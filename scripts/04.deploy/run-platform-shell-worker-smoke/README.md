@@ -4,7 +4,7 @@ id: deploy.script.run-platform-shell-worker-smoke.readme
 version: 5
 status: active
 created_on: "2026-09-23"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -47,3 +47,29 @@ uses `npm run platform:shell:metric-coverage -- --coverage-target worker` to
 observe the one fixed delivery counter. Queue settlement and metric delivery
 are intentionally two separate proof steps: a queue can settle even when the
 collector/exporter path is unavailable.
+
+Cleanup is armed before the first message submission. A timeout or lost response
+from queue submission or worker scale-up therefore still triggers the bounded
+scale-down and observation path. The original proof failure is retained if
+cleanup observation also fails. Scale-down response failure alone is not proof
+of failure: the command observes the service and queues before classifying the
+outcome.
+
+A completed cleanup requires worker desired, running and pending counts all
+zero, plus visible and in-flight counts both zero on the source queue and DLQ.
+Residual or unobservable messages cannot be reported as clean, and this command
+does not delete or purge messages to manufacture completion.
+
+After interruption or an uncertain response, observe the declared effects before
+requesting another approved execution:
+
+```bash
+npm run platform:shell:worker-smoke -- --reconcile
+```
+
+Reconciliation is read-only. It reports `cleaned-up` only for the complete
+observed zero state, `pending` for remaining effects, or `uncertain` when a
+required observation fails. Only `cleaned-up` exits successfully. A new execution
+also rechecks every zero-state precondition before it sends a message. These
+results describe bounded observations of the provider's approximate queue
+counts; they do not establish business-message idempotency.

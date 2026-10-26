@@ -4,7 +4,7 @@ set -euo pipefail
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession
 #   version: 2
-#   status: draft
+#   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
 #   layer: 04.deploy

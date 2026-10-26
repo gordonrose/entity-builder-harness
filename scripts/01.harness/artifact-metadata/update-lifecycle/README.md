@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.script.artifact-metadata.update-lifecycle.readme
-version: 2
+version: 3
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 01.harness
 domain: metadata
 disciplines: [agentic]
@@ -49,6 +49,15 @@ Append `--apply` to apply the reviewed batch. The command prepares and validates
 all requested artifacts before writing, preserves existing content, and checks
 for concurrent edits. It never stages, commits, deletes artifacts or changes
 branches. No-op runs do not rewrite headers or advance dates.
+
+For a bounded task-preparation sweep, use `--changed --apply`. It considers
+only changed v2/v3 `agentic-artifact` files, leaves headerless and legacy files
+alone, and never stages anything. It is safe to repeat: once the lifecycle
+headers match the current task state, the second invocation makes no write.
+Use explicit `--paths ... --skip-non-artifacts --apply` when the task scope is
+already known and includes both ordinary source and metadata-bearing artifacts.
+`--changed` is intentionally not a lifecycle-transition shortcut: deprecation,
+supersession, and historical-date decisions remain explicit-path operations.
 
 ## Lifecycle Transitions
 

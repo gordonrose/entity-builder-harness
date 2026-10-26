@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.classification.classify-task
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 00.chat
 #   domain: classification
 #   disciplines:
@@ -135,9 +135,9 @@ case "$TASK" in
     echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
     ;;
   *rag*|*retrieval\ augmented\ generation*|*rulebook*|*rule\ book*|*rule-pack*|*rule\ pack*|*ruleset*|*rule\ set*|*context\ packet*|*context\ packets*|*intent*|*corpus*|*chunk*|*chunks*|*embedding*|*embeddings*|*vector\ search*)
-    echo "Layer: rag-rulebook"
+    echo "Layer: harness"
     echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/02.rag-rulebook/workflows/default.md"
+    echo "Workflow: .agentic/01.harness/workflows/change-harness.md"
     ;;
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*|*metadata\ header*|*metadata\ headers*|*artifact\ metadata*|*agentic-artifact*|*discipline*|*disciplines*)
     echo "Layer: harness"

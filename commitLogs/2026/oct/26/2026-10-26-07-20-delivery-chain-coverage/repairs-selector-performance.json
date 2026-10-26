@@ -1,0 +1,167 @@
+{
+  "schema": "repo/check-selection-performance-repair/v1",
+  "id": "PERF-R1",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "inputs": {
+    "scripts/repo/check-selection/script.py": "c746b82c9483299fffd82bca874a5683f74c2cee06b36b1555a62d0882463bd5",
+    "scripts/repo/check-selection/smoke-test.py": "e9cc93bcf8fa5b043d6369f230057c18da19798ee455633998b8aecab50f1c9d"
+  },
+  "failure": "Pure planning repeated the same immutable graph closures for each rule/scope and recomputed execution-time identities even without execution.",
+  "repair": [
+    "Memoize forward and upstream closures per immutable input set inside plan only; copy cached results before callers extend reference sets.",
+    "Revalidate runtime/input identity before local execution or cache reuse only when --execute-local is requested; preserve after-execution identity checks."
+  ],
+  "verification": [
+    {
+      "command": "bash scripts/repo/check-selection/smoke-test.sh",
+      "result": "passed 54 tests in 83.562s (original 51 plus three focused regressions)",
+      "log_sha256": "433b55cfeb636827bba2c83be5f949bc8505cd7c21786d9e61c8a2b84729ef92"
+    },
+    {
+      "command": "git diff --check -- scripts/repo/check-selection/script.py scripts/repo/check-selection/smoke-test.py",
+      "result": "passed"
+    }
+  ],
+  "new_regressions": [
+    "Pure plan retains pending checks, probes shared runtime declaration once, and creates no runner/cache effects.",
+    "Changing tool identity before execution blocks commands; changes after execution produce uncertain evidence and no receipt.",
+    "Repeated closures execute once per input set inside a plan; a later plan observes a changed consumer graph."
+  ],
+  "performance": {
+    "same_changed_input_count": 193,
+    "before": {
+      "elapsed_seconds": 204.85932444198988,
+      "function_totals": {
+        "consumer_graph": {
+          "calls": 1,
+          "seconds": 3.8824068310204893
+        },
+        "closure": {
+          "calls": 5057,
+          "seconds": 136.858590375341
+        },
+        "discover": {
+          "calls": 1,
+          "seconds": 0.002333712996914983
+        },
+        "declaration.inspect": {
+          "calls": 6,
+          "seconds": 4.280710365041159
+        },
+        "upstream_closure": {
+          "calls": 102,
+          "seconds": 34.38613344117766
+        },
+        "validate_check": {
+          "calls": 94,
+          "seconds": 0.22025522828334942
+        },
+        "fingerprint": {
+          "calls": 114,
+          "seconds": 7.419146088126581
+        },
+        "runtime_identity": {
+          "calls": 52,
+          "seconds": 13.674988998915069
+        }
+      },
+      "checks": 67,
+      "findings": []
+    },
+    "after": {
+      "elapsed_seconds": 71.21650110499468,
+      "changed_paths": 193,
+      "function_totals": {
+        "consumer_graph": {
+          "calls": 1,
+          "seconds": 2.5165494570392184
+        },
+        "closure": {
+          "calls": 194,
+          "seconds": 6.017919436155353
+        },
+        "discover": {
+          "calls": 1,
+          "seconds": 0.003888083971105516
+        },
+        "upstream_closure": {
+          "calls": 104,
+          "seconds": 45.10753682907671
+        },
+        "validate_check": {
+          "calls": 96,
+          "seconds": 0.30373563419561833
+        },
+        "fingerprint": {
+          "calls": 68,
+          "seconds": 5.53877897397615
+        },
+        "runtime_identity": {
+          "calls": 5,
+          "seconds": 3.8136050309985876
+        },
+        "declaration.inspect": {
+          "calls": 6,
+          "seconds": 4.185477547871415
+        }
+      },
+      "checks": 68,
+      "findings": [
+        {
+          "code": "delivery-entrypoint-unregistered",
+          "path": "scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py",
+          "kind": "command"
+        }
+      ]
+    },
+    "notes": [
+      "Read-only planning profiles; selected checks were not executed.",
+      "Repository integration continued between measurements: 67 before versus 68 after selected checks; new ECR helper registration finding visible in after profile.",
+      "The complete same193-path measurement dropped from 204.859s to 71.217s; repeated forward closure calls fell from 5057 to 194.",
+      "Unique upstream traversals remain uncached across distinct sets and dominated the new profile; no broader graph engine or persistent cache was introduced."
+    ]
+  },
+  "all_current_plan": {
+    "elapsed_seconds": 61.50443846802227,
+    "changed_paths": 211,
+    "checks": 69,
+    "findings": [],
+    "report_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/selector-current-plan.json",
+    "mode": "local planning only; selected checks not executed"
+  },
+  "status": "repaired-local-verified",
+  "affected_routes": [
+    "Repository delivery check planning for all discovered declaration scopes",
+    "Selected local execution and evidence reuse through delivery-coverage CI"
+  ],
+  "downstream_consumers": [
+    "scripts/repo/check-selection/script.sh",
+    ".github/workflows/delivery-coverage.yml"
+  ],
+  "contract_files": [
+    "scripts/repo/check-selection/checks.yml",
+    ".agentic/shared/standards/require-change-completion.md"
+  ],
+  "implementation_files": [
+    "scripts/repo/check-selection/script.py"
+  ],
+  "caller_files": [
+    "scripts/repo/check-selection/script.sh",
+    ".github/workflows/delivery-coverage.yml"
+  ],
+  "test_files": [
+    "scripts/repo/check-selection/smoke-test.py",
+    "scripts/repo/check-selection/smoke-test.sh"
+  ],
+  "valid_behavior": [
+    "Pure planning preserves selected obligations and pending statuses without executing commands or creating execution-cache receipts.",
+    "Repeated input closures are reused within one immutable plan; a later plan sees changed source/consumer inputs.",
+    "Execute-local preserves current tool/input identity checks before execution or cache reuse and after command completion."
+  ],
+  "earliest_enforcement": "Cheap check planning before selected local commands; current tool/input identity is enforced before execution or cache reuse and after execution.",
+  "closure_evidence": [
+    "Existing recorded selector smoke command passed54tests, including the three focused regressions; no additional run is claimed.",
+    "Existing193-path read-only profiles and all-current plan retain timings, selected-check differences and transient unregistered-helper finding explicitly."
+  ],
+  "report_enrichment": "Route and file roles derived from current catalog, wrapper and delivery-coverage CI call sites; recorded test results and performance measurements unchanged."
+}

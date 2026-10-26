@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -74,10 +74,13 @@ ROOT = repo_root()
 
 
 def is_git_root() -> bool:
-    result = subprocess.run(
-        ["git", "-C", str(ROOT), "rev-parse", "--show-toplevel"],
-        text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "--show-toplevel"],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
+    except FileNotFoundError:
+        return False
     return result.returncode == 0 and Path(result.stdout.strip()).resolve() == ROOT
 
 

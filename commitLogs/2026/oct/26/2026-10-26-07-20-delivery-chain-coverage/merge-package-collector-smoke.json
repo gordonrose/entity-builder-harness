@@ -1,0 +1,15 @@
+{
+  "name": "collector-smoke",
+  "argv": [
+    "bash",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+    "--image",
+    "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1"
+  ],
+  "started_at": "2026-10-26T13:38:15.802904+00:00",
+  "finished_at": "2026-10-26T13:38:55.359635+00:00",
+  "duration_seconds": 39.562,
+  "exit_code": 0,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-smoke.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-smoke.stderr.log"
+}

@@ -1,0 +1,26 @@
+{
+  "checks": [
+    {
+      "scenario": "enabled",
+      "selected_emf_events": 1,
+      "verdict": "passed"
+    },
+    {
+      "scenario": "escaped-selector-rejected",
+      "selected_emf_events": 0,
+      "verdict": "passed"
+    }
+  ],
+  "client_image_id": "sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d",
+  "configuration_sha256": "sha256:67640820c07950df21c4de1e5025cef18d1def47da8ed7cbce2cc0d5292773b6",
+  "evidence_class": "local-finished-image",
+  "image_id": "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+  "limits": [
+    "No live CloudWatch or provider authorization was exercised.",
+    "The existing local source-built collector image was reused because binary inputs were unchanged; this run requalified corrected configuration and did not rebuild the image."
+  ],
+  "network": "none",
+  "schema": "deploy/collector-image-behavior/v1",
+  "sink": "awsemf-stdout",
+  "verdict": "passed"
+}

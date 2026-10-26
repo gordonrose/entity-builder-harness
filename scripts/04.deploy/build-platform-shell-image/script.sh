@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -29,6 +29,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
 
 if [ -z "${DOCKER_CONFIG:-}" ]; then
   export DOCKER_CONFIG="$ROOT/.cache/04.deploy/docker-config"
@@ -133,7 +134,8 @@ if ! "$ENGINE" info >/dev/null 2>&1; then
   exit 1
 fi
 
-bash scripts/04.deploy/validate-container-boundaries/script.sh >/dev/null
+bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root >/dev/null
+bash scripts/04.deploy/build-platform-shell-image/check-source.sh
 
 if [ ! -f "$DOCKERIGNORE" ]; then
   echo "ERROR: expected Dockerfile-specific ignore file is missing: $DOCKERIGNORE" >&2

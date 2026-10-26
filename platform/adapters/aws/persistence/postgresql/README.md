@@ -65,10 +65,28 @@ reviewed source or a constrained generated manifest, never a request.
   return type throw only a stable platform error. They never quietly report an
   unavailable database as an empty result.
 
+## Failure diagnostics
+
+`postgreSqlFailureDiagnostic(error)` returns the existing Core diagnostic
+shape with a closed classification, `recognized`/`unrecognized`/`absent` code
+status, observed phase and elapsed milliseconds. Unobserved timing is `null`
+and phase is `unknown`. The low-level pool seam preserves driver error identity
+for adapter SQL semantics; consumers must emit only this descriptor or the
+sanitized platform operation error, never the raw driver object.
+
+Phases identify the actual call boundary: `pool_connect` includes acquisition
+and any driver connection work; `pool_query` includes acquisition plus query;
+`query` is a checked-out client's query; `authentication_value` is the token
+callback. These observations do not prove internal TCP/TLS/authentication
+stages. A separate probe has its own connection. Unknown errors remain unknown
+and do not grant retries. PostgreSQL `57014` reports `query_canceled`, since its
+code alone cannot distinguish an explicit cancellation from a statement timeout.
+The older provider failure class retains its broad timeout bucket for compatibility.
+
 ## Tests and evidence
 
-The package-level tests are deterministic and use a recording pool, not AWS or
-a shared database. They prove configuration redaction, parameterised values,
+The package-level tests use a recording pool and disposable loopback protocol
+and TLS fixtures through the real `pg` driver, without AWS or a shared database. They prove configuration redaction, parameterised values,
 safe error mapping, commit/rollback behaviour, safe telemetry, atomic
 participant/fact composition, migration checksums, and source import
 boundaries.
@@ -85,7 +103,8 @@ shared database, real record, or production TLS bypass.
 The proof covers migration checksum immutability, atomic smoke
 state/lineage/outbox writes, rollback, optimistic concurrency, synthetic
 tenant predicates, outbox relay compatibility, and lease/fence rejection on a
-real engine. It injects a test-only non-TLS `pg` pool solely because the
+real engine. It also verifies rejected authentication, a missing database, and
+query cancellation under a configured statement timeout. It injects a test-only non-TLS `pg` pool solely because the
 disposable loopback fixture has no trusted certificate. The public production
 pool constructor continues to require `verify-full` TLS; Stage 5 proves that
 live boundary.

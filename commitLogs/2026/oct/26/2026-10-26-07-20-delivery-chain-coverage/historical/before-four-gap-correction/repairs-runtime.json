@@ -1,0 +1,1076 @@
+{
+  "historical_local_qualification_receipts": [
+    {
+      "contents": {
+        "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "inputs": {
+          "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml": "e5bf8008a5beecbea784d834579a7979b8e6264e9aea9d435ec45c0b4707204c",
+          "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": "cd6ba7debf13c2c6dcb02d3c09c90c2d170df83dca9d9a603acdfba8adb230e7"
+        },
+        "schema": "deploy/local-image-qualification/v1"
+      },
+      "freshness": "historical-input-snapshot-retained-not-current-package-binding",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/persistence-local-qualification.json",
+      "sha256": "9cf3015259e97603e98c6cf8181e8cd0608d2ec64d9fdfea9d41bd378f22245b"
+    },
+    {
+      "contents": {
+        "image_id": "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+        "inputs": {
+          "infra/04.deploy/03.product/image/Dockerfile": "1ffcf9c9abf6e895942275352513ff5223608326748a812a166ca7aff75bb47c",
+          "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml": "90ae34a1f9d4711d5712b69e39df620a72e3961e013a6f1504a1aad05cdf3758",
+          "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml": "bfea763a3b03ae5a497f9b2ae625e7693552b5c400621a411341a3bedb3aa7d5",
+          "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py": "7f9caac7a87bbdad98d38e7aac1326b4a8eb23f9130402ef1c11e286ee3a23d8",
+          "scripts/04.deploy/smoke-test-platform-shell-image/script.sh": "c354cd7b5e99447bcd2e7305eaa2ad9546323b78f17dba68d1a3b452e57cc8a9"
+        },
+        "schema": "deploy/local-image-qualification/v1"
+      },
+      "freshness": "historical-input-snapshot-retained-not-current-package-binding",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/shell-local-qualification.json",
+      "sha256": "61f9b7b6050003fbb68e7a03650ca667dd20bcb079609735adef0665ee646687"
+    }
+  ],
+  "input_sha256": {
+    ".github/workflows/deploy-platform-shell-staging.yml": "c85bc4b485cb490d60665fa75b084e146eb756aa3528f76a6103ad925283728f",
+    ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml": "1cba6e1f4027301e790c64e7adf0063cd656c563a3ff817efd2390f67aecaa9a",
+    ".github/workflows/publish-kanbien-core-platform-core-server.yml": "92df72995763812742f226475ab7fae866bdb63b39b586a5f6f2049d25031649",
+    ".github/workflows/publish-kanbien-core-platform-observability-collector.yml": "b9dfff572e854899869b0db74946f71474770d121127b7f5163b3ec81739467b",
+    "docs/04.deploy/rules/shared/container-image-management.yml": "25b2e829f650dde04525f4723763578902b88109241a975dddb811bca205c38b",
+    "docs/04.deploy/source-material/shared/container-image-management.md": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+    "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts": "7ac0db369f6a8fcdc7e3620017b1f4049784af666bd4a7a68187d0eba14fca4e",
+    "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml": "6216ee5ac9622f3b84fa37a862efdbbf0d81ca27659a7b984b9237025cb2b5a7",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile.dockerignore": "5141326af1e774fcf5aa49ca0a62dc92c36e073bd9bf0014a80ac14ab9dabdc1",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/README.md": "75e11c11c1346787db996abe3407ea9a9d028e73093516d7fc82c0ad41a7fee6",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml": "67640820c07950df21c4de1e5025cef18d1def47da8ed7cbce2cc0d5292773b6",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml": "2299eca72c0417497185c1e2606129179e97a446141c9447b930bcc6470fb45d",
+    "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile": "c176308e81c1c4bc9fba11e3b847f998defadda18eababfb3f483bb24cff2148",
+    "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore": "d7167e1e853f33726f1ca9861f0938d90d99a16ea01f4b227bbc5c6382a89947",
+    "infra/04.deploy/03.product/image/core-server-persistence/README.md": "2b02aa0d2a7bdbed5464a63ece15600b8854db58060cdab53cb897fb066e5e47",
+    "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003",
+    "infra/04.deploy/03.product/image/core-server/Dockerfile.dockerignore": "05735c01532081f025050b0bc86b7a761cde6c3ab5335cd13f89e0865a675922",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml": "735dd5c946e37d6e3fb95640a3c564c5e104939c2fc87da27efdc0d15498c53a",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml": "ed22007e1ff98a721bd9f0f868ab0cc45c5d6ad5ca1515767df73afebdc827df",
+    "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml": "bfea763a3b03ae5a497f9b2ae625e7693552b5c400621a411341a3bedb3aa7d5",
+    "scripts/04.deploy/build-platform-shell-image/check-source.sh": "34ffb556445df3289e2b331fcdaaa140cebe3f393c57941bbffd36156b4f5d87",
+    "scripts/04.deploy/build-platform-shell-image/script.sh": "5d97776a3669672044932930d6f25c9a52cf291211a0bb824e00d99c871652c4",
+    "scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs": "eecc28d21c9aa9c7069662ef6777868e6bf3461332ff3e0dc88f7213296ec3e7",
+    "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py": "4a367df9461244d222265c8c47435e1118f8485d5776772b9243e2dac19449a0",
+    "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py": "ca416350747310f4320968cb18c4cea4c79f6f14eeca340649bd62002fd1a350",
+    "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py": "268bca581cd149247cbf394b63127b5f18e92460e096f46992b9a0325eb04cc8",
+    "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+    "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py": "a66d3865bad0f6224451054455698dede7c3dce5b46dd72e6c1031b5c5d03730",
+    "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh": "54ccffb89c578f4e5ce4707ebce6164545d60354a473050924cf0e6bef43c49e",
+    "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh": "64d0a4fa7b5ee18802b450edff0624ed7770a51a8a6fedbb89b096b6e0e5a86b",
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh": "bd298a52a4798b2f42765fd92cc39597af681c876a05d1572c37eeb2bec81ea0",
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs": "51d2b99bd2ae07f4bf42ae3c7100f8925a5c4617a3a2ad109dec9186b26a765b",
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh": "8c9ebec51d931a18a2785b8525a41e147b50720c8d62d766dbe705f1c1b35ef4",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py": "5ed894a8fb178030996059e632a7e3bcba6d3a4cba64cab20d3231d8693719af",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py": "f8285e291db6ae338d5eb07b995096a08fb53f0d7e6d6ab3dbe72504c61ccb20",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py": "31cf4cad42c065c6ff712ae4f3b243e5836aba5eab96b901b8840d9549661152",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh": "6182e61e9fab504d18ef4258e9c5deec87f646728cfb7383087b04a66a39d87b",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py": "4a6f5aabc5523a64467ce7f81b3ca1a0a64ce49913c838b391ead6c22884328f",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py": "629c39208310bc71081491344133d96577c00da696ba58dda1353826720d2e02",
+    "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh": "8c683b4aeeeb75f2ce88a81dd7848421eb915794642795aed6eea9de35924246",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh": "5d37d548ff1b2cb7177160a6d866fdae898960a4782221c659bb500a7821f937",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py": "0bc442286b7b1fc77877c01b27db141acb3debfde0dd9caf0f7f42013d7fd66d",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh": "013176b24600065a87f8bdf726352057f1e353b702aedf6ce77e0631d465d702",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": "cd6ba7debf13c2c6dcb02d3c09c90c2d170df83dca9d9a603acdfba8adb230e7",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py": "1d94874c73ec3d94f3e15115a5d5a3f75b415c7a3fac7dfc34947294a200757a",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py": "9aa4960d53389173e72b7a89f48aa0cf46c943fd1e05b4a7e6790fb94aea2e2c",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh": "ce70744ae4389b1ca0892583fbdc430e494085af7fe893284bc0c6127ce2371f",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py": "8f72a299c1c9fe226de5dde34995aab3df1bb5a90bf7d3e30b67d8f8a1ef3b6a",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py": "0067c635d3d0d158b9151a6b0c0dc2411a7cded70e8c021b6db54b3a963d364c",
+    "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py": "b9306644e564b5a8332e2e8c6c3b26d9a743a356b9088bb2513c2488361b3cce",
+    "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py": "9deaf30378abeac3bd02cd39ceb5001790a50f8f94591993845fd1c8599e2b2e",
+    "scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py": "814c9cba02c139721a7feb8fd5d82bfc6ffb42c4c31c9daacaa701d3a4f18464",
+    "scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup-test.py": "3f2b0873652ae141d4e5b370f283df37c601083fbf94c979abf401d41be43767",
+    "scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py": "801e705e3fe2b138d811e820ba2c0e543ea993efa18848c12e446e32ff63c891",
+    "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py": "7f9caac7a87bbdad98d38e7aac1326b4a8eb23f9130402ef1c11e286ee3a23d8",
+    "scripts/04.deploy/smoke-test-platform-shell-image/script.sh": "a6f9886c9d5454b50897cc7db42aefdbe9e75cdf9a658ac3a22b70e630d8088a",
+    "scripts/04.deploy/validate-container-boundaries/script.sh": "b21a322d061e17b34b73fbc7b4ce73f7a965eb16b057d3a773f20e3bad65d883",
+    "scripts/04.deploy/validate-container-boundaries/smoke-test.sh": "d7e248328b37475bab94503a8ab14c446dee9567f6a8845f3be0638c7ff1ebfa",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py": "f8009004604b9492eb1ec0dd79c5a5faeaeff6991c4e4ce7438814477e06541e",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh": "28bb8d445886a2155bd0c3bc980897d15746eae00b7b4690fa1033353a6f730f",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh": "71c2d05437068891db68f3c700c700dcde3f8a9eaac536c1d2c0ab7bd9c1c9a4",
+    "scripts/repo/check-selection/smoke-test.py": "e9cc93bcf8fa5b043d6369f230057c18da19798ee455633998b8aecab50f1c9d"
+  },
+  "limits": [
+    "All database, queue and OTLP behavior here uses disposable local fixtures; no live AWS identity, permission, RDS, SQS, CloudWatch or deployment proof claimed.",
+    "No image was published and no workflow was run remotely. Workflow guarantees were tested through actual static validator subprocesses and disposable artifact producer/consumer CLIs.",
+    "Historical rollback-8cd872e8 image is incompatible with current local IAM environment (liveness fails); the failure is retained rather than reported as rollback proof.",
+    "Collector finished-image behavior used an existing source-built immutable image with unchanged binary inputs and corrected local configuration; actual OTLP-to-EMF stdout sink was exercised, not live CloudWatch. See collector-image-behavior.json.",
+    "Historical raw-template qualification receipts remain unchanged; current normalized receipts bind selected runtime/configuration and adapter identity. IAM/deployment authority is verified afresh by declaration and deployment gates, not by historical package behavior proof.",
+    "Root owns final repository-wide selected checks and remaining independent review findings; this child report does not mark the overall Goal complete."
+  ],
+  "local_qualification_receipts": [
+    {
+      "contents": {
+        "configuration_inputs": [
+          {
+            "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+            "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+            "projection_sha256": "a99a3b76460744d20d531ee6891959ee39b25f5760be3e29edc1b9e18eef1208",
+            "selector": "*",
+            "source": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+          }
+        ],
+        "image_id": "sha256:18a08ca7a0a168d8146c37393c26d11a0f3ed4376cacc703746a869fbe1326ae",
+        "inputs": {
+          "infra/04.deploy/03.product/image/core-server/image-contract.yml": "71e5efb910c80f449de0defdf80cb0310a7445d21a839b828f5ab56f94fbbb67",
+          "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh": "5d37d548ff1b2cb7177160a6d866fdae898960a4782221c659bb500a7821f937"
+        },
+        "schema": "deploy/local-image-qualification/v1"
+      },
+      "evidence_class": "local-finished-image-input-binding",
+      "exit_status": 0,
+      "note": "Captures current input identities for separately recorded successful actual image behavior. Does not imply registry publication or remote proof.",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/core-normalized-qualification.json",
+      "record_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "record",
+        "--image",
+        "sha256:18a08ca7a0a168d8146c37393c26d11a0f3ed4376cacc703746a869fbe1326ae",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/core-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server/image-contract.yml",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+        "*"
+      ],
+      "sha256": "1d2379f664a38b2af337d11f0f630103e7bb81251e5cc579e5415b454bd65ad8",
+      "verify_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:18a08ca7a0a168d8146c37393c26d11a0f3ed4376cacc703746a869fbe1326ae",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/core-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server/image-contract.yml",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+        "*"
+      ]
+    },
+    {
+      "contents": {
+        "configuration_inputs": [
+          {
+            "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+            "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+            "projection_sha256": "cf19e36cb381a8be2c507b703fb357fb308bf37ecc0c91e9ace99520e137262a",
+            "selector": "core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier",
+            "source": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+          }
+        ],
+        "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "inputs": {
+          "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003",
+          "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py": "0bc442286b7b1fc77877c01b27db141acb3debfde0dd9caf0f7f42013d7fd66d",
+          "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": "cd6ba7debf13c2c6dcb02d3c09c90c2d170df83dca9d9a603acdfba8adb230e7"
+        },
+        "schema": "deploy/local-image-qualification/v1"
+      },
+      "evidence_class": "local-finished-image-input-binding",
+      "exit_status": 0,
+      "note": "Captures current input identities for separately recorded successful actual image behavior. Does not imply registry publication or remote proof.",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/persistence-normalized-qualification.json",
+      "record_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "record",
+        "--image",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/persistence-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier"
+      ],
+      "sha256": "f441ffd4827d6b08d613be9aa9cf751bd916c56ed927c209b1f9766ff3a64f15",
+      "verify_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/persistence-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier"
+      ]
+    },
+    {
+      "contents": {
+        "configuration_inputs": [
+          {
+            "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+            "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+            "projection_sha256": "942bb276028bf060c57d743b68e5806abfa90c6288bdec5e1aa223ceabd19cfb",
+            "selector": "observability-collector",
+            "source": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+          }
+        ],
+        "image_id": "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+        "inputs": {
+          "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml": "67640820c07950df21c4de1e5025cef18d1def47da8ed7cbce2cc0d5292773b6",
+          "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml": "2299eca72c0417497185c1e2606129179e97a446141c9447b930bcc6470fb45d",
+          "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py": "9aa4960d53389173e72b7a89f48aa0cf46c943fd1e05b4a7e6790fb94aea2e2c",
+          "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh": "ce70744ae4389b1ca0892583fbdc430e494085af7fe893284bc0c6127ce2371f"
+        },
+        "schema": "deploy/local-image-qualification/v1"
+      },
+      "evidence_class": "local-finished-image-input-binding",
+      "exit_status": 0,
+      "note": "Captures current input identities for separately recorded successful actual image behavior. Does not imply registry publication or remote proof.",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/collector-normalized-qualification.json",
+      "record_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "record",
+        "--image",
+        "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/collector-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "observability-collector",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py"
+      ],
+      "sha256": "ec53751779c0624a95c10bba965d28113717e671357066ddab2edac3e86df766",
+      "verify_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/collector-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+        "--input",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "observability-collector",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+        "--input",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py"
+      ]
+    },
+    {
+      "contents": {
+        "configuration_inputs": [
+          {
+            "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+            "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+            "projection_sha256": "59c4ce593b9784ada284b31c178730438c742673c743b38dadd1ecf2e8a393e2",
+            "selector": "*",
+            "source": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml"
+          }
+        ],
+        "image_id": "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+        "inputs": {
+          "infra/04.deploy/03.product/image/Dockerfile": "1ffcf9c9abf6e895942275352513ff5223608326748a812a166ca7aff75bb47c",
+          "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py": "7f9caac7a87bbdad98d38e7aac1326b4a8eb23f9130402ef1c11e286ee3a23d8",
+          "scripts/04.deploy/smoke-test-platform-shell-image/script.sh": "a6f9886c9d5454b50897cc7db42aefdbe9e75cdf9a658ac3a22b70e630d8088a"
+        },
+        "schema": "deploy/local-image-qualification/v1"
+      },
+      "evidence_class": "local-finished-image-input-binding",
+      "exit_status": 0,
+      "note": "Captures current input identities for separately recorded successful actual image behavior. Does not imply registry publication or remote proof.",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/shell-normalized-qualification.json",
+      "record_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "record",
+        "--image",
+        "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/shell-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/Dockerfile",
+        "--input",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+        "--input",
+        "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+        "*"
+      ],
+      "sha256": "2743cc2d9cd38636431def6f8bba8d699f651705316d1dcb0d8b500ac7d82a75",
+      "verify_command": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/shell-normalized-qualification.json",
+        "--input",
+        "infra/04.deploy/03.product/image/Dockerfile",
+        "--input",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+        "--input",
+        "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+        "*"
+      ]
+    }
+  ],
+  "next_scope_example": "New declared workload automatically enters independent inventory and selector discovery. Its binding references a provider configuration adapter and per-workload requirements; missing selected environment/secret/identity/command fails declaration coverage before builder invokes compilation or Docker. Relevant image/config/permission hashes invalidate only impacted receipts; unchanged artifact/config evidence remains reusable.",
+  "owner": "runtime_package",
+  "pending": [],
+  "related_current_evidence": [
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/core-shell-image-verification.json",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/collector-image-behavior.json",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-acceptance.json",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/independent-review.json",
+    ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml"
+  ],
+  "repair_inventory": [
+    {
+      "affected_routes": [
+        "bootstrap-runtime",
+        "core-server-persistence"
+      ],
+      "callers": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh"
+      ],
+      "closure_evidence": [
+        "runtime-configuration",
+        "persistence-composition",
+        "parent selector synthetic second-target results",
+        "final-runtime-configuration"
+      ],
+      "contracts": [
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml"
+      ],
+      "earliest_enforcement": "Declaration check before compilation, image build or provider mutation.",
+      "failure": "Declarations could pass while workload required configuration, secrets, identity or execution command was absent or scoped to a different workload.",
+      "family": "B",
+      "id": "B-01",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py"
+      ],
+      "negative_regression": "Actual declaration CLI rejects missing host, enabled endpoint, secret injection, command, task role and required IAM action.",
+      "smallest_reusable_repair": "Normalize provider workload alternatives through declared provider adapter, bind semantic workload requirements and derive mandatory secrets/identity from scope declaration. Optional capability fields apply only when enabled.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py",
+        "scripts/repo/check-selection/smoke-test.py"
+      ],
+      "valid_behavior": "Disabled optional capability remains valid; complete baseline alternatives pass; materially different synthetic catalog endpoint/workload follows same declared adapter."
+    },
+    {
+      "affected_routes": [
+        "bootstrap-runtime",
+        "core-server-persistence"
+      ],
+      "callers": [
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh"
+      ],
+      "closure_evidence": [
+        "runnable",
+        "final-runtime-configuration"
+      ],
+      "contracts": [
+        "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml"
+      ],
+      "earliest_enforcement": "Runnable contract before compilation/package construction.",
+      "failure": "Runnable commands could mention the entrypoint while executing echo, a shell, or node --eval instead.",
+      "family": "B",
+      "id": "B-02",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py"
+      ],
+      "negative_regression": "Actual CLI rejects echo, sh and node --eval substitutions.",
+      "smallest_reusable_repair": "Declare runtime_executable and require exact executable plus entrypoint command prefix.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh"
+      ],
+      "valid_behavior": "Declared Node execution of exact packaged entrypoint passes."
+    },
+    {
+      "affected_routes": [
+        "core-server-persistence"
+      ],
+      "callers": [
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml"
+      ],
+      "closure_evidence": [
+        "current-persistence-finished-image",
+        "current-disconnected-observer-negative"
+      ],
+      "contracts": [
+        "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml"
+      ],
+      "earliest_enforcement": "Source/payload checks before build; enabled behavior in finished image before publication.",
+      "failure": "Persistence capability source was declared and importable but metrics/readiness exporter was unconnected; image missed adapter shim/dependency payload.",
+      "family": "C",
+      "id": "C-01",
+      "implementation": [
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs"
+      ],
+      "negative_regression": "Current exact assembled image with a test-only disconnected readiness observer proves module loaded and liveness healthy, then actual package smoke rejects specifically packaged-readiness-metric-ready-not-exported; all five effects observed absent. Earlier historical-image attempt failed too early and remains explicitly not counted.",
+      "smallest_reusable_repair": "Compose optional metrics and bounded dependency observer with lifecycle shutdown, package real adapter/OTel closure, require actual ready and revoked/not-ready OTLP exports.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py"
+      ],
+      "valid_behavior": "Disabled PostgreSQL/TLS/admin behavior and enabled ready/not-ready export pass current immutable finished image."
+    },
+    {
+      "affected_routes": [
+        "kanbien-staging-platform-shell"
+      ],
+      "callers": [
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh",
+        ".github/workflows/deploy-platform-shell-staging.yml"
+      ],
+      "closure_evidence": [
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/core-shell-image-verification.json"
+      ],
+      "contracts": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"
+      ],
+      "earliest_enforcement": "Finished-image smoke before new or resumed-image publication.",
+      "failure": "Shell image smoke loaded relational programs only with missing config; it did not execute their enabled database/queue/restore behavior.",
+      "family": "C",
+      "id": "C-02",
+      "implementation": [
+        "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh"
+      ],
+      "negative_regression": "Absent schema and missing processing restore cases fail for intended safe categories; denied processing writes fail without queue acknowledgement, retry succeeds after repaired grants.",
+      "smallest_reusable_repair": "Run five actual packaged task CLIs against two disposable TLS databases and local SQS wire fixture; existing smoke also requires actual enabled health-metric export.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py"
+      ],
+      "valid_behavior": "Bootstrap, repeated migration, relay, worker ack only after observed durable completion, isolated restored data verification, disabled and enabled server health all pass immutable image."
+    },
+    {
+      "affected_routes": [
+        "all five image definitions"
+      ],
+      "callers": [
+        "scripts/04.deploy/build-platform-shell-image/script.sh"
+      ],
+      "closure_evidence": [
+        "image-boundary",
+        "shell build",
+        "persistence hardened-context build",
+        ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml"
+      ],
+      "contracts": [
+        "docs/04.deploy/source-material/shared/container-image-management.md",
+        "docs/04.deploy/rules/shared/container-image-management.yml"
+      ],
+      "earliest_enforcement": "Container boundary before Docker build.",
+      "failure": "Container guard rejected three active capability Dockerfiles; persistence/collector lacked effective ignore contexts and image docs.",
+      "family": "C",
+      "id": "C-03",
+      "implementation": [
+        "scripts/04.deploy/validate-container-boundaries/script.sh",
+        "infra/04.deploy/03.product/image/core-server/Dockerfile.dockerignore",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile.dockerignore",
+        "infra/04.deploy/03.product/image/core-server-persistence/README.md",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/README.md"
+      ],
+      "negative_regression": "Arbitrary deeper path and weak/late-deny contexts are rejected.",
+      "smallest_reusable_repair": "Allow exactly one lowercase capability subdirectory under governed image root, retain README and effective default-deny ignore requirements, add missing bounded contexts.",
+      "status": "verified-local-current-source-review-accepted",
+      "tests": [
+        "scripts/04.deploy/validate-container-boundaries/smoke-test.sh"
+      ],
+      "valid_behavior": "Current five images and synthetic catalog capability pass; real shell and persistence guarded builds pass."
+    },
+    {
+      "affected_routes": [
+        "kanbien-staging-platform-shell"
+      ],
+      "callers": [
+        "scripts/04.deploy/build-platform-shell-image/check-source.sh",
+        "scripts/04.deploy/build-platform-shell-image/script.sh"
+      ],
+      "closure_evidence": [
+        "shell-source"
+      ],
+      "contracts": [
+        "scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs"
+      ],
+      "earliest_enforcement": "Source/runtime-payload before Docker build.",
+      "failure": "Existing shell payload check renamed workspace package links to system /tmp and failed EXDEV across filesystems.",
+      "family": "C",
+      "id": "C-04",
+      "implementation": [
+        "scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs"
+      ],
+      "negative_regression": "Actual source wrapper reproduced EXDEV before repair.",
+      "smallest_reusable_repair": "Create reversible isolation directory beside workspace package links on same filesystem and protect rename with final cleanup.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/build-platform-shell-image/check-source.sh"
+      ],
+      "valid_behavior": "Actual full server/product/runtime-payload wrapper passes; original package links restored."
+    },
+    {
+      "affected_routes": [
+        "four publishing workflows"
+      ],
+      "callers": [
+        ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+        ".github/workflows/deploy-platform-shell-staging.yml"
+      ],
+      "closure_evidence": [
+        "custody",
+        "shell-workflow",
+        "final-custody"
+      ],
+      "contracts": [
+        ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+        ".github/workflows/deploy-platform-shell-staging.yml"
+      ],
+      "earliest_enforcement": "Static workflow validation before build; identity check before tagging/push.",
+      "failure": "Qualification could be omitted, reordered, conditional, suppressed, substituted or disconnected from the published artifact/config.",
+      "family": "D",
+      "id": "D-01",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh"
+      ],
+      "negative_regression": "Real validator CLI workflow mutations reject omitted/reordered/conditional/suppressed/substituted qualification and mutable publication tag. Image/config substitutions invalidate receipts; overwrite rejected.",
+      "smallest_reusable_repair": "Use existing workflow owners with exact protected qualification commands, immutable local image ID plus relevant input hashes, verified archive hash and remote pulled identity equality before custody completion.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py"
+      ],
+      "valid_behavior": "All four current workflows pass; unchanged artifact/config receipt can be reused and original history bytes remain unchanged."
+    },
+    {
+      "affected_routes": [
+        "collector publishing workflow"
+      ],
+      "callers": [
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml"
+      ],
+      "closure_evidence": [
+        "custody",
+        "final-custody"
+      ],
+      "contracts": [
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml"
+      ],
+      "earliest_enforcement": "Workflow static gate before collector build.",
+      "failure": "Collector scanner shell appended || true passed previous guard and could turn vulnerability failure green.",
+      "family": "D",
+      "id": "D-R1",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py"
+      ],
+      "negative_regression": "Actual CLI rejects || true, semicolon true, different output, wrong outcome id and conditional scanner.",
+      "smallest_reusable_repair": "Require exact scanner argv/archive/output, step id, deliberate continue-on-error plus following failure outcome consumer.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py"
+      ],
+      "valid_behavior": "Existing exact scanner contract passes."
+    },
+    {
+      "affected_routes": [
+        "kanbien-staging-platform-shell"
+      ],
+      "callers": [
+        ".github/workflows/deploy-platform-shell-staging.yml"
+      ],
+      "closure_evidence": [
+        "custody",
+        "shell-workflow",
+        "final-custody"
+      ],
+      "contracts": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py"
+      ],
+      "earliest_enforcement": "After publication verification/scan/provenance, before deployment consumer can accept artifact.",
+      "failure": "Shell publication had summary-only evidence with no durable existing-schema package receipt for deployment consumers.",
+      "family": "D",
+      "id": "D-02",
+      "implementation": [
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh"
+      ],
+      "negative_regression": "Each skipped prerequisite rejects emission; overwrite rejects; workflow omission/forged success/substituted upload rejected.",
+      "smallest_reusable_repair": "Emit existing custody schema only after exact upstream success outcomes and preserve same-run receipt+qualification+SBOM via immutable artifact upload.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py"
+      ],
+      "valid_behavior": "Actual emitter to existing validator CLI passes exact source/digest/run fixture; downstream acceptance agent consumes agreed identifiers."
+    },
+    {
+      "affected_routes": [
+        "core image smoke",
+        "persistence image smoke",
+        "shell image smoke",
+        "collector startup",
+        "retained rollback qualification"
+      ],
+      "callers": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh"
+      ],
+      "closure_evidence": [
+        "custody",
+        "finished-image logs",
+        "retained compatibility results",
+        "final-custody"
+      ],
+      "contracts": [
+        "scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py"
+      ],
+      "earliest_enforcement": "Package qualification cleanup and trap boundary before success evidence.",
+      "failure": "Package cleanup ignored failed Docker removals and could print success while resources, tasks or effects remained or were unobservable.",
+      "family": "G",
+      "id": "G-02",
+      "implementation": [
+        "scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+        "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh"
+      ],
+      "negative_regression": "Actual fake Docker CLI covers present/already absent/still present/daemon unknown across container/network/volume. Actual qualifier retains run exit37 or diagnostic exit29 despite failed cleanup; otherwise cleanup failure exits1.",
+      "smallest_reusable_repair": "Shared Docker adapter observes absence by exact provider missing semantics; tracks named one-shot tasks and ambiguous create attempts; cleanup succeeds before success output; original nonzero exit retained.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup-test.py"
+      ],
+      "valid_behavior": "Current shell/persistence real package smoke all effects absent; retained incompatible historical artifact fails before target mutation and still cleans all five effects."
+    },
+    {
+      "affected_routes": [
+        "core-server publisher",
+        "persistence publisher",
+        "collector publisher",
+        "platform-shell publisher"
+      ],
+      "callers": [
+        ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+        ".github/workflows/deploy-platform-shell-staging.yml"
+      ],
+      "closure_evidence": [
+        "final-custody",
+        "final-scanner-environment"
+      ],
+      "contracts": [
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh"
+      ],
+      "downstream_consumers": [
+        "existing package custody validator",
+        "deployment acceptance producer/consumer guards"
+      ],
+      "earliest_enforcement": "Static CI guard before build/credential use; actual scan and outcome checks before durable custody; exact local qualified identity checked before publication.",
+      "failure": "Post-publication ECR vulnerability predicate could be suppressed while custody asserted passed; downstream proof bodies/outcomes and nested shell/collector qualification wrapper bodies could be omitted, reordered, conditional or substituted without rejection.",
+      "family": "D",
+      "id": "D-R6",
+      "implementation": [
+        "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh"
+      ],
+      "negative_regression": "All four actual workflow-validator CLIs reject omitted, conditional, reordered, suppressed, substituted and environment-forged proof stages; nested smoke suppression/conditional/reordering rejected. Fake AWS CLI rejects HIGH/CRITICAL, denied, timeout, identity mismatch and ambiguous platform. Capture rejects each skipped prerequisite and receipt overwrite.",
+      "smallest_reusable_repair": "Provider adapter resolves exact platform digest and classifies pending/denied/absent/failed/clean scan outcomes. Existing workflow owners enforce bounded exact proof bodies, IDs, outcome dependencies and immutable upload inputs. Existing schema emitter requires actual upstream success. Short nested qualification wrappers have exact executable-body contracts, including failure propagation.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py"
+      ],
+      "valid_behavior": "All four supported current workflows pass; clean direct/index image scans and pending-to-complete pass; exact emitted custody validates; existing/new shell image qualification both pass and failed smoke23 prevents receipt/output."
+    },
+    {
+      "affected_routes": [
+        "all four publishers"
+      ],
+      "callers": [
+        ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+        ".github/workflows/deploy-platform-shell-staging.yml",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh"
+      ],
+      "closure_evidence": [
+        "final-custody",
+        "final-runtime-configuration",
+        "local_qualification_receipts"
+      ],
+      "contracts": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py"
+      ],
+      "downstream_consumers": [
+        "qualification verification before publication",
+        "historical package evidence reuse"
+      ],
+      "earliest_enforcement": "Receipt verification before publication; fresh permission gate before provider mutation.",
+      "failure": "Whole provider template hashing invalidated package evidence on IAM-only edits, while a first normalized projection overlooked referenced CloudFormation mapping changes.",
+      "family": "I",
+      "id": "I-R8",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py"
+      ],
+      "negative_regression": "Actual record/verify CLI rejects changed image, selected environment/command/mapping, unsupported intrinsic and removed required configuration binding. Actual declaration CLI rejects missing IAM action.",
+      "smallest_reusable_repair": "Extend existing provider configuration adapter with selected-container package projection and optional configuration_inputs in existing local qualification v1 receipt. Bind adapter bytes, relevant containers/commands/env/secrets/capability conditions, referenced parameter/SSM/mapping configuration; exclude IAM authority. Explicit expected configuration descriptors prevent removed binding. Unknown selected intrinsics fail closed. Fresh permission checks remain separate.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"
+      ],
+      "valid_behavior": "Actual record/verify CLI retains immutable proof across IAM-only or unrelated mapping changes; restored relevant inputs pass without rewriting receipt. Current four image receipts record+verify successfully."
+    },
+    {
+      "affected_routes": [
+        "core image builder",
+        "core image smoke",
+        "platform-shell image smoke"
+      ],
+      "callers": [
+        ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+        ".github/workflows/deploy-platform-shell-staging.yml"
+      ],
+      "closure_evidence": [
+        "final-custody",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/core-shell-image-verification.json"
+      ],
+      "contracts": [
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh"
+      ],
+      "downstream_consumers": [
+        "CLI callers",
+        "selected local checks"
+      ],
+      "earliest_enforcement": "Container engine prerequisite before Docker operations.",
+      "failure": "Optional no-engine image paths returned success despite unavailable finished-image qualification.",
+      "family": "C",
+      "id": "C-05",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh"
+      ],
+      "negative_regression": "Actual three supported CLIs with fake Docker info unavailable and --allow-skip-without-engine each return77 and SKIP.",
+      "smallest_reusable_repair": "Use unavailable status77 for explicitly permitted skip; preserve source proof but never return finished-image success.",
+      "status": "verified-local",
+      "tests": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py"
+      ],
+      "valid_behavior": "Actual core rebuilt finished image and shell current immutable image complete real behavior successfully; source checks still run where applicable."
+    }
+  ],
+  "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "schema": "delivery-chain-owned-repair-report/v1",
+  "status": "owned-repairs-verified-local-integration-review-tracked-by-root",
+  "verification": [
+    {
+      "command": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-runtime-configuration.log",
+      "log_sha256": "54b5bc61b6910df997f03500153bb71a5e5faf9461b20c95c4389105a8b1e4ea",
+      "test": "runtime-configuration"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-runnable.log",
+      "log_sha256": "49631e38bc5102e7def8e6383e1092fbe7bf99f4f99588620330dafaeaa8c2dc",
+      "test": "runnable"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-persistence-composition.log",
+      "log_sha256": "89511c8a5570f51c01517d9c5ec6e1313c103258a10ce824555e173af22f2f95",
+      "test": "persistence-composition"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-payload.log",
+      "log_sha256": "142d3174efffca22a9b45c3577b5f25fe1ab5c2f32a1bdf006583f93641b84c9",
+      "test": "payload"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-custody.log",
+      "log_sha256": "42eb981adff5d83d7278871d163a801c466a1eb81e7cf8655164e41c5cde074b",
+      "test": "custody"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-shell-workflow.log",
+      "log_sha256": "582a5304072c08c6baf517bbedee8245a14b53bc7868ee133eebb183ef94cf31",
+      "test": "shell-workflow"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/build-platform-shell-image/check-source.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-shell-source.log",
+      "log_sha256": "cc10c0c125c41d744102839aaf2af9dea2e1ac86a4317efc876614aba6277bca",
+      "test": "shell-source"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/validate-container-boundaries/smoke-test.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-runtime-final-image-boundary.log",
+      "log_sha256": "cd7fb8effed3735eb9b79e5b93a4e53db3fe264def62966ce2f78be79afd3206",
+      "test": "image-boundary"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "--tag",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "--port",
+        "39456"
+      ],
+      "exit_status": 0,
+      "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-persistence-smoke-final.log",
+      "log_sha256": "f19c6738b3eeec7bee1a22aa07b3243c9ab2001eb1ba90c7fa2105d572a73d39"
+    },
+    {
+      "exit_status": 0,
+      "image_id": "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-shell-smoke-final.log",
+      "log_sha256": "86e35d740f769cb239e32b5e370c242680680fa58887551aacfeb9ec5970c1b7"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",
+        "--retained-image",
+        "sha256:4ce50839d629f7753cddf03fadb813f6d47587f027c31c0af0852e0e01adf035",
+        "--support-image",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8"
+      ],
+      "exit_status": 1,
+      "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-retained-rollback.log",
+      "log_sha256": "e40564b87649bd38f1225303ae745298f9d6456b56a3c83deaff451cdccf3718",
+      "retained_image_id": "sha256:4ce50839d629f7753cddf03fadb813f6d47587f027c31c0af0852e0e01adf035"
+    },
+    {
+      "engine_identity": "ba435a31-5288-4bb4-88a6-f52f835b708d",
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-shell-build.log",
+      "log_sha256": "a95b4458ebeb93d99764dae7ac06065d750ac593a01f21075bcb0d943d021a04",
+      "same_engine": true,
+      "test": "delivery-shell-build"
+    },
+    {
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-persistence-context-build.log",
+      "log_sha256": "268cefc97dcca01bd9696d0a136c75602a29a4378701d68dfa1b6af3d7af3c63",
+      "same_engine": true,
+      "test": "delivery-persistence-context-build"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",
+        "--retained-image",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "--support-image",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "--port",
+        "39472"
+      ],
+      "exit_status": 0,
+      "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-retained-current-compatible.log",
+      "log_sha256": "93c67d86d4035ee95a6cb32c4676031bec3897f762d2ce683fe47a3a6663d791"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "--tag",
+        "sha256:ad69cb735f5fd8954b5dde02438d2ae02b0930502a23e69fc5844ba647c46298",
+        "--port",
+        "39457"
+      ],
+      "exit_status": 1,
+      "expected_negative_confirmed": false,
+      "image_id": "sha256:ad69cb735f5fd8954b5dde02438d2ae02b0930502a23e69fc5844ba647c46298",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-inactive-capability-negative.log",
+      "log_sha256": "d7194bc84be4b19d030ea55dcee37350c8138788963dcdc7dcecfa73b1c0343e"
+    },
+    {
+      "cases": "7 qualification unittest methods, 2 cleanup methods, 13 ECR outcome cases",
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-final-d6-i-custody.log",
+      "log_sha256": "778c7e7a8c1bd8f52aa09cd26b6c00ccf5eac50aeec0ff692b428f6418c8a0e3",
+      "test": "final-custody"
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-final-d6-i-runtime-configuration.log",
+      "log_sha256": "0806dec845d0202303fe25b3c7372d9c9be2b5f74c39708b326263ffee80d911",
+      "test": "final-runtime-configuration"
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py",
+        "QualificationTests.test_publication_guards_reject_control_and_identity_substitution"
+      ],
+      "exit_status": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-final-d6-scanner-environment.log",
+      "log_sha256": "92ab57641555e7e27231749fa8fa1202a7ee90c3ff5b1033a2f5b01f743cca53",
+      "test": "final-scanner-environment"
+    },
+    {
+      "cleanup": "all-five-effects-observed-absent",
+      "command": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py",
+        "--image",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8"
+      ],
+      "evidence_class": "local-finished-image-negative",
+      "exit_status": 0,
+      "expected_negative_confirmed": true,
+      "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-current-inactive-capability-negative.log",
+      "log_sha256": "2ca4cc28b32fded650395ecc720b9826683788aa08e1123e5e6a1d0361b4d5b5",
+      "observed_failure": "packaged-readiness-metric-ready-not-exported",
+      "test": "current-disconnected-observer-negative"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "--tag",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "--port",
+        "39459"
+      ],
+      "evidence_class": "local-finished-image",
+      "exit_status": 0,
+      "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-d6-persistence-current.log",
+      "log_sha256": "f19c6738b3eeec7bee1a22aa07b3243c9ab2001eb1ba90c7fa2105d572a73d39",
+      "test": "current-persistence-finished-image"
+    }
+  ],
+  "verification_processes_running": []
+}

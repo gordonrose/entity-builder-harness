@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -96,7 +96,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 validate_port
-if [[ -n "$IMAGE_REFERENCE" ]] && [[ ! "$IMAGE_REFERENCE" =~ ^.+@sha256:[a-f0-9]{64}$ ]]; then
+if [[ -n "$IMAGE_REFERENCE" ]] && [[ ! "$IMAGE_REFERENCE" =~ ^(.+@)?sha256:[a-f0-9]{64}$ ]]; then
   echo "ERROR: --image must be an immutable sha256 image reference." >&2
   exit 2
 fi
@@ -112,7 +112,7 @@ find_engine() {
 if ! ENGINE="$(find_engine)"; then
   if [ "$ALLOW_SKIP" = true ]; then
     echo "SKIP: no container engine found."
-    exit 0
+    exit 77
   fi
   echo "ERROR: docker is required for this image smoke test." >&2
   exit 1
@@ -121,16 +121,21 @@ fi
 if ! "$ENGINE" info >/dev/null 2>&1; then
   if [ "$ALLOW_SKIP" = true ]; then
     echo "SKIP: container engine is not running or not reachable: $ENGINE"
-    exit 0
+    exit 77
   fi
   echo "ERROR: container engine is not running or not reachable: $ENGINE" >&2
   exit 1
 fi
 
-cleanup() {
-  "$ENGINE" rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+cleanup() { python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py" --container "$CONTAINER_NAME" --container "$CONTAINER_NAME-task"; }
+finish() {
+  local original=$? cleanup_status=0
+  trap - EXIT
+  cleanup || cleanup_status=$?
+  if [[ "$original" -ne 0 ]]; then exit "$original"; fi
+  exit "$cleanup_status"
 }
-trap cleanup EXIT
+trap finish EXIT
 
 if [[ -n "$IMAGE_REFERENCE" ]]; then
   TAG="$IMAGE_REFERENCE"
@@ -143,7 +148,7 @@ qualify_relational_entrypoint() {
   local entrypoint="$1"
   local output
   set +e
-  output="$("$ENGINE" run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "$TAG" ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/$entrypoint" 2>&1)"
+  output="$("$ENGINE" run --rm --name "$CONTAINER_NAME-task" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "$TAG" ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/$entrypoint" 2>&1)"
   local status=$?
   set -e
   if [[ "$status" -ne 1 ]] || [[ "$output" != *'"outcome":"failed"'* ]]; then
@@ -208,4 +213,24 @@ main().catch((error) => {
 });
 NODE
 
+# Qualify enabled composition through a real exported health measurement.
+python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py" --container "$CONTAINER_NAME"
+metrics_series='[{"sourceName":"platform.health.state","sourceKind":"counter","sourceUnit":"count","instrumentName":"package.shell.health","description":"Package health","allowedLabelNames":["health_state"],"cardinalityLimit":4}]'
+"$ENGINE" run --detach --rm --name "$CONTAINER_NAME" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges --env HOST=0.0.0.0 --env PORT=3000 --env PLATFORM_SMOKE_APP_NAME=Package --env PLATFORM_SOURCE_COMMIT_SHA=package-qualification --env PLATFORM_OBSERVABILITY_METRICS_PROVIDER=cloudwatch-otel --env PLATFORM_OBSERVABILITY_METRICS_ENDPOINT=http://127.0.0.1:4318/v1/metrics --env PLATFORM_OBSERVABILITY_METRICS_REGION=eu-west-1 --env PLATFORM_OBSERVABILITY_SERVICE_NAME=platform-shell --env PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT=package-qualification --env PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS=1000 --env PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS=500 --env "PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON=$metrics_series" "$TAG" >/dev/null
+"$ENGINE" exec --detach "$CONTAINER_NAME" /nodejs/bin/node -e 'const fs=require("fs");require("http").createServer((req,res)=>{const chunks=[];req.on("data",b=>chunks.push(b));req.on("end",()=>{const b=Buffer.concat(chunks);if(req.url==="/v1/metrics"&&b.includes(Buffer.from("package.shell.health"))&&b.includes(Buffer.from("health_state"))&&b.includes(Buffer.from("ready")))fs.writeFileSync("/tmp/package-health-exported","observed");res.end();});}).listen(4318,"127.0.0.1");'
+node - "$PORT" <<'NODE'
+const base=`http://127.0.0.1:${process.argv[2]}`;
+(async()=>{for(let attempt=0;attempt<40;attempt++){try{if((await fetch(base+"/readyz")).status===200)return;}catch{}await new Promise(r=>setTimeout(r,250));}throw Error("enabled-shell-not-ready");})().catch(e=>{console.error(e.message);process.exit(1)});
+NODE
+metric_observed=false
+for attempt in $(seq 1 30); do
+  if "$ENGINE" exec "$CONTAINER_NAME" /nodejs/bin/node -e 'process.exit(require("fs").existsSync("/tmp/package-health-exported")?0:1)'; then metric_observed=true; break; fi
+  sleep 1
+done
+if [[ "$metric_observed" != true ]]; then echo 'ERROR: enabled shell metric was not exported.' >&2; exit 1; fi
+
+python3 -B scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py --image "$("$ENGINE" image inspect "$TAG" --format '{{.Id}}')"
+
+cleanup
+trap - EXIT
 echo "Platform shell image smoke test passed."

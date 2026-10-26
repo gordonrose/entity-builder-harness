@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -95,6 +95,35 @@ def explicit_path(raw):
     if not path.is_file():
         raise PlanError(f"file does not exist: {raw}")
     return path
+
+
+def changed_paths():
+    """Return current task candidates without staging or following deletions."""
+    changed = set(git("diff", "--name-only", "-z", "--diff-filter=ACMR", "HEAD").stdout.decode().split("\0"))
+    changed.update(git("ls-files", "--others", "--exclude-standard", "-z").stdout.decode().split("\0"))
+    return sorted(path for path in changed if path)
+
+
+def lifecycle_candidate(path):
+    """Only v2/v3 artifact headers belong to automatic lifecycle maintenance.
+
+    Legacy and headerless source can be part of a verification task but must not
+    be rewritten merely because a task-preparation command saw it. A malformed
+    leading artifact declaration remains a candidate so the normal planner can
+    report it instead of silently skipping it.
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise PlanError(f"artifact must be UTF-8 text: {exc}") from exc
+    try:
+        span = header_span(text)
+        if span is None or span.marker != "agentic-artifact":
+            return False
+        parsed = parse_header_text(text).get("agentic-artifact", {})
+        return not isinstance(parsed, dict) or parsed.get("schema") in ("agentic-artifact/v2", "agentic-artifact/v3")
+    except HeaderError:
+        return "agentic-artifact:" in text[:8192]
 
 
 class Header:
@@ -500,7 +529,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Report lifecycle changes for explicit paths; --apply writes only a fully valid plan. Never stages or commits."
     )
-    parser.add_argument("--paths", nargs="+", required=True, help="repository-relative explicit paths")
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--paths", nargs="+", help="repository-relative explicit paths")
+    selection.add_argument("--changed", action="store_true", help="prepare all changed v2/v3 artifact headers without staging")
+    parser.add_argument("--skip-non-artifacts", action="store_true", help="ignore headerless and legacy paths in an explicit task path set")
     parser.add_argument("--apply", action="store_true", help="apply the complete validated plan")
     parser.add_argument("--created-on", help="explicitly confirmed creation date when automatic Git evidence is insufficient")
     parser.add_argument("--status", choices=("deprecated", "superseded"), help="explicit lifecycle transition")
@@ -508,13 +540,20 @@ def main():
     parser.add_argument("--deprecated-on", help="confirmed historical deprecation date")
     parser.add_argument("--superseded-on", help="confirmed historical supersession date")
     args = parser.parse_args(sys.argv[2:])
-    report = {"mode": "apply" if args.apply else "report", "today_utc": TODAY, "plans": [], "errors": [], "applied": False}
+    if args.changed and (args.status or args.replacement or args.deprecated_on or args.superseded_on or args.created_on):
+        parser.error("--changed only refreshes existing lifecycle metadata; use --paths for explicit transitions or dates")
+    raw_paths = changed_paths() if args.changed else args.paths
+    skip_non_artifacts = args.changed or args.skip_non_artifacts
+    report = {"mode": "apply" if args.apply else "report", "selection": "changed-artifacts" if args.changed else "explicit-paths", "today_utc": TODAY, "plans": [], "skipped": [], "errors": [], "applied": False}
     plans = {}
-    for raw_path in args.paths:
+    for raw_path in raw_paths:
         try:
             path = explicit_path(raw_path)
             if path in plans:
                 raise PlanError("duplicate explicit path")
+            if skip_non_artifacts and not lifecycle_candidate(path):
+                report["skipped"].append({"path": path.relative_to(ROOT).as_posix(), "reason": "not-a-v2-or-v3-artifact"})
+                continue
             plan = prepare(path, args)
             plans[path] = plan
             report["plans"].append(plan["report"])

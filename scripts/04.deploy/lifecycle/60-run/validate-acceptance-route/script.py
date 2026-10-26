@@ -118,7 +118,7 @@ def input_values(path: Path, route: dict, *, root: Path = ROOT) -> dict:
     return values
 
 
-def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None = None) -> dict:
+def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None = None, *, probe_commands: bool = True) -> dict:
     command_root = command_root or root
     findings, references = [], set()
     def gap(code, value=None):
@@ -162,16 +162,22 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     if record_schema and document(record_schema).get('record_schema') != record.get('schema'): gap('acceptance-route-record-schema-invalid')
     record_path = reference(scope_contract.parent.parent, record.get('path'))
     if record_path is None: gap('acceptance-route-record-path-invalid')
-    outputs = route.get('outputs')
-    if not isinstance(outputs, dict) or set(outputs) != {'candidate_record', 'current_release_id'}:
-        gap('acceptance-route-outputs-invalid')
-        outputs = {}
-    expected_outputs = {
-        'candidate_record': {'command': 'collect', 'fact': 'candidate_record', 'kind': 'target-evidence-path'},
-        'current_release_id': {'command': 'current-release', 'fact': 'release_id', 'kind': 'release-id'},
-    }
-    if outputs != expected_outputs:
-        gap('acceptance-route-outputs-invalid')
+    succession = route.get('release_succession')
+    lifecycle = document(scope_contract.parent.parent.parent / 'scope-index.yml')
+    entries = lifecycle.get('scopes', [])
+    states = [entry.get('lifecycle') for entry in entries if isinstance(entry, dict) and entry.get('id') == contract.get('scope')]
+    historical_succession = isinstance(succession, dict) and set(succession) == {'not_applicable'} and succession['not_applicable'] in {'accepted-historical', 'retired'} and states == [succession['not_applicable']]
+    if not historical_succession:
+        outputs = route.get('outputs')
+        if not isinstance(outputs, dict) or set(outputs) != {'candidate_record', 'current_release_id'}:
+            gap('acceptance-route-outputs-invalid')
+            outputs = {}
+        expected_outputs = {
+            'candidate_record': {'command': 'collect', 'fact': 'candidate_record', 'kind': 'target-evidence-path'},
+            'current_release_id': {'command': 'current-release', 'fact': 'release_id', 'kind': 'release-id'},
+        }
+        if outputs != expected_outputs:
+            gap('acceptance-route-outputs-invalid')
     evidence_root = scope_contract.parent.parent / '30-release-evidence'
     values.update(
         scope_contract=str(scope_contract), accepted_record=str(record_path or ''),
@@ -183,6 +189,7 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     # The collector takes one bounded manifest; the contents are checked only at
     # the acceptance stage. A package build must not require future live proof.
     values['acceptance_inputs'] = '/tmp/acceptance-route-inputs.json'
+    values.update(evidence_root=str(scope_contract.parent.parent / '30-release-evidence'), release_candidate='/tmp/release-candidate.yml', expected_predecessor='release-' + 'a' * 24)
     commands = route.get('commands')
     if not isinstance(commands, dict) or not commands: gap('acceptance-route-commands-invalid'); commands = {}
     probes = []
@@ -210,33 +217,57 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
         if not isinstance(proof, dict) or not isinstance(proof.get('command'), str) or proof.get('command') not in commands or not all(isinstance(proof.get(field), str) and proof[field] for field in ('proof_type', 'operation', 'result_code', 'image_role')): gap('acceptance-route-proof-binding-invalid', name)
     sequence = route.get('sequence')
     if not isinstance(sequence, list) or any(not isinstance(pair, list) or len(pair) != 2 or any(not isinstance(name, str) or name not in proofs for name in pair) for pair in sequence): gap('acceptance-route-sequence-invalid')
-    for field, value in [('collector', route.get('collector')), ('record-validator', record.get('validator')), ('candidate-validator', route.get('candidate_validator')), ('promotion', route.get('promotion'))]:
+    stages = [('collector', route.get('collector')), ('record-validator', record.get('validator')), ('promotion', route.get('promotion'))]
+    if not historical_succession: stages.append(('candidate-validator', route.get('candidate_validator')))
+    for field, value in stages:
         if not isinstance(value, str) or value not in commands: gap('acceptance-route-stage-missing', field)
+    succession = route.get('release_succession')
+    lifecycle = document(scope_contract.parent.parent.parent / 'scope-index.yml')
+    entries = lifecycle.get('scopes', [])
+    states = [entry.get('lifecycle') for entry in entries if isinstance(entry, dict) and entry.get('id') == contract.get('scope')]
+    if isinstance(succession, dict) and set(succession) == {'not_applicable'}:
+        if succession['not_applicable'] not in {'accepted-historical', 'retired'} or states != [succession['not_applicable']]:
+            gap('acceptance-route-succession-non-applicability-invalid')
+    elif not isinstance(succession, dict) or set(succession) != {'candidate_schema', 'candidate_producer', 'initialize', 'promotion', 'current_validator'}:
+        gap('acceptance-route-release-succession-missing')
+    else:
+        if succession.get('candidate_schema') != 'deploy/release-candidate/v1' or succession.get('candidate_producer') != route.get('collector'):
+            gap('acceptance-route-release-candidate-binding-invalid')
+        for field, operation in [('initialize', 'initialize-legacy'), ('promotion', 'promote'), ('current_validator', 'validate-current')]:
+            name = succession.get(field)
+            command = commands.get(name, {})
+            argv = command.get('argv', [])
+            if name == route.get('promotion') or command.get('owner') != 'deploy.command.release-succession' or '--operation' not in argv or argv[argv.index('--operation') + 1:argv.index('--operation') + 2] != [operation]:
+                gap('acceptance-route-release-succession-command-invalid', field)
     downstream = route.get('downstream')
     if not isinstance(downstream, list) or not downstream or any(not isinstance(item, str) or item not in commands for item in downstream): gap('acceptance-route-downstream-gates-missing')
-    if not findings:
+    if not findings and probe_commands:
         reports = {}
         for name, script, argv in probes:
             key = tuple(argv)
             try:
-                if key in reports: continue
-                result = subprocess.run([argv[0], str(script), *argv[2:], '--validate-arguments'], cwd=command_root, capture_output=True, text=True, timeout=15, env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'AWS_EC2_METADATA_DISABLED': 'true'})
-                parsed = json.loads(result.stdout)
-                reports[key] = parsed
-                if result.returncode or not isinstance(parsed, dict) or parsed.get('schema') != 'deploy/command-arguments-report/v1' or parsed.get('verdict') != 'valid': gap('acceptance-route-command-arguments-invalid', name)
+                if key not in reports:
+                    result = subprocess.run([argv[0], str(script), *argv[2:], '--validate-arguments'], cwd=command_root, capture_output=True, text=True, timeout=15, env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'AWS_EC2_METADATA_DISABLED': 'true'})
+                    reports[key] = (result.returncode, json.loads(result.stdout))
+                # Cache the command observation, never another alias's contract verdict.
+                returncode, parsed = reports[key]
+                declared_inputs = commands[name].get('runtime_input_contract')
+                if declared_inputs is not None and (not isinstance(parsed, dict) or parsed.get('runtime_input_contract') != declared_inputs):
+                    gap('acceptance-route-runtime-input-command-mismatch', name)
+                if returncode or not isinstance(parsed, dict) or parsed.get('schema') != 'deploy/command-arguments-report/v1' or parsed.get('verdict') != 'valid': gap('acceptance-route-command-arguments-invalid', name)
             except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError): gap('acceptance-route-command-arguments-invalid', name)
         for name, proof in proofs.items():
             command = commands[proof['command']]
-            parsed = reports.get(tuple(resolve(command['argv'], values)), {})
+            parsed = reports.get(tuple(resolve(command['argv'], values)), (None, {}))[1]
             expected = {key: value for key, value in proof.items() if key not in {'command', 'image_role'}}
             if not isinstance(parsed, dict) or parsed.get('proof_contract') != expected:
                 gap('acceptance-route-proof-command-contract-mismatch', name)
-    return {'schema': 'deploy/acceptance-route-report/v1', 'target': contract.get('target'), 'scope': contract.get('scope'), 'verdict': 'gap' if findings else 'covered', 'validation': 'route-template-actual-command-parsers', 'findings': findings, 'references': sorted(references)}
+    return {'schema': 'deploy/acceptance-route-report/v1', 'target': contract.get('target'), 'scope': contract.get('scope'), 'verdict': 'gap' if findings else 'covered', 'validation': 'route-template-actual-command-parsers' if probe_commands else 'route-structure', 'findings': findings, 'references': sorted(references)}
 
 
-def inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None = None) -> dict:
+def inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None = None, *, probe_commands: bool = True) -> dict:
     try:
-        return _inspect(scope_contract, root, command_root)
+        return _inspect(scope_contract, root, command_root, probe_commands=probe_commands)
     except (KeyError, TypeError, ValueError, OSError):
         return {'schema': 'deploy/acceptance-route-report/v1', 'verdict': 'gap', 'findings': [{'code': 'acceptance-route-contract-malformed'}], 'references': []}
 

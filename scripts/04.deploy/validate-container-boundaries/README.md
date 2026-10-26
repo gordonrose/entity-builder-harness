@@ -4,7 +4,7 @@ id: deploy.script.validate-container-boundaries.readme
 version: 1
 status: active
 created_on: "2026-06-30"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -32,7 +32,7 @@ governed infra image boundary.
 Allowed Dockerfile path shape:
 
 ```text
-infra/<deploy-layer>/<deploy-track>/image/Dockerfile
+infra/<deploy-layer>/<deploy-track>/image/[<capability>/]Dockerfile
 ```
 
 Each Dockerfile must have:
@@ -67,3 +67,8 @@ For smoke tests or alternate roots:
 ```bash
 bash scripts/04.deploy/validate-container-boundaries/script.sh --root /path/to/repo
 ```
+
+A build wrapper supplies `--build-context repository-root` or `image-directory`
+when validating its actual context. A root-only ignore file is accepted only for
+the explicit repository-root context; it cannot protect an image-directory build.
+The default census checks sibling ignore declarations without assuming a context.

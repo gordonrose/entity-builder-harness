@@ -4,7 +4,7 @@
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.implementation
 #   version: 2
-#   status: draft
+#   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
 #   layer: 04.deploy
@@ -24,6 +24,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -42,6 +43,7 @@ CANDIDATE_DIRECTORY = "release-candidates"
 COMPATIBILITY_DIRECTORY = "rollback-compatibility"
 EVIDENCE_DIRECTORIES = frozenset({"proof-receipts", "package-receipts", "observability-receipts", "rollback-compatibility", "proof-applicability"})
 REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+EVIDENCE_CLASS = "live"
 
 
 class SuccessionFailure(ValueError):
@@ -159,7 +161,9 @@ def proof_set(record: dict[str, Any], root: Path | None = None) -> dict[str, dic
     return result
 
 
-def candidate_identity(record: dict[str, Any], root: Path | None = None) -> tuple[str, str, str, dict[str, Any]]:
+def candidate_identity(record: dict[str, Any], root: Path | None = None, *, current_contracts: bool = True) -> tuple[str, str, str, dict[str, Any]]:
+    if record.get("evidence_class", "live") != EVIDENCE_CLASS:
+        raise SuccessionFailure("release-succession-evidence-class-invalid")
     if record.get("schema") != CANDIDATE_SCHEMA or record.get("status") != "verified":
         raise SuccessionFailure("release-succession-candidate-schema-invalid")
     target, scope = text(record.get("target")), text(record.get("scope"))
@@ -172,7 +176,7 @@ def candidate_identity(record: dict[str, Any], root: Path | None = None) -> tupl
         if not isinstance(contract, dict) or set(contract) != {"path", "sha256"}:
             raise SuccessionFailure("release-succession-candidate-contract-invalid")
         contracts[key] = {"path": text(contract.get("path")), "sha256": sha(contract.get("sha256"))}
-    if root is not None:
+    if root is not None and current_contracts:
         for contract in contracts.values():
             path = repository_file(contract["path"])
             try:
@@ -205,7 +209,9 @@ def candidate_identity(record: dict[str, Any], root: Path | None = None) -> tupl
 
 
 def legacy_identity(record: dict[str, Any], raw: bytes) -> tuple[str, str, str, dict[str, Any]]:
-    if record.get("schema") != LEGACY_SCHEMA or record.get("status") != "accepted":
+    if record.get("evidence_class", "live") != EVIDENCE_CLASS:
+        raise SuccessionFailure("release-succession-evidence-class-invalid")
+    if record.get("schema") != LEGACY_SCHEMA or record.get("status") != ("rehearsed" if EVIDENCE_CLASS == "simulated" else "accepted"):
         raise SuccessionFailure("release-succession-legacy-schema-invalid")
     target, scope = text(record.get("target")), text(record.get("scope"))
     release = record.get("release")
@@ -247,6 +253,8 @@ def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> 
     controlled rollback may select only after the corrected configuration and
     permission surfaces have been proved.
     """
+    if record.get("evidence_class", "live") != EVIDENCE_CLASS:
+        raise SuccessionFailure("release-succession-evidence-class-invalid")
     if record.get("schema") != COMPATIBILITY_SCHEMA or record.get("status") != "verified":
         raise SuccessionFailure("release-succession-compatibility-schema-invalid")
     target, scope = text(record.get("target")), text(record.get("scope"))
@@ -275,6 +283,8 @@ def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> 
     if not isinstance(workloads, list) or not workloads or any(not isinstance(value, str) or not value for value in workloads) or len(set(workloads)) != len(workloads):
         raise SuccessionFailure("release-succession-compatibility-workloads-invalid")
     proofs = proof_set(record, root)
+    if proof["receipt_count"] != len(proofs):
+        raise SuccessionFailure("release-succession-compatibility-proof-count-mismatch")
     if root is not None:
         for contract in contracts.values():
             path = repository_file(contract["path"])
@@ -319,6 +329,8 @@ def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> 
 
 
 def compatibility_record(root: Path, identifier: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not re.fullmatch(r"rollback-compatibility-[0-9a-f]{24}", identifier):
+        raise SuccessionFailure("release-succession-compatibility-reference-invalid")
     path = root / COMPATIBILITY_DIRECTORY / f"{identifier}.yml"
     record, raw = document(path)
     target, scope, _, identity = compatibility_identity(record, root)
@@ -358,6 +370,8 @@ def record_compatibility(root: Path, source: Path) -> tuple[str, str]:
 
 
 def history_record_for_id(root: Path, identifier: str) -> tuple[dict[str, Any], bytes]:
+    if not re.fullmatch(r"release-[0-9a-f]{24}", identifier):
+        raise SuccessionFailure("release-succession-history-reference-invalid")
     value, raw = document(root / HISTORY_DIRECTORY / f"{identifier}.yml")
     history_identity(root, {"path": str(Path(HISTORY_DIRECTORY) / f"{identifier}.yml"), "sha256": sha256_bytes(raw)})
     return value, raw
@@ -378,15 +392,23 @@ def atomic_write(path: Path, payload: bytes) -> None:
 
 
 def immutable_write(path: Path, payload: bytes) -> None:
-    if path.exists():
+    """Publish a complete file once, including across concurrent producers."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="wb", dir=path.parent, prefix=f".{path.name}.", suffix=".tmp", delete=False) as output:
+            temporary = Path(output.name)
+            output.write(payload)
+            output.flush()
+            os.fsync(output.fileno())
         try:
-            existing = path.read_bytes()
-        except OSError as error:
-            raise SuccessionFailure("release-succession-history-unreadable") from error
-        if existing != payload:
-            raise SuccessionFailure("release-succession-history-conflict")
-        return
-    atomic_write(path, payload)
+            os.link(temporary, path)
+        except FileExistsError:
+            if path.is_symlink() or path.read_bytes() != payload:
+                raise SuccessionFailure("release-succession-history-conflict")
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def history_identity(root: Path, reference: dict[str, Any]) -> tuple[str, str, str, str | None]:
@@ -422,7 +444,9 @@ def history_identity(root: Path, reference: dict[str, Any]) -> tuple[str, str, s
     elif kind == "verified-release-candidate":
         under(root, source, CANDIDATE_DIRECTORY)
         source_record, _ = document(source)
-        _, _, _, identity = candidate_identity(source_record, root)
+        # Historical custody verifies retained bytes, not today's contracts.
+        # A new promotion/rollback separately checks current contract identity.
+        _, _, _, identity = candidate_identity(source_record, root, current_contracts=False)
         expected_contracts = {"configuration": identity["configuration_contract"], "permissions": identity["permission_contract"]}
         expected_proofs = identity["proof_set_sha256"]
     else:
@@ -462,6 +486,15 @@ def current(root: Path) -> dict[str, Any] | None:
     history_target, history_scope, history_release, history_predecessor = history_identity(root, {"path": path_value, "sha256": digest})
     if (history_target, history_scope, history_release, history_predecessor) != (value["target"], value["scope"], value["release_id"], predecessor):
         raise SuccessionFailure("release-succession-current-history-mismatch")
+    seen = {value["release_id"]}
+    while predecessor is not None:
+        if predecessor in seen:
+            raise SuccessionFailure("release-succession-history-cycle")
+        seen.add(predecessor)
+        historical, _ = history_record_for_id(root, predecessor)
+        if historical.get("target") != value["target"] or historical.get("scope") != value["scope"] or historical.get("release", {}).get("id") != predecessor:
+            raise SuccessionFailure("release-succession-history-identity-invalid")
+        predecessor = historical.get("predecessor")
     return value
 
 
@@ -530,7 +563,8 @@ def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> in
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False)
+    global REPOSITORY_ROOT, EVIDENCE_CLASS
+    parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
     parser.add_argument("--operation", choices=("initialize-legacy", "promote", "record-compatibility", "validate-candidate", "validate-current"))
     parser.add_argument("--evidence-root", type=Path)
     parser.add_argument("--legacy-record", type=Path)
@@ -538,16 +572,26 @@ def main() -> int:
     parser.add_argument("--expected-predecessor")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
-    args, unknown = parser.parse_known_args()
-    if args.validate_arguments:
-        if unknown:
-            return report("blocked", "release-succession-arguments-invalid")
-        print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []}))
-        return 0
+    parser.add_argument("--rehearsal-root", type=Path)
+    try:
+        args, unknown = parser.parse_known_args()
+    except argparse.ArgumentError:
+        return report("blocked", "release-succession-arguments-invalid")
     if unknown or args.operation is None or args.evidence_root is None or (args.operation in {"initialize-legacy", "promote"} and not isinstance(args.expected_predecessor, str)):
         return report("blocked", "release-succession-arguments-invalid")
+    if args.operation == "initialize-legacy" and (args.legacy_record is None or args.candidate_record is not None) or args.operation in {"promote", "record-compatibility", "validate-candidate"} and (args.candidate_record is None or args.legacy_record is not None) or args.operation == "validate-current" and (args.legacy_record is not None or args.candidate_record is not None or args.expected_predecessor is not None):
+        return report("blocked", "release-succession-arguments-invalid")
+    if args.operation in {"record-compatibility", "validate-candidate"} and args.expected_predecessor is not None:
+        return report("blocked", "release-succession-arguments-invalid")
+    if args.validate_arguments:
+        print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []})); return 0
     root = args.evidence_root.resolve()
     try:
+        if args.rehearsal_root is not None:
+            rehearsal = args.rehearsal_root.resolve()
+            if not rehearsal.is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.is_relative_to(rehearsal) or rehearsal.is_relative_to(REPOSITORY_ROOT.resolve()) or REPOSITORY_ROOT.resolve().is_relative_to(rehearsal):
+                raise SuccessionFailure("release-succession-rehearsal-root-invalid")
+            REPOSITORY_ROOT, EVIDENCE_CLASS = rehearsal, "simulated"
         if args.operation == "validate-current":
             if args.legacy_record is not None or args.candidate_record is not None or args.expected_predecessor is not None:
                 raise SuccessionFailure("release-succession-arguments-invalid")
@@ -587,7 +631,7 @@ def main() -> int:
                 verdict, identifier = promote(root, target=target, scope=scope, identity=identity, source_path=source, source_digest=sha256_bytes(raw), expected_predecessor=args.expected_predecessor, legacy=False)
             return report(verdict, "release-succession-current-reference-advanced", facts={"target": target, "scope": scope, "release_id": identifier})
     except (SuccessionFailure, OSError) as error:
-        return report("blocked", str(error) if isinstance(error, SuccessionFailure) else "release-succession-evidence-root-unwritable")
+        return report("blocked", str(error) if isinstance(error, SuccessionFailure) else "release-succession-storage-unavailable")
 
 
 if __name__ == "__main__":

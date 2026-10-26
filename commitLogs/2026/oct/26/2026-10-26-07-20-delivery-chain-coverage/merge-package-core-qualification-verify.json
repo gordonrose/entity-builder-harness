@@ -1,0 +1,22 @@
+{
+  "name": "core-qualification-verify",
+  "argv": [
+    "python3",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+    "verify",
+    "--image",
+    "sha256:bf228554c62d451c558aa2531876f1526eced9efa5f956190542601baaffe5b3",
+    "--receipt",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification.json",
+    "--configuration-input",
+    "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+    "*"
+  ],
+  "started_at": "2026-10-26T13:49:51.326846+00:00",
+  "finished_at": "2026-10-26T13:49:51.943569+00:00",
+  "duration_seconds": 0.617,
+  "exit_code": 0,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification-verify.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification-verify.stderr.log"
+}

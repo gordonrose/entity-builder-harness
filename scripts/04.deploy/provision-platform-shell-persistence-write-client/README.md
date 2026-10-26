@@ -4,7 +4,7 @@ id: deploy.script.provision-platform-shell-persistence-write-client.readme
 version: 1
 status: active
 created_on: "2026-09-24"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -54,3 +54,12 @@ Live execution is an AWS mutation and requires current-chat approval:
 ```bash
 npm run platform:shell:persistence-write-client:provision -- --execute
 ```
+
+`--reconcile --json` is observation-only: it lists the declared resource server,
+client and secret metadata without retrieving secret values. It distinguishes
+absent, partial, present-but-unqualified and uncertain outcomes. Secret deletion
+pending, duplicate identities, denied reads and paginated/incomplete results
+cannot become completed cleanup or qualification. Failed compensation preserves
+the original safe failure and reports `compensation-unproven-reconcile-required`.
+The existing invocation remains blocked until the reviewed partial state is
+resolved; reconciliation never repeats provisioning automatically.

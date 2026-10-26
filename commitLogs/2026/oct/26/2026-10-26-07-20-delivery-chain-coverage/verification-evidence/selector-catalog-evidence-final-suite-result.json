@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "bash",
+    "scripts/repo/check-selection/smoke-test.sh"
+  ],
+  "exit_code": 0,
+  "seconds": 109.589,
+  "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-final-suite.log"
+}

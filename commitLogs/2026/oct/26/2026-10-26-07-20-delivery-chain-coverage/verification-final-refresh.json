@@ -1,0 +1,55 @@
+{
+  "schema": "deploy/governance-refresh-verification/v1",
+  "checks": [
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+        "--paths",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+        "scripts/repo/check-selection/checks.yml",
+        ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.131,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/final-headers-refresh.log",
+      "sha256": "ebc20abd9892ff560a80361c84e1ba059cc0128e540024cd13b88e293470bd99"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/generate-recognition-sources/script.sh",
+        "--check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 3.787,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/final-recognition-current.log",
+      "sha256": "263ff6630ad5719f1715d111b2de1e78d7dc40970d910af7a1e8e6788b54e481"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/validate-recognition-sources/script.sh",
+        "--current",
+        "--json"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.287,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/final-recognition-valid.log",
+      "sha256": "16d0abdc4b0879e3c58bc619fb57f50b002615e52c1fa70e735eba5fc9db7fe5"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.049,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/final-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

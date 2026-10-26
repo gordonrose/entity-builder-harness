@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-28"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -82,5 +82,37 @@ assert compiled["input_fingerprints"]["policy_pack"]["sha256"]
 assert compiled["input_fingerprints"]["compiler"]["sha256"]
 assert compiled["rule_graph"]["edge_count"] > 0
 PY
+
+python3 - "$INDEX_FILE" "$TMP_DIR" <<'ARCHIVE_TEST'
+import json, os, shutil, subprocess, sys
+from pathlib import Path
+root=Path.cwd(); fixture=Path(sys.argv[2])/'source-archive';fixture.mkdir()
+for directory in ['.agentic','.github','scripts','infra','docs']:
+    shutil.copytree(root/directory,fixture/directory,ignore=shutil.ignore_patterns('__pycache__','node_modules','.cache'))
+for name in ['package.json','AGENTS.md','packages/core/README.md','packages/core/src/index.ts','packages/core/src/audit/index.ts','packages/core/src/queues/index.ts','platform/contracts/README.md','platform/adapters/README.md']:
+    path=fixture/name;path.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(root/name,path)
+source_commit=subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'],text=True).strip()
+env={**os.environ,'RAG_REPO_ROOT':str(fixture),'RAG_SOURCE_COMMIT_SHA':source_commit}
+# Match the real packaged-source runtime: derive recognition from the files
+# actually exported into the archive, rather than retaining checkout-only
+# artifact references for application/test files the archive does not carry.
+regenerated=subprocess.run(['bash',str(root/'scripts/02.rag-rulebook/generate-recognition-sources/script.sh'),'--write-all'],env=env,text=True,capture_output=True)
+assert regenerated.returncode==0,regenerated.stderr
+command=['bash',str(root/'scripts/02.rag-rulebook/compile-retrieval-policy/script.sh'),'--current','--index',sys.argv[1]]
+result=subprocess.run(command,env=env,text=True,capture_output=True)
+assert result.returncode!=0 and 'source path does not exist: .codex/rules/governed-scripts.rules' in result.stderr,(result.returncode,result.stderr)
+result=subprocess.run(command+['--source-layout','packaged-source-archive'],env=env,text=True,capture_output=True)
+assert result.returncode==0,result.stderr
+compiled=json.loads(result.stdout)
+assert compiled['source_layout']=='packaged-source-archive'
+bundle=next(item for item in compiled['evidence_bundles'] if item['question_category_id']=='question.harness.governed-script-permissions')
+expected={'.codex/rules/governed-scripts.rules','.claude/settings.json','.vibe/config.toml'}
+assert set(bundle['unavailable_sources'])==expected
+assert expected.issubset(bundle['always_source_paths']) and all(bundle['unavailable_sources'].values())
+(fixture/'AGENTS.md').unlink()
+result=subprocess.run(command+['--source-layout','packaged-source-archive'],env=env,text=True,capture_output=True)
+assert result.returncode!=0 and 'source path does not exist: AGENTS.md' in result.stderr,(result.returncode,result.stderr)
+print('Archive evidence availability CLI checks passed (3).')
+ARCHIVE_TEST
 
 echo "Compiled retrieval policy smoke test passed."

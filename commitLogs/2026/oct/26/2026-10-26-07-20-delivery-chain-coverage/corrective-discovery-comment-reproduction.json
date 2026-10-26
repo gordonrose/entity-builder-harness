@@ -1,0 +1,16 @@
+{
+  "phase": "before-supported-comment-repair",
+  "argv": [
+    "python3",
+    "scripts/04.deploy/inventory-deploy-control/script.py",
+    "--root",
+    "<disposable>",
+    "--delivery",
+    "--check",
+    "--json"
+  ],
+  "exit_code": 0,
+  "findings": [],
+  "fixture_source": "// agentic-artifact:\n//   effects: [network, aws-mutation]\nconsole.log(\"fixture only\");\n",
+  "source_discovered": false
+}

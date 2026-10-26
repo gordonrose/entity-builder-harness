@@ -1,0 +1,5 @@
+DIAGNOSTIC_CODE=IMAGE_SMOKE_BUILD_FAILED
+LIFECYCLE_STAGE=40-package
+SUMMARY=core-server image build did not complete
+NEXT_CHECK=inspect the bounded build diagnostic and image contract
+CHILD_OUTPUT=not-retained-unstructured-output

@@ -1,0 +1,178 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities-merge-metadata.2026-10-26
+#   version: 1
+#   status: active
+#   created_on: "2026-10-26"
+#   updated_on: "2026-10-26"
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines: [architecture, agentic, security, sre]
+#   kind: review-record
+#   purpose: Independently rereview the date-only container source revision while preserving accepted historical proof.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.rules.shared.container-image-management
+#     path: docs/04.deploy/rules/shared/container-image-management.yml
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-10-26.04-deploy.container-image-capabilities-merge-metadata
+status: accepted
+source_material:
+  path: docs/04.deploy/source-material/shared/container-image-management.md
+  corpus_id: corpus.04.deploy
+  vertical: shared-container-image-management-and-anti-sprawl
+  source_state: accepted
+  sha256: d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1
+  target_rule_paths:
+  - docs/04.deploy/rules/shared/container-image-management.yml
+threshold:
+  passing_score: 9.5
+  required_roles:
+  - architect
+  - agentic-engineer
+  - secops-engineer
+  - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+iterations:
+- iteration: 1
+  source_revision_summary: Fresh rereview of current container source after changing only its artifact updated_on
+    from 2026-10-20 to 2026-10-26. Reversing that single field reproduces the prior accepted source SHA-256 exactly;
+    all policy text is unchanged. Prior accepted source-review records remain immutable.
+  reviewer_assessments:
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.6
+      coverage: 9.8
+      execution_variables: 9.7
+      human_readability: 9.8
+      machine_readability: 9.7
+      necessity: 9.8
+      performance: 9.6
+      production_grade_gaps: 9.6
+      security: 9.7
+      token_optimization: 9.7
+    overall_score: 9.7
+    recommendations: []
+    role: architect
+    evidence:
+    - Reviewer /root/independent_review performed four separate role-specific assessments of the complete current
+      source. These are four roles exercised by one reviewer, not four distinct agents.
+    - 'Current source SHA-256: d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1. The prior accepted
+      source is reproduced by reversing only updated_on; see merge-metadata-plan.json in the delivery-chain session.'
+    - 'Coverage and necessity: one deploy-owned image convention prevents competing Dockerfile locations while keeping
+      runtime source and build commands with their existing owners.'
+    - 'Production gaps and execution variables: capability depth/slug, effective context, runtime identity, entrypoint,
+      ports and immutable provenance are explicit; service configuration and provider operations remain with their
+      owning contracts.'
+    - 'Human/machine readability and token cost: stable headings, path examples and required-variable lists yield
+      bounded rules without a parallel container registry.'
+    - 'Security, cost and performance: minimal copy/base/runtime boundaries reduce exposure and runtime overhead;
+      rebuild and smoke/provenance obligations apply at the relevant lifecycle stage.'
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.6
+      coverage: 9.7
+      execution_variables: 9.8
+      human_readability: 9.7
+      machine_readability: 9.8
+      necessity: 9.8
+      performance: 9.6
+      production_grade_gaps: 9.6
+      security: 9.7
+      token_optimization: 9.8
+    overall_score: 9.7
+    recommendations: []
+    role: agentic-engineer
+    evidence:
+    - Reviewer /root/independent_review performed four separate role-specific assessments of the complete current
+      source. These are four roles exercised by one reviewer, not four distinct agents.
+    - 'Current source SHA-256: d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1. The prior accepted
+      source is reproduced by reversing only updated_on; see merge-metadata-plan.json in the delivery-chain session.'
+    - 'Coverage and necessity: deterministic placement and source-to-rule ownership remove path guessing for future
+      image definitions.'
+    - 'Production gaps and execution variables: optional capability is exactly one lowercase slug; context-specific
+      effective ignore and required checks define executable choices without inferring a permissive fallback.'
+    - 'Human/machine readability and token optimization: named sections, explicit must/do-not obligations and compact
+      variables support the existing concern rule and selector fixture.'
+    - 'Security, cost and performance: source remains non-executable explanation material; scripts own bounded builds/smokes,
+      deployment waits for immutable proof, and one authoritative boundary limits repeated scans.'
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.6
+      coverage: 9.7
+      execution_variables: 9.7
+      human_readability: 9.7
+      machine_readability: 9.7
+      necessity: 9.8
+      performance: 9.6
+      production_grade_gaps: 9.6
+      security: 9.8
+      token_optimization: 9.7
+    overall_score: 9.7
+    recommendations: []
+    role: secops-engineer
+    evidence:
+    - Reviewer /root/independent_review performed four separate role-specific assessments of the complete current
+      source. These are four roles exercised by one reviewer, not four distinct agents.
+    - 'Current source SHA-256: d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1. The prior accepted
+      source is reproduced by reversing only updated_on; see merge-metadata-plan.json in the delivery-chain session.'
+    - "Coverage and necessity: build context, sensitive-file exclusion, runtime identity and immutable publication\
+      \ provenance cover the source vertical\u2019s principal security boundaries."
+    - 'Production gaps and variables: root exceptions require reasons/controls/review; required image, base digest,
+      SBOM, scan, attestation and verifier identities are explicit before staging or production.'
+    - 'Human/machine readability and token optimization: prohibited private inputs and context-dependent ignore
+      requirements are concrete enough to derive fail-closed checks.'
+    - 'Cost and performance: minimum copied files, trusted minimal base and bounded runtime writes constrain unnecessary
+      image content without inventing workload security policy.'
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.7
+      coverage: 9.7
+      execution_variables: 9.7
+      human_readability: 9.7
+      machine_readability: 9.7
+      necessity: 9.8
+      performance: 9.7
+      production_grade_gaps: 9.6
+      security: 9.7
+      token_optimization: 9.7
+    overall_score: 9.7
+    recommendations: []
+    role: senior-sre
+    evidence:
+    - Reviewer /root/independent_review performed four separate role-specific assessments of the complete current
+      source. These are four roles exercised by one reviewer, not four distinct agents.
+    - 'Current source SHA-256: d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1. The prior accepted
+      source is reproduced by reversing only updated_on; see merge-metadata-plan.json in the delivery-chain session.'
+    - 'Coverage and necessity: placement, health, smoke, drift and provenance form the operating boundary for every
+      deployable image.'
+    - 'Production gaps and execution variables: source names readiness evidence and change triggers; workload-specific
+      rollout/recovery operations remain with deployment owners rather than being redefined by image governance.'
+    - 'Human/machine readability and token optimization: ordered update rules and named smoke command/health/runtime
+      variables give maintainers a reviewable handoff.'
+    - 'Security, cost and performance: final runtime user/write bounds and minimal base/copy controls are explicit;
+      image/corpus freshness and exact digest proof prevent reuse of unqualified deployment artifacts.'
+  cross_review_summary:
+    agreement:
+    - All four role-specific rereviews accept the current exact source hash with no blocking gaps in this source
+      vertical.
+    - The sole source delta is lifecycle-date maintenance; capability/context/security/provenance policies are unchanged.
+    - Source acceptance does not claim fresh generated artifacts, image qualification or live deployment proof.
+    disagreement: []
+    unresolved_blockers: []
+  recommendation_handling:
+    applied: []
+    rejected: []
+  rerun_required: false
+final_decision:
+  status: accepted
+  summary: Accepted after four role-specific rereviews by one independent reviewer, /root/independent_review. The
+    date-only source revision receives a new immutable record; downstream derivation and generated/runtime verification
+    remain separate obligations.
+  accepted_source_sha256: d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1
+  accepted_at_utc: '2026-10-26T13:39:11Z'
+  required_before_derivation: []

@@ -4,7 +4,7 @@ id: deploy.script.reconcile-platform-shell-staging.readme
 version: 2
 status: active
 created_on: "2026-09-26"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -23,7 +23,8 @@ used_by:
 # Platform-Shell Staging Deployment Reconciliation
 
 This command is the mandatory boundary between a reviewed infrastructure plan
-and an AWS mutation. It makes no provisioning change. It validates the source
+and an AWS mutation. Observation modes make no provisioning change; the guarded
+release modes below execute only an exactly reviewed change set. It validates the source
 policy, then checks only the declared account, Foundation and artifact-stack
 state, fresh passive CloudFormation drift evidence, private artifact-bucket
 controls, and the tag-scoped monthly budget. Its output contains only check identifiers and a
@@ -131,3 +132,42 @@ npm run platform:shell:deployment-reconciliation -- \
 ```bash
 npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-bootstrap-recovery-service-change-set --service-change-set reviewed-name --known-foundation-drift-evidence /tmp/fresh-foundation-evidence.json --service-drift-evidence /tmp/fresh-service-evidence.json
 ```
+
+The executable release modes consume `--deployment-manifest <path>` and the
+manifest's package-custody receipt. `runtime-alignment` reads the reviewed source
+and provider observations: exact source/deployed templates; drift assessed after
+stack updates and within 15 minutes; all declared runtime task configurations;
+workload role trust, inline policies and attached policy identities; service
+health; and running immutable image digests. It writes the manifest's fresh
+`acceptance.current_observation` and an immutable candidate under
+`acceptance.evidence_root`. Generic release succession performs promotion as a
+separate compare-and-swap step. Historical custody remains usable after the
+original CI download expires because the accepted proof set retains its bytes.
+
+`service-update` and `service-rollback` are the guarded mutation entrypoints.
+Both require `--service-change-set`, `--expected-predecessor`,
+`--realization-facts` and `--realization-change-summary`. First creation uses
+`--expected-predecessor none`; it requires a CREATE change set and absent or
+review-only stack, qualification, declared default configuration, and observed
+Foundation/permission/artifact-store/budget prerequisites. A successor requires
+`--current-deployment-manifest` with the accepted current release and fresh
+observation. The bounded update route preserves source templates and all
+non-image parameters. It does not qualify a simultaneous configuration change.
+Rollback additionally requires `--rollback-compatibility-id`; its retained proof
+must bind the exact current nested configuration and permission sources.
+
+`service-operation-status` requires the manifest and exact change-set identity;
+it observes pending, failed, absent/uncertain and completed outcomes without
+executing a change set. Lost execute responses remain uncertain. Provider calls
+in release control are single attempts with a 30-second maximum, and execution
+uses a stable request token derived from the reviewed change-set identity.
+Run the existing active drift assessment after a successful stack update before
+producing fresh runtime alignment. All local CLI regressions use disposable
+provider fixtures and explicitly simulated release evidence.
+
+Runtime observations also record `permission_state_sha256`: a digest of actual
+role trust, inline policies, permission boundary and attached managed policy
+default-version/document identities. Raw permission documents remain in memory.
+A new managed policy version at the same ARN invalidates current readiness; the
+immutable historical receipt remains retained. Mutation re-observes this identity
+immediately before execution, and rollback compares retained and current proof.

@@ -1,0 +1,6 @@
+{"schema": "deploy/local-public-qualification-report/v1", "verdict": "bound", "code": "same-local-engine-anonymous-config", "package": "core", "stored_configuration": "untouched"}
+Core-server generated runtime command proof passed.
+Core-server package payload fixture passed.
+{"effects_checked": 1, "findings": [], "schema": "deploy/disposable-cleanup/v1", "verdict": "passed"}
+Core-server image smoke test passed.
+{"schema": "deploy/local-public-qualification-report/v1", "verdict": "passed", "code": "existing-build-and-smoke-passed", "package": "core", "evidence_class": "container-qualification", "stored_configuration": "untouched"}

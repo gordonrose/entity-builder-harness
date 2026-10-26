@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.local-public-persistence-recovery
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -35,6 +35,13 @@ BUILD=Path('scripts/04.deploy/lifecycle/40-package/build-core-server-persistence
 SMOKE=DIRECTORY/'script.sh'
 DOCKERFILE=Path('infra/04.deploy/03.product/image/core-server-persistence/Dockerfile')
 CONTRACT=DOCKERFILE.with_name('image-contract.yml')
+DIAGNOSTIC_CHECK=Path('scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh')
+INTEGRATION_CHECK=Path('scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh')
+INTEGRATION_RUNNER=Path('platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs')
+CORE_BUILD=Path('scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh')
+CORE_SMOKE=Path('scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh')
+CORE_DOCKERFILE=Path('infra/04.deploy/03.product/image/core-server/Dockerfile')
+CORE_CONTRACT=CORE_DOCKERFILE.with_name('image-contract.yml')
 COUNT=0
 FAKE_DOCKER='''import json,os,sys
 from pathlib import Path
@@ -66,7 +73,7 @@ args=sys.argv[1:]
 assert args[0]=='scripts/01.harness/run-governed-script.sh' and args[1]=='--approved-action'
 command=args[2];stage='build' if command==os.environ['RECOVERY_BUILD'] else 'smoke'
 assert command in {os.environ['RECOVERY_BUILD'],os.environ['RECOVERY_SMOKE']}
-expected=['--tag','kanbien-core-server-persistence:test']+([] if stage=='build' else ['--port','39456'])
+expected=['--tag',os.environ['RECOVERY_TAG']]+([] if stage=='build' else ['--port','39456'])
 assert args[3:]==expected,args
 config=Path(os.environ['DOCKER_CONFIG'])
 assert str(config)!=os.environ['RECOVERY_ORIGINAL'] and json.loads((config/'config.json').read_text())=={'auths':{'https://index.docker.io/v1/':{},'gcr.io':{}}}
@@ -76,11 +83,13 @@ if os.environ.get('RECOVERY_SLEEP')==stage:time.sleep(60)
 if os.environ.get('RECOVERY_FAIL')==stage:raise SystemExit(42)
 '''
 
-def run_case(name,*,environment=None,arguments=None,mutate=None,expected=0,code=None,stages=None,terminate=False):
+def run_case(name,*,package="persistence",environment=None,arguments=None,mutate=None,expected=0,code=None,stages=None,terminate=False):
  global COUNT
  with tempfile.TemporaryDirectory(prefix='public-recovery-test-') as directory:
   fixture=Path(directory);binaries=fixture/'bin';binaries.mkdir();events=fixture/'events';events.touch()
-  for relative in (BUILD,SMOKE,DOCKERFILE,CONTRACT):
+  selected=(CORE_BUILD,CORE_SMOKE,CORE_DOCKERFILE,CORE_CONTRACT) if package=='core' else (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER)
+  tag='kanbien-core-server:test' if package=='core' else 'kanbien-core-server-persistence:test'
+  for relative in selected:
    path=fixture/relative;path.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,path)
   original=fixture/'original-docker';original.mkdir(mode=0o700);(original/'config.json').write_text('{"credsStore":"untouched-fixture-helper","auths":{"fixture.invalid":{"auth":"fixture-only"}}}\n');(original/'context').write_text('unchanged-context\n');original_files={p.name:(p.read_bytes(),stat.S_IMODE(p.stat().st_mode)) for p in original.iterdir()}
   for binary,text in [('git',"import os\nprint(os.environ['RECOVERY_ROOT'])\n"),('docker',FAKE_DOCKER),('bash',FAKE_BASH)]:
@@ -89,10 +98,10 @@ def run_case(name,*,environment=None,arguments=None,mutate=None,expected=0,code=
   with socket.socket(socket.AF_UNIX) as bound:
    bound.bind(str(fixture/'engine.sock'))
    env={key:value for key,value in os.environ.items() if not key.startswith(('DOCKER_','BUILDX_','BUILDKIT_'))}
-   env.update(PATH=str(binaries)+os.pathsep+os.environ['PATH'],DOCKER_CONFIG=str(original),RECOVERY_ORIGINAL=str(original),RECOVERY_EVENTS=str(events),RECOVERY_ROOT=str(fixture),RECOVERY_ENDPOINT=endpoint,RECOVERY_EXPECTED_ENDPOINT=endpoint,RECOVERY_BUILD=str(BUILD),RECOVERY_SMOKE=str(SMOKE),RECOVERY_BUILD_DONE=str(fixture/'built'),TMPDIR=str(fixture))
+   env.update(PATH=str(binaries)+os.pathsep+os.environ['PATH'],DOCKER_CONFIG=str(original),RECOVERY_ORIGINAL=str(original),RECOVERY_EVENTS=str(events),RECOVERY_ROOT=str(fixture),RECOVERY_ENDPOINT=endpoint,RECOVERY_EXPECTED_ENDPOINT=endpoint,RECOVERY_BUILD=str(selected[0]),RECOVERY_SMOKE=str(selected[1]),RECOVERY_TAG=tag,RECOVERY_BUILD_DONE=str(fixture/'built'),TMPDIR=str(fixture))
    for key,value in (environment or {}).items():env[key]=endpoint if value=='LOCAL_SOCKET' else value
    if mutate:mutate(fixture)
-   argv=['/bin/bash',str(WRAPPER),*(arguments if arguments is not None else ['--tag','kanbien-core-server-persistence:test','--port','39456'])]
+   argv=['/bin/bash',str(WRAPPER),*(arguments if arguments is not None else (['--package','core'] if package=='core' else [])+['--tag',tag,'--port','39456'])]
    if terminate:
     process=subprocess.Popen(argv,cwd=fixture,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
     for _ in range(500):
@@ -111,7 +120,7 @@ def run_case(name,*,environment=None,arguments=None,mutate=None,expected=0,code=
   assert 'Traceback' not in stderr,(name,stderr)
   if code:assert json.loads(stderr.strip().splitlines()[-1])['code']==code,(name,stderr)
   actual=[item['stage'] for item in records if item['kind']=='stage']
-  assert actual==(stages if stages is not None else ['build','smoke'] if expected==0 else []),(name,actual)
+  assert actual==(stages if stages is not None else (['smoke'] if package=='core' else ['build','smoke']) if expected==0 else []),(name,actual)
   configs={item['config'] for item in records if item.get('config') and item['config']!=str(original)}
   assert all(not Path(path).exists() for path in configs),(name,configs)
   assert not list(fixture.glob('persistence-public-docker-*')),name
@@ -139,6 +148,9 @@ run_case('signal-cleanup',environment={'RECOVERY_SLEEP':'build'},expected=143,co
 for arguments in (['--tag'],['--build-arg','anything'],['--tag','private.invalid/image:test','--port','39456'],['--tag','kanbien-core-server-persistence:test','--port','0'],['--tag','kanbien-core-server-persistence:test','--port','bad']):
  run_case('invalid-argument',arguments=arguments,expected=1,code='local-public-recovery-arguments-invalid')
 for name,mutate in (
+ ('private-nested-postgres',replace(INTEGRATION_RUNNER,'postgres:17.11-bookworm','private.invalid/postgres:17.11-bookworm')),
+ ('changed-nested-integration-check',lambda root:(root/INTEGRATION_CHECK).write_text((root/INTEGRATION_CHECK).read_text()+'\n# unreviewed owner edit\n')),
+ ('changed-nested-diagnostic-check',lambda root:(root/DIAGNOSTIC_CHECK).write_text((root/DIAGNOSTIC_CHECK).read_text()+'\n# unreviewed owner edit\n')),
  ('private-node',replace(DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
  ('private-frontend',replace(DOCKERFILE,'docker/dockerfile:1.7','private.invalid/frontend:1.7')),
  ('private-postgres',replace(SMOKE,'postgres:16-bookworm','private.invalid/postgres:16-bookworm')),
@@ -150,4 +162,17 @@ for name,mutate in (
  ('builder-secret',replace(BUILD,'docker build --file','docker build --secret id=fixture --file')),
  ('malformed-contract',lambda root:(root/CONTRACT).write_text('runtime_base: []\n')),
 ):run_case('owner-'+name,mutate=mutate,expected=1,code='local-public-recovery-owner-review-required')
+run_case('core-fixed-route',package='core')
+run_case('explicit-persistence',arguments=['--package','persistence','--tag','kanbien-core-server-persistence:test','--port','39456'])
+run_case('core-engine-mismatch',package='core',environment={'RECOVERY_ENGINE_MODE':'mismatch'},expected=1,code='local-public-recovery-engine-mismatch')
+run_case('core-failed-smoke',package='core',environment={'RECOVERY_FAIL':'smoke'},expected=42,code='local-public-recovery-smoke-failed',stages=['smoke'])
+run_case('core-signal-cleanup',package='core',environment={'RECOVERY_SLEEP':'smoke'},expected=143,code='local-public-recovery-interrupted',stages=['smoke'],terminate=True)
+for arguments in (['--package'],['--package','arbitrary'],['--package','core','--tag','kanbien-core-server-persistence:test','--port','39456'],['--package','core','--build-arg','private.invalid/image']):
+ run_case('invalid-argument-core',package='core',arguments=arguments,expected=1,code='local-public-recovery-arguments-invalid')
+for name,mutate in (
+ ('private-frontend',replace(CORE_DOCKERFILE,'docker/dockerfile:1.7','private.invalid/frontend:1.7')),
+ ('private-node',replace(CORE_DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
+ ('builder-private-override',replace(CORE_BUILD,'BUILD_NODE_IMAGE=node:22-bookworm-slim','BUILD_NODE_IMAGE=private.invalid/image')),
+ ('malformed-contract',lambda root:(root/CORE_CONTRACT).write_text('runtime_base: []\n')),
+):run_case('owner-core-'+name,package='core',mutate=mutate,expected=1,code='local-public-recovery-owner-review-required')
 print(json.dumps({'schema':'deploy/local-public-recovery-test-report/v1','verdict':'passed','cases':COUNT,'evidence_class':'local-runtime-controlled','real_docker_calls':0,'stored_configuration':'unchanged','temporary_configuration_cleanup':'passed'}))

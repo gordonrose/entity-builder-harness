@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 2
+version: 5
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -67,6 +67,29 @@ the local operating-system user who owns that Git metadata; it is neither signed
 portable evidence nor protection from that same user editing their own cache.
 `--evidence` reports are explicitly rejected as authority and never create cache
 receipts. Failed, pending, uncertain and nonzero results never qualify reuse.
+Each report has an `execution_summary` naming reused, executed and deferred
+checks. A rerun after a previous trusted receipt records concrete
+`invalidated_checks` reasons: verified input bytes changed, the declared runtime
+identity changed, or the verification contract changed. These reasons explain
+why a new local run is needed; they never make an old receipt acceptable.
+
+`--record-preparation` stores the exact selected input identities in the same
+private worktree cache, without executing checks. The chat pre-verification
+sequence uses it before final verification. `--require-preparation` is limited
+to `--staged`: it rejects a relevant commit-boundary check until its recorded
+identity matches, reporting `verification-preparation-missing` or
+`verification-preparation-inputs-changed` and the affected check IDs before
+any execution. This prevents late lifecycle metadata edits from silently
+turning commit preparation into a new verification cycle.
+
+Each receipt binds the complete catalog definitions of its selected check and
+all aliases sharing that command. An unrelated check definition does not revoke
+that receipt. Checks that explicitly consume the catalog still bind its complete
+bytes. Every invocation validates the current catalog and selection; a catalog
+change during planning or execution makes the invocation uncertain. This drift
+barrier is separate from the reusable proof identity, so the next fresh plan can
+reuse unaffected evidence. Staged execution still requires the catalog authority
+to match the staged version.
 
 The key includes relevant input bytes and file modes, transitive package and
 metadata dependencies, owner capability, argv/effects/stage/evidence class,
@@ -97,7 +120,11 @@ used to execute those commands here.
 
 Supported source impact uses explicit scope inputs and workspace package
 edges. Artifact metadata consumer relationships are followed transitively for
-both scope checks and repository check mappings. Authoritative schemas,
+both scope checks and repository check mappings. The catalog may declare
+`dormant_impact_roots`: metadata `used_by` edges into or out of those roots are
+excluded from ordinary impact traversal, while direct repository-input mappings
+continue to select the owning checks when that dormant surface is changed
+explicitly. Authoritative schemas,
 contracts and configuration need executable coverage; an unmapped definition is
 `changed-input-uncovered`. Ordinary prose and nonexecutable session records
 remain covered by their mandatory metadata/process checks. Scope requirements

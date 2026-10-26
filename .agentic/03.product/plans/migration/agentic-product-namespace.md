@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.migration-plan.agentic-product-namespace
-version: 1
+version: 2
 status: active
 created_on: "2026-08-30"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 03.product
 domain: migration
 disciplines:
@@ -101,7 +101,7 @@ Session-history references under `commitLogs/` are intentionally not migrated.
 - Passed: `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
 - Passed: `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
 - Passed: `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
-- Passed: `bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh`
+- Passed: `bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh` (historical invocation; current governed invocation: `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh`).
 - Passed: `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/query-local-context/smoke-test.sh`
 - Passed: `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/smoke-test.sh`
 - Passed: `bash scripts/00.chat/classification/classify-task/check-fixtures.sh`

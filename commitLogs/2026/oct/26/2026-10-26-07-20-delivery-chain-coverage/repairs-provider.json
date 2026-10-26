@@ -1,0 +1,519 @@
+{
+  "schema": "deploy/delivery-repair-report/v1",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "evidence_class": "local-and-simulated-only",
+  "items": [
+    {
+      "id": "E-01",
+      "status": "repaired-local-verified",
+      "failure": "Bootstrap direct deployment skipped fresh release-contract/alignment prerequisites and accepted unrelated permission parameters or destructive ECS changes",
+      "affected_routes": [
+        "kanbien-core-platform/bootstrap-runtime"
+      ],
+      "downstream_consumers": [
+        "kanbien-core-platform/bootstrap-runtime"
+      ],
+      "contract_files": [
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py"
+      ],
+      "smallest_reusable_repair": "Repeat prerequisites in direct implementation; exact unowned parameter and logical-resource/action review",
+      "negative_regression": "Missing release/alignment/cost/inventory; changed role; remove-service change rejected before execute",
+      "valid_behaviour": "Qualified exact update and observation-only pending/complete operation",
+      "earliest_enforcement_stage": "before provider mutation",
+      "closure_evidence": "Named local regression commands pass; fixtures do not prove live outcomes"
+    },
+    {
+      "id": "E-02",
+      "status": "repaired-local-verified",
+      "failure": "Rollback compatibility was checked only after target changes; old support image could restore obsolete permission behaviour",
+      "affected_routes": [
+        "kanbien-core-platform/core-server-persistence"
+      ],
+      "downstream_consumers": [
+        "kanbien-core-platform/core-server-persistence"
+      ],
+      "contract_files": [
+        ".agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py"
+      ],
+      "smallest_reusable_repair": "Consume immutable release-succession compatibility before permission change/rollback; preserve qualified current support image; reject retained image under update label",
+      "negative_regression": "Missing compatibility; changed permission hash/digest/proof; mismatched support image",
+      "valid_behaviour": "Exact immutable compatibility under unchanged current contracts passes",
+      "earliest_enforcement_stage": "before change-set creation",
+      "closure_evidence": "Named local regression commands pass; fixtures do not prove live outcomes"
+    },
+    {
+      "id": "E-03",
+      "status": "repaired-local-verified",
+      "failure": "Staging preflight only tested existence of realization contract and never compiled applicable current proof",
+      "affected_routes": [
+        "kanbien/staging/platform-shell"
+      ],
+      "downstream_consumers": [
+        "kanbien/staging/platform-shell"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh"
+      ],
+      "smallest_reusable_repair": "Invoke existing compiler and bind actual candidate digest to normalized facts before run-task",
+      "negative_regression": "Invalid evidence binding rejected by actual CLI before any AWS invocation",
+      "valid_behaviour": "Source contract validation and exact fresh input proof accepted locally",
+      "earliest_enforcement_stage": "before provider reads and task creation",
+      "closure_evidence": "Named local regression commands pass; fixtures do not prove live outcomes"
+    },
+    {
+      "id": "F-01",
+      "status": "repaired-local-verified",
+      "failure": "Broad missing-resource text conflated provider failures with absence; service-specific RDS/IAM absence was missed",
+      "affected_routes": [
+        "kanbien-core-platform/core-server-persistence",
+        "kanbien-core-platform/bootstrap-runtime",
+        "kanbien-core-platform/foundation"
+      ],
+      "downstream_consumers": [
+        "kanbien-core-platform/core-server-persistence",
+        "kanbien-core-platform/bootstrap-runtime",
+        "kanbien-core-platform/foundation"
+      ],
+      "contract_files": [
+        ".agentic/04.deploy/standards/provider-async-conditions.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/shared/provider-adapters/aws/response.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/shared/provider-adapters/aws/response.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py"
+      ],
+      "smallest_reusable_repair": "Operation-specific AWS error-code normalization with bounded anchored CloudFormation absent-stack exception",
+      "negative_regression": "Denied/unknown/validation error mentioning not found must not become absence",
+      "valid_behaviour": "DBInstanceNotFound, DBSnapshotNotFound, NoSuchEntity and ChangeSetNotFound observed as absent only for matching reads",
+      "earliest_enforcement_stage": "provider response boundary",
+      "closure_evidence": "Named local regression commands pass; fixtures do not prove live outcomes"
+    },
+    {
+      "id": "F-02",
+      "status": "repaired-local-verified",
+      "failure": "Bootstrap/permission transitions lacked observation-only continuation and permission update deleted/recreated failed reviews",
+      "affected_routes": [
+        "kanbien-core-platform/bootstrap-runtime",
+        "kanbien-core-platform/core-server-persistence"
+      ],
+      "downstream_consumers": [
+        "kanbien-core-platform/bootstrap-runtime",
+        "kanbien-core-platform/core-server-persistence"
+      ],
+      "contract_files": [
+        ".agentic/04.deploy/standards/provider-async-conditions.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py"
+      ],
+      "smallest_reusable_repair": "Reuse named operation and classify pending/failed/uncertain/complete; no automatic deletion or replay",
+      "negative_regression": "Absent/unknown identity and lost execute response never trigger another execute",
+      "valid_behaviour": "Pending review, execution, stack and terminal exact completion stay distinct",
+      "earliest_enforcement_stage": "before resubmission",
+      "closure_evidence": "Named local regression commands pass; fixtures do not prove live outcomes"
+    },
+    {
+      "id": "F-03",
+      "status": "repaired-local-verified",
+      "failure": "Staging cleanup diagnostics replaced original failure; generic consequential-child failure asserted provider failure without observation",
+      "affected_routes": [
+        "kanbien/staging/platform-shell",
+        "shared consequential diagnostics"
+      ],
+      "downstream_consumers": [
+        "kanbien/staging/platform-shell",
+        "shared consequential diagnostics"
+      ],
+      "contract_files": [
+        ".agentic/04.deploy/standards/safe-command-diagnostics.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+        "scripts/04.deploy/shared/safe-command-diagnostics.sh",
+        "scripts/04.deploy/shared/deployment-operation-diagnostics.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+        "scripts/04.deploy/shared/safe-command-diagnostics.sh",
+        "scripts/04.deploy/shared/deployment-operation-diagnostics.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh"
+      ],
+      "smallest_reusable_repair": "Preserve original status/category, retain secondary failure separately; unknown provider outcome until observed",
+      "negative_regression": "Diagnostic writer fails while child exits 23; cleanup also fails after health failure",
+      "valid_behaviour": "Safe original code/status retained without raw child output",
+      "earliest_enforcement_stage": "diagnostic/cleanup boundary",
+      "closure_evidence": "Named local regression commands pass; fixtures do not prove live outcomes"
+    },
+    {
+      "id": "G-01",
+      "status": "repaired-local-verified",
+      "failure": "Restore cleanup reported complete when database absent while temporary authority or tasks remained",
+      "affected_routes": [
+        "kanbien-core-platform/core-server-persistence"
+      ],
+      "downstream_consumers": [
+        "kanbien-core-platform/core-server-persistence"
+      ],
+      "contract_files": [
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py"
+      ],
+      "smallest_reusable_repair": "Independently observe database, temporary policy and bounded verifier task family; no identity inferred from absent DB",
+      "negative_regression": "DB absent with present/denied policy, running/provisioning/unknown/partial tasks cannot be complete",
+      "valid_behaviour": "All effects absent or stopped passes; observe-only never deletes",
+      "earliest_enforcement_stage": "before cleanup completion",
+      "closure_evidence": "Named local regression commands pass; fixtures do not prove live outcomes"
+    },
+    {
+      "id": "F-04",
+      "status": "repaired-local-verified",
+      "failure": "Active staging Cognito partial creation compensates best effort and lacks observation-only recovery interface",
+      "affected_routes": [
+        "kanbien/staging negative-authz client provisioning",
+        "kanbien/staging persistence-write client provisioning"
+      ],
+      "downstream_consumers": [
+        "kanbien/staging negative-authz client provisioning",
+        "kanbien/staging persistence-write client provisioning"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/provision-platform-shell-negative-authz-client/README.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/provision-platform-shell-negative-authz-client/script.py",
+        "scripts/04.deploy/provision-platform-shell-persistence-write-client/script.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/provision-platform-shell-negative-authz-client/script.py",
+        "scripts/04.deploy/provision-platform-shell-persistence-write-client/script.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py"
+      ],
+      "smallest_reusable_repair": "Shared observation-only Cognito reconciliation, bounded calls, strict shape/pagination/unique identity, original compensation failure preserved",
+      "negative_regression": "Both clients: partial creation, denied/malformed/paginated/duplicate observations, secret pending deletion",
+      "valid_behaviour": "Exact absence visible; existing resources present-unqualified; no secret-value access and no recovery mutation",
+      "earliest_enforcement_stage": "before provisioning retry",
+      "closure_evidence": "Local CLI/subprocess regression evidence below; no live cloud proof asserted."
+    },
+    {
+      "id": "F-05",
+      "status": "repaired-local-verified",
+      "failure": "Foundation budget creation uses new timestamp identity on every invocation; pending/uncertain outcomes lack dedicated reconciliation",
+      "affected_routes": [
+        "kanbien-core-platform/foundation budget"
+      ],
+      "downstream_consumers": [
+        "kanbien-core-platform/foundation budget"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/README.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py"
+      ],
+      "smallest_reusable_repair": "Deterministic source-and-parameter operation name; stable provider token; observe before create/execute; observation-only reconcile",
+      "negative_regression": "Lost create/execute response, missing operation, rollback failed, in-progress status",
+      "valid_behaviour": "Same operation resumes without second create/execute; completion requires exact actual budget",
+      "earliest_enforcement_stage": "before provisioning retry",
+      "closure_evidence": "Local CLI/subprocess regression evidence below; no live cloud proof asserted."
+    },
+    {
+      "id": "E-04",
+      "status": "repaired-local-verified",
+      "failure": "Shell catalog runtime-alignment was not implemented and actual service mutation lacked package/current-state/rollback guards",
+      "affected_routes": [
+        "kanbien/staging platform-shell create/successor/rollback/runtime alignment"
+      ],
+      "downstream_consumers": [
+        "kanbien/staging platform-shell create/successor/rollback/runtime alignment"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/README.md",
+        "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml",
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+        "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+        "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py"
+      ],
+      "smallest_reusable_repair": "Existing owner implements runtime proof producer and guarded image-only first/create/successor/rollback; consumes existing custody/realization/generic succession authorities; reads exact source/template/config/role/service/image state before immutable proof capture; immediately before update/rollback execution, re-read exact stable service stack and require ImageUri equal to accepted current manifest repository plus digest",
+      "negative_regression": "Missing custody before AWS; mismatched template/config/env/command/roles/digest; stale drift; partial task observation; wrong change scope/image; old-image update masquerade; wrong compatibility; changed nested permissions; lost submit and pending/failed/missing provider operation; live current stack image drift blocks successor and rollback before execute, despite fresh retained acceptance",
+      "valid_behaviour": "First creation with no accepted current, durable candidate separate promotion, accepted successor, qualified retained rollback, interrupted status resume, full current source shape resolution",
+      "earliest_enforcement_stage": "offline package/realization/current/compatibility before mutation; actual runtime observation before acceptance",
+      "closure_evidence": "Local shell CLI lifecycle regressions pass, including immediate current-image identity check before mutation; first creation remains unaffected. No live cloud proof asserted."
+    },
+    {
+      "id": "F-06",
+      "status": "repaired-local-verified",
+      "failure": "Candidate run-task lost response was marked rejected and next call allocated another label; mixed ECS filters invalid",
+      "affected_routes": [
+        "kanbien/staging candidate execution preflight"
+      ],
+      "downstream_consumers": [
+        "kanbien/staging candidate execution preflight"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py"
+      ],
+      "smallest_reusable_repair": "Retain original task definition and unresolved attempt; stable client token; explicit observation-only reconcile and exact-task cleanup; valid ECS family/status queries",
+      "negative_regression": "Accepted/lost run-task result, new execute while prior unresolved, absent metadata, wrong cleanup definition",
+      "valid_behaviour": "Provisioning pending, exact owned task stop once, repeated terminal reconcile no replay",
+      "earliest_enforcement_stage": "durable reservation before task submission",
+      "closure_evidence": "Local CLI/subprocess regression evidence below; no live cloud proof asserted."
+    },
+    {
+      "id": "F-07",
+      "status": "repaired-local-verified",
+      "failure": "Older relational proof used invalid mixed ECS filters and treated empty task observations after lost submission as rejection",
+      "affected_routes": [
+        "kanbien/staging PostgreSQL relational proof"
+      ],
+      "downstream_consumers": [
+        "kanbien/staging PostgreSQL relational proof"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+        "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py"
+      ],
+      "smallest_reusable_repair": "Valid separate active and stopped ECS queries with terminal label matching, pagination/identity checks; unknown submission retained even when no task observed; stable token and bounded AWS calls",
+      "negative_regression": "Invalid mixed filters rejected by fake CLI; paginated/wrong-ARN/partial responses; empty uncertain submission remains retry-blocking",
+      "valid_behaviour": "Successful predecessor receipt survives ECS expiry; correctly labelled terminal tasks and live checks pass",
+      "earliest_enforcement_stage": "before continuation or retry",
+      "closure_evidence": "Local CLI/subprocess regression evidence below; no live cloud proof asserted."
+    },
+    {
+      "id": "F-08",
+      "status": "repaired-local-verified",
+      "failure": "Generic AWS alignment classified arbitrary does-not-exist error text as known absence",
+      "affected_routes": [
+        "kanbien-core-platform runtime alignment"
+      ],
+      "downstream_consumers": [
+        "kanbien-core-platform runtime alignment"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.sh"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/response.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/response.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh"
+      ],
+      "smallest_reusable_repair": "Reuse operation-specific AWS response classifier, cheap inventory guard, 30s bounded read",
+      "negative_regression": "Unknown/denied response never proves missing resource",
+      "valid_behaviour": "Exact known CloudFormation absence; existing healthy baseline remains valid",
+      "earliest_enforcement_stage": "first provider observation",
+      "closure_evidence": "Local CLI/subprocess regression evidence below; no live cloud proof asserted."
+    },
+    {
+      "id": "I-provider-permission-state",
+      "status": "repaired-local-verified",
+      "failure": "An attached managed IAM policy can change its default version without changing repository sources or its ARN, allowing old runtime proof to appear current",
+      "affected_routes": [
+        "kanbien/staging platform-shell runtime alignment/current readiness/rollback"
+      ],
+      "downstream_consumers": [
+        "shell guarded service mutation",
+        "shell readiness",
+        "shell rollback compatibility"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh"
+      ],
+      "test_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py"
+      ],
+      "smallest_reusable_repair": "Existing observation schema gains permission_state_sha256 over actual trust/inline/boundary and managed default-version/document identities; current consumer compares retained and fresh hashes; mutation rechecks actual permission hash; rollback compares retained to current proof",
+      "negative_regression": "Actual fake-provider GetPolicy/GetPolicyVersion changes v1 to v2 with same ARN and source; current readiness rejects stale permission proof; nested source rollback change rejected",
+      "valid_behaviour": "Same observed permission identity retains readiness; immutable historical record remains readable when current permissions change",
+      "earliest_enforcement_stage": "fresh runtime observation before acceptance/current readiness, and immediate pre-mutation permission read",
+      "closure_evidence": "Managed-policy-version actual CLI fixture passed 1 test in 2.588s; readiness/succession 26 CLI checks passed"
+    }
+  ],
+  "verification": [
+    {
+      "command": "bash scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh",
+      "result": "passed including 14 real CLI scenarios"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+      "result": "passed 31 tests with provisioning state variants"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py",
+      "result": "passed 4 test methods in 5.044s after isolated fixture fix; real CLI missing prerequisites/cleanup/compatibility/inventory rejection"
+    },
+    {
+      "command": "bash scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh",
+      "result": "passed including compiler bindings and original failure preservation"
+    },
+    {
+      "command": "bash scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py",
+      "result": "passed 1 actual CLI lifecycle test in 2.969s"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py",
+      "result": "Cognito and budget: passed 2 test methods in 10.170s; relational subprocess filter test added and independently passed in 0.726s"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+      "result": "5 complete shell CLI/source-shape test methods passed in 24.415s after permission schema integration; additional managed-policy-version regression passed in 2.588s (6 methods total now registered)"
+    },
+    {
+      "command": "bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+      "result": "passed after valid filter and unknown-submission changes; additional empty-observation regression and invoked subprocess leaf added subsequently"
+    },
+    {
+      "command": "bash scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py",
+      "result": "passed 26 actual CLI checks after permission-state binding"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py ReleaseControl.test_successor_and_rollback_use_actual_immutable_history ReleaseControl.test_first_create_lost_response_and_resume ReleaseControl.test_first_create_rejects_before_execute",
+      "result": "passed 3 tests in 17.434s; both successor and rollback current-image drift reject without execute; valid transitions and first-create/resume continue passing"
+    },
+    {
+      "command": "git diff --check -- scripts/04.deploy/reconcile-platform-shell-staging/release_control.py scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+      "result": "passed after final current-image guard"
+    }
+  ],
+  "limits": [
+    "Local and simulated provider evidence only; no live provider calls, secret-value retrieval, cloud mutation, image publication or deployment performed.",
+    "Shell service mutation route qualifies first creation and unchanged-template image-only updates. Changed configuration/security is rejected until independently qualified; retained rollback evidence cannot cross changed relevant inputs.",
+    "Final repository inventory/check-selection/aggregate verification is owned by root integration; this report does not substitute for those required gates."
+  ],
+  "delegated_repairs": {
+    "owner": "acceptance_evidence",
+    "worker_smoke": "Lost send/scale response cleanup armed before first effect; zero desired/running/pending + source/DLQ visible/inflight required; original failure retained; 17 CLI cases reported passing",
+    "persistence_delivery_proof": "Exclusive immutable submission/terminal receipts with exact task/config/source/policy binding; stable client token; unknown absence no replay; terminal capture survives ECS expiry; 24 CLI cases reported passing; exact results in acceptance owner report"
+  }
+}

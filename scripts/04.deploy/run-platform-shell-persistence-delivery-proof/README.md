@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-09-25"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-26"
   layer: 04.deploy
   domain: persistence
   disciplines:
@@ -58,3 +58,28 @@ relay, an arbitrary worker queue test, or permission to replay the existing
 outbox entry more than once. A failed label is permanently spent. A later
 attempt requires a documented source change, an immutable-image rollout,
 post-rollout health evidence, and a fresh fixed label in the target policy.
+
+Before `run-task`, the command now writes one immutable submission artifact for
+the fixed label beneath the repository common directory's
+`platform-shell-delivery-proof/` directory. It binds the immutable task revision,
+its full configuration, network and overrides through hashes, together with the
+reviewed configuration/permission source inputs. The request uses the derived
+idempotency token. A reservation is permanently spent even if the response is
+lost; neither missing ECS history nor a restart authorizes another submission.
+These are the two fixed stage outputs, not a general execution history.
+
+`--assess-relay` and `--assess-worker` capture a safe immutable terminal receipt
+while ECS still exposes the stopped task. Later stages may reuse that receipt
+after ECS task history expires, while still checking fresh aggregate and cleanup
+state. If a terminal result expired before capture, the result is unobservable
+and replay remains blocked. The command cannot retrospectively manufacture
+receipts for the already accepted historical proof.
+
+Use `--reconcile` after an interruption. It makes provider reads only and may
+retain an observed terminal receipt locally. It reports `pending` while normal
+ECS provisioning/stopping states remain, `uncertain` when required outcomes are
+unobservable, and `cleaned-up` only after retained terminal proof and fresh
+aggregate checks agree. Worker and relay task families must have no active
+tasks, the worker service must have no desired/running/pending tasks, and source
+and dead-letter queues must have no visible or in-flight messages. Partial or
+paginated observations never establish complete cleanup.

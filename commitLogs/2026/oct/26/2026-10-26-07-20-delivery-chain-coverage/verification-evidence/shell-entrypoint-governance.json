@@ -1,0 +1,59 @@
+[
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+      "--paths",
+      "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+      "scripts/repo/check-selection/checks.yml"
+    ],
+    "exit_code": 0,
+    "seconds": 0.122,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-1.log"
+  },
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/check-deterministic-process-drift.sh",
+      "--paths",
+      "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+      "scripts/repo/check-selection/checks.yml"
+    ],
+    "exit_code": 0,
+    "seconds": 0.016,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-2.log"
+  },
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/check-governed-script-command-drift.sh",
+      "--paths",
+      "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+      "scripts/repo/check-selection/checks.yml"
+    ],
+    "exit_code": 0,
+    "seconds": 8.302,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-3.log"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+      "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+      "scripts/repo/check-selection/checks.yml"
+    ],
+    "exit_code": 0,
+    "seconds": 0.012,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-4.log"
+  }
+]

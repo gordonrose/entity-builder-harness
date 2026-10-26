@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: '2026-10-25'
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -38,7 +38,7 @@ ROOT = Path(__file__).resolve().parents[8]
 IMPLEMENTATION_ROOT = ROOT
 
 
-def validate_historical_legacy_record(path: Path, record: dict, root: Path) -> list[str]:
+def validate_historical_legacy_record(path: Path, record: dict, root: Path, evidence_class: str = 'live') -> list[str]:
     """Validate immutable predecessor custody without calling it current-policy compliant.
 
     A release accepted before the IAM permission contract cannot prove facts
@@ -52,12 +52,21 @@ def validate_historical_legacy_record(path: Path, record: dict, root: Path) -> l
         module = importlib.util.module_from_spec(spec)
         assert spec and spec.loader
         spec.loader.exec_module(module)
+        module.EVIDENCE_CLASS = evidence_class
+        module.REPOSITORY_ROOT = root
         evidence_root = path.parent
         current = module.current(evidence_root)
         if not isinstance(current, dict):
             return ['accepted-release-historical-succession-missing']
-        history_path = evidence_root / current['record']['path']
-        history, _ = module.document(history_path)
+        _, raw = module.document(path)
+        target, scope, _, identity = module.legacy_identity(record, raw)
+        identifier = module.release_id(identity)
+        history, _ = module.history_record_for_id(evidence_root, identifier)
+        selected = current['release_id']
+        while selected != identifier:
+            member, _ = module.history_record_for_id(evidence_root, selected)
+            selected = member.get('predecessor')
+            if selected is None: return ['accepted-release-historical-succession-mismatch']
         evidence = history.get('evidence') if isinstance(history, dict) else None
         if not isinstance(evidence, dict) or evidence.get('kind') != 'legacy-accepted-record' or evidence.get('path') != path.name:
             return ['accepted-release-historical-succession-mismatch']
@@ -75,8 +84,8 @@ def validate(path: Path, root: Path = ROOT, evidence_class: str = 'live') -> lis
     try:
         record = yaml.safe_load(path.read_text())
         if evidence_class == 'simulated' and not root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()): return ['accepted-release-simulation-root-invalid']
-        if evidence_class == 'live' and isinstance(record, dict) and record.get('schema') == 'deploy/persistence-accepted-release/v1' and record.get('status') == 'accepted':
-            return validate_historical_legacy_record(path, record, root)
+        if isinstance(record, dict) and record.get('schema') == 'deploy/persistence-accepted-release/v1' and record.get('status') == ('accepted' if evidence_class == 'live' else 'rehearsed') and (evidence_class == 'live' or (path.parent / 'current-accepted-release.yml').exists()):
+            return validate_historical_legacy_record(path, record, root, evidence_class)
         if not isinstance(record, dict) or record.get('evidence_class', 'live') != evidence_class or record.get('status') != ('accepted' if evidence_class == 'live' else 'rehearsed'): return ['accepted-release-evidence-class-invalid']
         source = IMPLEMENTATION_ROOT / 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py'
         spec=importlib.util.spec_from_file_location('retained_acceptance_collector',source);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)

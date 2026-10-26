@@ -4,7 +4,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -37,7 +37,7 @@ workload:
 configuration:
   value_policy: names-and-shapes-only-no-values
   required_names: [NODE_ENV, HOST, PORT, PLATFORM_SOURCE_COMMIT_SHA, PERSISTENCE_POSTGRES_HOST, PERSISTENCE_POSTGRES_PORT, PERSISTENCE_POSTGRES_DATABASE, PERSISTENCE_POSTGRES_SCHEMA, PERSISTENCE_POSTGRES_IAM_REGION, PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, PERSISTENCE_RUNTIME_DATABASE_USERNAME, PERSISTENCE_MIGRATION_DATABASE_USERNAME, PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME, PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE, PERSISTENCE_ADMINISTRATOR_CREDENTIALS, PERSISTENCE_POSTGRES_CA_PATH]
-  optional_names: []
+  optional_names: [PERSISTENCE_RESTORE_DIAGNOSTIC_MODE]
   secret_names: [PERSISTENCE_ADMINISTRATOR_CREDENTIALS]
   secret_dependencies:
     - id: postgresql-administrator-credentials
@@ -160,6 +160,19 @@ persistence_diagnostics:
       mappings: *task_mappings
     - id: persistence-restoration-verifier
       mappings: *task_mappings
+  connection_investigation:
+    command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    operation: diagnose-connection
+    mode_environment: {PERSISTENCE_RESTORE_DIAGNOSTIC_MODE: connection}
+    target: positively-bound-disposable-restored-database
+    proof_binding: retained-record-receipt-and-snapshot-source-incarnation-tags
+    effects: [ecs-task-launch, temporary-restored-instance-iam-access, owned-task-deadline-stop, temporary-access-removal, writes-diagnostic-evidence]
+    maximum_attempts_per_database_incarnation: 1
+    maximum_log_reads_per_stream_per_invocation: 3
+    deadline_seconds: 120
+    unknown_launch: retain-exclusive-reservation-and-reconcile-only
+    cleanup: require-terminal-diagnostic-and-recovery-tasks-before-temporary-access-removal-or-existing-disposable-database-cleanup
+    recovery_acceptance_evidence: false
 observability_mvp:
   declaration_schema: deploy/readiness-observability-mvp/v1
   status: dedicated-collector-composed-live-proof-pending
@@ -331,6 +344,18 @@ change_impact:
       consumers connected to their existing checks.
     owner: persistence-platform
     required_by:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.sh
+    - scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.sh
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh
     - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
     declarations:

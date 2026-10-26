@@ -1,0 +1,59 @@
+{
+  "schema": "delivery/merge-independent-review/v1",
+  "checked_at": "2026-10-26T13:48:37.374120+00:00",
+  "reviewer": "/root/independent_review",
+  "result": "passed",
+  "scope": [
+    "Task ownership, clean main and unchanged baseline ancestry",
+    "Session stream log classification confined to commitLogs; source and script gaps retained",
+    "Historical command retained with labeled current governed invocation",
+    "Fixed core public-image recovery route and metadata-only persistence owner hash refresh"
+  ],
+  "source_inputs": {
+    "scripts/repo/check-selection/script.py": "68df6d8f8b396631911594362dae0b78d92031dc9f48c05128dd97522313bfaa",
+    "scripts/repo/check-selection/smoke-test.py": "e43ca676d477819d26643a0f44ba98530bcb67bbd165d22640aad757f8a497b0",
+    ".agentic/03.product/plans/migration/agentic-product-namespace.md": "a4bf742d124f46c19a6edfe37ebaa174e25f6e7b0011999ede8d5fbed3ae841a",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh": "bc3f808b8c8cd7a50cd517a152a06998183a5e31506994538d9946d3ed2ca89e",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py": "9357e6188ddf095060c908132889821add3a19919b42650382a0528065431be9",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md": "9789a5b1a72952af1b857eb775f4d7addf91a13782489d7fd59f4e8bf564acd3"
+  },
+  "checks": [
+    {
+      "name": "session-stream-positive-and-negative-regression",
+      "result": "passed",
+      "command": [
+        "python3",
+        "scripts/repo/check-selection/smoke-test.py",
+        "SelectionTests.test_session_stream_logs_are_evidence_without_exempting_source_or_scripts"
+      ]
+    },
+    {
+      "name": "fixed-public-recovery-subprocess-boundaries",
+      "result": "passed",
+      "cases": 40,
+      "command": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py"
+      ]
+    }
+  ],
+  "attestation_basis": "Independent reviewer messages in this chat; reviewer ran both focused suites independently. Source review has its own merge-source-review.json.",
+  "limits": [
+    "Controlled recovery tests use fake command boundaries and do not establish actual image behavior; separate current package receipts are required.",
+    "Global workspace report incomplete because of an unrelated missing old registration; target-specific clean-worktree readiness remains required after commit."
+  ],
+  "final_disposition": {
+    "result": "passed",
+    "source_paths": 218,
+    "selected_local_passed": 53,
+    "deferred": 20,
+    "selected_findings": 0,
+    "source_drift": [],
+    "selected_input_digests_recomputed": 73,
+    "inventory_inputs_recomputed": 1658,
+    "inventory_input_digest": "127f52ea0c095b03324706d38113da3bc350bc75f23b87172a992e25f9664899",
+    "gate_log_sha256": "24bbaa56e41bd6665440a443e180e1c731f8be5c602be673c8ea1a7667b59f6c",
+    "basis": "Final independent reviewer message confirms gate, every selected input/catalog binding, all inventory identities and package/history proofs."
+  }
+}

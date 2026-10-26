@@ -257,6 +257,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Promoted isolated restore controller hardening
   Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
 
+
+- Raised: Incoming restore diagnostics queried only PostgreSQL logs although the governed restore workflow requires IAM authentication log coverage.
+  Resolution: Merged the bounded connection-diagnostic path, required both PostgreSQL and iam-db-auth-error exports, safely reduced both groups to allowlisted facts, and added an IAM-log-only regression.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -539,6 +543,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Promoted verified observability evidence controls to origin/main
   Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
 
+
+- Decision: Use origin/main bounded restore diagnostics together with the existing exact IAM rds-db:connect simulation.
+  Rationale: The integrated controller must prove both actual authorization and safely classify the connection boundary before it can launch a verifier or diagnostic task.
+
 ## Context Hygiene
 
 
@@ -793,6 +801,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Observability activation is healthy after a collector-only metric repair. The target still lacks confirmed SNS email delivery, so no revocation/recovery is repeated until the receipt controller can retain failure, notification, and recovery evidence.
   Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/. Receipt validator: .../observability-receipts.py. Acceptance collector/route now consume the three receipt references; AWS SNS read-only observation remains PendingConfirmation.
+
+
+- Summary: Origin/main brought a bounded restore connection diagnostic, adapter error normalization, and updated commit workflow. The merged correction retains the local exact IAM simulation and adds two-group RDS log collection; no live operation was repeated.
+  Durable evidence: Focused evidence is the restore smoke test, diagnostic-test.py, controller-regression.py, target and observability declaration gates, plus the existing retained rejected restore diagnostic and cleanup evidence.
 
 ## Activity Log
 
@@ -4005,6 +4017,34 @@ Summary: The restore verifier failure remains unclassified after private route, 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-26T18:02:09Z - Issue
+
+Raised: Incoming restore diagnostics queried only PostgreSQL logs although the governed restore workflow requires IAM authentication log coverage.
+
+Resolution: Merged the bounded connection-diagnostic path, required both PostgreSQL and iam-db-auth-error exports, safely reduced both groups to allowlisted facts, and added an IAM-log-only regression.
+
+
+### 2026-10-26T18:02:14Z - Decision
+
+Decision: Use origin/main bounded restore diagnostics together with the existing exact IAM rds-db:connect simulation.
+
+Rationale: The integrated controller must prove both actual authorization and safely classify the connection boundary before it can launch a verifier or diagnostic task.
+
+
+### 2026-10-26T18:02:22Z - Context hygiene
+
+Summary: Origin/main brought a bounded restore connection diagnostic, adapter error normalization, and updated commit workflow. The merged correction retains the local exact IAM simulation and adds two-group RDS log collection; no live operation was repeated.
+
+Durable evidence: Focused evidence is the restore smoke test, diagnostic-test.py, controller-regression.py, target and observability declaration gates, plus the existing retained rejected restore diagnostic and cleanup evidence.
+
+
+### 2026-10-26T18:02:22Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is an implementation correction within existing restore, IAM, and diagnostics decisions; it creates no new durable architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5200,9 +5240,9 @@ ADR impact: covered by session ADR disposition
 
 ## ADR Disposition
 
-ADR needed: yes
-ADR path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
-Reason: Record the PostgreSQL selection already stated in the programme for this target; staging ADR 0033 does not cover it. Resource design and live authority remain deferred.
+ADR needed: no
+ADR path:
+Reason: This is an implementation correction within existing restore, IAM, and diagnostics decisions; it creates no new durable architecture decision.
 
 ## Session Metrics
 

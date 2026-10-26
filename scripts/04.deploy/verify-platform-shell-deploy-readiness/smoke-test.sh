@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -251,8 +251,11 @@ blockers:
     resolution: Record the AWS target.
 YAML
 
+python3 -B scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py --prepare "$VALID" --root "$TMP_DIR/rehearsal"
+
 bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
   --manifest "$VALID" \
+  --rehearsal-root "$TMP_DIR/rehearsal" \
   --json > "$READY_REPORT"
 
 if bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
@@ -317,5 +320,7 @@ assert "gap.deploy.platform-shell-readiness.artifacts-source-commit-sha" in gap_
 assert "gap.deploy.platform-shell-readiness.auth-provider" in gap_ids
 assert "gap.deploy.platform-shell-readiness.auth-token-validation-local-tests-passed" in gap_ids
 PY
+
+python3 -B scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py
 
 echo "Platform shell deploy-readiness verification smoke test passed."

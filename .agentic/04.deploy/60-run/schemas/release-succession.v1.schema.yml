@@ -2,9 +2,9 @@
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.release-succession-v1
 #   version: 1
-#   status: draft
+#   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -30,6 +30,10 @@ records:
     contract_required: [path, sha256]
     proof_required: [accepted_at, receipt_count]
     proof_set_entry_required: [path, sha256]
+    proof_set_path_base: evidence-root
+    contract_path_base: repository-root
+    receipt_count: exact-proof-set-cardinality
+    evidence_class: live-by-default-or-explicit-simulated-in-temporary-rehearsal
   immutable_history:
     schema: deploy/accepted-release-history/v1
     required: [target, scope, status, release, predecessor, evidence]
@@ -51,3 +55,12 @@ rollback_compatibility:
   preserves: [least-privilege-runtime-grants, separate-administration-identity, protected-migration-history, revocation]
   forbids: [re-broaden-runtime-grants, inject-administrator-into-ordinary-migration, replay-completed-migration, undo-revocation]
 
+
+evidence_reuse:
+  historical: verify-retained-candidate-and-receipt-bytes-without-requiring-current-contract-equality
+  promotion_and_rollback: require-current-configuration-and-permission-contract-hashes
+  current_reference: verify-complete-predecessor-lineage
+rehearsal:
+  cli_flag: --rehearsal-root
+  location: temporary-root-outside-repository
+  production_accepts_simulated: false

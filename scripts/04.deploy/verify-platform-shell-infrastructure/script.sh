@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 43
+#   version: 44
 #   status: active
 #   created_on: "2026-09-06"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -21,6 +21,7 @@ set -euo pipefail
 #     - kanbien/staging
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: package.script.platform-shell-infrastructure-check
 #     path: package.json
@@ -412,6 +413,7 @@ else:
     if non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS") != json.dumps(expected_client_allowlist, separators=(",", ":")):
         fail("target profile must allowlist exactly the proof clients deployed to the service")
     admission_probe_base = {
+        "entrypoint": "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh",
         "route": "POST /smoke/work-items/admission",
         "permission": "platform-smoke.persistence.work-item:create",
         "request_body": "none",

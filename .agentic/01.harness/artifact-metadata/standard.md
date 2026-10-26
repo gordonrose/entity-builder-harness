@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standard.artifact-metadata
-version: 3
+version: 4
 status: active
 created_on: "2026-06-24"
-updated_on: "2026-10-23"
+updated_on: "2026-10-26"
 layer: 01.harness
 domain: metadata
 disciplines:
@@ -136,9 +136,12 @@ when it exactly matches the artifact's earliest recorded Git history date. An ex
 creation date remains immutable. This narrow recovery must not bypass immutable
 v3 dates or allow stale migration dates.
 
-After content edits, run the helper for the affected v3 files. Creation dates
-remain fixed. No-op runs must not rewrite files or advance dates. The helper's
-status-transition convenience path does not replace historical lifecycle review.
+After content edits, run the chat-owned `--before-verification --paths ...`
+preparation sequence before final verification or image qualification. It uses
+this helper for the affected v3 files, then establishes the focused verification
+inputs. Creation dates remain fixed. No-op runs must not rewrite files or
+advance dates. The helper's status-transition convenience path does not replace
+historical lifecycle review.
 
 ## Discovery And Required Headers
 
@@ -180,10 +183,13 @@ bash scripts/01.harness/artifact-metadata/generate-index/script.sh --all --stric
 ```
 
 It compares declared artifact paths with emitted index entries and fails on
-missing entries or malformed headers. The repository commit hook runs this
-working-tree coverage check alongside staged lifecycle validation. Keep the
-checker, index, helper and public checker distribution on the same discovery
-implementation; test new file types and negative embedded examples together.
+missing entries or malformed headers. The complete inventory audit is explicit
+rather than an ordinary commit cost: run
+`scripts/repo/audit-artifact-inventory/script.sh` after discovery or broad
+metadata-policy changes. Ordinary commit preparation retains staged lifecycle
+validation and focused affected checks. Keep the checker, index, helper and
+public checker distribution on the same discovery implementation; test new
+file types and negative embedded examples together.
 
 ## Enforcement And Consumers
 

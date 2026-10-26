@@ -4,7 +4,7 @@ id: deploy.script.build-platform-shell-image.readme
 version: 1
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -75,3 +75,11 @@ bash scripts/04.deploy/build-platform-shell-image/script.sh --no-cache
 be pinned by digest. The official GitHub deployment workflow resolves both
 tags to digests before it invokes this script. Local tags remain convenient for
 development, but they are never deployment evidence.
+
+For local qualification with only the declared public base images, a disposable
+`DOCKER_CONFIG` may contain anonymous `auths` entries for Docker Hub and gcr.io
+when the host's native credential helper is unavailable. Keep stored Docker
+configuration untouched, bind the same observed local Unix-socket engine
+before and after the command, and remove the temporary configuration afterward.
+Use the existing builder and smoke commands; do not substitute publication,
+remote engines, private registries, or target credentials in this recovery.

@@ -16,7 +16,7 @@ set -euo pipefail
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
-#   effects: [read-only]
+#   effects: [read-only, writes-files]
 
 ROOT="$(git rev-parse --show-toplevel)"
 RESTORE_SCRIPT="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py"
@@ -92,17 +92,11 @@ assert module.restore_run_identity({}) is None
 # returns a closed category.  Raw provider/server messages (including a
 # synthetic credential canary) cannot enter its report or stdout.
 assert module.restored_postgresql_log_group("kanbien-core-platform-persistence-restore-20261025-r2") == "/aws/rds/instance/kanbien-core-platform-persistence-restore-20261025-r2/postgresql"
-assert module.restored_database_log_groups("kanbien-core-platform-persistence-restore-20261025-r2") == (
-    "/aws/rds/instance/kanbien-core-platform-persistence-restore-20261025-r2/postgresql",
-    "/aws/rds/instance/kanbien-core-platform-persistence-restore-20261025-r2/iam-db-auth-error",
-)
 assert module.restored_postgresql_log_group("unrelated-instance") is None
 canary = "password=synthetic-not-for-output"
 assert module.classify_restored_postgresql_log_events([{"message": f'FATAL: password authentication failed for user "runtime" {canary}'}]) == "persistence-restore-server-log-authentication-rejected"
 assert module.classify_restored_postgresql_log_events([{"message": "FATAL: no pg_hba.conf entry"}]) == "persistence-restore-server-log-client-authentication-policy-rejected"
 assert module.classify_restored_postgresql_log_events([{"message": 'FATAL: role "runtime" does not exist'}]) == "persistence-restore-server-log-role-state-invalid"
-assert module.classify_restored_postgresql_log_events([{"message": "Failed to authorize the connection request because the caller is not authorized to perform `rds-db:connect` " + canary}]) == "persistence-restore-server-log-iam-authorization-rejected"
-assert module.classify_restored_postgresql_log_events([{"message": "Failed to authenticate the connection request because the provided token is malformed " + canary}]) == "persistence-restore-server-log-iam-authentication-rejected"
 assert module.classify_restored_postgresql_log_events([{"message": "unexpected provider detail " + canary}]) == "persistence-restore-server-log-no-classified-event"
 assert module.classify_restored_postgresql_log_events({}) == "persistence-restore-server-log-observation-invalid"
 
@@ -110,96 +104,50 @@ class RdsLogFixture:
     def __init__(self, response): self.response = response; self.calls = []
     def aws(self, *args):
         self.calls.append(args)
-        return self.response
+        return self.response.get(args[args.index("--log-group-name") + 1], (False, None, "aws-resource-missing")) if isinstance(self.response, dict) else self.response
 
 window_task = {"startedAt": "2026-10-26T02:00:00Z", "stoppedAt": "2026-10-26T02:00:11Z"}
-fixture = RdsLogFixture((True, {"events": [{"message": "PAM authentication failed " + canary}]}, "ok"))
+groups = module.restored_log_groups("kanbien-core-platform-persistence-restore-20261025-r2")
+assert len(groups) == 2 and groups[1].endswith("/iam-db-auth-error")
+fixture = RdsLogFixture({groups[0]: (True, {"events": []}, "ok"), groups[1]: (True, {"events": [{"message": "PAM authentication failed " + canary}]}, "ok")})
 classification, collection = module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
 assert (classification, collection) == ("persistence-restore-server-log-authentication-rejected", "collected")
-assert fixture.calls[0][:2] == ("logs", "filter-log-events") and canary not in json.dumps({"classification": classification, "collection": collection})
-class IamRdsLogFixture:
-    def aws(self, *args):
-        group = args[args.index("--log-group-name") + 1]
-        message = "ordinary PostgreSQL event" if group.endswith("/postgresql") else "Failed to authorize the connection request because the caller is not authorized to perform `rds-db:connect` " + canary
-        return True, {"events": [{"message": message}]}, "ok"
-
-assert module.collect_restored_postgresql_log_classification(IamRdsLogFixture(), "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-iam-authorization-rejected", "collected")
-missing_export = RdsLogFixture((False, None, "aws-resource-missing"))
+assert {call[call.index("--log-group-name") + 1] for call in fixture.calls} == set(groups) and canary not in json.dumps({"classification": classification, "collection": collection})
+missing_export = RdsLogFixture({groups[0]: (True, {"events": []}, "ok"), groups[1]: (False, None, "aws-resource-missing")})
 assert module.collect_restored_postgresql_log_classification(missing_export, "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-export-unavailable", "unavailable")
-class PartialRdsLogFixture:
-    def aws(self, *args):
-        group = args[args.index("--log-group-name") + 1]
-        return (True, {"events": []}, "ok") if group.endswith("/postgresql") else (False, None, "aws-resource-missing")
-
-assert module.collect_restored_postgresql_log_classification(PartialRdsLogFixture(), "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-collection-incomplete", "partial")
-recent = module.datetime.now(module.timezone.utc)
-recent_task = {"startedAt": (recent - module.timedelta(seconds=5)).isoformat().replace("+00:00", "Z"), "stoppedAt": recent.isoformat().replace("+00:00", "Z")}
-pending_delivery = RdsLogFixture((True, {"events": []}, "ok"))
-assert module.collect_restored_postgresql_log_classification(pending_delivery, "kanbien-core-platform-persistence-restore-20261025-r2", recent_task) == ("persistence-restore-server-log-delivery-pending", "pending")
-assert pending_delivery.calls == []
 assert module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", {"startedAt": "not-a-time", "stoppedAt": "2026-10-26T02:00:11Z"}) == ("persistence-restore-server-log-time-invalid", "failed")
 original_diagnostics = module.OPERATION_DIAGNOSTICS
 with TemporaryDirectory() as temporary:
     module.OPERATION_DIAGNOSTICS = Path(temporary)
-    assert module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-test", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == (True, "ok")
-    retained = json.loads((Path(temporary) / "kanbien-restore-diagnostic-test-rejected.json").read_text())
+    module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-test", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
+    retained = json.loads((next(Path(temporary).glob("kanbien-restore-diagnostic-test-*.json"))).read_text())
     assert retained["classification"] == {"code": "persistence-restore-server-log-authentication-rejected"}
-    assert retained["collection"] == {"status": "collected"}
-    assert retained["next_action"] == {"decision": "correct-and-create-new-operation"}
+    assert retained["collection"]["status"] == "collected"
+    assert retained["original_failure"]["code"] == "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE"
+    assert retained["next_action"] == {"decision": "inspect-retained-evidence"}
     assert canary not in json.dumps(retained)
-    assert module.retain_verifier_rejection(missing_export, "kanbien-restore-diagnostic-missing-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == (True, "ok")
-    unavailable = json.loads((Path(temporary) / "kanbien-restore-diagnostic-missing-export-rejected.json").read_text())
-    assert unavailable["collection"] == {"status": "unavailable"}
+    module.retain_verifier_rejection(missing_export, "kanbien-restore-diagnostic-missing-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
+    unavailable = json.loads((next(Path(temporary).glob("kanbien-restore-diagnostic-missing-export-*.json"))).read_text())
+    assert unavailable["collection"]["status"] == "unavailable"
     assert unavailable["next_action"] == {"decision": "inspect-retained-evidence"}
-    assert unavailable["original_failure"] == {"code": "persistence-restoration-verifier-rejected", "exit_status": 1}
-    assert module.retain_verifier_rejection(PartialRdsLogFixture(), "kanbien-restore-diagnostic-partial-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == (True, "ok")
-    partial = json.loads((Path(temporary) / "kanbien-restore-diagnostic-partial-export-rejected.json").read_text())
-    assert partial["collection"] == {"status": "partial"}
-    assert partial["next_action"] == {"decision": "inspect-retained-evidence"}
-    assert partial["original_failure"] == {"code": "persistence-restoration-verifier-rejected", "exit_status": 1}
-    assert module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-follow-up", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task, "rejected-reobservation") == (True, "ok")
-    assert (Path(temporary) / "kanbien-restore-diagnostic-follow-up-rejected-reobservation.json").is_file()
+    assert module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-follow-up", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ()
+    assert len(list(Path(temporary).glob("kanbien-restore-diagnostic-follow-up-*.json"))) == 1
 module.OPERATION_DIAGNOSTICS = original_diagnostics
 
 # RDS IAM authentication can lag the IAM policy read that binds the temporary
 # restored instance.  A first verifier launch waits for an aged, exact
 # CloudTrail policy observation, then launches at most one bound task.
-restored = {"DBInstanceStatus": "available", "Engine": "postgres", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "EnabledCloudwatchLogsExports": ["postgresql", "iam-db-auth-error"], "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "DBSubnetGroup": {"DBSubnetGroupName": "subnet-group"}, "Endpoint": {"Address": "restore.example.invalid"}}
+restored = {"DBInstanceStatus": "available", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "EnabledCloudwatchLogsExports": ["postgresql", "iam-db-auth-error"], "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "Endpoint": {"Address": "restore.example.invalid"}}
 controls = {"CoreServerPersistenceRestorationVerifierTaskDefinitionArn": "definition-safe", "PersistenceRestoredDatabaseSecurityGroupId": "sg-restored", "PersistenceRestorationVerifierTaskRoleName": "restore-role", "PrivateSubnetIds": "subnet-safe", "PersistenceRestorationVerifierSecurityGroupId": "sg-verifier"}
-source_for_posture = {"DBSubnetGroup": {"DBSubnetGroupName": "subnet-group"}}
-assert module.correct(restored, source_for_posture, "sg-restored")
-assert not module.correct({**restored, "EnabledCloudwatchLogsExports": ["postgresql"]}, source_for_posture, "sg-restored")
-class PolicySimulationFixture:
-    def __init__(self, decision="allowed"): self.decision = decision; self.calls = []
-    def aws(self, *args):
-        self.calls.append(args)
-        if args[1] == "get-role": return True, {"Role": {"Arn": "arn:aws:iam::337159794548:role/restore-role"}}, "ok"
-        if args[1] == "simulate-principal-policy":
-            resource = args[args.index("--resource-arns") + 1]
-            return True, {"EvaluationResults": [{"EvalActionName": "rds-db:connect", "EvalResourceName": resource, "EvalDecision": self.decision}]}, "ok"
-        raise AssertionError(args)
-
-assert module.temporary_restore_identity_policy_effective(PolicySimulationFixture(), {"PersistenceRestorationVerifierTaskRoleName": "restore-role"}, restored) == "ok"
-assert module.temporary_restore_identity_policy_effective(PolicySimulationFixture("implicitDeny"), {"PersistenceRestorationVerifierTaskRoleName": "restore-role"}, restored) == "persistence-restoration-temporary-identity-not-authorized"
-class MissingSimulationFixture(PolicySimulationFixture):
-    def aws(self, *args):
-        if args[1] == "simulate-principal-policy": return False, None, "aws-access-denied"
-        return super().aws(*args)
-
-assert module.temporary_restore_identity_policy_effective(MissingSimulationFixture(), {"PersistenceRestorationVerifierTaskRoleName": "restore-role"}, restored) == "aws-access-denied"
 class LaunchFixture:
     def __init__(self): self.calls = []
     def aws(self, *args):
         self.calls.append(args)
-        if args[1] == "get-role": return True, {"Role": {"Arn": "arn:aws:iam::337159794548:role/restore-role"}}, "ok"
-        if args[1] == "simulate-principal-policy":
-            resource = args[args.index("--resource-arns") + 1]
-            return True, {"EvaluationResults": [{"EvalActionName": "rds-db:connect", "EvalResourceName": resource, "EvalDecision": "allowed"}]}, "ok"
         if args[1] == "run-task": return True, {}, "ok"
         raise AssertionError(args)
 
 launch = LaunchFixture()
-originals = module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks
+originals = module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.temporary_restore_identity_policy_effective, module.verifier_tasks
 module.source = lambda _m: ({}, "ok")
 module.controls = lambda _m: (controls, "ok")
 module.db = lambda _m, _id: (restored, "ok")
@@ -208,51 +156,14 @@ module.task_def_valid = lambda *_: True
 identity = module.restore_identity_resource(restored)
 module.temporary_restore_identity_policy = lambda *_args: ("ok", identity)
 module.temporary_restore_identity_policy_stable = lambda *_args: True
+module.temporary_restore_identity_policy_effective = lambda *_args: "ok"
 module.verifier_tasks = lambda *_args: ([], "ok")
 output = io.StringIO()
 with contextlib.redirect_stdout(output):
     assert module.verify(launch, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2") == 1
-module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks = originals
+module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.temporary_restore_identity_policy_effective, module.verifier_tasks = originals
 assert any(call[1] == "run-task" for call in launch.calls)
 assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-verifier-submitted-awaiting-provider-observation"}]
-denied = PolicySimulationFixture("implicitDeny")
-originals = module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks
-module.source = lambda _m: ({}, "ok")
-module.controls = lambda _m: (controls, "ok")
-module.db = lambda _m, _id: (restored, "ok")
-module.correct = lambda *_: True
-module.task_def_valid = lambda *_: True
-module.temporary_restore_identity_policy = lambda *_args: ("ok", module.restore_identity_resource(restored))
-module.temporary_restore_identity_policy_stable = lambda *_args: True
-module.verifier_tasks = lambda *_args: ([], "ok")
-output = io.StringIO()
-with contextlib.redirect_stdout(output):
-    assert module.verify(denied, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2") == 1
-module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks = originals
-assert not any(call[1] == "run-task" for call in denied.calls)
-assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-temporary-identity-not-effective"}]
-
-# A new isolated restore must request both ordinary PostgreSQL and dedicated
-# IAM-authentication error exports.  The controller retains only closed
-# classifications; this extra provider signal is for in-memory diagnosis.
-class RestoreLaunchFixture:
-    def __init__(self): self.calls = []
-    def aws(self, *args): self.calls.append(args); return True, {}, "ok"
-
-originals = module.source, module.snapshot, module.controls, module.read_record_proof, module.recovery_point_binding, module.db
-module.source = lambda _m: ({"DBInstanceClass": "db.t4g.micro", "DBSubnetGroup": {"DBSubnetGroupName": "subnet-safe"}}, "ok")
-module.snapshot = lambda _m, _id: ({"Status": "available", "Encrypted": True, "DBInstanceIdentifier": module.DATABASE}, "ok")
-module.controls = lambda _m: (controls, "ok")
-module.read_record_proof = lambda _path: ({}, "ok")
-module.recovery_point_binding = lambda *_args: (({"Target": "kanbien-core-platform"}, {"snapshot": "safe"}), "ok")
-module.db = lambda _m, _id: (None, "aws-resource-missing")
-restore_launch = RestoreLaunchFixture()
-with contextlib.redirect_stdout(io.StringIO()):
-    assert module.restore(restore_launch, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2", record_proof_path=Path("safe")) == 1
-module.source, module.snapshot, module.controls, module.read_record_proof, module.recovery_point_binding, module.db = originals
-restore_call = next(call for call in restore_launch.calls if call[1] == "restore-db-instance-from-db-snapshot")
-export_index = restore_call.index("--enable-cloudwatch-logs-exports")
-assert restore_call[export_index + 1:export_index + 3] == module.RESTORE_SERVER_LOG_EXPORTS
 
 # The non-blocking stabilization check has to identify the exact temporary
 # policy mutation, and must fail closed for fresh, unrelated, or malformed
@@ -289,8 +200,8 @@ assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "co
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE"})]), "task-transport-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_NEGOTIATION_UNAVAILABLE"})]), "task-tls-negotiation-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_NEGOTIATION_UNAVAILABLE")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE"})]), "task-handshake-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE")
-assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "password=synthetic"})]), "task-unsafe") == ("unavailable", None)
-assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "provider_message": "synthetic"})]), "task-extra") == ("unavailable", None)
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "password=synthetic"})]), "task-unsafe") == ("malformed", None)
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "provider_message": "synthetic"})]), "task-extra") == ("malformed", None)
 
 # A normal RDS restore reports ``creating`` before it has an endpoint.  The
 # controller must preserve that as an in-flight operation instead of claiming
@@ -311,3 +222,5 @@ assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-resto
 assert json.loads(log_export_output.getvalue())["findings"] == [{"code": "persistence-restore-still-provisioning"}]
 print("isolated persistence restore verifier task-definition checks passed")
 PY
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py"

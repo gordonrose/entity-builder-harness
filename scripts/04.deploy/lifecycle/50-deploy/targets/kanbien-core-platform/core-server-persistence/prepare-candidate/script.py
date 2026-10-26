@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import subprocess
@@ -34,8 +35,20 @@ AWS_READ_TIMEOUT_SECONDS = 20
 AWS_PROCESS_TIMEOUT_SECONDS = 30
 
 
+_AWS_RESPONSE=None
+
+def aws_response():
+    global _AWS_RESPONSE
+    if _AWS_RESPONSE is None:
+        spec=importlib.util.spec_from_file_location("aws_response",ROOT/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
+        _AWS_RESPONSE=importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(_AWS_RESPONSE)
+    return _AWS_RESPONSE
+
+
 def aws_in_region(region: str, *parts: str) -> tuple[bool, Any, str]:
-    """Use the guarded AWS adapter in one explicit AWS region."""
+    if not aws_response().inventory_covered(ROOT):return False,None,"delivery-inventory-not-covered"
     try:
         result = subprocess.run(
             [
@@ -51,18 +64,7 @@ def aws_in_region(region: str, *parts: str) -> tuple[bool, Any, str]:
         # Callers must reconcile the named target state before another mutation.
         return False, None, "aws-command-timeout"
     if result.returncode:
-        lowered = result.stderr.lower()
-        if "accessdenied" in lowered or "not authorized" in lowered:
-            return False, None, "aws-access-denied"
-        # CloudFormation describes an absent named change set with the
-        # service-specific ``ChangeSetNotFoundException`` token.  That is a
-        # normal create-or-reconcile lifecycle state, not an opaque provider
-        # failure; callers still reconcile the exact named change set before
-        # creating it.  Keep this classification narrow so unrelated AWS
-        # failures cannot be treated as safely absent resources.
-        if "changesetnotfound" in lowered or "does not exist" in lowered or "not found" in lowered or "cannot be found" in lowered:
-            return False, None, "aws-resource-missing"
-        return False, None, "aws-command-failed"
+        return False, None, aws_response().classify_error(parts[0], parts[1], result.stderr)
     try:
         # AWS accepts several mutation requests with no response body. The
         # caller must reconcile the named provider operation, never retry an
@@ -312,6 +314,58 @@ def live_budget() -> tuple[bool, str]:
     valid_amount = amount == Decimal("100") and isinstance(limit, dict) and limit.get("Unit") == "USD"
     valid_filter = isinstance(target, list) and target == ["user:Target$kanbien-core-platform"]
     return (True, "ok") if valid_amount and valid_filter else (False, code if not ok else "target-budget-live-configuration-invalid")
+
+
+def succession_control():
+    spec=importlib.util.spec_from_file_location("release_succession",ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
+    owner=importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(owner)
+    return owner
+
+
+def retained_release(receipt: dict[str, Any]) -> bool:
+    """A retained historical image cannot evade rollback checks via 'update'."""
+    import yaml
+    root=ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence"
+    paths=[root/"accepted-release.yml",*sorted((root/succession_control().HISTORY_DIRECTORY).glob("*.yml"))]
+    for path in paths:
+        if not path.exists():continue
+        try:record=yaml.safe_load(path.read_text())
+        except (OSError,yaml.YAMLError):return True
+        if not isinstance(record,dict):return True
+        acceptance=record.get("acceptance")
+        identities=[record.get("release"),acceptance.get("rollback_release") if isinstance(acceptance,dict) else None]
+        if any(isinstance(value,dict) and value.get("image_digest")==receipt.get("image_digest") for value in identities):return True
+    return False
+
+
+def rollback_compatibility(receipt: dict[str, Any], identifier: str | None) -> bool:
+    """Use the existing immutable succession owner before changing a boundary."""
+    if not isinstance(identifier,str) or not identifier.startswith("rollback-compatibility-"):
+        return False
+    root=ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence"
+    owner=succession_control()
+    try:
+        _, reference=owner.compatibility_record(root,identifier)
+        identity=reference["identity"]
+        if reference["target"]!="kanbien-core-platform" or reference["scope"]!="core-server-persistence":return False
+        if identity["image_digest"]!=receipt["image_digest"] or identity["source_revision"]!=receipt["source_revision"]:return False
+        expected={"core-server-service","persistence-restoration-verifier-task","private-release-verifier-task"}
+        if set(identity["workloads"])!=expected:return False
+        contracts={"configuration_contract":"infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml","permission_contract":"infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"}
+        if any(identity[key]["path"]!=path for key,path in contracts.items()):return False
+        # Reading compatibility must retain the same historical ownership that
+        # was required when recording it; a detached archive is not a rollback.
+        try:
+            history,_=owner.history_record_for_id(root,identity["historical_release_id"])
+            historical=history["release"]
+        except owner.SuccessionFailure:
+            historical=owner.retained_rollback_identity(root)
+            if historical["release_id"]!=identity["historical_release_id"]:return False
+        return historical["image_digest"]==receipt["image_digest"] and historical["source_revision"]==receipt["source_revision"]
+    except (owner.SuccessionFailure,OSError,KeyError,TypeError,ValueError):
+        return False
 
 
 def main() -> int:

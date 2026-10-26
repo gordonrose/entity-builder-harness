@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-26"
@@ -15,7 +15,108 @@
 #   - id: repo.command.check-selection
 #     path: scripts/repo/check-selection/script.sh
 schema: repo/check-catalog/v1
+dormant_impact_roots:
+- .agentic/02.rag-rulebook
+- scripts/02.rag-rulebook
+- docs/02.rag-rulebook
+- infra/04.deploy/02.rag-rulebook
 checks:
+  # Disposable engine/driver CI proof only; persistence-container owns shipped-image qualification.
+  postgresql-disposable-diagnostics:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+    stage: package
+    evidence_class: ci
+    effects:
+    - network
+    - writes-files
+    owner: deploy.test.postgresql-disposable-connection-diagnostics
+    inputs:
+    - platform/adapters/aws/persistence/postgresql
+    - platform/persistence
+    - packages/core
+    - package.json
+    - package-lock.json
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  postgresql-connection-diagnostics:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.postgresql-connection-diagnostics
+    runtime:
+      tools:
+      - bash
+      - python3
+      - node
+      - npm
+      - typescript
+      - openssl
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      - TS_NODE_PROJECT
+      - TS_NODE_COMPILER_OPTIONS
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - .npmrc
+      - .node-version
+      - .nvmrc
+      node_packages:
+      - pg
+      - '@types/node'
+      - typescript
+      - '@aws-sdk/rds-signer'
+      - '@types/pg'
+    inputs:
+    - platform/adapters/aws/persistence/postgresql
+    - platform/persistence
+    - packages/core
+    - package.json
+    - package-lock.json
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  restore-connection-diagnostics:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.kanbien-core-platform.isolated-persistence-restore
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
   rag-retirement-regression:
     argv:
     - bash
@@ -384,6 +485,7 @@ checks:
       - node
       - npm
       - typescript
+      - openssl
       environment:
       - PATH
       - LANG
@@ -404,6 +506,7 @@ checks:
       - .nvmrc
       node_packages:
       - pg
+      - '@aws-sdk/rds-signer'
       - '@types/node'
       - typescript
     inputs:
@@ -849,6 +952,81 @@ checks:
     - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+  task-classification-fixtures:
+    argv:
+    - bash
+    - scripts/00.chat/classification/classify-task/check-fixtures.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: chat.script.classification.classify-task.check-fixtures
+    runtime:
+      tools:
+      - bash
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      config_inputs: []
+    inputs:
+    - .agentic/routing-policy.yaml
+    - scripts/00.chat/classification/classify-task
+  lifecycle-metadata-preparation:
+    argv:
+    - bash
+    - scripts/01.harness/artifact-metadata/update-lifecycle/script.sh
+    - --changed
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: harness.script.artifact-metadata.update-lifecycle
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/01.harness/artifact-metadata/update-lifecycle
+  artifact-inventory-audit:
+    argv:
+    - bash
+    - scripts/repo/audit-artifact-inventory/script.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: repo.script.audit-artifact-inventory
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/repo/audit-artifact-inventory
+    - scripts/01.harness/artifact-metadata/generate-index
 repository_inputs:
 - inputs:
   - .github/workflows/deploy-rag-rulebook-staging.yml
@@ -904,6 +1082,19 @@ repository_inputs:
   checks:
   - check-selection-regression
 - inputs:
+  - .agentic/routing-policy.yaml
+  - scripts/00.chat/classification/classify-task
+  checks:
+  - task-classification-fixtures
+- inputs:
+  - scripts/01.harness/artifact-metadata/update-lifecycle
+  checks:
+  - lifecycle-metadata-preparation
+- inputs:
+  - scripts/repo/audit-artifact-inventory
+  checks:
+  - artifact-inventory-audit
+- inputs:
   - scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement
   checks:
   - artifact-placement-regression
@@ -954,3 +1145,94 @@ repository_inputs:
   checks:
   - collector-package-custody-regression
   - deployment-operation-diagnostics-regression
+
+- inputs:
+  - platform/adapters/aws/persistence/postgresql
+  - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  checks:
+  - postgresql-connection-diagnostics
+  - postgresql-disposable-diagnostics
+- inputs:
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
+  - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+  - .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml
+  checks:
+  - restore-connection-diagnostics
+  - deployment-operation-diagnostics-regression
+
+- inputs:
+  - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  checks:
+  - postgresql-disposable-diagnostics
+- inputs:
+  - scripts/04.deploy/inventory-deploy-control
+  - .github/workflows/delivery-coverage.yml
+  checks:
+  - delivery-inventory-regression
+- inputs:
+  - infra/04.deploy/03.product/targets/kanbien/staging
+  - .github/workflows/deploy-platform-shell-staging.yml
+  - scripts/04.deploy/verify-platform-shell-deployment-workflow
+  checks:
+  - shell-declaration
+  - shell-infrastructure
+  - shell-publication
+
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
+  - scripts/04.deploy/shared/provider-adapters/docker
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py
+  checks:
+  - package-custody-regression
+  - core-package-custody-regression
+  - collector-package-custody-regression
+  - shell-publication
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody
+  checks:
+  - core-package-custody-regression
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/response.py
+  - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+  - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+  checks:
+  - persistence-provider-regression
+  - shell-negative-authz-client-check
+  - shell-postgresql-relational-smoke-check
+  - deployment-operation-diagnostics-regression
+- inputs:
+  - scripts/04.deploy/validate-container-boundaries
+  - docs/04.deploy/source-material/shared/container-image-management.md
+  - docs/04.deploy/rules/shared/container-image-management.yml
+  checks:
+  - container-boundaries-regression
+- inputs:
+  - scripts/04.deploy/verify-platform-shell-deploy-readiness
+  - scripts/04.deploy/lifecycle/60-run/release-succession
+  checks:
+  - shell-release-evidence-regression
+- inputs:
+  - scripts/02.rag-rulebook/validate-okf-source-material-reviews
+  - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml
+  - .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+  checks:
+  - source-review-history-regression
+- inputs:
+  - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
+  checks:
+  - shell-candidate-preflight-regression
+- inputs:
+  - scripts/02.rag-rulebook/build-local-runtime
+  - scripts/01.harness/artifact-metadata
+  checks:
+  - rag-runtime-build-regression
+- inputs:
+  - scripts/02.rag-rulebook/compile-retrieval-policy
+  checks:
+  - rag-policy-compiler-regression
+- inputs:
+  - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
+  checks:
+  - rag-selector-regression

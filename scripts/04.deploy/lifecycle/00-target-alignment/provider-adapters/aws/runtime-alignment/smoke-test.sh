@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -64,6 +64,7 @@ def fake(command, **_):
     if "ecs describe-task-definition" in joined: return Run(responses["task"])
     if "iam get-role" in joined: return Run(responses["iam"])
     raise AssertionError(joined)
+module.response_adapter()[1].inventory_covered=lambda _root: True
 module.subprocess.run = fake
 argv = ["script.py", "--profile", "x", "--region", "eu-west-1", "--account-id", "337159794548", "--repository", "repo", "--image-digest", "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "--foundation-stack", "foundation", "--runtime-stack", "runtime", "--cluster", "cluster", "--delivery-role", "delivery", "--execution-role", "execution", "--operation", "update", "--accepted-release", str(accepted)]
 old = sys.argv; sys.argv = argv

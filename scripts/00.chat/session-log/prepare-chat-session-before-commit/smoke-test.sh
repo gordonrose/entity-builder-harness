@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.prepare-chat-session-before-commit.smoke-test
-#   version: 1
+#   version: 4
 #   status: active
 #   created_on: "2026-07-09"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -56,6 +56,9 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/prepare-chat-session-before-commit" \
   "$REPO/scripts/00.chat/worktree/check-write-location" \
   "$REPO/scripts/01.harness/artifact-metadata/check-headers" \
+  "$REPO/scripts/01.harness/artifact-metadata/generate-index" \
+  "$REPO/scripts/01.harness/artifact-metadata/update-lifecycle" \
+  "$REPO/scripts/repo/check-selection" \
   "$LOG_DIR"
 
 git -C "$REPO" init --quiet --initial-branch=main
@@ -78,6 +81,38 @@ echo "stub-ok"
 EOF
   chmod +x "$stub"
 done
+
+cat > "$REPO/scripts/01.harness/artifact-metadata/update-lifecycle/script.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'lifecycle %s\n' "$*" >> preparation-order
+printf '%s\n' '{"plans":[{"path":".agentic/task.md"}],"errors":[]}'
+EOF
+chmod +x "$REPO/scripts/01.harness/artifact-metadata/update-lifecycle/script.sh"
+
+cat > "$REPO/scripts/01.harness/artifact-metadata/generate-index/script.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'index %s\n' "$*" >> preparation-order
+printf '%s\n' '{"schema":"agentic-artifact-index/v1"}'
+EOF
+chmod +x "$REPO/scripts/01.harness/artifact-metadata/generate-index/script.sh"
+
+cat > "$REPO/scripts/repo/check-selection/script.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'selector %s\n' "$*" >> preparation-order
+printf '%s\n' '{"schema":"repo/check-selection-report/v1","verdict":"planned","checks":[]}'
+EOF
+chmod +x "$REPO/scripts/repo/check-selection/script.sh"
+
+cat > "$REPO/scripts/01.harness/artifact-metadata/check-headers/script.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'headers %s\n' "$*" >> preparation-order
+echo 'stub-ok'
+EOF
+chmod +x "$REPO/scripts/01.harness/artifact-metadata/check-headers/script.sh"
 
 cat > "$REPO/.agentic/00.chat/checklists/before-commit.md" <<'EOF'
 # Before Commit
@@ -146,6 +181,30 @@ EOF
 git -C "$REPO" add .
 git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' commit --quiet -m 'base'
 git -C "$REPO" switch --quiet -c "chat/$SESSION_ID"
+
+bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+  bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh \
+  --before-verification --paths .agentic/task.md src/feature.ts \
+  >"$TMP_ROOT/before-verification.out"
+
+grep -q 'Verification preparation passed.' "$TMP_ROOT/before-verification.out" \
+  || fail "before-verification mode did not pass"
+expected_order=$'lifecycle --paths .agentic/task.md src/feature.ts --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md src/feature.ts\nselector --paths .agentic/task.md src/feature.ts --stage local --record-preparation --json'
+if [[ "$(cat "$REPO/preparation-order")" != "$expected_order" ]]; then
+  fail "before-verification did not complete lifecycle, structural, then selector preparation in order"
+fi
+
+rm "$REPO/scripts/repo/check-selection/script.sh"
+: > "$REPO/preparation-order"
+bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+  bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh \
+  --before-verification --paths .agentic/task.md \
+  >"$TMP_ROOT/portable-before-verification.out"
+grep -q 'Repository selector is absent' "$TMP_ROOT/portable-before-verification.out" \
+  || fail "before-verification did not preserve portable operation without a repository selector"
+if [[ "$(cat "$REPO/preparation-order")" != $'lifecycle --paths .agentic/task.md --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md' ]]; then
+  fail "portable preparation unexpectedly attempted repository selector work"
+fi
 
 set +e
 bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \

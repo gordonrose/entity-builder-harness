@@ -4,7 +4,7 @@ id: deploy.schema.declaration-contract.v1.guide
 version: 1
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -45,3 +45,15 @@ A contract is covered only within its own scope. Adding a new environment
 variable, image input, database dependency, queue, identity, network path, or
 recovery requirement means updating the contract or declaring that a different
 scope owns it.
+
+Proof fields use stable IDs in `scripts/repo/check-selection/checks.yml`, with
+stage and exact target-profile applicability. The physical delivery census
+finds these contracts and the shared selector runs their applicable checks;
+registration is not limited to the newer scope-index format.
+
+A local-only profile uses `deploy/local-target-profile/v1` and declares
+`execution: {kind: local, publication: none, provider_deployment: none}`.
+Its bounded scope may mark deploy/acceptance stages inapplicable with explicit
+reasons. It still needs local proofs and actual finished-image qualification
+for a supported image. Hosted retirement never retires an active local image
+implicitly; a retained artifact can have both historical and current consumers.

@@ -17,6 +17,12 @@
       ],
       "@kanbien/platform-adapter-aws-persistence-postgresql": [
         "platform/adapters/aws/persistence/postgresql/src/index.ts"
+      ],
+      "@kanbien/platform-contracts": [
+        "platform/contracts/src/index.ts"
+      ],
+      "@kanbien/platform-observability": [
+        "platform/observability/src/index.ts"
       ]
     }
   },

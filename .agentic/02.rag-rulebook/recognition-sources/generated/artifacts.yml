@@ -25,7 +25,7 @@
 #   - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
 #     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 #   created_on: '2026-06-25'
-#   updated_on: '2026-10-25'
+#   updated_on: '2026-10-26'
 
 schema: rag-rulebook/recognition-source/v1
 source_id: recognition.generated.artifacts
@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1356
-  term_count: 2742
+  indexed_artifacts: 1425
+  term_count: 2880
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4084,6 +4084,30 @@ terms:
   canonical_id: rag-rulebook.derivation-report.04-deploy.2026-09-08-platform-target-alerting-policy
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities-merge-metadata
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities-merge-metadata
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities-merge-metadata
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+  confidence_weight: 1
+- term: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-reports.readme
   category: artifact-id
   match_type: exact
@@ -6022,6 +6046,30 @@ terms:
   canonical_id: rag-rulebook.source-material-review.04-deploy.platform-target-alerting-policy.2026-09-08
   evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml
   confidence_weight: 1
+- term: rag-rulebook.source-material-review.04-deploy.container-image-capabilities-merge-metadata.2026-10-26
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities-merge-metadata.2026-10-26
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities-merge-metadata.2026-10-26
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.04-deploy.container-image-capabilities.2026-10-26
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities.2026-10-26
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities.2026-10-26
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml
+  confidence_weight: 1
 - term: rag-rulebook.source-material-reviews.readme
   category: artifact-id
   match_type: exact
@@ -7294,6 +7342,18 @@ terms:
   canonical_id: rag-rulebook.script.smoke-test-service-image
   evidence_path: scripts/02.rag-rulebook/smoke-test-service-image/script.sh
   confidence_weight: 1
+- term: rag-rulebook.test.local-image-delivery-wiring
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.test.local-image-delivery-wiring
+  evidence_path: scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.test.local-image-delivery-wiring
+  evidence_path: scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py
+  confidence_weight: 1
 - term: rag-rulebook.script.validate-context-packet.readme
   category: artifact-id
   match_type: exact
@@ -8385,6 +8445,18 @@ terms:
   match_type: exact
   canonical_id: platform.adapters.readme
   evidence_path: platform/adapters/README.md
+  confidence_weight: 1
+- term: product.test.postgresql-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.test.postgresql-diagnostics
+  evidence_path: platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts
+  confidence_weight: 1
+- term: platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts
+  category: file-path
+  match_type: exact
+  canonical_id: product.test.postgresql-diagnostics
+  evidence_path: platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts
   confidence_weight: 1
 - term: deploy.schema.secret-dependency-contract.v1.guide
   category: artifact-id
@@ -9502,6 +9574,18 @@ terms:
   canonical_id: aws.workflows.plan-aws-change
   evidence_path: .agentic/aws/workflows/plan-aws-change.md
   confidence_weight: 1
+- term: github.workflow.delivery-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: github.workflow.delivery-coverage
+  evidence_path: .github/workflows/delivery-coverage.yml
+  confidence_weight: 1
+- term: .github/workflows/delivery-coverage.yml
+  category: file-path
+  match_type: exact
+  canonical_id: github.workflow.delivery-coverage
+  evidence_path: .github/workflows/delivery-coverage.yml
+  confidence_weight: 1
 - term: github.workflow.deploy-platform-shell-staging
   category: artifact-id
   match_type: exact
@@ -10390,6 +10474,30 @@ terms:
   canonical_id: infra.04-deploy.02-rag-rulebook.ecs-fargate.cloudformation.readme
   evidence_path: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/README.md
   confidence_weight: 1
+- term: infra.04-deploy.02-rag-rulebook.local-delivery
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.local-delivery
+  evidence_path: infra/04.deploy/02.rag-rulebook/environments/local/declaration-contract.yml
+  confidence_weight: 1
+- term: infra/04.deploy/02.rag-rulebook/environments/local/declaration-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.local-delivery
+  evidence_path: infra/04.deploy/02.rag-rulebook/environments/local/declaration-contract.yml
+  confidence_weight: 1
+- term: infra.04-deploy.02-rag-rulebook.local-target
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.local-target
+  evidence_path: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+  confidence_weight: 1
+- term: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.local-target
+  evidence_path: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+  confidence_weight: 1
 - term: infra.04-deploy.02-rag-rulebook.github-actions.readme
   category: artifact-id
   match_type: exact
@@ -10726,6 +10834,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.dockerfile
   evidence_path: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile
   confidence_weight: 1
+- term: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.readme
+  evidence_path: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.readme
+  evidence_path: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.builder-config
   category: artifact-id
   match_type: exact
@@ -10773,6 +10893,18 @@ terms:
   match_type: exact
   canonical_id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
   evidence_path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.image.core-server-persistence.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.image.core-server-persistence.readme
+  evidence_path: infra/04.deploy/03.product/image/core-server-persistence/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/image/core-server-persistence/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.image.core-server-persistence.readme
+  evidence_path: infra/04.deploy/03.product/image/core-server-persistence/README.md
   confidence_weight: 1
 - term: infra.04-deploy.03-product.image.core-server-persistence.contract
   category: artifact-id
@@ -11350,6 +11482,30 @@ terms:
   canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.declaration-contract
   evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.operational-controls
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.operational-controls
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/declarations/operational-controls.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/declarations/operational-controls.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.operational-controls
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/declarations/operational-controls.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.relational-delivery
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.relational-delivery
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/declarations/relational-delivery.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/declarations/relational-delivery.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.relational-delivery
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/declarations/relational-delivery.yml
+  confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
   category: artifact-id
   match_type: exact
@@ -11650,6 +11806,18 @@ terms:
   canonical_id: deploy.script.build-platform-shell-image.readme
   evidence_path: scripts/04.deploy/build-platform-shell-image/README.md
   confidence_weight: 1
+- term: deploy.check.platform-shell-package-source
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.check.platform-shell-package-source
+  evidence_path: scripts/04.deploy/build-platform-shell-image/check-source.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/build-platform-shell-image/check-source.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.check.platform-shell-package-source
+  evidence_path: scripts/04.deploy/build-platform-shell-image/check-source.sh
+  confidence_weight: 1
 - term: deploy.script.build-platform-shell-image.prepare-runtime
   category: artifact-id
   match_type: exact
@@ -11697,6 +11865,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.inventory-deploy-control.readme
   evidence_path: scripts/04.deploy/inventory-deploy-control/README.md
+  confidence_weight: 1
+- term: deploy.test.delivery-inventory
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.delivery-inventory
+  evidence_path: scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.delivery-inventory
+  evidence_path: scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py
+  confidence_weight: 1
+- term: deploy.compiler.delivery-inventory
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.compiler.delivery-inventory
+  evidence_path: scripts/04.deploy/inventory-deploy-control/delivery_inventory.py
+  confidence_weight: 1
+- term: scripts/04.deploy/inventory-deploy-control/delivery_inventory.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.compiler.delivery-inventory
+  evidence_path: scripts/04.deploy/inventory-deploy-control/delivery_inventory.py
   confidence_weight: 1
 - term: deploy.script.inventory-deploy-control
   category: artifact-id
@@ -11782,6 +11974,30 @@ terms:
   canonical_id: deploy.script.declaration-coverage.readme
   evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md
   confidence_weight: 1
+- term: deploy.test.runtime-configuration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.runtime-configuration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.runtime-configuration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py
+  confidence_weight: 1
+- term: deploy.validation.runtime-configuration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.validation.runtime-configuration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.validation.runtime-configuration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py
+  confidence_weight: 1
 - term: deploy.compiler.declaration-coverage
   category: artifact-id
   match_type: exact
@@ -11817,6 +12033,18 @@ terms:
   match_type: exact
   canonical_id: deploy.adapter.aws.ecr-read-access
   evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh
+  confidence_weight: 1
+- term: deploy.adapter.aws.ecs-runtime-configuration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.aws.ecs-runtime-configuration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.aws.ecs-runtime-configuration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
   confidence_weight: 1
 - term: deploy.adapter.aws.runtime-alignment
   category: artifact-id
@@ -12226,6 +12454,54 @@ terms:
   canonical_id: deploy.test.core-server-persistence-configuration
   evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs
   confidence_weight: 1
+- term: deploy.test.core-server-persistence-observability-runtime
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.core-server-persistence-observability-runtime
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.core-server-persistence-observability-runtime
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs
+  confidence_weight: 1
+- term: deploy.test.postgresql-connection-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.postgresql-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.postgresql-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  confidence_weight: 1
+- term: deploy.test.postgresql-disposable-connection-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.postgresql-disposable-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.postgresql-disposable-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  confidence_weight: 1
+- term: deploy.test.packaged-persistence-connection-diagnostic
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.packaged-persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.packaged-persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs
+  confidence_weight: 1
 - term: deploy.test.core-server-persistence-composition-runtime
   category: artifact-id
   match_type: exact
@@ -12430,6 +12706,42 @@ terms:
   canonical_id: deploy.command.package-custody-receipt.readme
   evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/README.md
   confidence_weight: 1
+- term: deploy.command.package-custody-capture
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.package-custody-capture
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.package-custody-capture
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py
+  confidence_weight: 1
+- term: deploy.test.package-qualification-binding
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.package-qualification-binding
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.package-qualification-binding
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py
+  confidence_weight: 1
+- term: deploy.validation.package-qualification-binding
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.validation.package-qualification-binding
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.validation.package-qualification-binding
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
+  confidence_weight: 1
 - term: deploy.command.package-custody-receipt
   category: artifact-id
   match_type: exact
@@ -12465,6 +12777,18 @@ terms:
   match_type: exact
   canonical_id: deploy.command.package-custody-receipt-validation
   evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+  confidence_weight: 1
+- term: deploy.validation.package-qualification-workflow
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.validation.package-qualification-workflow
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.validation.package-qualification-workflow
+  evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
   confidence_weight: 1
 - term: deploy.adapter.aws.iam-policy-coverage
   category: artifact-id
@@ -12549,6 +12873,18 @@ terms:
   match_type: exact
   canonical_id: deploy.command.smoke-test-core-server-persistence-image.readme
   evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md
+  confidence_weight: 1
+- term: deploy.test.persistence-packaged-inactive-capability
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.persistence-packaged-inactive-capability
+  evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.persistence-packaged-inactive-capability
+  evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py
   confidence_weight: 1
 - term: deploy.test.local-public-persistence-recovery
   category: artifact-id
@@ -12669,6 +13005,30 @@ terms:
   match_type: exact
   canonical_id: deploy.command.kanbien-core-platform.core-server-package-custody.validation
   evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py
+  confidence_weight: 1
+- term: deploy.test.collector-image-metric-behavior
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.collector-image-metric-behavior
+  evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.collector-image-metric-behavior
+  evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py
+  confidence_weight: 1
+- term: deploy.test.collector-image-startup
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.collector-image-startup
+  evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.collector-image-startup
+  evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.core-server-persistence-observability-collector-package-custody
   category: artifact-id
@@ -12862,6 +13222,18 @@ terms:
   canonical_id: deploy.command.kanbien-core-platform.deploy-candidate
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/script.sh
   confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.bootstrap-deployment-cli
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.bootstrap-deployment-cli
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.bootstrap-deployment-cli
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py
+  confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.prepare-candidate.readme
   category: artifact-id
   match_type: exact
@@ -12958,6 +13330,30 @@ terms:
   canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-database-permission-surface
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh
   confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
+  confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.apply-private-persistence-verifier-route-update
   category: artifact-id
   match_type: exact
@@ -13029,6 +13425,18 @@ terms:
   match_type: exact
   canonical_id: deploy.command.kanbien-core-platform.prepare-core-server-persistence-candidate
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.provider-cli-boundaries
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.provider-cli-boundaries
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.provider-cli-boundaries
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.retire-failed-core-server-persistence-candidate
   category: artifact-id
@@ -13534,6 +13942,30 @@ terms:
   canonical_id: deploy.fixture.kanbien-core-platform.persistence-ecs-captured-responses
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/fixtures/ecs-captured-responses.yml
   confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.observability-receipts
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts-smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts-smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts-smoke-test.py
+  confidence_weight: 1
+- term: deploy.library.kanbien-core-platform.observability-receipts
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.library.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.library.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py
+  confidence_weight: 1
 - term: deploy.test.kanbien-core-platform.persistence-proof-receipts
   category: artifact-id
   match_type: exact
@@ -13558,6 +13990,78 @@ terms:
   canonical_id: deploy.library.kanbien-core-platform.persistence-proof-receipts
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
   confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.persistence-proof-applicability
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh
+  confidence_weight: 1
+- term: deploy.test.persistence-connection-diagnostic
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py
+  confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
   category: artifact-id
   match_type: exact
@@ -13581,6 +14085,66 @@ terms:
   match_type: exact
   canonical_id: deploy.test.kanbien-core-platform.isolated-persistence-restore
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-observability-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-observability-readiness.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.rehearse-observability-readiness.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.py
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.rehearse-observability-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
   category: artifact-id
@@ -13677,6 +14241,30 @@ terms:
   match_type: exact
   canonical_id: deploy.command.persistence-accepted-release.validate
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.sh
+  confidence_weight: 1
+- term: deploy.reference.kanbien-core-platform.private-verifier-continuation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.reference.kanbien-core-platform.private-verifier-continuation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.reference.kanbien-core-platform.private-verifier-continuation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.private-verifier-operation-continuation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.private-verifier-operation-continuation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.private-verifier-operation-continuation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
   category: artifact-id
@@ -13942,6 +14530,18 @@ terms:
   canonical_id: deploy.script.operational-realization-gate.readme
   evidence_path: scripts/04.deploy/operational-realization-gate/README.md
   confidence_weight: 1
+- term: deploy.test.operational-realization-evidence-reuse
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.operational-realization-evidence-reuse
+  evidence_path: scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.operational-realization-evidence-reuse
+  evidence_path: scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py
+  confidence_weight: 1
 - term: deploy.fixture.operational-realization-preflight-normalized-facts
   category: artifact-id
   match_type: exact
@@ -14122,6 +14722,30 @@ terms:
   canonical_id: deploy.script.reconcile-platform-shell-staging.readme
   evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/README.md
   confidence_weight: 1
+- term: deploy.test.platform-shell-release-control
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-release-control
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-release-control
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py
+  confidence_weight: 1
+- term: deploy.adapter.platform-shell-release-control
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.platform-shell-release-control
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/release_control.py
+  confidence_weight: 1
+- term: scripts/04.deploy/reconcile-platform-shell-staging/release_control.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.platform-shell-release-control
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/release_control.py
+  confidence_weight: 1
 - term: deploy.script.reconcile-platform-shell-staging
   category: artifact-id
   match_type: exact
@@ -14193,6 +14817,18 @@ terms:
   match_type: exact
   canonical_id: deploy.readme.run-platform-shell-candidate-execution-preflight
   evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md
+  confidence_weight: 1
+- term: deploy.test.platform-shell-candidate-continuation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-candidate-continuation
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-candidate-continuation
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-candidate-execution-preflight
   category: artifact-id
@@ -14422,6 +15058,18 @@ terms:
   canonical_id: deploy.script.run-platform-shell-persistence-delivery-proof.readme
   evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md
   confidence_weight: 1
+- term: deploy.test.platform-shell-persistence-delivery-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-persistence-delivery-recovery
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/recovery-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/recovery-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-persistence-delivery-recovery
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/recovery-test.py
+  confidence_weight: 1
 - term: deploy.script.run-platform-shell-persistence-delivery-proof
   category: artifact-id
   match_type: exact
@@ -14578,6 +15226,18 @@ terms:
   canonical_id: deploy.script.run-platform-shell-worker-smoke.readme
   evidence_path: scripts/04.deploy/run-platform-shell-worker-smoke/README.md
   confidence_weight: 1
+- term: deploy.test.platform-shell-worker-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-worker-recovery
+  evidence_path: scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-worker-recovery
+  evidence_path: scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py
+  confidence_weight: 1
 - term: deploy.script.run-platform-shell-worker-smoke
   category: artifact-id
   match_type: exact
@@ -14638,6 +15298,114 @@ terms:
   canonical_id: deploy.shared.deployment-operation-diagnostics
   evidence_path: scripts/04.deploy/shared/deployment-operation-diagnostics.py
   confidence_weight: 1
+- term: deploy.adapter.aws.cloudformation-template
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.aws.cloudformation-template
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.aws.cloudformation-template
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+  confidence_weight: 1
+- term: deploy.provider.aws.cognito-provisioning-observation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.provider.aws.cognito-provisioning-observation
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.provider.aws.cognito-provisioning-observation
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+  confidence_weight: 1
+- term: deploy.test.aws.ecr-scan
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.aws.ecr-scan
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.aws.ecr-scan
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py
+  confidence_weight: 1
+- term: deploy.provider.aws.ecr-scan
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.provider.aws.ecr-scan
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.provider.aws.ecr-scan
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+  confidence_weight: 1
+- term: deploy.provider.aws.ecr-publication-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.provider.aws.ecr-publication-contract
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.provider.aws.ecr-publication-contract
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py
+  confidence_weight: 1
+- term: deploy.test.aws.provisioning-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.aws.provisioning-recovery
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.aws.provisioning-recovery
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+  confidence_weight: 1
+- term: deploy.provider.aws.response-classification
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.provider.aws.response-classification
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/response.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/aws/response.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.provider.aws.response-classification
+  evidence_path: scripts/04.deploy/shared/provider-adapters/aws/response.py
+  confidence_weight: 1
+- term: deploy.test.docker.disposable-cleanup
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.docker.disposable-cleanup
+  evidence_path: scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.docker.disposable-cleanup
+  evidence_path: scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup-test.py
+  confidence_weight: 1
+- term: deploy.adapter.docker.disposable-cleanup
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.docker.disposable-cleanup
+  evidence_path: scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.docker.disposable-cleanup
+  evidence_path: scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py
+  confidence_weight: 1
 - term: deploy.test.safe-command-diagnostics
   category: artifact-id
   match_type: exact
@@ -14673,6 +15441,18 @@ terms:
   match_type: exact
   canonical_id: deploy.script.smoke-test-platform-shell-image.readme
   evidence_path: scripts/04.deploy/smoke-test-platform-shell-image/README.md
+  confidence_weight: 1
+- term: deploy.test.platform-shell-relational-package
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-relational-package
+  evidence_path: scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-relational-package
+  evidence_path: scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py
   confidence_weight: 1
 - term: deploy.script.smoke-test-platform-shell-image
   category: artifact-id
@@ -14733,6 +15513,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-deploy-readiness.readme
   evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
+  confidence_weight: 1
+- term: deploy.validation.platform-shell-release-evidence.test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.validation.platform-shell-release-evidence.test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.validation.platform-shell-release-evidence.test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py
+  confidence_weight: 1
+- term: deploy.validation.platform-shell-release-evidence
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.validation.platform-shell-release-evidence
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.validation.platform-shell-release-evidence
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py
   confidence_weight: 1
 - term: deploy.script.verify-platform-shell-deploy-readiness
   category: artifact-id
@@ -14841,6 +15645,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-deployment-workflow.readme
   evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/README.md
+  confidence_weight: 1
+- term: deploy.script.platform-shell-package-custody
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.platform-shell-package-custody
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.platform-shell-package-custody
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py
+  confidence_weight: 1
+- term: deploy.test.platform-shell-publication-image
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-publication-image
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.platform-shell-publication-image
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh
   confidence_weight: 1
 - term: deploy.script.verify-platform-shell-deployment-workflow
   category: artifact-id

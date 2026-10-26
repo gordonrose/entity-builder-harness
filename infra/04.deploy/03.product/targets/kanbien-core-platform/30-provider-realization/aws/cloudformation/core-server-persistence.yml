@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -309,7 +309,7 @@ Resources:
       DeletionProtection: true
       AutoMinorVersionUpgrade: true
       EnableIAMDatabaseAuthentication: true
-      EnableCloudwatchLogsExports: [postgresql, upgrade]
+      EnableCloudwatchLogsExports: [postgresql, iam-db-auth-error]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   PersistenceServiceDiscovery:

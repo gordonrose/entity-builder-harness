@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.prepare-chat-session-before-commit
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -27,6 +27,85 @@ set -euo pipefail
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  prepare-chat-session-before-commit/script.sh
+  prepare-chat-session-before-commit/script.sh --before-verification --paths <task-path> [<task-path>...]
+
+The default command validates a staged commit boundary. The before-verification
+mode completes lifecycle metadata for the named task paths, validates their
+artifact structure and emits the focused selector plan whose input identities
+must remain unchanged for commit-time evidence reuse.
+EOF
+}
+
+prepare_before_verification() {
+  shift
+  if [ "${1:-}" != "--paths" ]; then
+    echo "ERROR: --before-verification requires --paths <task-path> [...]" >&2
+    usage >&2
+    exit 2
+  fi
+  shift
+  if [ "$#" -eq 0 ]; then
+    echo "ERROR: --paths requires at least one task path" >&2
+    exit 2
+  fi
+
+  local lifecycle_report
+  local -a lifecycle_artifacts
+  lifecycle_report="$(mktemp "${TMPDIR:-/tmp}/verification-preparation-lifecycle.XXXXXX")"
+
+  bash scripts/00.chat/worktree/check-write-location/script.sh
+  bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
+  if ! bash scripts/01.harness/artifact-metadata/update-lifecycle/script.sh \
+    --paths "$@" --skip-non-artifacts --apply > "$lifecycle_report"; then
+    cat "$lifecycle_report"
+    rm -f "$lifecycle_report"
+    return 1
+  fi
+  cat "$lifecycle_report"
+  mapfile -t lifecycle_artifacts < <(python3 - "$lifecycle_report" <<'PY'
+import json
+import sys
+report = json.load(open(sys.argv[1], encoding='utf-8'))
+for plan in report.get('plans', []):
+    if isinstance(plan, dict) and isinstance(plan.get('path'), str):
+        print(plan['path'])
+PY
+)
+  if [ "${#lifecycle_artifacts[@]}" -gt 0 ]; then
+    bash scripts/01.harness/artifact-metadata/generate-index/script.sh --paths "${lifecycle_artifacts[@]}" --strict > /dev/null
+  fi
+  rm -f "$lifecycle_report"
+  bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths "$@"
+  if [ -f scripts/repo/check-selection/script.sh ]; then
+    bash scripts/repo/check-selection/script.sh --paths "$@" --stage local --record-preparation --json
+  else
+    echo "Repository selector is absent; portable lifecycle preparation completed without repository verification planning."
+  fi
+  echo "Verification preparation passed. Run the selected final verification next; commit preparation will reuse only unchanged input identities."
+}
+
+case "${1:-}" in
+  --before-verification)
+    prepare_before_verification "$@"
+    exit 0
+    ;;
+  -h|--help)
+    usage
+    exit 0
+    ;;
+  "")
+    ;;
+  *)
+    echo "ERROR: unknown argument: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
 
 bash scripts/00.chat/worktree/check-write-location/script.sh
 bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh

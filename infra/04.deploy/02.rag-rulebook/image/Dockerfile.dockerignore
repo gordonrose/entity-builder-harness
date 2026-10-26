@@ -45,6 +45,21 @@ build
 .pypirc
 
 !package.json
+!AGENTS.md
+
+# Public source evidence referenced by the retrieval policy; no runtime trees.
+!packages/
+!packages/core/
+!packages/core/README.md
+!packages/core/src/
+!packages/core/src/index.ts
+!packages/core/src/audit/
+!packages/core/src/audit/index.ts
+!packages/core/src/queues/
+!packages/core/src/queues/index.ts
+!platform/
+!platform/contracts/
+!platform/contracts/README.md
 
 !.agentic/
 !.agentic/**
@@ -92,3 +107,9 @@ build
 **/credentials/**
 **/credential
 **/credential/**
+
+# Keep host interpreter caches out after the broad source allowlists.
+**/__pycache__
+**/__pycache__/**
+**/*.pyc
+**/*.pyo

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: rag-rulebook.workflow.review-okf-source-material
-version: 1
+version: 2
 status: active
 created_on: "2026-06-29"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 02.rag-rulebook
 domain: rulebook
 disciplines:
@@ -77,8 +77,11 @@ Each reviewer must address:
 
 1. Identify the source material path, corpus ID, vertical, and target user.
 2. Confirm the source is non-executable unless explicitly governed otherwise.
-3. Create or update a review record under
-   `.agentic/02.rag-rulebook/source-material-reviews/`.
+3. Create or update a pending review record under
+   `.agentic/02.rag-rulebook/source-material-reviews/`. Preserve accepted records
+   unchanged. A source revision after acceptance receives a new review ID and
+   record path; historical scores and accepted hashes remain attached to the
+   bytes originally reviewed.
 4. Run the architect review and record score, gaps, and recommendations.
 5. Run the agentic engineer review and record score, gaps, and
    recommendations.
@@ -90,8 +93,15 @@ Each reviewer must address:
 10. Record applied changes and rejected recommendations with reasons.
 11. Rerun all reviewers.
 12. Repeat until every reviewer score is greater than `9.5`.
-13. Mark the review record `accepted`.
-14. Continue to `derive-rules-from-source.md`.
+13. Mark the new review record `accepted`, recording the same generated source
+    SHA-256 in `source_material.sha256` and
+    `final_decision.accepted_source_sha256`.
+14. Run `bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh
+    --record <new-record-path>` before current source-to-rule derivation.
+    `--current` separately validates all historical record integrity and requires
+    a matching valid accepted review for each referenced current source. A stale
+    historical record is retained evidence, not approval for changed bytes.
+15. Continue to `derive-rules-from-source.md`.
 
 ## Stop Conditions
 

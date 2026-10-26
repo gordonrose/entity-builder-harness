@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -83,6 +83,11 @@ print('Persistence package stage regression passed (declaration gap blocks befor
 # Coverage itself was exercised above; this stub lets us prove corrupt health
 # cannot reach composition or Docker even when the requirement chain is covered.
 (fixture / coverage / 'script.sh').write_text('#!/usr/bin/env bash\nprintf \'%s\\n\' \'{"verdict":"covered"}\'\n')
+# Delivery inventory has its own CLI regression suite; isolate the later health
+# gate here so malformed health is rejected by its owning implementation.
+inventory = fixture / 'scripts/04.deploy/inventory-deploy-control/script.py'
+inventory.parent.mkdir(parents=True)
+inventory.write_text('print(\'{"verdict":"covered"}\')\n')
 capabilities = (
     'scripts/04.deploy/lifecycle/60-run/release-succession',
     'scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery',
@@ -118,6 +123,8 @@ contract.write_text(yaml.safe_dump(invalid, sort_keys=False))
 for command in (
     'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',
     'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh',
+    'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh',
+    'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh',
 ):
     destination = fixture / command; destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text('#!/usr/bin/env bash\ntouch "$COVERAGE_LATER_MARKER"\n')

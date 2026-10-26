@@ -4,7 +4,7 @@ id: rag-rulebook.script.build-local-runtime.readme
 version: 1
 status: active
 created_on: "2026-06-26"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 02.rag-rulebook
 domain: runtime
 disciplines:
@@ -70,6 +70,17 @@ The command checks:
 - generated recognition-source freshness
 - rulebook index validity
 
+Generated recognition sources are refreshed against the selected source tree
+before their evidence paths are validated. This supports a packaged source
+archive whose contents differ from the full checkout. Curated sources still
+require validation; failed validator reports are preserved in stderr.
+
+The default `--source-layout checkout` requires every canonical evidence path.
+The image selects `--source-layout packaged-source-archive`, which permits only
+exact exclusions declared by the evidence-bundle policy. Their identities and
+reasons remain in the compiled policy and produce missing-evidence query gaps.
+Other absent source paths still fail compilation.
+
 Then it writes the generated index, chunk set, manifest, and validation report.
 
 The manifest also records fingerprints for the live inputs that
@@ -95,6 +106,7 @@ or rulebook-generation inputs no longer match the runtime that was built.
 
 ## Effects
 
-This command writes only to the selected local runtime directory. It does not
+This command writes the selected runtime directory and refreshes stale generated
+recognition-source files in the selected source tree. It does not
 call the network, generate embeddings, start a server, deploy anything, or
 modify curated sources.

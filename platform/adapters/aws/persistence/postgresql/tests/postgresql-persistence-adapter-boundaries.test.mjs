@@ -8,7 +8,7 @@ const srcRoot = path.join(packageRoot, "src");
 const packageJsonPath = path.join(packageRoot, "package.json");
 const disposableIntegrationRunnerPath = path.join(packageRoot, "tests", "run-disposable-integration.mjs");
 const repositoryRoot = path.resolve(packageRoot, "../../../../..");
-const allowedSourceImportPattern = /^(?:node:crypto|pg|@kanbien\/core(?:\/[^"']+)?|@kanbien\/platform-persistence|\.\.?\/[^"']+)$/;
+const allowedSourceImportPattern = /^(?:node:crypto|node:async_hooks|pg|@aws-sdk\/rds-signer|@kanbien\/core(?:\/[^"']+)?|@kanbien\/platform-persistence|\.\.?\/[^"']+)$/;
 
 async function walk(dir) {
   const entries = await readdir(dir);

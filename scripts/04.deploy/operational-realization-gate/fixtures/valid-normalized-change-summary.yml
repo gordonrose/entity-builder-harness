@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -22,7 +22,7 @@
 #     path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
 schema: operational-realization-normalized-change-summary/v1
 contract_id: harmless-delivery-route
-check_id: change-summary-check
+check_id: change-shape-check
 timestamp: "2026-09-27T00:00:00Z"
 operation_counts:
   create: 1
@@ -30,3 +30,4 @@ operation_counts:
   delete: 0
   replace: 0
   broaden-permission: 0
+input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d

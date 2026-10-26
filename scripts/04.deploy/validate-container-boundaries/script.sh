@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-30"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -31,14 +31,15 @@ set -euo pipefail
 
 ROOT=""
 JSON=false
+BUILD_CONTEXT=""
 
 usage() {
   cat <<'EOF'
 Usage:
-  validate-container-boundaries/script.sh [--root <path>] [--json]
+  validate-container-boundaries/script.sh [--root <path>] [--build-context <repository-root|image-directory>] [--json]
 
 Checks that Dockerfiles stay under:
-  infra/<deploy-layer>/<deploy-track>/image/Dockerfile
+  infra/<deploy-layer>/<deploy-track>/image/[<capability>/]Dockerfile
 
 The command is read-only.
 EOF
@@ -52,6 +53,14 @@ while [ "$#" -gt 0 ]; do
         exit 2
       fi
       ROOT="$2"
+      shift 2
+      ;;
+    --build-context)
+      if [ "$#" -lt 2 ] || { [ "$2" != repository-root ] && [ "$2" != image-directory ]; }; then
+        echo "ERROR: --build-context requires repository-root or image-directory." >&2
+        exit 2
+      fi
+      BUILD_CONTEXT="$2"
       shift 2
       ;;
     --json)
@@ -74,7 +83,7 @@ if [ -z "$ROOT" ]; then
   ROOT="$(git rev-parse --show-toplevel)"
 fi
 
-python3 - "$ROOT" "$JSON" <<'PY'
+python3 - "$ROOT" "$JSON" "$BUILD_CONTEXT" <<'PY'
 from __future__ import annotations
 
 import json
@@ -84,6 +93,7 @@ from pathlib import Path
 
 root = Path(sys.argv[1]).resolve()
 emit_json = sys.argv[2] == "true"
+build_context = sys.argv[3]
 
 startup_errors: list[dict[str, str]] = []
 if not root.exists():
@@ -114,7 +124,7 @@ if startup_errors:
             "errors": len(startup_errors),
             "warnings": 0,
         },
-        "allowed_dockerfile_pattern": "infra/<deploy-layer>/<deploy-track>/image/Dockerfile",
+        "allowed_dockerfile_pattern": "infra/<deploy-layer>/<deploy-track>/image/[<capability>/]Dockerfile",
         "errors": startup_errors,
         "warnings": [],
     }
@@ -126,8 +136,8 @@ if startup_errors:
             print(f"- {item['path']}: {item['message']} {item['resolution']}")
     sys.exit(1)
 
-allowed_dockerfile = re.compile(r"^infra/[^/]+/[^/]+/image/Dockerfile$")
-allowed_image_ignore = re.compile(r"^infra/[^/]+/[^/]+/image/(?:\.dockerignore|Dockerfile\.dockerignore)$")
+allowed_dockerfile = re.compile(r"^infra/[^/]+/[^/]+/image/(?:[a-z0-9][a-z0-9-]*/)?Dockerfile$")
+allowed_image_ignore = re.compile(r"^infra/[^/]+/[^/]+/image/(?:[a-z0-9][a-z0-9-]*/)?(?:\.dockerignore|Dockerfile\.dockerignore)$")
 ignored_dirs = {
     ".git",
     "node_modules",
@@ -268,7 +278,7 @@ for dockerfile in sorted(dockerfiles):
         error(
             path,
             "Dockerfile is outside the governed infra image boundary.",
-            "Move it to infra/<deploy-layer>/<deploy-track>/image/Dockerfile or update the container-image-management rule through review.",
+            "Move it to infra/<deploy-layer>/<deploy-track>/image/[<capability>/]Dockerfile or update the container-image-management rule through review.",
         )
         continue
 
@@ -282,11 +292,12 @@ for dockerfile in sorted(dockerfiles):
             "Dockerfile is missing sibling README.md.",
             "Add a README.md that explains build context, runtime user, port, health, and provenance expectations.",
         )
-    if not dockerignore.is_file() and not dockerfile_specific_ignore.is_file():
+    effective = dockerfile_specific_ignore.is_file() or (root / '.dockerignore').is_file() if build_context == 'repository-root' else dockerfile_specific_ignore.is_file() or dockerignore.is_file()
+    if not effective:
         error(
             rel(dockerignore),
             "Dockerfile is missing an effective ignore file.",
-            "Add image/.dockerignore for image-directory contexts or image/Dockerfile.dockerignore for repo-root contexts.",
+            "Add the selected image directory .dockerignore for image-directory contexts, or a Dockerfile-specific / repository-root .dockerignore for repo-root contexts.",
         )
 
 for dockerignore in sorted(dockerignores):
@@ -299,7 +310,7 @@ for dockerignore in sorted(dockerignores):
         error(
             path,
             ".dockerignore is outside an approved image directory.",
-            "Move it next to a governed Dockerfile as image/.dockerignore or image/Dockerfile.dockerignore, or use repo-root .dockerignore for shared context protection.",
+            "Move it next to a governed Dockerfile as image/.dockerignore or image/[<capability>/]Dockerfile.dockerignore, or use repo-root .dockerignore for shared context protection.",
         )
         continue
     validate_ignore_coverage(dockerignore)
@@ -308,13 +319,14 @@ report = {
     "schema": "deploy/container-boundary-report/v1",
     "ok": not errors,
     "root": str(root),
+    "build_context": build_context or "caller-not-selected",
     "counts": {
         "dockerfiles": len(dockerfiles),
         "dockerignores": len(dockerignores),
         "errors": len(errors),
         "warnings": len(warnings),
     },
-    "allowed_dockerfile_pattern": "infra/<deploy-layer>/<deploy-track>/image/Dockerfile",
+    "allowed_dockerfile_pattern": "infra/<deploy-layer>/<deploy-track>/image/[<capability>/]Dockerfile",
     "errors": errors,
     "warnings": warnings,
 }

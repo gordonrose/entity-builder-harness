@@ -4,7 +4,7 @@ id: deploy.workflow.verify-accept-or-restore-release
 version: 4
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -74,6 +74,24 @@ and the selected provider workflow for concrete commands and authority.
    restored workload identities and proof. Retain candidate and restoration
    evidence separately.
 
+## Bounded Connection Investigation
+
+A connection diagnostic is a separate non-accepting operation against an owned
+disposable restored database. The selected scope declares its controller mode,
+record/snapshot binding, task identity, attempt/deadline limits and cleanup.
+It does not recreate a database, replay migrations, rotate credentials, promote
+a release or satisfy recovery acceptance. Only the existing recovery verifier's
+accepted receipt can meet that obligation.
+
+The diagnostic controller reserves one launch per database incarnation before
+submitting its task. An uncertain response, interrupted invocation, expired ECS
+task retention or missing logs permits observation of that reservation and task,
+never another launch. The existing recovery verifier keeps its own single-run
+identity. Log reconciliation reads at most three pages/observations per stream
+per invocation and retains new closed observations without rewriting earlier
+reports. Collection/write failure is reported separately from the original
+operation result. Deployment authority owns live execution and temporary access.
+
 ## Uncertain Results and Completion
 
 Use existing logs, receipts and provider operation identities to inspect an
@@ -86,3 +104,9 @@ Complete only when the declared final release is healthy, independently verified
 and reflected in the accepted record. Output the candidate verdict, final live
 identity, accepted record and safe evidence references. No result grants new
 permissions, expands the scope, or substitutes for missing mutation authority.
+
+Historical succession validation checks the retained evidence hashes and full
+predecessor lineage without comparing historical contracts to today's files.
+New candidate promotion and rollback compatibility still require exact current
+configuration/permission contract hashes. This permits a corrected successor
+without rewriting or invalidating genuine historical proof.

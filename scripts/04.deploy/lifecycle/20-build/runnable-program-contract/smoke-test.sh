@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -123,3 +123,15 @@ PY
 expect_failure "evidence-field-unsafe" "$TEMPORARY_DIRECTORY/unsafe-evidence.yml"
 
 echo "Runnable-program contract local tests passed."
+
+python3 - "$FIXTURES/valid-contract.yml" "$TEMPORARY_DIRECTORY" <<'PYTHON'
+from pathlib import Path
+import copy, subprocess, sys, yaml
+original=yaml.safe_load(Path(sys.argv[1]).read_text())
+entry=original['runnable_programs'][0]['entrypoint']
+for command in [['echo',entry],['sh',entry],['node','--eval','0',entry]]:
+    document=copy.deepcopy(original);document['image_contracts'][0]['command']=command
+    path=Path(sys.argv[2])/'runtime-mismatch.yml';path.write_text(yaml.safe_dump(document))
+    result=subprocess.run(['python3','-B','scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py','--contract',str(path),'--json'],capture_output=True,text=True)
+    assert result.returncode==1 and 'image-command-invalid' in result.stdout
+PYTHON

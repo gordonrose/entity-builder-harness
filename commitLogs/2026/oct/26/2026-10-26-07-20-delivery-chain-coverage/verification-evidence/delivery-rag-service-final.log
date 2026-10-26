@@ -1,0 +1,2 @@
+{"schema": "rag-rulebook/local-image-wiring-test/v1", "verdict": "passed", "evidence_class": "simulated", "cli_checks": 6}
+RAG/rulebook local service smoke test passed.
