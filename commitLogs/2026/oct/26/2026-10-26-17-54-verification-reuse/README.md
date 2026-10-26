@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T19:11:44Z
-latest_commit_sha: 3bbd801fb1be34469dc69f6aa5586a093dc80bf4
-chat_duration: 4639s (00:01:17:19)
+latest_commit_at_utc: 2026-10-26T20:32:26Z
+latest_commit_sha: 7ecae22e21e787e65c1fdb2040aa37d714739fd7
+chat_duration: 9481s (00:02:38:01)
 estimated_chat_tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -48,6 +48,10 @@ Simplify repository verification and preserve trusted evidence through local mai
 - Raised: Restored catalogue coverage and resolved independent-review findings
   Resolution: Latest main omitted 49 previously accepted check definitions. Restored them without altering provider permissions; audited consumed source/runtime inputs, removed fixture runtime alias leakage, and bound nested configuration validation helpers. Final prepared-input verification follows.
 
+
+- Raised: Provider fixture mock-state race observed once
+  Resolution: A concurrent JSON state-file read in verify-candidate/operation-test.py failed during refresh validation. Its failed receipt was rejected; an unchanged trusted-runner retry passed and reused the other50 proofs. Production behavior and requirements were not changed.
+
 ## Decisions Made
 
 
@@ -61,6 +65,10 @@ Simplify repository verification and preserve trusted evidence through local mai
 
 - Summary: Active worktree is this newly created October 26 session, based on main bcaa8c94. Original older chat remains untouched. Baseline selector suite: 65 tests, 3 failures, 133.62 seconds; lost registrations and producer binding were restored. Focused caller bundle: four tests passed in 84.67 seconds. Before/after unrelated-scope fixture: 3 executions / 1.766 seconds versus 1 execution, 2 reuses / 0.814 seconds. Unchanged repeat: zero executions; actual refresh reuses all three proofs with zero images/provider operations.
   Durable evidence: Development evidence: /tmp/verification-baseline-selector.log, /tmp/verification-before-counts.json, /tmp/verification-after-counts.json, /tmp/verification-callers.log. Final source verification, commit gate, task commit, log checkpoint and local-main integration remain to complete; no push or cloud operations authorized.
+
+
+- Summary: Final verification complete: 80 selector regressions pass; all 91 registered check contracts valid; independent delivery census covered with zero gaps. All 14 approved costly checks remain mandatory at integration and external stages retain their owners. Independent review resolved consumed-input, runtime, catalogue-only selection and census findings. Unchanged refresh transferred all 51 local receipts with zero executions and zero images.
+  Durable evidence: Full qualified run: selected 68, executed 51, reused 0, deferred 17, 1248.056s. Combined incoming-main revalidation: selected 68, executed 9, reused 42, deferred 17, 581.683s. Provider mock JSON publication race caused one failed attempt; unchanged retry passed: selected 68, executed 1, reused 50, deferred 17, 115.628s. Bounded resolution commit gate: selected47/executed0/reused23/deferred24 in21.751s. Unchanged apply: selected 68, executed 0, reused 51, deferred 17, 66.233s. Before/after unrelated-scope fixture: 3 executions/1.766s versus1 execution+2 reuses/0.814s. Stable repeat:0 executions. UTC-rollover fixture preserved bytes, artifact and preparation-receipt mtime, and immutable created_on; changed content requires preparation. Main refresh used fetched/local accepted refs, no stash. Source/contract/runtime/dependency/environment/mode changes and unsafe/missing receipts remain legitimate rerun reasons. No push, image publication, deployment, cloud or credential changes by this chat. Durable authority: this chat worktree's private agentic-local-checks receipts/latest-report.json; development reports /tmp/verification-final2.json, verification-combined.json, verification-latest-retry.json, verification-apply.log. Final local-main readiness will reconcile current census and the same affected proofs.
 
 ## Activity Log
 
@@ -138,6 +146,86 @@ Mode: manual
 
 Action: Combine bounded header reads and commit-log exclusion with optional metadata proof edges; retain dormant-scope exclusion and incoming non-probing selection. Preserve both branches tests.
 
+
+### 2026-10-26T20:32:24Z - Commit recorded
+
+Commit: `0f88893766fcb780dd133dafc2616349f39ffe3b`
+
+Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+
+Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T20:32:25Z - Commit recorded
+
+Commit: `cec8e8cf7ef621cd2436ed96ed18fbc35be6b460`
+
+Message: Merge branch 'chat/2026-10-26-17-54-simplify-repository-verification-and-preserve-trusted-eviden' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+
+Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T20:32:25Z - Commit recorded
+
+Commit: `c02fb1416e45b93b3518c0cb2bf487f656773545`
+
+Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+
+Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T20:32:25Z - Commit recorded
+
+Commit: `d4dd228ac4e18419ddb3c6ec9ec6e76759bb77ff`
+
+Message: fix(verification): preserve catalogue and census integration guards
+
+Summary: Resolve verification contracts, independent census promotion gate, audited global structural inputs and regressions.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T20:32:26Z - Commit recorded
+
+Commit: `383c73fac6666ec32d4d3991d177311f06b350a3`
+
+Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+
+Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T20:32:26Z - Commit recorded
+
+Commit: `7ecae22e21e787e65c1fdb2040aa37d714739fd7`
+
+Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+
+Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T20:32:26Z - Context hygiene
+
+Summary: Final verification complete: 80 selector regressions pass; all 91 registered check contracts valid; independent delivery census covered with zero gaps. All 14 approved costly checks remain mandatory at integration and external stages retain their owners. Independent review resolved consumed-input, runtime, catalogue-only selection and census findings. Unchanged refresh transferred all 51 local receipts with zero executions and zero images.
+
+Durable evidence: Full qualified run: selected 68, executed 51, reused 0, deferred 17, 1248.056s. Combined incoming-main revalidation: selected 68, executed 9, reused 42, deferred 17, 581.683s. Provider mock JSON publication race caused one failed attempt; unchanged retry passed: selected 68, executed 1, reused 50, deferred 17, 115.628s. Bounded resolution commit gate: selected47/executed0/reused23/deferred24 in21.751s. Unchanged apply: selected 68, executed 0, reused 51, deferred 17, 66.233s. Before/after unrelated-scope fixture: 3 executions/1.766s versus1 execution+2 reuses/0.814s. Stable repeat:0 executions. UTC-rollover fixture preserved bytes, artifact and preparation-receipt mtime, and immutable created_on; changed content requires preparation. Main refresh used fetched/local accepted refs, no stash. Source/contract/runtime/dependency/environment/mode changes and unsafe/missing receipts remain legitimate rerun reasons. No push, image publication, deployment, cloud or credential changes by this chat. Durable authority: this chat worktree's private agentic-local-checks receipts/latest-report.json; development reports /tmp/verification-final2.json, verification-combined.json, verification-latest-retry.json, verification-apply.log. Final local-main readiness will reconcile current census and the same affected proofs.
+
+
+### 2026-10-26T20:32:26Z - Issue
+
+Raised: Provider fixture mock-state race observed once
+
+Resolution: A concurrent JSON state-file read in verify-candidate/operation-test.py failed during refresh validation. Its failed receipt was rejected; an unchanged trusted-runner retry passed and reused the other50 proofs. Production behavior and requirements were not changed.
+
 ## Sub-Agent Activity
 
 
@@ -165,6 +253,48 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
   Summary: Implemented prepared-input receipts, explicit consumed-input contracts, commit/integration scheduling and trusted refresh reuse. Independent review resolved material findings. Checkpoint gate passed: selected57, executed31, deferred26, 360.571s; broader final verification remains pending on the combined latest-main tree.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `0f88893766fcb780dd133dafc2616349f39ffe3b`
+  Time UTC: 2026-10-26T20:32:24Z
+  Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+  Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `cec8e8cf7ef621cd2436ed96ed18fbc35be6b460`
+  Time UTC: 2026-10-26T20:32:25Z
+  Message: Merge branch 'chat/2026-10-26-17-54-simplify-repository-verification-and-preserve-trusted-eviden' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+  Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `c02fb1416e45b93b3518c0cb2bf487f656773545`
+  Time UTC: 2026-10-26T20:32:25Z
+  Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+  Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `d4dd228ac4e18419ddb3c6ec9ec6e76759bb77ff`
+  Time UTC: 2026-10-26T20:32:25Z
+  Message: fix(verification): preserve catalogue and census integration guards
+  Summary: Resolve verification contracts, independent census promotion gate, audited global structural inputs and regressions.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `383c73fac6666ec32d4d3991d177311f06b350a3`
+  Time UTC: 2026-10-26T20:32:26Z
+  Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+  Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `7ecae22e21e787e65c1fdb2040aa37d714739fd7`
+  Time UTC: 2026-10-26T20:32:26Z
+  Message: Merge branch 'main' into agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146
+  Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -188,9 +318,9 @@ Reason: This refines existing verification catalogue, private cache, lifecycle p
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T17:54:25Z
-Latest commit at UTC: 2026-10-26T19:11:44Z
-Latest commit SHA: 3bbd801fb1be34469dc69f6aa5586a093dc80bf4
-Chat duration: 4639s (00:01:17:19)
+Latest commit at UTC: 2026-10-26T20:32:26Z
+Latest commit SHA: 7ecae22e21e787e65c1fdb2040aa37d714739fd7
+Chat duration: 9481s (00:02:38:01)
 Estimated chat tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
