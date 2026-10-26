@@ -1,0 +1,1 @@
+{"verdict": "passed", "evidence_class": "container-qualification-negative", "image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8", "injected_fault": "healthy-loaded-readiness-observer-disconnected", "observed_rejection": "packaged-readiness-metric-ready-not-exported", "cleanup": "all-five-effects-observed-absent"}

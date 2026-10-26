@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 6
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -165,3 +165,5 @@ assert module.wait_for_verifier_stop("arn:task/stopped", 120, lambda _: ("ok", {
 PY
 
 echo "Fixed core-platform target control tests passed."
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py"

@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-07-01"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -46,6 +46,13 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY package.json ./package.json
+# Public canonical evidence required by the selected retrieval policy.
+COPY AGENTS.md ./AGENTS.md
+COPY packages/core/README.md ./packages/core/README.md
+COPY packages/core/src/index.ts ./packages/core/src/index.ts
+COPY packages/core/src/audit/index.ts ./packages/core/src/audit/index.ts
+COPY packages/core/src/queues/index.ts ./packages/core/src/queues/index.ts
+COPY platform/contracts/README.md ./platform/contracts/README.md
 COPY .agentic/ ./.agentic/
 COPY .github/workflows/ ./.github/workflows/
 COPY infra/ ./infra/
@@ -55,6 +62,7 @@ COPY docs/ ./docs/
 RUN mkdir -p /app/.cache \
   && (RAG_REPO_ROOT=/app RAG_SOURCE_COMMIT_SHA="${SOURCE_COMMIT_SHA}" bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
       --output-dir /app/.cache/02.rag-rulebook \
+      --source-layout packaged-source-archive \
       --pretty >/tmp/rag-rulebook-runtime-build.log \
     || { cat /tmp/rag-rulebook-runtime-build.log >&2; exit 1; }) \
   && chown node:node /app/.cache \
@@ -65,6 +73,7 @@ RUN mkdir -p /app/.cache \
   && rm -f /tmp/rag-rulebook-runtime-build.log
 
 ENV NODE_ENV=production
+ENV COMMIT_SHA=${SOURCE_COMMIT_SHA}
 ENV RAG_REPO_ROOT=/app
 ENV RAG_RUNTIME_DIR=/app/.cache/02.rag-rulebook
 ENV HOST=0.0.0.0

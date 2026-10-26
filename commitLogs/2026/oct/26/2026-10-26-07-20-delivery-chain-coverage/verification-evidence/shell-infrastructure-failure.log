@@ -1,0 +1,16 @@
+Platform-shell synthetic scheduler policy check passed.
+Platform-shell metric-coverage static policy check passed.
+Platform-shell deployment-artifact store static policy check passed.
+PostgreSQL relational-reference static policy check passed.
+Platform-shell deployment reconciliation static policy check passed.
+Platform-shell drift-detection boundary check passed.
+Negative authorization test-client local validation passed.
+.
+----------------------------------------------------------------------
+Ran 1 test in 5.902s
+
+OK
+Negative authorization smoke local validation passed.
+Persistence-write client local validation passed.
+Persistence smoke local validation passed.
+persistence-admission-probe: the admission probe must retain its fixed non-mutating policy

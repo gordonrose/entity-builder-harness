@@ -1,0 +1,165 @@
+{
+  "schema": "delivery-repair/v1",
+  "id": "E-ENTRYPOINT-AGREEMENT",
+  "families": [
+    "A",
+    "B",
+    "E"
+  ],
+  "status": "repaired-local-verified",
+  "checked_at": "2026-10-26T10:27:03.489574+00:00",
+  "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "concrete_failure": "The registered admission_probe.entrypoint field made both exact policy dictionaries reject the valid target profile. The admission local check and its infrastructure umbrella exited 1 with the fixed non-mutating-policy mismatch.",
+  "affected_routes": [
+    "platform-shell persistence admission probe",
+    "platform-shell infrastructure local preflight",
+    "selected local shell-infrastructure",
+    "selected local shell-persistence-admission-probe-check"
+  ],
+  "downstream_consumers": [
+    "package.json platform:shell:infrastructure:check",
+    ".github/workflows/deploy-platform-shell-staging.yml",
+    "scripts/repo/check-selection/checks.yml"
+  ],
+  "contract": "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml#auth.persistence_write_test_client.admission_probe",
+  "implementation": "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+  "caller": "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+  "test": "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+  "changed_files": [
+    "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+    "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+    "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+    "scripts/repo/check-selection/checks.yml"
+  ],
+  "source_inputs_sha256": {
+    "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py": "6d85c97e0a48e3a3db602530f6be4c99d913a3c1734b4a20d3a118f9db5abd58",
+    "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh": "5e5cc850c3c7f2781921ffb604bac9ae0871c00ff847bb15663b219c501de08f",
+    "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh": "b4c33c039aadde726992c9a8ac6f90b1e3a32da1c3f77ca449589d4ffa02faac",
+    "scripts/repo/check-selection/checks.yml": "7ca460c8ef539cdc3f37631cb3e4a24323ee2ce32896c11b9fe1fa16e10bbce4"
+  },
+  "smallest_reusable_repair": "Both owning exact policy dictionaries require the canonical registered command. No unknown-field filtering, registration removal or policy relaxation. Root catalog and script headers truthfully declare temporary-fixture writes. Existing smoke exercises the actual CLI with disposable profiles.",
+  "test_safety_repair": "Removed execution against the real target profile from the local smoke. Disposable CLI fixtures install AWS subprocess and urllib HTTP tripwires; any attempted access creates a marker and fails the test. Six lifecycle states validate offline, and source/completed states refuse execution before external access.",
+  "negative_regressions": [
+    "missing entrypoint rejects",
+    "substituted entrypoint rejects",
+    "write route substitution rejects",
+    "request body permission rejects",
+    "persistence side effect permission rejects",
+    "unsafe output policy rejects",
+    "unknown policy field rejects",
+    "five non-executable lifecycle states refuse execution",
+    "combined validate/execute parser modes reject"
+  ],
+  "valid_cases": [
+    "current accepted profile passes actual shell CLI --validate",
+    "all six governed lifecycle state policy shapes pass actual Python CLI --validate",
+    "canonical registered entrypoint preserves strict no-body/non-mutating policy"
+  ],
+  "earliest_enforcement_stage": "Cheap target-profile validation before AWS lookup, secret retrieval or HTTP; existing infrastructure local preflight and repository selected checks.",
+  "verification": [
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh"
+      ],
+      "phase": "before-repair",
+      "exit_code": 1,
+      "seconds": 21.724,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-infrastructure-failure.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh"
+      ],
+      "phase": "before-repair",
+      "exit_code": 1,
+      "seconds": 0.286,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-admission-failure.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh"
+      ],
+      "phase": "after-repair",
+      "exit_code": 0,
+      "seconds": 7.107,
+      "cli_cases": 20,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-admission-repaired.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh"
+      ],
+      "phase": "after-repair",
+      "exit_code": 0,
+      "seconds": 68.111,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-infrastructure-repaired.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+        "--paths",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "exit_code": 0,
+      "seconds": 0.122,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-1.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-deterministic-process-drift.sh",
+        "--paths",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "exit_code": 0,
+      "seconds": 0.016,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-2.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-governed-script-command-drift.sh",
+        "--paths",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "exit_code": 0,
+      "seconds": 8.302,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-3.log"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+        "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "exit_code": 0,
+      "seconds": 0.012,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-entrypoint-governance-4.log"
+    }
+  ],
+  "closure_evidence": "Both exact selected commands pass; 20 intended-reason positive/negative CLI cases pass; affected metadata headers, deterministic drift, governed command drift and diffcheck pass.",
+  "remaining_limits": [
+    "No cloud, secret values or public HTTP accessed; fixtures do not establish live proof.",
+    "The root integration owner will refresh generated recognition metadata for the two header changes and rerun the full selected local suite.",
+    "Previous full governance snapshot remains historical; this report adds the later affected-path verification."
+  ]
+}

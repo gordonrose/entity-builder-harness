@@ -1,0 +1,531 @@
+{
+  "schema": "delivery/merge-package-qualification-summary/v1",
+  "recorded_at": "2026-10-26T13:56:38.693127+00:00",
+  "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476",
+  "result": "passed",
+  "required_packages": 4,
+  "qualified_packages": 4,
+  "packages": [
+    {
+      "package": "core",
+      "result": "passed",
+      "image_id": "sha256:bf228554c62d451c558aa2531876f1526eced9efa5f956190542601baaffe5b3",
+      "previous_image_id": "sha256:18a08ca7a0a168d8146c37393c26d11a0f3ed4376cacc703746a869fbe1326ae",
+      "image_identity_reused": false,
+      "qualification_receipt": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification.json",
+      "receipt_sha256": "94bd16324dc6e05dd31ec024db3373acb0c48e5b023874963b79db5b914f28c3",
+      "qualification_commands": [
+        {
+          "name": "core-public-recovery",
+          "argv": [
+            "bash",
+            "scripts/01.harness/run-governed-script.sh",
+            "--approved-action",
+            "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+            "--package",
+            "core",
+            "--tag",
+            "kanbien-core-server:merge-qualified",
+            "--port",
+            "39554"
+          ],
+          "started_at": "2026-10-26T13:47:26.844507+00:00",
+          "finished_at": "2026-10-26T13:48:47.296129+00:00",
+          "duration_seconds": 80.466,
+          "exit_code": 0,
+          "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-public-recovery.stdout.log",
+          "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-public-recovery.stderr.log"
+        }
+      ],
+      "binding_record_command": {
+        "name": "core-qualification-record",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "record",
+          "--image",
+          "sha256:bf228554c62d451c558aa2531876f1526eced9efa5f956190542601baaffe5b3",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification.json",
+          "--input",
+          "infra/04.deploy/03.product/image/core-server/image-contract.yml",
+          "--input",
+          "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+          "*"
+        ],
+        "started_at": "2026-10-26T13:49:50.845925+00:00",
+        "finished_at": "2026-10-26T13:49:51.259852+00:00",
+        "duration_seconds": 0.414,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification-record.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification-record.stderr.log"
+      },
+      "binding_verify_command": {
+        "name": "core-qualification-verify",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "verify",
+          "--image",
+          "sha256:bf228554c62d451c558aa2531876f1526eced9efa5f956190542601baaffe5b3",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification.json",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+          "*"
+        ],
+        "started_at": "2026-10-26T13:49:51.326846+00:00",
+        "finished_at": "2026-10-26T13:49:51.943569+00:00",
+        "duration_seconds": 0.617,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification-verify.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-qualification-verify.stderr.log"
+      },
+      "historical_receipt_preserved": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/core-normalized-qualification.json",
+      "historical_receipt_sha256": "1d2379f664a38b2af337d11f0f630103e7bb81251e5cc579e5415b454bd65ad8",
+      "inputs": {
+        "infra/04.deploy/03.product/image/core-server/image-contract.yml": "71e5efb910c80f449de0defdf80cb0310a7445d21a839b828f5ab56f94fbbb67",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh": "0129e31693f2c15b4c4c3b172a94cf3696bdb6327d6b690fe0877b32711423a6"
+      },
+      "configuration_inputs": [
+        {
+          "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+          "projection_sha256": "a99a3b76460744d20d531ee6891959ee39b25f5760be3e29edc1b9e18eef1208",
+          "selector": "*",
+          "source": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+        }
+      ]
+    },
+    {
+      "package": "persistence",
+      "result": "passed",
+      "image_id": "sha256:ec086a0dbf5dc55e20b820dedf5082d4b4c506f4d288b15f65289d7f28c07cc2",
+      "previous_image_id": "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+      "image_identity_reused": false,
+      "qualification_receipt": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-qualification.json",
+      "receipt_sha256": "3fa8b9366fae77bbfd39833f0375ce92741071d45300b03f3c49852dd9c5fb5f",
+      "qualification_commands": [
+        {
+          "name": "persistence-public-recovery",
+          "argv": [
+            "bash",
+            "scripts/01.harness/run-governed-script.sh",
+            "--approved-action",
+            "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+            "--tag",
+            "kanbien-core-server-persistence:merge-qualified",
+            "--port",
+            "39555"
+          ],
+          "started_at": "2026-10-26T13:47:29.991545+00:00",
+          "finished_at": "2026-10-26T13:52:50.646047+00:00",
+          "duration_seconds": 320.773,
+          "exit_code": 0,
+          "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-public-recovery.stdout.log",
+          "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-public-recovery.stderr.log"
+        },
+        {
+          "name": "persistence-inactive-capability",
+          "argv": [
+            "python3",
+            "-B",
+            "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py",
+            "--image",
+            "sha256:ec086a0dbf5dc55e20b820dedf5082d4b4c506f4d288b15f65289d7f28c07cc2",
+            "--port",
+            "39558"
+          ],
+          "started_at": "2026-10-26T13:53:49.460660+00:00",
+          "finished_at": "2026-10-26T13:55:30.246616+00:00",
+          "duration_seconds": 100.839,
+          "exit_code": 0,
+          "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-inactive-capability.stdout.log",
+          "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-inactive-capability.stderr.log"
+        }
+      ],
+      "binding_record_command": {
+        "name": "persistence-qualification-record",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "record",
+          "--image",
+          "sha256:ec086a0dbf5dc55e20b820dedf5082d4b4c506f4d288b15f65289d7f28c07cc2",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-qualification.json",
+          "--input",
+          "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+          "--input",
+          "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py",
+          "--input",
+          "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+          "core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier"
+        ],
+        "started_at": "2026-10-26T13:56:36.674204+00:00",
+        "finished_at": "2026-10-26T13:56:37.621629+00:00",
+        "duration_seconds": 0.947,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-qualification-record.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-qualification-record.stderr.log"
+      },
+      "binding_verify_command": {
+        "name": "persistence-qualification-verify",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "verify",
+          "--image",
+          "sha256:ec086a0dbf5dc55e20b820dedf5082d4b4c506f4d288b15f65289d7f28c07cc2",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-qualification.json",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+          "core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier"
+        ],
+        "started_at": "2026-10-26T13:56:37.782298+00:00",
+        "finished_at": "2026-10-26T13:56:38.660422+00:00",
+        "duration_seconds": 0.878,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-qualification-verify.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-qualification-verify.stderr.log"
+      },
+      "historical_receipt_preserved": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/persistence-normalized-qualification.json",
+      "historical_receipt_sha256": "f441ffd4827d6b08d613be9aa9cf751bd916c56ed927c209b1f9766ff3a64f15",
+      "inputs": {
+        "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py": "0bc442286b7b1fc77877c01b27db141acb3debfde0dd9caf0f7f42013d7fd66d",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": "faf4cb27f84d7e7e71aa818ff59f1efd94c62af4b5ec976265ab2be76ac13301"
+      },
+      "configuration_inputs": [
+        {
+          "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+          "projection_sha256": "cf19e36cb381a8be2c507b703fb357fb308bf37ecc0c91e9ace99520e137262a",
+          "selector": "core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier",
+          "source": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+        }
+      ]
+    },
+    {
+      "package": "shell",
+      "result": "passed",
+      "image_id": "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+      "previous_image_id": "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+      "image_identity_reused": true,
+      "qualification_receipt": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-qualification.json",
+      "receipt_sha256": "b5e597cd234f09ae24f7c4f51f51f13b5f33c5835563be25f0877ce547b329e8",
+      "qualification_commands": [
+        {
+          "name": "shell-smoke",
+          "argv": [
+            "bash",
+            "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+            "--image",
+            "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+            "--port",
+            "39553"
+          ],
+          "started_at": "2026-10-26T13:37:55.409134+00:00",
+          "finished_at": "2026-10-26T13:38:59.023318+00:00",
+          "duration_seconds": 63.623,
+          "exit_code": 0,
+          "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-smoke.stdout.log",
+          "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-smoke.stderr.log"
+        }
+      ],
+      "binding_record_command": {
+        "name": "shell-qualification-record",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "record",
+          "--image",
+          "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-qualification.json",
+          "--input",
+          "infra/04.deploy/03.product/image/Dockerfile",
+          "--input",
+          "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py",
+          "--input",
+          "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+          "*"
+        ],
+        "started_at": "2026-10-26T13:40:35.255869+00:00",
+        "finished_at": "2026-10-26T13:40:37.994603+00:00",
+        "duration_seconds": 2.739,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-qualification-record.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-qualification-record.stderr.log"
+      },
+      "binding_verify_command": {
+        "name": "shell-qualification-verify",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "verify",
+          "--image",
+          "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-qualification.json",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+          "*"
+        ],
+        "started_at": "2026-10-26T13:40:38.241008+00:00",
+        "finished_at": "2026-10-26T13:40:39.271882+00:00",
+        "duration_seconds": 1.031,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-qualification-verify.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-qualification-verify.stderr.log"
+      },
+      "historical_receipt_preserved": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/shell-normalized-qualification.json",
+      "historical_receipt_sha256": "2743cc2d9cd38636431def6f8bba8d699f651705316d1dcb0d8b500ac7d82a75",
+      "inputs": {
+        "infra/04.deploy/03.product/image/Dockerfile": "1ffcf9c9abf6e895942275352513ff5223608326748a812a166ca7aff75bb47c",
+        "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py": "7f9caac7a87bbdad98d38e7aac1326b4a8eb23f9130402ef1c11e286ee3a23d8",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh": "837084685a44b800e13d890629f52baa6e84a55daa4600c70fdfcc8e29d647de"
+      },
+      "configuration_inputs": [
+        {
+          "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+          "projection_sha256": "59c4ce593b9784ada284b31c178730438c742673c743b38dadd1ecf2e8a393e2",
+          "selector": "*",
+          "source": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml"
+        }
+      ]
+    },
+    {
+      "package": "collector",
+      "result": "passed",
+      "image_id": "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+      "previous_image_id": "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+      "image_identity_reused": true,
+      "qualification_receipt": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification.json",
+      "receipt_sha256": "097034def40d364176310eb53fc9437ddbfb1e0985d1df8ae1626281e4a47cc3",
+      "qualification_commands": [
+        {
+          "name": "collector-smoke",
+          "argv": [
+            "bash",
+            "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+            "--image",
+            "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1"
+          ],
+          "started_at": "2026-10-26T13:38:15.802904+00:00",
+          "finished_at": "2026-10-26T13:38:55.359635+00:00",
+          "duration_seconds": 39.562,
+          "exit_code": 0,
+          "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-smoke.stdout.log",
+          "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-smoke.stderr.log"
+        }
+      ],
+      "binding_record_command": {
+        "name": "collector-qualification-record",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "record",
+          "--image",
+          "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification.json",
+          "--input",
+          "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+          "--input",
+          "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+          "--input",
+          "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py",
+          "--input",
+          "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+          "observability-collector"
+        ],
+        "started_at": "2026-10-26T13:40:39.401755+00:00",
+        "finished_at": "2026-10-26T13:40:40.248287+00:00",
+        "duration_seconds": 0.847,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification-record.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification-record.stderr.log"
+      },
+      "binding_verify_command": {
+        "name": "collector-qualification-verify",
+        "argv": [
+          "python3",
+          "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+          "verify",
+          "--image",
+          "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+          "--receipt",
+          "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification.json",
+          "--configuration-input",
+          "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+          "observability-collector"
+        ],
+        "started_at": "2026-10-26T13:40:40.380103+00:00",
+        "finished_at": "2026-10-26T13:40:41.181941+00:00",
+        "duration_seconds": 0.802,
+        "exit_code": 0,
+        "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification-verify.stdout.log",
+        "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification-verify.stderr.log"
+      },
+      "historical_receipt_preserved": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/collector-normalized-qualification.json",
+      "historical_receipt_sha256": "ec53751779c0624a95c10bba965d28113717e671357066ddab2edac3e86df766",
+      "inputs": {
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml": "a9d8da6f1005ebc9d3ef92984ad025213b3d403b4cc7ba218aab9a91acc208cf",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml": "d07d55b96bfec3d48350f163b384b9022a02d5afdd14456763d46ad33661e757",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py": "9aa4960d53389173e72b7a89f48aa0cf46c943fd1e05b4a7e6790fb94aea2e2c",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh": "ce70744ae4389b1ca0892583fbdc430e494085af7fe893284bc0c6127ce2371f"
+      },
+      "configuration_inputs": [
+        {
+          "adapter": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+          "adapter_sha256": "1a3d5abc95098730562740d50b065be54ba2fbf7e7d33c1ee8d4976d25619f14",
+          "projection_sha256": "942bb276028bf060c57d743b68e5806abfa90c6288bdec5e1aa223ceabd19cfb",
+          "selector": "observability-collector",
+          "source": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+        }
+      ]
+    }
+  ],
+  "revalidation_before": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-revalidation-before.json",
+  "invalidation_result": "All four historical receipts correctly rejected current changed qualification inputs; no historical receipt was overwritten.",
+  "failed_native_attempts": [
+    {
+      "name": "core-smoke",
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "--tag",
+        "kanbien-core-server:merge-qualification",
+        "--port",
+        "39554"
+      ],
+      "started_at": "2026-10-26T13:37:52.022132+00:00",
+      "finished_at": "2026-10-26T13:38:54.329304+00:00",
+      "duration_seconds": 62.318,
+      "exit_code": 102,
+      "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-smoke.stdout.log",
+      "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-smoke.stderr.log"
+    },
+    {
+      "name": "core-build-diagnostic",
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh",
+        "--tag",
+        "kanbien-core-server:merge-qualification"
+      ],
+      "started_at": "2026-10-26T13:40:02.540397+00:00",
+      "finished_at": "2026-10-26T13:41:06.599727+00:00",
+      "duration_seconds": 64.067,
+      "exit_code": 1,
+      "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-build-diagnostic.stdout.log",
+      "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-build-diagnostic.stderr.log"
+    },
+    {
+      "name": "persistence-build",
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "--tag",
+        "kanbien-core-server-persistence:merge-qualification"
+      ],
+      "started_at": "2026-10-26T13:39:00.957223+00:00",
+      "finished_at": "2026-10-26T13:41:49.745312+00:00",
+      "duration_seconds": 168.805,
+      "exit_code": 1,
+      "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-build.stdout.log",
+      "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-build.stderr.log"
+    }
+  ],
+  "native_failure_resolution": {
+    "cause": "The workstation native Docker credential helper failed while resolving the fixed public Dockerfile frontend. Detailed direct-builder logs report UtilAcceptVsock accept4 timeout and error getting credentials with empty output.",
+    "first_smoke_failure": "The guarded core smoke preserved exit102 and safe IMAGE_SMOKE_BUILD_FAILED diagnostics; separate direct-builder and persistence attempts exited1. These failed attempts are not counted as passing.",
+    "resolution": "Use the existing governed temporary anonymous configuration recovery on the same local Unix-socket engine; stored Docker configuration and credentials remain untouched.",
+    "credential_material": "No credential values were supplied, printed, copied or retained; recovery uses empty anonymous auth entries."
+  },
+  "recovery_owner_repair": {
+    "id": "MERGE-PACKAGE-RECOVERY-01",
+    "files": [
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md"
+    ],
+    "source_sha256": {
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh": "bc3f808b8c8cd7a50cd517a152a06998183a5e31506994538d9946d3ed2ca89e",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py": "9357e6188ddf095060c908132889821add3a19919b42650382a0528065431be9",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md": "9789a5b1a72952af1b857eb775f4d7addf91a13782489d7fd59f4e8bf564acd3"
+    },
+    "metadata_review": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-recovery-owner-review.json",
+    "reviewed_owner_inputs": [
+      {
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh": "3831d15bd64161415c2262a69d4d66fdb3f101d11cbb0ba291be5496c437fda3",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": "faf4cb27f84d7e7e71aa818ff59f1efd94c62af4b5ec976265ab2be76ac13301",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile": "a9ef8f057231b695bde93f9058084f1c619f3ad23b652396afc9549b01d481dc",
+        "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003"
+      },
+      {
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh": "ff93bc6dfc355eba2f07ac042376bf2ea40371e8daf650d38226c8e2bbb2c644",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh": "0129e31693f2c15b4c4c3b172a94cf3696bdb6327d6b690fe0877b32711423a6",
+        "infra/04.deploy/03.product/image/core-server/Dockerfile": "f764797f1a3f7a70e3904f5371bc9f2a7716c9bac0daf453840a488d348e2820",
+        "infra/04.deploy/03.product/image/core-server/image-contract.yml": "71e5efb910c80f449de0defdf80cb0310a7445d21a839b828f5ab56f94fbbb67"
+      }
+    ],
+    "change": "Added only fixed --package core to the existing persistence recovery owner. Core executes its existing smoke once because it owns the build; persistence remains the default separate build+smoke route. Both bind exact reviewed builder, smoke, Dockerfile and contract hashes, fixed public declarations and tag prefix.",
+    "negative_valid_cases": {
+      "name": "public-recovery-boundaries",
+      "argv": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py"
+      ],
+      "started_at": "2026-10-26T13:45:54.150015+00:00",
+      "finished_at": "2026-10-26T13:46:01.012689+00:00",
+      "duration_seconds": 6.865,
+      "exit_code": 0,
+      "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-public-recovery-boundaries.stdout.log",
+      "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-public-recovery-boundaries.stderr.log"
+    },
+    "cases": 40,
+    "independent_review": "Passed same40 actual subprocess cases, all8 hashes, and inverse metadata-only review of3 persistence hashes. No source changes by independent reviewer.",
+    "preserved_boundaries": [
+      "Local Unix socket and unchanged engine identity before/after stages",
+      "Clear inherited Docker/Buildx/BuildKit selectors",
+      "Only empty anonymous Docker Hub/gcr.io auth entries; no copied credentials",
+      "No arbitrary command, package, registry, builder, build arguments or private image selection",
+      "Preserve child failure42 and interruption143; remove temporary configuration on all tested outcomes"
+    ]
+  },
+  "artifact_semantics": {
+    "core": "Fresh local finished-image liveness/readiness and release identity through the supported smoke/build owner.",
+    "persistence": "Fresh local finished-image synthetic PostgreSQL/TLS, administration, migration, restore, readiness telemetry, revocation and recovery; loaded-but-disconnected observer intentionally rejected; all5 disposable effects confirmed absent.",
+    "shell": "Retained exact local image freshly exercised through supported health and relational package smoke.",
+    "collector": "Retained exact binary freshly exercised with current qualification configuration; OTLP metric selected into EMF stdout and escaped-selector negative rejected; network none."
+  },
+  "limits": [
+    "Local images and disposable test dependencies only; no cloud mutations, secret retrieval, publication or deployment.",
+    "No live CloudWatch authorization, RDS managed-role behavior, real IAM token validation or published custody is claimed.",
+    "Image identity and package/configuration input bindings refer to these exact pre-commit worktree bytes; Git revision records the base before the approved local commit/merge.",
+    "Root owns the final selected checks, inventory, metadata/recognition validation and local merge."
+  ],
+  "required_remaining_package_actions": []
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "delivery-chain/package-cli-evidence/v1",
+  "check_id": "rag-local-service-regression",
+  "captured_at": "2026-10-26T13:44:09.102404+00:00",
+  "evidence_class": "local-loopback-http",
+  "command": [
+    "bash",
+    "scripts/02.rag-rulebook/run-local-service/smoke-test.sh"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 32.924,
+  "verdict": "passed",
+  "input_binding": {
+    "authority": "scripts/repo/check-selection/checks.yml",
+    "catalog_entry": {
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/run-local-service/smoke-test.sh"
+      ],
+      "stage": "package",
+      "effects": [
+        "writes-files",
+        "network"
+      ],
+      "owner": "rag-rulebook.script.run-local-service.smoke-test",
+      "evidence_class": "ci",
+      "applicability": {
+        "kind": "profile",
+        "target_profile": "infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml"
+      },
+      "inputs": [
+        "scripts/02.rag-rulebook/run-local-service",
+        ".agentic/02.rag-rulebook/service",
+        "scripts/02.rag-rulebook/build-local-runtime",
+        "infra/04.deploy/02.rag-rulebook/image"
+      ]
+    },
+    "catalog_entry_sha256": "3a0fb7a1b0f9d70447db22154e3dedad7d5d737f4f6c341c3a146a1e72f2d2fe",
+    "algorithm": "existing check-selection.fingerprint over declared check inputs and executable wrapper",
+    "references": [
+      ".agentic/02.rag-rulebook/service",
+      "infra/04.deploy/02.rag-rulebook/image",
+      "scripts/02.rag-rulebook/build-local-runtime",
+      "scripts/02.rag-rulebook/run-local-service",
+      "scripts/02.rag-rulebook/run-local-service/smoke-test.sh"
+    ],
+    "before": "5149bf9040670569ade79065045d2a5cc860a549587f86d5d2f2f983c0481f86",
+    "after": "5149bf9040670569ade79065045d2a5cc860a549587f86d5d2f2f983c0481f86",
+    "unchanged": true,
+    "scope": "Declared input binding; final root selector owns the complete metadata-expanded evidence key."
+  },
+  "log": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-rag-service-suite.log",
+    "sha256": "6882d3b500826b2334f21e325a55d68e8b5f3e342caa283cd9f1b70f05c1d71b"
+  },
+  "limits": [
+    "Local loopback HTTP and disposable fixtures only; no hosted service, live cloud or remote CI execution.",
+    "Existing suite owns temporary process/file cleanup; final image qualification separately proves its containers and host sentinels absent."
+  ]
+}

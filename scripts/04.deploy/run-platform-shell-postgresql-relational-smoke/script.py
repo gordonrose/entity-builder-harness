@@ -422,9 +422,10 @@ def aws(arguments: list[str], policy: dict[str, Any], allowed_not_found_code: st
     environment = os.environ.copy()
     environment["AWS_PAGER"] = ""
     environment["AWS_CLI_AUTO_PROMPT"] = "off"
-    result = subprocess.run(["aws", *arguments, "--profile", policy["profile"], "--region", REGION, "--output", "json"], capture_output=True, encoding="utf-8", check=False, env=environment)
+    try:result = subprocess.run(["aws", *arguments, "--profile", policy["profile"], "--region", REGION, "--output", "json"], capture_output=True, encoding="utf-8", check=False, env=environment,timeout=30)
+    except (OSError,subprocess.SubprocessError):raise RelationalSmokeError("a relational-stage AWS outcome is uncertain") from None
     if result.returncode != 0:
-        if allowed_not_found_code is not None and allowed_not_found_code in result.stderr:
+        if allowed_not_found_code is not None and re.search(r"An error occurred \("+re.escape(allowed_not_found_code)+r"(?:Fault)?\) when calling the [A-Za-z]+ operation:",result.stderr):
             return None
         raise RelationalSmokeError("a fixed approved relational-stage AWS operation did not complete")
     try:
@@ -596,8 +597,8 @@ def assess_candidate_execution(policy: dict[str, Any]) -> None:
     original = [item for item in attempts if isinstance(item, dict) and item.get("image_hash") == image_hash and item.get("label") == label and item.get("state") == "failed"] if isinstance(attempts, list) else []
     if len(original) != 1:
         raise RelationalSmokeError("the candidate terminal assessment requires one preserved failed original receipt")
-    running = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy).get("taskArns")
-    stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy).get("taskArns")
+    running = labelled_tasks(label, "RUNNING", policy).get("taskArns")
+    stopped = labelled_tasks(label, "STOPPED", policy).get("taskArns")
     if not isinstance(running, list) or running or not isinstance(stopped, list) or len(stopped) != 1 or not isinstance(stopped[0], str):
         raise RelationalSmokeError("the candidate terminal assessment lacks one stopped task and zero running tasks")
     observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", stopped[0]], policy).get("tasks")
@@ -630,8 +631,8 @@ def candidate_execution_preflight_succeeded(policy: dict[str, Any]) -> None:
     if not isinstance(image, str):
         raise RelationalSmokeError("the active service candidate preflight image is unavailable")
     label = candidate_preflight_label(image)
-    running = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy).get("taskArns")
-    stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy).get("taskArns")
+    running = labelled_tasks(label, "RUNNING", policy).get("taskArns")
+    stopped = labelled_tasks(label, "STOPPED", policy).get("taskArns")
     if not isinstance(running, list) or running or not isinstance(stopped, list):
         raise RelationalSmokeError("the active image lacks one terminal candidate execution preflight")
     # ECS expires stopped-task metadata.  A successful durable receipt is the
@@ -681,11 +682,28 @@ def assert_task_definition(stage: str, policy: dict[str, Any]) -> dict[str, Any]
     return {"task_definition_revision": revision, "image": image}
 
 
+def labelled_tasks(label: str, desired_status: str, policy: dict[str, Any]) -> dict[str, Any]:
+    """ECS forbids combining startedBy with desiredStatus; filter terminal results locally."""
+    command=["ecs","list-tasks","--cluster",policy["cluster"]]
+    command += ["--started-by",label] if desired_status=="RUNNING" else ["--desired-status","STOPPED"]
+    response=aws(command,policy);arns=response.get("taskArns")
+    if not isinstance(arns,list) or any(not isinstance(item,str) or not item for item in arns) or len(arns)!=len(set(arns)) or response.get("nextToken"):
+        raise RelationalSmokeError("the relational task observation is incomplete")
+    if desired_status=="RUNNING" or not arns:return {"taskArns":arns}
+    matching=[]
+    for offset in range(0,len(arns),100):
+        selected=arns[offset:offset+100];observed=aws(["ecs","describe-tasks","--cluster",policy["cluster"],"--tasks",*selected],policy);tasks=observed.get("tasks")
+        if observed.get("failures") or not isinstance(tasks,list) or {item.get("taskArn") for item in tasks if isinstance(item,dict)}!=set(selected):
+            raise RelationalSmokeError("the relational terminal task observation is incomplete")
+        matching += [item["taskArn"] for item in tasks if item.get("startedBy")==label]
+    return {"taskArns":matching}
+
+
 def no_prior_label(label: str, policy: dict[str, Any]) -> None:
     """Make each finite attempt identity single-use, including after failure."""
 
     for desired_status in ("RUNNING", "STOPPED"):
-        response = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", desired_status], policy)
+        response = labelled_tasks(label, desired_status, policy)
         tasks = response.get("taskArns")
         if not isinstance(tasks, list) or tasks:
             raise RelationalSmokeError("a fixed relational proof stage has already been consumed")
@@ -698,10 +716,10 @@ def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
     receipt = ledger["stages"].get(stage)
     if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or not isinstance(receipt.get("label"), str):
         raise RelationalSmokeError("the fixed relational continuation predecessor has no durable successful receipt")
-    running = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", receipt["label"], "--desired-status", "RUNNING"], policy).get("taskArns")
+    running = labelled_tasks(receipt["label"], "RUNNING", policy).get("taskArns")
     if not isinstance(running, list) or running:
         raise RelationalSmokeError("the fixed relational continuation predecessor is still active")
-    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", receipt["label"], "--desired-status", "STOPPED"], policy)
+    listed = labelled_tasks(receipt["label"], "STOPPED", policy)
     tasks = listed.get("taskArns")
     if not isinstance(tasks, list):
         raise RelationalSmokeError("the fixed relational continuation predecessor is not one consumed terminal stage")
@@ -743,21 +761,15 @@ def stop_and_verify(stage: str, task_arn: str, policy: dict[str, Any]) -> None:
 def reconcile_unacknowledged_submission(stage: str, label: str, policy: dict[str, Any]) -> None:
     """Never repeat a request when its acceptance cannot be established safely."""
 
+    # Empty/eventually-consistent/expired observations cannot prove a rejected submission.
+    failure=None
     try:
-        observed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy)
-        stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy)
-        running = observed.get("taskArns")
-        terminal = stopped.get("taskArns")
-        if isinstance(running, list) and isinstance(terminal, list) and len(running) + len(terminal) == 0:
-            record_stage_state(stage, "failed", policy)
-            raise RelationalSmokeError("a relational stage submission was rejected before acceptance")
-    except RelationalSmokeError as exception:
-        if str(exception) == "a relational stage submission was rejected before acceptance":
-            raise
-        record_stage_state(stage, "unknown", policy)
-        raise RelationalSmokeError("a relational stage submission outcome is uncertain and blocks retry") from exception
-    record_stage_state(stage, "unknown", policy)
-    raise RelationalSmokeError("a relational stage submission outcome is uncertain and blocks retry")
+        labelled_tasks(label,"RUNNING",policy)
+        labelled_tasks(label,"STOPPED",policy)
+    except RelationalSmokeError as error:
+        failure=error
+    record_stage_state(stage,"unknown",policy)
+    raise RelationalSmokeError("a relational stage submission outcome is uncertain and blocks retry") from failure
 
 
 def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: list[dict[str, str]] | None = None, command_override: list[str] | None = None, task_stage: str | None = None, output_verifier: Any = None) -> Any:
@@ -772,7 +784,7 @@ def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: 
         receipt_binding = {**binding, "diagnostic_code_sha256": hashlib.sha256(BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM.encode("utf-8")).hexdigest()}
     _, _attempt, label = reserve_stage(stage, policy, receipt_binding)
     no_prior_label(label, policy)
-    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][definition_stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", label, "--network-configuration", network]
+    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][definition_stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", label, "--client-token", label, "--network-configuration", network]
     if environment is not None or command_override is not None:
         override: dict[str, Any] = {"name": policy["containers"][definition_stage]}
         if environment is not None:
@@ -1241,7 +1253,7 @@ def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
     update_complete(policy["service_stack"], policy)
     outputs = stack_outputs(policy)
     label = failed_bootstrap_receipt_label(policy)
-    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy)
+    listed = labelled_tasks(label, "STOPPED", policy)
     task_arns = listed.get("taskArns")
     if not isinstance(task_arns, list) or len(task_arns) != 1 or not isinstance(task_arns[0], str):
         raise RelationalSmokeError("the fixed bootstrap diagnostic cannot identify one consumed terminal task")

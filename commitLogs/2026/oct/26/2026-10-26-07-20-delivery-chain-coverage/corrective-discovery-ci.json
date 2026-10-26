@@ -1,0 +1,110 @@
+{
+  "schema": "delivery-corrective-repair/v1",
+  "status": "owner-local-verified-awaiting-final-integration",
+  "findings": [
+    {
+      "id": "CORR-03",
+      "failure": "Explicitly consequential test-like scripts outside deploy and public npm bash wrappers could pass without a delivery chain.",
+      "repair": "Consequential declared effects override filename/fixture heuristics. Literal interpreter/governed wrappers and same-package npm aliases resolve implementation paths; each consequential target requires a chain. Unknown/cyclic relationships and inline provider package commands fail closed.",
+      "implementation_files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/inventory-deploy-control/README.md",
+        ".agentic/04.deploy/standards/declaration-coverage.md"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/inventory-deploy-control/script.py",
+        "scripts/repo/check-selection/script.py",
+        ".github/workflows/delivery-coverage.yml"
+      ],
+      "earliest_enforcement": "Existing inventory and selector preflight before build/provider work; workflow source validation before its execution.",
+      "negative_regressions": [
+        "publish.sh / publish-test.sh / publish-regression.sh with declared network/aws-mutation effects are rejected by inventory and selector when unregistered",
+        "npm bash/env/bash-c/run/run-script wrapper aliases cannot hide missing target ownership",
+        "Bound first command plus unbound second command fails",
+        "Bound first command plus inline AWS mutation fails (independent review reproduction)",
+        "Missing/dynamic/cyclic aliases fail explicitly",
+        "JavaScript // inline and multiline declared mutation effects override test-like filenames in .mjs, .js and .cjs through both actual CLIs"
+      ],
+      "valid_behavior": [
+        "Registered consequential script and literal aliases pass with real route",
+        "Governed wrapper with and without bash resolves actual action",
+        "Genuine read-only local fixture remains non-operational"
+      ],
+      "review_resolution": "Independent appended-provider piggyback bypass repaired with owner-script requirement and actual CLI negative."
+    },
+    {
+      "id": "CORR-04",
+      "failure": "Presence-only pull_request trigger checking allowed path/branch/event restrictions to disable ordinary delivery checks.",
+      "repair": "Current CI contract accepts unrestricted pull_request null/empty mapping only. All unproven restrictions fail before enforcement can be reported present.",
+      "implementation_files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py"
+      ],
+      "contract_files": [
+        "scripts/04.deploy/inventory-deploy-control/README.md",
+        ".agentic/04.deploy/standards/declaration-coverage.md"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/inventory-deploy-control/script.py",
+        "scripts/repo/check-selection/script.py",
+        ".github/workflows/delivery-coverage.yml"
+      ],
+      "earliest_enforcement": "Existing inventory and selector preflight before build/provider work; workflow source validation before its execution.",
+      "negative_regressions": [
+        "Unrelated paths",
+        "paths-ignore covering infra/scripts",
+        "Negative path glob",
+        "Restricted branches and negative branch glob",
+        "branches-ignore main",
+        "types closed",
+        "Unproven broad path glob and malformed event values"
+      ],
+      "valid_behavior": [
+        "Current unrestricted workflow passes",
+        "Explicit empty pull_request mapping passes"
+      ],
+      "limits": [
+        "No restricted trigger syntax is currently supported; adding it requires governed demonstrable coverage rather than a guessed glob evaluator."
+      ]
+    }
+  ],
+  "pre_repair_reproduction": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-trigger-reproduction.json",
+  "verification": [
+    {
+      "command": "python3 scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+      "exit_code": 0,
+      "tests": 22,
+      "seconds": 19.033,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-discovery-ci-22.log",
+      "log_sha256": "3019885a64fe9f48370458c481b05ccd94f86f40d1539d346217c6c0aa9664e3",
+      "proof_class": "actual CLI in disposable repository fixtures; no provider command executed"
+    },
+    {
+      "command": "python3 scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+      "exit_code": 0,
+      "tests": 23,
+      "seconds": 21.669,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-discovery-ci-23.log",
+      "log_sha256": "eace16accb06bd35076d63769a4887307f5ca7ff08e5a0232e41d2804561573c",
+      "proof_class": "actual inventory and selector CLIs in disposable repositories, including supported JavaScript comment styles; no provider command executed"
+    }
+  ],
+  "source_inputs": {
+    "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": "36bd8b829e4bc15337b47e6f97ee77557db4a0bd43685a99dcfdbeae21420fa2",
+    "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py": "faf0d72c3f6ab094b43df01b8dea0303e9c21af198ce4b497f262edc1fdd87b5",
+    "scripts/04.deploy/inventory-deploy-control/README.md": "494989391d9ed28520de872367f60a7936ee2b43546f137b071bd54ce8e31964",
+    ".agentic/04.deploy/standards/declaration-coverage.md": "9fa5ff1a23f9a03a414acb086b92cbd03551d76b1a5f00d05862770d8ab3a4d0"
+  },
+  "limits": [
+    "Only four requested correction families; no broader platform rewrite.",
+    "No live AWS, publication, deployment, merge or push."
+  ],
+  "additional_pre_repair_reproduction": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-comment-reproduction.json"
+}

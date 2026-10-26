@@ -12,7 +12,7 @@
 #   portability: { class: internal, targets: [] }
 #   effects: [read-only]
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   used_by:
 #   - id: deploy.command.package-custody-receipt
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh
@@ -73,10 +73,13 @@ def report(verdict, codes=(), receipt=None):
     if verdict == "passed": result.update({key: receipt[key] for key in ("target", "source_revision", "image_digest")})
     return json.dumps(result, sort_keys=True)
 
-try:
-    expected = args()
-    try: receipt = json.loads(Path(expected.receipt).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError): raise Failure("receipt-unreadable") from None
-    validate(receipt, expected); print(report("passed", receipt=receipt))
-except Failure as error:
-    print(report("failed", error.codes)); sys.exit(1)
+def main():
+    try:
+        expected = args()
+        try: receipt = json.loads(Path(expected.receipt).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError): raise Failure("receipt-unreadable") from None
+        validate(receipt, expected); print(report("passed", receipt=receipt))
+    except Failure as error:
+        print(report("failed", error.codes)); sys.exit(1)
+
+if __name__ == "__main__": main()

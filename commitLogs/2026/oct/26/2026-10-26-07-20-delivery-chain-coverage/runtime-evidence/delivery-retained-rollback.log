@@ -1,0 +1,5 @@
+WARNING: Plugin "/usr/local/lib/docker/cli-plugins/docker-sbom" is not valid: failed to fetch metadata: fork/exec /usr/local/lib/docker/cli-plugins/docker-sbom: no such file or directory
+Error: retained-image-/livez-not-200
+    at wait ([stdin]:2:198)
+    at async [stdin]:3:1
+{"effects_checked": 5, "findings": [], "schema": "deploy/disposable-cleanup/v1", "verdict": "passed"}

@@ -4,7 +4,7 @@ id: deploy.schema.runnable-program-contract.v1.guide
 version: 1
 status: draft
 created_on: "2026-10-19"
-updated_on: "2026-10-21"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -42,3 +42,7 @@ location, target, provider value, or digest that does not yet exist.
 Candidate verification lists only safe receipt field names. The later receipt
 may prove which source revision, package digest, and release identity were
 checked, but this contract never stores their values or any sensitive material.
+
+The program `runtime_executable` must name a supported interpreter; its image
+command begins with that interpreter and the exact entrypoint. A shell, echo,
+or an interpreter evaluation flag mentioning the entrypoint is not execution.

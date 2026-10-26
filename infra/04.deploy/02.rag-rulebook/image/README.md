@@ -4,7 +4,7 @@ id: infra.04-deploy.02-rag-rulebook.image.readme
 version: 1
 status: active
 created_on: "2026-06-30"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -103,3 +103,9 @@ until the repo has:
 - protected GitHub environment and OIDC trust
 - deploy-readiness manifest with real non-secret evidence
 - rollback target and operational alarms
+
+The packaged source archive includes the exact public evidence files selected
+by the retrieval policy alongside the existing corpus. Local tool configuration
+roots remain excluded. The explicit `packaged-source-archive` layout records
+only the policy's declared omissions; queries for those sources return visible
+missing-evidence gaps. Missing undeclared evidence still blocks image assembly.

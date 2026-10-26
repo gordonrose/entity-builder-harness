@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -58,11 +58,13 @@ class EvidenceFailure(Exception):
 
 def succession_module():
     """Load the one generic release-succession authority; do not fork it."""
-    path = ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+    path = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
     spec = importlib.util.spec_from_file_location("release_succession", path)
     value = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
     spec.loader.exec_module(value)
+    value.REPOSITORY_ROOT = ROOT
+    value.EVIDENCE_CLASS = EVIDENCE_CLASS
     return value
 
 
@@ -90,7 +92,7 @@ def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]],
             raw = path.read_bytes()
         except (OSError, ValueError):
             raise EvidenceFailure("acceptance-evidence-proof-reference-invalid") from None
-        receipt_set[name] = {"path": relative, "sha256": succession.sha256_bytes(raw)}
+        receipt_set[name] = {"path": path.relative_to(EVIDENCE_ROOT.resolve()).as_posix(), "sha256": succession.sha256_bytes(raw)}
     if not receipt_set:
         raise EvidenceFailure("acceptance-evidence-proof-reference-invalid")
     contract_paths = {
@@ -113,6 +115,7 @@ def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]],
     }
     value: dict[str, Any] = {
         "schema": succession.CANDIDATE_SCHEMA,
+        "evidence_class": EVIDENCE_CLASS,
         "target": TARGET,
         "scope": SCOPE,
         "status": "verified",
@@ -127,14 +130,14 @@ def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]],
         "proof_set": receipt_set,
     }
     try:
-        succession.candidate_identity(value)
+        succession.candidate_identity(value, EVIDENCE_ROOT)
     except succession.SuccessionFailure as error:
         raise EvidenceFailure("acceptance-evidence-candidate-record-invalid") from error
     return EVIDENCE_ROOT / succession.CANDIDATE_DIRECTORY / f"{value['release']['id']}.yml", value
 
 
-def report(verdict: str, *codes: str) -> int:
-    print(json.dumps({"schema": "deploy/persistence-acceptance-collection-report/v1", "target": TARGET, "scope": SCOPE, "verdict": verdict, "findings": [{"code": code} for code in dict.fromkeys(codes)]}, sort_keys=True))
+def report(verdict: str, *codes: str, facts: dict | None = None) -> int:
+    print(json.dumps({"schema": "deploy/persistence-acceptance-collection-report/v1", "target": TARGET, "scope": SCOPE, "verdict": verdict, "findings": [{"code": code} for code in dict.fromkeys(codes)], **({"facts": facts} if facts else {})}, sort_keys=True))
     return 0 if verdict in {"ready", "recorded"} else 1
 
 
@@ -532,13 +535,29 @@ def write_record(record: dict[str, Any]) -> None:
     record_date = parsed_time(record["acceptance"]["accepted_at"]).date().isoformat()
     metadata = {"schema": "agentic-artifact/v3", "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.accepted-release", "version": 1, "status": "active", "created_on": record_date, "updated_on": record_date, "layer": "04.deploy", "domain": "deployment.core-server-persistence", "disciplines": ["security", "sre"], "kind": "accepted-release-record", "purpose": "Record the qualified persistence release and AWS-observed proof set accepted for core-server-persistence.", "portability": {"class": "internal", "targets": []}, "used_by": [{"id": "deploy.command.core-platform-target-declaration", "path": "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh"}]}
     rendered = "# agentic-artifact:\n" + "".join("#   " + line + "\n" for line in yaml.safe_dump(metadata, sort_keys=False).splitlines()) + yaml.safe_dump(record, sort_keys=False)
-    RECORD.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=RECORD.parent, prefix=f".{RECORD.name}.", suffix=".tmp", delete=False) as output:
-        temporary = Path(output.name)
-        output.write(rendered)
-        output.flush()
-        os.fsync(output.fileno())
-    os.replace(temporary, RECORD)
+    try:
+        succession_module().immutable_write(RECORD, rendered.encode())
+    except Exception as error:
+        raise EvidenceFailure("acceptance-evidence-record-conflict") from error
+
+
+def write_successor(record: dict[str, Any]) -> dict[str, str]:
+    """Capture fresh observations durably before emitting the generic candidate.
+
+    The original accepted record is immutable.  Candidate promotion is a
+    separate compare-and-swap command and must name the expected predecessor.
+    """
+    succession = succession_module()
+    if EVIDENCE_CLASS == "simulated" and (not EVIDENCE_ROOT.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or EVIDENCE_ROOT.resolve().is_relative_to(IMPLEMENTATION_ROOT.resolve())):
+        raise EvidenceFailure("acceptance-evidence-simulation-production-write-forbidden")
+    raw = yaml.safe_dump(record, sort_keys=True).encode()
+    observation = EVIDENCE_ROOT / "proof-receipts" / ("acceptance-observation-" + succession.sha256_bytes(raw)[7:] + ".yml")
+    succession.immutable_write(observation, raw)
+    proofs = dict(record["provider_observation"]["proofs"])
+    proofs["current-acceptance-observation"] = {"receipt": observation.relative_to(ROOT).as_posix()}
+    path, value = candidate_record(record["release"], proofs, record["acceptance"]["accepted_at"])
+    succession.immutable_write(path, succession.rendered(value))
+    return {"candidate_record": str(path), "release_id": value["release"]["id"]}
 
 
 def route_module():
@@ -710,10 +729,13 @@ def main() -> int:
         stamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         record = {"schema":"deploy/persistence-accepted-release/v1","target":TARGET,"scope":SCOPE,"status":"accepted" if EVIDENCE_CLASS == "live" else "rehearsed","evidence_class":EVIDENCE_CLASS,"release":{"source_revision":candidate["source_revision"],"image_digest":candidate["image_digest"],"image_repository":f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kanbien-core-platform/core-server","package_custody_reference":candidate["receipt_reference"],"runtime_stack":STACK,"service":SERVICE,"runtime_task_definition":outputs["CoreServerPersistenceTaskDefinitionArn"],"verifier_task_definition":outputs["CoreServerPersistenceVerifierTaskDefinitionArn"],"migration_task_definition":outputs["CoreServerPersistenceMigrationTaskDefinitionArn"],"restoration_verifier_task_definition":outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]},"acceptance":{"accepted_at":stamp,"collector":"collect-acceptance-evidence","retained_for_restoration":True,"rollback_release":rollback},"provider_observation":{"current_service":current,"current_health":health,"database":database,"proofs":observed,"server_replacement":{"original_task":original,"replacement_task":successor}}}
         validate_record(record, evidence_class=EVIDENCE_CLASS)
+        facts = None
         if args.write:
-            if RECORD.exists(): raise EvidenceFailure("acceptance-evidence-record-already-exists")
-            write_record(record)
-        return report("recorded" if args.write else "ready")
+            # Never overwrite accepted history; always produce the successor
+            # artifact consumed by the declared release-succession command.
+            facts = write_successor(record)
+            if not RECORD.exists(): write_record(record)
+        return report("recorded" if args.write else "ready", facts=facts)
     except (EvidenceFailure, KeyError, TypeError, ValueError, OSError, subprocess.SubprocessError) as error:
         return report("blocked", str(error) if isinstance(error, EvidenceFailure) else "acceptance-evidence-malformed-input")
 

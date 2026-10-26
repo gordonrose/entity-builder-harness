@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -125,6 +125,8 @@ def validate_programs(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
         program_id = item["id"]
         if program_id in programs:
             raise ContractFailure("program-record-duplicate")
+        if item.get("runtime_executable") not in {"node", "python3", "ruby", "java"}:
+            raise ContractFailure("program-runtime-unsupported")
         approved = item.get("approved_dependencies")
         observed = item.get("observed_dependencies")
         if not isinstance(approved, list) or not isinstance(observed, list):
@@ -137,10 +139,10 @@ def validate_programs(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return programs
 
 
-def is_safe_command(command: Any, entrypoint: str) -> bool:
+def is_safe_command(command: Any, entrypoint: str, runtime: str) -> bool:
     if not isinstance(command, list) or len(command) < 2 or not all(isinstance(token, str) and token for token in command):
         return False
-    if command[0].startswith("-") or entrypoint not in command:
+    if command[0] != runtime or command[1] != entrypoint:
         return False
     return all(
         not any(character in token for character in FORBIDDEN_COMMAND_CHARACTERS)
@@ -160,7 +162,7 @@ def validate_images(document: dict[str, Any], programs: dict[str, dict[str, Any]
         program_id = item.get("program")
         if not is_id(program_id) or program_id not in programs:
             raise ContractFailure("program-record-missing")
-        if item.get("command_mode") != "exec" or not is_safe_command(item.get("command"), programs[program_id]["entrypoint"]):
+        if item.get("command_mode") != "exec" or not is_safe_command(item.get("command"), programs[program_id]["entrypoint"], programs[program_id]["runtime_executable"]):
             raise ContractFailure("image-command-invalid")
         images[image_id] = item
     return images

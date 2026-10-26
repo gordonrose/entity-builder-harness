@@ -1,0 +1,123 @@
+{
+  "schema": "delivery-chain/corrective-repair/v1",
+  "id": "H-CORR-VERIFIER-CALLERS",
+  "finding": 1,
+  "role": "caller integration for verifier operation continuation correction",
+  "families": [
+    "F",
+    "H",
+    "I"
+  ],
+  "status": "repaired-actual-cli-rehearsal-verified",
+  "checked_at": "2026-10-26T12:52:55.549758+00:00",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "failure": "After durable verifier continuation was added, repeated read and health mode arguments would correctly reconcile the retained terminal operation but could not establish a fresh acceptance phase. Acceptance callers must explicitly request each fresh successor using the immediately preceding operation ID for that same mode; initial modes require the explicit none predecessor.",
+  "affected_routes": [
+    "core-server-persistence server replacement read",
+    "credential revocation and recovery health/read",
+    "rollback previous-image and restored-current health/read",
+    "final current-health acceptance observation"
+  ],
+  "downstream_consumers": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py",
+    "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+    "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py"
+  ],
+  "contract_files": [
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+    ".agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml"
+  ],
+  "implementation_files": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+    "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py"
+  ],
+  "caller_files": [
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md"
+  ],
+  "test_files": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh"
+  ],
+  "changed_source_files": [
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py"
+  ],
+  "source_inputs_sha256": {
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml": "218453ca2a9db58df102037a03dcdb7e691b5b47b6c628e1bd505dc960d56c68",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py": "d46ecdf800f6b7b94d10f343f9794304956de6f6624c6c0c0a170a368094867a",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md": "308ca47f0805bc6f3e8353f052ef45f4ea50258c425d38c8531fd2973002ebbc",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py": "3cc5ffeb43492f0ab2e9c189d8ab4e535a5ee47de8c276f3d4318fe158a20ed2"
+  },
+  "file_ownership_note": "Verifier implementation and operation-test behavior are provider_lifecycle-owned; this caller integration adds only the used_by metadata for its actual shared fixture consumer in operation-test.py.",
+  "smallest_reusable_repair": "Use the existing typed acceptance inputs and actual verifier successor flags in nine declared phase commands. Existing generic route argument validation checks the resolved commands. The existing acceptance rehearsal consumes operation IDs emitted by real CLI subprocesses to resolve successive same-mode commands, with the existing disposable verifier provider fixture; no new registry, execution engine or journal.",
+  "negative_regressions": [
+    "Removing both successor flags yields historical-completion and cannot satisfy the fresh-terminal-observation assertion for a new phase.",
+    "Leaving --expected-operation without --new-operation returns private-persistence-verifier-new-operation-arguments-invalid before run-task.",
+    "Supplying the latest health-ready operation as a read predecessor returns private-persistence-verifier-operation-predecessor-mismatch before run-task.",
+    "Existing route malformed/missing arguments, proof schema, owner/effects and scope-activation substitution negatives remain enforced."
+  ],
+  "valid_behavior": [
+    "Each of nine new read/health phases yields accepted fresh-terminal-observation and one new task, consuming the latest same-mode operation ID; first use supplies none.",
+    "Repeating exactly the same explicit phase request returns its historical-completion and original receipt without another task.",
+    "Earlier operation receipts remain byte-identical, all disposable operation state is removed, and genuine accepted evidence/lifecycle files remain byte-identical.",
+    "The complete acceptance collector, validators, successor promotion and downstream lifecycle/target gates continue passing using simulated retained proof and separate current observations."
+  ],
+  "earliest_enforcement": "Declaration coverage resolves the real command parser before deployment prerequisites; each actual fresh verifier command validates predecessor before task submission. Acceptance rehearsal is required by existing check-selection and CI owners.",
+  "verification": [
+    {
+      "command": "bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+      "exit_code": 0,
+      "checks": 19,
+      "fresh_phase_commands": 9,
+      "fresh_and_identical_retry_cli_invocations": 18,
+      "additional_historical_and_negative_cli_invocations": 3,
+      "seconds": 44.493,
+      "evidence_class": "simulated",
+      "log": {
+        "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-callers-suite.log",
+        "sha256": "302d1c00d74ffe86b35ff349f1c57680b7d295e631bb0dad5462af0f19985bb9"
+      }
+    },
+    {
+      "command": "git diff --check -- infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+      "exit_code": 0
+    },
+    {
+      "command": "bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+      "exit_code": 0,
+      "checks": 19,
+      "fresh_phase_commands": 9,
+      "fresh_and_identical_retry_cli_invocations": 18,
+      "additional_historical_and_negative_cli_invocations": 3,
+      "seconds": 43.029,
+      "evidence_class": "simulated",
+      "log": {
+        "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-callers-final-suite.log",
+        "sha256": "399502ac4543f2df0d96d2f4fa49f162596659e66d9e773d4aae0ff6f032476a"
+      },
+      "scope": "Final route contract includes truthful writes-files effect for credential recovery after verifier durable continuation integration."
+    }
+  ],
+  "closure_evidence": "Full existing acceptance wrapper passes with actual declared CLI argv and actual producer/consumer operation IDs, preserves immutable history and exercises collection/succession. The provider-owned corrective-verifier.json covers reservation/interruption/reconciliation implementation and broader verifier regressions.",
+  "limits": [
+    "All provider behavior is simulated with disposable local process fixtures; no live AWS, secret, deployment or remote CI proof.",
+    "Operation IDs are intentionally mode-specific and caller-supplied; the route does not introduce an orchestration engine.",
+    "Root owns final aggregate, independent review, generated recognition and the RAG package refresh after all source freezes; this report does not claim overall corrective completion."
+  ],
+  "caller_handoff": "Credential lifecycle facts.verifier_operations keyed by mode exposes the last child operation_id, full verifier_task ARN, proof_receipt and evidence_reuse. The workflow names the exact fields for next read and health-ready predecessors; the provider-owned operation test checks the handoff with a subsequent actual verifier CLI.",
+  "late_integration_effects_binding": {
+    "failure": "Credential recovery wrapper now truthfully declares aws-mutation and writes-files; its route still declared aws-mutation alone.",
+    "detector": "Actual RAG build and root aggregate inventory prerequisite blocked acceptance-route-command-owner-or-effects-mismatch before image build or selected checks.",
+    "negative_evidence": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-rag-image-qualification-build.log",
+      "sha256": "47252c65b05ca3ac83a702e2f2bde2ac42d09a3d2021b44f920bca82b93b0db3"
+    },
+    "smallest_repair": "Add writes-files to the existing credential-revoke-recover-route.effects declaration.",
+    "closure": "Full final acceptance rehearsal passes all19 checks including actual command owner/effects/parser probes; root owns refreshed inventory and aggregate."
+  }
+}

@@ -1,0 +1,4 @@
+{"effects_checked": 1, "findings": [], "schema": "deploy/disposable-cleanup/v1", "verdict": "passed"}
+{"verdict": "passed", "evidence_class": "container-qualification", "checks": ["bootstrap", "migration", "migration-repeat", "relay", "worker-denied-no-ack", "worker-retry-after-permission-repair", "worker-ack-after-completion", "isolated-restore", "absent-schema-rejected", "incomplete-processing-rejected"], "provider_fixture": "local-sqs-protocol-no-cloud-proof"}
+{"effects_checked": 2, "findings": [], "schema": "deploy/disposable-cleanup/v1", "verdict": "passed"}
+Platform shell image smoke test passed.

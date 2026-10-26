@@ -4,7 +4,7 @@
 #   version: 4
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -53,6 +53,7 @@ workloads:
       source_reference: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml#ReleaseVerifierTaskDefinition.private-release-verifier.command
       command_description: node -e private release verification request
 proposed_provider_binding:
+  configuration_adapter: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
   template: 30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
   workload_kind: ecs-fargate-service
   immutable_image_reference: repository-at-sha256-digest-only
@@ -62,3 +63,23 @@ proposed_provider_binding:
 mutation:
   status: blocked
   allowed_operation: update-or-restore-after-fresh-alignment-and-reviewed-change-set
+
+runtime_requirements:
+- workload: core-server-service
+  declaration_workload: core-server
+  required_names:
+  - NODE_ENV
+  - HOST
+  - PORT
+  - PLATFORM_SOURCE_COMMIT_SHA
+  secret_names: []
+  identity_required: false
+  command:
+  - artifacts/kanbien-core-server.main.js
+- workload: private-release-verifier-task
+  declaration_workload: private-release-verifier
+  required_names:
+  - KANBIEN_PRIVATE_VERIFICATION_URL
+  secret_names: []
+  identity_required: false
+  command_sha256: 409ad3ea6cc3edb5234b9614ac8f4ce777860d838778fd7995278ff5162cf9c5

@@ -4,7 +4,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -43,6 +43,9 @@ checks:
     inputs:
     - scripts/04.deploy/verify-rag-rulebook-deploy-readiness
   rag-local-retrieval-regression:
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
     argv:
     - bash
     - scripts/02.rag-rulebook/query-local-context/smoke-test.sh
@@ -411,6 +414,8 @@ checks:
     - package-lock.json
     - infra/04.deploy/03.product/entrypoints
   persistence-provider-regression:
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
     argv:
     - bash
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh
@@ -849,6 +854,865 @@ checks:
     - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+  delivery-inventory-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/inventory-deploy-control/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.script.inventory-deploy-control.smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/inventory-deploy-control
+    - scripts/repo/check-selection
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+  shell-runtime-alignment:
+    argv:
+    - bash
+    - scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+    - --mode
+    - runtime-alignment
+    - --deployment-manifest
+    - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+    - --json
+    stage: deploy
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.reconcile-platform-shell-staging.wrapper
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+  shell-declaration:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh
+    - --scope-contract
+    - infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml
+    - --json
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.command.declaration-coverage
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  shell-infrastructure:
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.script.verify-platform-shell-infrastructure
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  shell-publication:
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.script.verify-platform-shell-deployment-workflow
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  shell-package-source:
+    argv:
+    - bash
+    - scripts/04.deploy/build-platform-shell-image/check-source.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.check.platform-shell-package-source
+    applicability: &id001
+      kind: profile
+      target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    runtime: &id003
+      tools:
+      - bash
+      - python3
+      - node
+      - typescript
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      node_packages:
+      - typescript
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - package.json
+      - package-lock.json
+    inputs:
+    - scripts/04.deploy/build-platform-shell-image
+    - platform
+    - products/kanbien-platform
+    - apps/platform-smoke
+    - infra/04.deploy/03.product/image
+  shell-image-smoke:
+    argv:
+    - bash
+    - scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+    stage: package
+    evidence_class: container-qualification
+    effects:
+    - network
+    - writes-files
+    owner: deploy.script.smoke-test-platform-shell-image
+    applicability: *id001
+  shell-ingress-smoke:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh
+    - --execute
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.run-platform-shell-ingress-smoke
+    applicability: *id001
+  shell-postgresql-live-boundary-check:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.verify-platform-shell-postgresql-live-boundary.smoke-test
+    applicability: *id001
+    runtime: &id002
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary
+  shell-postgresql-relational-smoke-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test
+    applicability: *id001
+    runtime: *id002
+    inputs:
+    - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke
+  shell-persistence-admission-probe-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.script.run-platform-shell-persistence-admission-probe.smoke-test
+    applicability: *id001
+    runtime: *id002
+    inputs:
+    - scripts/04.deploy/run-platform-shell-persistence-admission-probe
+  shell-postgresql-relational-smoke:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+    - --execute
+    - --approve-relational-stage6
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.run-platform-shell-postgresql-relational-smoke.shell
+    applicability: *id001
+  shell-negative-authz-client-check:
+    argv:
+    - bash
+    - scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.provision-platform-shell-negative-authz-client.smoke-test
+    applicability: *id001
+    runtime: *id002
+    inputs:
+    - scripts/04.deploy/provision-platform-shell-negative-authz-client
+  shell-persistence-write-client-check:
+    argv:
+    - bash
+    - scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.provision-platform-shell-persistence-write-client.smoke-test
+    applicability: *id001
+    runtime: *id002
+    inputs:
+    - scripts/04.deploy/provision-platform-shell-persistence-write-client
+  shell-controlled-smoke-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.run-platform-shell-controlled-smoke.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/run-platform-shell-controlled-smoke
+  shell-negative-authz-smoke-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.run-platform-shell-negative-authz-smoke.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/run-platform-shell-negative-authz-smoke
+  shell-persistence-smoke-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.script.run-platform-shell-persistence-smoke.smoke-test
+    applicability: *id001
+    runtime: *id002
+    inputs:
+    - scripts/04.deploy/run-platform-shell-persistence-smoke
+  shell-negative-authz-smoke:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh
+    - --execute
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.run-platform-shell-negative-authz-smoke
+    applicability: *id001
+  shell-persistence-smoke:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+    - --execute
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.run-platform-shell-persistence-smoke
+    applicability: *id001
+  shell-worker-smoke-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.script.run-platform-shell-worker-smoke.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/run-platform-shell-worker-smoke
+  shell-persistence-delivery-proof-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.script.run-platform-shell-persistence-delivery-proof.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/run-platform-shell-persistence-delivery-proof
+  shell-worker-smoke:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-worker-smoke/script.sh
+    - --execute
+    - --approve-live-worker-smoke
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.run-platform-shell-worker-smoke
+    applicability: *id001
+  shell-persistence-delivery-proof:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+    - --verify-terminal
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    - writes-files
+    owner: deploy.script.run-platform-shell-persistence-delivery-proof
+    applicability: *id001
+  shell-metric-coverage-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.run-platform-shell-metric-coverage.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/run-platform-shell-metric-coverage
+  shell-metric-coverage-policy-check:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.verify-platform-shell-metric-coverage
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/verify-platform-shell-metric-coverage
+  shell-synthetic-scheduler-check:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.verify-platform-shell-synthetic-scheduler
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/verify-platform-shell-synthetic-scheduler
+  shell-rate-limit-smoke-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.run-platform-shell-rate-limit-smoke.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/run-platform-shell-rate-limit-smoke
+  shell-ingress-smoke-check:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.run-platform-shell-ingress-smoke.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/run-platform-shell-ingress-smoke
+  shell-metric-coverage:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.run-platform-shell-metric-coverage
+    applicability: *id001
+  shell-rate-limit-smoke:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh
+    - --execute
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.run-platform-shell-rate-limit-smoke
+    applicability: *id001
+  shell-deployment-reconciliation-check:
+    argv:
+    - bash
+    - scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.reconcile-platform-shell-staging.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/reconcile-platform-shell-staging
+  shell-deployment-reconciliation-policy-check:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.verify-platform-shell-deployment-reconciliation
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/verify-platform-shell-deployment-reconciliation
+  shell-artifact-active-drift-assessment-check:
+    argv:
+    - bash
+    - scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.assess-platform-shell-artifact-drift.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/assess-platform-shell-artifact-drift
+  shell-foundation-active-drift-assessment-check:
+    argv:
+    - bash
+    - scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.assess-platform-shell-foundation-drift.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/assess-platform-shell-foundation-drift
+  shell-service-active-drift-assessment-check:
+    argv:
+    - bash
+    - scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.assess-platform-shell-service-drift.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/assess-platform-shell-service-drift
+  shell-drift-detection-boundary-check:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.script.verify-platform-shell-drift-detection-boundary.smoke-test
+    applicability: *id001
+    runtime: *id003
+    inputs:
+    - scripts/04.deploy/verify-platform-shell-drift-detection-boundary
+  shell-deployment-reconciliation:
+    argv:
+    - bash
+    - scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+    - --mode
+    - continuous
+    - --json
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.script.reconcile-platform-shell-staging.wrapper
+    applicability: *id001
+  rag-local-query-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/query-context/smoke-test.sh
+    stage: package
+    effects:
+    - writes-files
+    - network
+    owner: rag-rulebook.script.query-context.smoke-test
+    evidence_class: ci
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+    inputs:
+    - scripts/02.rag-rulebook/query-context
+    - .agentic/02.rag-rulebook/service
+    - scripts/02.rag-rulebook/build-local-runtime
+    - infra/04.deploy/02.rag-rulebook/image
+
+  rag-local-service-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/run-local-service/smoke-test.sh
+    stage: package
+    effects:
+    - writes-files
+    - network
+    owner: rag-rulebook.script.run-local-service.smoke-test
+    evidence_class: ci
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+    inputs:
+    - scripts/02.rag-rulebook/run-local-service
+    - .agentic/02.rag-rulebook/service
+    - scripts/02.rag-rulebook/build-local-runtime
+    - infra/04.deploy/02.rag-rulebook/image
+
+  rag-local-image:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/smoke-test-service-image/script.sh
+    stage: package
+    effects:
+    - network
+    - writes-files
+    owner: rag-rulebook.script.smoke-test-service-image
+    evidence_class: container-qualification
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+    inputs:
+    - scripts/02.rag-rulebook/smoke-test-service-image
+    - .agentic/02.rag-rulebook/service
+    - scripts/02.rag-rulebook/build-local-runtime
+    - infra/04.deploy/02.rag-rulebook/image
+  package-custody-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.package-custody-receipt
+    runtime: &delivery_runtime
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
+  core-package-custody-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.test.kanbien-core-platform.core-server-package-custody
+    runtime: *delivery_runtime
+    inputs:
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody
+  container-boundaries-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.script.validate-container-boundaries.smoke-test
+    runtime: *delivery_runtime
+    inputs:
+    - scripts/04.deploy/validate-container-boundaries
+  shell-release-evidence-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/verify-platform-shell-deploy-readiness
+    - scripts/04.deploy/lifecycle/60-run/release-succession
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+  source-review-history-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: rag-rulebook.script.validate-okf-source-material-reviews.smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/02.rag-rulebook/validate-okf-source-material-reviews
+    - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml
+    - .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+  shell-candidate-preflight-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.script.run-platform-shell-candidate-execution-preflight.smoke-test
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
+  rag-runtime-build-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: rag-rulebook.script.build-local-runtime.smoke-test
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/02.rag-rulebook/build-local-runtime
+    - scripts/01.harness/artifact-metadata
+  rag-policy-compiler-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: rag-rulebook.script.compile-retrieval-policy.smoke-test
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/02.rag-rulebook/compile-retrieval-policy
+  rag-selector-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: rag-rulebook.script.generate-retrieval-selector-fixture.smoke-test
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
 repository_inputs:
 - inputs:
   - .github/workflows/deploy-rag-rulebook-staging.yml
@@ -950,3 +1814,74 @@ repository_inputs:
   checks:
   - collector-package-custody-regression
   - deployment-operation-diagnostics-regression
+- inputs:
+  - scripts/04.deploy/inventory-deploy-control
+  - .github/workflows/delivery-coverage.yml
+  checks:
+  - delivery-inventory-regression
+- inputs:
+  - infra/04.deploy/03.product/targets/kanbien/staging
+  - .github/workflows/deploy-platform-shell-staging.yml
+  - scripts/04.deploy/verify-platform-shell-deployment-workflow
+  checks:
+  - shell-declaration
+  - shell-infrastructure
+  - shell-publication
+
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
+  - scripts/04.deploy/shared/provider-adapters/docker
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py
+  checks:
+  - package-custody-regression
+  - core-package-custody-regression
+  - collector-package-custody-regression
+  - shell-publication
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody
+  checks:
+  - core-package-custody-regression
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/response.py
+  - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+  - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+  checks:
+  - persistence-provider-regression
+  - shell-negative-authz-client-check
+  - shell-postgresql-relational-smoke-check
+  - deployment-operation-diagnostics-regression
+- inputs:
+  - scripts/04.deploy/validate-container-boundaries
+  - docs/04.deploy/source-material/shared/container-image-management.md
+  - docs/04.deploy/rules/shared/container-image-management.yml
+  checks:
+  - container-boundaries-regression
+- inputs:
+  - scripts/04.deploy/verify-platform-shell-deploy-readiness
+  - scripts/04.deploy/lifecycle/60-run/release-succession
+  checks:
+  - shell-release-evidence-regression
+- inputs:
+  - scripts/02.rag-rulebook/validate-okf-source-material-reviews
+  - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml
+  - .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+  checks:
+  - source-review-history-regression
+- inputs:
+  - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
+  checks:
+  - shell-candidate-preflight-regression
+- inputs:
+  - scripts/02.rag-rulebook/build-local-runtime
+  - scripts/01.harness/artifact-metadata
+  checks:
+  - rag-runtime-build-regression
+- inputs:
+  - scripts/02.rag-rulebook/compile-retrieval-policy
+  checks:
+  - rag-policy-compiler-regression
+- inputs:
+  - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
+  checks:
+  - rag-selector-regression

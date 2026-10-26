@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "bash",
+    "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+  ],
+  "exit_code": 0,
+  "seconds": 1.361,
+  "stdout": "Persistence smoke local validation passed (fixture lifecycle guards; no AWS or HTTP).\n",
+  "stderr": "",
+  "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-smoke-isolation.log"
+}

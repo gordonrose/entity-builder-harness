@@ -1,0 +1,57 @@
+
+> platform:server:check
+> npm run platform:server:typecheck && npm run platform:server:build && npm run platform:server:test && npm run platform:server:boundary
+
+
+> platform:server:typecheck
+> tsc -p platform/server/tsconfig.check.json
+
+
+> platform:server:build
+> tsc -p platform/server/tsconfig.json
+
+
+> platform:server:test
+> tsc -p platform/server/tsconfig.runtime-test.json && node platform/server/tests/run-runtime-tests.mjs
+
+{"level":"info","message":"platform.server.started","fields":{"port":39557,"host":"127.0.0.1"}}
+platform/server runtime test passed.
+
+> platform:server:boundary
+> node platform/server/tests/platform-server-boundaries.test.mjs
+
+platform/server boundary check passed for 7 source file(s).
+
+> product:kanbien-platform:check
+> npm run product:kanbien-platform:typecheck && npm run product:kanbien-platform:build && npm run product:kanbien-platform:test && npm run product:kanbien-platform:boundary
+
+
+> product:kanbien-platform:typecheck
+> tsc -p products/kanbien-platform/tsconfig.check.json
+
+
+> product:kanbien-platform:build
+> tsc -p products/kanbien-platform/tsconfig.json
+
+
+> product:kanbien-platform:test
+> tsc -p products/kanbien-platform/tsconfig.runtime-test.json && node products/kanbien-platform/tests/run-runtime-tests.mjs
+
+products/kanbien-platform runtime test passed.
+
+> product:kanbien-platform:boundary
+> node products/kanbien-platform/tests/kanbien-platform-boundaries.test.mjs
+
+products/kanbien-platform boundary check passed for 2 source file(s).
+
+> platform:server:image-runtime-check
+> npm run platform:server:image-build && node scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+
+
+> platform:server:image-build
+> tsc -p platform/server/tsconfig.image.json && node scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
+
+Prepared platform shell image runtime at .cache/platform-shell-image-build
+{"level":"info","message":"platform.server.started","fields":{"port":39455,"host":"127.0.0.1","sourceCommitSha":"runtime-payload-test"}}
+{"level":"info","message":"platform.worker.started"}
+Platform shell compiled runtime payload check passed.

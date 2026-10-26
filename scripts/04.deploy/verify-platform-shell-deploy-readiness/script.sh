@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -20,6 +20,7 @@ set -euo pipefail
 #     targets: []
 #   effects:
 #     - read-only
+#     - writes-files
 #   used_by:
 #     - id: deploy.script.verify-platform-shell-deploy-readiness.readme
 #       path: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
@@ -35,6 +36,8 @@ MANIFEST=""
 JSON=false
 ALLOW_BLOCKED=false
 CALLER_INTENT=""
+REHEARSAL_ROOT=""
+RECORD_COMPATIBILITY=""
 
 usage() {
   cat <<'EOF'
@@ -43,7 +46,9 @@ Usage:
   verify-platform-shell-deploy-readiness/script.sh --manifest <path> --allow-blocked --caller-intent <planning|explanation> [--json]
 
 Validates a deploy-readiness manifest for the product platform shell.
-The command is read-only and fails closed when required deploy proof is missing.
+The default command is read-only and fails closed when required deploy proof is missing.
+--record-rollback-compatibility <retained-release-id> writes additive local compatibility
+evidence only when the retained runtime/package proof matches current source inputs.
 EOF
 }
 
@@ -55,6 +60,16 @@ while [ "$#" -gt 0 ]; do
         exit 2
       fi
       MANIFEST="$2"
+      shift 2
+      ;;
+    --record-rollback-compatibility)
+      if [ "$#" -lt 2 ]; then echo "ERROR: --record-rollback-compatibility requires a retained release ID." >&2; exit 2; fi
+      RECORD_COMPATIBILITY="$2"
+      shift 2
+      ;;
+    --rehearsal-root)
+      if [ "$#" -lt 2 ]; then echo "ERROR: --rehearsal-root requires a path." >&2; exit 2; fi
+      REHEARSAL_ROOT="$2"
       shift 2
       ;;
     --json)
@@ -96,10 +111,12 @@ if [ "$ALLOW_BLOCKED" = true ] && [ -z "$CALLER_INTENT" ]; then
   exit 2
 fi
 
-python3 - "$MANIFEST" "$JSON" "$ALLOW_BLOCKED" "$CALLER_INTENT" <<'PY'
+python3 - "$MANIFEST" "$JSON" "$ALLOW_BLOCKED" "$CALLER_INTENT" "$REHEARSAL_ROOT" "$RECORD_COMPATIBILITY" <<'PY'
 from __future__ import annotations
 
 import json
+import importlib.util
+import tempfile
 import re
 import sys
 from pathlib import Path
@@ -116,6 +133,11 @@ manifest_path = Path(sys.argv[1])
 emit_json = sys.argv[2] == "true"
 allow_blocked = sys.argv[3] == "true"
 caller_intent = sys.argv[4]
+rehearsal_root = Path(sys.argv[5]).resolve() if sys.argv[5] else None
+if rehearsal_root is not None and (not rehearsal_root.is_relative_to(Path(tempfile.gettempdir()).resolve()) or rehearsal_root.is_relative_to(ROOT)):
+    print("ERROR: rehearsal root must be temporary and outside repository",file=sys.stderr);sys.exit(2)
+
+record_compatibility = sys.argv[6]
 
 SCHEMA = "deploy/platform-shell-readiness-manifest/v1"
 TARGET_PROFILE_SCHEMA = "deploy/platform-shell-target-profile/v1"
@@ -537,6 +559,13 @@ def validate(data: dict[str, Any]) -> None:
         block("blockers", "ready manifest must not carry blockers", "Remove blockers only after all proof fields are ready.")
 
     if status == "ready":
+        try:
+            spec=importlib.util.spec_from_file_location('shell_release_evidence',ROOT/'scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py')
+            evidence=importlib.util.module_from_spec(spec);spec.loader.exec_module(evidence)
+            evidence.validate_ready(data,root=rehearsal_root or ROOT,evidence_class='simulated' if rehearsal_root else 'live')
+        except Exception as error:
+            code=str(error) if isinstance(error,ValueError) else 'shell-release-evidence-invalid'
+            block('acceptance',code,'Collect current runtime proof, retain immutable candidate receipts and promote with the generic release-succession command.')
         for path in REQUIRED_BLOCKED_PATHS:
             if is_pending(get(data, path)):
                 block(path, "ready manifest contains unresolved deploy proof", f"Resolve `{path}` before setting status ready.")
@@ -598,6 +627,18 @@ if allow_blocked and caller_intent not in ALLOWED_BLOCKED_CALLER_INTENTS:
     print("ERROR: --caller-intent must be planning or explanation when --allow-blocked is used.", file=sys.stderr)
     sys.exit(2)
 
+if record_compatibility:
+    if allow_blocked or caller_intent:
+        print("ERROR: rollback compatibility cannot use a planning override",file=sys.stderr);sys.exit(2)
+    try:
+        spec=importlib.util.spec_from_file_location('shell_release_evidence',ROOT/'scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py')
+        evidence=importlib.util.module_from_spec(spec);spec.loader.exec_module(evidence)
+        facts=evidence.write_compatibility_from_history(manifest,record_compatibility,root=rehearsal_root or ROOT,evidence_class='simulated' if rehearsal_root else 'live')
+        print(json.dumps({'schema':'deploy/platform-shell-rollback-compatibility-report/v1','verdict':'recorded','evidence_class':'simulated' if rehearsal_root else 'live','facts':facts},sort_keys=True));sys.exit(0)
+    except Exception as error:
+        code=str(error) if isinstance(error,ValueError) else 'shell-release-evidence-invalid'
+        print(json.dumps({'schema':'deploy/platform-shell-rollback-compatibility-report/v1','verdict':'blocked','findings':[{'code':code}]}));sys.exit(1)
+
 validate(manifest)
 
 status = "ready" if not blocking_gaps and manifest.get("status") == "ready" else "blocked"
@@ -605,6 +646,7 @@ ok = status == "ready"
 exit_overridden = bool(allow_blocked and status == "blocked")
 report = {
     "schema": REPORT_SCHEMA,
+    "evidence_class": "simulated" if rehearsal_root else "live",
     "ok": ok,
     "status": status,
     "caller_intent": caller_intent or None,

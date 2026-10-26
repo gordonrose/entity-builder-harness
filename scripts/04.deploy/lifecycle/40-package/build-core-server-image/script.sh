@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -28,6 +28,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
 TAG="entity-builder-harness/04.deploy/kanbien-core-server:local"
 ALLOW_SKIP=false
 NO_CACHE=false
@@ -75,6 +76,8 @@ while [[ "$#" -gt 0 ]]; do
   esac
 done
 
+bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root >/dev/null
+
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 
@@ -90,7 +93,7 @@ python3 scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-pa
 if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
   if [[ "$ALLOW_SKIP" == true ]]; then
     printf '%s\n' 'SKIP: core-server payload qualification passed; container engine is unavailable.'
-    exit 0
+    exit 77
   fi
   printf '%s\n' 'ERROR: core-server payload qualification passed, but Docker is required to build the image.' >&2
   exit 1

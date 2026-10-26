@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -212,6 +212,9 @@ fields:
             type: string
         family_source_paths:
           type: object
+        archive_unavailable_sources:
+          type: object
+          note: Exact already-required source paths mapped to reasons for exclusion from an explicitly selected packaged-source-archive layout. Checkout compilation still requires every source; archive omissions remain required evidence and must produce query gaps.
 
   retrieval_strategy:
     type: object

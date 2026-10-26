@@ -1,0 +1,3 @@
+Core-server generated runtime command proof passed.
+Core-server package payload fixture passed.
+{"effects_checked": 1, "findings": [], "schema": "deploy/disposable-cleanup/v1", "verdict": "passed"}

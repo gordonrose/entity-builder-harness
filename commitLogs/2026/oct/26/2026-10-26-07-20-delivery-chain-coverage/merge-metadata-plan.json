@@ -1,0 +1,3410 @@
+{
+  "mode": "report",
+  "today_utc": "2026-10-26",
+  "plans": [
+    {
+      "path": ".agentic/02.rag-rulebook/source-projections/v1.yml",
+      "id": "rag-rulebook.source-projections.v1",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/02.rag-rulebook/source-projections/v1.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-27",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "0f4f955b495d4dd92b70f9808afaebcdf7e27edf",
+          "basis": "git-first-added",
+          "created_on": "2026-06-27",
+          "commit": "f460b49c6789273d3b15b650a3a3824341f2c18b",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-27",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-27",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "55100bb7b52e29d1ce7d467586b7dc90ee9c5305480885cbf7e4ebe90b1828a4",
+      "sha256_after": "5ced3ca1925bfc42c4e75f04c3e0fde568a872c3e4a67043a6e9910bd44004c6"
+    },
+    {
+      "path": ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md",
+      "id": "deploy.schema.runnable-program-contract.v1.guide",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "ac504bffbeaad26161740ec9e8ed23bbcff586c2",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "e9fbc711c45028261073bc5838c590ea1651bcad",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "afe782bc7b3968fe53497fbb2c7dd3dbbb5b56a6f7a28042729ad3af1fd251e1",
+      "sha256_after": "d0fc9c13c6fdb3280366f2aa41cf6839f2fb993397055bd2719afb8ef909a2e9"
+    },
+    {
+      "path": ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml",
+      "id": "deploy.schema.runnable-program-contract.v1",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "ac504bffbeaad26161740ec9e8ed23bbcff586c2",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "e9fbc711c45028261073bc5838c590ea1651bcad",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "bd52beb2e21cdad840731b3f9e1411ff2bdc4f653dd4ed8a4c660ffeab618cb0",
+      "sha256_after": "35fb642000cecff37e8e2e9ca1ed3c5e7f9978986bd0c165d3eb4c855899ba23"
+    },
+    {
+      "path": ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml",
+      "id": "deploy.template.runnable-program-contract.v1",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "ac504bffbeaad26161740ec9e8ed23bbcff586c2",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "e9fbc711c45028261073bc5838c590ea1651bcad",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "3e95e098221d9888cda775005592c802a9378b8f4de7d91e8801099c25e0cdee",
+      "sha256_after": "df8543c82c4b9effddaaabaf9f3c068dab184a4d84f70346d458398b03b8f4ea"
+    },
+    {
+      "path": ".agentic/04.deploy/20-build/standards/require-runnable-program-contract.md",
+      "id": "deploy.standards.runnable-program-candidates",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/04.deploy/20-build/standards/require-runnable-program-contract.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "e9fbc711c45028261073bc5838c590ea1651bcad",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "575b85f9fc4ad6eb3b3f3b33b14e949797f09603209904997dfacce7a96da1ec",
+      "sha256_after": "37f05b3289f72fa9426a0fdde13e949bfd3356e85a948efaf0648fc4cb8c9534"
+    },
+    {
+      "path": ".agentic/04.deploy/schemas/declaration-contract.v1.guide.md",
+      "id": "deploy.schema.declaration-contract.v1.guide",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/04.deploy/schemas/declaration-contract.v1.guide.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-06",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-10-06",
+          "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "fbc4f666742dd4dc95f0c7e61df02d191305e6b07a27e0d029b06a17cb311c12",
+      "sha256_after": "e1df415b311ff5f49be37299cc7346e4dbc58b8d49e53815e49c925f50718481"
+    },
+    {
+      "path": ".agentic/04.deploy/schemas/declaration-contract.v1.schema.yml",
+      "id": "deploy.schema.declaration-contract.v1",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/04.deploy/schemas/declaration-contract.v1.schema.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-06",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-10-06",
+          "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "be284d7294bc3c99145344d200fd94f07a750cc962f8074ef0fd90387fec7b44",
+      "sha256_after": "a92a14943df3e3ed4a5340e1dd7f4824a5d40ee9ed7d7a8303f648bf90b0d19c"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/declaration-coverage.md",
+      "id": "deploy.standards.declaration-coverage",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/04.deploy/standards/declaration-coverage.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-06",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "basis": "git-first-added",
+          "created_on": "2026-10-06",
+          "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "9fa5ff1a23f9a03a414acb086b92cbd03551d76b1a5f00d05862770d8ab3a4d0",
+      "sha256_after": "70454a1f49a442b73bc4bba28d3699fbcd692ea1078bfe99b958d4a4b452973f"
+    },
+    {
+      "path": ".github/workflows/deploy-platform-shell-staging.yml",
+      "id": "github.workflow.deploy-platform-shell-staging",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".github/workflows/deploy-platform-shell-staging.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-07-14",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-07-14",
+          "commit": "0467182db26e767361584f85177e1172da37447e",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-14",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-14",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "c85bc4b485cb490d60665fa75b084e146eb756aa3528f76a6103ad925283728f",
+      "sha256_after": "82c6743ea8d01f7cd999e5d1245f1209c076ea3d788d7e228be3071245545d34"
+    },
+    {
+      "path": ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+      "id": "github.workflow.publish-kanbien-core-platform-core-server-persistence",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "bbf19a21d73bbaa238bdb035cfa813f59ccbf62d",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "1cba6e1f4027301e790c64e7adf0063cd656c563a3ff817efd2390f67aecaa9a",
+      "sha256_after": "80940370ed60626fd293fce5c34068d74e9788da6fe45fa972746c04e561f81e"
+    },
+    {
+      "path": ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+      "id": "github.workflow.publish-kanbien-core-platform-core-server",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "d5cb0c5479d222bf1524716e31a1449967c4e765",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "92df72995763812742f226475ab7fae866bdb63b39b586a5f6f2049d25031649",
+      "sha256_after": "b7a0a0bfd99ca48b6c22e6085196d80825e8dacae8375b76ff6d69a0f5a91ed9"
+    },
+    {
+      "path": ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+      "id": "github.workflow.publish-kanbien-core-platform-observability-collector",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "basis": "unknown",
+          "created_on": "2026-10-23",
+          "commit": "bbf19a21d73bbaa238bdb035cfa813f59ccbf62d",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship.",
+          "reason": "The first-added artifact ID differs from the current ID."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "b9dfff572e854899869b0db74946f71474770d121127b7f5163b3ec81739467b",
+      "sha256_after": "a5d1823701b3bad4892b0b8cda70bcb687a7845bec2a8ad4ebbb67ed105782f6"
+    },
+    {
+      "path": "docs/04.deploy/source-material/shared/container-image-management.md",
+      "id": "deploy.source-material.shared.container-image-management",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "docs/04.deploy/source-material/shared/container-image-management.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-30",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-06-30",
+          "commit": "72992048c26122375e72a97c3e177eb80806c254",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+      "sha256_after": "d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+      "id": "infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-main",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "dadc63602d132983c0badca9fba0f816dde3e1e3",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "9149d30d5fdadcf15d4dcbfb5ec11f91a49794bb",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "7ac0db369f6a8fcdc7e3620017b1f4049784af666bd4a7a68187d0eba14fca4e",
+      "sha256_after": "fb8bb13e76e20db173555e25f0e9778ffdbc15a8f608b9ab20ba078eec35b528"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+      "id": "infra.04-deploy.03-product.entrypoints.runnable-program-index",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "8c11081227b78b9eb385b548f87ad8e3d31cf2f2",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "6216ee5ac9622f3b84fa37a862efdbbf0d81ca27659a7b984b9237025cb2b5a7",
+      "sha256_after": "c9e63f5658838df5f8440b74d9438e2a58497951a77a3997e17a11063457fc61"
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+      "id": "infra.04-deploy.03-product.image.core-server-persistence-observability-collector.qualification-config",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "df2ca76296f4ccae7d5b752d7ae0725c1a689e07",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "df2ca76296f4ccae7d5b752d7ae0725c1a689e07",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "67640820c07950df21c4de1e5025cef18d1def47da8ed7cbce2cc0d5292773b6",
+      "sha256_after": "a9d8da6f1005ebc9d3ef92984ad025213b3d403b4cc7ba218aab9a91acc208cf"
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+      "id": "infra.04-deploy.03-product.image.core-server-persistence-observability-collector.contract",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "d9cd23623a4cd4bdfdcd53db0d74bffa94c70eff",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "df2ca76296f4ccae7d5b752d7ae0725c1a689e07",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "2299eca72c0417497185c1e2606129179e97a446141c9447b930bcc6470fb45d",
+      "sha256_after": "d07d55b96bfec3d48350f163b384b9022a02d5afdd14456763d46ad33661e757"
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+      "id": "infra.04-deploy.03-product.image.core-server-persistence.dockerfile",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "dadc63602d132983c0badca9fba0f816dde3e1e3",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "9149d30d5fdadcf15d4dcbfb5ec11f91a49794bb",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "c176308e81c1c4bc9fba11e3b847f998defadda18eababfb3f483bb24cff2148",
+      "sha256_after": "a9ef8f057231b695bde93f9058084f1c619f3ad23b652396afc9549b01d481dc"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.budget-control",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-22",
+        "history": {
+          "last_committed_on": "2026-10-22",
+          "last_commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "basis": "git-first-added",
+          "created_on": "2026-10-22",
+          "commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-22",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-22",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "ad72e216e2b599a25ea874c8dd3fc9bccfeb229bc4180511aa15a500fdc9e421",
+      "sha256_after": "63c2318e9719882b319d7d90dafd124e98093d89287333052a43feaa56a94f90"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "0416bd1e9432c824d41ea306cdc0c67c2fc9a60f",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "60891e4b4ea6ee3d72771ff944f3c0b922986c93",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-22",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "7c7e72b6fa34e37052336f83b98f98c484fb5262a9f07c66d85fbe45c7203724",
+      "sha256_after": "6832e438567ab09b4994b75d48ac72de737e4512eabbbfb187ceefbc65dd3e1d"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "60891e4b4ea6ee3d72771ff944f3c0b922986c93",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "c05be0dfcb2fdb0e0dd495b3c5bce460712122e0663d987c40e87cf1900bc406",
+      "sha256_after": "adc579e5a8c9292d33a45e13a74dfe4e0dd592519a85beec041f17c2e7cf60be"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-23",
+          "last_commit": "13fe5145106d3834fd2c1dcca1cbcf4208c834ba",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "60891e4b4ea6ee3d72771ff944f3c0b922986c93",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-23",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-23",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "735dd5c946e37d6e3fb95640a3c564c5e104939c2fc87da27efdc0d15498c53a",
+      "sha256_after": "e5e9fd480a8fad66dd106543f8b070d5389ff6b0d41e85eee066b8d7d618b2d9"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.contract",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "14ca679752b36ccf0ff09e48c86159d307ce375c",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "f6cd5fbe89498f1c1fc18b7beaf769562a0e39b0",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "637740ef983d9f9b42a3167a5f1896e26ef2bafa8b2ab8299b68eb2705753886",
+      "sha256_after": "2ff5cb6684a71dae31aec4d691c8acd3f3dda4eee927d3cd06ed0dd8d1793fbb"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.binding",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "0416bd1e9432c824d41ea306cdc0c67c2fc9a60f",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "f6cd5fbe89498f1c1fc18b7beaf769562a0e39b0",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-23",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "ed22007e1ff98a721bd9f0f868ab0cc45c5d6ad5ca1515767df73afebdc827df",
+      "sha256_after": "f33c124cfc20e5042e41f80a6f4d1ee3b83f5d52ad2d8db74f28ed029197b175"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.core-server-persistence",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "dadc63602d132983c0badca9fba0f816dde3e1e3",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "7ab8d07016fcb2a1d987148f243d224761b38346",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "9964f5754f66ec3adc6395060a7f190f67e38c8fe58cf0196fb1c651ff0bcb2f",
+      "sha256_after": "c1b07e76328335cd3275e9464d80f6d81f9149f98865ff2daf1174f37e042711"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien.staging.declaration-contract",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-06",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "1520ef06831e68f86f6ddd07e09c034809d34b81",
+          "basis": "git-first-added",
+          "created_on": "2026-10-06",
+          "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "85c44af4897a285efba225b600f4fd23824d5db331cfd0542436676cb00c8b6e",
+      "sha256_after": "dc1ee55084244820ad004f10b4b3479623f2cbb8fea050f8ebfc199fca556927"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+      "id": "infra.04-deploy.03-product.targets.kanbien.staging.target-profile",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-07-13",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "1520ef06831e68f86f6ddd07e09c034809d34b81",
+          "basis": "git-first-added",
+          "created_on": "2026-07-13",
+          "commit": "2bf492b2eaef5dbc4a81ff07cfa920a164e4edf2",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-07-13",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-07-13",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "bfea763a3b03ae5a497f9b2ae625e7693552b5c400621a411341a3bedb3aa7d5",
+      "sha256_after": "0e91a865c8717b7e17ac6b69068b8cf0d000977ab470d7cb5b94dbb01c68570b"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+      "id": "harness.script.artifact-metadata.generate-index",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-24",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "1520ef06831e68f86f6ddd07e09c034809d34b81",
+          "basis": "git-first-added",
+          "created_on": "2026-06-24",
+          "commit": "bf2ded50767d097a1f0ae53b12c11022ebf109dd",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "86ee3d929d8420392ced2c2ba9065d1978ed256bfbe60ffe6db8f6a731a0813b",
+      "sha256_after": "b193d8703483054aba38af9ffc23c4118325e3b88138b63186f5e2f778e586a8"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+      "id": "harness.script.artifact-metadata.generate-index-smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-24",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "1520ef06831e68f86f6ddd07e09c034809d34b81",
+          "basis": "git-first-added",
+          "created_on": "2026-06-24",
+          "commit": "bf2ded50767d097a1f0ae53b12c11022ebf109dd",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "70af1bd6a1beaa0de7e5ab077851c3ce501caa31c9a3fa928fde55fd3248e30b",
+      "sha256_after": "f3b95327f19f6beba69b1d268acb096cca353b97962cedaa6b4d2caf11f7df48"
+    },
+    {
+      "path": "scripts/02.rag-rulebook/build-service-image/README.md",
+      "id": "rag-rulebook.script.build-service-image.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/02.rag-rulebook/build-service-image/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-07-01",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-07-01",
+          "commit": "a059bac4a2322b5fffeee09012d1ceb7968563b5",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-01",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-01",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "c15a5d8f25a21e2da687655e632e4604ef1aff8583ac298c74931314c79a4eab",
+      "sha256_after": "3df5788652fb1065137858e1dc5b4315ec2b29f2f6c8305848ab7eacdd57f40b"
+    },
+    {
+      "path": "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh",
+      "id": "rag-rulebook.script.generate-retrieval-selector-fixture.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-25",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-06-25",
+          "commit": "caf75cc88a6c17864d0e62fcb8a5b802c4974ea9",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "f2c0c5073864a87e6615bd1ee69aa5ffdbbd396d7779214a2f978c0cafd0d9d5",
+      "sha256_after": "ce0f7271d962f4920af5355530470474a93d6932766f7d8c7dc6c61a93a21adc"
+    },
+    {
+      "path": "scripts/02.rag-rulebook/run-local-service/smoke-test.sh",
+      "id": "rag-rulebook.script.run-local-service.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/02.rag-rulebook/run-local-service/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-29",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-06-29",
+          "commit": "5e0415d3c7f48f17f6cfd5334ebb828ad58c44f3",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-29",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-29",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "295bd23cbc8e5a9c06776b2ca10716f268d2c96ba7391be834d09d76cc9ab73e",
+      "sha256_after": "e1bcc7b16d92a75fbd2448e4a945e45bf0877fa6106bb8c0da90ef88aa62917a"
+    },
+    {
+      "path": "scripts/04.deploy/build-platform-shell-image/README.md",
+      "id": "deploy.script.build-platform-shell-image.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/build-platform-shell-image/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-07-10",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-07-10",
+          "commit": "e4123222c6e0f53b92bd44f7fa6c622d9c259795",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-10",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-10",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "5bc977731c4101a20ff63b216385cd42675accb49a69140ff8d081cfde56804c",
+      "sha256_after": "914f1431daa12c1c14c3b523a215e538ad965935fda63623e07f27593b7c9a5e"
+    },
+    {
+      "path": "scripts/04.deploy/build-platform-shell-image/script.sh",
+      "id": "deploy.script.build-platform-shell-image",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/build-platform-shell-image/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-07-10",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "unknown",
+          "created_on": "2026-07-01",
+          "commit": "a059bac4a2322b5fffeee09012d1ceb7968563b5",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship.",
+          "reason": "The first-added artifact ID differs from the current ID."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-10",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-10",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "5d97776a3669672044932930d6f25c9a52cf291211a0bb824e00d99c871652c4",
+      "sha256_after": "149a9ab9746834db997ebeac61c2dddb901326146d0ff0d396182b2dd76f4283"
+    },
+    {
+      "path": "scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs",
+      "id": "deploy.script.build-platform-shell-image.verify-runtime-payload",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-06",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-06",
+          "commit": "b767499de3e29525e2cd5654810acf80d2eac7b9",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "eecc28d21c9aa9c7069662ef6777868e6bf3461332ff3e0dc88f7213296ec3e7",
+      "sha256_after": "01b7a2c4f3c7b964eb2c2998e7da04e4261e3b788769defc2e379330ad3f0536"
+    },
+    {
+      "path": "scripts/04.deploy/inventory-deploy-control/README.md",
+      "id": "deploy.script.inventory-deploy-control.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/inventory-deploy-control/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-06",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-10-06",
+          "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "494989391d9ed28520de872367f60a7936ee2b43546f137b071bd54ce8e31964",
+      "sha256_after": "2c855f3fb024e0d34fb2b9f6ba0d81ec0244c57159c87f3d674236dd60735588"
+    },
+    {
+      "path": "scripts/04.deploy/inventory-deploy-control/smoke-test.sh",
+      "id": "deploy.script.inventory-deploy-control.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/inventory-deploy-control/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-06",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-10-06",
+          "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "aef20012fc7c2c51a91ef7a7f4651411f8e915f6b3583c90e2b8b61b027b1277",
+      "sha256_after": "f2807329479f6926d36a9903da4446b02fb219f7d99aac561906520cf59ed9e0"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+      "id": "deploy.compiler.declaration-coverage",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-24",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-24",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-24",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "268bca581cd149247cbf394b63127b5f18e92460e096f46992b9a0325eb04cc8",
+      "sha256_after": "8ed8641f1755c04cc92a085d168717c3a9898c3a28489f98d4292e12894b759b"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py",
+      "id": "deploy.adapter.aws.runtime-alignment",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "832e709a858aff8e42d3a05101394d74c6e31f6b",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "b34c211e226fdcb7a8840d263bd6f8d83fe55ddb",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "f5771d2eff88994db2b4dd967ec1957d4dc880e934f7b90eea3afb7d96de605d",
+      "sha256_after": "37839e7b4faff048df1bb295a7a604b2b841147775601bdf33e092c5895e763b"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh",
+      "id": "deploy.test.aws.runtime-alignment",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "832e709a858aff8e42d3a05101394d74c6e31f6b",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "8a0ffd8f9cf22839127daff55dc845ee78760507",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "6a1db4800fcc9db12f2b61513c14b57fe52ec7343c49b9801de4dff0caf7d901",
+      "sha256_after": "b6e83cee29df1072470c6f7c1e3c2efb6e9f6ad430a767349a6927e5ca8df230"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh",
+      "id": "deploy.command.validate-core-server-persistence-observability-mvp.wrapper",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "0416bd1e9432c824d41ea306cdc0c67c2fc9a60f",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "0416bd1e9432c824d41ea306cdc0c67c2fc9a60f",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "af57d16b2f6e3466526a7a18bd9f6b65c1629fb6e010d5341b98cf45c1b8ab6b",
+      "sha256_after": "3f3235fcc76bda4fceab6013906d82e64bb2efc01ab952afa38b29540c44b156"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+      "id": "deploy.test.core-server-persistence-composition",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "39f8bbc4d07a044cd5285836f4ca0842d16d85c9",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "4fe66268c6c6f5f47ce4777c2356a01351956c2f349814d9ce7c4182dc5292af",
+      "sha256_after": "81160faf04ffe39d126a06805ba3baad9dd7edd8695b5835bf771b5aa0817a90"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/fixtures/valid-contract.yml",
+      "id": "deploy.fixture.runnable-program-contract.valid",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/fixtures/valid-contract.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "e9fbc711c45028261073bc5838c590ea1651bcad",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "f64ca1950f8a9c70bac06160d037b1bb78b64317ab53be68a8ef93724599365f",
+      "sha256_after": "78105efe76932e3f5f3515caa2bae5afe5a3c711312b1a0a6258b707f0612888"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py",
+      "id": "deploy.compiler.runnable-program-contract",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-23",
+          "last_commit": "9149d30d5fdadcf15d4dcbfb5ec11f91a49794bb",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "e9fbc711c45028261073bc5838c590ea1651bcad",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-23",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-23",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "a66d3865bad0f6224451054455698dede7c3dce5b46dd72e6c1031b5c5d03730",
+      "sha256_after": "8cbe09a0f183cb1669f5bf6978697fcae0432824432dd782662adab3cee314ee"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh",
+      "id": "deploy.test.runnable-program-contract",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "ac504bffbeaad26161740ec9e8ed23bbcff586c2",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "e9fbc711c45028261073bc5838c590ea1651bcad",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "64d0a4fa7b5ee18802b450edff0624ed7770a51a8a6fedbb89b096b6e0e5a86b",
+      "sha256_after": "82ea2e0a07c905b62cac4692cd1d2644287b076a1a4c184a2fb26814cad85326"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh",
+      "id": "deploy.command.build-core-server-image",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "746f00179fb8f74ae31dc8f7ce8d28333864910a",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "bb539fe35745d1dda80b0f7af805ce09d10c2462",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "bd298a52a4798b2f42765fd92cc39597af681c876a05d1572c37eeb2bec81ea0",
+      "sha256_after": "ff93bc6dfc355eba2f07ac042376bf2ea40371e8daf650d38226c8e2bbb2c644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+      "id": "deploy.command.build-core-server-persistence-image.prepare-runtime",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "9149d30d5fdadcf15d4dcbfb5ec11f91a49794bb",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "51d2b99bd2ae07f4bf42ae3c7100f8925a5c4617a3a2ad109dec9186b26a765b",
+      "sha256_after": "fadd19cca8523065d86fbc7489c7886acc137294fc68e06d1fca56a6b5f0094f"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+      "id": "deploy.command.build-core-server-persistence-image",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "f6cd5fbe89498f1c1fc18b7beaf769562a0e39b0",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "8c9ebec51d931a18a2785b8525a41e147b50720c8d62d766dbe705f1c1b35ef4",
+      "sha256_after": "3831d15bd64161415c2262a69d4d66fdb3f101d11cbb0ba291be5496c437fda3"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh",
+      "id": "deploy.test.package-custody-receipt",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "db4cb76763a905ce6be2b7efd9ec8325a670b87b",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "6182e61e9fab504d18ef4258e9c5deec87f646728cfb7383087b04a66a39d87b",
+      "sha256_after": "111b442ae30527f5b461c393c860d0f55f4f2a801fcc9db62d66484e33650f6b"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py",
+      "id": "deploy.command.package-custody-receipt-validation",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "db4cb76763a905ce6be2b7efd9ec8325a670b87b",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "4a6f5aabc5523a64467ce7f81b3ca1a0a64ce49913c838b391ead6c22884328f",
+      "sha256_after": "400b6d5dcf8f4737ff795691207da5206d4b88dc640b5cd09e3ffd3be5c55a38"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",
+      "id": "deploy.command.qualify-retained-persistence-rollback-image",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "dadc63602d132983c0badca9fba0f816dde3e1e3",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "8659dfca3b9c4449a70e762cf9ae6ce36ffb7ad8",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "8c683b4aeeeb75f2ce88a81dd7848421eb915794642795aed6eea9de35924246",
+      "sha256_after": "e7f305dfe54973eaeec98a25fddf334082cfc840d7a004931f5593a2200c81d2"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+      "id": "deploy.command.smoke-test-core-server-image",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-19",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "02405b56499ba30f928aaad539df27756167c5cf",
+          "basis": "git-first-added",
+          "created_on": "2026-10-19",
+          "commit": "bb539fe35745d1dda80b0f7af805ce09d10c2462",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-19",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "5d37d548ff1b2cb7177160a6d866fdae898960a4782221c659bb500a7821f937",
+      "sha256_after": "0129e31693f2c15b4c4c3b172a94cf3696bdb6327d6b690fe0877b32711423a6"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+      "id": "deploy.test.core-server-persistence-image-payload-fixture",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-24",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "0f4f955b495d4dd92b70f9808afaebcdf7e27edf",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-24",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-24",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "013176b24600065a87f8bdf726352057f1e353b702aedf6ce77e0631d465d702",
+      "sha256_after": "980414686a999c1a7a95324c38f9331c5790cec9751331617f7cbbbaf94d8375"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py",
+      "id": "deploy.test.core-server-persistence-publication-qualification",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "981a1fe3ca371fbb628004f957592c9d351ae1c9c8b7dac1daab364cedfed9be",
+      "sha256_after": "65a9cbdb4c3a7d942eb9efdb65d8b90093ee5bf34616ebafaa4bd1c682711b53"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+      "id": "deploy.command.qualify-local-public-persistence-images",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "0f4f955b495d4dd92b70f9808afaebcdf7e27edf",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "b7691802bf81dd16392e63e4b4622b1f6b031a52",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "8b740d84ba859f197ef83741164970f5bc40f0c853bc6707a641a771b722c213",
+      "sha256_after": "e0dc0bccbf04bf55cd5ad4135c384121073e2fd077a3d848aa13d7b4bc2a87e7"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+      "id": "deploy.command.smoke-test-core-server-persistence-image",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "14ca679752b36ccf0ff09e48c86159d307ce375c",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "d9262f462c1426fad797376ad0e363bb43e6ba02",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "cd6ba7debf13c2c6dcb02d3c09c90c2d170df83dca9d9a603acdfba8adb230e7",
+      "sha256_after": "faf4cb27f84d7e7e71aa818ff59f1efd94c62af4b5ec976265ab2be76ac13301"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py",
+      "id": "deploy.command.kanbien-core-platform.core-server-package-custody.validation",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "1d94874c73ec3d94f3e15115a5d5a3f75b415c7a3fac7dfc34947294a200757a",
+      "sha256_after": "de4a6f3908120a2b3460d0c3bdec00221851fccc8ca6062f73454613db599568"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py",
+      "id": "deploy.command.kanbien-core-platform.core-server-persistence-observability-collector-package-custody.verify",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "df2ca76296f4ccae7d5b752d7ae0725c1a689e07",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "8f72a299c1c9fe226de5dde34995aab3df1bb5a90bf7d3e30b67d8f8a1ef3b6a",
+      "sha256_after": "355b9d29e5352d48eebf9e3d60f20358a07badcf0025e918d48608a7cc0dcb02"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py",
+      "id": "deploy.command.kanbien-core-platform.create-runtime-change-set",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-21",
+          "last_commit": "5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "b34c211e226fdcb7a8840d263bd6f8d83fe55ddb",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-21",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-21",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "f950743166ef27c69f76bb4de42d848f108fc0f7d8b1df2802bda54a915c3d11",
+      "sha256_after": "d2265454af042a4819c4d5bef214e611e7db89f92c91fc7cc82e306e92c901a3"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh",
+      "id": "deploy.test.kanbien-core-platform.target-controls",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "25014ff989f4dca7132321db869f3beae0de45b4",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "ab2f5506010203969798f0a36751fe8615eabec35ffaf179549cfc150b8c4b5f",
+      "sha256_after": "ac0de46a92eb7e2bdb7e7905ae36d84cd49a62c861ce68bb4f0fbe1aa3728d5d"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py",
+      "id": "deploy.command.kanbien-core-platform.apply-core-server-persistence-database-permission-surface.impl",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "be024ef957d08e9d56c6b9508a5153952860a21b",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "8659dfca3b9c4449a70e762cf9ae6ce36ffb7ad8",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "748f092ef3b7fab00bbe7725ad420cf3c327540facb4a2dd8c53bd3bbd312a0d",
+      "sha256_after": "092419a30e515a31059577d5961801c1bd6ae23c6686fe99f9435fe140b2bb06"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+      "id": "deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-23",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "32168ba5a6e0fbaf84246a4a37292f6f9f8fe0e5",
+          "basis": "git-first-added",
+          "created_on": "2026-10-23",
+          "commit": "5dced5356e8b6c667f81ddb04efa8d7fa0bec81d",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "3310b4b4f7e53d78f220c96a75d8069d8143c3d497423ae93919e020c667545b",
+      "sha256_after": "7addb9af367fee4b7f810c8ce05009bf9fc1200a5594877cdce10901bca4a085"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/README.md",
+      "id": "deploy.command.kanbien-core-platform.provision-target-budget.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-22",
+        "history": {
+          "last_committed_on": "2026-10-22",
+          "last_commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "basis": "git-first-added",
+          "created_on": "2026-10-22",
+          "commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-22",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-22",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "e73d12da057f1eaf7522193da79435817ec6d180d7250ab0bffa7e3d716e311f",
+      "sha256_after": "d5adf8c26ba72ef72b5dfeed5ff9ea2f4338f561bb1d45ffac0995b976acbdba"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py",
+      "id": "deploy.command.kanbien-core-platform.provision-target-budget",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-22",
+        "history": {
+          "last_committed_on": "2026-10-22",
+          "last_commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "basis": "git-first-added",
+          "created_on": "2026-10-22",
+          "commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-22",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-22",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "81801cfccfb5ba3f328195271c9b258ca516ccf34d264539370f586b8597424a",
+      "sha256_after": "47b2e7f0a82e0c35ef4f886740b3a27fbd1a04ebe4a13d327c150f860773ebeb"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh",
+      "id": "deploy.test.kanbien-core-platform.provision-target-budget",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-22",
+        "history": {
+          "last_committed_on": "2026-10-22",
+          "last_commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "basis": "git-first-added",
+          "created_on": "2026-10-22",
+          "commit": "4021fbf2f9772b3f33173b242d35956279d64749",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-22",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-22",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-22",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "286a13e0f7d646b85c31a0e55d55096c6748f82eb69ef0eaeee4afff73f74dd2",
+      "sha256_after": "536629f80a36034244f911fcee3cd692b7a2a1f74ee69c579437a12d0fac52ce"
+    },
+    {
+      "path": "scripts/04.deploy/provision-platform-shell-negative-authz-client/README.md",
+      "id": "deploy.script.provision-platform-shell-negative-authz-client.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/provision-platform-shell-negative-authz-client/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-23",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-23",
+          "commit": "5fdb98919093c43c7f05c65a24b8d514d1f0f396",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-23",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "6be6416da5f295aac98236911d4ea4debb2a068f212ba8a597de864680abbbcf",
+      "sha256_after": "172921807b2864067974e7e0898479cc185c87775e1a9c8be363af71ce817cd0"
+    },
+    {
+      "path": "scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh",
+      "id": "deploy.script.provision-platform-shell-negative-authz-client.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-23",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-23",
+          "commit": "5fdb98919093c43c7f05c65a24b8d514d1f0f396",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-23",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-23",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "d2387128096b2e26258fcb3ea6ab7717c6965db7cc57c308946c6a38473b4fc3",
+      "sha256_after": "6c86fa999e462c6a3fb6712bd6288dd35bfacba203122fdf55f1403b12348ab8"
+    },
+    {
+      "path": "scripts/04.deploy/provision-platform-shell-persistence-write-client/README.md",
+      "id": "deploy.script.provision-platform-shell-persistence-write-client.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/provision-platform-shell-persistence-write-client/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-24",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-24",
+          "commit": "515813a928ee2b130fdfb0589b6f9965bdccfc61",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-24",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "5a5514f834933f74fce1984798bf287f1ec6ab8ff7ebc9d1aa531ec3e13a5796",
+      "sha256_after": "f83c809e21f1896cff76cc417979b3a4a3f0aa8426906f92143de441b74411aa"
+    },
+    {
+      "path": "scripts/04.deploy/reconcile-platform-shell-staging/README.md",
+      "id": "deploy.script.reconcile-platform-shell-staging.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/reconcile-platform-shell-staging/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-26",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-26",
+          "commit": "0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "37a3186bc4b010fb6f6b3381d9607aa4032515afd4ae97f57b8cc3ca96a8ae6b",
+      "sha256_after": "63095d1b9100d9766061166f721d4386c65796ba6973a867b83ec7e3c5b1d10c"
+    },
+    {
+      "path": "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+      "id": "deploy.script.reconcile-platform-shell-staging",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-26",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "1520ef06831e68f86f6ddd07e09c034809d34b81",
+          "basis": "git-first-added",
+          "created_on": "2026-09-26",
+          "commit": "0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "06676b5f7022808834d6e0d23b0b4a103db9a42c24ec536f8b154fe73e670f5e",
+      "sha256_after": "0d9e2ef0b8df75f16bc9ce9cbd06ccbc129be32b9544f229b259e3f156897b42"
+    },
+    {
+      "path": "scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh",
+      "id": "deploy.script.reconcile-platform-shell-staging.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-26",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-26",
+          "commit": "0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "dfc784e5937ce816ea36bff7410f1dccc30a6cd596a597663722f4b7d7a0c74b",
+      "sha256_after": "e0b397b3266491eac78c8d98b677f3ca934b97f28ee05a02aa7400cb02b84c00"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md",
+      "id": "deploy.readme.run-platform-shell-candidate-execution-preflight",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-27",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-27",
+          "commit": "164f9f18a9e6d959ff2c1f103fbcdfc36881dc0c",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-27",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-27",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "e941d766f4ec2532a3b7a4a0027f8f5a907831d9f0abc76c3935631de2f6d382",
+      "sha256_after": "37353648f0beaff9a38c9bf8f1f3962820a2bf9d5aea999f21f4a4ff25bdb1ca"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+      "id": "deploy.script.run-platform-shell-candidate-execution-preflight",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-27",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "1520ef06831e68f86f6ddd07e09c034809d34b81",
+          "basis": "git-first-added",
+          "created_on": "2026-09-27",
+          "commit": "164f9f18a9e6d959ff2c1f103fbcdfc36881dc0c",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-27",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-27",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "7627b3c816ec988ed2fd8eb577d9be73ab41fac8ad3199933df96eb77d2d3c54",
+      "sha256_after": "5c67a72ede3366b76a85c9c966f443bf043b4a9ae645e20266fb7fb88f118d4c"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh",
+      "id": "deploy.script.run-platform-shell-candidate-execution-preflight.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-27",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-27",
+          "commit": "164f9f18a9e6d959ff2c1f103fbcdfc36881dc0c",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-27",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-27",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "4696310dbf972b0a93d82d2e2388e94cb46829fd171b5765f7b888e6c32d6cf1",
+      "sha256_after": "427582e3d9c9b9d807e1cf4cfb6140920be2d16225ec1d914755f5a5d6d4c988"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+      "id": "deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-26",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-26",
+          "commit": "7837b5ce1e6b8cbe155cb6fedb78235d2af6b01d",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-26",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "6fd16a7fcf67ee3fb73aedb3d147bc38d24c9e5e09cf7e471043998ee80284e4",
+      "sha256_after": "809296c789f96df8e438c287ad1798db45b6dde43cb954dcdf9ed09c87c13de4"
+    },
+    {
+      "path": "scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py",
+      "id": "deploy.test.deployment-operation-diagnostics",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "0a0b434d7c564fb5f57f52a2c3dfe04a6d9287a93856d64fef864d33dcd2a486",
+      "sha256_after": "bdf2c4c26b4227d148b4df75d22dad1860297402b894b8c46ee8abf301828022"
+    },
+    {
+      "path": "scripts/04.deploy/shared/deployment-operation-diagnostics.py",
+      "id": "deploy.shared.deployment-operation-diagnostics",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/shared/deployment-operation-diagnostics.py",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-25",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-25",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "d05c12dcf75339edbe84664e39e4ba14e48ee11c2bf1bfae1839de1109e44218",
+      "sha256_after": "09708a58e877cad5156f344894a7dd4edb1b0a397724e53cc40fa3cf1496864f"
+    },
+    {
+      "path": "scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh",
+      "id": "deploy.test.safe-command-diagnostics",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "02405b56499ba30f928aaad539df27756167c5cf",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "bd5e4c676541e2b6b13658e5d36b28b52d387c6e3c1a77e6fc62c943db25ec37",
+      "sha256_after": "22b6972b7fa320d1920b071adf084650c27df87fa3308961bc142a3322c6e38d"
+    },
+    {
+      "path": "scripts/04.deploy/shared/safe-command-diagnostics.sh",
+      "id": "deploy.shared.safe-command-diagnostics",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/shared/safe-command-diagnostics.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-20",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "a4eb433723c67a2c6550ec25793756d003305383",
+          "basis": "git-first-added",
+          "created_on": "2026-10-20",
+          "commit": "02405b56499ba30f928aaad539df27756167c5cf",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "3f7354f26fe7265fed8f6d201a1216d226b12c87de9a3b35fee1c45979de148b",
+      "sha256_after": "e071dd8db44e7f49428757f001bff426f93035a027229ea927f17e04c73ec10b"
+    },
+    {
+      "path": "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+      "id": "deploy.script.smoke-test-platform-shell-image",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-07-10",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-07-10",
+          "commit": "e4123222c6e0f53b92bd44f7fa6c622d9c259795",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-10",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-10",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "a6f9886c9d5454b50897cc7db42aefdbe9e75cdf9a658ac3a22b70e630d8088a",
+      "sha256_after": "837084685a44b800e13d890629f52baa6e84a55daa4600c70fdfcc8e29d647de"
+    },
+    {
+      "path": "scripts/04.deploy/validate-container-boundaries/README.md",
+      "id": "deploy.script.validate-container-boundaries.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/validate-container-boundaries/README.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-30",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-06-30",
+          "commit": "72992048c26122375e72a97c3e177eb80806c254",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "e8f063e35965c7a3fc2e465964330315370d9970cdf560d75ce4691c77b34b5e",
+      "sha256_after": "e33f745389a3595418d3fe7659bde787c4d00f0dba8471c2b25e77ae206def7d"
+    },
+    {
+      "path": "scripts/04.deploy/validate-container-boundaries/script.sh",
+      "id": "deploy.script.validate-container-boundaries",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/validate-container-boundaries/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-30",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-06-30",
+          "commit": "72992048c26122375e72a97c3e177eb80806c254",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "b21a322d061e17b34b73fbc7b4ce73f7a965eb16b057d3a773f20e3bad65d883",
+      "sha256_after": "90ccf9cd6789732f34507ff3b20c7a7602ebee481f0c7070224c20d34686db56"
+    },
+    {
+      "path": "scripts/04.deploy/validate-container-boundaries/smoke-test.sh",
+      "id": "deploy.script.validate-container-boundaries.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/validate-container-boundaries/smoke-test.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-06-30",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-06-30",
+          "commit": "72992048c26122375e72a97c3e177eb80806c254",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-30",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "d7e248328b37475bab94503a8ab14c446dee9567f6a8845f3be0638c7ff1ebfa",
+      "sha256_after": "d1cc7229f32ce371e3a0e82a3ccdbc7580b3ee60c3e1911c7bbc7574a6bff6cd"
+    },
+    {
+      "path": "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",
+      "id": "deploy.script.verify-platform-shell-deployment-workflow",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-09-06",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-09-06",
+          "commit": "1b561739b7de55d5c777280c040eac9f42e21f07",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-09-06",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "71c2d05437068891db68f3c700c700dcde3f8a9eaac536c1d2c0ab7bd9c1c9a4",
+      "sha256_after": "671796a7bc0e3429dec803d970680fb01a5d30f29acbc67130f769f551829453"
+    },
+    {
+      "path": "scripts/repo/check-selection/checks.yml",
+      "id": "repo.check-selection.catalog",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": "scripts/repo/check-selection/checks.yml",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-10-24",
+        "history": {
+          "last_committed_on": "2026-10-25",
+          "last_commit": "0f4f955b495d4dd92b70f9808afaebcdf7e27edf",
+          "basis": "git-first-added",
+          "created_on": "2026-10-25",
+          "commit": "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-25",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-24",
+        "updated_on": "2026-10-25",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-24",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "cb0b7cb643999fe22d06adf9e896853e4d5b582887c5e7b3a5706452b61a3ca4",
+      "sha256_after": "187be3cdef825f1616221a4cf00b2c0a03f548d41d1314ea93f71e3c61b17160"
+    }
+  ],
+  "errors": [],
+  "applied": false
+}

@@ -1,0 +1,42 @@
+{
+  "checked_at": "2026-10-26T13:38:37.827315+00:00",
+  "checks": [
+    {
+      "argv": [
+        "bash",
+        "scripts/00.chat/worktree/check-write-location/script.sh"
+      ],
+      "exit_code": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-structural-0.log",
+      "sha256": "8561bafbfd393314081c9db857b2158c0305597530925d683ac280a43e0cc7c6"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/00.chat/session-log/check-commit-prerequisites/script.sh"
+      ],
+      "exit_code": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-structural-1.log",
+      "sha256": "6413ace9cefa28bdcdc29ae28dfae8e5cd0614c50f56630793304f5bc1590472"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-deterministic-process-drift.sh",
+        "--staged"
+      ],
+      "exit_code": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-structural-2.log",
+      "sha256": "b07513304ae36b4154441c1a9b10aba3129943f9abc935d310a0dac59b249c5a"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-governed-script-command-drift.sh"
+      ],
+      "exit_code": 1,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-structural-3.log",
+      "sha256": "90cbf1c5b1e6a1bd459c9dda33ce2e23dd5205d34929f47b1d816a7d13081639"
+    }
+  ]
+}

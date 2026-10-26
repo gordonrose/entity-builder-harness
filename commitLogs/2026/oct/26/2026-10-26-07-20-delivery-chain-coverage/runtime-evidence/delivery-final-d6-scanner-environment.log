@@ -1,0 +1,6 @@
+test_publication_guards_reject_control_and_identity_substitution (__main__.QualificationTests.test_publication_guards_reject_control_and_identity_substitution) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 19.471s
+
+OK

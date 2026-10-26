@@ -1,0 +1,47 @@
+[
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+      "--paths",
+      "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 0.151,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-1.log"
+  },
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/check-deterministic-process-drift.sh",
+      "--paths",
+      "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 0.013,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-2.log"
+  },
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/check-governed-script-command-drift.sh",
+      "--paths",
+      "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 9.913,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-3.log"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 0.005,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-4.log"
+  }
+]

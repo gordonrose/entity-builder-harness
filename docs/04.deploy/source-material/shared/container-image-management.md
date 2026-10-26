@@ -4,7 +4,7 @@ id: deploy.source-material.shared.container-image-management
 version: 1
 status: active
 created_on: "2026-06-30"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -79,8 +79,13 @@ and cheap for agents to retrieve.
 Dockerfiles for deployable services must live under:
 
 ```text
-infra/<deploy-layer>/<deploy-track>/image/Dockerfile
+infra/<deploy-layer>/<deploy-track>/image/[<capability>/]Dockerfile
 ```
+
+The optional capability is exactly one directory named with the lowercase slug
+`[a-z0-9][a-z0-9-]*`; further nested capability directories are forbidden. The
+README and Dockerfile-specific ignore file live beside the selected Dockerfile;
+repo-root `.dockerignore` remains a fallback for a repo-root build context.
 
 For the first RAG/rulebook service image, the canonical path is:
 
@@ -92,7 +97,7 @@ The image boundary must include a README, a Dockerfile, and the effective
 ignore file for the declared build context:
 
 ```text
-infra/<deploy-layer>/<deploy-track>/image/
+infra/<deploy-layer>/<deploy-track>/image/[<capability>/]
   README.md
   Dockerfile
   .dockerignore              # required when image/ is the build context
@@ -129,10 +134,10 @@ manifest.
 
 The effective ignore file must match the declared build context:
 
-- if the image directory is the build context, `infra/**/image/.dockerignore`
+- if the image directory is the build context, `infra/**/image/[<capability>/].dockerignore`
   is the effective ignore file.
 - if the repo root is the build context, either the repo-root `.dockerignore`
-  or `infra/**/image/Dockerfile.dockerignore` must provide the effective
+  or `infra/**/image/[<capability>/]Dockerfile.dockerignore` must provide the effective
   protection for that build.
 
 For service images that need repo files outside the image directory, the build

@@ -1,0 +1,644 @@
+{
+  "complexity_assessment": "No universal deployment engine or new registry found. Current shared qualification identity and provider-neutral configuration comparison have actual callers; AWS normalization and shell runtime adapter remain provider/target scoped. Some static discovery relies on declared effects and lexical calls; regressions must keep operational-route classification fail closed.",
+  "container_source_review": {
+    "applied_recommendation": "Explicit exactly-one lowercase capability slug/depth and selected Dockerfile sibling ignore/README plus root-context fallback.",
+    "assessments": [
+      {
+        "blocking_gaps": [],
+        "decision": "pass",
+        "dimension_scores": {
+          "cost_optimization": 9.6,
+          "coverage": 9.8,
+          "execution_variables": 9.7,
+          "human_readability": 9.8,
+          "machine_readability": 9.7,
+          "necessity": 9.8,
+          "performance": 9.6,
+          "production_grade_gaps": 9.6,
+          "security": 9.7,
+          "token_optimization": 9.7
+        },
+        "overall_score": 9.7,
+        "recommendations": [],
+        "role": "architect"
+      },
+      {
+        "blocking_gaps": [],
+        "decision": "pass",
+        "dimension_scores": {
+          "cost_optimization": 9.6,
+          "coverage": 9.7,
+          "execution_variables": 9.8,
+          "human_readability": 9.7,
+          "machine_readability": 9.8,
+          "necessity": 9.8,
+          "performance": 9.6,
+          "production_grade_gaps": 9.6,
+          "security": 9.7,
+          "token_optimization": 9.8
+        },
+        "overall_score": 9.7,
+        "recommendations": [],
+        "role": "agentic-engineer"
+      },
+      {
+        "blocking_gaps": [],
+        "decision": "pass",
+        "dimension_scores": {
+          "cost_optimization": 9.6,
+          "coverage": 9.7,
+          "execution_variables": 9.7,
+          "human_readability": 9.7,
+          "machine_readability": 9.7,
+          "necessity": 9.8,
+          "performance": 9.6,
+          "production_grade_gaps": 9.6,
+          "security": 9.8,
+          "token_optimization": 9.7
+        },
+        "overall_score": 9.7,
+        "recommendations": [],
+        "role": "secops-engineer"
+      },
+      {
+        "blocking_gaps": [],
+        "decision": "pass",
+        "dimension_scores": {
+          "cost_optimization": 9.7,
+          "coverage": 9.7,
+          "execution_variables": 9.7,
+          "human_readability": 9.7,
+          "machine_readability": 9.7,
+          "necessity": 9.8,
+          "performance": 9.7,
+          "production_grade_gaps": 9.6,
+          "security": 9.7,
+          "token_optimization": 9.7
+        },
+        "overall_score": 9.7,
+        "recommendations": [],
+        "role": "senior-sre"
+      }
+    ],
+    "decision": "pass",
+    "evidence": [
+      "Canonical Placement precisely limits capability slug and depth.",
+      "Ownership Boundaries keeps source/package/script authority separate.",
+      "Build Context and Secrets define context and exclusion obligations.",
+      "Required Variables and local-only exception distinguish execution stages.",
+      "Health/Provenance/Update Rules require package behavior and immutable identity before deployment.",
+      "Drift controls preserve bounded lookup and maintenance cost."
+    ],
+    "limits": "Source review passes independently of pending validator derivation/projection/evaluation work. Historical accepted June30 review records untouched.",
+    "reviewer_identity": "One independent agent /root/independent_review providing four role-specific assessments; not four distinct reviewer agents.",
+    "source_path": "docs/04.deploy/source-material/shared/container-image-management.md",
+    "source_sha256": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2"
+  },
+  "evidence_class": "source-review-and-disposable-local-regressions",
+  "final_signoff": {
+    "aggregate": {
+      "current_input_mismatches": [],
+      "deferred": {
+        "acceptance": 11,
+        "deploy": 3,
+        "package": 6
+      },
+      "deferred_interpretation": "The20 later-stage checks are deferred, not passing local or live proof. Actual package behavior is evidenced separately by owning finished-image reports; provider/deployment/acceptance execution remains barred.",
+      "findings": [],
+      "local_passed": 53,
+      "report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+      "selected_catalog_declaration_mismatches": [],
+      "selected_input_digests_recomputed": 73,
+      "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9",
+      "verdict": "passed"
+    },
+    "complexity": "The repairs extend existing declaration, selector, package, provider and acceptance owners. No parallel delivery registry, universal deployment engine or generic execution journal was introduced. Selected-entry evidence reuse retains full identity for actual catalog consumers and current-invocation authority checks.",
+    "decision": "passed",
+    "final_rag_image": {
+      "classification": "local finished-image behavior, not live/cloud proof",
+      "cleanup": "confirmed absent",
+      "current_source_mismatches": [],
+      "exact_image_source_comparison": "passed with expected archive-generated registry projection only",
+      "image_id": "sha256:b4d9f64549a8aedebb6be0c653bf1f0d99334500d1c43cd9dda62ff886acee34",
+      "log_sha256_verified": "1368f0f7da31d1cc50890925bd400f0efea82cb71daa19604d10efbba31efd3b",
+      "recorded_copy_files_rehashed": 1537,
+      "report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json",
+      "source_hygiene": "host sentinels excluded;zero Python cache paths"
+    },
+    "governance": {
+      "checks_passed": 7,
+      "checks_total": 7,
+      "current_source_mismatches": [],
+      "report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-governance-frozen.json",
+      "source_hashes_rechecked": 204,
+      "unchanged_scoped_container_proof": "9 prior scoped container checks retained with matching owning input hashes"
+    },
+    "inventory": {
+      "current_input_mismatches": [],
+      "entrypoints": 419,
+      "gaps": 0,
+      "input_digest": "eb5076a8666929f9f48c7c43d80b75824aa58ab78dbdaf3a67d22793820aa331",
+      "recorded_input_files_rehashed": 1653,
+      "report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+      "retired": 4,
+      "routes": 6,
+      "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+      "supported": 415
+    },
+    "next_scope_example": "Independent physical discovery finds a new target even without a scope index. Missing registration fails inventory and the selector before package/provider work. Once its existing declaration, workload binding and catalogued applicable proofs are supplied, the same runtime checks, selected local regressions and stage-owned proof prerequisites apply; synthetic second-target CLI coverage establishes this reuse.",
+    "recorded_at": "2026-10-26T11:28:45.508611+00:00",
+    "reviewer": "/root/independent_review",
+    "scope": "Independent delivery-chain source enforcement, false-green/bypass, proportional evidence reuse, local integration and recorded finished-image proof review for the authorized frozen worktree.",
+    "unresolved_review_findings": []
+  },
+  "findings": [
+    {
+      "evidence": "Current delivery-smoke-test.py actual CLI regressions reject orphan chain and invalid classic declarations.",
+      "failure": "Prose registration alone admitted consequential orphan command; classic declarations could pass without inspection.",
+      "files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py"
+      ],
+      "id": "A-R1",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "Current root image and package command CLI regression passes.",
+      "failure": "Root Dockerfile and direct package publication script were omitted from independent discovery.",
+      "files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+      ],
+      "id": "A-R2",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "qualification-test.py 3 tests passed including scanner suppression/id/output/condition changes.",
+      "failure": "Collector scan shell failure suppression passed workflow guard.",
+      "files": [
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py"
+      ],
+      "id": "D-R1",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "continuation-test.py passed actual CLI lost-submission, no-replay, provisioning, uncertain absence, wrong identity and cleanup sequence.",
+      "failure": "Uncertain shell candidate submission could consume a new attempt before prior reconciliation; invalid mixed startedBy filters.",
+      "files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+      ],
+      "id": "F-G-R2",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "evidence-reuse-test.py 19 checks passed with package gate receipt retained byte-for-byte, required artifact/composition/config invalidation.",
+      "failure": "Permission-only changes invalidated unaffected artifact gate receipt.",
+      "files": [
+        "scripts/04.deploy/operational-realization-gate/script.py"
+      ],
+      "id": "I-R3",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "Mandatory command/digest negative suite passed and independent delivery-smoke-test.py repeated-argv positive passed.",
+      "failure": "Omitted workload command requirement allowed an unrelated template command.",
+      "files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py"
+      ],
+      "id": "B-R4",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "Independent delivery-smoke-test.py 14 tests passed, including unannotated, network and aws-mutation test-like filenames failing unbound route.",
+      "failure": "Test-like filename can exempt operational external command from delivery chain.",
+      "files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+      ],
+      "id": "A-R5",
+      "reproduction": "DeliveryInventoryCLI fixture: add scripts/04.deploy/orphan/publish-test.sh with aws cloudformation deploy --stack-name orphan and prose-only registration. Original returned exit0/no findings. Bare-name case now rejects; adding effects [aws-mutation] or [network] still makes needs_route false. Operational effect metadata must override filename exemption.",
+      "status": "verified-repaired"
+    },
+    {
+      "closure_evidence": "Independent actual CLI publication mutation suite passed all three modern routes (19.451s), and shell nested wrapper/custody test passed. Added exact nested executable-body contract rejects omitted, conditional, reordered, suppressed and set+e wrappers.",
+      "failure": "Core-server/persistence post-publication scan and evidence qualification steps are not protected like the initial smoke step.",
+      "files": [
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml"
+      ],
+      "id": "D-R6",
+      "reproduction": "In disposable cwd, copy persistence workflow to its expected relative path and current builder script. Append || true to severity test line. Invoke absolute verify-workflow.py --json: exit0/findings[]. Receipt later hardcodes ecr_scan passed. Guard scan/SBOM/attestation/custody ordering, conditions and behavior.",
+      "status": "verified-repaired"
+    },
+    {
+      "closure_evidence": "Independent actual runtime configuration alias CLI regression passed: every producer alias contract is compared with its cached actual parser response; duplicate argv cannot skip capability binding.",
+      "failure": "Any existing runtime_inputs source can exempt absent required runtime configuration without executable producer proof.",
+      "files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py"
+      ],
+      "followup": "After command ID/actual producer parser fix, duplicate-argv cache skips the per-command runtime_input_contract comparison. Add zz-extra-producer as copy of isolated-restore with same argv but names=[NEVER_DELIVERED], add NEVER_DELIVERED to required_names/runtime_inputs pointing to alias. Actual declaration-coverage CLI in disposable repo exits0/findings[]. validate-acceptance-route/script.py skips duplicate tuple argv before per-command compare; move only subprocess execution into cache, compare each alias contract.",
+      "id": "B-R7",
+      "reproduction": "DeliveryInventoryCLI synthetic fixture: remove CATALOG_ENDPOINT from both template Environment lists; set each runtime requirement runtime_inputs to {CATALOG_ENDPOINT:{source:src/main.ts}} where file contains fixture text. Actual inventory CLI exits0/findings[]. Bind claimed producer to real registered command/caller/proof; do not accept file existence alone.",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "Explicit repository-root context flag and image-directory negative in actual CLI smoke pass; default source validator and full repository-root validation pass.",
+      "failure": "Validator originally rejected documented repository-root ignore fallback; current simple existence fix admits it even for image-directory contexts.",
+      "files": [
+        "scripts/04.deploy/validate-container-boundaries/script.sh"
+      ],
+      "id": "C-IGNORE-FALLBACK",
+      "required_repair": "Honor root fallback only when existing image contract/build entrypoint declares repo-root context. Preserve valid root case and fail image-context fallback/weak ignore.",
+      "status": "verified-repaired"
+    },
+    {
+      "closure_evidence": "Independent current release-control-test.py passed all 6 tests in29.802s, including updated durable-custody boundary.",
+      "evidence": "Current run 3/4 pass, test_first_create_rejects_before_execute expects custody-invalid after unlink but emits custody-unavailable. Actual controller still blocks before provider calls. Update reason expectation and rerun.",
+      "failure": "Release-control first-create test expectation predates durable custody fallback.",
+      "files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py"
+      ],
+      "id": "H-TEST-EXPECTATION",
+      "status": "verified-repaired"
+    },
+    {
+      "closure_evidence": "Independent delivery-smoke-test.py passed15 actual CLI tests including named service command/source discovery; current inventory snapshot has no unbound supported consumer.",
+      "failure": "Named local service package scripts are discovered but classified supported without a route; their source program can be omitted.",
+      "files": [
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+      ],
+      "id": "A-R8",
+      "reproduction": "Actual DeliveryInventoryCLI fixture: create packages/orphan/server.js containing an HTTP server; add package.json scripts.serve:orphan = node packages/orphan/server.js. Inventory exits0/findings[]; sole orphan entry is package-command supported/routes[]. Source server.js is not inventoried as runnable-program.",
+      "required_repair": "Bind named start/serve/service execution to a declared route; discover executable source independently and preserve explicit local-only stage applicability.",
+      "status": "verified-repaired"
+    },
+    {
+      "classification": "Conservative over-invalidation, not false-green acceptance. Operational-realization artifact gate reuse I-R3 is already correct; publisher receipt is a distinct remaining owner.",
+      "closure_evidence": "Independent qualification CLI mapping/configuration test passed: unchanged image with IAM-only change reuses receipt; changed selected command/environment/mapping invalidates; unrelated mapping unchanged. Selected unsupported intrinsics fail closed.",
+      "failure": "Actual package qualification receipt hashes entire provider template and invalidates unchanged packaged behavior on IAM-only edits.",
+      "files": [
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml"
+      ],
+      "id": "I-R8",
+      "reproduction": "Disposable actual qualification.py CLI, fixed Docker image sha256:a*64, current persistence CF template input: record0/verify0. Replace only first Action: rds-db:connect with another action: verify1 qualification-binding-invalid. No package command/environment/image changed.",
+      "required_repair": "Bind actual package configuration/proof inputs or existing provider-derived runtime projection separately from current permission and deployment prerequisites. Test same receipt survives unrelated IAM edits and fails relevant runtime/capability/image change.",
+      "status": "verified-repaired"
+    },
+    {
+      "closure_evidence": "Independent code review and3 targeted selector tests passed in1.367s: plan-local copied traversal cache, no pure-plan revalidation, true execution before/after identity revalidation. Owner measured same193paths204.859s to71.217s; reviewer did not rerun full timing.",
+      "evidence_file": "/tmp/delivery-selector-independent-profile.json",
+      "failure": "Read-only check-selection planning repeatedly recomputes identical input closures and before-execution runtime identity.",
+      "files": [
+        "scripts/repo/check-selection/script.py"
+      ],
+      "id": "PERF-R1",
+      "measurement": {
+        "checks": 67,
+        "elapsed_seconds": 204.85932444198988,
+        "findings": [],
+        "function_totals": {
+          "closure": {
+            "calls": 5057,
+            "seconds": 136.858590375341
+          },
+          "consumer_graph": {
+            "calls": 1,
+            "seconds": 3.8824068310204893
+          },
+          "declaration.inspect": {
+            "calls": 6,
+            "seconds": 4.280710365041159
+          },
+          "discover": {
+            "calls": 1,
+            "seconds": 0.002333712996914983
+          },
+          "fingerprint": {
+            "calls": 114,
+            "seconds": 7.419146088126581
+          },
+          "runtime_identity": {
+            "calls": 52,
+            "seconds": 13.674988998915069
+          },
+          "upstream_closure": {
+            "calls": 102,
+            "seconds": 34.38613344117766
+          },
+          "validate_check": {
+            "calls": 94,
+            "seconds": 0.22025522828334942
+          }
+        }
+      },
+      "reproduction": "Call current selector.plan with same193 changed paths from /tmp/delivery-selected-plan.json, stage local, execute_local false. Function wrappers only measure elapsed times; no monkeypatch of results or files. 67 checks/no findings, elapsed204.859s.",
+      "required_repair": "Memoize closure for immutable per-plan graph/input set; do not add persistent cache. Pure planning needs one identity snapshot, not clearing runtime cache and recomputing before every non-executed local check. Preserve true runner before/after invalidation checks.",
+      "secondary_observation": "Scope-wide reference unions also enlarge all check evidence sets. Bootstrap package plan references persistence accepted-release and shell IAM files through metadata graph; do not claim these package selectors independently implement precise stage-specific reuse. Avoid broad redesign; fix measured duplication first.",
+      "status": "verified-repaired"
+    },
+    {
+      "evidence": "Independent actual two-process concurrency regression passed1 test in0.295s; exactly one permitted reservation remains observable and the competitor is blocked busy or reconciliation-required.",
+      "failure": "Concurrent candidate receipt reservations for different image digests could both pass the unresolved-attempt check while atomic replacement retained only one reservation.",
+      "files": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py"
+      ],
+      "id": "F-G-R9",
+      "repair": "Owner-local nonblocking flock covers each load/check/save reservation and state transaction. Existing finite candidate receipt owner retained; no shared generic journal added.",
+      "reproduction": "Disposable two-process imported actual owner, synchronized after unlocked ledger load: both reserve_candidate_attempt calls returned successful distinct labels and final attempts list retained one. No provider call occurred.",
+      "status": "verified-repaired"
+    },
+    {
+      "closure_evidence": "Independent actual CLI checks passed selected aliases/unrelated reuse, staged authority, transient mid-execution catalog drift (4 methods17.338s); then expanded9-mode explicit catalog consumption and fresh replanning passed (2 methods16.646s). Original --catalog=PATH actual consuming command reproducer first exposed stale reuse, then after knownpath normalization reran as intended with full catalog reference bound. Selected entry definitions and all aliases form canonical receipt identity; raw catalog bytes remain transient race authority; explicit file/directory/runtime/argv consumers retain full bytes.",
+      "evidence": "Root observed all53 local checks rerun after two header/catalog effect corrections; source review confirmed implicit checks.yml references for every scope and repository selected check. Existing full53 local success retained as baseline.",
+      "failure": "Implicit whole catalog file fingerprint revokes every selected local receipt when only one unrelated catalog entry changes.",
+      "files": [
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/smoke-test.py"
+      ],
+      "final_source_sha256": {
+        "scripts/repo/check-selection/script.py": "c4c185fb88f780f9c60efc6d2260fb8c1109de5c9818287f842f48db5d99dc6d",
+        "scripts/repo/check-selection/smoke-test.py": "010b6e1a44807244750b3b7a50bc89f0e35b42ce02fe5e4a90dc53728e193499"
+      },
+      "id": "I-R10",
+      "required_regressions": [
+        "Actual CLI unchanged A cache hit after unrelated B catalog metadata/effects changes.",
+        "Selected entry or alias changes invalidate/block.",
+        "Explicit catalog input/argument/runtime-configuration consumer retains full catalog binding.",
+        "Catalog changes during invocation are uncertain; staged authority checks remain strict."
+      ],
+      "required_repair": "Bind full canonical declarations for every selected check/alias. Preserve whole catalog bytes for actual explicit consumers. Fresh catalog validation and selection always run; transient invocation catalog hash detects changes before reuse/execution and during commands without permanently invalidating unrelated prior receipts.",
+      "status": "verified-repaired"
+    }
+  ],
+  "followups": [
+    {
+      "current_derivation": ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml",
+      "current_source_review": ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml",
+      "derivation": "accepted-scoped-current-proof",
+      "discovery_verification": "Independent current delivery-smoke-test.py:14 tests passed, including operational metadata filename variants, required producer binding and repeated argv.",
+      "history": "June30 accepted source review and derivation unchanged. Global --current validator historical freshness conflation reported to root before owner edits.",
+      "producer_followup": "B-R7 now rejects file-only claims; actual declaration CLI still accepts producer operation cleanup substituted for verify, because command argv has no producer capability binding. Reproduced in disposable copy; root notified.",
+      "recorded_at": "2026-10-26T09:26:19Z",
+      "source_hash": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+      "source_review": "accepted",
+      "verification": "Current source record, current derivation shape, scoped projection, scoped source coverage, current generated index, fresh chunks/selector fixture, container boundary smoke and explicit repository-root validation pass."
+    },
+    {
+      "claims": "Read-only review; no finished-image/live proof claimed. Current D-R6 mutations still underway. Final independent rereview required after owners finish.",
+      "confirmed_findings": [
+        "A-R8",
+        "B-R7 duplicate-argv alias",
+        "I-R8",
+        "PERF-R1"
+      ],
+      "kind": "targeted-route-accounting-and-proportionality",
+      "profile": "/tmp/delivery-selector-independent-profile.json",
+      "recorded_at": "2026-10-26T09:47:23Z",
+      "tests": "Actual inventory service-route negative unexpectedly passed; actual producer alias negative unexpectedly passed; actual qualification unchanged-image/IAM-only case invalidated; current full193-path plan67 checks/no findings completed in204.859s."
+    },
+    {
+      "bounded_complexity": "Current discovery derives routes from physical executable definitions plus existing contracts/catalogs. Existing stage receipt, provider adapter and proof owners remain distinct. Fixed relay/worker submission reservation is immutable and owner-local; candidate lock protects the existing finite receipt owner. No universal deployment engine, execution journal or parallel scope registry introduced.",
+      "decision": "No confirmed unresolved source or local enforcement finding in reviewed final files. Actual RAG finished image and final owner suite integration remain outside this review conclusion until owners finish.",
+      "inventory_snapshot": {
+        "entries": 419,
+        "findings": 0,
+        "input_digest": "4ba5c1dad32314c37ad42a75edda788b5f962327b44be74ad2b14dbd40013ff9",
+        "note": "Source-only snapshot; later concurrent edits require regenerated final digest.",
+        "retired": 4,
+        "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+        "routes": 6,
+        "supported": 415,
+        "unbound_supported_consumers": 0
+      },
+      "kind": "final-source-and-local-enforcement-rereview",
+      "new_findings_repaired": [
+        "D-R6 nested qualifier suppression remainder",
+        "I-R8 selected mapping invalidation remainder",
+        "F-G-R9 candidate reservation lost update"
+      ],
+      "proof_limits": "Read-only source review and disposable local process/provider fixtures are not CI execution, publication, deployment or live cloud proof. Package image results are recorded by their executing owners.",
+      "proportionality": "Cheap inventory avoids parser subprocess repetition; actual declaration CLI retains parser behavior proof. Selected package configuration excludes IAM-only changes while current permission checks remain fresh. Full selector evidence unions are conservatively broad; measured plan duplication repaired without persistent graph cache.",
+      "rag_source_review": "Explicit packaged-source-archive layout only permits exact already-required excluded paths declared with reasons. Compiler retains required paths and records unavailable sources; query emits missing-evidence and lowered confidence. Checkout remains strict. Await owner negative/query/interface and finished-image execution before final acceptance.",
+      "recorded_at": "2026-10-26T10:10:48.928206+00:00"
+    },
+    {
+      "aggregate": "Root final selected aggregate remains running; no full-suite duplication performed.",
+      "findings": [],
+      "kind": "final-bounded-delta-review",
+      "proof_integrity": {
+        "claims": "Stored actual image HTTP checks verify health/source identity,401 unauthorized,200 canonical query,three excluded local-tool references remain missing-evidence with reasons and no private source chunks; cleanup confirmed absent. Local finished image only, no live/cloud proof.",
+        "entrypoint_repair_input_hashes_checked": 4,
+        "image_id": "sha256:2c887f0e11148228cbcbcd23f59587d41634c4e9ce95a7c8812525888f7b06a8",
+        "implementation_and_log_hashes_checked": 13,
+        "local_http_source_and_log_hashes_checked": 4,
+        "mismatches": [],
+        "rag_image_report": "rag-image-qualification-2c887f0e1114.json"
+      },
+      "recorded_at": "2026-10-26T10:33:27.309179+00:00",
+      "remaining_freshness_condition": {
+        "basis_for_fresh_run": "The late admission source and infrastructure script edits are copied by this Dockerfile, so the new image run should bind those frozen context inputs. The original proof remains valid for its exact image and archive data.",
+        "correction": "The generated recognition_sources hash differs between the packaged source archive and complete checkout by design: the image regenerates recognition from its selected closure. Raw archive-versus-checkout hash inequality alone does not establish stale proof.",
+        "do_not_require": "Do not require equality between generated archive and full-checkout recognition registries.",
+        "required_binding": "Current selected Docker context source identities and cache freshness inside that finished image."
+      },
+      "scope": [
+        "RAG finished-image and local HTTP evidence claims",
+        "Docker ignore input fingerprinting",
+        "strict admission entrypoint agreement and offline test tripwires"
+      ],
+      "verification": [
+        {
+          "command": "python3 -B scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py DeliveryInventoryCLI.test_effective_image_context_inputs_are_bound_without_becoming_images",
+          "result": "passed",
+          "seconds": 0.622,
+          "tests": 1
+        },
+        {
+          "cli_cases": 20,
+          "command": "bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+          "external_access": "AWS subprocess and urllib HTTP tripwires remained untouched",
+          "result": "passed"
+        }
+      ]
+    },
+    {
+      "completion_conditions": [
+        "New proof binds frozen selected Docker context source identities and image cache freshness.",
+        "Root final selected aggregate completes."
+      ],
+      "kind": "packaged-source-projection-freshness-clarification",
+      "recorded_at": "2026-10-26T10:35:45.116866+00:00",
+      "result": "Confirmed image COPY closure differs from checkout and build-local-runtime --source-layout packaged-source-archive regenerates recognition inside the image. Currentness must compare each evidence artifact to its own declared source closure, not the other projection.",
+      "reviewed_owners": [
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile",
+        "scripts/02.rag-rulebook/build-local-runtime/script.sh"
+      ]
+    },
+    {
+      "actual_negative_evidence": "rag-image-cache-negative-b49a330da25b.json records the exact new supported guard rejecting the historical cache-containing image with confirmed absence after cleanup.",
+      "independent_command": "python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py",
+      "kind": "rag-cache-context-repair-review",
+      "owning_repair_id": "C-G-RAG-LOCAL",
+      "recorded_at": "2026-10-26T10:51:12.094902+00:00",
+      "required_remaining": "Final cache-clean image proof after all copied source edits freeze.",
+      "result": "passed7 simulated CLI checks",
+      "source_review": "Terminal __pycache__/.pyc/.pyo deny rules follow broad allowlists. Supported finished-image smoke creates unique host-cache sentinels before build, checks immutable image /app for all Python cache paths and removes only its disposable files. Cleanup failure cannot replace an original command failure."
+    },
+    {
+      "argument_boundary": "The initial =PATH false reuse was independently reproduced and repaired. Explicit inputs include --option=value, split flags, ./relative and absolute spellings; consumed catalog is inserted into references.",
+      "complexity": "No LocalCache/schema migration or global persistent execution engine. Existing selector identity extended with complete selected declarations and optional exact-file exclusion for incidental catalog references.",
+      "decision": "No remaining source implementation finding. Bounded I-R10 repair preserves unaffected local results while maintaining aliases, explicit whole-catalog consumers, fresh selection, staged authority and invocation drift safety.",
+      "kind": "catalog-reuse-final-independent-closure",
+      "recorded_at": "2026-10-26T11:05:04.004596+00:00",
+      "verification": "Four focused actual CLI methods17.338s; original residual reproducer now passes; expanded explicit consumer/replanning2 methods16.646s. Owner full suite and root final aggregate remain integration obligations."
+    },
+    {
+      "decision": "C-G-RAG-LOCAL hygiene repair verified for the exact image. Later selector implementation/test edits are copied source changes, so final source binding will use owner final image receipt after freeze; do not rewrite this successful historical proof.",
+      "image_id": "sha256:825028d85bade04bdb477797496edcf36f8abfee80a69f5cbe947132b309688c",
+      "kind": "rag-cache-clean-image-evidence-review",
+      "recorded_at": "2026-10-26T11:05:04.004623+00:00",
+      "report": "rag-image-qualification-825028d85bad.json",
+      "verification": "Stored log hash matched. All1537 admitted COPY hashes matched current files when reviewed before final selector argument correction. Exact image source comparison passed with only expected regenerated artifact registry projection; cache sentinels excluded, zero Python cache paths, cleanup confirmed absent."
+    },
+    {
+      "decision": "Independent source and finished-image evidence review passed. No unresolved implementation finding. Only root final selected aggregate and its final report/inventory publication remain.",
+      "final_inventory": "Existing delivery-inventory.json is historical pre-final snapshot with8late modified inputs. Root will regenerate when publishing final aggregate/report; this is not an implementation coverage finding.",
+      "kind": "final-frozen-proof-integrity-review",
+      "other_delta": "Read-reviewed persistence-smoke local isolation: invalid/executable cases use controlled target fixture plus denying AWS CLI and HTTP tripwire; exact intended failures required. No source issue found.",
+      "rag_proof": {
+        "cleanup": "confirmed absent; historical receipts retained unchanged",
+        "copied_sources_checked": 1537,
+        "current_copied_source_mismatches": [],
+        "exact_image_comparison": "passed, only expected generated artifact registry projection differs; no missing/additional sources",
+        "image_id": "sha256:b4d9f64549a8aedebb6be0c653bf1f0d99334500d1c43cd9dda62ff886acee34",
+        "implementation_hash_mismatches": [],
+        "log_sha256_verified": "1368f0f7da31d1cc50890925bd400f0efea82cb71daa19604d10efbba31efd3b",
+        "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json",
+        "runtime": "ready,401 unauthorized,200 canonical query6 chunks,three explicit unavailable evidence paths remain visible,zero Python cache paths",
+        "snapshot_digest_self_consistent": true,
+        "source_snapshot_sha256": "649b09aed41b9d6b6fb461dd317a69a1c5c9914935714055f8f17653f343c0b9"
+      },
+      "recorded_at": "2026-10-26T11:10:55.791357+00:00",
+      "selector_proof": {
+        "failures": 0,
+        "log_sha256_verified": "40fc0c8fc133150d35a2d527e8081d863da2810b14c1200b09fdf427a80a6981",
+        "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-selector-catalog-evidence.json",
+        "seconds": 109.38,
+        "source_hash_mismatches": [],
+        "tests": 60,
+        "unchanged_since_independent_review": true
+      }
+    }
+  ],
+  "recorded_at": "2026-10-26T09:18:10.625548+00:00",
+  "remaining_limits": [
+    "No cloud resources, live secret values, remote publication, deployment, push or merge were used for this review. Simulated provider lifecycle tests and local finished images do not establish live target readiness.",
+    "The local selector explicitly defers6 package,3 deploy and11 acceptance stage checks. Deferred checks are not counted as passing; package behavior records and stage command enforcement remain with their existing owners.",
+    "Five unrelated pre-existing sources lack matching current accepted reviews, and one unchanged rulebook related-ruleset reference remains unresolved. These are separately recorded in verification-governance-frozen.json and source-review-current-coverage.json, not relabelled as passing or rewritten.",
+    "Final signoff covers the recorded revision plus hashed authorized working-tree inputs. Subsequent relevant changes require the owning executable checks; historical evidence remains bound to its original identities."
+  ],
+  "reviewer": "/root/independent_review",
+  "schema": "deploy/independent-review/v1",
+  "scope": "Independent discovery, enforcement bypass, false-green, current source-review and proportional evidence reuse review. Current worktree only; no cloud, secret retrieval, publication, deployment or Git mutation performed.",
+  "state": "passed",
+  "verification": [
+    {
+      "command": "python3 -B scripts/04.deploy/inventory-deploy-control/script.py --check --json",
+      "detail": "406 entries, 6 routes, 0 findings at review snapshot; source inventory is not full delivery proof.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+      "detail": "12 actual CLI tests.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py",
+      "detail": "1 test with current negative variants and restored valid cases.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py",
+      "detail": "3 tests.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py",
+      "detail": "19 checks, simulated.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+      "detail": "3/4 pass; custody reason expectation mismatch recorded above.",
+      "result": "failed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py",
+      "detail": "1 full CLI continuation scenario.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py",
+      "detail": "17 CLI checks, simulated.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/run-platform-shell-persistence-delivery-proof/recovery-test.py",
+      "detail": "23 CLI checks, simulated.",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/04.deploy/validate-container-boundaries/smoke-test.sh",
+      "detail": "Current test suite; context-dependent fallback followup still required.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+      "detail": "15 actual CLI regressions,8.968s; final review pass.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py RuntimeConfigurationTests.test_command_alias_requires_its_own_runtime_input_contract",
+      "detail": "1 actual CLI alias regression,10.224s.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py QualificationTests.test_shell_workflow_and_durable_custody_cli QualificationTests.test_configuration_projection_reuses_permissions_and_invalidates_runtime_cli",
+      "detail": "2 actual CLI tests,6.861s.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py QualificationTests.test_publication_guards_reject_control_and_identity_substitution",
+      "detail": "All3 modern workflow mutation routes,19.451s.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py CandidateContinuation.test_concurrent_different_images_cannot_lose_a_permitted_reservation",
+      "detail": "Two real local processes,1 test,0.295s.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+      "detail": "6 actual CLI tests,29.802s; supersedes earlier historical failing expectation run.",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh",
+      "detail": "21 simulated CLI checks for immutable history and current freshness.",
+      "result": "passed"
+    },
+    {
+      "command": "python3 -B scripts/repo/check-selection/smoke-test.py SelectionTests.test_pure_plan_probes_runtime_once_without_execution_revalidation SelectionTests.test_execution_still_revalidates_runtime_before_and_after_commands SelectionTests.test_closure_reuse_is_limited_to_one_immutable_plan_graph",
+      "detail": "3 targeted local tests,1.367s.",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh",
+      "detail": "Independent compiler smoke and3 actual CLI archive availability cases: checkout missing local settings rejects, explicit archive retains exact3 required unavailable paths/reasons, undeclared missing AGENTS rejects.",
+      "result": "passed"
+    }
+  ]
+}

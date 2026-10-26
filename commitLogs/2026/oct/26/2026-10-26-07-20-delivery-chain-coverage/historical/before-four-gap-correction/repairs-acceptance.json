@@ -1,0 +1,646 @@
+{
+  "schema": "delivery-chain-repair-inventory/v1",
+  "baseline_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "evidence_class": "local-and-simulated",
+  "repairs": [
+    {
+      "id": "H-001",
+      "family": "H",
+      "failure": "The real acceptance collector emitted repository-relative proof paths while the succession consumer resolved them relative to the evidence root. The helper was unused by the real collector, whose --write rejected every existing accepted record, preventing successor production.",
+      "routes": [
+        "kanbien-core-platform/core-server-persistence acceptance collector and release succession"
+      ],
+      "downstream_consumers": [
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py",
+        "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py"
+      ],
+      "contract_files": [
+        ".agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+      ],
+      "caller_files": [
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.sh"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py"
+      ],
+      "repair": "Use the existing collector to capture a content-addressed current-observation receipt and emit an immutable generic candidate on every accepted --write; preserve the original accepted record. Encode receipt paths relative to the single evidence root and check them using the actual generic consumer before publication.",
+      "negative_regression": "Production CLI rejects simulated evidence; stale predecessor and incomplete proof inputs fail before advancement; original repository-relative paths would fail actual candidate promotion.",
+      "valid_behavior": "First acceptance still writes its historical record; actual collector candidate promotes through the real succession CLI and retries idempotently; retained receipt collection never queries expired historical tasks.",
+      "earliest_enforcement": "Collector candidate validation before local candidate publication; release promotion before current-reference replacement.",
+      "closure_evidence": [
+        "acceptance-route-rehearsal/smoke-test.sh passed with 16 checks and byte-for-byte preserved genuine accepted evidence",
+        "collect-acceptance-evidence/smoke-test.py passed including 20 negative current-observation cases"
+      ],
+      "status": "repaired-and-locally-verified"
+    },
+    {
+      "id": "H-002",
+      "family": "H",
+      "failure": "The acceptance route only declared scope activation, so a first-release rehearsal could pass without any successor producer, release promotion or current-reference consumer. The legacy record validator assumed current history was always the legacy record.",
+      "routes": [
+        "active/candidate acceptance routes",
+        "kanbien-core-platform/core-server-persistence release successors"
+      ],
+      "downstream_consumers": [
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+        "scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py"
+      ],
+      "contract_files": [
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml",
+        ".agentic/04.deploy/60-run/workflows/govern-scope-lifecycle.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py"
+      ],
+      "repair": "Require an explicit release_succession contract for active/candidate scopes, probe the real generic initialization/promotion/current-validation argument parser, reject scope activation substituted for release promotion, validate complete historical lineage after successors. Historical/retired non-applicability must match the lifecycle index.",
+      "negative_regression": "Omitting release_succession or substituting promote-accepted-scope fails declaration coverage before command execution. Stale predecessor, altered archive/current ref, changed retained receipts and malformed candidates cannot advance acceptance.",
+      "valid_behavior": "Actual CLI initialization, successor promotion, already-current retry, interrupted archive-before-reference resume and downstream accepted validator pass. Genuine history stays immutable.",
+      "earliest_enforcement": "Declaration coverage before build/publication/deployment; current-reference validation and compare-and-swap before acceptance advancement.",
+      "closure_evidence": [
+        "16-check acceptance route rehearsal passed",
+        "release-succession/smoke-test.py passed using actual bash/Python subprocess interfaces",
+        "core-platform-target-declaration/script.sh --json passed"
+      ],
+      "status": "repaired-and-locally-verified"
+    },
+    {
+      "id": "I-001",
+      "family": "I",
+      "failure": "Reading historical accepted candidate evidence reran current configuration/permission equality checks. A legitimate contract correction invalidated accepted history and blocked a corrected successor. Existing tests called module.main and did not exercise actual path and CLI boundaries.",
+      "routes": [
+        "generic release-succession",
+        "all current-reference and retained-history consumers"
+      ],
+      "downstream_consumers": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"
+      ],
+      "contract_files": [
+        ".agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml",
+        ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py"
+      ],
+      "repair": "Historical identity validates immutable candidate/receipt bytes and lineage without comparing old contract hashes to current files. New candidate promotion and rollback compatibility still enforce exact current contract hashes. Immutable publication uses create-once linking to avoid overwrites across competing producers.",
+      "negative_regression": "Changed current configuration blocks re-promotion of stale candidate; altered retained receipt blocks historical validation; explicit simulated evidence is rejected by production CLI.",
+      "valid_behavior": "Historical current reference remains valid after current contracts change; corrected successor proceeds; unaffected old artifact/receipt proof stays available without provider history.",
+      "earliest_enforcement": "Offline history validation versus fresh promotion/rollback prerequisite checks.",
+      "closure_evidence": [
+        "release-succession/smoke-test.py passed subprocess first/successor/interruption/current-change/receipt-tamper cases"
+      ],
+      "status": "repaired-and-locally-verified"
+    },
+    {
+      "id": "I-002",
+      "family": "I",
+      "failure": "Operational realization accepted arbitrary syntactically valid check IDs and old timestamps, and lacked a semantic input fingerprint on gate, component and change-summary proof. Changed runtime artifact, configuration or permission declarations could reuse unrelated passed evidence.",
+      "routes": [
+        "operational-realization-gate CLI",
+        "legacy candidate execution preflight integration owned by provider agent"
+      ],
+      "downstream_consumers": [
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+      ],
+      "contract_files": [
+        ".agentic/04.deploy/standards/operational-realization-gate.md",
+        ".agentic/01.harness/templates/operational-realization-contract.v1.schema.yml"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/operational-realization-gate/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/operational-realization-gate/script.sh",
+        "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/operational-realization-gate/smoke-test.sh",
+        "scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py"
+      ],
+      "repair": "Bind each component to its outgoing declaration/dependency closure and normalized runtime artifact digest. The artifact gate binds artifact declarations/digests, qualification configuration, workload artifact/configuration composition and qualification check; source binds the reviewed contract and later operational gates include runtime artifact inputs. Enforce declared check IDs, chronological current-state evidence and 900-second current observation freshness. Reuse original immutable gate receipts when their stage-specific input identity still matches.",
+      "negative_regression": "Stale current facts, changed permission/configuration/artifact inputs, unknown check IDs, reordered stages and changed summaries fail with specific finding codes.",
+      "valid_behavior": "Historical source/artifact/semantic proof remains reusable. The actual artifact gate receipt, including its old timestamp, stays byte-identical while fresh source and permission checks process an unrelated permission change. Changed package bytes, entrypoint, configuration or workload composition specifically invalidates that retained artifact gate.",
+      "earliest_enforcement": "Realization compiler before controlled execution; provider command wiring separately verified by provider agent.",
+      "closure_evidence": [
+        "operational-realization-gate/smoke-test.sh passed including 19 real-CLI reuse/invalidation cases",
+        "Independent review I-R3 repaired: actual package gate receipt retained across permission-only changes, not merely component receipt reuse"
+      ],
+      "status": "compiler-repaired-and-locally-verified; provider-wiring-owned-by-provider-agent"
+    },
+    {
+      "id": "H-003",
+      "family": "H/I",
+      "failure": "The active shell readiness verifier accepted disagreeing artifact/source identities and arbitrary passed proof strings without a candidate producer, immutable current release, durable receipts or retained-release compatibility. Its manual rollback runbook used raw service mutation without accepted-history prerequisites.",
+      "routes": [
+        "kanbien-staging/platform-shell readiness, acceptance and rollback",
+        "deploy-platform-shell-staging publication receipt consumer"
+      ],
+      "downstream_consumers": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+        "docs/aws/runbooks/platform-shell-staging-rollback.md"
+      ],
+      "contract_files": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+        ".agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py",
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+        ".github/workflows/deploy-platform-shell-staging.yml",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py"
+      ],
+      "test_files": [
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py",
+        "scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh"
+      ],
+      "repair": "Use existing package-custody validator, exact publication source/digest/run identities, safe provider observation schema and existing generic succession. Capture package and runtime receipt bytes durably in the same immutable candidate proof set. Require promoted current history plus separate fresh runtime/source-input observation for ready status. Produce additive generic rollback compatibility only from retained accepted-lineage proof matching all current target configuration/permission source inputs; changed boundaries block before mutation. Runtime/status package prerequisites also reuse exact retained accepted-lineage custody after the original CI download disappears; an existing invalid receipt never falls back.",
+      "negative_regression": "Actual readiness CLI rejects source/run mismatch, missing acceptance/current, receipt tamper, stale/incomplete observations, unsafe fields, path escapes, changed IAM inputs and unpromoted successors. Actual compatibility CLI rejects changed security inputs and planning-exit override. Production consumers reject simulated evidence.",
+      "valid_behavior": "First and successor generic CLI promotion, stale-predecessor protection, interrupted archive-before-reference resume, repeat idempotency, immutable historical bytes, durable package receipt after original download removal, history retention across current permission changes and unchanged-boundary rollback compatibility all pass.",
+      "earliest_enforcement": "Offline package candidate validation and immutable compatibility before any provider mutation; source inventory/declaration discovers owner commands; current readiness before accepted service operation.",
+      "closure_evidence": [
+        "bash scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh passed including 25 actual CLI checks",
+        "Canonical deploy-readiness.yml unchanged; planning report remains status blocked, ok false and explicit exit override",
+        "Runtime owner implemented same-run durable existing-schema package custody artifact; provider wrapper integration owned and tested separately by provider agent",
+        "Rollback runbook replaced raw service update with existing guarded runtime/service/operation-status owner and generic compare-and-swap promotion; includes required realization facts/change summary."
+      ],
+      "status": "local-evidence-owner-repaired-and-verified; guarded-provider-wiring-owned-by-provider-agent"
+    },
+    {
+      "id": "G-WORKER",
+      "family": "F/G",
+      "failure": "Worker cleanup was armed only after the scale-up response succeeded. An accepted operation with a lost response could leave a worker running; cleanup checked only worker desired/running counts and could mask the original error or ignore residual source/DLQ messages. No observation-only interrupted-operation command existed.",
+      "routes": [
+        "platform-shell worker-consumer smoke"
+      ],
+      "downstream_consumers": [
+        "package.json platform:shell:worker-smoke",
+        "declared worker-consumer readiness closure and telemetry observation"
+      ],
+      "contract_files": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+        "scripts/04.deploy/run-platform-shell-worker-smoke/README.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/run-platform-shell-worker-smoke/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/run-platform-shell-worker-smoke/script.sh",
+        "package.json"
+      ],
+      "test_files": [
+        "scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh",
+        "scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py"
+      ],
+      "repair": "Arm cleanup before the first possible queue effect; reconcile scale-down result through observed state even after response failure. Require worker desired/running/pending and both queues visible/inflight counts zero. Preserve primary failure alongside cleanup failure. Add read-only --reconcile without retries/submissions and enforce existing zero-state preconditions on new execution. Bound subprocess calls and report uncertain responses safely.",
+      "negative_regression": "Accepted-but-lost start/send responses still invoke cleanup; denied cleanup retains original failure; leftover source or DLQ messages and pending tasks prevent completion; failed reads report uncertain; raw provider canary never appears.",
+      "valid_behavior": "Full two-message proof passes; already-clean state reconciles successfully; lost scale-down response with observed zero state completes; read-only reconciliation emits no provider mutations.",
+      "earliest_enforcement": "Effects guard before first submission and before retry; complete cleanup observation before success reporting.",
+      "closure_evidence": [
+        "bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh passed including 17 actual CLI/subprocess fixture cases"
+      ],
+      "status": "repaired-and-locally-verified"
+    },
+    {
+      "id": "F-G-DELIVERY",
+      "family": "F/G/I",
+      "failure": "The active fixed persistence delivery stages could resubmit a label after ECS task expiry, lacked durable terminal capture and client tokens, ignored normal pending worker states and incomplete task enumeration, and could report terminal cleanup without checking standalone worker tasks.",
+      "routes": [
+        "platform-shell persistence delivery proof start/assess/terminal/reconcile stages"
+      ],
+      "downstream_consumers": [
+        "package.json platform:shell:persistence-delivery-proof",
+        "target-profile persistence smoke_transactional_outbox.delivery_proof"
+      ],
+      "contract_files": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+        "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh",
+        "package.json"
+      ],
+      "test_files": [
+        "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh",
+        "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/recovery-test.py"
+      ],
+      "repair": "Persist fixed-label immutable submission before run-task, use deterministic client token, bind exact immutable task revision/configuration/network/overrides/source inputs and pinned image, capture safe stopped outcome before ECS expiry, reuse unchanged retained outcome while rechecking current effects. Missing outcome never permits replay. Observe pending states, reject incomplete enumeration, add read-only provider reconciliation and complete service/family/queue effect checks. Independent provider review also added exclusive submission creation on collision, normalized policy identity excluding lifecycle status, and DescribeTasks batches of at most 100 with exact returned ARN-set verification.",
+      "negative_regression": "Accepted-but-lost response followed by absent ECS task cannot replay; provisioning worker prevents another start; pagination, mutable image, mismatched observed digest, changed source inputs and each remaining queue/service effect fail for intended reason.",
+      "valid_behavior": "Actual first relay/worker submissions, terminal capture, source/due transition, later ECS expiry with retained proof, fresh complete cleanup and immutable receipt reuse pass; already accepted terminal source still rejects starts before provider access.",
+      "earliest_enforcement": "Immutable reservation and artifact check before task submission; fresh outcome reconciliation before retry or successor; cleanup observation before completion.",
+      "closure_evidence": [
+        "bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh passed including 24 actual CLI/subprocess cases",
+        "Five metadata headers and owned diff check passed"
+      ],
+      "status": "repaired-and-locally-verified",
+      "limits": [
+        "Existing historical accepted profile has no pre-change task submission/terminal receipts; no retrospective proof was manufactured. Without authentic retained outcomes the historical terminal observer fails closed and never replays."
+      ]
+    },
+    {
+      "id": "C-G-RAG-LOCAL",
+      "family": "A/C/G",
+      "failure": "The supported local RAG image builder lacked the shared inventory guard; package smoke bind-mounted a newly generated host cache over the image cache, substituting source behavior for assembled-package behavior. Cleanup ignored Docker failures and unavailable-engine skip exited as success. Final exact-image source comparison also proved that later broad source allowlists re-included host Python bytecode despite the earlier Docker ignore entry, coupling packaged bytes to incidental parallel-test caches.",
+      "routes": [
+        "rag-rulebook-local-delivery image build/qualification",
+        "local RAG HTTP/query route"
+      ],
+      "downstream_consumers": [
+        "scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+        "scripts/02.rag-rulebook/run-local-service/smoke-test.sh"
+      ],
+      "contract_files": [
+        "infra/04.deploy/02.rag-rulebook/environments/local/declaration-contract.yml",
+        "infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml",
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore"
+      ],
+      "implementation_files": [
+        "scripts/02.rag-rulebook/build-service-image/script.sh",
+        "scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile",
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore"
+      ],
+      "caller_files": [
+        "scripts/02.rag-rulebook/run-local-service/smoke-test.sh",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "test_files": [
+        "scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py",
+        "scripts/02.rag-rulebook/query-context/smoke-test.sh",
+        "scripts/02.rag-rulebook/run-local-service/smoke-test.sh"
+      ],
+      "repair": "Invoke existing delivery inventory before Docker, test assembled image cache without host override, expose/verify built source revision, reuse shared Docker absence-observation cleanup preserving earlier failures, and return explicit non-success skip status77. Wire cheap process-fixture negatives into existing local-service suite. Terminal __pycache__/.pyc/.pyo denies now follow all source allowlists. The existing supported image smoke seeds uniquely named disposable nested and loose host cache sentinels, checks the actual finished image contains no Python cache, and removes only its own sentinels on every outcome while preserving earlier failures.",
+      "negative_regression": "Inventory failure blocks before Docker; source cache mount absent; cleanup failure cannot emit passed; original query/run failure retained when cleanup also fails. Existing query CLI denies missing/rejected auth and unsafe config permissions without leaking tokens. The exact new image hygiene guard rejects preserved b49a330da25b image for its actual copied Python cache, with expected diagnostic and isolated container absence; a seventh wrapper case checks the same failure and sentinel cleanup.",
+      "valid_behavior": "Actual supported local image command builds and runs by immutable image ID, serves healthy fresh packaged cache at the built source revision, rejects unauthenticated query with401, and serves200 with6selected chunks. Archive-local excluded tool evidence remains visible as missing-evidence gaps with reasons; no private source chunks are selected. Cleanup observes container absence. The final repaired image excludes both disposable host cache sentinels and every Python cache path; earlier image receipts remain immutable historical results.",
+      "earliest_enforcement": "Inventory before Docker build; actual image HTTP qualification before package proof; cleanup absence observation before passed result.",
+      "closure_evidence": [
+        "python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py passed 5 actual-wrapper fixture cases",
+        "bash scripts/02.rag-rulebook/query-context/smoke-test.sh passed using disposable loopback HTTP server",
+        "bash scripts/02.rag-rulebook/run-local-service/smoke-test.sh passed real loopback HTTP routing/input checks plus five wrapper regressions",
+        "Seven RAG artifact metadata headers and owned diff check passed",
+        "python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py passed6 actual-wrapper/source-closure fixture cases",
+        "bash scripts/02.rag-rulebook/smoke-test-service-image/script.sh passed actual finished-image behavior and cleanup",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-2c887f0e1114.json",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-2c887f0e1114.log",
+        "python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py passed7 actual-wrapper/source-closure cases after cache exclusion repair",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-cache-negative-b49a330da25b.json",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b49a330da25b.json",
+        "Repeated supported finished-image qualification after final selector, admission and source-hygiene inputs changed: exit0, exact new image, HTTP ready/401/200, packaged cache freshness, expected archive evidence gaps, no packaged Python cache, disposable host sentinels removed and observed container cleanup.",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-825028d85bad.json",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-825028d85bad.log",
+        "Independent read-only exact-image source comparison passed for all 1537 copied source files; only generated recognition projections differ as declared; probe cleanup confirmed absent.",
+        "Repeated supported finished-image qualification after final selector, admission and source-hygiene inputs changed: exit0, exact new image, HTTP ready/401/200, packaged cache freshness, expected archive evidence gaps, no packaged Python cache, disposable host sentinels removed and observed container cleanup.",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.log",
+        "Independent read-only exact-image source comparison passed for all 1537 copied source files; only generated recognition projections differ as declared; probe cleanup confirmed absent."
+      ],
+      "status": "repaired-and-finished-image-verified",
+      "limits": [
+        "No hosted RAG route was reactivated and no retired accepted manifest was rewritten. Local finished-image proof does not establish hosted/cloud delivery."
+      ],
+      "image_id": "sha256:b4d9f64549a8aedebb6be0c653bf1f0d99334500d1c43cd9dda62ff886acee34",
+      "bounded_context_audit": [
+        {
+          "image": "core-server",
+          "dockerignore": "infra/04.deploy/03.product/image/core-server/Dockerfile.dockerignore",
+          "finding": "Existing terminal **/__pycache__ rule follows all allow rules; no corresponding copied-cache gap confirmed."
+        },
+        {
+          "image": "core-server-persistence",
+          "dockerignore": "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore",
+          "finding": "Existing terminal **/__pycache__ rule follows all allow rules; no corresponding copied-cache gap confirmed."
+        },
+        {
+          "image": "observability-collector",
+          "dockerignore": "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile.dockerignore",
+          "finding": "Only exact builder-config is copied from source; terminal cache exclusion also exists."
+        },
+        {
+          "image": "platform-shell",
+          "dockerignore": "infra/04.deploy/03.product/image/Dockerfile.dockerignore",
+          "finding": "Early cache deny is followed by broad source allow rules, but no Python cache exists in its actual source COPY roots and runtime stage copies compiled payload/node_modules plus CA only. No corresponding runtime-cache consumer demonstrated; no unrelated image rebuild claimed."
+        }
+      ],
+      "current_image_proof": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json"
+    },
+    {
+      "id": "C-COLLECTOR-EMF",
+      "family": "B/C",
+      "failure": "The collector package gate only started the binary. Both qualification config and live-target SSM configuration double-escaped dots in a single-quoted metric selector, so OTLP ingestion succeeded but the readiness metric was not selected for EMF export.",
+      "routes": [
+        "kanbien-core-platform/core-server-persistence optional enabled observability collector",
+        "publish-kanbien-core-platform-observability-collector qualification"
+      ],
+      "downstream_consumers": [
+        "core-server-persistence readiness metric publication and alarms",
+        "observability collector package custody"
+      ],
+      "contract_files": [
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+      ],
+      "implementation_files": [
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+        ".github/workflows/publish-kanbien-core-platform-observability-collector.yml"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py"
+      ],
+      "repair": "Correct only the selector escaping in the existing fixture and target SSM config. Extend the supported qualifier through actual finished-image OTLP-to-EMF behavior with unchanged enabled receiver/processors/exporter composition, using the documented stdout sink and network:none. Compare fixture and actual target configuration, assert exact metric value, namespace and dimension set, reject unselected metric publication, and verify disposable absence with existing Docker adapter.",
+      "negative_regression": "Before repair the actual image accepted health+OTLP but failed collector-readiness-emf-not-emitted. The retained old-selector finished-image scenario ingests the same metric but emits no matching EMF event. Cleanup failures still preserve the primary failure.",
+      "valid_behavior": "Actual image with corrected target-shaped configuration emits one matching readiness EMF event value1 with all five expected dimensions and namespace, while the unselected metric is excluded. The actual supported qualify-image.sh passes including startup, positive behavior, old-selector negative and cleanup.",
+      "earliest_enforcement": "Finished-image qualification before archive export, scan, custody or publication.",
+      "closure_evidence": [
+        "bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh --image kanbien-observability-collector:local-qualification passed",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/collector-image-behavior.json",
+        "validate-observability-mvp-declaration and collector package workflow validators passed",
+        "shared Docker cleanup regression suite passed; four metadata headers and owned diff check passed"
+      ],
+      "status": "repaired-and-finished-image-verified",
+      "image_id": "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+      "configuration_sha256": "sha256:67640820c07950df21c4de1e5025cef18d1def47da8ed7cbce2cc0d5292773b6",
+      "limits": [
+        "EMF stdout demonstrates local receiver/processor/exporter behavior. No live CloudWatch delivery or provider authorization was exercised. Collector binary inputs were unchanged; the existing local source-built image was requalified against corrected configuration."
+      ],
+      "primary_reference": "https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector-contrib/v0.163.0/exporter/awsemfexporter/README.md"
+    },
+    {
+      "id": "B-R7",
+      "family": "B/H",
+      "failure": "Acceptance-route parser result caching skipped every later command alias with identical argv, so a different declared runtime_input_contract could falsely satisfy a required workload input absent from the real producer.",
+      "routes": [
+        "All supported acceptance routes with duplicate command argv; reproduced on core-server-persistence isolated restore"
+      ],
+      "downstream_consumers": [
+        "Runtime configuration declaration coverage",
+        "Delivery check selection and supported pre-build/pre-deploy declaration gates"
+      ],
+      "contract_files": [
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml"
+      ],
+      "implementation_files": [
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py"
+      ],
+      "caller_files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "test_files": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"
+      ],
+      "repair": "Cache only the real command exit status and parsed report, then compare every alias declaration independently. Preserve one parser invocation for identical argv and proof-contract validation against the same observed result.",
+      "negative_regression": "Actual declaration CLI originally returned covered/exit0 after an identical-argv alias claimed NEVER_DELIVERED and the workload declared it required from that alias. After repair it returns nonzero with exactly acceptance-route-runtime-input-command-mismatch referencing zz-extra-producer.",
+      "valid_behavior": "An identical-argv alias with the actual producer runtime_input_contract can supply PERSISTENCE_POSTGRES_HOST; actual declaration CLI returns covered/exit0. Existing optional capability, required names, secrets, command, identity and permission regressions remain passing.",
+      "earliest_enforcement": "Actual-command acceptance validation within declaration coverage before supported consequential build/deployment commands; cheap inventory structural mode remains explicitly structural only.",
+      "closure_evidence": [
+        "Pre-fix targeted regression failed because invalid declaration returned exit0",
+        "python3 -B scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py RuntimeConfigurationTests.test_command_alias_requires_its_own_runtime_input_contract passed after repair",
+        "python3 -B scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py passed both test methods and all CLI scenarios in52.868s",
+        "Two changed source metadata headers and focused git diff --check passed"
+      ],
+      "status": "repaired-and-locally-verified",
+      "limits": [
+        "Regression uses actual offline command parsers and disposable repository inputs; no live provider operation was exercised."
+      ]
+    },
+    {
+      "id": "C-RAG-SOURCE-ARCHIVE",
+      "family": "C/F/H",
+      "failure": "The real RAG image could not assemble its runtime: copied generated recognition references were validated before refresh for the packaged source tree; source indexing invoked unavailable Git despite archive mode; required public bundle sources were omitted, while three canonical local tool config paths conflicted with private-root exclusions. Validator JSON failures were deleted with temporary files, obscuring the initial cause.",
+      "routes": [
+        "rag-rulebook-local-delivery image build and qualification"
+      ],
+      "downstream_consumers": [
+        "Packaged RAG HTTP health/freshness checks",
+        "Context query producer and missing-evidence consumer"
+      ],
+      "contract_files": [
+        ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml",
+        ".agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml",
+        ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml",
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore"
+      ],
+      "implementation_files": [
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile",
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore",
+        "scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+        "scripts/02.rag-rulebook/build-service-image/script.sh",
+        "scripts/02.rag-rulebook/build-local-runtime/script.sh",
+        "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh",
+        "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
+        "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+        "scripts/01.harness/artifact-metadata/header_discovery.py",
+        ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml",
+        ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml",
+        ".agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml"
+      ],
+      "caller_files": [
+        "infra/04.deploy/02.rag-rulebook/image/Dockerfile",
+        "scripts/02.rag-rulebook/build-local-runtime/script.sh",
+        "scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+        "scripts/repo/check-selection/checks.yml",
+        ".github/workflows/delivery-coverage.yml"
+      ],
+      "test_files": [
+        "scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py",
+        "scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh",
+        "scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh",
+        "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh",
+        "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh"
+      ],
+      "repair": "Refresh generated recognition references before validation against the selected source tree and print failed validator JSON while retaining its exit status. The existing artifact-index owner handles missing Git in explicit source archives. COPY only six missing public canonical evidence files. Explicit packaged-source-archive compilation permits only exact declared archive_unavailable_sources with reasons, preserving required paths and visible query gaps; checkout and undeclared missing sources remain strict. Run the smoke by immutable image ID and emit cache fingerprints with passing proof only after observed cleanup.",
+      "negative_regression": "Actual builds failed successively for omitted generated evidence, absent Git, and missing required public evidence before repair. Actual compiler CLI rejects omitted local tool evidence under default checkout and missing undeclared AGENTS.md even in archive layout. Runtime fixture preserves invalid-curated-source exit48 and diagnostics after refreshing stale generated references. Actual image query must expose all3excluded local-tool paths/reasons and select none of their chunks.",
+      "valid_behavior": "Existing full-checkout runtime/compiler/selector suites pass. Actual packaged-source-archive image has3584chunks across10corpus packages, healthy freshness,401unauthenticated response,200canonical query selecting6chunks, and explicit unavailable evidence on the tool-permissions query.",
+      "earliest_enforcement": "Source-archive assembly during image build and cheap runtime/compiler CLI checks selected by declarations; actual HTTP package qualification before any future publication.",
+      "closure_evidence": [
+        "bash scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh passed plus2noGit CLI checks",
+        "bash scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh passed plus3archive availability CLI checks",
+        "bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh passed",
+        "python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py passed6",
+        "bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root --json passed",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-2c887f0e1114.json",
+        "Repeated supported finished-image qualification after final selector, admission and source-hygiene inputs changed: exit0, exact new image, HTTP ready/401/200, packaged cache freshness, expected archive evidence gaps, no packaged Python cache, disposable host sentinels removed and observed container cleanup.",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-825028d85bad.json",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-825028d85bad.log",
+        "Independent read-only exact-image source comparison passed for all 1537 copied source files; only generated recognition projections differ as declared; probe cleanup confirmed absent.",
+        "Repeated supported finished-image qualification after final selector, admission and source-hygiene inputs changed: exit0, exact new image, HTTP ready/401/200, packaged cache freshness, expected archive evidence gaps, no packaged Python cache, disposable host sentinels removed and observed container cleanup.",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.log",
+        "Independent read-only exact-image source comparison passed for all 1537 copied source files; only generated recognition projections differ as declared; probe cleanup confirmed absent."
+      ],
+      "status": "repaired-and-finished-image-verified",
+      "image_id": "sha256:b4d9f64549a8aedebb6be0c653bf1f0d99334500d1c43cd9dda62ff886acee34",
+      "limits": [
+        "Local Docker and loopback HTTP only; no hosted service, cloud mutation, registry publication or deployment.",
+        "Baseline Git revision is accompanied by finished image identity and packaged input/output hashes; the image contains authorized uncommitted working-tree changes.",
+        "Three explicitly declared local-tool configuration sources are absent from the source archive and remain visible as missing evidence in matching queries."
+      ],
+      "current_image_proof": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json"
+    }
+  ],
+  "checks": [
+    {
+      "command": "bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+      "result": "passed",
+      "checks": 16
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/04.deploy/operational-realization-gate/smoke-test.sh",
+      "result": "passed",
+      "additional_cli_cases": 19
+    },
+    {
+      "command": "bash scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh --json",
+      "result": "repository-declaration-complete"
+    },
+    {
+      "command": "bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths <30 touched acceptance/realization artifacts>",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh",
+      "result": "passed",
+      "additional_cli_cases": 25
+    },
+    {
+      "command": "bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh",
+      "result": "passed",
+      "additional_cli_cases": 17
+    },
+    {
+      "command": "bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh",
+      "result": "passed",
+      "additional_cli_cases": 24
+    },
+    {
+      "command": "python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py",
+      "result": "passed",
+      "additional_cli_cases": 5
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/query-context/smoke-test.sh",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/run-local-service/smoke-test.sh",
+      "result": "passed"
+    },
+    {
+      "command": "bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh --image kanbien-observability-collector:local-qualification",
+      "result": "passed",
+      "evidence_class": "local-finished-image",
+      "image_id": "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1"
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py",
+      "result": "passed",
+      "test_methods": 2,
+      "review_gap": "B-R7"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh",
+      "result": "passed",
+      "additional_cli_cases": 2,
+      "evidence": "local-subprocess-suite"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh",
+      "result": "passed",
+      "additional_cli_cases": 3,
+      "evidence": "local-subprocess-suite"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh",
+      "result": "passed",
+      "additional_cli_cases": 0,
+      "evidence": "local-subprocess-suite"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+      "result": "passed",
+      "additional_cli_cases": 0,
+      "evidence": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-2c887f0e1114.json"
+    },
+    {
+      "command": "python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py",
+      "result": "passed",
+      "cli_checks": 7,
+      "scope": "late Python cache exclusion and cleanup integration; actual source closure checks retained"
+    }
+  ],
+  "limits": [
+    "No live provider, publication or deployment proof was attempted. Rehearsal results are explicitly simulated.",
+    "Operational realization fingerprints declarations and supplied normalized runtime artifact identity; provider adapters must establish actual current target/configuration/permission observations.",
+    "Existing local-cache identity/invalidation tests were inspected; no cache changes were required for these confirmed gaps."
+  ],
+  "review_repairs": [
+    {
+      "id": "I-R3",
+      "finding": "Whole-contract artifact gate fingerprints over-invalidated package qualification on unrelated permission changes.",
+      "status": "repaired-and-locally-verified",
+      "tests": "19 CLI realization reuse/invalidation cases including byte-identical actual gate reuse and four independently invalidating package-input mutations.",
+      "full_repair_record": {
+        "id": "I-002",
+        "json_pointer": "/repairs/3",
+        "relationship": "Independent review correction implemented and verified in the same existing operational-realization owner; full per-gap fields are retained in I-002."
+      }
+    },
+    {
+      "id": "B-R7",
+      "finding": "Acceptance-route parser result caching skipped every later command alias with identical argv, so a different declared runtime_input_contract could falsely satisfy a required workload input absent from the real producer.",
+      "status": "repaired-and-locally-verified",
+      "tests": "Actual declaration CLI red-to-green conflicting-alias case, valid alias producer, full existing runtime configuration suite.",
+      "full_repair_record": {
+        "id": "B-R7",
+        "json_pointer": "/repairs/9",
+        "relationship": "Same stable repair ID; full per-gap fields retained in the main repair inventory."
+      }
+    }
+  ]
+}

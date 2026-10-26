@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-09-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: persistence
 #   disciplines:
@@ -21,6 +21,7 @@ set -euo pipefail
 #     - kanbien/staging
 #   effects:
 #   - network
+#   - writes-files
 #   used_by:
 #   - id: package.script.platform-shell-persistence-delivery-proof
 #     path: package.json

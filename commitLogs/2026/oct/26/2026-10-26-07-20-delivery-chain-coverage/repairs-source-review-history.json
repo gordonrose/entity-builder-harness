@@ -1,0 +1,128 @@
+{
+  "schema": "rag-rulebook/source-review-history-repair-report/v1",
+  "id": "I-source-review-history-current",
+  "status": "repaired-local-verified",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "inputs": {
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh": "bc24a6cfaf1396ce443e94d5e1e392f85261e3054d1b9941cd9de97210fa0fa2",
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh": "17be42da6dad29bf06a4884c104af0f40dcec6a88554b3f7dfc7e51cab95e5ae",
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/README.md": "8437a90998cfc1a63639f90ecd2da8ed10752493871726166cc69c47feb410a0",
+    ".agentic/02.rag-rulebook/workflows/review-okf-source-material.md": "d7cbc252d26b097fbe19cbbe1623530a01596ff7a947d8265545e06c83568273",
+    ".agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml": "0ba6e47098a71fc1337daf1c1e7c8862d2835c532b443936cdae802baf88cf1c"
+  },
+  "failure": "Global current validation compared every immutable historical acceptance to mutable current source, blocking a valid successor and encouraging historical proof rewriting.",
+  "affected_routes": [
+    "OKF source review validation",
+    "source-to-rule derivation acceptance",
+    "commit gates consuming source reviews"
+  ],
+  "smallest_reusable_repair": "Validate all record integrity and accepted hash/scorecard agreement, report each record freshness/current eligibility, then require a valid accepted current hash per referenced source. Keep explicit --record current-strict.",
+  "negative_regressions": [
+    "Changed current source without new accepted review",
+    "Historical accepted hash mismatch even beside valid current review",
+    "Missing current source",
+    "Malformed historical schema/source/iteration, NaN or threshold score, missing reviewer, unresolved blocker",
+    "Superseded accepted-proof hash forgery",
+    "Duplicate YAML keys and review IDs",
+    "Independent second source uncovered",
+    "Empty current inventory"
+  ],
+  "valid_behaviour": [
+    "Historical accepted record retained beside passing current review",
+    "Valid explicit current record",
+    "Unchanged historical bytes retained through all CLI cases"
+  ],
+  "enforcement_stage": "Source review/derivation gate before downstream rule acceptance",
+  "verification": [
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh",
+      "result": "passed 21 actual CLI checks in disposable Git roots; synthetic scorecards only"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml --json",
+      "exit_status": 0,
+      "result": "passed; current_eligible true"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml --json",
+      "exit_status": 1,
+      "result": "expected rejection as current authorization; integrity_valid true, freshness historical, current_eligible false"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --current --json",
+      "exit_status": 1,
+      "result": "not passing: five unrelated preexisting current-review gaps remain visible; container source covered by new current review"
+    },
+    {
+      "command": "git diff --check -- <five changed owning files>",
+      "result": "passed"
+    }
+  ],
+  "preserved_historical_record": {
+    "path": ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml",
+    "unchanged_from_HEAD": true,
+    "sha256": "6d2eec3e1f1f3302c4a4537669d08fb385593f745f60b4c84b8e67932619332e"
+  },
+  "unrelated_current_review_gaps": [
+    {
+      "current_sha256": "56fa64149041b4fc99d645ec782add66011435b0289db09393abe60482199f64",
+      "eligible_records": [],
+      "path": "docs/03.product/source-material/guides/markdown/package-documentation-v1.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "380afd33e1addb6b1acca6d91de1df0cb2941d3938656e355a31177763416f5e",
+      "eligible_records": [],
+      "path": "docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "26e195e94586c71a2168aec21ffbc1a9646a7f9b89a07af4cb916ded0620eed3",
+      "eligible_records": [],
+      "path": "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "e91bf7fa7c7ec95f5575febd824d7005812958b5d2ad3b4796e66544df2c9362",
+      "eligible_records": [],
+      "path": "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "826ec060288b126b9a13d5d97c46f3c08e539b80ab9305d19fdff14ac54f77cf",
+      "eligible_records": [],
+      "path": "docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md",
+      "status": "accepted-current-review-missing"
+    }
+  ],
+  "limits": [
+    "This repair does not create or fabricate accepted source reviews for the five unrelated source changes.",
+    "The current coverage set comes from the existing review records; source registration and review workflow still govern sources without any review record.",
+    "Historical internal integrity checks compare recorded acceptance hashes and scorecards; no claim of retained historical source bytes or independent cryptographic signatures is made."
+  ],
+  "contract_files": [
+    ".agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml",
+    ".agentic/02.rag-rulebook/workflows/review-okf-source-material.md"
+  ],
+  "implementation_files": [
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh"
+  ],
+  "caller_files": [
+    "scripts/02.rag-rulebook/commit-gates/script.sh",
+    "scripts/repo/check-selection/checks.yml",
+    ".agentic/02.rag-rulebook/workflows/review-okf-source-material.md"
+  ],
+  "test_files": [
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh"
+  ],
+  "downstream_consumers": [
+    "scripts/02.rag-rulebook/commit-gates/script.sh",
+    "scripts/repo/check-selection/checks.yml",
+    ".agentic/02.rag-rulebook/workflows/review-okf-source-material.md"
+  ],
+  "closure_evidence": [
+    "Existing verification records retain21actualCLI checks plus separate explicit-current and global-current results.",
+    "Historical accepted review integrity is preserved; the five unrelated current-review gaps remain nonpassing and are not fabricated or waived."
+  ],
+  "report_enrichment": "File roles and consumers derived from the current schema/workflow, direct commit-gate call and existing catalog references. Verification results and historical accepted-record metadata unchanged."
+}

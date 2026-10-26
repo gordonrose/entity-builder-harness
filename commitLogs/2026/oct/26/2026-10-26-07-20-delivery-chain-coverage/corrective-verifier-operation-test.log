@@ -1,0 +1,22 @@
+private persistence verifier isolation checks passed
+test_concurrent_invocations_submit_once (__main__.OperationTests.test_concurrent_invocations_submit_once) ... ok
+test_explicit_initial_none_is_idempotent_and_checks_predecessor (__main__.OperationTests.test_explicit_initial_none_is_idempotent_and_checks_predecessor) ... ok
+test_explicit_reconciliation_captures_durable_current_completion (__main__.OperationTests.test_explicit_reconciliation_captures_durable_current_completion) ... ok
+test_identical_lost_response_retry_reconciles_same_operation (__main__.OperationTests.test_identical_lost_response_retry_reconciles_same_operation) ... ok
+test_initial_none_cannot_replace_pending_uncertain_or_missing_state (__main__.OperationTests.test_initial_none_cannot_replace_pending_uncertain_or_missing_state) ... ok
+test_interruption_after_possible_submission_reconciles_same_task (__main__.OperationTests.test_interruption_after_possible_submission_reconciles_same_task) ... ok
+test_interruption_before_submission_never_replays_reserved_operation (__main__.OperationTests.test_interruption_before_submission_never_replays_reserved_operation) ... ok
+test_known_terminal_failures_allow_only_explicit_successor (__main__.OperationTests.test_known_terminal_failures_allow_only_explicit_successor) ... ok
+test_missing_expired_denied_provider_metadata_never_replays (__main__.OperationTests.test_missing_expired_denied_provider_metadata_never_replays) ... ok
+test_missing_malformed_private_metadata_blocks (__main__.OperationTests.test_missing_malformed_private_metadata_blocks) ... ok
+test_missing_terminal_proof_or_expired_logs_never_authorize_new_operation (__main__.OperationTests.test_missing_terminal_proof_or_expired_logs_never_authorize_new_operation) ... ok
+test_old_request_reconciles_after_current_definition_changes_before_successor (__main__.OperationTests.test_old_request_reconciles_after_current_definition_changes_before_successor) ... ok
+test_pending_first_execution_and_repeat_submit_once (__main__.OperationTests.test_pending_first_execution_and_repeat_submit_once) ... ok
+test_request_change_and_new_operation_while_pending_block (__main__.OperationTests.test_request_change_and_new_operation_while_pending_block) ... ok
+test_runtime_identity_caller_requests_fresh_successor_and_resumes_pending (__main__.OperationTests.test_runtime_identity_caller_requests_fresh_successor_and_resumes_pending) ... ok
+test_terminal_receipt_survives_expiry_and_new_operation_is_idempotent (__main__.OperationTests.test_terminal_receipt_survives_expiry_and_new_operation_is_idempotent) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 23.939s
+
+OK

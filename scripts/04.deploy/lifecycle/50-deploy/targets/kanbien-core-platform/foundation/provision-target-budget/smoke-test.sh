@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.foundation-cost-control
 #   disciplines: [security, sre]
@@ -39,3 +39,5 @@ assert 'not expect_json and not completed.stdout.strip()' in source
 PY
 
 echo "Target-budget provisioning smoke test passed."
+
+python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py" RecoveryCli.test_budget_lost_response_resumes_exact_operation

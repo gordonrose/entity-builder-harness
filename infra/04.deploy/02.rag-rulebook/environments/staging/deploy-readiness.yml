@@ -1,6 +1,11 @@
 schema: deploy/rag-rulebook-readiness-manifest/v1
 deployment:
   status: retired
+  retained_artifacts:
+    - infra/04.deploy/02.rag-rulebook/image/Dockerfile
+    - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+    - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
+    - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/github-oidc-bootstrap.yml
   retirement_runbook: .agentic/aws/workflows/deploy-rag-rulebook-service.md#hosted-staging-retirement
   service_id: rag-rulebook-mcp
   environment: staging

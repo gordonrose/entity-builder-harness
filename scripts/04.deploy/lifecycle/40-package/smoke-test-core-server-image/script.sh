@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -88,16 +88,21 @@ bash scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/payload
 if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
   if [[ "$ALLOW_SKIP" == true ]]; then
     printf '%s\n' 'SKIP: core-server payload fixture passed; container engine is unavailable.'
-    exit 0
+    exit 77
   fi
   printf '%s\n' 'ERROR: core-server payload fixture passed, but Docker is required to run the image smoke test.' >&2
   exit 1
 fi
 
-cleanup() {
-  docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+cleanup() { python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py" --container "$CONTAINER_NAME"; }
+finish() {
+  local original=$? cleanup_status=0
+  trap - EXIT
+  cleanup || cleanup_status=$?
+  if [[ "$original" -ne 0 ]]; then exit "$original"; fi
+  exit "$cleanup_status"
 }
-trap cleanup EXIT
+trap finish EXIT
 
 safe_command_diagnostic IMAGE_SMOKE_BUILD_FAILED 40-package \
   'core-server image build did not complete' \
@@ -142,4 +147,6 @@ await waitFor("/internal/release-verification", {
 });
 NODE
 
+cleanup
+trap - EXIT
 printf '%s\n' 'Core-server image smoke test passed.'

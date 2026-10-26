@@ -1,0 +1,163 @@
+{
+  "schema": "delivery-repair/v1",
+  "id": "I-R10",
+  "title": "Bind reusable proof to selected catalog entries while revalidating current selection authority",
+  "families": [
+    "I"
+  ],
+  "status": "repaired-local-verified",
+  "checked_at": "2026-10-26T11:07:31.717785+00:00",
+  "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476",
+  "concrete_failure": "Every local proof implicitly fingerprinted the entire checks.yml through both scope and repository-rule reference construction, including upstream and parent-directory reinsertion. An unrelated catalog-entry edit therefore discarded unaffected valid proof (53 local checks reran in final integration).",
+  "affected_routes": [
+    "all selected local checks",
+    "governed commit gate",
+    "delivery coverage CI selector",
+    "scope and repository-input mapped checks"
+  ],
+  "downstream_consumers": [
+    "scripts/repo/commit-gates/script.sh",
+    ".github/workflows/delivery-coverage.yml",
+    "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh"
+  ],
+  "contract_files": [
+    "scripts/repo/check-selection/checks.yml",
+    "scripts/repo/check-selection/README.md"
+  ],
+  "implementation_files": [
+    "scripts/repo/check-selection/script.py"
+  ],
+  "caller_files": [
+    "scripts/repo/check-selection/script.sh",
+    "scripts/repo/commit-gates/script.sh",
+    ".github/workflows/delivery-coverage.yml"
+  ],
+  "test_files": [
+    "scripts/repo/check-selection/smoke-test.py"
+  ],
+  "changed_source_files": [
+    "scripts/repo/check-selection/script.py",
+    "scripts/repo/check-selection/smoke-test.py",
+    "scripts/repo/check-selection/README.md"
+  ],
+  "source_inputs_sha256": {
+    "scripts/repo/check-selection/script.py": "c4c185fb88f780f9c60efc6d2260fb8c1109de5c9818287f842f48db5d99dc6d",
+    "scripts/repo/check-selection/smoke-test.py": "010b6e1a44807244750b3b7a50bc89f0e35b42ce02fe5e4a90dc53728e193499",
+    "scripts/repo/check-selection/README.md": "f1cbd2a2cc5242a44c29b06ca9e734a8d1afecbb57c00c8798a7c4155f1934a6"
+  },
+  "smallest_reusable_repair": [
+    "Bind the complete selected check entries, keyed by every deduplicated alias identity, into the existing evidence key using canonical JSON. This includes description, runtime, effects, applicability, argv and future fields.",
+    "Remove incidental catalog hashing from reusable proof references and parent-directory fingerprints; leave the impact/discovery graph and fresh validation intact.",
+    "Retain whole-catalog identity for declared inputs (including ancestor directories), runtime config inputs and consumed path arguments. Recognize split and --option=value arguments with ordinary relative, ./relative and absolute catalog paths; add the exact catalog reference explicitly.",
+    "Keep the raw catalog fingerprint as transient current-invocation authority before planning/each cache reuse or execution/after execution/end of invocation. Catalog mutation blocks or makes current execution uncertain; it does not erase unaffected immutable receipts.",
+    "Always treat the catalog as staged control authority for commit checks, even when it is not an incidental reusable proof input. The existing LocalCache implementation and receipt format owner remain unchanged."
+  ],
+  "negative_regressions": [
+    "Selected definition changes (description, argv, effects, runtime) execute fresh proof; incompatible applicability blocks.",
+    "Changing a selected deduplicated alias invalidates the shared proof.",
+    "Every explicit catalog consumer invalidates after unrelated entry edits, including nine declared/argument path forms and actual cat consumption.",
+    "A catalog mutation during one command produces uncertain evidence without a successful receipt and blocks subsequent cached execution in that invocation.",
+    "Unstaged catalog changes block a staged invocation even when the selected old proof would otherwise be reusable.",
+    "Malformed current catalog is rejected by fresh planning."
+  ],
+  "valid_behaviour": [
+    "A cached selected check retains the same evidence key and does not execute after an unrelated check description or effect-order change.",
+    "A fresh repository_inputs mapping selects and executes a newly required check while retaining the unaffected check cache hit.",
+    "After a catalog-mutating interrupted invocation, a fresh plan safely reuses unaffected previously successful evidence.",
+    "Existing source/runtime/environment/install identity, execution-race, mandatory-check, effects, package/live-stage and untrusted-report regressions continue passing."
+  ],
+  "earliest_enforcement_stage": "Fresh local/CI/commit selector planning before any selected command, followed by per-invocation pre/post-execution authority checks.",
+  "verification": [
+    {
+      "argv": [
+        "bash",
+        "scripts/repo/check-selection/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "seconds": 109.589,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-final-suite.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+        "--paths",
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/smoke-test.py",
+        "scripts/repo/check-selection/README.md"
+      ],
+      "exit_code": 0,
+      "seconds": 0.108,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-final-governance-1.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-deterministic-process-drift.sh",
+        "--paths",
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/smoke-test.py",
+        "scripts/repo/check-selection/README.md"
+      ],
+      "exit_code": 0,
+      "seconds": 0.02,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-final-governance-2.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-governed-script-command-drift.sh",
+        "--paths",
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/smoke-test.py",
+        "scripts/repo/check-selection/README.md"
+      ],
+      "exit_code": 0,
+      "seconds": 8.387,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-final-governance-3.log"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/smoke-test.py",
+        "scripts/repo/check-selection/README.md"
+      ],
+      "exit_code": 0,
+      "seconds": 0.01,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-final-governance-4.log"
+    }
+  ],
+  "suite_result": {
+    "tests": 60,
+    "passed": 60,
+    "failures": 0,
+    "errors": 0,
+    "unittest_seconds": 109.38,
+    "new_actual_cli_methods": [
+      "test_cli_unrelated_catalog_changes_reuse_full_selected_alias_definitions",
+      "test_cli_selected_catalog_fields_invalidate_or_block",
+      "test_cli_explicit_catalog_consumers_keep_whole_file_identity",
+      "test_cli_catalog_replanning_selects_new_repository_check",
+      "test_cli_catalog_mutation_blocks_invocation_but_preserves_unaffected_receipt",
+      "test_cli_unstaged_catalog_authority_blocks_even_unaffected_cached_proof"
+    ],
+    "expanded_explicit_catalog_consumer_modes": 9
+  },
+  "independent_review": {
+    "reviewer": "/root/independent_review",
+    "finding": "Single-token --catalog=PATH consumer initially omitted whole-catalog binding; reviewer actual CLI reproduction observed false reuse.",
+    "resolution": "Known catalog path normalization plus explicit catalog-reference insertion; reviewer reran original actual CLI reproduction and confirmed catalog_input true, changed evidence key and local-runner execution after catalog edit.",
+    "latest_disposition": "No further finding in normalized known-path/ancestor binding and explicit reference addition."
+  },
+  "closure_evidence": "Final full 60-test selector suite passes, including all six new actual CLI methods and nine explicit-catalog consumer modes. Affected metadata headers, deterministic drift, governed command drift and diffcheck pass.",
+  "limits": [
+    "Local disposable fixture verification; no live provider, publication, deployment or cloud proof.",
+    "Whole-catalog consumers intentionally invalidate for any catalog edit. Other reuse still depends on correctly declared inputs, metadata dependencies and the existing runtime identity boundary.",
+    "The root integration owner owns final source inventory, generated recognition, aggregate selected execution and the RAG image snapshot."
+  ]
+}

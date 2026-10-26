@@ -7,7 +7,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -28,6 +28,9 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+import fcntl
+import importlib.util
 import hashlib
 import json
 import os
@@ -84,14 +87,20 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate or run the one Kanbien staging candidate execution preflight.")
     parser.add_argument("--validate", action="store_true", help="Validate committed source only; make no AWS call.")
     parser.add_argument("--execute", action="store_true", help="Run exactly one derived-label candidate task and clean it up.")
+    parser.add_argument("--reconcile", action="store_true", help="Observe unresolved retained attempts without submitting or stopping tasks.")
+    parser.add_argument("--cleanup", action="store_true", help="Stop only an unresolved retained task with its original definition and label.")
     parser.add_argument("--approve-candidate-execution-preflight", action="store_true", help="Acknowledge the one isolated candidate task start and controlled stop.")
+    parser.add_argument("--realization-facts",type=Path)
+    parser.add_argument("--realization-change-summary",type=Path)
     result = parser.parse_args()
-    if sum((result.validate, result.execute)) != 1:
-        parser.error("choose exactly one validation or execution mode")
-    if result.validate and result.approve_candidate_execution_preflight:
+    if sum((result.validate, result.execute,result.reconcile,result.cleanup)) != 1:
+        parser.error("choose exactly one validation, execution, reconciliation or cleanup mode")
+    if (result.validate or result.reconcile) and result.approve_candidate_execution_preflight:
         parser.error("the execution approval guard is unavailable in validation mode")
-    if result.execute and not result.approve_candidate_execution_preflight:
+    if (result.execute or result.cleanup) and not result.approve_candidate_execution_preflight:
         parser.error("the fixed candidate execution preflight requires --approve-candidate-execution-preflight")
+    if result.execute and (result.realization_facts is None or result.realization_change_summary is None):parser.error("candidate execution requires normalized realization facts and change summary")
+    if not result.execute and (result.realization_facts is not None or result.realization_change_summary is not None):parser.error("execution evidence is unavailable in validation mode")
     return result
 
 
@@ -128,6 +137,7 @@ def load_policy() -> dict[str, Any]:
     expected = {
         "status": "dormant-task-boundary-deployed-finite-same-image-attempts-require-durable-reconciliation",
         "command": "npm-run-platform-shell-candidate-execution-preflight",
+        "entrypoint":"scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh",
         "execution_guard": "execute-and-approve-candidate-execution-preflight",
         "realization_contract": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml",
         "service_stack": "kanbien-staging-platform-shell-service",
@@ -155,6 +165,26 @@ def load_policy() -> dict[str, Any]:
         "maximum_start_seconds": expected["maximum_start_seconds"],
         "maximum_stop_seconds": expected["maximum_stop_seconds"],
     }
+
+
+def realization_preflight(facts_path=None, summary_path=None):
+    """Consume the authoritative compiler, including input/freshness bindings."""
+    root=Path(__file__).resolve().parents[3]
+    spec=importlib.util.spec_from_file_location("realization",root/"scripts/04.deploy/operational-realization-gate/script.py")
+    compiler=importlib.util.module_from_spec(spec);spec.loader.exec_module(compiler)
+    try:
+        contract=compiler.load_yaml(root/"infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml","contract-unreadable")
+        identifier=compiler.validate_contract(contract)
+        if facts_path is None:return None
+        facts=compiler.load_yaml(facts_path,"normalized-facts-unreadable")
+        _,known=compiler.ids(contract)
+        compiler.validate_facts(facts,contract,identifier,known,"execution-preflight")
+        compiler.validate_change_summary(compiler.load_yaml(summary_path,"normalized-change-summary-unreadable"),contract,identifier,facts)
+        bindings=[item for item in facts.get("artifact_bindings",[]) if item.get("component_id")=="candidate-runtime-artifact"]
+        if len(bindings)!=1:raise CandidatePreflightError("candidate-realization-artifact-binding-invalid")
+        return bindings[0]["immutable_reference"]
+    except compiler.ContractFailure as error:
+        raise CandidatePreflightError("candidate-realization-"+error.code) from error
 
 
 def aws(arguments: list[str], policy: dict[str, Any], failure_code: str) -> dict[str, Any]:
@@ -358,6 +388,9 @@ def load_candidate_ledger(path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> dict[st
         raise CandidatePreflightError("candidate-attempt-ledger-unreadable") from exception
     if ledger.get("schema") != "postgresql-candidate-attempt-ledger/v1" or not isinstance(ledger.get("attempts"), list):
         raise CandidatePreflightError("candidate-attempt-ledger-invalid")
+    allowed={"reserved","submitted","uncertain","rejected","succeeded","failed","stopped-reconciled"}
+    entries=ledger["attempts"]
+    if any(not isinstance(item,dict) or item.get("state") not in allowed or not isinstance(item.get("label"),str) or re.fullmatch(r"kb-candidate-[a-f0-9]{16}-a[1-4]",item["label"]) is None or not isinstance(item.get("image_hash"),str) for item in entries) or len({item["label"] for item in entries})!=len(entries):raise CandidatePreflightError("candidate-attempt-ledger-invalid")
     return ledger
 
 
@@ -380,43 +413,95 @@ def save_candidate_ledger(ledger: dict[str, Any], path: Path = DEFAULT_CANDIDATE
         raise CandidatePreflightError("candidate-attempt-ledger-write-failed") from exception
 
 
-def reserve_candidate_attempt(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> str:
+@contextmanager
+def candidate_ledger_lock(path: Path):
+    """Serialize this owner's safe receipt transactions across local processes."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        descriptor = os.open(path.with_suffix(path.suffix + ".lock"), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    except OSError as error:
+        raise CandidatePreflightError("candidate-attempt-ledger-lock-unavailable") from error
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            raise CandidatePreflightError("candidate-attempt-ledger-busy") from error
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def reserve_candidate_attempt(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH, task_definition: str | None = None) -> str:
     """Reserve at most four same-image candidate attempts across restarts."""
 
     digest = IMMUTABLE_IMAGE.fullmatch(image)
     if digest is None:
         raise CandidatePreflightError("candidate-image-not-immutable")
-    ledger = load_candidate_ledger(path)
-    image_hash = hashlib.sha256(digest.group(1).encode("ascii")).hexdigest()[:16]
-    attempts = [item for item in ledger["attempts"] if isinstance(item, dict) and item.get("image_hash") == image_hash]
-    if len(attempts) >= 4:
-        raise CandidatePreflightError("candidate-attempt-limit-exhausted")
-    label = attempt_label(image, len(attempts) + 1)
-    ledger["attempts"].append({"image_hash": image_hash, "label": label, "state": "reserved", "reserved_at": time.time()})
-    save_candidate_ledger(ledger, path)
-    return label
+    with candidate_ledger_lock(path):
+        ledger = load_candidate_ledger(path)
+        image_hash = hashlib.sha256(digest.group(1).encode("ascii")).hexdigest()[:16]
+        attempts = [item for item in ledger["attempts"] if isinstance(item, dict) and item.get("image_hash") == image_hash]
+        if any(item["state"] not in {"succeeded","failed","stopped-reconciled"} for item in ledger["attempts"]):raise CandidatePreflightError("candidate-prior-attempt-reconciliation-required")
+        if len(attempts) >= 4:
+            raise CandidatePreflightError("candidate-attempt-limit-exhausted")
+        label = attempt_label(image, len(attempts) + 1)
+        ledger["attempts"].append({"image_hash": image_hash, "label": label, "state": "reserved", "reserved_at": time.time(), "task_definition":task_definition})
+        save_candidate_ledger(ledger, path)
+        return label
 
 
 def record_candidate_state(label: str, state: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> None:
     """Record a safe terminal or uncertain result before another same-image attempt."""
 
-    ledger = load_candidate_ledger(path)
-    receipt = next((item for item in ledger["attempts"] if isinstance(item, dict) and item.get("label") == label), None)
-    if not isinstance(receipt, dict):
-        raise CandidatePreflightError("candidate-attempt-receipt-missing")
-    receipt["state"] = state
-    receipt["updated_at"] = time.time()
-    save_candidate_ledger(ledger, path)
+    with candidate_ledger_lock(path):
+        ledger = load_candidate_ledger(path)
+        receipt = next((item for item in ledger["attempts"] if isinstance(item, dict) and item.get("label") == label), None)
+        if not isinstance(receipt, dict):
+            raise CandidatePreflightError("candidate-attempt-receipt-missing")
+        receipt["state"] = state
+        receipt["updated_at"] = time.time()
+        save_candidate_ledger(ledger, path)
 
 
 def labelled_tasks(label: str, desired_state: str, policy: dict[str, Any]) -> list[str]:
-    """Read task identifiers only in memory to enforce one terminal attempt per digest."""
+    """Enumerate a bounded family, then match startedBy; AWS forbids mixed filters."""
+    payload=aws(["ecs","list-tasks","--cluster",CLUSTER,"--family",policy.get("candidate_task_family","kanbien-staging-platform-shell-candidate-preflight"),"--desired-status",desired_state],policy,"candidate-attempt-inspection-unavailable")
+    arns=payload.get("taskArns")
+    if not isinstance(arns,list) or payload.get("nextToken") or not all(isinstance(item,str) for item in arns):raise CandidatePreflightError("candidate-attempt-inspection-invalid")
+    found=[]
+    for offset in range(0,len(arns),100):
+        batch=arns[offset:offset+100]
+        response=aws(["ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*batch],policy,"candidate-attempt-inspection-unavailable")
+        tasks=response.get("tasks")
+        if not isinstance(tasks,list) or response.get("failures") or len(tasks)!=len(batch) or any(not isinstance(item,dict) for item in tasks) or {item.get("taskArn") for item in tasks}!=set(batch):raise CandidatePreflightError("candidate-attempt-inspection-invalid")
+        found.extend(item["taskArn"] for item in tasks if item.get("startedBy")==label)
+    return found
 
-    payload = aws(["ecs", "list-tasks", "--cluster", CLUSTER, "--started-by", label, "--desired-status", desired_state], policy, "candidate-attempt-inspection-unavailable")
-    tasks = payload.get("taskArns")
-    if not isinstance(tasks, list) or not all(isinstance(item, str) for item in tasks):
-        raise CandidatePreflightError("candidate-attempt-inspection-invalid")
-    return tasks
+
+def reconcile_attempts(policy: dict[str,Any], *, cleanup: bool=False) -> int:
+    """Never replace an unresolved submission; absence remains uncertain."""
+    ledger=load_candidate_ledger()
+    unresolved=[item for item in ledger["attempts"] if item["state"] not in {"succeeded","failed","stopped-reconciled"}]
+    if not unresolved:
+        print(safe_result("reconciled","candidate-no-unresolved-attempts"));return 0
+    for item in unresolved:
+        definition=item.get("task_definition")
+        if not isinstance(definition,str) or not definition:raise CandidatePreflightError("candidate-prior-definition-unavailable")
+        arns=list(dict.fromkeys(labelled_tasks(item["label"],"RUNNING",policy)+labelled_tasks(item["label"],"STOPPED",policy)))
+        if len(arns)!=1:raise CandidatePreflightError("candidate-prior-submission-uncertain")
+        payload=aws(["ecs","describe-tasks","--cluster",CLUSTER,"--tasks",arns[0]],policy,"candidate-attempt-inspection-unavailable")
+        tasks=payload.get("tasks")
+        if not isinstance(tasks,list) or len(tasks)!=1 or payload.get("failures") or not isinstance(tasks[0],dict):raise CandidatePreflightError("candidate-attempt-inspection-invalid")
+        task=tasks[0]
+        if task.get("taskArn")!=arns[0] or task.get("startedBy")!=item["label"] or task.get("taskDefinitionArn")!=definition:raise CandidatePreflightError("candidate-prior-task-identity-mismatch")
+        status=task.get("lastStatus")
+        if status in {"PROVISIONING","PENDING","ACTIVATING","RUNNING","DEACTIVATING","STOPPING","DEPROVISIONING"}:
+            if not cleanup:
+                print(safe_result("pending","candidate-prior-task-still-running"));return 1
+            stop_and_wait(arns[0],policy)
+        elif status!="STOPPED":raise CandidatePreflightError("candidate-prior-task-state-uncertain")
+        record_candidate_state(item["label"],"stopped-reconciled")
+    print(safe_result("cleaned-up" if cleanup else "reconciled","candidate-prior-attempts-stopped-not-qualified"));return 0
 
 
 def assert_fresh_attempt(label: str, policy: dict[str, Any]) -> None:
@@ -431,7 +516,7 @@ def run_candidate(reference: str, label: str, network: dict[str, Any], policy: d
 
     payload = run_task_payload([
         "ecs", "run-task", "--cluster", CLUSTER, "--task-definition", reference, "--launch-type", "FARGATE", "--count", "1",
-        "--network-configuration", json.dumps(network, separators=(",", ":")), "--started-by", label,
+        "--network-configuration", json.dumps(network, separators=(",", ":")), "--started-by", label, "--client-token", label,
     ], policy)
     tasks = payload.get("tasks")
     failures = payload.get("failures")
@@ -515,12 +600,13 @@ def interrupted(_signal_number: int, _frame: Any) -> None:
     raise CandidatePreflightError("candidate-execution-interrupted")
 
 
-def safe_result(verdict: str, category: str | None = None) -> str:
+def safe_result(verdict: str, category: str | None = None, secondary: str | None = None) -> str:
     """Produce the only permitted external evidence shape."""
 
     result: dict[str, str] = {"schema": SAFE_RESULT_SCHEMA, "candidate_execution_preflight": verdict}
     if category is not None:
         result["failure_category"] = category
+    if secondary is not None:result["secondary_failure_category"]=secondary
     return json.dumps(result, sort_keys=True)
 
 
@@ -529,21 +615,26 @@ def execute(policy: dict[str, Any]) -> int:
 
     global ACTIVE_CANDIDATE
     accepted_task: str | None = None
+    reserved=False
     try:
+        if any(item["state"] not in {"succeeded","failed","stopped-reconciled"} for item in load_candidate_ledger()["attempts"]):raise CandidatePreflightError("candidate-prior-attempt-reconciliation-required")
         verify_account(policy)
         candidate_reference = candidate_task_definition(policy)
         server_reference, network = active_server(policy)
         candidate = task_definition(candidate_reference, policy, "candidate-task-definition-inspection-unavailable")
         server = task_definition(server_reference, policy, "candidate-source-task-definition-inspection-unavailable")
         image = verify_candidate_shape(candidate, server, policy)
+        if image.rsplit("@",1)[-1]!=policy.get("qualified_artifact_digest"):raise CandidatePreflightError("candidate-realization-artifact-mismatch")
         current_attempts = [
             item for item in load_candidate_ledger()["attempts"]
             if isinstance(item, dict) and item.get("image_hash") == hashlib.sha256(IMMUTABLE_IMAGE.fullmatch(image).group(1).encode("ascii")).hexdigest()[:16]
         ]
         label = attempt_label(image, len(current_attempts) + 1)
         assert_fresh_attempt(label, policy)
-        label = reserve_candidate_attempt(image)
+        label = reserve_candidate_attempt(image,task_definition=candidate_reference)
+        reserved=True
         accepted_task = run_candidate(candidate_reference, label, network, policy)
+        record_candidate_state(label,"submitted")
         ACTIVE_CANDIDATE = (accepted_task, policy)
         wait_for_healthy(accepted_task, policy)
         stop_and_wait(accepted_task, policy)
@@ -555,18 +646,19 @@ def execute(policy: dict[str, Any]) -> int:
         return 0
     except CandidatePreflightError as exception:
         category = str(exception)
-        if accepted_task is None and "label" in locals():
+        secondary = None
+        if accepted_task is None and reserved:
             try:
-                record_candidate_state(label, "rejected")
+                record_candidate_state(label, "uncertain")
             except CandidatePreflightError:
-                category = "candidate-attempt-receipt-failure"
+                secondary = "candidate-attempt-receipt-failure"
         if accepted_task is not None:
             try:
                 cleanup_active_candidate()
                 record_candidate_state(label, "failed")
             except CandidatePreflightError:
-                category = "candidate-cleanup-failure"
-        print(safe_result("failed", category))
+                secondary = "candidate-cleanup-failure"
+        print(safe_result("uncertain" if (reserved and accepted_task is None) or secondary is not None or category=="candidate-prior-attempt-reconciliation-required" else "failed", category, secondary))
         return 1
     finally:
         ACTIVE_CANDIDATE = None
@@ -580,12 +672,20 @@ def main() -> int:
     signal.signal(signal.SIGTERM, interrupted)
     try:
         policy = load_policy()
+        policy["qualified_artifact_digest"]=realization_preflight(arguments.realization_facts,arguments.realization_change_summary)
         if arguments.validate:
             print(safe_result("validated"))
             return 0
+        root=Path(__file__).resolve().parents[3]
+        spec=importlib.util.spec_from_file_location("aws_response",root/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
+        adapter=importlib.util.module_from_spec(spec);spec.loader.exec_module(adapter)
+        if not adapter.inventory_covered(root):raise CandidatePreflightError("delivery-inventory-not-covered")
+        if arguments.reconcile or arguments.cleanup:
+            verify_account(policy)
+            return reconcile_attempts(policy,cleanup=arguments.cleanup)
         return execute(policy)
     except CandidatePreflightError as exception:
-        print(safe_result("failed", str(exception)))
+        print(safe_result("uncertain" if arguments.reconcile or arguments.cleanup else "failed", str(exception)))
         return 1
 
 

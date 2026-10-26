@@ -1,0 +1,6 @@
+test_runtime_identity_caller_requests_fresh_successor_and_resumes_pending (__main__.OperationTests.test_runtime_identity_caller_requests_fresh_successor_and_resumes_pending) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 4.859s
+
+OK

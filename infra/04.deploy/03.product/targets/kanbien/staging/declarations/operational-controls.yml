@@ -1,0 +1,172 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.operational-controls
+#   version: 1
+#   status: active
+#   created_on: '2026-10-26'
+#   updated_on: '2026-10-26'
+#   layer: 04.deploy
+#   domain: deployment.declaration-coverage
+#   disciplines:
+#   - security
+#   - sre
+#   kind: deployment-declaration-contract
+#   purpose: Bind the supported staging authorization, verification, drift and temporary-effect
+#     operations to their existing command and proof owners.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+#     path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+schema: deploy/declaration-contract/v1
+id: kanbien-staging-operational-controls
+status: active
+target:
+  profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+  environment: staging
+  service: platform-shell
+scope:
+  covers:
+  - platform-shell.authentication-proof-identities
+  - platform-shell.controlled-worker-delivery
+  - platform-shell.observability-and-ingress
+  - platform-shell.provider-control-reconciliation
+  excludes:
+  - Base server release is governed by ../declaration-contract.yml; this scope adds
+    only the listed target capabilities.
+requirements:
+- id: platform-shell.authentication-proof-identities
+  purpose: Dedicated least-privilege machine identities and secret references reach
+    only their bounded positive or negative authorization proof.
+  owner: deployment-platform
+  required_by:
+  - scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh
+  - scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
+  - scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
+  - scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh
+  - scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+  declarations:
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    expectation: Dedicated least-privilege machine identities and secret references
+      reach only their bounded positive or negative authorization proof.
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+    expectation: Dedicated least-privilege machine identities and secret references
+      reach only their bounded positive or negative authorization proof.
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    expectation: Dedicated least-privilege machine identities and secret references
+      reach only their bounded positive or negative authorization proof.
+  expectation: Dedicated least-privilege machine identities and secret references
+    reach only their bounded positive or negative authorization proof.
+  local_proofs:
+  - shell-negative-authz-client-check
+  - shell-persistence-write-client-check
+  - shell-controlled-smoke-check
+  - shell-negative-authz-smoke-check
+  - shell-persistence-smoke-check
+  package_proofs: []
+  target_proofs:
+  - shell-runtime-alignment
+  run_proofs:
+  - shell-negative-authz-smoke
+  - shell-persistence-smoke
+  not_applicable:
+    package_proofs: This operation runs through the repository CLI; its local subprocess
+      regression and current target observations own behaviour, rather than the application
+      image.
+- id: platform-shell.controlled-worker-delivery
+  purpose: Bounded queue and persistence proof commands require declared identities,
+    reconcile effects and prove task and queue settlement.
+  owner: deployment-platform
+  required_by:
+  - scripts/04.deploy/run-platform-shell-worker-smoke/script.sh
+  - scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+  declarations:
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    expectation: Bounded queue and persistence proof commands require declared identities,
+      reconcile effects and prove task and queue settlement.
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    expectation: Bounded queue and persistence proof commands require declared identities,
+      reconcile effects and prove task and queue settlement.
+  expectation: Bounded queue and persistence proof commands require declared identities,
+    reconcile effects and prove task and queue settlement.
+  local_proofs:
+  - shell-worker-smoke-check
+  - shell-persistence-delivery-proof-check
+  package_proofs:
+  - shell-image-smoke
+  target_proofs:
+  - shell-runtime-alignment
+  run_proofs:
+  - shell-worker-smoke
+  - shell-persistence-delivery-proof
+- id: platform-shell.observability-and-ingress
+  purpose: Declared ingress, rate limits and enabled telemetry have package behaviour
+    plus bounded current signal and routing observations.
+  owner: deployment-platform
+  required_by:
+  - scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
+  - scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh
+  - scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh
+  - scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  declarations:
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    expectation: Declared ingress, rate limits and enabled telemetry have package
+      behaviour plus bounded current signal and routing observations.
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    expectation: Declared ingress, rate limits and enabled telemetry have package
+      behaviour plus bounded current signal and routing observations.
+  expectation: Declared ingress, rate limits and enabled telemetry have package behaviour
+    plus bounded current signal and routing observations.
+  local_proofs:
+  - shell-metric-coverage-check
+  - shell-metric-coverage-policy-check
+  - shell-synthetic-scheduler-check
+  - shell-rate-limit-smoke-check
+  - shell-ingress-smoke-check
+  package_proofs:
+  - shell-image-smoke
+  target_proofs:
+  - shell-runtime-alignment
+  run_proofs:
+  - shell-metric-coverage
+  - shell-ingress-smoke
+  - shell-rate-limit-smoke
+- id: platform-shell.provider-control-reconciliation
+  purpose: Read-only target reconciliation and bounded drift inspection distinguish
+    absent, pending, denied and uncertain outcomes before permitted changes.
+  owner: deployment-platform
+  required_by:
+  - scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+  - scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh
+  - scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
+  - scripts/04.deploy/assess-platform-shell-service-drift/script.sh
+  declarations:
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    expectation: Read-only target reconciliation and bounded drift inspection distinguish
+      absent, pending, denied and uncertain outcomes before permitted changes.
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+    expectation: Read-only target reconciliation and bounded drift inspection distinguish
+      absent, pending, denied and uncertain outcomes before permitted changes.
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    expectation: Read-only target reconciliation and bounded drift inspection distinguish
+      absent, pending, denied and uncertain outcomes before permitted changes.
+  expectation: Read-only target reconciliation and bounded drift inspection distinguish
+    absent, pending, denied and uncertain outcomes before permitted changes.
+  local_proofs:
+  - shell-deployment-reconciliation-check
+  - shell-candidate-preflight-regression
+  - shell-deployment-reconciliation-policy-check
+  - shell-artifact-active-drift-assessment-check
+  - shell-foundation-active-drift-assessment-check
+  - shell-service-active-drift-assessment-check
+  - shell-drift-detection-boundary-check
+  package_proofs: []
+  target_proofs:
+  - shell-runtime-alignment
+  run_proofs:
+  - shell-deployment-reconciliation
+  not_applicable:
+    package_proofs: This operation runs through the repository CLI; its local subprocess
+      regression and current target observations own behaviour, rather than the application
+      image.

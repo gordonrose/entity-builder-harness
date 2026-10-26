@@ -1,0 +1,756 @@
+{
+  "branch": "chat/2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c",
+  "changed_source_files": [
+    ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+    ".agentic/04.deploy/standards/declaration-coverage.md",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+    "scripts/04.deploy/inventory-deploy-control/README.md",
+    "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+    "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py"
+  ],
+  "changed_source_identities": {
+    ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml": {
+      "mode": 420,
+      "sha256": "b4ca6fb4a6e99f82068a04c305346064090d0bca87ddc4ff06d23edfc501d216"
+    },
+    ".agentic/04.deploy/standards/declaration-coverage.md": {
+      "mode": 420,
+      "sha256": "9fa5ff1a23f9a03a414acb086b92cbd03551d76b1a5f00d05862770d8ab3a4d0"
+    },
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md": {
+      "mode": 420,
+      "sha256": "06093dfc7e5a21871984ce75d05f484fa523924285916708d80dc7a872e8bd3b"
+    },
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md": {
+      "mode": 420,
+      "sha256": "308ca47f0805bc6f3e8353f052ef45f4ea50258c425d38c8531fd2973002ebbc"
+    },
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml": {
+      "mode": 420,
+      "sha256": "218453ca2a9db58df102037a03dcdb7e691b5b47b6c628e1bd505dc960d56c68"
+    },
+    "scripts/04.deploy/inventory-deploy-control/README.md": {
+      "mode": 420,
+      "sha256": "494989391d9ed28520de872367f60a7936ee2b43546f137b071bd54ce8e31964"
+    },
+    "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py": {
+      "mode": 420,
+      "sha256": "faf0d72c3f6ab094b43df01b8dea0303e9c21af198ce4b497f262edc1fdd87b5"
+    },
+    "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": {
+      "mode": 420,
+      "sha256": "36bd8b829e4bc15337b47e6f97ee77557db4a0bd43685a99dcfdbeae21420fa2"
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md": {
+      "mode": 420,
+      "sha256": "8694b710bcd5e28cacc356a4fca172da01fc9bf9b617536d6b439fbc77e9369c"
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": {
+      "mode": 420,
+      "sha256": "ad34756a433269f35e8329c9b9e22c8931c26c89cc0b7c31345634a614165218"
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py": {
+      "mode": 420,
+      "sha256": "a7f21fb8ccc75aaafcae815f9a00f55deb990c95d7f56d26c54bdd438ef15014"
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py": {
+      "mode": 420,
+      "sha256": "7ddd414a68b0b73832df89d443f7b6aa2b3ce78e6b72173e64464c174852c233"
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh": {
+      "mode": 493,
+      "sha256": "bcf6b1a47b538707c584be15d717dc0dd7ea56afb3dcdd90d4425cde0115c4b9"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py": {
+      "mode": 420,
+      "sha256": "d46ecdf800f6b7b94d10f343f9794304956de6f6624c6c0c0a170a368094867a"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py": {
+      "mode": 420,
+      "sha256": "1cd40620606b93b08cd69740cf50bc8db2d9ac2368236f00d6865c127ca4de41"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh": {
+      "mode": 420,
+      "sha256": "80e6514db365062351789b2b7d05147e1df5efedfa99bd974b12f834bb049ec1"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md": {
+      "mode": 420,
+      "sha256": "0021c6629b484589fd32394c9f74ae77687cbe6f67cc60ac7a5403b507405b95"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py": {
+      "mode": 420,
+      "sha256": "3cc5ffeb43492f0ab2e9c189d8ab4e535a5ee47de8c276f3d4318fe158a20ed2"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py": {
+      "mode": 420,
+      "sha256": "3f7aeb9c7cbbef7e3bff06c975f336e98168d4e434a83d952d114dac9b8f281c"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh": {
+      "mode": 493,
+      "sha256": "ea9dbb6cdb4d70b2c839b9c19d233bf6d2c70c31077fd3bf2523f10016a9bf9d"
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh": {
+      "mode": 420,
+      "sha256": "0aa890b51a6fe6c8b6f8f363d25418d066e822a43c5b12360cb022241d89e5d4"
+    },
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py": {
+      "mode": 420,
+      "sha256": "502bfe852583bae40fbb8f8b4d8149a8090f52ab296cdbf7a6f0f944ad479c3f"
+    },
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py": {
+      "mode": 420,
+      "sha256": "57d70bd61b79d2ec38d902f54b47845a013067e7157c3565750148c4bb9cee5d"
+    },
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py": {
+      "mode": 420,
+      "sha256": "9adbc231059ffa4b7cdc1ce4c8e41d193b5bb030befb4da26c2d83fe6bdfc835"
+    }
+  },
+  "corrections": [
+    {
+      "authorities": [
+        {
+          "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier.json",
+          "sha256": "76d1038d0fcdfd7b2c7077ec7a2b2d73f79843829eef666ae59ada7ab2a84213"
+        },
+        {
+          "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-callers.json",
+          "sha256": "fc9a591a07d8ee21121b9eedc66961b285b7f1a8416c873474f118624882a5c7"
+        }
+      ],
+      "behavior": "Durable reservation precedes submission. Repeated pending/uncertain operations reconcile the same identity; locks and retained predecessor compare-and-set protect concurrent and explicit successor calls. Fresh-proof callers propagate operation IDs and distinguish historical completion.",
+      "exact_files": {
+        "caller_files": [
+          ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+          "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh"
+        ],
+        "contract_files": [
+          ".agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml",
+          ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md"
+        ],
+        "documentation_files": [],
+        "implementation_files": [
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+          "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py"
+        ],
+        "test_files": [
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py"
+        ]
+      },
+      "finding": 1,
+      "negative_and_valid_results": "Exact pre-repair reproduction, commands, assertions, results and limitations are retained in the linked owner authorities.",
+      "observed_commands_and_results": [
+        {
+          "authority": {
+            "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier.json",
+            "sha256": "76d1038d0fcdfd7b2c7077ec7a2b2d73f79843829eef666ae59ada7ab2a84213"
+          },
+          "runs": [
+            {
+              "argv": [
+                "python3",
+                "-B",
+                "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py"
+              ],
+              "exit_code": 0,
+              "note": "Initial full operation suite after changed-definition recovery repair.",
+              "seconds": 24.786,
+              "tests": 16
+            },
+            {
+              "argv": [
+                "python3",
+                "-B",
+                "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py"
+              ],
+              "exit_code": 0,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-controller-test.log",
+              "seconds": 0.983,
+              "tests": 31
+            },
+            {
+              "additional": "existing lower-case provider isolation assertions",
+              "argv": [
+                "bash",
+                "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh"
+              ],
+              "exit_code": 0,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-operation-test.log",
+              "seconds": 23.939,
+              "tests": 16
+            },
+            {
+              "argv": [
+                "python3",
+                "-B",
+                "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+                "OperationTests.test_runtime_identity_caller_requests_fresh_successor_and_resumes_pending"
+              ],
+              "exit_code": 0,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-caller-test.log",
+              "seconds": 4.859,
+              "tests": 1
+            },
+            {
+              "additional": "existing argument, template and isolation shell/Python assertions",
+              "argv": [
+                "bash",
+                "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh"
+              ],
+              "exit_code": 0,
+              "final_source": true,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-provider-final-test.log",
+              "suites": {
+                "controller": 31,
+                "provider_cli": 4,
+                "verifier_operation": 16
+              },
+              "tests": 51
+            },
+            {
+              "argv": [
+                "git",
+                "diff",
+                "--check"
+              ],
+              "exit_code": 0
+            }
+          ]
+        },
+        {
+          "authority": {
+            "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-callers.json",
+            "sha256": "fc9a591a07d8ee21121b9eedc66961b285b7f1a8416c873474f118624882a5c7"
+          },
+          "runs": [
+            {
+              "additional_historical_and_negative_cli_invocations": 3,
+              "checks": 19,
+              "command": "bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+              "evidence_class": "simulated",
+              "exit_code": 0,
+              "fresh_and_identical_retry_cli_invocations": 18,
+              "fresh_phase_commands": 9,
+              "log": {
+                "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-callers-suite.log",
+                "sha256": "302d1c00d74ffe86b35ff349f1c57680b7d295e631bb0dad5462af0f19985bb9"
+              },
+              "seconds": 44.493
+            },
+            {
+              "command": "git diff --check -- infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+              "exit_code": 0
+            },
+            {
+              "additional_historical_and_negative_cli_invocations": 3,
+              "checks": 19,
+              "command": "bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+              "evidence_class": "simulated",
+              "exit_code": 0,
+              "fresh_and_identical_retry_cli_invocations": 18,
+              "fresh_phase_commands": 9,
+              "log": {
+                "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-callers-final-suite.log",
+                "sha256": "399502ac4543f2df0d96d2f4fa49f162596659e66d9e773d4aae0ff6f032476a"
+              },
+              "scope": "Final route contract includes truthful writes-files effect for credential recovery after verifier durable continuation integration.",
+              "seconds": 43.029
+            }
+          ]
+        }
+      ],
+      "pre_repair_reproduction": [
+        {
+          "failure_reproduced": true,
+          "report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-before.json",
+          "result": "Two identical actual wrapper invocations returned uncertain with distinct operation IDs and performed two fake-provider run-task calls before repair.",
+          "run_task_calls": 2
+        }
+      ],
+      "status": "repaired-and-verified-local",
+      "title": "Verifier operation identity"
+    },
+    {
+      "authorities": [
+        {
+          "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap.json",
+          "sha256": "4080844d6f7cdc945c1fd07b767893392a1fc7d238a2e8c8d0aefb1bc5d92e49"
+        }
+      ],
+      "behavior": "The selected and current CloudFormation templates must canonically match the qualified source, and exact candidate/current parameter bindings must respect image-only update or restoration. Missing, malformed, duplicate-key or mismatched proposals block execution.",
+      "exact_files": {
+        "caller_files": [
+          "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/script.sh",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh",
+          "scripts/04.deploy/reconcile-platform-shell-staging/script.py"
+        ],
+        "contract_files": [
+          ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+        ],
+        "documentation_files": [
+          ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+          "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md"
+        ],
+        "implementation_files": [
+          "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+          "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+          "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py"
+        ],
+        "test_files": [
+          "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+          "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py"
+        ]
+      },
+      "finding": 2,
+      "negative_and_valid_results": "Exact pre-repair reproduction, commands, assertions, results and limitations are retained in the linked owner authorities.",
+      "observed_commands_and_results": [
+        {
+          "authority": {
+            "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap.json",
+            "sha256": "4080844d6f7cdc945c1fd07b767893392a1fc7d238a2e8c8d0aefb1bc5d92e49"
+          },
+          "runs": [
+            {
+              "actual_cli_scenarios": 54,
+              "command": "python3 -B scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+              "exit_code": 0,
+              "log": {
+                "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-final-suite.log",
+                "sha256": "3f918cc0ab3604ffe663f870622ca216807bb7c7ffd69ef42ba3a506a0d2d7c9"
+              },
+              "scope": "14 retained prerequisite/reconciliation cases;26 proposed-template/parameter negatives;6 current/source-binding negatives;8 matching update/restoration cases; separate intrinsic parser assertions.",
+              "seconds": 13.132,
+              "unittest_methods": 5
+            },
+            {
+              "command": "python3 -B scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+              "exit_code": 0,
+              "log": {
+                "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-shell-suite.log",
+                "sha256": "d0b5f41e9963cc2d4eddafcf7885d90308cdd24700f3b50139166547e5179b09"
+              },
+              "scope": "Existing shell behavior proof retained after parser extraction; parser unchanged by later bootstrap-only current-template refinement. Log is captured completion output.",
+              "seconds": 30.645,
+              "unittest_methods": 6
+            },
+            {
+              "command": "git diff --check -- scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py scripts/04.deploy/reconcile-platform-shell-staging/release_control.py scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+              "exit_code": 0
+            },
+            {
+              "artifact": {
+                "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-after-final.json",
+                "sha256": "c6a687a7225594dfab6ff004633139a76d27d813df4976202b7efa286027913e"
+              },
+              "command": "Actual existing DeploymentCli.command with the exact immutable before-repair proposal and parameters",
+              "execute_calls": 0,
+              "exit_code": 1,
+              "expected_code": "change-set-template-mismatch",
+              "fixture_cleanup": "confirmed-absent"
+            }
+          ]
+        }
+      ],
+      "pre_repair_reproduction": [
+        {
+          "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-before.json",
+          "sha256": "759c19d83f4f6bcc695448e5442cb4b3003a852e936f0bc66ce637272020298b"
+        }
+      ],
+      "status": "repaired-and-verified-local",
+      "title": "Bootstrap proposed configuration"
+    },
+    {
+      "authorities": [
+        {
+          "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-ci.json",
+          "sha256": "f6de65b20be101a000dc57149773037c91ee6b0b626a3c18cc36f9453858f8e0"
+        }
+      ],
+      "behavior": "Declared mutation effects override test names and fixture heuristics in supported shell/Python/JavaScript source forms. Literal package wrappers and npm aliases bind every consequential implementation. Unsupported relationships and inline provider piggybacking fail closed.",
+      "exact_files": {
+        "caller_files": [
+          ".github/workflows/delivery-coverage.yml",
+          "scripts/04.deploy/inventory-deploy-control/script.py",
+          "scripts/repo/check-selection/script.py"
+        ],
+        "contract_files": [
+          ".agentic/04.deploy/standards/declaration-coverage.md",
+          "scripts/04.deploy/inventory-deploy-control/README.md"
+        ],
+        "documentation_files": [],
+        "implementation_files": [
+          "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+        ],
+        "test_files": [
+          "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py"
+        ]
+      },
+      "finding": 3,
+      "negative_and_valid_results": "Exact pre-repair reproduction, commands, assertions, results and limitations are retained in the linked owner authorities.",
+      "observed_commands_and_results": [
+        {
+          "authority": {
+            "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-ci.json",
+            "sha256": "f6de65b20be101a000dc57149773037c91ee6b0b626a3c18cc36f9453858f8e0"
+          },
+          "runs": [
+            {
+              "command": "python3 scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+              "exit_code": 0,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-discovery-ci-22.log",
+              "log_sha256": "3019885a64fe9f48370458c481b05ccd94f86f40d1539d346217c6c0aa9664e3",
+              "proof_class": "actual CLI in disposable repository fixtures; no provider command executed",
+              "seconds": 19.033,
+              "tests": 22
+            },
+            {
+              "command": "python3 scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+              "exit_code": 0,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-discovery-ci-23.log",
+              "log_sha256": "eace16accb06bd35076d63769a4887307f5ca7ff08e5a0232e41d2804561573c",
+              "proof_class": "actual inventory and selector CLIs in disposable repositories, including supported JavaScript comment styles; no provider command executed",
+              "seconds": 21.669,
+              "tests": 23
+            }
+          ]
+        }
+      ],
+      "pre_repair_reproduction": [
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-trigger-reproduction.json"
+      ],
+      "status": "repaired-and-verified-local",
+      "title": "Consequential discovery and wrappers"
+    },
+    {
+      "authorities": [
+        {
+          "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-ci.json",
+          "sha256": "f6de65b20be101a000dc57149773037c91ee6b0b626a3c18cc36f9453858f8e0"
+        }
+      ],
+      "behavior": "The existing delivery workflow requires unrestricted pull requests. Unproven path, branch and activity filters are rejected; the current unrestricted workflow passes.",
+      "exact_files": {
+        "caller_files": [
+          ".github/workflows/delivery-coverage.yml",
+          "scripts/04.deploy/inventory-deploy-control/script.py",
+          "scripts/repo/check-selection/script.py"
+        ],
+        "contract_files": [
+          ".agentic/04.deploy/standards/declaration-coverage.md",
+          "scripts/04.deploy/inventory-deploy-control/README.md"
+        ],
+        "documentation_files": [],
+        "implementation_files": [
+          "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+        ],
+        "test_files": [
+          "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py"
+        ]
+      },
+      "finding": 4,
+      "negative_and_valid_results": "Exact pre-repair reproduction, commands, assertions, results and limitations are retained in the linked owner authorities.",
+      "observed_commands_and_results": [
+        {
+          "authority": {
+            "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-ci.json",
+            "sha256": "f6de65b20be101a000dc57149773037c91ee6b0b626a3c18cc36f9453858f8e0"
+          },
+          "runs": [
+            {
+              "command": "python3 scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+              "exit_code": 0,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-discovery-ci-22.log",
+              "log_sha256": "3019885a64fe9f48370458c481b05ccd94f86f40d1539d346217c6c0aa9664e3",
+              "proof_class": "actual CLI in disposable repository fixtures; no provider command executed",
+              "seconds": 19.033,
+              "tests": 22
+            },
+            {
+              "command": "python3 scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+              "exit_code": 0,
+              "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-discovery-ci-23.log",
+              "log_sha256": "eace16accb06bd35076d63769a4887307f5ca7ff08e5a0232e41d2804561573c",
+              "proof_class": "actual inventory and selector CLIs in disposable repositories, including supported JavaScript comment styles; no provider command executed",
+              "seconds": 21.669,
+              "tests": 23
+            }
+          ]
+        }
+      ],
+      "pre_repair_reproduction": [
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-discovery-trigger-reproduction.json"
+      ],
+      "status": "repaired-and-verified-local",
+      "title": "Delivery CI triggers"
+    }
+  ],
+  "early_block_evidence": {
+    "inventory": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-preflight-effects-mismatch.json",
+      "sha256": "ede041d7e39c734032ceb8fc053fc2cd4fa721d0bb07952ff94ef021bff7e723"
+    },
+    "rag_prebuild_log": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-rag-image-qualification-build.log",
+      "sha256": "47252c65b05ca3ac83a702e2f2bde2ac42d09a3d2021b44f920bca82b93b0db3"
+    },
+    "resolution": "One caller effects declaration was aligned with its existing controller; the final route suite, governance and inventory pass. The failed attempt never started Docker or selected tests."
+  },
+  "generated_at": "2026-10-26T13:24:41.062170+00:00",
+  "goal_complete": true,
+  "governance": {
+    "passed": 7,
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-governance.json",
+    "sha256": "b5fa190b132216a42d16ad0c046804eb2aa3a7edb74a2252c18bf6bcb42a2fde",
+    "source_drift": [],
+    "total": 7
+  },
+  "historical_completion": [
+    {
+      "original": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/README.md",
+      "retained": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/README.md",
+      "sha256": "015946ee7391bc70584985bf89b135d579d39dfa074e4496e025211bfe7708ac"
+    },
+    {
+      "original": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/DELIVERY-REPORT.md",
+      "retained": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/DELIVERY-REPORT.md",
+      "sha256": "77b5280b27ee524b0d4f827a4aa3a4dfdcd385c4fe49b883c378247517542bae"
+    },
+    {
+      "original": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-verification.json",
+      "retained": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-verification.json",
+      "sha256": "e8fac668f4974ce56bdaa34908ab60682000caeb2fb31a5d531f488bbeb29172"
+    },
+    {
+      "original": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+      "retained": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-inventory.json",
+      "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+    },
+    {
+      "original": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.md",
+      "retained": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-inventory.md",
+      "sha256": "8c7cd09c6e6a5fa60f2d7baaa19d6d09398a893a2029e97887fce3837f4c959c"
+    },
+    {
+      "original": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/independent-review.json",
+      "retained": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/independent-review.json",
+      "sha256": "e529ec6fc027d166cdb56b3e5d3a2bae1aca394544845790d0b993f3bf2884c5"
+    }
+  ],
+  "historical_linked_evidence": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/retained-link-manifest.json",
+    "sha256": "90560573bbe38d6dc6c21ce4fcea23b98bcc12f1f96ca20c86d2b05a000b17b8"
+  },
+  "independent_review": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-independent-review.json",
+    "sha256": "f36b11402ea30c0bbbf7feba5fa682f04f772b755b6fb9b9087011d5df32c923"
+  },
+  "integration_handoff": {
+    "human": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/integration-handoff.md",
+      "sha256": "27b9d9cdb5ec2694def54c1eff78760f9be416ab7c6022d329168577504951b8"
+    },
+    "machine": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/integration-handoff.json",
+      "sha256": "2bf0e34ff81e0065717de06696ddb13b5327e4f7761c14e94df0ffddf0fbb9a5"
+    }
+  },
+  "inventory": {
+    "human_view": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.md",
+      "sha256": "f4be31d59f0d4d78f531555be36bfa043ab2e8a52846c7990fa3620366bb64d6"
+    },
+    "input_count": 1656,
+    "input_digest": "8b79625e7dc8b4538c4c6891a45badbaa330756d2c25b8b72cc1e82de0146968",
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+    "sha256": "18f8f2dc39f7cb8d7685b30ea41c983b929808b69d0e36a66babbd0c3a4bfb02",
+    "summary": {
+      "classifications": {
+        "retired": 4,
+        "supported": 416
+      },
+      "entrypoints": 420,
+      "gaps": 0,
+      "kinds": {
+        "ci-workflow": 9,
+        "command": 184,
+        "image-definition": 5,
+        "package-command": 77,
+        "provider-binding": 2,
+        "provider-template": 27,
+        "regression-command": 87,
+        "runnable-program": 20,
+        "scope": 6,
+        "target": 3
+      },
+      "routes": 6
+    }
+  },
+  "package_proof": {
+    "image_id": "sha256:73dcbf5c2ec49b106d0746cded20cec4badb6b42ad6a32d81337c3e0bbf63ac2",
+    "local_rag_http": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-rag-http.json",
+      "sha256": "4e41d33b5644a3749b3cabec14e8efc1e856bbf4f0cc1129fde0641cab0be09a"
+    },
+    "refreshed_rag": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-rag-image-qualification-73dcbf5c2ec4.json",
+      "sha256": "1c6341163c8a50b87e39d24b22f5257bc463d4e717c5436282945e00dc0ed6db"
+    },
+    "unchanged_qualified_images": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-package-reuse.json",
+      "sha256": "eccc0674920f8c312e92fd31e452347d274ccb4f0ae9d94e73861a6bd52bfd56"
+    }
+  },
+  "remaining_limits": [
+    "Actual local CLI and image proof only. Provider responses are disposable fixtures, not live AWS verification; remote CI, cloud mutation, live secrets, publication and deployment were not performed.",
+    "Verifier submission guarantees require retaining this worktree private metadata. Missing or corrupted retained records and unobservable provider outcomes block replay; complete erasure of all local history or a different worktree is outside the local owner guarantee.",
+    "Only unrestricted pull-request trigger coverage and documented literal wrapper forms are supported. Other relationships/restrictions fail explicitly rather than being guessed.",
+    "Four unchanged images reuse historical behavior evidence after current image/input/configuration identity revalidation. The RAG image has fresh behavior proof because its actual COPY inputs changed.",
+    "Prior unrelated baseline limits remain: five current-source review gaps, one unchanged rulebook-reference warning, incompatible historical rollback proof and unavailable historical terminal receipts. They are not represented as passing.",
+    "Other active worktrees have overlapping changes. The handoff records exact snapshots and post-integration checks; no merging, conflict resolution across worktrees, commit or push was performed."
+  ],
+  "schema": "delivery-chain/corrective-verification/v1",
+  "scope": "Focused four-finding corrective goal; not a new repository-wide audit.",
+  "selected_verification": {
+    "counts": {
+      "deferred": 20,
+      "passed": 43
+    },
+    "deferred_checks": [
+      {
+        "check_id": "bootstrap-container",
+        "stage": "package"
+      },
+      {
+        "check_id": "persistence-container",
+        "stage": "package"
+      },
+      {
+        "check_id": "rag-local-image",
+        "stage": "package"
+      },
+      {
+        "check_id": "rag-local-query-regression",
+        "stage": "package"
+      },
+      {
+        "check_id": "rag-local-service-regression",
+        "stage": "package"
+      },
+      {
+        "check_id": "shell-image-smoke",
+        "stage": "package"
+      },
+      {
+        "check_id": "bootstrap-target-alignment",
+        "stage": "deploy"
+      },
+      {
+        "check_id": "persistence-target-alignment",
+        "stage": "deploy"
+      },
+      {
+        "check_id": "shell-runtime-alignment",
+        "stage": "deploy"
+      },
+      {
+        "check_id": "bootstrap-acceptance",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "persistence-acceptance",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-deployment-reconciliation",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-ingress-smoke",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-metric-coverage",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-negative-authz-smoke",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-persistence-delivery-proof",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-persistence-smoke",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-postgresql-relational-smoke",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-rate-limit-smoke",
+        "stage": "acceptance"
+      },
+      {
+        "check_id": "shell-worker-smoke",
+        "stage": "acceptance"
+      }
+    ],
+    "findings": [],
+    "invocation": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-selected-invocation.json",
+      "sha256": "5730a4749f517df38272ba23c47758d1542112bc19dea0efc656a734c1b5002c"
+    },
+    "local_evidence_sources": {
+      "local-runner": 1,
+      "trusted-worktree-cache": 42
+    },
+    "note": "Deferred stage checks are not passes. Relevant local package evidence is separate; live-stage execution is outside the authorized boundary.",
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-selected-execution.json",
+    "sha256": "242fc8bdf99f2edbafe629c2db40c18d9c580c9e82024d1d3273c1d1a1da879c",
+    "stage_counts": {
+      "acceptance": 11,
+      "deploy": 3,
+      "local": 43,
+      "package": 6
+    }
+  },
+  "selective_invalidation": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-invalidation.json",
+    "sha256": "a4e476eeb98d0c3382eac2ac5fb5a0de80afd6cf244ffead25131043d23bd68e"
+  },
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "source_state": "working-tree",
+  "status": "complete-local-corrections-not-adopted-on-main",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476"
+}

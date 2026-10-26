@@ -1,0 +1,90 @@
+{
+  "counts": {
+    "curated_sources": 5,
+    "files": 7,
+    "generated_sources": 2,
+    "sources": 7,
+    "terms": 3135
+  },
+  "errors": [],
+  "ok": true,
+  "root": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476",
+  "schema": "rag-rulebook/recognition-source/v1",
+  "sources": [
+    {
+      "generation_mode": "curated",
+      "path": ".agentic/02.rag-rulebook/recognition-sources/curated/actions.yml",
+      "source_id": "recognition.curated.actions",
+      "source_kinds": [
+        "action-verb"
+      ],
+      "terms": 9
+    },
+    {
+      "generation_mode": "curated",
+      "path": ".agentic/02.rag-rulebook/recognition-sources/curated/aliases.yml",
+      "source_id": "recognition.curated.aliases",
+      "source_kinds": [
+        "alias",
+        "layer-name"
+      ],
+      "terms": 2
+    },
+    {
+      "generation_mode": "curated",
+      "path": ".agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml",
+      "source_id": "recognition.curated.intent-forms",
+      "source_kinds": [
+        "intent-form"
+      ],
+      "terms": 8
+    },
+    {
+      "generation_mode": "curated",
+      "path": ".agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml",
+      "source_id": "recognition.curated.question-categories",
+      "source_kinds": [
+        "question-category",
+        "domain-noun"
+      ],
+      "terms": 133
+    },
+    {
+      "generation_mode": "curated",
+      "path": ".agentic/02.rag-rulebook/recognition-sources/curated/risks.yml",
+      "source_id": "recognition.curated.risks",
+      "source_kinds": [
+        "risk-word",
+        "stop-condition",
+        "check-name"
+      ],
+      "terms": 10
+    },
+    {
+      "generation_mode": "generated",
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+      "source_id": "recognition.generated.artifacts",
+      "source_kinds": [
+        "artifact-id",
+        "file-path",
+        "schema-name",
+        "rule-id",
+        "rule-pack-id"
+      ],
+      "terms": 2830
+    },
+    {
+      "generation_mode": "generated",
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/routing.yml",
+      "source_id": "recognition.generated.routing",
+      "source_kinds": [
+        "corpus-id",
+        "layer-name",
+        "mode-name",
+        "workflow-name"
+      ],
+      "terms": 143
+    }
+  ],
+  "warnings": []
+}

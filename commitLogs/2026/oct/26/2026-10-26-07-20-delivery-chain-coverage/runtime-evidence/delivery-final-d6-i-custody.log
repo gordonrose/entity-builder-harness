@@ -1,0 +1,26 @@
+Package-custody receipt tests passed.
+test_common_capture_requires_real_outcomes_and_immutable_valid_schema (__main__.QualificationTests.test_common_capture_requires_real_outcomes_and_immutable_valid_schema) ... ok
+test_configuration_projection_reuses_permissions_and_invalidates_runtime_cli (__main__.QualificationTests.test_configuration_projection_reuses_permissions_and_invalidates_runtime_cli) ... ok
+test_exact_artifact_config_reuse_and_invalidation_cli (__main__.QualificationTests.test_exact_artifact_config_reuse_and_invalidation_cli) ... ok
+test_missing_engine_is_unavailable_not_passed_cli (__main__.QualificationTests.test_missing_engine_is_unavailable_not_passed_cli) ... ok
+test_publication_guards_reject_control_and_identity_substitution (__main__.QualificationTests.test_publication_guards_reject_control_and_identity_substitution) ... ok
+test_shell_actual_qualification_resume_and_failure_boundary (__main__.QualificationTests.test_shell_actual_qualification_resume_and_failure_boundary) ... ok
+test_shell_workflow_and_durable_custody_cli (__main__.QualificationTests.test_shell_workflow_and_durable_custody_cli) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 56.969s
+
+OK
+test_actual_cleanup_cli (__main__.CleanupTests.test_actual_cleanup_cli) ... ok
+test_qualifier_cleanup_preserves_original_failure (__main__.CleanupTests.test_qualifier_cleanup_preserves_original_failure) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 5.103s
+
+OK
+test_actual_provider_cli (__main__.EcrScanTests.test_actual_provider_cli) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.362s
+
+OK

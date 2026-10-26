@@ -1,0 +1,53 @@
+{
+  "schema": "deploy/local-image-verification-report/v1",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "checks": [
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "--tag",
+        "kanbien-core-server:delivery-chain-20261026",
+        "--port",
+        "39460"
+      ],
+      "exit_code": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/delivery-core-image-final.log",
+      "log_sha256": "8cdfcfbf2bb8e666d3357955ee6dd773d8a1ee82633f9dd9d500de72b3f1370c",
+      "image_id": "sha256:18a08ca7a0a168d8146c37393c26d11a0f3ed4376cacc703746a869fbe1326ae",
+      "input_sha256": {
+        "infra/04.deploy/03.product/image/core-server/Dockerfile": "f764797f1a3f7a70e3904f5371bc9f2a7716c9bac0daf453840a488d348e2820",
+        "infra/04.deploy/03.product/image/core-server/Dockerfile.dockerignore": "05735c01532081f025050b0bc86b7a761cde6c3ab5335cd13f89e0865a675922",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh": "bd298a52a4798b2f42765fd92cc39597af681c876a05d1572c37eeb2bec81ea0",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh": "5d37d548ff1b2cb7177160a6d866fdae898960a4782221c659bb500a7821f937"
+      },
+      "evidence_class": "local-finished-image",
+      "provider_operations": false
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+        "--image",
+        "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+        "--port",
+        "39461"
+      ],
+      "exit_code": 0,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/delivery-shell-image-refreshed-final.log",
+      "log_sha256": "86e35d740f769cb239e32b5e370c242680680fa58887551aacfeb9ec5970c1b7",
+      "image_id": "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+      "input_sha256": {
+        "infra/04.deploy/03.product/image/Dockerfile": "1ffcf9c9abf6e895942275352513ff5223608326748a812a166ca7aff75bb47c",
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh": "a6f9886c9d5454b50897cc7db42aefdbe9e75cdf9a658ac3a22b70e630d8088a",
+        "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py": "7f9caac7a87bbdad98d38e7aac1326b4a8eb23f9130402ef1c11e286ee3a23d8"
+      },
+      "evidence_class": "local-finished-image",
+      "provider_operations": false
+    }
+  ],
+  "limits": [
+    "Local Docker behaviour and observed disposable cleanup only; not publication or live provider proof.",
+    "Core image rebuilt; existing immutable shell image was requalified after smoke skip-status semantics changed."
+  ]
+}

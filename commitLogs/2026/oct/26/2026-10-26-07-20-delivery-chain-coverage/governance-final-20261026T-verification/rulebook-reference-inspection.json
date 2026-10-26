@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "bash",
+    "scripts/02.rag-rulebook/generate-rulebook-index/script.sh"
+  ],
+  "exit_code": 0,
+  "seconds": 6.337,
+  "index_id": "index.rulebook.3db60130493a.1e31aac414bc",
+  "unresolved_references": [
+    {
+      "owner_ref": "artifact.concern.mcp.server.deployment.architecture",
+      "ref": ".agentic/shared/workflows/deployment-process.md",
+      "ref_type": "related-ruleset",
+      "severity": "warning",
+      "suggested_resolution": "Resolve or update path: .agentic/shared/workflows/deployment-process.md"
+    }
+  ],
+  "diagnostics": {
+    "counts": {
+      "artifacts": 856,
+      "chunk_candidates": 3695,
+      "corpus_packages": 10,
+      "graph_edges": 6001,
+      "rule_packs": 4,
+      "rules": 237,
+      "unresolved_references": 1
+    },
+    "errors": [],
+    "ok": true,
+    "warnings": []
+  }
+}

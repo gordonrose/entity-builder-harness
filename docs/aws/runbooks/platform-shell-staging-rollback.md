@@ -2,9 +2,9 @@
 schema: agentic-artifact/v3
 id: aws.runbooks.platform-shell-staging-rollback
 version: 1
-status: draft
+status: active
 created_on: "2026-07-13"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: infra.operations
 disciplines:
@@ -22,138 +22,104 @@ used_by:
 -->
 # Platform Shell Staging Rollback
 
-## Scope
+The supported service-change boundary is
+`scripts/04.deploy/reconcile-platform-shell-staging/script.sh`. The guarded
+`service-update` and `service-rollback` modes replace the former raw ECS
+`update-service` instructions. The GitHub publication workflow remains an image
+publisher; it does not deploy the service. Mutation still requires the current
+explicit approval governed by `.agentic/aws/workflows/execute-approved-aws-change.md`.
 
-This runbook covers rollback for the Kanbien staging product platform shell on
-ECS Fargate.
+Before a rollback, retain the current and selected historical manifests, the
+published `platform-shell-package-custody-<run-id>` artifact, and the generic
+accepted-release evidence root. Each manifest names repository-relative
+`acceptance.evidence_root`, `acceptance.package_custody_receipt` and
+`acceptance.current_observation` paths. The source commit, publication workflow,
+run and image digest must agree with the captured custody receipt.
 
-Target profile:
-`infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml`
-
-Readiness manifest:
-`infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml`
-
-This runbook does not approve AWS mutation by itself. Run mutating commands only
-through `.agentic/aws/workflows/execute-approved-aws-change.md` after explicit
-approval in the current chat.
-
-## Rollback Policy
-
-Primary rollback target: previous known-good ECS task definition revision.
-
-Fallback rollback target: previous known-good platform-shell image digest,
-registered into a new ECS task definition revision if the prior task definition
-cannot be reused.
-
-Rollback authority: Gordon Rose, with LLM-assisted command planning.
-
-## Before First Deploy
-
-There is no previous platform shell ECS task definition until the first
-successful deployment exists. Before first deploy, record:
-
-- current ECS service name, if created
-- current ECS task definition ARN, if created
-- current platform-shell image digest
-- target group ARN
-- ALB health-check path
-- post-deploy smoke result
-
-If the first deploy fails before a known-good revision exists, disable or remove
-the platform shell ALB host rule instead of rolling back to an unknown target.
-
-## Rollback Steps
-
-1. Confirm the AWS target.
-
-   - profile: `kanbien-dev` or the selected GitHub OIDC deploy role
-   - region: `eu-west-1`
-   - cluster: `kanbien-staging`
-   - service: `kanbien-staging-platform-shell`
-
-2. Inspect current service state.
+1. Inspect the accepted current reference and the selected retained release.
+   Refresh the current service observation through the existing owner:
 
    ```bash
-   aws ecs describe-services \
-     --profile kanbien-dev \
-     --region eu-west-1 \
-     --cluster kanbien-staging \
-     --services kanbien-staging-platform-shell
+   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+     --mode runtime-alignment --deployment-manifest <current-manifest> --json
    ```
 
-3. Select the previous known-good task definition ARN from deployment evidence.
+   This proves current provider configuration, permissions, runtime health and
+   image identity, captures immutable receipts and emits a verified candidate.
+   It does not promote a release. An unchanged current accepted release can
+   consume the fresh observation without rewriting its historical proof.
 
-   Use the latest recorded previous task definition in the deploy evidence. If
-   that value is missing, stop and use the fallback image-digest path.
-
-4. Update the ECS service to the previous task definition.
+2. Produce an additive rollback compatibility decision for the retained image:
 
    ```bash
-   aws ecs update-service \
-     --profile kanbien-dev \
-     --region eu-west-1 \
-     --cluster kanbien-staging \
-     --service kanbien-staging-platform-shell \
-     --task-definition <previous-task-definition-arn> \
-     --force-new-deployment
+   bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
+     --manifest <retained-manifest> \
+     --record-rollback-compatibility <retained-release-id> --json
    ```
 
-5. Wait for service stability.
+   Reuse succeeds only when the retained runtime/package receipts match the
+   current configuration and permission source inputs exactly. A changed
+   boundary requires separate governed qualification; it cannot be approved by
+   editing an old receipt. The compatibility command does not advance current
+   acceptance. First creation has no retained rollback target and cannot use
+   this rollback path.
+
+3. Review an image-only Service-stack change set with the compatible retained
+   immutable image, preserving every other parameter and resource boundary.
+   After explicit approval, execute through the guarded owner:
 
    ```bash
-   aws ecs wait services-stable \
-     --profile kanbien-dev \
-     --region eu-west-1 \
-     --cluster kanbien-staging \
-     --services kanbien-staging-platform-shell
+   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+     --mode service-rollback \
+     --deployment-manifest <retained-manifest> \
+     --current-deployment-manifest <current-manifest> \
+     --service-change-set <reviewed-change-set-id> \
+     --expected-predecessor <current-release-id> \
+     --rollback-compatibility-id <compatibility-id> \
+     --realization-facts <fresh-normalized-facts> \
+     --realization-change-summary <reviewed-change-summary> --json
    ```
 
-6. Verify ALB target health and application smoke proof.
+   The command enforces package custody, accepted current state, fresh provider
+   alignment, exact reviewed change-set scope and rollback compatibility before
+   execution. Unsupported configuration, security or routing changes block.
+   For an approved fresh candidate, use `--mode service-update` with its
+   manifest and current predecessor; first creation uses predecessor `none`.
+
+4. If the submission response is interrupted or uncertain, inspect the same
+   change set before any retry:
 
    ```bash
-   aws elbv2 describe-target-health \
-     --profile kanbien-dev \
-     --region eu-west-1 \
-     --target-group-arn <platform-shell-target-group-arn>
+   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+     --mode service-operation-status --deployment-manifest <retained-manifest> \
+     --service-change-set <reviewed-change-set-id> --json
    ```
 
-   Then verify:
+   This mode only reads provider status. Pending, failed, absent and uncertain
+   results are not successful deployment proof and do not authorize replay.
 
-   - `https://staging.platform.kanbien.com/livez`
-   - unauthenticated protected route returns `401`
-   - authenticated caller without `smoke:read` returns `403`
-   - authenticated caller with `smoke:read` succeeds
+5. After provider completion, collect the selected release's actual current
+   runtime observation, then promote the emitted candidate using the generic
+   compare-and-swap boundary:
 
-7. Record rollback evidence.
+   ```bash
+   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+     --mode runtime-alignment --deployment-manifest <retained-manifest> --json
+   bash scripts/04.deploy/lifecycle/60-run/release-succession/script.sh \
+     --operation promote --evidence-root <evidence-root> \
+     --candidate-record <emitted-candidate-path> \
+     --expected-predecessor <current-release-id> --json
+   bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
+     --manifest <retained-manifest> --json
+   ```
 
-   Update the readiness or deployment evidence with:
+   Promotion retains every predecessor and receipt. If interrupted after the
+   archive write, retry the same candidate and expected predecessor; the
+   generic owner resumes without overwriting history. Scope activation does
+   not replace this release transition.
 
-   - rollback start and end time
-   - previous task definition ARN
-   - restored task definition ARN
-   - image digest restored
-   - ECS service stability result
-   - ALB target health result
-   - smoke proof
-   - operator/approver
-
-## Fallback Image Digest Path
-
-Use this only when the previous task definition cannot be reused but a previous
-known-good image digest exists.
-
-1. Register a new task definition revision using the previous image digest and
-   the last known-good task settings.
-2. Update the ECS service to that new task definition revision.
-3. Run the same stability, target-health, smoke, and evidence steps.
-
-## Failed Rollback
-
-If rollback cannot restore health:
-
-1. Stop public exposure by removing or disabling the platform shell ALB host
-   rule for `staging.platform.kanbien.com`.
-2. Keep the existing Kanbien staging ALB and unrelated services untouched.
-3. Record failed rollback evidence and the disablement action.
-4. Do not attempt another mutating change until a new approved AWS change plan
-   exists.
+If rollback fails, retain the safe command result and the original failure.
+Use read-only operation status and the existing diagnostic owner to establish
+what occurred. A different image, changed security boundary or public-exposure
+change requires its own reviewed change plan; do not bypass this route with a
+raw service update or amend accepted evidence to describe an unproved outcome.
