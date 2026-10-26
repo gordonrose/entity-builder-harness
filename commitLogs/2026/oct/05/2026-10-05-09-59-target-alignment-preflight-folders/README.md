@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T00:33:06Z
-latest_commit_sha: 5a962e64858476e87fb793f7c2b55233c584d0ca
-chat_duration: 1784017s (20:15:33:37)
+latest_commit_at_utc: 2026-10-26T01:05:07Z
+latest_commit_sha: 408d7734
+chat_duration: 1785938s (20:16:05:38)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3645,6 +3645,17 @@ Summary: The failed restored copy has been deleted and its temporary inline IAM 
 
 Durable evidence: Current task evidence is in AWS ECS/RDS and durable accepted proof receipts remain under the core-server-persistence target release-evidence directory.
 
+
+### 2026-10-26T01:05:07Z - Commit recorded
+
+Commit: `408d7734`
+
+Message: fix(deploy): classify isolated restore transport boundary
+
+Summary: Adds a credential-free bounded TCP preflight to the isolated restoration verifier, distinguishes a closed transport boundary from an opaque post-transport PostgreSQL/TLS handshake, accepts only those closed result codes in the governed restore controller, and proves the classification plus transport fixture locally.
+
+ADR impact: No ADR: this is an implementation refinement within the existing isolated-restore diagnostic and recovery decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4656,6 +4667,13 @@ Durable evidence: Current task evidence is in AWS ECS/RDS and durable accepted p
   Summary: Added integrity-checked retained package receipts and a closed restore-verifier-only proof applicability route; acceptance keeps current-state checks and isolated restore fresh.
   ADR impact: No ADR required: this is a bounded correction to the existing release-evidence architecture.
 
+
+- Commit: `408d7734`
+  Time UTC: 2026-10-26T01:05:07Z
+  Message: fix(deploy): classify isolated restore transport boundary
+  Summary: Adds a credential-free bounded TCP preflight to the isolated restoration verifier, distinguishes a closed transport boundary from an opaque post-transport PostgreSQL/TLS handshake, accepts only those closed result codes in the governed restore controller, and proves the classification plus transport fixture locally.
+  ADR impact: No ADR: this is an implementation refinement within the existing isolated-restore diagnostic and recovery decision.
+
 ## Main Refresh Conflicts
 
 
@@ -4679,9 +4697,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T00:33:06Z
-Latest commit SHA: 5a962e64858476e87fb793f7c2b55233c584d0ca
-Chat duration: 1784017s (20:15:33:37)
+Latest commit at UTC: 2026-10-26T01:05:07Z
+Latest commit SHA: 408d7734
+Chat duration: 1785938s (20:16:05:38)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
