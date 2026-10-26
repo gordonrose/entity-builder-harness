@@ -189,7 +189,12 @@ module.db = lambda _m, _identifier: ({"DBInstanceStatus": "creating"}, "ok")
 output = io.StringIO()
 with contextlib.redirect_stdout(output):
     assert module.verify(object(), "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2", True) == 1
+module.db = lambda _m, _identifier: ({"DBInstanceStatus": "configuring-log-exports"}, "ok")
+log_export_output = io.StringIO()
+with contextlib.redirect_stdout(log_export_output):
+    assert module.verify(object(), "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2", True) == 1
 module.source, module.controls, module.db = original_source, original_controls, original_db
 assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restore-still-provisioning"}]
+assert json.loads(log_export_output.getvalue())["findings"] == [{"code": "persistence-restore-still-provisioning"}]
 print("isolated persistence restore verifier task-definition checks passed")
 PY

@@ -204,7 +204,7 @@ def restore(m,sid,rid,observe_only=False,record_proof_path=None):
   return emit("pending" if ok else "uncertain","persistence-restore-submitted-awaiting-provider-observation" if ok else c,facts=facts)
  bound=existing_restore_binding(value,rid,tags)
  if bound!="ok":return emit("uncertain" if bound.endswith("unproven") else "blocked",bound,facts=facts)
- if value.get("DBInstanceStatus") in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring"}:return emit("pending","persistence-restore-still-provisioning",facts=facts)
+ if value.get("DBInstanceStatus") in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring","configuring-log-exports"}:return emit("pending","persistence-restore-still-provisioning",facts=facts)
  if value.get("DBInstanceStatus") in {"failed","incompatible-restore","inaccessible-encryption-credentials","storage-full"}:return emit("failed","persistence-restore-provider-failed",facts=facts)
  if value.get("DBInstanceStatus")!="available":return emit("uncertain","persistence-restore-provider-status-unknown",facts=facts)
  return emit("restored","persistence-restored-database-ready",facts=facts) if correct(value,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]) else emit("blocked","persistence-restored-database-posture-invalid")
@@ -303,7 +303,7 @@ def verify(m,sid,rid,observe_only=False):
  # is an in-flight governed operation, not a malformed restored target. Do
  # not turn a normal provider lifecycle state into a false hard failure.
  status=restored.get("DBInstanceStatus")
- if status in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring"}:return emit("pending","persistence-restore-still-provisioning",facts={"snapshot":sid,"restored_database":rid})
+ if status in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring","configuring-log-exports"}:return emit("pending","persistence-restore-still-provisioning",facts={"snapshot":sid,"restored_database":rid})
  if status in {"failed","incompatible-restore","inaccessible-encryption-credentials","storage-full"}:return emit("failed","persistence-restore-provider-failed",facts={"snapshot":sid,"restored_database":rid})
  if status!="available":return emit("uncertain","persistence-restore-provider-status-unknown",facts={"snapshot":sid,"restored_database":rid})
  if not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked","persistence-restored-database-posture-invalid")
