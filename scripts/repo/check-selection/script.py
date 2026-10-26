@@ -29,6 +29,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
+import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.dont_write_bytecode = True
@@ -57,8 +58,13 @@ def git(root: Path, *args: str) -> str:
 
 
 def metadata(path: Path) -> dict[str, Any]:
+    # Artifact headers are required to be leading and deliberately small.
+    # Selection needs their dependency declarations, not multi-megabyte
+    # historical bodies.  Keep the read bounded so retained evidence and long
+    # teaching material cannot turn a changed-file plan into an I/O sweep.
     try:
-        value = parse_header_text(path.read_text(encoding='utf-8'))
+        with path.open(encoding='utf-8') as source:
+            value = parse_header_text(source.read(64 * 1024))
         result = value.get('agentic-artifact', value.get('agentic-script', {}))
         return result if isinstance(result, dict) else {}
     except (OSError, UnicodeError, HeaderError):
@@ -76,7 +82,13 @@ def dormant_roots(root: Path, catalog: dict[str, Any]) -> tuple[list[str], list[
 
 def consumer_graph(root: Path, paths: list[str], dormant: list[str] | tuple[str, ...] = (), *, include_metadata: bool = True) -> dict[str, set[str]]:
     graph: dict[str, set[str]] = {}
-    headers = {path: metadata(root / path) for path in paths if coverage.within(root, path) is not None and path.endswith(('.md', '.yml', '.yaml', '.py', '.sh', '.ts', '.mjs'))} if include_metadata else {}
+    headers = {
+        path: metadata(root / path)
+        for path in paths
+        if coverage.within(root, path) is not None
+        and not below(path, 'commitLogs')
+        and path.endswith(('.md', '.yml', '.yaml', '.py', '.sh', '.ts', '.mjs'))
+    } if include_metadata else {}
     identities = {meta.get('id'): path for path, meta in headers.items() if isinstance(meta.get('id'), str)}
     for path, meta in headers.items():
         for consumer in meta.get('used_by', []) if isinstance(meta.get('used_by'), list) else []:
@@ -200,6 +212,27 @@ def fingerprint(root: Path, refs: set[str], *, exclude: set[str] | frozenset[str
     return digest.hexdigest()
 
 
+def changed_catalog_checks(root: Path, catalog_ref: str, current: dict[str, Any]) -> set[str]:
+    """Return only check identities whose executable contract changed.
+
+    A catalog is shared selection authority.  A change to one bound check must
+    reselect its consumers, but it must not turn every unrelated legacy
+    declaration into a prerequisite for a focused change.
+    """
+    try:
+        prior = yaml.safe_load(git(root, 'show', 'HEAD:' + catalog_ref))
+    except (subprocess.SubprocessError, yaml.YAMLError):
+        return set()
+    before = prior.get('checks', {}) if isinstance(prior, dict) else {}
+    after = current.get('checks', {}) if isinstance(current, dict) else {}
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        return set()
+    return {
+        identity for identity in set(before) | set(after)
+        if json.dumps(before.get(identity), sort_keys=True) != json.dumps(after.get(identity), sort_keys=True)
+    }
+
+
 def plan(args: argparse.Namespace) -> dict[str, Any]:
     started = time.monotonic()
     root = args.root.resolve()
@@ -224,6 +257,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     changed = sorted(set(args.paths or []))
     if args.staged: changed = sorted(set(git(root, 'diff', '--cached', '--name-only', '--no-renames', '-z').split('\0')) - {''})
     if any(not coverage.safe_path(path) for path in changed): findings.append({'code': 'changed-path-invalid'})
+    catalog_check_changes = changed_catalog_checks(root, catalog_ref, catalog) if catalog_ref in changed else set()
     paths = repository_paths(root)
     dormant, dormant_findings = dormant_roots(root, catalog)
     findings += dormant_findings
@@ -251,8 +285,18 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     assert inventory_spec and inventory_spec.loader
     inventory = importlib.util.module_from_spec(inventory_spec)
     inventory_spec.loader.exec_module(inventory)
-    delivery = inventory.report(root, source_revision=git(root, 'rev-parse', 'HEAD').strip())
-    findings.extend(item for item in delivery['findings'] if item not in findings)
+    delivery = inventory.report(root, source_revision=git(root, 'rev-parse', 'HEAD').strip(), routes_only=True)
+    # Delivery inventory is repository-wide source coverage.  Its independent
+    # CI route owns unrelated legacy gaps; a focused change plan must not
+    # report another target's pre-existing gap as though the selected change
+    # caused it.  Attach only findings whose declared subject overlaps the
+    # requested input.  `--all` deliberately retains the full census verdict.
+    def delivery_finding_is_relevant(item: dict[str, Any]) -> bool:
+        subject = item.get('path')
+        if not isinstance(subject, str) or not coverage.safe_path(subject):
+            return args.all
+        return args.all or any(below(path, subject) or below(subject, path) for path in changed)
+    findings.extend(item for item in delivery['findings'] if delivery_finding_is_relevant(item) and item not in findings)
     # The earlier target-profile declarations remain supported. Discover them
     # from the physical census and select their catalogued proofs through the
     # same runner/cache; they do not require a second registry or special CI.
@@ -284,7 +328,6 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         item['catalog_input'] = item.get('catalog_input', False) or catalog_argument or any(below(catalog_ref, ref) for ref in explicit)
     impacted: list[dict[str, Any]] = []
     covered: set[str] = set()
-    catalog_changed = any(below(path, 'scripts/repo/check-selection') for path in changed)
     revision = git(root, 'rev-parse', 'HEAD').strip()
     for scope in scopes:
         contract = scope['contract']
@@ -292,7 +335,8 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         dormant_owner = next((owner for owner in dormant if below(contract_ref, owner)), None)
         if dormant_owner and not args.all and not any(below(path, owner) for path in changed for owner in dormant):
             continue
-        report = coverage.inspect(contract, root, catalog)
+        # Route parsers are qualified by selected target/declaration gates.
+        report = coverage.inspect(contract, root, catalog, probe_commands=False)
         refs = set(report['references']) | set(report['inputs'])
         refs.add(scope['index'].relative_to(root).as_posix())
         # A checker implementation change impacts every scope that requires it.
@@ -309,7 +353,8 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             configs = runtime.get('config_inputs', []) if isinstance(runtime, dict) else []
             if isinstance(configs, list): check_inputs.update(value for value in configs if isinstance(value, str))
         triggers = refs | proof_dirs | check_inputs
-        if not (args.all or catalog_changed or any(below(path, ref) or below(ref, path) for path in consumers for ref in triggers)): continue
+        check_contract_changed = bool(set(report['required_checks']) & catalog_check_changes)
+        if not (args.all or check_contract_changed or any(below(path, ref) or below(ref, path) for path in consumers for ref in triggers)): continue
         for path in changed:
             if any(below(path, ref) or below(ref, path) for ref in triggers) or downstream([path]) & consumers & refs: covered.add(path)
         impacted.append(report)

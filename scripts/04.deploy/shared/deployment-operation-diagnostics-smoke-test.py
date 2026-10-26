@@ -58,8 +58,11 @@ def fails(report):
         return
     raise AssertionError("unsafe or malformed report passed validation")
 
-
 diagnostics.validate(valid())
+diagnostics.validate(valid(collection={"status": "collected", "observation": "incomplete", "attempts": 3}))
+fails(valid(collection={"status": "pending"}))
+fails(valid(collection={"status": "partial"}))
+
 bad = valid(); bad["facts"]["provider_message"] = "synthetic provider response"; fails(bad)
 bad = valid(); bad["facts"]["resource_logical_id"] = "password=synthetic-only"; fails(bad)
 bad = valid(); bad["operation_outcome"] = "unknown"; bad["next_action"] = {"decision": "correct-and-create-new-operation"}; fails(bad)

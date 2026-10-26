@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T14:07:58Z
-latest_commit_sha: 43509078
-chat_duration: 1832909s (21:05:08:29)
+latest_commit_at_utc: 2026-10-26T18:36:51Z
+latest_commit_sha: f29399a9
+chat_duration: 1849042s (21:09:37:22)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -256,6 +256,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Promoted isolated restore controller hardening
   Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
+
+
+- Raised: Incoming restore diagnostics queried only PostgreSQL logs although the governed restore workflow requires IAM authentication log coverage.
+  Resolution: Merged the bounded connection-diagnostic path, required both PostgreSQL and iam-db-auth-error exports, safely reduced both groups to allowlisted facts, and added an IAM-log-only regression.
+
+
+- Raised: Integrated origin/main and corrected its focused delivery-selection boundary
+  Resolution: The imported inventory treated dormant RAG and unrelated legacy declarations as blockers for a core-server-persistence change; the selector now routes only attributable inventory findings and preserves the full inventory as its independent CI gate.
 
 ## Decisions Made
 
@@ -539,6 +547,14 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Promoted verified observability evidence controls to origin/main
   Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
 
+
+- Decision: Use origin/main bounded restore diagnostics together with the existing exact IAM rds-db:connect simulation.
+  Rationale: The integrated controller must prove both actual authorization and safely classify the connection boundary before it can launch a verifier or diagnostic task.
+
+
+- Decision: Bind restore diagnostics to its actual dynamic configuration proof
+  Rationale: The restore verifier's PERSISTENCE_POSTGRES_HOST injection is now declared against restore-connection-diagnostics, whose catalogue entry is bound to kanbien-core-server-persistence.
+
 ## Context Hygiene
 
 
@@ -793,6 +809,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Observability activation is healthy after a collector-only metric repair. The target still lacks confirmed SNS email delivery, so no revocation/recovery is repeated until the receipt controller can retain failure, notification, and recovery evidence.
   Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/. Receipt validator: .../observability-receipts.py. Acceptance collector/route now consume the three receipt references; AWS SNS read-only observation remains PendingConfirmation.
+
+
+- Summary: Origin/main brought a bounded restore connection diagnostic, adapter error normalization, and updated commit workflow. The merged correction retains the local exact IAM simulation and adds two-group RDS log collection; no live operation was repeated.
+  Durable evidence: Focused evidence is the restore smoke test, diagnostic-test.py, controller-regression.py, target and observability declaration gates, plus the existing retained rejected restore diagnostic and cleanup evidence.
+
+
+- Summary: Current source template and restore controller require postgresql plus iam-db-auth-error exports; current live RDS still exports postgresql and upgrade only, so no new recovery attempt occurs until an accepted target update deploys the corrected route.
+  Durable evidence: Retain the current accepted release plus historical rejected restore diagnostic; local proof details are in the affected regression suites and the staged preparation report.
 
 ## Activity Log
 
@@ -3950,6 +3974,139 @@ Summary: Retained the safe provisional update diagnostic and fresh server-mediat
 
 ADR impact: No ADR change; durable evidence only.
 
+
+### 2026-10-26T14:28:45Z - Commit recorded
+
+Commit: `e3b1b26e6afe8a0dca0f9f8c75f9e0eaa446276f`
+
+Message: fix(deploy): retain IAM restore diagnostics
+
+Summary: Retained the failed isolated-restore evidence safely and required future isolated restores to export and classify RDS IAM-auth errors without emitting raw provider details.
+
+ADR impact: None.
+
+
+### 2026-10-26T15:08:52Z - Commit recorded
+
+Commit: `a209473122a673754c983db133e5bf2559c47a27`
+
+Message: Retained both PostgreSQL and IAM authentication restore diagnostics, including honest pending and partial collection states.
+
+Summary: Second restore rejection was reconciled and cleanup confirmed; isolated restoration acceptance remains unproved.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T15:20:10Z - Commit recorded
+
+Commit: `19407bef32e01250adbd231941cf62c31df757ac`
+
+Message: Added exact restored-task-role IAM simulation before a verifier can launch and aligned the restoration workflow.
+
+Summary: Awaiting an active kanbien-dev AWS SSO session for policy-simulator verification and the next governed restore attempt.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T16:32:37Z - Commit recorded
+
+Commit: `29c862d8`
+
+Message: Retained the current-image isolated restore verifier rejection and its safe partial-log diagnostic; the temporary restored database and scoped identity policy were cleaned up.
+
+Summary: Restore acceptance remains unproved: post-TLS PostgreSQL handshake failed despite exact IAM policy simulation; one required RDS log export was unavailable, so no provider cause is claimed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T16:38:33Z - Commit recorded
+
+Commit: `50fbc00e`
+
+Message: Refreshed the retained diagnostic after the restored copy was deleted; AWS log-group metadata confirmed no IAM-authentication group was ever created, and source workload/database health remained good.
+
+Summary: The restore verifier failure remains unclassified after private route, TLS, restored posture, and exact IAM simulation; no governed safe observer presently resolves the post-TLS client handshake boundary.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T18:02:09Z - Issue
+
+Raised: Incoming restore diagnostics queried only PostgreSQL logs although the governed restore workflow requires IAM authentication log coverage.
+
+Resolution: Merged the bounded connection-diagnostic path, required both PostgreSQL and iam-db-auth-error exports, safely reduced both groups to allowlisted facts, and added an IAM-log-only regression.
+
+
+### 2026-10-26T18:02:14Z - Decision
+
+Decision: Use origin/main bounded restore diagnostics together with the existing exact IAM rds-db:connect simulation.
+
+Rationale: The integrated controller must prove both actual authorization and safely classify the connection boundary before it can launch a verifier or diagnostic task.
+
+
+### 2026-10-26T18:02:22Z - Context hygiene
+
+Summary: Origin/main brought a bounded restore connection diagnostic, adapter error normalization, and updated commit workflow. The merged correction retains the local exact IAM simulation and adds two-group RDS log collection; no live operation was repeated.
+
+Durable evidence: Focused evidence is the restore smoke test, diagnostic-test.py, controller-regression.py, target and observability declaration gates, plus the existing retained rejected restore diagnostic and cleanup evidence.
+
+
+### 2026-10-26T18:02:22Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is an implementation correction within existing restore, IAM, and diagnostics decisions; it creates no new durable architecture decision.
+
+
+### 2026-10-26T18:03:35Z - Commit recorded
+
+Commit: `3a90ae88`
+
+Message: Merge origin/main diagnostics and harness improvements
+
+Summary: Integrated origin/main, retained exact IAM simulation, added dual PostgreSQL/IAM restore-log diagnosis, and passed focused restore, diagnostics, controller, target, observability, and staged commit-readiness gates.
+
+ADR impact: not-needed: existing restore and diagnostics architecture governs this correction
+
+
+### 2026-10-26T18:35:25Z - Issue
+
+Raised: Integrated origin/main and corrected its focused delivery-selection boundary
+
+Resolution: The imported inventory treated dormant RAG and unrelated legacy declarations as blockers for a core-server-persistence change; the selector now routes only attributable inventory findings and preserves the full inventory as its independent CI gate.
+
+
+### 2026-10-26T18:35:25Z - Decision
+
+Decision: Bind restore diagnostics to its actual dynamic configuration proof
+
+Rationale: The restore verifier's PERSISTENCE_POSTGRES_HOST injection is now declared against restore-connection-diagnostics, whose catalogue entry is bound to kanbien-core-server-persistence.
+
+
+### 2026-10-26T18:35:25Z - Context hygiene
+
+Summary: Current source template and restore controller require postgresql plus iam-db-auth-error exports; current live RDS still exports postgresql and upgrade only, so no new recovery attempt occurs until an accepted target update deploys the corrected route.
+
+Durable evidence: Retain the current accepted release plus historical rejected restore diagnostic; local proof details are in the affected regression suites and the staged preparation report.
+
+
+### 2026-10-26T18:35:42Z - ADR disposition
+
+ADR needed: no
+
+Reason: Bounded evidence-collection and check-selection corrections remain within existing deployment architecture.
+
+
+### 2026-10-26T18:36:51Z - Commit recorded
+
+Commit: `f29399a9`
+
+Message: fix(deploy): route retained restore diagnostics
+
+Summary: Bound the restore verifier's dynamic host injection to its actual local diagnostic proof; require PostgreSQL plus IAM-authentication RDS export collection; and make focused check selection respect dormant roots and attributable scope contracts while preserving the full inventory gate.
+
+ADR impact: No ADR: bounded correction within existing deployment evidence and verification architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5094,6 +5251,55 @@ ADR impact: No ADR change; durable evidence only.
   Summary: Retained the safe provisional update diagnostic and fresh server-mediated read proof from the newly qualified image before recovery rehearsal.
   ADR impact: No ADR change; durable evidence only.
 
+
+- Commit: `e3b1b26e6afe8a0dca0f9f8c75f9e0eaa446276f`
+  Time UTC: 2026-10-26T14:28:45Z
+  Message: fix(deploy): retain IAM restore diagnostics
+  Summary: Retained the failed isolated-restore evidence safely and required future isolated restores to export and classify RDS IAM-auth errors without emitting raw provider details.
+  ADR impact: None.
+
+
+- Commit: `a209473122a673754c983db133e5bf2559c47a27`
+  Time UTC: 2026-10-26T15:08:52Z
+  Message: Retained both PostgreSQL and IAM authentication restore diagnostics, including honest pending and partial collection states.
+  Summary: Second restore rejection was reconciled and cleanup confirmed; isolated restoration acceptance remains unproved.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `19407bef32e01250adbd231941cf62c31df757ac`
+  Time UTC: 2026-10-26T15:20:10Z
+  Message: Added exact restored-task-role IAM simulation before a verifier can launch and aligned the restoration workflow.
+  Summary: Awaiting an active kanbien-dev AWS SSO session for policy-simulator verification and the next governed restore attempt.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `29c862d8`
+  Time UTC: 2026-10-26T16:32:37Z
+  Message: Retained the current-image isolated restore verifier rejection and its safe partial-log diagnostic; the temporary restored database and scoped identity policy were cleaned up.
+  Summary: Restore acceptance remains unproved: post-TLS PostgreSQL handshake failed despite exact IAM policy simulation; one required RDS log export was unavailable, so no provider cause is claimed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `50fbc00e`
+  Time UTC: 2026-10-26T16:38:33Z
+  Message: Refreshed the retained diagnostic after the restored copy was deleted; AWS log-group metadata confirmed no IAM-authentication group was ever created, and source workload/database health remained good.
+  Summary: The restore verifier failure remains unclassified after private route, TLS, restored posture, and exact IAM simulation; no governed safe observer presently resolves the post-TLS client handshake boundary.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `3a90ae88`
+  Time UTC: 2026-10-26T18:03:35Z
+  Message: Merge origin/main diagnostics and harness improvements
+  Summary: Integrated origin/main, retained exact IAM simulation, added dual PostgreSQL/IAM restore-log diagnosis, and passed focused restore, diagnostics, controller, target, observability, and staged commit-readiness gates.
+  ADR impact: not-needed: existing restore and diagnostics architecture governs this correction
+
+
+- Commit: `f29399a9`
+  Time UTC: 2026-10-26T18:36:51Z
+  Message: fix(deploy): route retained restore diagnostics
+  Summary: Bound the restore verifier's dynamic host injection to its actual local diagnostic proof; require PostgreSQL plus IAM-authentication RDS export collection; and make focused check selection respect dormant roots and attributable scope contracts while preserving the full inventory gate.
+  ADR impact: No ADR: bounded correction within existing deployment evidence and verification architecture.
+
 ## Main Refresh Conflicts
 
 
@@ -5110,16 +5316,16 @@ ADR impact: No ADR change; durable evidence only.
 
 ## ADR Disposition
 
-ADR needed: yes
-ADR path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
-Reason: Record the PostgreSQL selection already stated in the programme for this target; staging ADR 0033 does not cover it. Resource design and live authority remain deferred.
+ADR needed: no
+ADR path:
+Reason: Bounded evidence-collection and check-selection corrections remain within existing deployment architecture.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T14:07:58Z
-Latest commit SHA: 43509078
-Chat duration: 1832909s (21:05:08:29)
+Latest commit at UTC: 2026-10-26T18:36:51Z
+Latest commit SHA: f29399a9
+Chat duration: 1849042s (21:09:37:22)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

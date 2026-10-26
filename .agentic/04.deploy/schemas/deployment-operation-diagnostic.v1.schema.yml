@@ -52,6 +52,8 @@ allowed_collection_statuses:
   - collected
   - unavailable
   - failed
+  - pending
+  - partial
 allowed_fact_fields:
   - artifact_identity
   - change_set_id

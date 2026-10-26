@@ -181,15 +181,17 @@ database. Then give the acceptance collector the exact paths reported by the
 controllers, all under
 `infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/`:
 
-The derived restore must export only its PostgreSQL server log. If its verifier
-rejects, the controller makes a bounded, read-only observation of that
-derived instance's target-owned export over the verifier's execution window.
-It retains one closed classification (or `unavailable`) in the governed
-operation diagnostic; it never prints, commits, or stores a raw server event,
-log stream, endpoint, credential, or provider error. A missing or delayed
-export does not make the verifier successful and does not authorize a new
-task: reconcile the same operation first. This diagnosis supports correction;
-only an accepted verifier receipt can prove recovery.
+The derived restore must export its PostgreSQL and `iam-db-auth-error` logs.
+If its verifier rejects, the controller makes one bounded, read-only
+observation of both target-owned exports over the verifier's execution window.
+It retains one closed classification with an honest `complete`, `empty`,
+`unrecognized`, `malformed`, or `incomplete` observation, or an `unavailable`
+or `failed` collection state, in the governed operation diagnostic; it never
+prints, commits, or stores a raw server event, log stream, endpoint,
+credential, or provider error. A missing or delayed export does not make the
+verifier successful and does not authorize a new task: reconcile the same
+operation first. This diagnosis supports correction; only an accepted verifier
+receipt can prove recovery.
 
 For a failed connection, the deployment chat may use the separate bounded mode
 below after explicit task-launch and temporary-access authority. It targets the
@@ -406,11 +408,14 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 
 The first verifier launch waits for one bounded restoration-identity
 stabilization interval after the exact temporary `rds-db:connect` policy is
-observed, then re-observes that policy before submitting the task. This covers
-normal IAM/RDS propagation without retrying a verifier that has already run.
-An unsuccessful verifier remains a failed completion: collect its closed safe
-result, clean up the derived database, diagnose through governed controls, and
-start a fresh rehearsal only after the correction is reviewed.
+observed. It then requires IAM's policy simulator to report `allowed` for that
+exact task role, action, and restored-instance resource before submitting the
+task. A missing simulator observation or any non-allowed result blocks before
+task launch; the policy-write timestamp alone is insufficient. This covers the
+controller's IAM authorization boundary without retrying a verifier that has
+already run. An unsuccessful verifier remains a failed completion: collect its
+closed safe result, clean up the derived database, diagnose through governed
+controls, and start a fresh rehearsal only after the correction is reviewed.
 
 New restores retain source, snapshot, record and proof-digest tags. Continue
 with the same snapshot and record receipt; existing resources with absent or

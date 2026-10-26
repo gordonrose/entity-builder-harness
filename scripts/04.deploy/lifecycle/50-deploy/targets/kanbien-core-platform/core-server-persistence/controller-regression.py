@@ -691,7 +691,7 @@ class ControllerRegression(unittest.TestCase):
                     mutations.append(parts)
                     tag_values=parts[parts.index('--tags')+1:]
                     tags=[{'Key':value.split(',Value=',1)[0][4:],'Value':value.split(',Value=',1)[1]} for value in tag_values]
-                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'EnabledCloudwatchLogsExports':['postgresql'],'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
+                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'EnabledCloudwatchLogsExports':['postgresql','iam-db-auth-error'],'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
                     return True,{},'ok'
                 raise AssertionError(f'unexpected provider action {parts}')
             provider=Provider(response)

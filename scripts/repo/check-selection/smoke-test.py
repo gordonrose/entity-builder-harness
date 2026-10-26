@@ -364,6 +364,24 @@ class SelectionTests(unittest.TestCase):
             if paths[0].startswith('scripts/04.deploy'):
                 self.assertNotIn('postgresql-connection-diagnostics', selected, 'report-only changes reuse unaffected adapter evidence')
 
+    def test_selection_does_not_probe_unrelated_acceptance_commands(self):
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        calls = []
+        original = selection.coverage.inspect
+
+        def inspect(contract, root, catalog, *, probe_commands=True):
+            calls.append(probe_commands)
+            return original(contract, root, catalog, probe_commands=probe_commands)
+
+        args = argparse.Namespace(root=ROOT, catalog=catalog,
+            paths=['scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py'],
+            staged=False, all=False, stage='local', execute_local=False,
+            evidence=None, json=True)
+        with patch.object(selection.coverage, 'inspect', side_effect=inspect):
+            selection.plan(args)
+        self.assertTrue(calls)
+        self.assertEqual(set(calls), {False})
+
     def test_openssl_runtime_identity_is_bounded_and_versioned(self):
         identity = local_cache.runtime_identity(self.root, {'tools': ['openssl'], 'environment': [], 'node_packages': []})
         self.assertIn('openssl', identity['tools'])

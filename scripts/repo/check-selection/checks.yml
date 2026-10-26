@@ -20,8 +20,111 @@ dormant_impact_roots:
 - scripts/02.rag-rulebook
 - docs/02.rag-rulebook
 - infra/04.deploy/02.rag-rulebook
+dormant_package_commands:
+- package.json#scripts.rag:service
+- package.json#scripts.rag:service:smoke
+- package.json#scripts.rag:image:build
+- package.json#scripts.rag:image:smoke
 checks:
-  # Disposable engine/driver CI proof only; persistence-container owns shipped-image qualification.
+  observability-mvp-declaration-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.validate-observability-mvp-declaration
+    inputs:
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration
+  secret-dependency-declaration-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.validate-secret-dependency-declaration
+    inputs:
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
+  target-alignment-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.validate-target-alignment
+    inputs:
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment
+  runtime-credential-lifecycle-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.kanbien-core-platform.runtime-credential-lifecycle
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle
+  active-workload-health-recovery-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.validate-active-workload-health-recovery
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery
+  health-failure-recovery-declaration-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.validate-health-failure-and-recovery-declaration
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+  persistence-diagnostic-mapping-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.validate-persistence-diagnostic-mapping
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
+  shell-postgresql-reference-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.test.verify-platform-shell-postgresql-reference
+    applicability:
+      kind: profile
+      target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    inputs:
+    - scripts/04.deploy/verify-platform-shell-postgresql-reference
+    - infra/04.deploy/03.product/targets/kanbien/staging
   postgresql-disposable-diagnostics:
     argv:
     - bash
@@ -121,11 +224,14 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence"
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
   rag-retirement-regression:
     argv:
     - bash

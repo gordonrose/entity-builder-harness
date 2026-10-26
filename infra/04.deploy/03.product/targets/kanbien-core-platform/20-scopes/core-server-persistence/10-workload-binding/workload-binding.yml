@@ -165,5 +165,5 @@ runtime_requirements:
   runtime_inputs:
     PERSISTENCE_POSTGRES_HOST:
       source: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py
-      command: isolated-restore
-      proof: persistence-provider-regression
+      command: connection-diagnostic
+      proof: restore-connection-diagnostics

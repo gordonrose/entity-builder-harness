@@ -104,14 +104,16 @@ class RdsLogFixture:
     def __init__(self, response): self.response = response; self.calls = []
     def aws(self, *args):
         self.calls.append(args)
-        return self.response
+        return self.response.get(args[args.index("--log-group-name") + 1], (False, None, "aws-resource-missing")) if isinstance(self.response, dict) else self.response
 
 window_task = {"startedAt": "2026-10-26T02:00:00Z", "stoppedAt": "2026-10-26T02:00:11Z"}
-fixture = RdsLogFixture((True, {"events": [{"message": "PAM authentication failed " + canary}]}, "ok"))
+groups = module.restored_log_groups("kanbien-core-platform-persistence-restore-20261025-r2")
+assert len(groups) == 2 and groups[1].endswith("/iam-db-auth-error")
+fixture = RdsLogFixture({groups[0]: (True, {"events": []}, "ok"), groups[1]: (True, {"events": [{"message": "PAM authentication failed " + canary}]}, "ok")})
 classification, collection = module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
 assert (classification, collection) == ("persistence-restore-server-log-authentication-rejected", "collected")
-assert fixture.calls[0][:2] == ("logs", "filter-log-events") and canary not in json.dumps({"classification": classification, "collection": collection})
-missing_export = RdsLogFixture((False, None, "aws-resource-missing"))
+assert {call[call.index("--log-group-name") + 1] for call in fixture.calls} == set(groups) and canary not in json.dumps({"classification": classification, "collection": collection})
+missing_export = RdsLogFixture({groups[0]: (True, {"events": []}, "ok"), groups[1]: (False, None, "aws-resource-missing")})
 assert module.collect_restored_postgresql_log_classification(missing_export, "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-export-unavailable", "unavailable")
 assert module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", {"startedAt": "not-a-time", "stoppedAt": "2026-10-26T02:00:11Z"}) == ("persistence-restore-server-log-time-invalid", "failed")
 original_diagnostics = module.OPERATION_DIAGNOSTICS
@@ -135,7 +137,7 @@ module.OPERATION_DIAGNOSTICS = original_diagnostics
 # RDS IAM authentication can lag the IAM policy read that binds the temporary
 # restored instance.  A first verifier launch waits for an aged, exact
 # CloudTrail policy observation, then launches at most one bound task.
-restored = {"DBInstanceStatus": "available", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "EnabledCloudwatchLogsExports": ["postgresql"], "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "Endpoint": {"Address": "restore.example.invalid"}}
+restored = {"DBInstanceStatus": "available", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "EnabledCloudwatchLogsExports": ["postgresql", "iam-db-auth-error"], "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "Endpoint": {"Address": "restore.example.invalid"}}
 controls = {"CoreServerPersistenceRestorationVerifierTaskDefinitionArn": "definition-safe", "PersistenceRestoredDatabaseSecurityGroupId": "sg-restored", "PersistenceRestorationVerifierTaskRoleName": "restore-role", "PrivateSubnetIds": "subnet-safe", "PersistenceRestorationVerifierSecurityGroupId": "sg-verifier"}
 class LaunchFixture:
     def __init__(self): self.calls = []
@@ -145,7 +147,7 @@ class LaunchFixture:
         raise AssertionError(args)
 
 launch = LaunchFixture()
-originals = module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks
+originals = module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.temporary_restore_identity_policy_effective, module.verifier_tasks
 module.source = lambda _m: ({}, "ok")
 module.controls = lambda _m: (controls, "ok")
 module.db = lambda _m, _id: (restored, "ok")
@@ -154,11 +156,12 @@ module.task_def_valid = lambda *_: True
 identity = module.restore_identity_resource(restored)
 module.temporary_restore_identity_policy = lambda *_args: ("ok", identity)
 module.temporary_restore_identity_policy_stable = lambda *_args: True
+module.temporary_restore_identity_policy_effective = lambda *_args: "ok"
 module.verifier_tasks = lambda *_args: ([], "ok")
 output = io.StringIO()
 with contextlib.redirect_stdout(output):
     assert module.verify(launch, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2") == 1
-module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks = originals
+module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.temporary_restore_identity_policy_effective, module.verifier_tasks = originals
 assert any(call[1] == "run-task" for call in launch.calls)
 assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-verifier-submitted-awaiting-provider-observation"}]
 

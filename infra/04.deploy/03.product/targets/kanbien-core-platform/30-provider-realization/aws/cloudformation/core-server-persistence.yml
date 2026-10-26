@@ -309,7 +309,7 @@ Resources:
       DeletionProtection: true
       AutoMinorVersionUpgrade: true
       EnableIAMDatabaseAuthentication: true
-      EnableCloudwatchLogsExports: [postgresql, upgrade]
+      EnableCloudwatchLogsExports: [postgresql, iam-db-auth-error]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   PersistenceServiceDiscovery:

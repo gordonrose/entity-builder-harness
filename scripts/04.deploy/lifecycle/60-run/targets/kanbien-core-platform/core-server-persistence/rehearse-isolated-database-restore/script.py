@@ -64,8 +64,14 @@ def emit(verdict,*codes,facts=None):
  if facts:v["facts"]=facts
  print(json.dumps(v,sort_keys=True)); return 0 if verdict in {"restored","accepted","cleaned-up","diagnosed"} else 1
 def restored_postgresql_log_group(restored_database):
- """Return the only RDS log group a restore diagnostic may observe."""
+ """Return the PostgreSQL group for compatibility with existing callers."""
  return f"/aws/rds/instance/{restored_database}/postgresql" if restored_database==restore_id_from_database(restored_database) else None
+
+def restored_log_groups(restored_database):
+ """Return only the two target-owned exports needed for IAM DB diagnosis."""
+ if restored_database!=restore_id_from_database(restored_database):return ()
+ prefix=f"/aws/rds/instance/{restored_database}/"
+ return (prefix+"postgresql",prefix+"iam-db-auth-error")
 
 def restore_id_from_database(restored_database):
  """Validate the deterministic restored identifier without accepting free text."""
@@ -89,13 +95,8 @@ def classify_restored_postgresql_log_events(events):
   if "role " in text and " does not exist" in text:return "persistence-restore-server-log-role-state-invalid"
  return "persistence-restore-server-log-no-classified-event"
 
-def collect_server_logs(m, restored_database, task):
- group=restored_postgresql_log_group(restored_database)
- started=parsed_time(task.get("startedAt")) if isinstance(task,dict) else None
- stopped=parsed_time(task.get("stoppedAt")) if isinstance(task,dict) else None
- if group is None or started is None or stopped is None or stopped<started:return {"classification":"persistence-restore-server-log-time-invalid","status":"failed","observation":"malformed","attempts":1}
- start=int((started-timedelta(seconds=RESTORE_SERVER_LOG_LOOKBACK_SECONDS)).timestamp()*1000)
- end=int((stopped+timedelta(seconds=RESTORE_SERVER_LOG_TAIL_SECONDS)).timestamp()*1000)
+def collect_log_group(m, group, start, end):
+ """Read one allowlisted group and reduce it to bounded diagnostic facts."""
  events=[]; token=None; observation="incomplete"
  for attempt in range(1,LOG_READ_LIMIT+1):
   args=("--next-token",token) if token else ()
@@ -114,11 +115,27 @@ def collect_server_logs(m, restored_database, task):
   if next_token==token:break
   token=next_token
  classification=classify_restored_postgresql_log_events(events)
- if observation=="complete":
-  observation="empty" if not events else "unrecognized" if classification.endswith("no-classified-event") else "complete"
+ if observation=="complete":observation="empty" if not events else "unrecognized" if classification.endswith("no-classified-event") else "complete"
+ return {"classification":classification,"status":"collected","observation":observation,"attempts":attempt}
+
+def collect_server_logs(m, restored_database, task):
+ groups=restored_log_groups(restored_database)
+ started=parsed_time(task.get("startedAt")) if isinstance(task,dict) else None
+ stopped=parsed_time(task.get("stoppedAt")) if isinstance(task,dict) else None
+ if not groups or started is None or stopped is None or stopped<started:return {"classification":"persistence-restore-server-log-time-invalid","status":"failed","observation":"malformed","attempts":1}
+ start=int((started-timedelta(seconds=RESTORE_SERVER_LOG_LOOKBACK_SECONDS)).timestamp()*1000)
+ end=int((stopped+timedelta(seconds=RESTORE_SERVER_LOG_TAIL_SECONDS)).timestamp()*1000)
+ observations=[collect_log_group(m,group,start,end) for group in groups]
+ for value in observations:
+  if value["status"]!="collected":return value
+ classifications=[value["classification"] for value in observations]
+ known=[value for value in classifications if value not in {"persistence-restore-server-log-empty","persistence-restore-server-log-no-classified-event"}]
+ classification=known[0] if known else "persistence-restore-server-log-empty" if all(value=="persistence-restore-server-log-empty" for value in classifications) else "persistence-restore-server-log-no-classified-event"
+ values=[value["observation"] for value in observations]
+ observation="malformed" if "malformed" in values else "incomplete" if "incomplete" in values else "unrecognized" if "unrecognized" in values else "empty" if all(value=="empty" for value in values) else "complete"
  # The tail window is still open; export completion cannot be claimed yet.
  if stopped+timedelta(seconds=RESTORE_SERVER_LOG_TAIL_SECONDS)>datetime.now(timezone.utc) and observation=="complete":observation="incomplete"
- return {"classification":classification,"status":"collected","observation":observation,"attempts":attempt}
+ return {"classification":classification,"status":"collected","observation":observation,"attempts":max(value["attempts"] for value in observations)}
 
 def collect_restored_postgresql_log_classification(m, restored_database, task):
  value=collect_server_logs(m,restored_database,task); return value["classification"],value["status"]
@@ -179,7 +196,7 @@ def controls(m):
 def correct(restored,src,group):
  attached=[x.get("VpcSecurityGroupId") for x in restored.get("VpcSecurityGroups",[]) if isinstance(x,dict)]; a=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; b=restored.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(restored.get("DBSubnetGroup"),dict) else None
  exports=restored.get("EnabledCloudwatchLogsExports")
- return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("IAMDatabaseAuthenticationEnabled") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b and isinstance(exports,list) and exports==["postgresql"]
+ return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("IAMDatabaseAuthenticationEnabled") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b and isinstance(exports,list) and set(exports)=={"postgresql","iam-db-auth-error"}
 def parsed_time(value):
  if not isinstance(value,str):return None
  try:
@@ -243,7 +260,7 @@ def restore(m,sid,rid,observe_only=False,record_proof_path=None):
   if observe_only:return emit("uncertain","persistence-restore-operation-not-observed",facts=facts)
   subnet=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; cls=src.get("DBInstanceClass")
   if not isinstance(subnet,str) or not isinstance(cls,str):return emit("blocked","persistence-restore-source-shape-invalid")
-  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--enable-cloudwatch-logs-exports","postgresql","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
+  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--enable-cloudwatch-logs-exports","postgresql","iam-db-auth-error","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
   return emit("pending" if ok else "uncertain","persistence-restore-submitted-awaiting-provider-observation" if ok else c,facts=facts)
  bound=existing_restore_binding(value,rid,tags)
  if bound!="ok":return emit("uncertain" if bound.endswith("unproven") else "blocked",bound,facts=facts)
@@ -310,6 +327,26 @@ def temporary_restore_identity_policy_stable(m, controls):
   except (json.JSONDecodeError,TypeError):request=None
   if isinstance(request,dict) and request.get("roleName")==role and request.get("policyName")==name and observed is not None and observed<=cutoff:return True
  return False
+
+def temporary_restore_identity_policy_effective(m, controls, restored):
+ """Require IAM's decision for the exact task role and restored DB identity.
+
+ A retained policy and its CloudTrail observation only establish that a policy
+ mutation happened.  Before a controller starts the one governed verifier or
+ diagnostic task, it must also establish that IAM allows *this* role to use
+ rds-db:connect against *this* restored database user resource.
+ """
+ resource=restore_identity_resource(restored); role=controls.get("PersistenceRestorationVerifierTaskRoleName") if isinstance(controls,dict) else None
+ if not isinstance(resource,str) or not isinstance(role,str) or not role:return "persistence-restoration-identity-binding-unavailable"
+ ok,value,code=m.aws("iam","get-role","--role-name",role)
+ actual=value.get("Role") if ok and isinstance(value,dict) else None; arn=actual.get("Arn") if isinstance(actual,dict) else None
+ if not isinstance(arn,str) or not re.fullmatch(r"arn:aws:iam::[0-9]{12}:role/"+re.escape(role),arn):return "persistence-restoration-temporary-identity-role-unavailable" if ok else code
+ ok,value,code=m.aws("iam","simulate-principal-policy","--policy-source-arn",arn,"--action-names","rds-db:connect","--resource-arns",resource)
+ results=value.get("EvaluationResults") if ok and isinstance(value,dict) else None
+ if not ok:return code
+ if not isinstance(results,list) or len(results)!=1 or not isinstance(results[0],dict):return "persistence-restoration-temporary-identity-simulation-invalid"
+ result=results[0]
+ return "ok" if result.get("EvalActionName")=="rds-db:connect" and result.get("EvalResourceName")==resource and result.get("EvalDecision")=="allowed" else "persistence-restoration-temporary-identity-not-authorized"
 def task_image_digest(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None; c=cs[0] if isinstance(cs,list) and len(cs)==1 and isinstance(cs[0],dict) else None; image=c.get("image") if isinstance(c,dict) else None
  return image.rsplit("@",1)[1] if isinstance(image,str) and image.count("@")==1 and image.rsplit("@",1)[1].startswith("sha256:") else None
@@ -447,6 +484,8 @@ def verify(m,sid,rid,observe_only=False):
  if not temporary_restore_identity_policy_stable(m,ctl):return emit("pending","persistence-restoration-temporary-identity-policy-stabilizing",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,True)
  if identity_status!="ok" or identity_reference!=restore_identity_resource(restored):return emit("uncertain","persistence-restoration-temporary-identity-policy-not-stable",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
+ effective=temporary_restore_identity_policy_effective(m,ctl,restored)
+ if effective!="ok":return emit("blocked","persistence-restoration-temporary-identity-not-effective" if effective=="persistence-restoration-temporary-identity-not-authorized" else effective,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","value":identity_reference},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
  ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--client-token",started,"--network-configuration",net,"--overrides",overrides)
  return emit("pending" if ok else "uncertain","persistence-restoration-verifier-submitted-awaiting-provider-observation" if ok else c,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
@@ -544,6 +583,8 @@ def diagnose_connection(m,sid,rid,observe_only=False,record_proof_path=None):
  if not temporary_restore_identity_policy_stable(m,ctl):return emit_diagnostic("pending","persistence-restoration-temporary-identity-policy-stabilizing",facts=facts)
  access,observed_identity=temporary_restore_identity_policy(m,ctl,restored,True)
  if access!="ok" or observed_identity!=identity:return emit_diagnostic("uncertain","persistence-connection-diagnostic-access-unproven",facts=facts)
+ effective=temporary_restore_identity_policy_effective(m,ctl,restored)
+ if effective!="ok":return emit_diagnostic("blocked","persistence-restoration-temporary-identity-not-effective" if effective=="persistence-restoration-temporary-identity-not-authorized" else effective,facts=facts)
  artifact=task_image_digest(m,definition)
  if not isinstance(artifact,str) or re.fullmatch(r"sha256:[a-f0-9]{64}",artifact) is None:return emit_diagnostic("blocked","persistence-connection-diagnostic-artifact-unavailable",facts=facts)
  try:

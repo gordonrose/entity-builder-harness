@@ -51,7 +51,7 @@ def event(value):return {'message':json.dumps(value)}
 
 class Provider:
  def __init__(self,module):
-  self.module=module;self.calls=[];self.tasks=[];self.policy=True;self.foreign_policy=False;self.lost_response=False;self.result={'schema':'deploy/persistence-restore-verifier-result/v2','verdict':'diagnosed','code':module.DIAGNOSTIC_RESULT}
+  self.module=module;self.calls=[];self.tasks=[];self.policy=True;self.foreign_policy=False;self.effective_access=True;self.lost_response=False;self.result={'schema':'deploy/persistence-restore-verifier-result/v2','verdict':'diagnosed','code':module.DIAGNOSTIC_RESULT}
  def aws_in_region(self,region,*args):
   assert region=="us-east-1"
   return self.aws(*args)
@@ -67,6 +67,10 @@ class Provider:
   if operation=='get-role-policy':
    if not self.policy:return False,None,'aws-resource-missing'
    return True,{'PolicyDocument':{'Version':'2012-10-17','Statement':[{'Effect':'Allow','Action':'rds-db:connect','Resource':self.module.restore_identity_resource(self.restored) if not self.foreign_policy else 'fixture-foreign-resource'}]}},'ok'
+  if operation=='get-role':return True,{'Role':{'Arn':'arn:aws:iam::337159794548:role/fixture-role'}},'ok'
+  if operation=='simulate-principal-policy':
+   resource=args[args.index('--resource-arns')+1]
+   return True,{'EvaluationResults':[{'EvalActionName':'rds-db:connect','EvalResourceName':resource,'EvalDecision':'allowed' if self.effective_access else 'implicitDeny'}]},'ok'
   if operation=='put-role-policy':self.policy=True;return True,{},'ok'
   if operation=='delete-role-policy':self.policy=False;return True,{},'ok'
   if operation=='lookup-events':return True,{'Events':[{'EventTime':'2020-01-01T00:00:00Z','CloudTrailEvent':json.dumps({'requestParameters':{'roleName':'fixture-role','policyName':'kanbien-core-platform-restoration-verifier-current-instance'}})}]},'ok'
@@ -128,7 +132,7 @@ class DiagnosticTests(unittest.TestCase):
   point={'DBSnapshotIdentifier':SID,'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','SnapshotCreateTime':'2026-10-24T00:00:00Z'}
   proof={'task':{'started_at':'2026-10-23T00:00:00Z','stopped_at':'2026-10-23T00:00:01Z'},'integrity':{'payload_sha256':'b'*64}}
   tags,_=self.m.recovery_point_binding(src,point,SID,RID,proof)[0]
-  restored={**src,'DBInstanceIdentifier':RID,'DbiResourceId':'db-RESTORED','DBInstanceStatus':'available','PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'EnabledCloudwatchLogsExports':['postgresql'],'Endpoint':{'Address':'fixture.invalid'},'TagList':[{'Key':k,'Value':v} for k,v in tags.items()]}
+  restored={**src,'DBInstanceIdentifier':RID,'DbiResourceId':'db-RESTORED','DBInstanceStatus':'available','PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'EnabledCloudwatchLogsExports':['postgresql','iam-db-auth-error'],'Endpoint':{'Address':'fixture.invalid'},'TagList':[{'Key':k,'Value':v} for k,v in tags.items()]}
   controls={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'fixture-definition:1','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored','PersistenceRestorationVerifierTaskRoleName':'fixture-role','PrivateSubnetIds':'subnet-fixture','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
   provider=Provider(self.m);provider.restored=restored
   stack=contextlib.ExitStack();stack.enter_context(patch.object(self.m,'source',return_value=(src,'ok')));stack.enter_context(patch.object(self.m,'controls',return_value=(controls,'ok')));stack.enter_context(patch.object(self.m,'db',return_value=(restored,'ok')));stack.enter_context(patch.object(self.m,'snapshot',return_value=(point,'ok')));stack.enter_context(patch.object(self.m,'read_record_proof',return_value=(proof,'ok')))
@@ -235,6 +239,14 @@ class DiagnosticTests(unittest.TestCase):
    self.run_diagnostic(provider,observe_only=True);self.assertFalse(any(call[1] in {'run-task','put-role-policy','delete-role-policy'} for call in provider.calls))
    provider.restored['TagList']=[]
    _,result=self.run_diagnostic(provider);self.assertEqual(result['verdict'],'blocked',result);self.assertFalse(any(call[1]=='run-task' for call in provider.calls))
+ def test_effective_access_is_required_before_a_verifier_or_diagnostic_task(self):
+  provider,stack=self.target()
+  with stack:
+   provider.effective_access=False
+   _,result=self.run_diagnostic(provider)
+   self.assertEqual(result['verdict'],'blocked',result)
+   self.assertIn('persistence-restoration-temporary-identity-not-effective',[finding['code'] for finding in result['findings']])
+   self.assertFalse(any(call[1]=='run-task' for call in provider.calls))
  def test_terminal_diagnostic_cleanup_and_recovery_separation(self):
   provider,stack=self.target()
   with stack:
