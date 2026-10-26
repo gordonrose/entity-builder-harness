@@ -22,6 +22,10 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import re
+import subprocess
+import sys
+import yaml
 import tempfile
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -96,4 +100,39 @@ with io.StringIO() as stream, redirect_stdout(stream):
     print(json.dumps({"classification": classification, "facts": facts}, sort_keys=True))
     emitted = stream.getvalue()
 assert "synthetic-only" not in emitted and "x" * 200 not in emitted
-print("Deployment-operation diagnostics regression tests passed.")
+# Historical records remain valid; only bounded, typed optional facts are added.
+execution={"phase":"pool_connect","elapsed_ms":12,"code_status":"recognized","classification":"authentication_rejected"}
+extended=valid(execution=execution,collection={"status":"collected","observation":"incomplete","attempts":3,"task_observation":"malformed","task_attempts":2})
+diagnostics.validate(extended)
+for field,value in [("phase",[]),("phase","authentication-completed"),("elapsed_ms",True),("elapsed_ms",3600001),("elapsed_ms",-1),("classification",[]),("classification","password=synthetic-canary"),("code_status","provider-code")]:
+ bad=valid(execution={**execution,field:value});fails(bad)
+for field in ["message","stack","endpoint","credential","sql","values","certificate","connection_string"]:
+ fails(valid(execution={**execution,field:"synthetic-sensitive-canary"}))
+for collection in [{"status":"collected","observation":[]},{"status":"collected","attempts":0},{"status":"collected","attempts":True},{"status":"collected","task_observation":"guessed"},{"status":"collected","task_attempts":4}]:fails(valid(collection=collection))
+fails(valid(execution={**execution,"phase":"unknown"}))
+fails(valid(execution={**execution,"code_status":"absent"}))
+schema=yaml.safe_load((ROOT/'.agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml').read_text())
+assert set(schema['execution']['allowed_phases'])==diagnostics.EXECUTION_PHASES
+assert set(schema['execution']['allowed_code_statuses'])==diagnostics.CODE_STATUSES
+assert set(schema['execution']['allowed_classifications'])==diagnostics.FAILURE_CLASSIFICATIONS
+assert set(schema['collection']['allowed_observations'])==diagnostics.COLLECTION_OBSERVATIONS
+adapter=(ROOT/'platform/adapters/aws/persistence/postgresql/src/errors.ts').read_text()
+assert set(re.findall(r'"([a-z_]+)"',re.search(r'postgreSqlFailureClassifications = \[(.*?)\] as const',adapter,re.S).group(1)))==diagnostics.FAILURE_CLASSIFICATIONS
+assert set(re.findall(r'"([a-z_]+)"',re.search(r'PostgreSqlObservedPhase = ([^;]+)',adapter).group(1)))==diagnostics.EXECUTION_PHASES
+for status in ["absent", "unrecognized"]:
+ diagnostics.validate_execution({**execution,"classification":"authentication_material_invalid","code_status":status})
+for value in [{"verdict":"rejected","code":"SAFE_REJECTED"},{"schema":"deploy/persistence-restore-verifier-result/v2","verdict":"rejected","code":"SAFE_REJECTED","execution":execution}]:diagnostics.validate_verifier_result(value)
+for value in [{"verdict":"accepted","code":"SAFE_RESULT","provider_message":"synthetic-canary"},{"schema":"deploy/persistence-restore-verifier-result/v2","verdict":"accepted","code":"SAFE_RESULT","execution":execution}]:
+ try:diagnostics.validate_verifier_result(value)
+ except diagnostics.DiagnosticFailure:pass
+ else:raise AssertionError('unsafe result envelope accepted')
+with tempfile.TemporaryDirectory() as directory:
+ path=Path(directory)/'report.json'
+ command=[sys.executable,str(ROOT/'scripts/04.deploy/shared/deployment-operation-diagnostics.py'),'record','--target','test-target','--scope','test-scope','--operation-id','test-operation','--stage','run','--original-code','SAFE_REJECTED','--exit-status','7','--outcome','failed','--classification','test-classified','--evidence-reference','provider-operation:test-operation','--next-decision','inspect-retained-evidence','--collection-observation','incomplete','--collection-attempts','3','--task-log-observation','malformed','--task-log-attempts','2','--execution-phase','pool_connect','--execution-elapsed-ms','12','--execution-code-status','recognized','--execution-classification','authentication_rejected','--report',str(path)]
+ result=subprocess.run(command,capture_output=True,text=True,timeout=10);assert result.returncode==0,result.stderr
+ retained=json.loads(path.read_text());assert retained['execution']==execution and retained['original_failure']['exit_status']==7
+ result=subprocess.run([sys.executable,str(ROOT/'scripts/04.deploy/shared/deployment-operation-diagnostics.py'),'validate','--report',str(path)],capture_output=True,text=True,timeout=10);assert result.returncode==0
+ # A failed retained write gets a closed CLI failure, never a raw traceback.
+ path.unlink();path.mkdir()
+ result=subprocess.run(command,capture_output=True,text=True,timeout=10);assert result.returncode!=0 and 'Traceback' not in result.stderr
+print("Deployment-operation diagnostics regression tests passed (historical/v2 readers, typed observations, secrecy and actual CLI).")

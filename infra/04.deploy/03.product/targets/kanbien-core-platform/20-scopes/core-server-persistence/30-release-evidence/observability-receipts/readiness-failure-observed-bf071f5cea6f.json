@@ -1,0 +1,38 @@
+{
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:bf071f5cea6f6a743564e3b1207625d17adfcb894e69d625d7c7f9209bde5347"
+  },
+  "observation": {
+    "alarm_name": "kanbien-core-platform-core-server-postgresql-readiness-not-ready-or-silent",
+    "alarm_state": "ALARM",
+    "alarm_state_updated_at": "2026-10-26T12:00:39.355000Z",
+    "dimensions": {
+      "dependency": "postgresql",
+      "scope": "core-server-persistence",
+      "target": "kanbien-core-platform",
+      "workload": "core-server"
+    },
+    "metric_name": "kanbien.core_server.postgresql_readiness",
+    "metric_observed_at": "2026-10-26T11:59:00Z",
+    "metric_value": 0
+  },
+  "provenance": {
+    "collected_at": "2026-10-26T12:00:58.911220Z",
+    "collection_method": "cloudwatch-alarm+metric+confirmed-subscription",
+    "controller": "rehearse-observability-readiness",
+    "evidence_class": "live"
+  },
+  "receipt_type": "readiness-failure-observed",
+  "schema": "deploy/persistence-observability-receipt/v1",
+  "scope": "core-server-persistence",
+  "source_proof": {
+    "image_digest": "sha256:bd8960e5de1b92f2cab721b64f77ec9c5e1b37411a15c67269b9351979028569",
+    "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-unready-d8aeec6b2ad94005948a084d5a6e9199.json",
+    "result_code": "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY",
+    "sha256": "sha256:ab97817c63c5e4201dc9011957a35b1146fc91d8f3c5be9cac7c7aaae4a51fb3",
+    "task_arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/d8aeec6b2ad94005948a084d5a6e9199",
+    "task_definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:34"
+  },
+  "target": "kanbien-core-platform"
+}

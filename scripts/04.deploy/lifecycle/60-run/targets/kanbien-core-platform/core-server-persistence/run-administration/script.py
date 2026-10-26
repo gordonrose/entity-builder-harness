@@ -56,6 +56,17 @@ OPERATIONS = (
     "prove-effective-privilege",
     "observe-migration-state",
 )
+# These operations observe an already-present state.  Retrying after a host
+# interruption must reuse a terminal receipt for the exact current task
+# definition/image rather than submit an equivalent task.  State-changing
+# identity operations intentionally require an explicit task reconciliation or
+# a new governed invocation; an old revoke/restore receipt cannot establish a
+# new transition.
+RESUMABLE_OPERATIONS = frozenset({
+    "confirm-runtime-iam-access",
+    "prove-effective-privilege",
+    "observe-migration-state",
+})
 
 
 def module(path: Path, name: str):
@@ -141,6 +152,46 @@ def accept(task: dict[str, object], seconds: int, operation: str) -> int:
     return report("accepted", "persistence-administration-applied", facts={"operation": operation, "safe_result_code": result_code, "administration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed, "proof_receipt": str(path.relative_to(ROOT))})
 
 
+def retained_observation(operation: str, definition: str) -> tuple[Path | None, dict[str, object] | None]:
+    """Find one valid exact-image observation receipt for an interrupted retry."""
+    if operation not in RESUMABLE_OPERATIONS:
+        return None, None
+    digest = MIGRATION.image_digest(definition)
+    if not isinstance(digest, str):
+        return None, None
+    try:
+        candidates = sorted(RECEIPTS.RECEIPTS.glob(f"administration-{operation}-*.json"), key=lambda path: path.name, reverse=True)
+    except OSError:
+        return None, None
+    for path in candidates:
+        try:
+            observed = RECEIPTS.validate(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, UnicodeError, json.JSONDecodeError, RECEIPTS.ReceiptError):
+            continue
+        task = observed.get("task")
+        if not isinstance(task, dict):
+            continue
+        if task.get("definition") != definition or task.get("image_digest") != digest or task.get("result_code") != PROOF_RESULT[operation]:
+            continue
+        return path, observed
+    return None, None
+
+
+def reused_observation(path: Path, receipt: dict[str, object], operation: str) -> int:
+    task = receipt.get("task")
+    context = receipt.get("context")
+    if not isinstance(task, dict) or not isinstance(context, dict):
+        return report("blocked", "persistence-administration-retained-receipt-invalid")
+    try:
+        relative = path.resolve().relative_to(ROOT.resolve()).as_posix()
+        task_id = str(task["arn"]).rsplit("/", 1)[-1]
+        deadline_seconds = context["completion_deadline_seconds"]
+        duration_seconds = context["completion_duration_seconds"]
+    except (KeyError, ValueError):
+        return report("blocked", "persistence-administration-retained-receipt-invalid")
+    return report("accepted", "persistence-administration-reconciled-retained-receipt", facts={"operation": operation, "safe_result_code": task["result_code"], "administration_task": task_id, "completion_deadline_seconds": deadline_seconds, "completion_duration_seconds": duration_seconds, "proof_receipt": relative})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     # Keep this literal tuple beside the controller contract.  The declaration
@@ -148,10 +199,11 @@ def main() -> int:
     # without executing it, so a computed dictionary view is insufficient.
     parser.add_argument("--operation", choices=OPERATIONS)
     parser.add_argument("--reconcile-task")
+    parser.add_argument("--fresh", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
-    if unknown or args.operation is None or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)):
+    if unknown or args.operation is None or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.reconcile_task is not None and args.fresh):
         return report("blocked", "persistence-administration-arguments-invalid")
     if args.validate_arguments:
         print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": PROOF_CONTRACT[args.operation]}, sort_keys=True))
@@ -174,6 +226,10 @@ def main() -> int:
             return report("blocked", code if not ok else "persistence-administration-controller-observation-uncertain")
         reconciliation = current_task(task, args.reconcile_task, definition)
         return accept(task, seconds, args.operation) if reconciliation == "ok" else report("blocked", reconciliation)
+    if not args.fresh:
+        retained_path, retained = retained_observation(args.operation, definition)
+        if retained_path is not None and retained is not None:
+            return reused_observation(retained_path, retained, args.operation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
     overrides = json.dumps({"containerOverrides": [{"name": "persistence-administration", "environment": [{"name": "PERSISTENCE_ADMINISTRATION_OPERATION", "value": args.operation}]}]})
     ok, started, code = MIGRATION.aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network, "--overrides", overrides)

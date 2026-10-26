@@ -91,3 +91,11 @@ exact current predecessor. Interrupted archive publication resumes through the
 same command; the current reference advances only after complete immutable
 custody and predecessor validation. Temporary rehearsals use explicit simulated
 evidence and `--rehearsal-root`; ordinary promotion rejects those records.
+
+For the persistence scope, prepare a historical image's explicit compatibility
+record with
+`scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh`.
+Its read-only argument parser describes the required receipt and contract inputs;
+the command writes a candidate compatibility record and grants no provider
+mutation authority. The transition route consumes that record's identity alongside
+the fresh support receipt before a rollback can proceed.

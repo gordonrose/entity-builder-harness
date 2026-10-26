@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.rehearse-core-server-persistence-replacement.impl
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -61,6 +61,56 @@ def proof_receipts():
     assert spec and spec.loader
     spec.loader.exec_module(module)
     return module
+
+
+def retained_reconciliation_receipt(
+    receipts: object,
+    *,
+    stopped: dict,
+    successor: dict,
+    definition: str,
+    image_digest: str,
+) -> Path | None:
+    """Reuse only the exact receipt written before an interrupted response.
+
+    The replacement boundary is selected before the stop mutation. A later
+    reconciliation cannot recreate that timestamp, so rebuilding a receipt
+    would conflict with the durable first observation. This deliberately
+    trusts no filename alone: integrity, every task identity, the immutable
+    image, and the successor relationship must all agree with fresh provider
+    observations made by the caller.
+    """
+    original_arn = stopped.get("taskArn")
+    successor_arn = successor.get("taskArn")
+    successor_started = successor.get("startedAt")
+    if not isinstance(original_arn, str) or not isinstance(successor_arn, str) or not isinstance(successor_started, str):
+        return None
+    destination = receipts.RECEIPTS / f"server-replacement-controlled-replacement-{original_arn.rsplit('/', 1)[-1]}.json"
+    if not destination.is_file():
+        return None
+    try:
+        existing = receipts.validate(json.loads(destination.read_text(encoding="utf-8")))
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+        raise ValueError("persistence-replacement-reconciliation-receipt-invalid")
+    task = existing["task"]
+    context = existing["context"]
+    if (
+        existing["proof_type"] != "server-replacement"
+        or existing["operation"] != "controlled-replacement"
+        or existing["provenance"].get("controller") != "rehearse-server-replacement"
+        or task.get("arn") != original_arn
+        or task.get("definition") != definition
+        or task.get("image_digest") != image_digest
+        or task.get("terminal_status") != "STOPPED"
+        or task.get("result_code") != "PERSISTENCE_SERVER_REPLACED"
+        or task.get("stopped_reason") != "governed core-server-persistence replacement rehearsal"
+        or context.get("original_stopped_reason") != "governed core-server-persistence replacement rehearsal"
+        or context.get("successor_task_arn") != successor_arn
+        or context.get("successor_started_at") != successor_started
+        or context.get("runtime_task_definition") != definition
+    ):
+        raise ValueError("persistence-replacement-reconciliation-receipt-mismatch")
+    return destination
 
 
 def healthy_service(service: object) -> bool:
@@ -240,8 +290,19 @@ def main() -> int:
         if not isinstance(stopped_at, str) or not isinstance(successor.get("startedAt"), str):
             return report("blocked", "persistence-replacement-reconciliation-original-invalid")
         try:
+            retained = retained_reconciliation_receipt(
+                proof_receipts(),
+                stopped=stopped,
+                successor=successor,
+                definition=definition,
+                image_digest=receipt["image_digest"],
+            )
+            if retained is not None:
+                return report("replaced", "persistence-server-replaced-read-proof-required", facts={"candidate_image_digest": receipt["image_digest"], "source_revision": receipt["source_revision"], "runtime_task_definition": definition, "original_task": args.reconcile_original_task, "replacement_task": args.reconcile_successor_task, "recovery_boundary": json.loads(retained.read_text(encoding="utf-8"))["context"]["recovery_boundary"], "proof_receipt": str(retained.relative_to(ROOT))})
             receipt_body = proof_receipts().make(proof_type="server-replacement", operation="controlled-replacement", task=stopped, image_digest=receipt["image_digest"], result_code="PERSISTENCE_SERVER_REPLACED", context={"original_stopped_reason": "governed core-server-persistence replacement rehearsal", "successor_task_arn": args.reconcile_successor_task, "successor_started_at": successor["startedAt"], "runtime_task_definition": definition, "recovery_boundary": stopped_at}, controller="rehearse-server-replacement", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
             proof_path = proof_receipts().persist(receipt_body)
+        except ValueError as error:
+            return report("blocked", str(error))
         except Exception:
             return report("blocked", "persistence-replacement-receipt-persistence-failed")
         return report("replaced", "persistence-server-replaced-read-proof-required", facts={"candidate_image_digest": receipt["image_digest"], "source_revision": receipt["source_revision"], "runtime_task_definition": definition, "original_task": args.reconcile_original_task, "replacement_task": args.reconcile_successor_task, "recovery_boundary": stopped_at, "proof_receipt": str(proof_path.relative_to(ROOT))})

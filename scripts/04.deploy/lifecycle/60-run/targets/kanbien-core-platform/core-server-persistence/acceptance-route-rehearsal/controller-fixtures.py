@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -196,7 +196,7 @@ def capture_proofs(root: Path) -> dict:
         controller = load(SOURCE / RUN / 'rehearse-isolated-database-restore/script.py')
         restored_id = controller.restore_id(snapshot)
         source = {'DBInstanceIdentifier': controller.DATABASE, 'DBInstanceStatus': 'available', 'PubliclyAccessible': False, 'StorageEncrypted': True, 'IAMDatabaseAuthenticationEnabled': True, 'DBSubnetGroup': {'DBSubnetGroupName': 'fixture-private'}}
-        restored = {**source, 'DBInstanceIdentifier': restored_id, 'DbiResourceId': 'db-FIXTURE-RESTORE', 'Engine': 'postgres', 'VpcSecurityGroups': [{'VpcSecurityGroupId': 'sg-restored'}], 'Endpoint': {'Address': 'restored.fixture.invalid'}}
+        restored = {**source, 'DBInstanceIdentifier': restored_id, 'DbiResourceId': 'db-FIXTURE-RESTORE', 'Engine': 'postgres', 'VpcSecurityGroups': [{'VpcSecurityGroupId': 'sg-restored'}], 'EnabledCloudwatchLogsExports': ['postgresql'], 'Endpoint': {'Address': 'restored.fixture.invalid'}}
         observed = task(number, proof['family'], start, 'persistence-restoration-verifier')
         observed['startedBy'] = controller.restore_run_identity(restored)
         identity = controller.restore_identity_resource(restored)

@@ -88,7 +88,21 @@ throws(() => createCloudWatchOtelMetricsRuntime({ // Attempt to start the adapte
   exportIntervalMs: 60_000, // Supply a valid export interval.
   exportTimeoutMs: 10_000, // Supply a valid export timeout.
   series, // Supply the valid reviewed metric catalogue.
-}), /task-local/); // Require startup to refuse an arbitrary telemetry delivery destination.
+}), /reviewed private collector/); // Require startup to refuse an arbitrary telemetry delivery destination.
+
+// A separate collector task remains private when target composition selects a
+// bounded service-discovery route; it must not require the server task's role.
+const dedicated = createCloudWatchOtelMetricsRuntime({
+  endpoint: "http://observability-collector.kanbien-core-platform.internal:4318/v1/metrics",
+  region: "eu-west-1",
+  serviceName: "kanbien-core-server-persistence",
+  serviceVersion: "test",
+  deploymentEnvironment: "kanbien-core-platform",
+  exportIntervalMs: 60_000,
+  exportTimeoutMs: 10_000,
+  series,
+});
+void dedicated.shutdown(); // No metric is recorded in this boundary test; stop its periodic reader without introducing an asynchronous test harness.
 
 console.log("CloudWatch OTel metrics adapter runtime test passed."); // Make successful standalone execution clear in governed check output.
 

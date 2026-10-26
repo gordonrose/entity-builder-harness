@@ -50,6 +50,9 @@ function writeFixtureEnvironment() {
   chmodSync(fixtureEnvironment, 0o600);
 }
 
+// Invalid SCRAM material can leave a pg transport awaiting server closure.
+// The disposable server owns a short authentication deadline; no live setting
+// changes and no forced success exit hide an unclosed fixture connection.
 function startDockerFixture() {
   let containerStarted = false;
   try {
@@ -59,7 +62,7 @@ function startDockerFixture() {
       "--env-file", fixtureEnvironment,
       "--env", "POSTGRES_DB=postgres",
       "--publish", "127.0.0.1::5432",
-      "postgres:17.11-bookworm",
+      "postgres:17.11-bookworm", "-c", "authentication_timeout=2s",
     ], 60_000);
     if (started.status !== 0) throw new FixtureError("container-start-failed");
     containerStarted = true;
@@ -110,7 +113,7 @@ function startLocalFixture() {
     console.log("PostgreSQL disposable local engine startup attempt started.");
     const started = runCommand(binaries.pgCtl, [
       "--pgdata", dataDirectory,
-      "--options", `-h 127.0.0.1 -p ${port} -k ${socketDirectory}`,
+      "--options", `-h 127.0.0.1 -p ${port} -k ${socketDirectory} -c authentication_timeout=2s`,
       "start",
     ], 10_000);
     if (started.status !== 0) {

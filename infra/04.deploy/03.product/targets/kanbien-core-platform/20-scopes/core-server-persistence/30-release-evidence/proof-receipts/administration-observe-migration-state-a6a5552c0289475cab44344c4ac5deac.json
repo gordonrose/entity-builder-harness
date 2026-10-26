@@ -1,0 +1,32 @@
+{
+  "context": {
+    "completion_deadline_seconds": 300,
+    "completion_duration_seconds": 24
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:7a1b7084a6fde91d37057a9107ee44d0f7a50f72e7b1acf42b2b4548c00fe189"
+  },
+  "operation": "observe-migration-state",
+  "proof_type": "administration",
+  "provenance": {
+    "collected_at": "2026-10-26T12:40:56.082337Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "run-administration",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/a6a5552c0289475cab44344c4ac5deac",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:17",
+    "exit_code": 0,
+    "image_digest": "sha256:bd8960e5de1b92f2cab721b64f77ec9c5e1b37411a15c67269b9351979028569",
+    "result_code": "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED",
+    "started_at": "2026-10-26T13:40:25.846000+01:00",
+    "stopped_at": "2026-10-26T13:40:50.291000+01:00",
+    "stopped_reason": "Essential container in task exited",
+    "terminal_status": "STOPPED"
+  }
+}

@@ -37,7 +37,7 @@ workload:
 configuration:
   value_policy: names-and-shapes-only-no-values
   required_names: [NODE_ENV, HOST, PORT, PLATFORM_SOURCE_COMMIT_SHA, PERSISTENCE_POSTGRES_HOST, PERSISTENCE_POSTGRES_PORT, PERSISTENCE_POSTGRES_DATABASE, PERSISTENCE_POSTGRES_SCHEMA, PERSISTENCE_POSTGRES_IAM_REGION, PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, PERSISTENCE_RUNTIME_DATABASE_USERNAME, PERSISTENCE_MIGRATION_DATABASE_USERNAME, PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME, PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE, PERSISTENCE_ADMINISTRATOR_CREDENTIALS, PERSISTENCE_POSTGRES_CA_PATH]
-  optional_names: []
+  optional_names: [PERSISTENCE_RESTORE_DIAGNOSTIC_MODE]
   secret_names: [PERSISTENCE_ADMINISTRATOR_CREDENTIALS]
   secret_dependencies:
     - id: postgresql-administrator-credentials
@@ -160,9 +160,22 @@ persistence_diagnostics:
       mappings: *task_mappings
     - id: persistence-restoration-verifier
       mappings: *task_mappings
+  connection_investigation:
+    command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    operation: diagnose-connection
+    mode_environment: {PERSISTENCE_RESTORE_DIAGNOSTIC_MODE: connection}
+    target: positively-bound-disposable-restored-database
+    proof_binding: retained-record-receipt-and-snapshot-source-incarnation-tags
+    effects: [ecs-task-launch, temporary-restored-instance-iam-access, owned-task-deadline-stop, temporary-access-removal, writes-diagnostic-evidence]
+    maximum_attempts_per_database_incarnation: 1
+    maximum_log_reads_per_stream_per_invocation: 3
+    deadline_seconds: 120
+    unknown_launch: retain-exclusive-reservation-and-reconcile-only
+    cleanup: require-terminal-diagnostic-and-recovery-tasks-before-temporary-access-removal-or-existing-disposable-database-cleanup
+    recovery_acceptance_evidence: false
 observability_mvp:
   declaration_schema: deploy/readiness-observability-mvp/v1
-  status: local-contract-validated-deployment-disabled-pending-dedicated-collector-boundary
+  status: dedicated-collector-composed-live-proof-pending
   owner: observability-owner
   event_envelope:
     owner: platform-contracts
@@ -177,7 +190,7 @@ observability_mvp:
     cadence_seconds: 30
     timeout_seconds: 5
     stale_after_seconds: 180
-    not_ready_codes: [persistence.transport-unavailable, persistence.credential-rejected, persistence.trust-validation-failed, persistence.schema-incompatible]
+    not_ready_codes: [persistence.transport-unavailable, persistence.credential-rejected, persistence.trust-validation-failed, persistence.schema-incompatible, persistence.unclassified-failure]
   metric_catalogue:
     application:
       - id: core-server-postgresql-readiness
@@ -186,6 +199,7 @@ observability_mvp:
         kind: gauge
         unit: count
         dimensions: [target, scope, workload, dependency, readiness]
+        published_dimensions: [target, scope, workload, dependency]
         cardinality_limit: 16
         meaning: 1-when-periodic-server-postgresql-readiness-observation-is-ready-0-otherwise
     rds_native:
@@ -193,14 +207,17 @@ observability_mvp:
       - { id: postgresql-database-connections, namespace: AWS/RDS, metric: DatabaseConnections, source: rds-native, meaning: database-connection-pressure }
       - { id: postgresql-cpu-utilization, namespace: AWS/RDS, metric: CPUUtilization, source: rds-native, meaning: database-resource-pressure }
   collector:
-    runtime_dependency: task-local-otel-collector
+    runtime_dependency: dedicated-private-otel-collector-service
     adapter: '@kanbien/platform-adapter-aws-observability-cloudwatch'
-    endpoint: http://127.0.0.1:4318/v1/metrics
-    configuration_delivery: target-owned-ssm-parameter-non-secret
+    endpoint: http://observability-collector.kanbien-core-platform.internal:4318/v1/metrics
+    configuration_delivery: target-owned-allowlisted-non-secret-container-environment
+    activation_control: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
     package_proof: immutable-collector-image-and-runtime-payload-required-before-live-deployment
     failure_behaviour: bounded-best-effort-application-work-continues-stale-signal-alarm-detects-missing-delivery
-    deployment_status: disabled-pending-dedicated-task-role-and-private-route
+    deployment_status: governed-private-service-update-pending-live-proof
     prohibited_topology: task-local-sidecar-sharing-server-task-role
+    identity_boundary: separate-collector-task-role-no-rds-connect
+    network_boundary: server-to-collector-otlp-4318-only-collector-to-private-aws-endpoints-443-only
   alarms:
     notification_destination: target-owned-topic-no-recipient-in-repository
     delivery_proof: subscribed-destination-receipt-required-at-live-acceptance-without-message-content

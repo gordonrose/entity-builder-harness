@@ -30,6 +30,8 @@ MISSING = {
     ("rds", "describe-db-snapshots"): {"DBSnapshotNotFound", "DBSnapshotNotFoundFault"},
     ("iam", "get-role-policy"): {"NoSuchEntity", "NoSuchEntityException"},
     ("budgets", "describe-budget"): {"NotFoundException"},
+    ("logs", "filter-log-events"): {"ResourceNotFoundException"},
+    ("logs", "get-log-events"): {"ResourceNotFoundException"},
 }
 
 

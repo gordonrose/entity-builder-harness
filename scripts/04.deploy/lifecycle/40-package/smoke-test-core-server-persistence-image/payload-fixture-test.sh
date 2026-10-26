@@ -123,6 +123,8 @@ contract.write_text(yaml.safe_dump(invalid, sort_keys=False))
 for command in (
     'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',
     'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh',
+    'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh',
+    'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh',
 ):
     destination = fixture / command; destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text('#!/usr/bin/env bash\ntouch "$COVERAGE_LATER_MARKER"\n')

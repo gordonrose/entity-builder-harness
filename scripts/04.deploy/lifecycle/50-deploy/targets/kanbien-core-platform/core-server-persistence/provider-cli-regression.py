@@ -71,7 +71,7 @@ class ProviderCliRegression(unittest.TestCase):
             inventory=repository/'scripts/04.deploy/inventory-deploy-control/script.py';inventory.parent.mkdir(parents=True);inventory.write_text('import os,sys\nsys.exit(1 if os.environ.get("FIXTURE_SCENARIO")=="inventory-gap" else 0)\n')
             command_path=repository/RESTORE.with_name('script.py').relative_to(ROOT)
 
-            cases=[('inventory-gap','blocked',False),('all-absent','cleaned-up',False),('tasks-stopped','cleaned-up',False),('policy-present','pending',False),('policy-present','uncertain',True),('policy-denied','blocked',False),('policy-unknown','blocked',False),('database-denied','uncertain',False),('tasks-denied','uncertain',False),('tasks-paginated','uncertain',False),('tasks-running','pending',False),('tasks-provisioning','pending',False),('tasks-unknown','uncertain',False),('tasks-mismatch','uncertain',False)]
+            cases=[('inventory-gap','blocked',False),('all-absent','cleaned-up',False),('tasks-stopped','cleaned-up',False),('policy-present','blocked',False),('policy-present','blocked',True),('policy-denied','blocked',False),('policy-unknown','blocked',False),('database-denied','uncertain',False),('tasks-denied','uncertain',False),('tasks-paginated','uncertain',False),('tasks-running','pending',False),('tasks-provisioning','pending',False),('tasks-unknown','uncertain',False),('tasks-mismatch','uncertain',False)]
             for index,(scenario,verdict,observe) in enumerate(cases):
                 with self.subTest(scenario=scenario,observe=observe):
                     calls=root/f'calls-{index}.jsonl'
@@ -83,7 +83,8 @@ class ProviderCliRegression(unittest.TestCase):
                     self.assertEqual(result.returncode,0 if verdict=='cleaned-up' else 1)
                     operations=[json.loads(line)[1] for line in calls.read_text().splitlines()] if calls.exists() else []
                     self.assertNotIn('delete-db-instance',operations)
-                    self.assertEqual('delete-role-policy' in operations,scenario=='policy-present' and not observe)
+                    self.assertNotIn('delete-role-policy',operations)
+                    if scenario=='policy-present':self.assertEqual(report['findings'][0]['code'],'persistence-restoration-temporary-identity-policy-mismatch')
                     if verdict=='cleaned-up':
                         self.assertIn('get-role-policy',operations)
                         self.assertEqual(report['facts']['temporary_authority'],'absent')

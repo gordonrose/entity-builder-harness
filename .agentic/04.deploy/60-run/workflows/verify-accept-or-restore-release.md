@@ -74,6 +74,24 @@ and the selected provider workflow for concrete commands and authority.
    restored workload identities and proof. Retain candidate and restoration
    evidence separately.
 
+## Bounded Connection Investigation
+
+A connection diagnostic is a separate non-accepting operation against an owned
+disposable restored database. The selected scope declares its controller mode,
+record/snapshot binding, task identity, attempt/deadline limits and cleanup.
+It does not recreate a database, replay migrations, rotate credentials, promote
+a release or satisfy recovery acceptance. Only the existing recovery verifier's
+accepted receipt can meet that obligation.
+
+The diagnostic controller reserves one launch per database incarnation before
+submitting its task. An uncertain response, interrupted invocation, expired ECS
+task retention or missing logs permits observation of that reservation and task,
+never another launch. The existing recovery verifier keeps its own single-run
+identity. Log reconciliation reads at most three pages/observations per stream
+per invocation and retains new closed observations without rewriting earlier
+reports. Collection/write failure is reported separately from the original
+operation result. Deployment authority owns live execution and temporary access.
+
 ## Uncertain Results and Completion
 
 Use existing logs, receipts and provider operation identities to inspect an

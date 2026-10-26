@@ -33,7 +33,12 @@ trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/build.sh --out-dir "$TEMPORARY_DIRECTORY"
 node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
-node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs "$TEMPORARY_DIRECTORY"
+# The composed entrypoint imports its optional target metrics adapter at module
+# load time.  Resolve its real external packages here just as the image payload
+# does, while the individual runtime fixtures still select provider `none`.
+NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs "$TEMPORARY_DIRECTORY"
+NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs "$TEMPORARY_DIRECTORY"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs "$TEMPORARY_DIRECTORY"
+NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs "$TEMPORARY_DIRECTORY"
 
 python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"

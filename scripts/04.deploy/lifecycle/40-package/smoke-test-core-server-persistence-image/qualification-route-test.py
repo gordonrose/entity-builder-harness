@@ -76,6 +76,7 @@ printf '%s\\n' "$command_path" >> "$QUAL_CALLS"
 if [[ "$command_path" == "$QUAL_FAIL" ]]; then exit 23; fi
 if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path" "$@"; fi
 ''')
+    (binaries / 'npm').write_text('#!/bin/bash\nprintf "npm:%s\\n" "$*" >> "$QUAL_CALLS"\nif [[ "npm:$*" == "$QUAL_FAIL" ]]; then exit 23; fi\n')
     (binaries / 'python3').write_text('#!/bin/bash\nprintf "%s\\n" "$1" >> "$QUAL_CALLS"\n[[ "$1" != "$QUAL_FAIL" ]]\n')
     (binaries / 'docker').write_text('#!/bin/bash\nprintf "docker:%s\\n" "$1" >> "$QUAL_CALLS"\n')
     for binary in binaries.iterdir():
@@ -89,6 +90,8 @@ if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path"
         'scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh',
         'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',
         'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh',
+        'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh',
+        'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh',
     ]
     for rejected in ('', *required):
         calls.write_text('')

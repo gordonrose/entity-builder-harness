@@ -9,14 +9,14 @@
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
 #   kind: image-contract
-#   purpose: Build, qualify, scan, and publish the minimal collector sidecar before the target can select it by private immutable digest.
+#   purpose: Build, qualify, scan, and publish the minimal dedicated collector workload before the target can select it by private immutable digest.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.pipeline.kanbien-core-platform.observability-collector-package-custody
 #     path: .github/workflows/publish-kanbien-core-platform-observability-collector.yml
 #   - id: deploy.command.validate-core-server-persistence-observability-mvp
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh
-schema: deploy/sidecar-image-contract/v1
+schema: deploy/collector-image-contract/v1
 target: kanbien-core-platform
 scope: core-server-persistence
 candidate_id: observability-collector
@@ -43,7 +43,7 @@ destination:
 runtime:
   configuration_source: target-owned-ssm-parameter-non-secret
   configuration_environment: AOT_CONFIG_CONTENT
-  receiver: otlp-http-127-0-0-1-4318
+  receiver: otlp-http-private-service-4318
   exporter: aws-emf-cloudwatch-logs
   application_failure_effect: bounded-telemetry-failure-only
 qualification:

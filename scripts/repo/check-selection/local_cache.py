@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -29,7 +29,7 @@ import sys
 import tempfile
 import yaml
 
-TOOLS = {'bash', 'python3', 'node', 'npm', 'typescript'}
+TOOLS = {'bash', 'python3', 'node', 'npm', 'typescript', 'openssl'}
 
 
 def valid_node_package(value: object) -> bool:
@@ -160,7 +160,7 @@ def runtime_identity(root: Path, declaration: dict) -> dict:
         executable = root / 'node_modules/.bin/tsc' if tool == 'typescript' else Path(shutil.which(tool) or '/missing-tool/' + tool)
         if not executable.is_file(): raise ValueError('check-runtime-tool-missing:' + tool)
         resolved = executable.resolve()
-        argv = [str(executable), '--version']
+        argv = [str(executable), 'version' if tool == 'openssl' else '--version']
         completed = subprocess.run(argv, cwd=root, capture_output=True, text=True, timeout=15, env=probe_environment)
         if completed.returncode: raise ValueError('check-runtime-tool-unavailable:' + tool)
         info = resolved.stat()

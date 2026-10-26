@@ -5,7 +5,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-10-24"
-//   updated_on: "2026-10-25"
+//   updated_on: "2026-10-26"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -20,6 +20,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import { createServer } from "node:net";
 import { join, resolve } from "node:path";
 
 const compiled = resolve(process.argv[2]);
@@ -106,6 +107,8 @@ try {
   await roleCredentialRegression();
   await iamAuthenticationRegression();
   administrationDiagnosticRegression();
+  restoreDiagnosticRegression();
+  await restoreTransportProbeRegression();
   targetTemplateRegression();
   assert.equal(globalThis.poolAttempts, 0);
   console.log(`Persistence configuration regression passed (${scenarios + 5} entrypoint failures before pool creation; migration deadline and TLS authority validated).`);
@@ -119,6 +122,50 @@ function administrationDiagnosticRegression() {
     "PERSISTENCE_RUNTIME_ADMINISTRATION_UNEXPECTEDLY_PERMITTED",
   ]) assert.equal(administration.administrationFailureCode(new Error(code)), code, "closed privilege-probe outcome must remain diagnostically distinct");
   assert.equal(administration.administrationFailureCode(new Error("password=synthetic-canary")), "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED", "unexpected provider detail must not enter a diagnostic code");
+}
+
+function restoreDiagnosticRegression() {
+  for (const [providerCode, diagnostic] of [
+    ["28P01", "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED"],
+    ["42501", "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED"],
+    ["42P01", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE"],
+    ["ETIMEDOUT", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"],
+    ["ENETUNREACH", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"],
+    ["ERR_TLS_CERT_ALTNAME_INVALID", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID"],
+  ]) assert.equal(restore.restoreVerificationFailureCode({ code: providerCode }), diagnostic);
+  assert.equal(restore.restoreVerificationFailureCode(new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string")), "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_MATERIAL_INVALID", "the one fixed node-postgres token-material invariant has its own closed remediation code");
+  assert.equal(restore.restoreVerificationFailureCode(new Error("SASL: unexpected password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE", "nearby provider detail must not become an allowlisted diagnostic");
+  assert.equal(restore.restoreVerificationFailureCode({ cause: { code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE" }, message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID", "only an allowlisted causal machine code may cross the diagnostic boundary");
+  assert.equal(restore.restoreVerificationFailureCode({ errors: [{ code: "28P01", message: "password=synthetic-canary" }] }), "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", "an allowlisted nested PostgreSQL code may cross the boundary without its message");
+  assert.equal(restore.restoreVerificationFailureCode({ errors: [{ errors: [{ code: "42501", message: "password=synthetic-canary" }] }] }), "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "bounded aggregate traversal retains only allowlisted machine codes");
+  assert.equal(restore.restoreVerificationFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE", "raw provider detail must never become a diagnostic code");
+  assert.equal(restore.restoreConnectionFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE", "an opaque connection failure must remain closed but distinguish the failed boundary");
+  assert.equal(restore.restoreTransportFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE", "an opaque preflight failure must remain a closed transport result");
+  assert.equal(restore.restoreTlsPreflightFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_NEGOTIATION_UNAVAILABLE", "an opaque TLS preflight failure must remain a closed TLS result");
+  assert.equal(restore.restoreTlsPreflightFailureCode({ code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE", message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID", "an allowlisted TLS code preserves trust-specific remediation without provider detail");
+  assert.equal(restore.restorePostTransportConnectionFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE", "a separate successful probe cannot establish an internal stage of the driver connection");
+  assert.equal(restore.restoreTransportFailureCode({ code: "ETIMEDOUT", message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE", "allowlisted transport machine codes preserve the established closed category");
+  assert.equal(restore.restoreQueryFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE", "an opaque query failure must remain closed but distinguish the failed boundary");
+  assert.equal(restore.restoreConnectionFailureCode({ code: "28P01", message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", "an allowlisted connection error must preserve its safe classification");
+  assert.equal(restore.restoreQueryFailureCode({ code: "42P01", message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE", "an allowlisted query error must preserve its safe classification");
+}
+
+async function restoreTransportProbeRegression() {
+  const server = createServer((socket) => socket.destroy());
+  await new Promise((resolve, reject) => server.listen(0, "127.0.0.1", (error) => error === undefined ? resolve(undefined) : reject(error)));
+  const address = server.address();
+  assert.equal(typeof address, "object", "fixture transport listener must expose a bound port");
+  if (typeof address !== "object" || address === null) throw new Error("transport-listener-unavailable");
+  try {
+    await restore.probePostgreSqlTransport("127.0.0.1", address.port, 100);
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => error === undefined ? resolve(undefined) : reject(error)));
+  }
+  // Once the listener has gone away, the same local port is a deterministic
+  // closed-path fixture. An open-but-idle listener is *not* a transport
+  // failure—it correctly proves TCP reachability and leaves PostgreSQL/TLS to
+  // the next bounded phase.
+  await assert.rejects(() => restore.probePostgreSqlTransport("127.0.0.1", address.port, 100), "a closed private port must reject before the verifier constructs a PostgreSQL pool");
 }
 
 async function rejectedBeforePool(run, env) {
