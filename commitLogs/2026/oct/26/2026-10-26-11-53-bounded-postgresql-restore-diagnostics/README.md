@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T14:57:02Z
-latest_commit_sha: b86b990fd1a90df1c42592e83244aec6964f2e17
-chat_duration: 10990s (00:03:03:10)
+latest_commit_at_utc: 2026-10-26T16:22:03Z
+latest_commit_sha: cec8b1aa365ed9c5fb15ded7db265ef0ee5a709b
+chat_duration: 16091s (00:04:28:11)
 estimated_chat_tokens: 920961 estimated from chat transcript bytes (3683841 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -142,7 +142,7 @@ Durable evidence: Active worktree/branch remain recorded here; HEAD 8a6c4fec09d6
 
 ADR needed: no
 
-Reason: Current adapter slice extends existing error/connection owners and Core diagnostic descriptor without changing architectural ownership; full route governance remains pending.
+Reason: Existing adapter, shared diagnostic and restore-controller owners were extended with bounded typed observations and an explicit non-accepting route; no architectural ownership migration or new general execution system.
 
 
 ### 2026-10-26T12:10:34Z - Decision
@@ -699,6 +699,28 @@ Mode: manual
 
 Action: Retained append-only original-failure assertions and adapted incoming re-observation fixture to strict typed helper; retained regional CloudTrail proof.
 
+
+### 2026-10-26T16:22:03Z - Commit recorded
+
+Commit: `fd547c20389d2257888435c83125a79deacf3a46`
+
+Message: Merge accepted delivery-chain coverage into diagnostic work
+
+Summary: Reviewed reconciliation preserves accepted delivery coverage, diagnostics, collector lifecycle, rollback support and bounded cleanup; affected suites passed.
+
+ADR impact: no new ADR
+
+
+### 2026-10-26T16:22:03Z - Commit recorded
+
+Commit: `cec8b1aa365ed9c5fb15ded7db265ef0ee5a709b`
+
+Message: Merge remote deployment fixes with bounded diagnostics
+
+Summary: Reviewed remote reconciliation preserves private SCRAM classification, read-only rejection diagnosis, immutable candidate evidence and simulated-root isolation; affected suites passed.
+
+ADR impact: no new ADR
+
 ## Sub-Agent Activity
 
 
@@ -725,6 +747,20 @@ Summary: Reviewed baseline and adapter diff. Fixed invocation-scoping stale obse
   Message: feat(diagnostics): bound restored PostgreSQL connection diagnosis
   Summary: Verified intermediate implementation checkpoint: bounded adapter/controller diagnostics, typed compatible readers, one-attempt connection investigation, fixture isolation and focused qualification/selection wiring. Fifteen selected local checks passed; real-engine CI wrapper separately passed. Full goal remains active for reconciliation of main8d479627 and origin494693ef, preservation of newer diagnostic/runtime contracts, combined verification, independent review, actual image qualification, main integration and normal push.
   ADR impact: No new architectural owner; additive diagnostics and governed mode in existing owners.
+
+
+- Commit: `fd547c20389d2257888435c83125a79deacf3a46`
+  Time UTC: 2026-10-26T16:22:03Z
+  Message: Merge accepted delivery-chain coverage into diagnostic work
+  Summary: Reviewed reconciliation preserves accepted delivery coverage, diagnostics, collector lifecycle, rollback support and bounded cleanup; affected suites passed.
+  ADR impact: no new ADR
+
+
+- Commit: `cec8b1aa365ed9c5fb15ded7db265ef0ee5a709b`
+  Time UTC: 2026-10-26T16:22:03Z
+  Message: Merge remote deployment fixes with bounded diagnostics
+  Summary: Reviewed remote reconciliation preserves private SCRAM classification, read-only rejection diagnosis, immutable candidate evidence and simulated-root isolation; affected suites passed.
+  ADR impact: no new ADR
 
 ## Main Refresh Conflicts
 
@@ -1228,14 +1264,14 @@ Summary: Reviewed baseline and adapter diff. Fixed invocation-scoping stale obse
 
 ADR needed: no
 ADR path:
-Reason: Current adapter slice extends existing error/connection owners and Core diagnostic descriptor without changing architectural ownership; full route governance remains pending.
+Reason: Existing adapter, shared diagnostic and restore-controller owners were extended with bounded typed observations and an explicit non-accepting route; no architectural ownership migration or new general execution system.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T11:53:52Z
-Latest commit at UTC: 2026-10-26T14:57:02Z
-Latest commit SHA: b86b990fd1a90df1c42592e83244aec6964f2e17
-Chat duration: 10990s (00:03:03:10)
+Latest commit at UTC: 2026-10-26T16:22:03Z
+Latest commit SHA: cec8b1aa365ed9c5fb15ded7db265ef0ee5a709b
+Chat duration: 16091s (00:04:28:11)
 Estimated chat tokens: 920961 estimated from chat transcript bytes (3683841 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -1255,3 +1291,11 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
 - Independent review identified simulated evidence containment gaps in the combined generic succession CLI and candidate collector writer. Both now require temporary evidence roots disjoint from implementation roots, with imported and real CLI regression coverage proving failure before writes. Offline validate-candidate arguments now enforce required candidate and conflicting-argument rejection. Historical-scope omission of active candidate outputs is allowed only for exact declared non-applicability matching actual lifecycle; active-route negative tests and actual parser probes preserve fail-closed coverage. Full acceptance reconciliation final rerun and final active-branch gates remain pending.
 
 - Final remote-intake rehearsal passed all 19 acceptance checks, generic succession regressions, inventory zero findings, metadata and governed-command drift. Reviewer reported no remaining material findings across diagnostics and both main reconciliations. These establish local behavior only; actual image qualification and final active-worktree gates remain pending.
+
+- Active branch now contains local main and origin/main through cec8b1aa365ed9c5fb15ded7db265ef0ee5a709b. Governed apply fast-forwarded correctly and removed its completed durable preflight, then returned an error while inspecting the already-cleared old /tmp sibling; the stale sibling reference/metadata is preserved, with no forced cleanup. Source worktree is clean apart from this required session bookkeeping. Final diff against origin/main contains no release-evidence changes.
+
+- Actual local image qualification passed for kanbien-core-server-persistence:bounded-diagnostics-cec8b1aa, image manifest sha256:45eb3545b92dc49b5fcebcbbceef5a5ef883890d9c3cd7265abaf54ca5ea4c1b. The real build, driver/disposable-engine/composition checks, finished PostgreSQL/TLS/package smoke and five temporary-effect cleanup checks passed. Anonymous configuration remained untouched outside its temporary wrapper. No image was published or deployed.
+- All eight actual retained v1 operation diagnostic reports validate with the current reader without modification; final source diff against origin/main preserves release evidence byte-for-byte. Independent review has no remaining material findings.
+- The final catalog-selected run passed 37 local checks and deferred 20 external-stage entries. Four RAG checks were correctly marked uncertain when the first retrieval regression refreshed a stale deterministic artifact recognition source. Reviewed update adds 40 terms for 20 present diagnostic/incoming artifacts and preserves every prior term unchanged. This generated source is staged and the four checks are being rerun against stable inputs, reusing unaffected successful evidence. The actual image inputs did not change, so no image rebuild is required.
+
+- Final RAG fixture correction: compile-retrieval-policy archive smoke now regenerates recognition from actual exported files, using actual checkout source SHA exactly as the packaged runtime does. This resolves checkout-only diagnostic artifact references in its narrow archive without relaxing any validator or missing-governance assertion. All three archive CLI checks and compiler smoke pass. Independent reviewer confirmed fixture-only scope and exact generated-index additions, with no remaining material findings.
