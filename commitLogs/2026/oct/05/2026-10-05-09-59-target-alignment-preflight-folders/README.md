@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T01:42:24Z
-latest_commit_sha: HEAD
-chat_duration: 1788175s (20:16:42:55)
+latest_commit_at_utc: 2026-10-26T02:41:35Z
+latest_commit_sha: 1ab65b6c
+chat_duration: 1791726s (20:17:42:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3719,6 +3719,17 @@ Summary: Adds a credential-free PostgreSQL SSL/TLS preflight to the isolated res
 
 ADR impact: No ADR: focused diagnostic refinement within the established isolated recovery proof.
 
+
+### 2026-10-26T02:41:35Z - Commit recorded
+
+Commit: `1ab65b6c`
+
+Message: evidence(deploy): retain restore handshake rejection
+
+Summary: Retained the qualified package receipt, image-input applicability record, and closed isolated restore rejection after source-safe cleanup; recovery acceptance remains unproven.
+
+ADR impact: No ADR: factual live evidence under the existing durable proof model.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4751,6 +4762,13 @@ ADR impact: No ADR: focused diagnostic refinement within the established isolate
   Summary: Adds a credential-free PostgreSQL SSL/TLS preflight to the isolated restore verifier. It retains closed transport, TLS negotiation, TLS trust and post-TLS handshake outcomes, with composition and restore-controller checks passing.
   ADR impact: No ADR: focused diagnostic refinement within the established isolated recovery proof.
 
+
+- Commit: `1ab65b6c`
+  Time UTC: 2026-10-26T02:41:35Z
+  Message: evidence(deploy): retain restore handshake rejection
+  Summary: Retained the qualified package receipt, image-input applicability record, and closed isolated restore rejection after source-safe cleanup; recovery acceptance remains unproven.
+  ADR impact: No ADR: factual live evidence under the existing durable proof model.
+
 ## Main Refresh Conflicts
 
 
@@ -4774,9 +4792,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T01:42:24Z
-Latest commit SHA: HEAD
-Chat duration: 1788175s (20:16:42:55)
+Latest commit at UTC: 2026-10-26T02:41:35Z
+Latest commit SHA: 1ab65b6c
+Chat duration: 1791726s (20:17:42:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
