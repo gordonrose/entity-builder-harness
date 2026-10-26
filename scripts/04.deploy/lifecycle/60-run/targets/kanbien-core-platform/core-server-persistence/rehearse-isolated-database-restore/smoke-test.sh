@@ -169,10 +169,32 @@ controls = {"CoreServerPersistenceRestorationVerifierTaskDefinitionArn": "defini
 source_for_posture = {"DBSubnetGroup": {"DBSubnetGroupName": "subnet-group"}}
 assert module.correct(restored, source_for_posture, "sg-restored")
 assert not module.correct({**restored, "EnabledCloudwatchLogsExports": ["postgresql"]}, source_for_posture, "sg-restored")
+class PolicySimulationFixture:
+    def __init__(self, decision="allowed"): self.decision = decision; self.calls = []
+    def aws(self, *args):
+        self.calls.append(args)
+        if args[1] == "get-role": return True, {"Role": {"Arn": "arn:aws:iam::337159794548:role/restore-role"}}, "ok"
+        if args[1] == "simulate-principal-policy":
+            resource = args[args.index("--resource-arns") + 1]
+            return True, {"EvaluationResults": [{"EvalActionName": "rds-db:connect", "EvalResourceName": resource, "EvalDecision": self.decision}]}, "ok"
+        raise AssertionError(args)
+
+assert module.temporary_restore_identity_policy_effective(PolicySimulationFixture(), {"PersistenceRestorationVerifierTaskRoleName": "restore-role"}, restored) == "ok"
+assert module.temporary_restore_identity_policy_effective(PolicySimulationFixture("implicitDeny"), {"PersistenceRestorationVerifierTaskRoleName": "restore-role"}, restored) == "persistence-restoration-temporary-identity-not-authorized"
+class MissingSimulationFixture(PolicySimulationFixture):
+    def aws(self, *args):
+        if args[1] == "simulate-principal-policy": return False, None, "aws-access-denied"
+        return super().aws(*args)
+
+assert module.temporary_restore_identity_policy_effective(MissingSimulationFixture(), {"PersistenceRestorationVerifierTaskRoleName": "restore-role"}, restored) == "aws-access-denied"
 class LaunchFixture:
     def __init__(self): self.calls = []
     def aws(self, *args):
         self.calls.append(args)
+        if args[1] == "get-role": return True, {"Role": {"Arn": "arn:aws:iam::337159794548:role/restore-role"}}, "ok"
+        if args[1] == "simulate-principal-policy":
+            resource = args[args.index("--resource-arns") + 1]
+            return True, {"EvaluationResults": [{"EvalActionName": "rds-db:connect", "EvalResourceName": resource, "EvalDecision": "allowed"}]}, "ok"
         if args[1] == "run-task": return True, {}, "ok"
         raise AssertionError(args)
 
@@ -193,6 +215,22 @@ with contextlib.redirect_stdout(output):
 module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks = originals
 assert any(call[1] == "run-task" for call in launch.calls)
 assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-verifier-submitted-awaiting-provider-observation"}]
+denied = PolicySimulationFixture("implicitDeny")
+originals = module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks
+module.source = lambda _m: ({}, "ok")
+module.controls = lambda _m: (controls, "ok")
+module.db = lambda _m, _id: (restored, "ok")
+module.correct = lambda *_: True
+module.task_def_valid = lambda *_: True
+module.temporary_restore_identity_policy = lambda *_args: ("ok", module.restore_identity_resource(restored))
+module.temporary_restore_identity_policy_stable = lambda *_args: True
+module.verifier_tasks = lambda *_args: ([], "ok")
+output = io.StringIO()
+with contextlib.redirect_stdout(output):
+    assert module.verify(denied, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2") == 1
+module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks = originals
+assert not any(call[1] == "run-task" for call in denied.calls)
+assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-temporary-identity-not-effective"}]
 
 # A new isolated restore must request both ordinary PostgreSQL and dedicated
 # IAM-authentication error exports.  The controller retains only closed

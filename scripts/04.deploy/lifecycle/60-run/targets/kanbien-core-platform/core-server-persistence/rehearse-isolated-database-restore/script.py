@@ -315,6 +315,28 @@ def temporary_restore_identity_policy_stable(m, controls):
   except (json.JSONDecodeError,TypeError):request=None
   if isinstance(request,dict) and request.get("roleName")==role and request.get("policyName")==name and observed is not None and observed<=cutoff:return True
  return False
+
+def temporary_restore_identity_policy_effective(m, controls, restored):
+ """Require IAM's effective decision before launching a new verifier task.
+
+ A retained PutRolePolicy event establishes only that the mutation occurred.
+ The verifier's database-authentication boundary needs the separate fact that
+ the exact task role is allowed to connect as the exact restored database
+ identity. This is an IAM read; it neither creates a token nor contacts the
+ database.
+ """
+ resource=restore_identity_resource(restored); role=controls.get("PersistenceRestorationVerifierTaskRoleName") if isinstance(controls,dict) else None
+ if not isinstance(resource,str) or not isinstance(role,str) or not role:return "persistence-restoration-identity-binding-unavailable"
+ ok,value,code=m.aws("iam","get-role","--role-name",role)
+ actual=value.get("Role") if ok and isinstance(value,dict) else None
+ arn=actual.get("Arn") if isinstance(actual,dict) else None
+ if not isinstance(arn,str) or not re.fullmatch(r"arn:aws:iam::[0-9]{12}:role/"+re.escape(role),arn):return "persistence-restoration-temporary-identity-role-unavailable" if ok else code
+ ok,value,code=m.aws("iam","simulate-principal-policy","--policy-source-arn",arn,"--action-names","rds-db:connect","--resource-arns",resource)
+ results=value.get("EvaluationResults") if ok and isinstance(value,dict) else None
+ if not ok:return code
+ if not isinstance(results,list) or len(results)!=1 or not isinstance(results[0],dict):return "persistence-restoration-temporary-identity-simulation-invalid"
+ result=results[0]
+ return "ok" if result.get("EvalActionName")=="rds-db:connect" and result.get("EvalResourceName")==resource and result.get("EvalDecision")=="allowed" else "persistence-restoration-temporary-identity-not-authorized"
 def task_image_digest(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None; c=cs[0] if isinstance(cs,list) and len(cs)==1 and isinstance(cs[0],dict) else None; image=c.get("image") if isinstance(c,dict) else None
  return image.rsplit("@",1)[1] if isinstance(image,str) and image.count("@")==1 and image.rsplit("@",1)[1].startswith("sha256:") else None
@@ -419,6 +441,8 @@ def verify(m,sid,rid,observe_only=False):
  if not temporary_restore_identity_policy_stable(m,ctl):return emit("pending","persistence-restoration-temporary-identity-policy-stabilizing",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,True)
  if identity_status!="ok" or identity_reference!=restore_identity_resource(restored):return emit("uncertain","persistence-restoration-temporary-identity-policy-not-stable",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
+ effective=temporary_restore_identity_policy_effective(m,ctl,restored)
+ if effective!="ok":return emit("blocked","persistence-restoration-temporary-identity-not-effective" if effective=="persistence-restoration-temporary-identity-not-authorized" else effective,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","value":identity_reference},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
  ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--client-token",started,"--network-configuration",net,"--overrides",overrides)
  return emit("pending" if ok else "uncertain","persistence-restoration-verifier-submitted-awaiting-provider-observation" if ok else c,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
