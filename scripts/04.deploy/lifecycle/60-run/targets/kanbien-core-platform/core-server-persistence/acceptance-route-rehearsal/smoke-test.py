@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -201,7 +201,7 @@ def full_route():
         # Package custody is acceptance evidence too.  Keep the simulated
         # files in the same durable evidence root as production receipts so
         # the generic successor validator exercises its allowlisted-root rule.
-        values={'candidate_receipt':custody(evidence_root/'package-receipts/candidate.json',facts['candidate_digest']),'rollback_receipt':custody(evidence_root/'package-receipts/rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'proof_applicability':None,'observability_receipts':observability_receipts}
+        values={'candidate_receipt':custody(evidence_root/'package-receipts/candidate.json',facts['candidate_digest']),'rollback_receipt':custody(evidence_root/'package-receipts/rollback.json',facts['rollback_digest']),'restoration_verifier_receipt':custody(evidence_root/'package-receipts/restoration-verifier.json',facts['candidate_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'proof_applicability':None,'observability_receipts':observability_receipts}
         values["rollback_compatibility_id"]="rollback-compatibility-"+"a"*24
         route_inputs=yaml.safe_load((ROOT/ROUTE).read_text())['inputs']
         values.update({key:spec['example'] for key,spec in route_inputs.items() if key.endswith('_predecessor')})

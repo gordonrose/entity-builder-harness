@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -193,6 +193,18 @@ with tempfile.TemporaryDirectory() as temporary:
         pass
     archive_path.write_bytes(archived_bytes)
     assert run("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(compatibility)) == 0
+    # Later contract revisions do not rewrite archival truth.  The ordinary
+    # selector rejects the stale binding, while an archive reader can still
+    # validate its immutable receipt and identity before skipping it.
+    current_contract_path = module.REPOSITORY_ROOT / "contracts/configuration.yml"
+    current_contract_path.write_text("configuration: later\n", encoding="utf-8")
+    try:
+        module.compatibility_record(root, identifier)
+        raise AssertionError("stale compatibility binding selected")
+    except module.SuccessionFailure as error:
+        assert str(error) == "release-succession-compatibility-contract-mismatch"
+    assert module.compatibility_record(root, identifier, current_contracts=False)[1]["identity"]["image_digest"] == retained["image_digest"]
+    current_contract_path.write_text("configuration: initial\n", encoding="utf-8")
     malformed = yaml.safe_load(compatibility.read_text(encoding="utf-8"))
     malformed["historical_release"]["image_digest"] = "sha256:" + "1" * 64
     write(root / module.CANDIDATE_DIRECTORY / "invalid-compatibility.yml", malformed)

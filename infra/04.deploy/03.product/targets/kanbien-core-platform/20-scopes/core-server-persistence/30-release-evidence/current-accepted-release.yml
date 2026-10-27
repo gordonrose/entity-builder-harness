@@ -2,10 +2,9 @@ schema: deploy/release-current-ref/v1
 target: kanbien-core-platform
 scope: core-server-persistence
 status: active
-release_id: release-652d4dfa24d1096a23a346d1
+release_id: release-cb3cf3292e03fda8e7e40188
 record:
-  path: accepted-releases/release-652d4dfa24d1096a23a346d1.yml
-  sha256: sha256:91bbb6247402af236eb56f52fc3d704db583a9531a98b576901d3874bdb023d2
-predecessor: null
-promoted_at: '2026-10-25T11:18:54.873930Z'
-
+  path: accepted-releases/release-cb3cf3292e03fda8e7e40188.yml
+  sha256: sha256:e99de94becca94d4a6d6a827d1b425521136e0d0c7e764481497f7e048340650
+predecessor: release-652d4dfa24d1096a23a346d1
+promoted_at: '2026-10-27T00:38:01.885276Z'

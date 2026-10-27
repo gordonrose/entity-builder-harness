@@ -658,8 +658,15 @@ def diagnose_connection(m,sid,rid,observe_only=False,record_proof_path=None):
  ok,_,_=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",definition,"--launch-type","FARGATE","--count","1","--started-by",operation,"--client-token",operation,"--network-configuration",net,"--overrides",overrides)
  return emit_diagnostic("pending" if ok else "uncertain","persistence-connection-diagnostic-submitted" if ok else "persistence-connection-diagnostic-launch-uncertain",facts=facts)
 
-def absent_database_reservations_resolved(rid, tasks):
- """An absent database does not prove a reserved task launch never happened."""
+def absent_database_reservations_resolved(m, rid, definition):
+ """Close only terminal or long-expired diagnostic reservations after removal.
+
+ A diagnostic reservation from a previous incarnation can outlive ECS stopped
+ task retention. It cannot block deletion forever once a fresh provider search
+ finds no matching task, its bounded deadline has elapsed, and the database
+ plus its temporary access have already been independently removed. This is a
+ cleanup conclusion only; it is never diagnostic or recovery acceptance proof.
+ """
  if OPERATION_DIAGNOSTICS.exists() and not OPERATION_DIAGNOSTICS.is_dir():return False
  try:
   paths=sorted(OPERATION_DIAGNOSTICS.glob("kanbien-connect-*-launch.json"))
@@ -672,9 +679,19 @@ def absent_database_reservations_resolved(rid, tasks):
    if target!=rid:continue
    operation=reservation.get("operation_id")
    if path.name!=f"{operation}-launch.json" or reservation.get("target")!="kanbien-core-platform" or reservation.get("scope")!="core-server-persistence" or reservation.get("classification",{}).get("code")!="persistence-connection-diagnostic-launch-reserved":return False
-   matching=[task for task in tasks if task.get("startedBy")==operation]
-   if len(matching)==1 and matching[0].get("lastStatus")=="STOPPED":continue
-   if not diagnostic_completion_resolves(operation,rid):return False
+   if diagnostic_completion_resolves(operation,rid):continue
+   matching,code=verifier_tasks(m,operation,definition)
+   if matching is None:return False
+   if matching:
+    ok,response,_=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*matching)
+    observed=response.get("tasks") if ok and isinstance(response,dict) else None
+    if not isinstance(observed,list) or len(observed)!=len(matching) or response.get("failures") or {item.get("taskArn") for item in observed if isinstance(item,dict)}!=set(matching) or not all(isinstance(item,dict) and item.get("startedBy")==operation and item.get("taskDefinitionArn")==definition and item.get("lastStatus")=="STOPPED" for item in observed):return False
+    continue
+   observed_at=parsed_time(reservation.get("observed_at"))
+   # A fresh empty list can be an ECS propagation race. Only an absence that
+   # outlasts the declared task deadline can close an unrecoverable legacy
+   # reservation, and only after the caller has proved database/policy absence.
+   if datetime.now(timezone.utc)-observed_at<=timedelta(seconds=DEADLINE):return False
   return True
  except Exception:return False
 
@@ -709,7 +726,7 @@ def cleanup(m,sid,rid,observe_only=False):
   states={"PROVISIONING","PENDING","ACTIVATING","RUNNING","DEACTIVATING","STOPPING","DEPROVISIONING","STOPPED"}
   if any(task.get("lastStatus") not in states for task in listed):return emit("uncertain","persistence-restore-cleanup-task-state-uncertain",facts=facts)
   if any(task["lastStatus"]!="STOPPED" for task in listed):return emit("pending","persistence-restore-cleanup-verifier-still-running",facts=facts)
- if restored is None and not absent_database_reservations_resolved(rid,listed):return emit("uncertain","persistence-connection-diagnostic-reservation-binding-unproven",facts=facts)
+ if restored is None and not absent_database_reservations_resolved(m,rid,definition):return emit("uncertain","persistence-connection-diagnostic-reservation-binding-unproven",facts=facts)
  # If the database is absent its resource identity cannot own a remaining
  # policy. Only independently observed policy absence can complete cleanup.
  removed=remove_temporary_restore_identity_policy(m,ctl,observe_only,restored)

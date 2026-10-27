@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: persistence.diagnostics
 #   disciplines: [security, sre]
@@ -179,6 +179,14 @@ class DiagnosticTests(unittest.TestCase):
     _,result=self.capture(self.m.cleanup,provider,SID,RID)
     self.assertEqual(result['verdict'],'uncertain',result)
     self.assertIn('reservation-binding-unproven',result['findings'][0]['code'])
+    # A reservation that has outlived the task deadline and has no provider
+    # task record is cleanup-safe after database and temporary access removal.
+    launch=next(self.m.OPERATION_DIAGNOSTICS.glob('kanbien-connect-*-launch.json'))
+    expired=json.loads(launch.read_text())
+    expired['observed_at']='2020-01-01T00:00:00Z'
+    launch.write_text(json.dumps(expired))
+    _,result=self.capture(self.m.cleanup,provider,SID,RID)
+    self.assertEqual(result['verdict'],'cleaned-up',result)
  def test_historical_terminal_diagnostic_report_resolves_retention_after_database_deletion(self):
   provider,stack=self.target()
   with stack:

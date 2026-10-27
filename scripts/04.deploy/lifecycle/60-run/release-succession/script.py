@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -245,7 +245,7 @@ def retained_rollback_identity(root: Path) -> dict[str, Any]:
     return identity
 
 
-def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> tuple[str, str, str, dict[str, Any]]:
+def compatibility_identity(record: dict[str, Any], root: Path | None = None, *, current_contracts: bool = True) -> tuple[str, str, str, dict[str, Any]]:
     """Validate a fresh, additive compatibility proof for a rollback release.
 
     This record does not promote or amend any previous acceptance.  It names
@@ -285,7 +285,11 @@ def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> 
     proofs = proof_set(record, root)
     if proof["receipt_count"] != len(proofs):
         raise SuccessionFailure("release-succession-compatibility-proof-count-mismatch")
-    if root is not None:
+    # A compatibility archive is immutable historical evidence.  Consumers
+    # selecting a rollback target require the then-current contract hashes;
+    # archive readers may instead validate the retained binding while allowing
+    # an older record to remain historically true after those contracts move.
+    if root is not None and current_contracts:
         for contract in contracts.values():
             path = repository_file(contract["path"])
             try: raw = path.read_bytes()
@@ -328,12 +332,12 @@ def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> 
     return target, scope, identity["image_digest"], identity
 
 
-def compatibility_record(root: Path, identifier: str) -> tuple[dict[str, Any], dict[str, Any]]:
+def compatibility_record(root: Path, identifier: str, *, current_contracts: bool = True) -> tuple[dict[str, Any], dict[str, Any]]:
     if not re.fullmatch(r"rollback-compatibility-[0-9a-f]{24}", identifier):
         raise SuccessionFailure("release-succession-compatibility-reference-invalid")
     path = root / COMPATIBILITY_DIRECTORY / f"{identifier}.yml"
     record, raw = document(path)
-    target, scope, _, identity = compatibility_identity(record, root)
+    target, scope, _, identity = compatibility_identity(record, root, current_contracts=current_contracts)
     if identifier != record.get("rollback", {}).get("id"):
         raise SuccessionFailure("release-succession-compatibility-reference-mismatch")
     return record, {"target": target, "scope": scope, "identity": identity, "sha256": sha256_bytes(raw)}

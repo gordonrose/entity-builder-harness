@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -35,6 +35,10 @@ inputs:
     kind: path
     owner: package-custody
     example: /tmp/qualified-rollback.json
+  restoration_verifier_receipt:
+    kind: path
+    owner: package-custody
+    example: /tmp/qualified-restoration-verifier.json
   rollback_compatibility_id:
     kind: identifier
     owner: release-succession
@@ -715,7 +719,7 @@ proofs:
     proof_type: restore
     operation: isolated-restore
     result_code: KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED
-    image_role: candidate
+    image_role: restoration-verifier
     family: kanbien-core-platform-persistence-restoration-verifier
     deadline_workload: persistence-restoration-verifier
 sequence:

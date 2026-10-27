@@ -258,6 +258,10 @@ can you walk me through which part of my repo work on the following stages
   Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
 
 
+- Raised: Final persistence acceptance could lose historical task proof or conflate the server image with the separately qualified restoration-verifier image.
+  Resolution: Retained receipts now supply historical task identity while fresh provider observations prove current service, database, cleanup, budget, and health state. The accepted release `release-cb3cf3292e03fda8e7e40188` was promoted with a distinct restoration-verifier package identity, a current-contract rollback-compatibility archive, and a fresh health verifier receipt. No migration, credential lifecycle, deployment, or restore was repeated for closeout.
+
+
 - Raised: Incoming restore diagnostics queried only PostgreSQL logs although the governed restore workflow requires IAM authentication log coverage.
   Resolution: Merged the bounded connection-diagnostic path, required both PostgreSQL and iam-db-auth-error exports, safely reduced both groups to allowlisted facts, and added an IAM-log-only regression.
 

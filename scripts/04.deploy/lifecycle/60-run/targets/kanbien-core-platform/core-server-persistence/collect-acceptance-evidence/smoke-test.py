@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -36,7 +36,7 @@ collector = load("collector", BASE / "collect-acceptance-evidence/script.py")
 receipts = load("proof_receipts", BASE / "proof-receipts.py")
 receipts.EVIDENCE_CLASS = collector.EVIDENCE_CLASS = "simulated"
 
-candidate, rollback = "sha256:" + "a" * 64, "sha256:" + "b" * 64
+candidate, rollback, restoration = "sha256:" + "a" * 64, "sha256:" + "b" * 64, "sha256:" + "c" * 64
 required = {
  "migration-applied-state": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED", "persistence-administration"),
  "effective-privilege": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-administration"),
@@ -52,7 +52,7 @@ required = {
  "rollback-b-read": ("verifier", "kanbien-core-platform-persistence-verifier", rollback, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
  "rollback-final-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"),
  "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
- "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier"),
+ "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", restoration, "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier"),
 }
 operations = {"migration-applied-state":"observe-migration-state","effective-privilege":"prove-effective-privilege","server-replacement":"controlled-replacement","server-replacement-read":"read","runtime-identity-initial-access":"confirm-runtime-iam-access","credential-revocation":"revoke-runtime","credential-revocation-unready":"health-unready","credential-recovery":"restore-runtime","credential-recovery-health":"health-ready","credential-recovery-read":"read","rollback-b-health":"health-ready","rollback-b-read":"read","rollback-final-health":"health-ready","rollback-final-read":"read","isolated-restore":"isolated-restore"}
 controllers={"administration":"run-administration","migration":"run-migration","verifier":"verify-candidate","restore":"rehearse-isolated-database-restore","server-replacement":"rehearse-server-replacement"}
@@ -75,10 +75,25 @@ try:
     with patch.object(collector, "aws", side_effect=AssertionError("historical ECS lookup")):
         observed = collector.parse_proof_receipts(arguments,required,deadlines,directory)
     assert set(observed) == set(required)
+    wrong_restore = json.loads((directory / "isolated-restore.json").read_text())
+    wrong_restore["task"]["image_digest"] = candidate
+    wrong_restore["integrity"]["payload_sha256"] = receipts.digest({key: value for key, value in wrong_restore.items() if key != "integrity"})
+    (directory / "isolated-restore.json").write_text(json.dumps(wrong_restore), encoding="utf-8")
+    try:
+        collector.parse_proof_receipts(arguments, required, deadlines, directory)
+    except collector.EvidenceFailure as error:
+        assert str(error) == "acceptance-evidence-proof-receipt-mismatch"
+    else:
+        raise AssertionError("server image passed as restoration verifier proof")
+    # Restore the actual independently-qualified verifier proof before the
+    # existing predecessor-applicability cases below.
+    wrong_restore["task"]["image_digest"] = restoration
+    wrong_restore["integrity"]["payload_sha256"] = receipts.digest({key: value for key, value in wrong_restore.items() if key != "integrity"})
+    (directory / "isolated-restore.json").write_text(json.dumps(wrong_restore), encoding="utf-8")
     # A qualified applicability record may carry only the named predecessor
     # proofs across the exact restore-verifier-only image change.  Without it,
     # a historical digest cannot be silently accepted.
-    predecessor = "sha256:" + "c" * 64
+    predecessor = "sha256:" + "d" * 64
     migration_path = directory / "migration-applied-state.json"
     original_migration = json.loads(migration_path.read_text())
     historical_migration = copy.deepcopy(original_migration)
@@ -179,10 +194,34 @@ with tempfile.TemporaryDirectory(prefix="observability-acceptance-receipt-") as 
         try: collector.parse_observability_receipts(arguments, "sha256:" + "e" * 64)
         except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-source-invalid"
         else: raise AssertionError("wrong observability image passed")
+        inherited = {
+            "predecessor": {"image_digest": digest},
+            "reused_proofs": ["credential-revocation-unready", "credential-recovery-health"],
+        }
+        observed_proofs = {
+            "credential-revocation-unready": {"task_arn": failure_source["task_arn"], "task_definition": failure_source["task_definition"], "result_code": failure_source["result_code"]},
+            "credential-recovery-health": {"task_arn": recovery_source["task_arn"], "task_definition": recovery_source["task_definition"], "result_code": recovery_source["result_code"]},
+        }
+        assert set(collector.parse_observability_receipts(arguments, "sha256:" + "e" * 64, applicability=inherited, observed_proofs=observed_proofs)) == set(paths)
+        observed_proofs["credential-recovery-health"]["task_arn"] = "wrong"
+        try: collector.parse_observability_receipts(arguments, "sha256:" + "e" * 64, applicability=inherited, observed_proofs=observed_proofs)
+        except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-source-invalid"
+        else: raise AssertionError("unbound inherited observability proof passed")
         tampered = json.loads(paths["readiness-recovery-observed"].read_text()); tampered["observation"]["metric_value"] = 0; paths["readiness-recovery-observed"].write_text(json.dumps(tampered))
         try: collector.parse_observability_receipts(arguments, digest)
         except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-receipt-invalid"
         else: raise AssertionError("modified observability receipt passed")
+        # A recovery metric may be queried after AWS has already transitioned
+        # the alarm, but the controller itself cannot claim recovery before
+        # that transition was observable.
+        paths["readiness-recovery-observed"].write_text(json.dumps(recovery))
+        premature = json.loads(paths["readiness-recovery-observed"].read_text())
+        premature["provenance"]["collected_at"] = stamp(now - timedelta(minutes=2))
+        premature["integrity"]["payload_sha256"] = observation_module.digest({key: value for key, value in premature.items() if key != "integrity"})
+        paths["readiness-recovery-observed"].write_text(json.dumps(premature))
+        try: collector.parse_observability_receipts(arguments, digest)
+        except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-sequence-invalid"
+        else: raise AssertionError("premature recovery collection passed")
     finally:
         collector.ROOT, collector.EVIDENCE_CLASS = old_root, old_class
 print("retained observability acceptance receipt checks passed")

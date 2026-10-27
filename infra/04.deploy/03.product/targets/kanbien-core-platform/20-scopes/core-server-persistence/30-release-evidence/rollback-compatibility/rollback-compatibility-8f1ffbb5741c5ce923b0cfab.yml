@@ -1,0 +1,30 @@
+schema: deploy/release-rollback-compatibility/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+status: verified
+qualified_predecessor:
+  source_revision: 47e72818d1aa17a43b4d16168e44c33e1267e373
+  image_digest: sha256:d65005e10e420d75067c867f2a732b63bcd796445e6a9eb802c5d15f5827434e
+  package_custody_reference: github-actions-run:40232309637
+rollback:
+  id: rollback-compatibility-8f1ffbb5741c5ce923b0cfab
+  configuration_contract:
+    path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    sha256: sha256:1543c6145efb18085c110a92585abc265c8767f4f123ae7a0625f3244f695958
+  permission_contract:
+    path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
+    sha256: sha256:c8391213ba2a1dae617f2f9de6dd65e69286df7c4e2f36265ed247a464ab67b4
+  workloads:
+  - core-server-service
+  - private-release-verifier-task
+  proof_set_sha256: sha256:412eddb31226bd7e243aa0598703dc1c0535caa85841683cb2eadc4b01dc8207
+proof:
+  qualified_at: '2026-10-27T00:30:07.466473Z'
+  receipt_count: 2
+proof_set:
+  rollback-b-health:
+    path: proof-receipts/verifier-health-ready-c1e5264432194c3e9ec14dc48a75136d.json
+    sha256: sha256:b0c2f6bed295623f0e2a8273d29a79fa89867b465ae70d5654f6729e14a67cce
+  rollback-b-read:
+    path: proof-receipts/verifier-read-206314cc3ec24cc0813b5f15f36556fe.json
+    sha256: sha256:b8310f0509666726aa9bd72bfc74e922b62270ba2e7dac8e1f889bf5b7e4b358

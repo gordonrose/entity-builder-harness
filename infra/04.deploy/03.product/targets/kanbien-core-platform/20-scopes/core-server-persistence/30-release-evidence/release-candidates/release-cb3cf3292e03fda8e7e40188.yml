@@ -1,0 +1,92 @@
+schema: deploy/release-candidate/v1
+evidence_class: live
+target: kanbien-core-platform
+scope: core-server-persistence
+status: verified
+release:
+  id: release-cb3cf3292e03fda8e7e40188
+  source_revision: 72dadc7d48cae074f92df809e5527f47dfd69931
+  image_digest: sha256:e9d12f96384f0518c1fbd71e2b506d86cf05361ebf253ee35f2de075bc327178
+  configuration_contract:
+    path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    sha256: sha256:1543c6145efb18085c110a92585abc265c8767f4f123ae7a0625f3244f695958
+  permission_contract:
+    path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
+    sha256: sha256:c8391213ba2a1dae617f2f9de6dd65e69286df7c4e2f36265ed247a464ab67b4
+  proof_set_sha256: sha256:4824f2ff78f4012f6f954e933701a55a4a0feccf8235da0128ee4782ce7f516a
+proof:
+  accepted_at: '2026-10-27T00:37:47.838262Z'
+  receipt_count: 24
+proof_set:
+  migration-applied-state:
+    path: proof-receipts/administration-observe-migration-state-a6a5552c0289475cab44344c4ac5deac.json
+    sha256: sha256:8b96da3f50cb3f120d425885fdb0f70e27b6bc32f8b6e3e3a46465e34f308ace
+  effective-privilege:
+    path: proof-receipts/administration-prove-effective-privilege-c900b104ac734127aedd2a2ae9961202.json
+    sha256: sha256:ba694f26459943deb4b3909d01518a502c7f477771a83ba204a213f1096e75b2
+  server-replacement:
+    path: proof-receipts/server-replacement-controlled-replacement-f315aa8af42c4c6d8805ae9096f52ad2.json
+    sha256: sha256:fde6807030cda223d30686cd7580623dc51d2ad6b334e61e1f151a3052184c81
+  server-replacement-read:
+    path: proof-receipts/verifier-read-e9d5b884a32f4ddb946e658682ac1129.json
+    sha256: sha256:2706ef452f8f34688a0ce737c36b027a5a4386b8667c5c07f5927c782dd80ede
+  runtime-identity-initial-access:
+    path: proof-receipts/administration-confirm-runtime-iam-access-6f295216d37243769b772f50081082ba.json
+    sha256: sha256:f9f37ad77481bb51fdd8e48b9cd7e337712abfd5f1b31f9d3bd03086973b0352
+  credential-revocation:
+    path: proof-receipts/administration-revoke-runtime-288b0515349d4676a671c7193c2794d0.json
+    sha256: sha256:71a733d054a2f63f5f491c23c6997868367085a68cbc8a251b8b102101f67efe
+  credential-revocation-unready:
+    path: proof-receipts/verifier-health-unready-d8aeec6b2ad94005948a084d5a6e9199.json
+    sha256: sha256:ab97817c63c5e4201dc9011957a35b1146fc91d8f3c5be9cac7c7aaae4a51fb3
+  credential-recovery:
+    path: proof-receipts/administration-restore-runtime-794a3469a96f492a8e8b6d9f5eb87825.json
+    sha256: sha256:e861544b32fcfb8c319816846e04276789084c7b1e22d7a96372cce1372c3ce0
+  credential-recovery-health:
+    path: proof-receipts/verifier-health-ready-a79a715b94f84bd38c0a45836118be2b.json
+    sha256: sha256:9f9dbfcfcae6f2e9c2ec807c76c560ee026b86c0b82ae6760eff6227f92cebef
+  credential-recovery-read:
+    path: proof-receipts/verifier-read-e9d5b884a32f4ddb946e658682ac1129.json
+    sha256: sha256:2706ef452f8f34688a0ce737c36b027a5a4386b8667c5c07f5927c782dd80ede
+  rollback-b-health:
+    path: proof-receipts/verifier-health-ready-c1e5264432194c3e9ec14dc48a75136d.json
+    sha256: sha256:b0c2f6bed295623f0e2a8273d29a79fa89867b465ae70d5654f6729e14a67cce
+  rollback-b-read:
+    path: proof-receipts/verifier-read-206314cc3ec24cc0813b5f15f36556fe.json
+    sha256: sha256:b8310f0509666726aa9bd72bfc74e922b62270ba2e7dac8e1f889bf5b7e4b358
+  rollback-final-health:
+    path: proof-receipts/verifier-health-ready-fe8e8ef528044f64afb9c11d9d2b0470.json
+    sha256: sha256:a38f02a756515dfc576926c629c6dd30539760c5fa03ef727658d769e85b87de
+  rollback-final-read:
+    path: proof-receipts/verifier-read-e9d5b884a32f4ddb946e658682ac1129.json
+    sha256: sha256:2706ef452f8f34688a0ce737c36b027a5a4386b8667c5c07f5927c782dd80ede
+  isolated-restore:
+    path: proof-receipts/restore-isolated-restore-bbcb7b31a6f84c439999ceceed12d57c.json
+    sha256: sha256:159d0d2bf2bcd481fa4434215417ea5b58dea37cc9d7ba92623be31167fe0b53
+  candidate-package:
+    path: package-receipts/package-custody-40332033141.json
+    sha256: sha256:65bcdb7b9382ecadf971471b3482d9a1a84bee30bbf1dd45ca15e392849bf29d
+  rollback-package:
+    path: package-receipts/package-custody-40232309637.json
+    sha256: sha256:edf6eb10d584decfaa38b5d178fb9a6d28118cc43d5f10ae7afd6e43062e5d0b
+  restoration-verifier-package:
+    path: package-receipts/package-custody-40419185209.json
+    sha256: sha256:7d377c58acd4aca45fdcd4c5419c01132923a43eda05fddddf338e0741a61edc
+  record-source:
+    path: proof-receipts/verifier-read-0b4dce17a00340059e7862b63ce029ee.json
+    sha256: sha256:590d6cf549d5afe3b86b3d625152b4ab2ed1f4f87d97bee32dd1eaceb57ddc9d
+  observability-readiness-failure-observed:
+    path: observability-receipts/readiness-failure-observed-bf071f5cea6f.json
+    sha256: sha256:a2ecf9022bce8685f5daba891f55231c88ad6ec62c0af8fe5be8d541b40fe834
+  observability-readiness-alarm-notified:
+    path: observability-receipts/readiness-alarm-notified-b149aac322d0.json
+    sha256: sha256:db265fa4733c67275b1a393144d1f3477fbcf9e4c7904c7a4d195843abbec127
+  observability-readiness-recovery-observed:
+    path: observability-receipts/readiness-recovery-observed-093d97582a8b.json
+    sha256: sha256:46c7b43ac8920c6385c5b1ddb0e1f0709937417edf5308408e30b7888d008808
+  rollback-compatibility:
+    path: rollback-compatibility/rollback-compatibility-8f1ffbb5741c5ce923b0cfab.yml
+    sha256: sha256:e6d84b6cfee50f4ccc2ce6b9a7de8ce7caec500918032dc8c0fe66643636eaf1
+  proof-applicability:
+    path: proof-applicability/restore-verifier-only-e9d12f96384f.json
+    sha256: sha256:34d5cba73eb1234ba3bd826b249175eb6bec19382345e4e942a8da413ca6084b
