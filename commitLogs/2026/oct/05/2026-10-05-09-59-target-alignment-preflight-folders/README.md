@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T18:36:51Z
-latest_commit_sha: f29399a9
-chat_duration: 1849042s (21:09:37:22)
+latest_commit_at_utc: 2026-10-27T00:45:21Z
+latest_commit_sha: 575642c3
+chat_duration: 1871152s (21:15:45:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -4111,6 +4111,17 @@ Summary: Bound the restore verifier's dynamic host injection to its actual local
 
 ADR impact: No ADR: bounded correction within existing deployment evidence and verification architecture.
 
+
+### 2026-10-27T00:45:21Z - Commit recorded
+
+Commit: `575642c3`
+
+Message: feat(deploy): accept durable persistence release evidence
+
+Summary: Promoted core-server-persistence release-cb3cf3292e03fda8e7e40188 with durable proof receipts, separate restoration-verifier identity, fresh health evidence, and current-state acceptance observations.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5304,6 +5315,13 @@ ADR impact: No ADR: bounded correction within existing deployment evidence and v
   Summary: Bound the restore verifier's dynamic host injection to its actual local diagnostic proof; require PostgreSQL plus IAM-authentication RDS export collection; and make focused check selection respect dormant roots and attributable scope contracts while preserving the full inventory gate.
   ADR impact: No ADR: bounded correction within existing deployment evidence and verification architecture.
 
+
+- Commit: `575642c3`
+  Time UTC: 2026-10-27T00:45:21Z
+  Message: feat(deploy): accept durable persistence release evidence
+  Summary: Promoted core-server-persistence release-cb3cf3292e03fda8e7e40188 with durable proof receipts, separate restoration-verifier identity, fresh health evidence, and current-state acceptance observations.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -5327,9 +5345,9 @@ Reason: Bounded evidence-collection and check-selection corrections remain withi
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T18:36:51Z
-Latest commit SHA: f29399a9
-Chat duration: 1849042s (21:09:37:22)
+Latest commit at UTC: 2026-10-27T00:45:21Z
+Latest commit SHA: 575642c3
+Chat duration: 1871152s (21:15:45:52)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
