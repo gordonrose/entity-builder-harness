@@ -12,7 +12,10 @@ product entity.
 
 | File | Responsibility |
 | --- | --- |
-| `src/configuration.ts` | Validates the explicitly injected region, table, and index names. It performs no environment lookup. |
+| `src/configuration/index.ts` | Exposes the checker and its two public types; it contains no checking logic. |
+| `src/configuration/contract/types.ts` | Describes the four pieces of text the existing adapter needs: region, table name and two index names. |
+| `src/configuration/contract/errors.ts` | Describes the failure result returned when supplied configuration is rejected. |
+| `src/configuration/domain/validation.ts` | Checks the supplied object, checks required fields through Core's string reader, then applies the existing blank and length checks. It performs no environment lookup or AWS operation. |
 | `src/client.ts` | Names the small command-client seam and creates the AWS SDK client only when the target composition selects it. |
 | `src/records.ts` | Owns the private DynamoDB key and attribute encoding for outbox, processing, and lineage rows. |
 | `src/outbox-store.ts` | Implements due-work lookup, conditional relay leasing, and fence-protected publication marking. |
@@ -20,7 +23,117 @@ product entity.
 | `src/lineage-store.ts` | Appends bounded record-change facts and queries them by record or direct cause. |
 | `src/transactions.ts` | Builds the two-fact transaction and the provider-local atomic-writer seam through which target composition can add one product-owned write. |
 | `src/errors.ts` | Maps AWS failure categories to bounded platform errors; it never returns raw provider payloads. |
+| `src/observations.ts` | Observes existing command boundaries and bounded stored-attribute predicates through the shared Platform catalog. |
 | `src/index.ts` | Deliberate public composition exports only. |
+
+## Checking the information before use
+
+Before this adapter can use a table, the code choosing it must supply the AWS
+region, the table name and the names of its two existing lookups. These supplied
+values are its configuration. An index is a database lookup structure; deciding
+which lookups persistence needs is separate from checking that a name was supplied.
+
+The configuration folder separates the description of the information
+(`contract/`) from the code that checks it (`domain/`). The public package root
+and `src/configuration/index.ts` expose the same checker. Other adapter files import
+types through `configuration/index.ts`, this submodule's supported interface. The former sibling
+forwarding file has been retired; no second checker was removed.
+
+The three public names remain:
+
+- `DynamoDbPersistenceConfiguration`: a TypeScript description of the four
+  required string fields. It helps check code while building; it does not
+  inspect values received when the program runs.
+- `DynamoDbPersistenceConfigurationError`: the failure's code, fixed summary,
+  field/reason description and optional diagnostic packet.
+- `dynamoDbPersistenceConfiguration(input)`: the function that actually checks
+  the supplied information and returns either accepted information or a failure.
+  Future composition code can reuse it; it is not exclusive to the smoke app.
+
+### Example: complete information
+
+This illustrative code is outside the adapter. It uses the public package
+export; it is not another file that must be added to the repo.
+
+```typescript
+import { dynamoDbPersistenceConfiguration } from "@kanbien/platform-adapter-aws-persistence-dynamodb";
+
+const supplied = {
+  region: "example-region",
+  tableName: "example-records",
+  outboxDueIndexName: "example-due",
+  lineageCauseIndexName: "example-cause",
+};
+const result = dynamoDbPersistenceConfiguration(supplied);
+```
+
+The function first obtains the supplied properties once for checking, without
+catching or relabelling an exception thrown while reading them. Core's
+`stringConfigValue` reads that captured information to establish whether each
+required field exists and contains text. The adapter then runs its existing
+blank/length checks. On success, `result` is `{ ok: true, value: ... }`, where
+`value` is the existing copied configuration. Accepted text is not trimmed.
+This example passes the checks; it does not establish that the example region,
+table or indexes exist in AWS.
+
+### Example: information is missing or has the wrong type
+
+JavaScript callers or unchecked external information can omit `region`, even
+though the TypeScript description requires it. The function then returns:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "PLATFORM_ADAPTER_AWS_DYNAMODB_PERSISTENCE_CONFIG_INVALID",
+    "defaultMessage": "DynamoDB persistence adapter configuration is invalid.",
+    "details": { "path": "region", "reason": "A required value is missing." },
+    "diagnosticRecord": {
+      "schema": "core/diagnostic-record/v1",
+      "code": "persistence.configuration-input-invalid",
+      "definitionVersion": 1,
+      "detail": { "field": "region", "reason": "missing" }
+    }
+  }
+}
+```
+
+If `region` is a number instead, the same failure structure identifies
+`wrong-type`; it does not attempt a text operation on that number. If both
+`region` and `tableName` have presence/type problems, region is reported first.
+The fixed order is region, table, due-index name, cause-index name. This returns
+one failure, not a list. Empty or spaces-only strings still use the historical
+`persistence.configuration-invalid` diagnostic with reason `blank`.
+
+```text
+Composition code supplies the existing four fields
+    -> configuration/index.ts exposes the checker
+    -> domain/validation.ts checks the captured information
+         -> Core string reader establishes missing / wrong type
+         -> existing adapter checks establish blank / too long
+    <- accepted copy OR structured failure returns to composition code
+```
+
+Platform persistence owns the diagnostic definitions in
+[`platform/persistence/src/diagnostics.ts`](../../../../persistence/src/diagnostics.ts).
+Core supplies reusable reading and diagnostic-packet construction. This adapter
+establishes which field failed. The code calling it must handle the returned
+failure before starting dependent work; the SDK client factory does not
+automatically call this checker.
+
+The [configuration standard](../../../../../.agentic/03.product/standards/config-runtime-settings.md)
+and [module structure standard](../../../../../.agentic/03.product/standards/public-module-structure.md)
+own the requirements. Their checks and source review do not prove every caller
+uses the result correctly.
+
+**Not yet implemented in this slice:** full dependency-loading adoption,
+extra-property policy and index-specific configuration changes. Additional
+properties keep their legacy checking/copying behaviour; this is not a promise
+to turn every malformed extra into a structured failure. The known oversized-
+index error-path mismatch also remains. These are recorded under N01B in the
+[configuration plan](../../../../../.agentic/03.product/plans/implementation/configuration-ownership-and-loading.md#n01b-persistence-handoff--deferred-not-lost)
+for the later persistence slice, not silently fixed here. No indexes or resources
+are created by these checks.
 
 ## The table model
 
@@ -53,8 +166,11 @@ adapter uses that property for the controls defined by `platform/persistence`:
 - worker completion and retry release require the current, unexpired fence.
 
 If a competing operation wins first, the adapter rereads the row and returns
-the truthful state (`lease-active` or `already-completed`) where possible. It
-does not turn a race into a false success.
+the current state (`lease-active` or `already-completed`) where possible.
+Publication/completion/release reconciliation also retains the existing policy
+that successful validation may return success without issuing another write.
+That is not proof that this caller durably performed the requested mutation;
+diagnostics report only the read result. Changing that policy is separate work.
 
 ## Transaction boundary—and its current limit
 
@@ -105,11 +221,25 @@ only its fixed logical operation name and one of these finite categories:
 `access_denied`, `conditional_check_failed`, `resource_not_found`,
 `validation`, `throttled`, `transport`, or `unknown`.
 
-The Kanbien relay entrypoint has a second allowlist before it writes either
-field to its structured startup-failure log. This gives an operator enough
-information to correct a target configuration safely—for example,
-`claim_outbox` plus `validation`—without creating an accidental diagnostic
-channel for customer data or AWS provider payloads.
+These legacy parameters retain their original meaning and getter behavior.
+Optional `PlatformPersistenceDiagnosticOptions` on stores, writers and SDK
+client construction add selected safe diagnostic records without altering them.
+`atomicWriter.run(operation, diagnostics?)` owns its invocation's observer;
+omission uses defaults, while an explicit empty object silences the defaults.
+Observers use the existing target-selected/profile-governed reporting seam;
+exceptions and rejected observer promises cannot change workload results.
+
+The command records distinguish selection, argument encoding, SDK invocation,
+response traversal and decoding. Client construction is not a connection test.
+Only positively supplied finite native invocation names select a native meaning;
+transaction cancellation alone does not establish a condition conflict. Supplied
+cancellation reasons are reduced to at most64ordinal/finite-code observations
+with explicit truncation. Accessors are not invoked to discover optional facts.
+Unknown getter/conversion throws remain unknown command boundaries, not invalid
+stored data. Existing rejected attribute predicates are coalesced to at most16
+logical issues with counts/positions and explicit truncation; no stored values,
+keys, identifiers, provider text or command payload enters diagnostic detail.
+Independent own records do not consume any of a source's primary/eight slots.
 
 The outbox tests additionally prove that each DynamoDB conditional request
 supplies only values that its chosen expression references. Initial claims and

@@ -31,7 +31,11 @@ router if one exists.
 
 Default mode after governed chat-start bootstrap is read-only until the user
 explicitly grants write permission for task files.
+
 <!-- llm-workbench:end -->
+
+For coding changes, use `.agentic/shared/workflows/verify-diagnostic-coverage.md`
+alongside the owning implementation workflow.
 
 - Stop when repo state, branch state, task ownership, prompt-level routing, chat lifecycle state, or governance coverage is ambiguous or absent.
 - Missing governance is a stop condition. If a required action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard, stop before acting. Explain the governance gap and ask whether to update the harness instead of improvising.

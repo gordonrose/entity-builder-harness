@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.persistence-diagnostic-mapping
-version: 3
+version: 4
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-25"
+updated_on: "2026-10-27"
 layer: 04.deploy
 domain: deployment.persistence-diagnostics
 disciplines: [security, sre, agentic]
@@ -42,3 +42,11 @@ value, and controlled next-check route; provider detail has no place in the
 record. Local declaration validation does not prove actual adapter mapping
 prevents raw errors, provider permission, target routing, or live failure
 behaviour; each is required separately before scope acceptance.
+
+The executable identity and detail source is `platform/persistence/src/diagnostics.ts`.
+The validator consumes `platform/persistence/contracts/diagnostics.v1.json`, generated
+from that source. This standard retains effects, replay authority and proof; it
+does not own a duplicate runtime code list. Existing target declarations remain
+compatible. A declared code is a required policy branch, not proof that an adapter
+can observe that cause. Capacity and schema causes must remain unclassified until
+the actual operation supplies adequate evidence.

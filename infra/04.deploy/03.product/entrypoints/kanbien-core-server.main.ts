@@ -4,7 +4,7 @@
 //   version: 2
 //   status: active
 //   created_on: "2026-10-19"
-//   updated_on: "2026-10-21"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: deployment.bootstrap-runtime
 //   disciplines:
@@ -31,6 +31,7 @@ import {
 } from "@kanbien/platform-contracts";
 import {
   platformReleaseVerificationResponse,
+  serverDiagnosticErrorCodes,
   resolvePlatformReleaseIdentity,
   type PlatformReleaseIdentity,
 } from "@kanbien/platform-server";
@@ -46,6 +47,7 @@ const releaseVerificationProfile: PlatformCapabilityObservabilityProfile = {
   name: releaseVerificationProfileName,
   capability: requiredPlatformName(platformCapabilityName("kanbien-core-server.release")),
   action: "verify",
+  errorClasses: serverDiagnosticErrorCodes,
   signals: ["operational_log", "metric", "trace"],
   logFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
   metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],

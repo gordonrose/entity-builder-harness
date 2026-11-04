@@ -9,6 +9,9 @@ import {
   type PostgreSqlConnectionPool,
   type PostgreSqlPersistenceConfiguration,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { relationalSecretSetting, targetConfigurationDiagnosticRecord, type TargetConfigurationReason } from "./kanbien-platform-configuration-diagnostics";
+import { persistenceBoundaryDiagnosticRecord } from "@kanbien/platform-persistence";
+import { reportKanbienPlatformPostgreSqlTaskDiagnostic } from "./kanbien-platform-postgresql-operation-diagnostics";
 
 export interface RelationalTaskSecret {
   readonly username: string;
@@ -78,37 +81,39 @@ export interface RestoreVerificationFailureDetails {
 
 export function secretFromEnvironment(name: string): RelationalTaskSecret {
   const candidate = secretObjectFromEnvironment(name);
-  const credentials = credentialsFromSecret(candidate);
-  const host = stringField(candidate, "host");
-  const port = numberField(candidate, "port");
-  if (!/^[A-Za-z0-9.-]{1,253}$/.test(host) || !Number.isInteger(port) || port < 1 || port > 65_535) {
-    throw new Error("RELATIONAL_TASK_SECRET_INVALID");
-  }
+  const credentials = credentialsFromSecret(candidate, name);
+  const host = stringField(candidate, "host", relationalSecretSetting(name, "host"));
+  const port = numberField(candidate, "port", relationalSecretSetting(name, "port"));
+  if (!/^[A-Za-z0-9.-]{1,253}$/.test(host)) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", relationalSecretSetting(name, "host"), "invalid-format");
+  if (!Number.isInteger(port)) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", relationalSecretSetting(name, "port"), "invalid-integer");
+  if (port < 1 || port > 65_535) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", relationalSecretSetting(name, "port"), "out-of-range");
   return { ...credentials, host, port };
 }
 
 export function credentialsFromEnvironment(name: string): RelationalTaskCredentials {
-  return credentialsFromSecret(secretObjectFromEnvironment(name));
+  return credentialsFromSecret(secretObjectFromEnvironment(name), name);
 }
 
 export function configurationFromEnvironment(): RelationalTaskConfiguration {
   const raw = process.env["RELATIONAL_CONFIG_JSON"];
-  if (raw === undefined) throw new Error("RELATIONAL_TASK_CONFIGURATION_MISSING");
+  if (raw === undefined) throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_MISSING", "relational.configuration", "missing");
   let candidate: unknown;
   try {
     candidate = JSON.parse(raw);
   } catch {
-    throw new Error("RELATIONAL_TASK_CONFIGURATION_INVALID");
+    throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", "relational.configuration", "invalid-json");
   }
-  if (!isRecord(candidate)) throw new Error("RELATIONAL_TASK_CONFIGURATION_INVALID");
-  const database = stringField(candidate, "database");
-  const schema = stringField(candidate, "schema");
-  const tls = stringField(candidate, "tls");
-  const runtimeSecretArn = stringField(candidate, "runtime_secret_arn");
-  const migrationSecretArn = stringField(candidate, "migration_secret_arn");
-  if (database !== "platformsmoke" || schema !== "platform_smoke" || tls !== "verify-full" || !secretArn(runtimeSecretArn) || !secretArn(migrationSecretArn)) {
-    throw new Error("RELATIONAL_TASK_CONFIGURATION_INVALID");
-  }
+  if (!isRecord(candidate)) throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", "relational.configuration", "wrong-shape");
+  const database = stringField(candidate, "database", "relational.database");
+  const schema = stringField(candidate, "schema", "relational.schema");
+  const tls = stringField(candidate, "tls", "relational.tls");
+  const runtimeSecretArn = stringField(candidate, "runtime_secret_arn", "relational.runtime-reference");
+  const migrationSecretArn = stringField(candidate, "migration_secret_arn", "relational.migration-reference");
+  if (database !== "platformsmoke") throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", "relational.database", "fixed-value-required");
+  if (schema !== "platform_smoke") throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", "relational.schema", "fixed-value-required");
+  if (tls !== "verify-full") throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", "relational.tls", "fixed-value-required");
+  if (!secretArn(runtimeSecretArn)) throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", "relational.runtime-reference", "invalid-format");
+  if (!secretArn(migrationSecretArn)) throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", "relational.migration-reference", "invalid-format");
   return { database, schema, tls, runtimeSecretArn, migrationSecretArn };
 }
 
@@ -127,7 +132,12 @@ export function connectionConfiguration(secret: RelationalTaskSecret, reference:
     statementTimeoutMs: 15_000,
     tls: { mode: "verify-full", certificateAuthoritySource: "injected" },
   });
-  if (!result.ok) throw new Error("RELATIONAL_TASK_CONFIGURATION_INVALID");
+  if (!result.ok) {
+    const path = result.error.details.path;
+    const setting = path === "host" ? "relational.connection.host" : path === "port" ? "relational.connection.port" : path === "schema" ? "relational.connection.schema" : path === "runtimeCredentialSecretReference" ? "relational.connection.reference" : "relational.connection.configuration";
+    // reasonCode is adapter-owned typed evidence; never inspect its message.
+    throw relationalConfigurationError("RELATIONAL_TASK_CONFIGURATION_INVALID", setting, result.error.details.reasonCode as TargetConfigurationReason);
+  }
   return result.value;
 }
 
@@ -153,10 +163,16 @@ function relationalCertificateAuthority(): string {
 
 export async function closePool(pool: PostgreSqlConnectionPool | undefined): Promise<void> {
   if (pool === undefined) return;
+  let pending: Promise<void>;
+  try { pending = pool.end(); }
+  catch (cause) {
+    reportKanbienPlatformPostgreSqlTaskDiagnostic("connection-resource", persistenceBoundaryDiagnosticRecord({ operation: "connection-pool", phase: "invocation", boundary: "end", condition: "threw", effect: "not-assessed" }), cause);
+    return;
+  }
   try {
-    await pool.end();
-  } catch {
-    // A process is already exiting; diagnostics remain intentionally safe.
+    await pending;
+  } catch (cause) {
+    reportKanbienPlatformPostgreSqlTaskDiagnostic("connection-resource", persistenceBoundaryDiagnosticRecord({ operation: "connection-pool", phase: "completion", boundary: "end", condition: "rejected", effect: "not-assessed" }), cause);
   }
 }
 
@@ -182,38 +198,42 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 
 function secretObjectFromEnvironment(name: string): Readonly<Record<string, unknown>> {
   const raw = process.env[name];
-  if (raw === undefined) throw new Error("RELATIONAL_TASK_SECRET_MISSING");
+  if (raw === undefined) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_MISSING", relationalSecretSetting(name, "value"), "missing");
   let candidate: unknown;
   try {
     candidate = JSON.parse(raw);
   } catch {
-    throw new Error("RELATIONAL_TASK_SECRET_INVALID");
+    throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", relationalSecretSetting(name, "value"), "invalid-json");
   }
-  if (!isRecord(candidate)) throw new Error("RELATIONAL_TASK_SECRET_INVALID");
+  if (!isRecord(candidate)) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", relationalSecretSetting(name, "value"), "wrong-shape");
   return candidate;
 }
 
-function credentialsFromSecret(candidate: Readonly<Record<string, unknown>>): RelationalTaskCredentials {
-  const username = stringField(candidate, "username");
-  const password = stringField(candidate, "password");
-  if (!/^[A-Za-z0-9._-]{1,63}$/.test(username) || password.length < 1) {
-    throw new Error("RELATIONAL_TASK_SECRET_INVALID");
-  }
+function credentialsFromSecret(candidate: Readonly<Record<string, unknown>>, name: string): RelationalTaskCredentials {
+  const username = stringField(candidate, "username", relationalSecretSetting(name, "username"));
+  const password = stringField(candidate, "password", relationalSecretSetting(name, "password"));
+  if (!/^[A-Za-z0-9._-]{1,63}$/.test(username)) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", relationalSecretSetting(name, "username"), "invalid-format");
+  if (password.length < 1) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", relationalSecretSetting(name, "password"), "empty");
   return { username, password };
 }
 
-function stringField(value: Readonly<Record<string, unknown>>, name: string): string {
+function stringField(value: Readonly<Record<string, unknown>>, name: string, setting: string): string {
   const field = value[name];
-  if (typeof field !== "string" || field.length === 0) throw new Error("RELATIONAL_TASK_SECRET_INVALID");
+  if (typeof field !== "string" || field.length === 0) throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", setting, field === undefined ? "missing" : typeof field !== "string" ? "wrong-type" : "empty");
   return field;
 }
 
-function numberField(value: Readonly<Record<string, unknown>>, name: string): number {
+function numberField(value: Readonly<Record<string, unknown>>, name: string, setting: string): number {
   const field = value[name];
-  if (typeof field !== "number") throw new Error("RELATIONAL_TASK_SECRET_INVALID");
+  if (typeof field !== "number") throw relationalConfigurationError("RELATIONAL_TASK_SECRET_INVALID", setting, field === undefined ? "missing" : "wrong-type");
   return field;
 }
 
 function secretArn(value: string): boolean {
   return /^arn:aws:secretsmanager:eu-west-1:337159794548:secret:[A-Za-z0-9/_+=.@-]+$/.test(value);
+}
+
+/** Keep the historical Error and message, attaching only a checked safe fact. */
+export function relationalConfigurationError(message: string, setting: string, reason: TargetConfigurationReason): Error {
+  return Object.assign(new Error(message), { diagnosticRecord: targetConfigurationDiagnosticRecord(setting, reason) });
 }

@@ -6,7 +6,7 @@
 #   version: 5
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -312,7 +313,10 @@ def main() -> int:
     if not isinstance(original_arn, str):
         return report("blocked", "persistence-replacement-current-task-invalid")
     boundary = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    print(json.dumps({"verdict": "pending", "facts": {"original_task": original_arn, "recovery_boundary": boundary}}), file=sys.stderr, flush=True)
+    checkpoint = {"schema": "deploy/persistence-server-replacement-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": "pending", "facts": {"recovery_boundary": boundary}}
+    if re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}", original_arn):
+        checkpoint["facts"]["original_task"] = original_arn
+    print(json.dumps(checkpoint), file=sys.stderr, flush=True)
     ok, _, code = prepare.aws("ecs", "stop-task", "--cluster", CLUSTER, "--task", original_arn, "--reason", "governed core-server-persistence replacement rehearsal")
     if not ok:
         return report("uncertain", code, facts={"original_task": original_arn, "recovery_boundary": boundary})

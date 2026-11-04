@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.state.rulebook-coverage
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-22"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-04"
 #   layer: 01.harness
 #   domain: architecture
 #   disciplines:
@@ -240,7 +240,7 @@ source_guides:
           - "Enterprise Future"
         status: covered
         artifacts:
-          - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+          - .agentic/03.product/standards/config-runtime-settings.md
         note: "Configuration source refs were manually checked while creating docs/03.product/rules/platform/concerns/config-runtime-settings.yml."
       - source_sections:
           - "What a shared core package is"
@@ -287,7 +287,7 @@ source_guides:
           - "Should Have as the platform grows"
         status: covered
         artifacts:
-          - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+          - .agentic/03.product/standards/config-runtime-settings.md
           - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
           - docs/03.product/rules/platform/concerns/identity-access-security.yml
           - docs/03.product/rules/core/concerns/validation-api-errors.yml
@@ -694,7 +694,7 @@ artifact_coverage:
   - artifact: docs/04.deploy/rules/layers/infra.yml
     status: covered
     note: "Source refs manually checked while creating the infra layer ruleset."
-  - artifact: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+  - artifact: .agentic/03.product/standards/config-runtime-settings.md
     status: covered
     note: "Source refs manually checked while creating the configuration and runtime settings concern ruleset."
   - artifact: docs/03.product/rules/design-system/layers/design-system.yml

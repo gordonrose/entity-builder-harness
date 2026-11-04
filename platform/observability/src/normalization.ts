@@ -1,9 +1,10 @@
 import { defaultRedactedValue, defaultSensitiveLogFieldNames } from "@kanbien/core/logging";
 import type { JsonValue } from "@kanbien/core/shared";
+import { platformErrorClassification, platformErrorClassDeclarations, type PlatformErrorClassificationOptions } from "@kanbien/platform-contracts";
 
 export type PlatformSafeLogFields = Readonly<Record<string, JsonValue>>;
 
-export interface PlatformValueNormalizationOptions {
+export interface PlatformValueNormalizationOptions extends PlatformErrorClassificationOptions {
   readonly additionalSensitiveKeys?: readonly string[];
   readonly redactedValue?: string;
   readonly maxDepth?: number;
@@ -33,35 +34,39 @@ export function normalizePlatformValue(
   return normalizeUnknown(value, createNormalizationState(options), 0);
 }
 
-export function normalizePlatformError(error: unknown): PlatformSafeLogFields {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      ...(hasStringProperty(error, "code") ? { code: error["code"] } : {}),
-    };
-  }
-
-  if (isObjectLike(error)) {
-    return {
-      type: "non-error-object",
-      ...(hasStringProperty(error, "code") ? { code: error["code"] } : {}),
-      ...(hasStringProperty(error, "name") ? { name: error["name"] } : {}),
-    };
-  }
-
-  return { type: "non-error-value" };
+export function normalizePlatformError(error: unknown, options?: PlatformErrorClassificationOptions): PlatformSafeLogFields {
+  try {
+    if (!isObjectLike(error)) return { type: "non-error-value" };
+    const code = Object.getOwnPropertyDescriptor(error, "code");
+    const native = nativeErrorClass(error);
+    if (native !== "unknown") return { name: native,
+      ...(code === undefined ? {} : { code: "value" in code ? platformErrorClassification(code.value, options) : "unknown" }) };
+    const name = Object.getOwnPropertyDescriptor(error, "name");
+    return { type: "non-error-object",
+      ...(code === undefined ? {} : { code: "value" in code ? platformErrorClassification(code.value, options) : "unknown" }),
+      ...(name === undefined ? {} : { name: "value" in name ? platformErrorClassification(name.value, options) : "unknown" }) };
+  } catch { return { type: "non-error-object" }; }
 }
 
-export function platformErrorClass(error: unknown): string {
-  if (hasStringProperty(error, "code")) {
-    return String(error["code"]);
-  }
+export function platformErrorClass(error: unknown, options?: PlatformErrorClassificationOptions): string {
+  try {
+    if (!isObjectLike(error)) return "unknown";
+    const code = Object.getOwnPropertyDescriptor(error, "code");
+    // A present unsupported code is not evidence of a native error cause.
+    if (code !== undefined) return "value" in code ? platformErrorClassification(code.value, options) : "unknown";
+    return nativeErrorClass(error);
+  } catch { return "unknown"; }
+}
 
-  if (error instanceof Error && error.name.length > 0) {
-    return error.name;
-  }
-
-  return "unknown";
+function nativeErrorClass(error: object): string {
+  if (error instanceof EvalError) return "EvalError";
+  if (error instanceof RangeError) return "RangeError";
+  if (error instanceof ReferenceError) return "ReferenceError";
+  if (error instanceof SyntaxError) return "SyntaxError";
+  if (error instanceof TypeError) return "TypeError";
+  if (error instanceof URIError) return "URIError";
+  if (error instanceof AggregateError) return "AggregateError";
+  return error instanceof Error ? "Error" : "unknown";
 }
 
 function createNormalizationState(options: PlatformValueNormalizationOptions): NormalizationState {
@@ -72,6 +77,7 @@ function createNormalizationState(options: PlatformValueNormalizationOptions): N
     maxArrayItems: options.maxArrayItems ?? 20,
     maxObjectKeys: options.maxObjectKeys ?? 50,
     maxStringLength: options.maxStringLength ?? 256,
+    errorClasses: platformErrorClassDeclarations(options) ?? [],
   };
 
   return {
@@ -132,7 +138,7 @@ function normalizeUnknown(value: unknown, state: NormalizationState, depth: numb
   }
 
   if (value instanceof Error) {
-    return normalizePlatformError(value);
+    return normalizePlatformError(value, state.options);
   }
 
   if (depth > state.options.maxDepth) {
@@ -176,8 +182,4 @@ function normalizeKey(value: string): string {
 
 function isObjectLike(value: unknown): value is object {
   return typeof value === "object" && value !== null;
-}
-
-function hasStringProperty(value: unknown, key: string): value is Readonly<Record<string, string>> {
-  return isObjectLike(value) && typeof (value as Readonly<Record<string, unknown>>)[key] === "string";
 }

@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.script.build-platform-shell-image.prepare-runtime
-//   version: 1
+//   version: 2
 //   status: active
 //   created_on: "2026-07-10"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-31"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -26,6 +26,9 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path, { join } from "node:path";
 
 const runtimeRoot = ".cache/platform-shell-image-build";
+let preparationPhase = "package-shim";
+let preparationLocation = {};
+try {
 const coreModules = [
   "audit",
   "authn",
@@ -38,6 +41,7 @@ const coreModules = [
   "monitoring",
   "persistence",
   "queues",
+  "security",
   "shared",
   "tenancy",
   "validation",
@@ -105,21 +109,32 @@ writePackageShim("@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter",
 });
 
 console.log(`Prepared platform shell image runtime at ${runtimeRoot}`);
+} catch {
+  console.error(JSON.stringify({ scope: "platform-shell-runtime-preparation", verdict: "failed", code: "runtime-preparation-boundary-failed", phase: preparationPhase, ...preparationLocation, effect: "earlier-writes-possible" }));
+  process.exitCode = 1;
+}
 
 function writePackageShim(packageName, exportsMap) {
+  preparationLocation = { package: packageName };
   const packageRoot = join(runtimeRoot, "node_modules", ...packageName.split("/"));
+  preparationPhase = "shim-directory";
   mkdirSync(packageRoot, { recursive: true });
 
   const packageExports = {};
   for (const [exportName, targetPath] of Object.entries(exportsMap)) {
+    preparationLocation = { package: packageName, export: exportName };
     const shimPath = exportName === "."
       ? join(packageRoot, "index.js")
       : join(packageRoot, exportName.slice(2), "index.js");
+    preparationPhase = "shim-directory";
     mkdirSync(path.dirname(shimPath), { recursive: true });
+    preparationPhase = "shim-write";
     writeFileSync(shimPath, `module.exports = require(${JSON.stringify(relativeRequirePath(shimPath, targetPath))});\n`);
     packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
   }
 
+  preparationPhase = "manifest-write";
+  preparationLocation = { package: packageName };
   writeFileSync(
     join(packageRoot, "package.json"),
     `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`,

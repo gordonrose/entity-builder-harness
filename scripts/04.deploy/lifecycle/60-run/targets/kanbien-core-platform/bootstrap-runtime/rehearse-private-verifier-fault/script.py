@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -67,7 +67,9 @@ def report(verdict: str, *codes: str, facts: dict | None = None) -> int:
 
 
 def aws(*args: str):
-    result = subprocess.run(["aws", *args, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True)
+    try: result = subprocess.run(["aws", *args, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True)
+    except OSError: return False, None, "aws-command-unavailable"
+    except UnicodeError: return False, None, "aws-response-invalid"
     if result.returncode:
         text = result.stderr.lower()
         return False, None, "aws-access-denied" if "accessdenied" in text or "not authorized" in text else "aws-command-failed"
@@ -79,10 +81,12 @@ def aws(*args: str):
 
 def outputs(stack_name: str) -> tuple[dict[str, str] | None, str]:
     ok, described, code = aws("cloudformation", "describe-stacks", "--stack-name", stack_name)
-    stacks = described.get("Stacks", []) if ok else []
-    if not ok or len(stacks) != 1:
-        return None, code if not ok else "stack-not-returned"
-    return {item.get("OutputKey"): item.get("OutputValue") for item in stacks[0].get("Outputs", []) if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)}, "ok"
+    try:
+        stacks = described.get("Stacks", []) if ok else []
+        if not ok or len(stacks) != 1:
+            return None, code if not ok else "stack-not-returned"
+        return {item.get("OutputKey"): item.get("OutputValue") for item in stacks[0].get("Outputs", []) if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)}, "ok"
+    except (AttributeError, TypeError, KeyError, IndexError): return None, "stack-output-observation-invalid"
 
 
 def fault_override(case: str) -> dict:
@@ -102,13 +106,16 @@ def task_log_contains(task: dict, code: str) -> tuple[bool, str]:
     ok, events, aws_code = aws("logs", "get-log-events", "--log-group-name", "/aws/ecs/kanbien-core-platform", "--log-stream-name", f"release-verifier/private-release-verifier/{task_id}", "--start-from-head")
     if not ok:
         return False, aws_code
-    messages = [event.get("message") for event in events.get("events", []) if isinstance(event, dict)]
-    return any(isinstance(message, str) and f'"code":"{code}"' in message for message in messages), "ok"
+    try: messages = [event.get("message") for event in events.get("events", []) if isinstance(event, dict)]
+    except (AttributeError, TypeError): return False, "private-verifier-evidence-invalid"
+    matched = any(isinstance(message, str) and f'"code":"{code}"' in message for message in messages)
+    return matched, "ok" if matched else "private-verifier-rejection-log-not-observed"
 
 
 def task_exit_code(task: dict) -> int | None:
     containers = task.get("containers", []) if isinstance(task, dict) else []
-    value = containers[0].get("exitCode") if containers and isinstance(containers[0], dict) else None
+    try: value = containers[0].get("exitCode") if containers and isinstance(containers[0], dict) else None
+    except (TypeError, KeyError, IndexError): return None
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
@@ -132,11 +139,13 @@ def service_unchanged(release: dict, original_task_arn: str) -> bool:
 def run_fault(case: str, verifier_definition: str, subnets: str, security_group: str) -> tuple[dict | None, str]:
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
     ok, result, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", verifier_definition, "--launch-type", "FARGATE", "--count", "1", "--started-by", f"kanbien-core-platform-{case}", "--network-configuration", network, "--overrides", json.dumps(fault_override(case), separators=(",", ":")))
-    tasks = result.get("tasks", []) if ok else []
-    if not ok or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
-        return None, code if not ok else "private-verifier-fault-task-not-started"
+    try:
+        tasks = result.get("tasks", []) if ok else []
+        if not ok or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
+            return None, code if not ok else "private-verifier-fault-task-observation-unconfirmed"
+    except (AttributeError, TypeError, KeyError): return None, "private-verifier-fault-task-observation-invalid"
     if tasks[0].get("taskDefinitionArn") != verifier_definition:
-        return None, "private-verifier-fault-task-definition-mismatch"
+        return tasks[0], "private-verifier-fault-task-definition-mismatch"
     return tasks[0], "ok"
 
 
@@ -151,53 +160,86 @@ def main() -> int:
     release = REPLACEMENT.accepted_release()
     if release is None:
         return report("blocked", "accepted-release-record-invalid")
-    with tempfile.TemporaryDirectory() as directory:
-        receipt_path = Path(directory) / "accepted-receipt.json"
-        REPLACEMENT.receipt(release, receipt_path)
-        accepted_task, code = REPLACEMENT.preflight(release, receipt_path)
-        if accepted_task is None:
-            return report("blocked", code)
-        runtime_outputs, runtime_code = outputs(RUNTIME_STACK)
-        foundation_outputs, foundation_code = outputs(FOUNDATION_STACK)
-        verifier = runtime_outputs.get("ReleaseVerifierTaskDefinitionArn") if runtime_outputs else None
-        subnets = foundation_outputs.get("PrivateSubnetIds") if foundation_outputs else None
-        security_group = foundation_outputs.get("VerifierSecurityGroupId") if foundation_outputs else None
-        if runtime_code != "ok" or foundation_code != "ok" or not all(isinstance(value, str) and value for value in (verifier, subnets, security_group)):
-            return report("blocked", "private-verifier-fault-foundation-unavailable")
-        deadline = VERIFIER.verifier_completion_deadline()
-        if deadline is None:
-            return report("blocked", "private-verifier-deadline-contract-invalid")
-        facts = {"case": args.case, "accepted_source_revision": release["source_revision"], "accepted_image_digest": release["image_digest"], "accepted_runtime_task_definition": release["runtime_task_definition"], "verifier_task_definition": verifier, "completion_deadline_seconds": deadline, "accepted_server_task_suffix": REPLACEMENT.task_suffix(accepted_task)}
-        if not args.execute:
-            return report("prepared", "private-verifier-fault-ready", facts=facts)
-        fixture, code = run_fault(args.case, verifier, subnets, security_group)
-        if fixture is None:
-            return report("blocked", code, facts=facts)
-        fixture_arn = fixture["taskArn"]
-        facts["fixture_task_suffix"] = REPLACEMENT.task_suffix(fixture)
-        state, terminal = VERIFIER.wait_for_verifier_stop(fixture_arn, deadline, VERIFIER.inspect_verifier_task)
-        if args.case == "expected-source-mismatch":
-            if state != "stopped" or terminal is None:
-                return report("blocked", "private-verifier-rejection-state-invalid", facts=facts)
-            within, timing_code = VERIFIER.completed_within_deadline(terminal, deadline)
-            rejected, log_code = task_log_contains(terminal, "KANBIEN_CORE_RELEASE_VERIFICATION_FAILED")
-            exit_code = task_exit_code(terminal)
-            if not within or exit_code is None or exit_code == 0 or not rejected or not service_unchanged(release, accepted_task["taskArn"]):
-                return report("blocked", timing_code if not within else log_code if not rejected else "private-verifier-rejection-not-contained", facts=facts)
-            facts["completion_duration_seconds"] = VERIFIER.verifier_duration_seconds(terminal)
-            return report("rejected-as-expected", "private-verifier-source-mismatch-rejected", facts=facts)
-        if state != "still-running" or terminal is None:
-            return report("blocked", "private-verifier-controller-timeout-not-observed", facts=facts)
-        if terminal.get("taskDefinitionArn") != verifier or not service_unchanged(release, accepted_task["taskArn"]):
-            return report("blocked", "private-verifier-timeout-not-contained", facts=facts)
-        ok, _, stop_code = aws("ecs", "stop-task", "--cluster", CLUSTER, "--task", fixture_arn, "--reason", "governed controller-deadline fixture cleanup")
-        if not ok:
-            return report("blocked", stop_code, facts=facts)
-        cleaned, cleanup_code = wait_for_cleanup_stop(fixture_arn)
-        if cleaned is None or not service_unchanged(release, accepted_task["taskArn"]):
-            return report("blocked", cleanup_code if cleaned is None else "private-verifier-timeout-cleanup-not-contained", facts=facts)
-        facts["cleanup_task_status"] = cleaned.get("lastStatus")
-        return report("controller-deadline-confirmed", "private-verifier-controller-deadline-remote-task-still-running", "private-verifier-timeout-fixture-cleaned", facts=facts)
+    phase="private-verifier-temporary-directory-unavailable"
+    mutation_attempted=False
+    facts={}
+    try:
+        with tempfile.TemporaryDirectory() as directory:
+            body_failed=False
+            try:
+                receipt_path = Path(directory) / "accepted-receipt.json"
+                phase="private-verifier-receipt-unavailable"
+                REPLACEMENT.receipt(release, receipt_path)
+                phase="private-verifier-preflight-observation-unavailable"
+                accepted_task, code = REPLACEMENT.preflight(release, receipt_path)
+                if accepted_task is None:
+                    return report("blocked", code)
+                phase="private-verifier-foundation-observation-unavailable"
+                runtime_outputs, runtime_code = outputs(RUNTIME_STACK)
+                foundation_outputs, foundation_code = outputs(FOUNDATION_STACK)
+                verifier = runtime_outputs.get("ReleaseVerifierTaskDefinitionArn") if runtime_outputs else None
+                subnets = foundation_outputs.get("PrivateSubnetIds") if foundation_outputs else None
+                security_group = foundation_outputs.get("VerifierSecurityGroupId") if foundation_outputs else None
+                if runtime_code != "ok" or foundation_code != "ok" or not all(isinstance(value, str) and value for value in (verifier, subnets, security_group)):
+                    return report("blocked", "private-verifier-fault-foundation-unavailable")
+                phase="private-verifier-deadline-observation-unavailable"
+                deadline = VERIFIER.verifier_completion_deadline()
+                if deadline is None:
+                    return report("blocked", "private-verifier-deadline-contract-invalid")
+                facts = {"case": args.case, "accepted_source_revision": release["source_revision"], "accepted_image_digest": release["image_digest"], "accepted_runtime_task_definition": release["runtime_task_definition"], "verifier_task_definition": verifier, "completion_deadline_seconds": deadline, "accepted_server_task_suffix": REPLACEMENT.task_suffix(accepted_task)}
+                if not args.execute:
+                    return report("prepared", "private-verifier-fault-ready", facts=facts)
+                phase="private-verifier-submission-observation-unavailable"
+                mutation_attempted=True
+                fixture, code = run_fault(args.case, verifier, subnets, security_group)
+                if fixture is None:
+                    return report("uncertain", code, facts=facts)
+                fixture_arn = fixture["taskArn"]
+                facts["fixture_task_suffix"] = REPLACEMENT.task_suffix(fixture)
+                if code != "ok":
+                    # Identity was observed, but this task's definition was not proven.
+                    # Retain it without waiting on or automatically cleaning it up.
+                    identity = {"fixture_task_arn": fixture_arn} if REPLACEMENT.task_arn_is_reportable(fixture_arn) else {"fixture_task_identity": "unavailable"}
+                    return report("uncertain", code, facts={**facts, **identity})
+                phase="private-verifier-wait-observation-unavailable"
+                try: state, terminal = VERIFIER.wait_for_verifier_stop(fixture_arn, deadline, VERIFIER.inspect_verifier_task)
+                except (AttributeError, TypeError, KeyError, IndexError, ValueError, OSError):
+                    identity = {"fixture_task_arn": fixture_arn} if REPLACEMENT.task_arn_is_reportable(fixture_arn) else {"fixture_task_identity": "unavailable"}
+                    return report("uncertain", "private-verifier-wait-observation-unavailable", facts={**facts, **identity})
+                if args.case == "expected-source-mismatch":
+                    if state != "stopped" or terminal is None:
+                        return report("blocked", "private-verifier-rejection-state-invalid", facts=facts)
+                    try: within, timing_code = VERIFIER.completed_within_deadline(terminal, deadline)
+                    except (AttributeError, TypeError, KeyError, ValueError, OSError): return report("uncertain", "private-verifier-time-observation-unavailable", facts=facts)
+                    rejected, log_code = task_log_contains(terminal, "KANBIEN_CORE_RELEASE_VERIFICATION_FAILED")
+                    exit_code = task_exit_code(terminal)
+                    if not within or exit_code is None or exit_code == 0 or not rejected or not service_unchanged(release, accepted_task["taskArn"]):
+                        selected_code = timing_code if not within else log_code if not rejected else "private-verifier-rejection-not-contained"
+                        return report("blocked", selected_code if selected_code != "ok" else "private-verifier-rejection-not-contained", facts=facts)
+                    try: facts["completion_duration_seconds"] = VERIFIER.verifier_duration_seconds(terminal)
+                    except (AttributeError, TypeError, KeyError, ValueError, OSError): return report("uncertain", "private-verifier-duration-observation-unavailable", facts=facts)
+                    return report("rejected-as-expected", "private-verifier-source-mismatch-rejected", facts=facts)
+                if state != "still-running" or terminal is None:
+                    return report("blocked", "private-verifier-controller-timeout-not-observed", facts=facts)
+                if terminal.get("taskDefinitionArn") != verifier or not service_unchanged(release, accepted_task["taskArn"]):
+                    return report("blocked", "private-verifier-timeout-not-contained", facts=facts)
+                phase="private-verifier-stop-observation-unavailable"
+                ok, _, stop_code = aws("ecs", "stop-task", "--cluster", CLUSTER, "--task", fixture_arn, "--reason", "governed controller-deadline fixture cleanup")
+                if not ok:
+                    return report("blocked", stop_code, facts=facts)
+                try: cleaned, cleanup_code = wait_for_cleanup_stop(fixture_arn)
+                except (AttributeError, TypeError, KeyError, IndexError, ValueError, OSError): return report("uncertain", "private-verifier-cleanup-observation-unavailable", facts=facts)
+                if cleaned is None or not service_unchanged(release, accepted_task["taskArn"]):
+                    return report("blocked", cleanup_code if cleaned is None else "private-verifier-timeout-cleanup-not-contained", facts=facts)
+                facts["cleanup_task_status"] = cleaned.get("lastStatus")
+                return report("controller-deadline-confirmed", "private-verifier-controller-deadline-remote-task-still-running", "private-verifier-timeout-fixture-cleaned", facts=facts)
+            except BaseException:
+                body_failed=True
+                raise
+            finally:
+                if not body_failed: phase="private-verifier-temporary-cleanup-unavailable"
+    except (OSError, UnicodeError, AttributeError, TypeError, KeyError, IndexError, ValueError):
+        return report("uncertain" if mutation_attempted else "blocked", phase, facts=facts)
 
 
 if __name__ == "__main__":

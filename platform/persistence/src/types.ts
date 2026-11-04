@@ -9,6 +9,8 @@ import {
   type Result,
 } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
+import { validatePersistenceLeaseDuration } from "./leasing/index";
+import { persistenceLocalRejectionDiagnostic, persistenceLocalRejectionDiagnosticRecord } from "./diagnostics";
 
 export type PlatformPersistenceLeaseOwner = Brand<string, "PlatformPersistenceLeaseOwner">;
 export type PlatformPersistenceFence = Brand<number, "PlatformPersistenceFence">;
@@ -61,6 +63,7 @@ export function platformPersistenceLeaseOwner(
         code: "PLATFORM_PERSISTENCE_INVALID_LEASE",
         defaultMessage: "Persistence lease owner must use lowercase identifier segments.",
         messageKey: "platform.persistence.lease.owner.invalid",
+        diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-lease", field: "owner", condition: "pattern", phase: "validation", effect: "not-started" }),
       }),
     );
   }
@@ -78,6 +81,7 @@ export function platformPersistenceFence(
         defaultMessage: "Persistence fence must be a positive integer.",
         messageKey: "platform.persistence.lease.fence.invalid",
         params: { fence: String(value) },
+        diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-lease", field: "fence", condition: !Number.isInteger(value) ? "not-integer" : "not-positive", phase: "validation", effect: "not-started" }),
       }),
     );
   }
@@ -95,6 +99,7 @@ export function platformPersistenceAttempt(
         defaultMessage: "Persistence attempt must be a non-negative integer.",
         messageKey: "platform.persistence.lease.attempt.invalid",
         params: { attempt: String(value) },
+        diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-lease", field: "attempt", condition: !Number.isInteger(value) ? "not-integer" : "negative", phase: "validation", effect: "not-started" }),
       }),
     );
   }
@@ -115,6 +120,7 @@ export function platformPersistenceLease(input: {
         code: "PLATFORM_PERSISTENCE_INVALID_LEASE",
         defaultMessage: "Persistence lease expiry must be after its acquisition time.",
         messageKey: "platform.persistence.lease.expiry.invalid",
+        diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-lease", field: "expiry", condition: "not-after-acquisition", phase: "validation", effect: "not-started" }),
       }),
     );
   }
@@ -129,13 +135,16 @@ export function nextPlatformPersistenceLease(input: {
   readonly acquiredAt: ISODateTime;
   readonly durationMs: number;
 }): Result<PlatformPersistenceLease, PlatformPersistenceError> {
-  if (!Number.isInteger(input.durationMs) || input.durationMs <= 0) {
+  const suppliedDuration = input.durationMs;
+  const duration = validatePersistenceLeaseDuration(suppliedDuration);
+  if (!duration.ok) {
     return err(
       platformPersistenceError({
         code: "PLATFORM_PERSISTENCE_INVALID_LEASE",
         defaultMessage: "Persistence lease duration must be a positive integer number of milliseconds.",
         messageKey: "platform.persistence.lease.duration.invalid",
-        params: { durationMs: String(input.durationMs) },
+        params: { durationMs: typeof suppliedDuration === "number" ? String(suppliedDuration) : "invalid" },
+        diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-lease", field: "duration", condition: duration.error.reason === "not-positive" ? "not-positive" : "not-integer", phase: "validation", effect: "not-started" }),
       }),
     );
   }
@@ -148,6 +157,10 @@ export function nextPlatformPersistenceLease(input: {
         code: "PLATFORM_PERSISTENCE_INVALID_LEASE",
         defaultMessage: "Persistence lease sequence could not advance.",
         messageKey: "platform.persistence.lease.sequence.invalid",
+        diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-lease", field: "sequence", condition: "cannot-advance", phase: "validation", effect: "not-started" }),
+        relatedDiagnosticRecords: [...(fence.ok || fence.error.diagnosticRecord === undefined ? [] : [fence.error.diagnosticRecord]),
+          ...(attempt.ok || attempt.error.diagnosticRecord === undefined ? [] : [attempt.error.diagnosticRecord])],
+        relatedDiagnosticDefinitions: [persistenceLocalRejectionDiagnostic],
       }),
     );
   }
@@ -157,7 +170,7 @@ export function nextPlatformPersistenceLease(input: {
     fence: fence.value,
     attempt: attempt.value,
     acquiredAt: input.acquiredAt,
-    expiresAt: isoDateTimeFromDate(new Date(Date.parse(input.acquiredAt) + input.durationMs)),
+    expiresAt: isoDateTimeFromDate(new Date(Date.parse(input.acquiredAt) + duration.value)),
   });
 }
 

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines:
@@ -88,7 +88,7 @@ safe_command_deployment_diagnostic() {
       --target "$target" --scope "$scope" --operation-id "$operation_id" --stage "$stage" \
       --original-code "$code" --exit-status "$status" --outcome unknown --classification child-command-failed \
       --evidence-reference "$evidence_reference" --next-decision inspect-retained-evidence \
-      --report "$report_path" >/dev/null; then
+      --report "$report_path" >/dev/null 2>&1; then
     printf 'DIAGNOSTIC_COLLECTION_STATUS=failed\n' >&2
     printf 'DIAGNOSTIC_COLLECTION_CODE=deployment-operation-diagnostic-collection-failed\n' >&2
   else

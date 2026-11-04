@@ -5,10 +5,13 @@ import path, { join } from "node:path";
 const runtimeRoot = ".cache/platform-observability-runtime";
 const testDirectory = join(runtimeRoot, "platform/observability/tests");
 const coreModules = [
+  "config",
+  "diagnostics",
   "logging",
   "monitoring",
   "persistence",
   "queues",
+  "security",
   "shared",
 ];
 
@@ -23,6 +26,10 @@ writePackageShim("@kanbien/platform-contracts", {
 
 writePackageShim("@kanbien/platform-persistence", {
   ".": join(runtimeRoot, "platform/persistence/src/index.js"),
+});
+
+writePackageShim("@kanbien/platform-security", {
+  ".": join(runtimeRoot, "platform/security/src/index.js"),
 });
 
 const testFiles = readdirSync(testDirectory)

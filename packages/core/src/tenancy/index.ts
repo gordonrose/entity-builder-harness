@@ -1,4 +1,9 @@
 import { entityId, type EntityId } from "../shared/index";
+import { TenantObservation } from "./observations";
+import type { CoreTenancyDiagnosticOptions } from "./diagnostics";
+export { coreTenancyBoundaryDiagnostic, coreTenancyBoundaryDiagnosticRecord, coreTenancyDiagnosticDefinitions } from "./diagnostics";
+export type { CoreTenancyBoundaryDetail, CoreTenancyDiagnosticOptions } from "./diagnostics";
+export { observeCoreTenancyDiagnostic } from "./observations";
 
 export type TenantId = EntityId<"TenantId">;
 export type TenantResolution = TenantContext | null;
@@ -19,11 +24,12 @@ export function tenantId(value: string): TenantId {
 export function tenantContext(input: {
   readonly tenantId: TenantId;
   readonly isolationKey?: string;
-}): TenantContext {
-  return {
-    tenantId: input.tenantId,
-    isolationKey: input.isolationKey ?? input.tenantId,
-  };
+}, diagnostics?: CoreTenancyDiagnosticOptions): TenantContext {
+  const observation = new TenantObservation(diagnostics);
+  return observation.run(() => ({
+    tenantId: observation.read("tenant-id", () => input.tenantId),
+    isolationKey: observation.read("isolation-key", () => input.isolationKey) ?? observation.read("tenant-id", () => input.tenantId),
+  }));
 }
 
 export function fixedTenantResolver<TInput>(resolution: TenantResolution): TenantResolver<TInput> {

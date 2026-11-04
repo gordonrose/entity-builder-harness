@@ -13,6 +13,7 @@ part of that public API.
 | File | Owns | Why it remains separate |
 | --- | --- | --- |
 | `errors.ts` | Runtime failure codes, mount-failure shape, and internal failure constructors. | Registry mounting and lifecycle coordination can report safe, consistent failures without importing one another’s mechanics. |
+| `diagnostics.ts` | Closed runtime catalog, explicit evidence selection, and isolated per-call observation. | Runtime location is independent of upstream primary/companion evidence and has no global registry or output sink. |
 | `registry.ts` | App registration catalogue, scoped app views, cross-registration validation, and app-mount orchestration. | Only this topic can see every app contribution and enforce relationships such as duplicate routes or namespace ownership. |
 | `contexts.ts` | Shared dependency defaults plus request and job context construction. | Handlers receive a consistent bundle of runtime facts without the registry or lifecycle becoming a service locator. |
 | `lifecycle.ts` | State machine, app hooks, resource startup/draining/closing, telemetry flushing, and ordered shutdown. | Process lifecycle has a different stateful sequencing concern from registration or individual request/job facts. |
@@ -91,6 +92,23 @@ Internal error-construction helpers are intentionally absent from the barrel.
 They help the registry and lifecycle implement their responsibilities, but they
 are not a promise that applications, servers, or adapters may depend on their
 current shape.
+
+### `diagnostics.ts` — location without invented causes
+
+The public runtime catalog owns state rejection and runtime boundary failure, not
+contract registration or Core date-normalization meanings. Per-invocation tracking
+distinguishes selecting a callback, invoking it, awaiting its completion, and recording
+its event. Timestamp failures after a completed effect retain that distinction.
+Construction snapshots, iterator advancement, result projection, and synchronous
+context construction have their own observed phases without changing their original
+escape behavior. Optional phase-local ordinals count yielded subjects only.
+
+The observer receives closed data plus the existing diagnostic context; mount also
+supplies a registered catalog snapshot. Core validates selected upstream records
+without reading error accessors. The runtime observer emits its own location separately
+from retained upstream evidence, keeping the full primary-plus-eight carrier bound.
+Contexts emit only location and rethrow the same source. There is no default logger,
+registry of thrown objects, error decoration, or additional dependency validation.
 
 ## Dependency direction
 

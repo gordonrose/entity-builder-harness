@@ -1,29 +1,38 @@
 import { noopTracer, type TraceSpan, type TraceSpanOutcome } from "@kanbien/core/monitoring";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import { createDiagnosticRecord, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { outboxEntryId, type OutboxEntryId } from "@kanbien/core/persistence";
+import { validationDiagnostic } from "@kanbien/core/validation";
 import type { QueueMessage } from "@kanbien/core/queues";
 import { causationId, correlationId, isoDateTimeFromDate, type Result } from "@kanbien/core/shared";
 import {
   recordPlatformPersistenceObservation,
+  validatePersistenceLeaseDuration,
   type PlatformPersistenceTransition,
   type PlatformPersistenceTransitionOutcome,
 } from "@kanbien/platform-persistence";
 import { tenantContext } from "@kanbien/core/tenancy";
 import {
   platformProfileAllowsSignal,
+  platformErrorClassDeclarations,
   platformProfileLogFields,
   platformProfileMeasuresLatency,
   platformProfileMetricLabels,
   platformProfileTraceFields,
+  platformContractDiagnosticCatalog,
 } from "@kanbien/platform-contracts";
 import type {
   PlatformCapabilityObservabilityProfile,
+  PlatformDiagnosticReporter,
+  PlatformDiagnosticCatalog,
+  PlatformDiagnosticContext,
   PlatformJobDeliveryDisposition,
   PlatformJobName,
   PlatformJobRegistration,
   PlatformOperationalNomenclature,
 } from "@kanbien/platform-contracts";
-import { assertPlatformConfigValid } from "@kanbien/platform-config";
-import { platformReadiness } from "@kanbien/platform-health";
+import { assertPlatformConfigValid, platformConfigDiagnosticCatalog } from "@kanbien/platform-config";
+import { platformHealthDiagnosticCatalog, platformReadiness } from "@kanbien/platform-health";
 import {
   elapsedMilliseconds,
   endPlatformTraceSpan,
@@ -31,13 +40,26 @@ import {
   recordPlatformMetric,
   startPlatformTraceSpan,
   writePlatformLog,
+  createPlatformDiagnosticReporter,
+  createPlatformMetricDiagnosticBinding,
+  platformObservabilityDiagnosticCatalog,
+  type PlatformMetricDiagnosticBinding,
+  reportPlatformErrorDiagnostic,
+  reportPlatformDiagnostic,
+  type PlatformObservationDiagnostics,
 } from "@kanbien/platform-observability";
 import {
   createPlatformRuntimeJobContext,
   createPlatformRuntimeLifecycle,
   mountPlatformRuntimeApps,
+  platformRuntimeDiagnosticCatalog,
 } from "@kanbien/platform-runtime";
 import { workerError, workerFailure, type PlatformWorkerError } from "./errors";
+import { platformWorkerDiagnosticCatalog, platformWorkerBoundaryDiagnostic, reportWorkerBoundary, workerDiagnosticEvidence,
+  workerDeliveryRejectedRecord, workerCoordinationRecord, workerDeliveryBoundaryRecord, type WorkerDeliveryBoundaryDetail } from "./diagnostics";
+import { workerDiagnosticErrorCodes } from "./diagnostics";
+import { workerConfigurationDiagnosticRecord } from "./configuration-diagnostics";
+import { validateWorkerRetryConfiguration, validateWorkerRetryDelay, workerRetryDelayError } from "./configuration/index";
 import { createInMemoryPlatformWorkerQueue, workerQueueNow } from "./queue";
 import type {
   PlatformWorkerQueueEntry,
@@ -47,47 +69,159 @@ import type {
   PlatformWorkerShellOptions,
 } from "./types";
 
+export const workerBuiltinDiagnosticCatalogs = Object.freeze([coreDiagnosticCatalog, platformContractDiagnosticCatalog,
+  platformWorkerDiagnosticCatalog, platformRuntimeDiagnosticCatalog, platformConfigDiagnosticCatalog,
+  platformObservabilityDiagnosticCatalog, platformHealthDiagnosticCatalog]);
+
 export async function createPlatformWorkerShell(
   options: PlatformWorkerShellOptions,
 ): Promise<Result<PlatformWorkerShell, PlatformWorkerError>> {
+  let startupCatalogs: readonly PlatformDiagnosticCatalog[] = [];
+  function diagnosticDefinitions(): readonly DiagnosticDefinition[] {
+    try { return [...workerBuiltinDiagnosticCatalogs, ...(options.diagnosticCatalogs ?? []), ...startupCatalogs].flatMap((catalog) => catalog.definitions); }
+    catch { return []; }
+  }
+  let selectedStartupReporter: PlatformDiagnosticReporter | undefined;
+  const startupDiagnostics: PlatformDiagnosticReporter = { report(record, context) {
+    if (selectedStartupReporter === undefined) {
+      const builtins = workerBuiltinDiagnosticCatalogs;
+      try { selectedStartupReporter = options.deps.diagnostics ?? createPlatformDiagnosticReporter({
+        catalogs: [...builtins, ...(options.diagnosticCatalogs ?? []), ...startupCatalogs], logger: options.deps.logger, clock: options.deps.clock,
+      }); } catch (error) {
+        try {
+          selectedStartupReporter = createPlatformDiagnosticReporter({ catalogs: builtins, logger: options.deps.logger, clock: options.deps.clock });
+          reportPlatformErrorDiagnostic(selectedStartupReporter, error, { capability: "platform-contracts", operation: "select-diagnostic-catalog", stage: "configuration" });
+        } catch { return { status: "unavailable" }; }
+      }
+    }
+    try { return selectedStartupReporter.report(record, context); } catch { return { status: "unavailable" }; }
+  } };
   const mounted = await mountPlatformRuntimeApps({
     apps: options.apps,
     deps: options.deps,
+    get diagnosticDefinitions() { return diagnosticDefinitions(); },
+    onDiagnostic(record, context, registeredCatalogs) {
+      if (registeredCatalogs !== undefined) startupCatalogs = registeredCatalogs;
+      reportPlatformDiagnostic(startupDiagnostics, record, context);
+    },
   });
 
   if (!mounted.ok) {
-    return workerFailure("PLATFORM_WORKER_MOUNT_FAILED", "Platform worker failed to mount apps.", { runtimeCode: mounted.error.code }, mounted.error);
+    for (const error of mounted.error.contractErrors) reportPlatformErrorDiagnostic(startupDiagnostics, error,
+      { capability: "platform-contracts", operation: "register", stage: "configuration" });
+    return workerFailure("PLATFORM_WORKER_MOUNT_FAILED", "Platform worker failed to mount apps.", { runtimeCode: mounted.error.code }, mounted.error, diagnosticDefinitions());
   }
+
+  startupCatalogs = mounted.value.diagnosticCatalogs;
 
   const config = assertPlatformConfigValid({
     source: options.deps.config,
     schemas: mounted.value.configSchemas,
+    get diagnosticDefinitions() { return diagnosticDefinitions(); },
+    onDiagnostic: (record) => reportPlatformDiagnostic(startupDiagnostics, record, { capability: "platform-config", operation: "validate-schema", stage: "configuration" }),
   });
   if (!config.ok) {
-    return workerFailure("PLATFORM_WORKER_CONFIG_INVALID", "Platform worker config validation failed before polling.", config.error.details, config.error);
+    return workerFailure("PLATFORM_WORKER_CONFIG_INVALID", "Platform worker config validation failed before polling.", config.error.details, config.error, diagnosticDefinitions());
   }
 
-  if (options.durableOutboxProcessing !== undefined && (!Number.isInteger(options.durableOutboxProcessing.leaseDurationMs) || options.durableOutboxProcessing.leaseDurationMs <= 0)) {
-    return workerFailure(
+  const processing = options.durableOutboxProcessing;
+  const lease = processing === undefined ? undefined : validatePersistenceLeaseDuration(processing.leaseDurationMs);
+  if (lease !== undefined && !lease.ok) {
+    const error = { ...workerError(
       "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
       "Durable outbox processing requires a positive lease duration.",
       { phase: "configuration" },
-    );
+    ), diagnosticRecord: workerConfigurationDiagnosticRecord("durable-lease-duration", lease.error.reason) };
+    reportPlatformErrorDiagnostic(startupDiagnostics, error, { capability: "platform-worker", operation: "configure", stage: "configuration" });
+    return { ok: false, error };
   }
 
+  const retryConfiguration = validateWorkerRetryConfiguration(options);
+  if (!retryConfiguration.ok) {
+    const error = workerError("PLATFORM_WORKER_CONFIG_INVALID", "Worker retry configuration is invalid.", undefined, undefined, [], retryConfiguration.error.diagnosticRecord);
+    reportPlatformErrorDiagnostic(startupDiagnostics, error, { capability: "platform-worker", operation: "configure", stage: "configuration" });
+    return { ok: false, error };
+  }
+  const checkedProcessing: PlatformWorkerDurableOutboxProcessingOptions | undefined = processing === undefined || lease === undefined || !lease.ok ? undefined : Object.freeze({
+    get processingStore() { return processing.processingStore; },
+    get owner() { return processing.owner; },
+    get observer() { return processing.observer; },
+    leaseDurationMs: lease.value,
+  }) as PlatformWorkerDurableOutboxProcessingOptions;
   const queue = options.queue ?? createInMemoryPlatformWorkerQueue({
     now: workerQueueNow(options.deps.clock),
   });
-  const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps });
+  const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps,
+    get diagnosticDefinitions() { return diagnosticDefinitions(); },
+    onDiagnostic: (record, context) => reportPlatformDiagnostic(startupDiagnostics, record, context),
+  });
   const jobsByMessageType = new Map(mounted.value.jobs.map((job) => [String(job.messageType), job]));
   const profilesByName = new Map(mounted.value.observabilityProfiles.map((profile) => [String(profile.name), profile]));
+  let diagnostics: PlatformDiagnosticReporter;
+  try {
+    diagnostics = options.deps.diagnostics ?? createPlatformDiagnosticReporter({
+      catalogs: [...workerBuiltinDiagnosticCatalogs, ...(options.diagnosticCatalogs ?? []), ...mounted.value.diagnosticCatalogs],
+      logger: options.deps.logger, clock: options.deps.clock,
+    });
+  } catch (error) {
+    try { reportPlatformErrorDiagnostic(createPlatformDiagnosticReporter({ catalogs: [platformContractDiagnosticCatalog], logger: options.deps.logger, clock: options.deps.clock }), error,
+      { capability: "platform-contracts", operation: "select-diagnostic-catalog", stage: "configuration" }); } catch { /* Optional delivery only. */ }
+    return workerFailure("PLATFORM_WORKER_MOUNT_FAILED", "Platform worker diagnostic catalog selection is invalid.");
+  }
+  // Preserve the old eager copy of other options, without rereading checked inputs.
+  const copiedOptions = Object.fromEntries(Reflect.ownKeys(options)
+    .filter(key => Object.prototype.propertyIsEnumerable.call(options, key)
+      && key !== "maxAttempts" && key !== "retryBackoffMs" && key !== "durableOutboxProcessing")
+    .map(key => [key, Reflect.get(options, key)]));
+  options = {
+    ...copiedOptions,
+    deps: { ...options.deps, diagnostics },
+    maxAttempts: retryConfiguration.value.maxAttempts,
+    retryBackoffMs: retryConfiguration.value.retryBackoffMs,
+    durableOutboxProcessing: checkedProcessing,
+  } as PlatformWorkerShellOptions;
+  const metricDiagnostics = createPlatformMetricDiagnosticBinding(diagnostics, { capability: "platform-worker", stage: "request" });
   const tracer = options.tracer ?? noopTracer;
-  const maxAttempts = options.maxAttempts ?? 3;
-  const retryBackoffMs = options.retryBackoffMs ?? ((attempt: number) => attempt * 1000);
+  const { maxAttempts, retryBackoffMs } = retryConfiguration.value;
 
   async function runNext(): Promise<Result<PlatformWorkerRunNextResult, PlatformWorkerError>> {
+    let profile: PlatformCapabilityObservabilityProfile | undefined;
+    let phase: WorkerDeliveryBoundaryDetail["phase"] = "dequeue";
+    let effect: WorkerDeliveryBoundaryDetail["effect"] = "handler-not-invoked";
+    let rawBoundaryReported = false;
+    const reportedErrors = new WeakSet<object>();
+    function observe(own: DiagnosticRecord, cause?: unknown): void {
+      try {
+        if (profile === undefined || !platformProfileAllowsSignal(profile, "operational_log")) return;
+        const context: PlatformDiagnosticContext = { capability: "platform-worker", operation: "job-delivery", stage: "request" };
+        reportPlatformDiagnostic(diagnostics, own, context);
+        const evidence = workerDiagnosticEvidence(cause, diagnosticDefinitions());
+        if (evidence.diagnosticRecord !== undefined) reportPlatformDiagnostic(diagnostics, evidence.diagnosticRecord, context);
+        for (const source of evidence.relatedDiagnosticRecords ?? []) reportPlatformDiagnostic(diagnostics, source, context);
+      } catch { /* Observation cannot affect delivery or settlement. */ }
+    }
+    const boundary: WorkerBoundaryObserver = (at, reason, cause, knownEffect = effect) => {
+      const own = workerDeliveryBoundaryRecord({ operation: "job-delivery", phase: at, reason, effect: knownEffect });
+      observe(own, cause); return own;
+    };
+    function recordWorkerObservation(...args: Parameters<typeof recordWorkerObservationUnchecked>): void {
+      const event = args[5];
+      recordWorkerObservationUnchecked(args[0], args[1], args[2], args[3], args[4],
+        { ...event, ...(event.error !== undefined && reportedErrors.has(event.error) ? { diagnosticAlreadyReported: true } : {}) }, observationDiagnostics(args[3]));
+    }
+    function observationDiagnostics(selectedProfile: PlatformCapabilityObservabilityProfile | undefined): PlatformObservationDiagnostics | undefined {
+      try {
+        if (selectedProfile === undefined || !platformProfileAllowsSignal(selectedProfile, "operational_log")) return undefined;
+        return { reporter: diagnostics, get definitions() { return diagnosticDefinitions(); },
+          context: { capability: "platform-worker", operation: "job-observation", stage: "request" } };
+      } catch { return undefined; }
+    }
+    function endWorkerTrace(...args: Parameters<typeof endWorkerTraceUnchecked>): void {
+      endWorkerTraceUnchecked(args[0], args[1], args[2], observationDiagnostics(args[0]));
+    }
+    try {
     if (!lifecycle.isReady()) {
-      return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker shell is not ready.");
+      return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker shell is not ready.", undefined, undefined, [], workerDeliveryRejectedRecord({ field: "lifecycle", condition: "not-ready", effect: "handler-not-invoked" }));
     }
 
     const entry = queue.next();
@@ -95,23 +229,38 @@ export async function createPlatformWorkerShell(
       return { ok: true, value: { status: "idle" } };
     }
 
+    phase = "selection";
     const job = jobsByMessageType.get(String(entry.message.type));
     if (job === undefined) {
       const error = workerError("PLATFORM_WORKER_JOB_NOT_FOUND", "No platform job is registered for the queue message type.", {
         messageType: String(entry.message.type),
-      });
+      }, undefined, [], workerDeliveryRejectedRecord({ field: "job", condition: "unmatched", effect: "handler-not-invoked" }));
+      phase = "dead-letter";
       queue.deadLetter(entry, error);
       return { ok: true, value: deadLettered(entry, error) };
     }
 
-    const profile = workerProfileForJob(job, profilesByName);
-    const startedAt = options.deps.clock.now();
-    const traceSpan = startWorkerTrace(tracer, entry, profile);
+    profile = workerProfileForJob(job, profilesByName);
+    let startedAt: Date;
+    try { startedAt = options.deps.clock.now(); }
+    catch (error) {
+      rawBoundaryReported = true;
+      try {
+        if (profile !== undefined && platformProfileAllowsSignal(profile, "operational_log")) reportWorkerBoundary(diagnostics,
+          { operation: "job-delivery", phase: "delivery-clock", boundary: "selection-or-invocation", effect: "handler-not-invoked" }, error, diagnosticDefinitions());
+      } catch { /* Optional delivery must not replace the original pre-context clock failure. */ }
+      throw error;
+    }
+    const traceSpan = startWorkerTrace(tracer, entry, profile, observationDiagnostics(profile));
 
-    const invalidPayload = validateJobPayload(job, entry.message);
+    phase = "validation";
+    const invalidPayload = validateJobPayload(job, entry.message, diagnosticDefinitions, observe);
     if (invalidPayload !== undefined) {
+      reportedErrors.add(invalidPayload);
+      phase = "dead-letter";
       queue.deadLetter(entry, invalidPayload);
-      recordWorkerObservation(options, entry, profile, startedAt, {
+      phase = "observation";
+      recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
         outcome: "rejected",
         deliveryDisposition: "dead_lettered",
         error: invalidPayload,
@@ -124,8 +273,11 @@ export async function createPlatformWorkerShell(
       return { ok: true, value: deadLettered(entry, invalidPayload, job.name) };
     }
 
-    const durableClaim = await claimDurableOutboxProcessing(options, entry.message);
+    phase = "identity";
+    const durableClaim = await claimDurableOutboxProcessing(options, entry.message, diagnosticDefinitions, boundary, observe);
     if (!durableClaim.ok) {
+      reportedErrors.add(durableClaim.error);
+      phase = "observation";
       recordDurablePersistenceObservation(
         options,
         entry.message,
@@ -135,8 +287,11 @@ export async function createPlatformWorkerShell(
         durableClaim.error,
       );
       if (durableClaim.error.code === "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID") {
+        observe(durableClaim.error.diagnosticRecord!);
+        phase = "dead-letter";
         queue.deadLetter(entry, durableClaim.error);
-        recordWorkerObservation(options, entry, profile, startedAt, {
+        phase = "observation";
+        recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
           outcome: "rejected",
           deliveryDisposition: "dead_lettered",
           error: durableClaim.error,
@@ -149,16 +304,19 @@ export async function createPlatformWorkerShell(
         return { ok: true, value: deadLettered(entry, durableClaim.error, job.name) };
       }
 
-      recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: durableClaim.error });
+      recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, { outcome: "failed", error: durableClaim.error });
       endWorkerTrace(profile, traceSpan, { outcome: "failed", error: durableClaim.error });
       return durableClaim;
     }
 
     if (durableClaim.value.kind === "already-completed") {
+      observe(workerCoordinationRecord(durableClaim.value.outcome === "terminal-failure" ? "already-terminal" : "already-completed"));
+      phase = "observation";
       if (durableClaim.value.outcome === "terminal-failure") {
         const terminalFailure = workerError(
           "PLATFORM_WORKER_DURABLE_PROCESSING_TERMINAL_FAILURE",
           "Durable outbox processing previously reached a terminal failure.",
+          undefined, undefined, [], workerCoordinationRecord("already-terminal"),
         );
         recordDurablePersistenceObservation(
           options,
@@ -168,8 +326,11 @@ export async function createPlatformWorkerShell(
           "failed",
           terminalFailure,
         );
+        reportedErrors.add(terminalFailure);
+        phase = "dead-letter";
         queue.deadLetter(entry, terminalFailure);
-        recordWorkerObservation(options, entry, profile, startedAt, {
+        phase = "observation";
+        recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
           outcome: "failed",
           deliveryDisposition: "dead_lettered",
           error: terminalFailure,
@@ -190,7 +351,7 @@ export async function createPlatformWorkerShell(
         "succeeded",
       );
 
-      recordWorkerObservation(options, entry, profile, startedAt, {
+      recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
         outcome: "succeeded",
         deliveryDisposition: "succeeded",
       });
@@ -220,13 +381,17 @@ export async function createPlatformWorkerShell(
       );
     }
 
+    phase = "identity";
     const idempotencyKey = options.durableOutboxProcessing === undefined
       ? (entry.message.idempotencyKey === undefined ? undefined : String(entry.message.idempotencyKey))
       : undefined;
     if (idempotencyKey !== undefined && options.idempotency !== undefined) {
       try {
+        phase = "lookup";
         if (await options.idempotency.hasProcessed(idempotencyKey)) {
-          recordWorkerObservation(options, entry, profile, startedAt, {
+          observe(workerCoordinationRecord("idempotency-duplicate"));
+          phase = "observation";
+          recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
             outcome: "succeeded",
             deliveryDisposition: "succeeded",
           });
@@ -246,19 +411,27 @@ export async function createPlatformWorkerShell(
           };
         }
       } catch (error) {
+        const own = boundary(phase, "thrown", error, "handler-not-invoked");
         const idempotencyError = workerError(
           "PLATFORM_WORKER_IDEMPOTENCY_FAILED",
           "Worker idempotency lookup failed.",
           { key: idempotencyKey },
           error,
+          diagnosticDefinitions(),
+          own,
         );
-        recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: idempotencyError });
+        reportedErrors.add(idempotencyError);
+        phase = "observation";
+        recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, { outcome: "failed", error: idempotencyError });
         endWorkerTrace(profile, traceSpan, { outcome: "failed", error: idempotencyError });
         return { ok: false, error: idempotencyError };
       }
     }
 
+    let contextDiagnostic: { readonly record: DiagnosticRecord; readonly context: PlatformDiagnosticContext } | undefined;
+    let contextInputComplete = false;
     try {
+      phase = "context";
       const context = createPlatformRuntimeJobContext({
         jobName: job.name,
         message: entry.message,
@@ -270,18 +443,26 @@ export async function createPlatformWorkerShell(
         config: options.deps.config,
         flags: options.deps.flags,
         clock: options.deps.clock,
+        onDiagnostic: (contextInputComplete = true, (record, context) => { contextDiagnostic = { record, context }; }),
       });
+      phase = "handler"; effect = "handler-outcome-unknown";
       await job.handler.handle(entry.message, context);
+      effect = "handler-succeeded";
 
       if (durableClaim.value.kind === "claimed") {
+        phase = "complete";
+        let completionStamp: ReturnType<typeof isoDateTimeFromDate>;
         const completed = await options.durableOutboxProcessing!.processingStore.complete({
           outboxEntryId: durableClaim.value.outboxEntryId,
           fence: durableClaim.value.fence,
           outcome: "succeeded",
-          completedAt: isoDateTimeFromDate(options.deps.clock.now()),
+          completedAt: (phase = "complete-clock", completionStamp = isoDateTimeFromDate(options.deps.clock.now()), phase = "complete", completionStamp),
         });
         if (!completed.ok) {
-          const completionError = durableProcessingFailure("complete", completed.error);
+          const own = boundary("complete", "returned-failure", completed.error);
+          const completionError = durableProcessingFailure("complete", completed.error, diagnosticDefinitions(), own);
+          reportedErrors.add(completionError);
+          phase = "observation";
           recordDurablePersistenceObservation(
             options,
             entry.message,
@@ -290,11 +471,12 @@ export async function createPlatformWorkerShell(
             "failed",
             completionError,
           );
-          recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: completionError, handlerStarted: true });
+          recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, { outcome: "failed", error: completionError, handlerStarted: true });
           endWorkerTrace(profile, traceSpan, { outcome: "failed", error: completionError, handlerStarted: true });
           return { ok: false, error: completionError };
         }
 
+        phase = "observation";
         recordDurablePersistenceObservation(
           options,
           entry.message,
@@ -305,10 +487,12 @@ export async function createPlatformWorkerShell(
       }
 
       if (idempotencyKey !== undefined && options.idempotency !== undefined) {
+        phase = "idempotency-record";
         await options.idempotency.recordProcessed(idempotencyKey);
       }
 
-      recordWorkerObservation(options, entry, profile, startedAt, {
+      phase = "observation";
+      recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
         outcome: "succeeded",
         deliveryDisposition: "succeeded",
         handlerStarted: true,
@@ -331,21 +515,46 @@ export async function createPlatformWorkerShell(
         },
       };
     } catch (error) {
+      const failedPhase = phase;
+      const own = phase === "context" ? undefined : boundary(phase, "thrown", error);
+      if (!contextInputComplete) {
+        try {
+          const checked = createDiagnosticRecord(platformWorkerBoundaryDiagnostic, { operation: "job-delivery", phase: "context-input", boundary: "selection", effect: "handler-not-invoked" });
+          if (checked.ok) contextDiagnostic = { record: checked.value, context: { capability: "platform-worker", operation: "job-delivery", stage: "request" } };
+        } catch { /* Preserve the original argument-projection failure. */ }
+      }
       const workerHandlerError = workerError("PLATFORM_WORKER_HANDLER_FAILED", "Platform job handler failed.", {
         jobName: String(job.name),
         messageType: String(entry.message.type),
         attempt: entry.attempt,
-      }, error);
+      }, error, diagnosticDefinitions(), contextDiagnostic?.record ?? own);
+      if (own !== undefined) reportedErrors.add(workerHandlerError);
+      let contextDiagnosticReported = false;
+      try {
+        if (contextDiagnostic !== undefined && profile !== undefined && platformProfileAllowsSignal(profile, "operational_log")) {
+          contextDiagnosticReported = true;
+          reportPlatformDiagnostic(diagnostics, contextDiagnostic.record, contextDiagnostic.context);
+          const evidence = workerHandlerError.diagnosticRecord === contextDiagnostic.record
+            ? { ...(workerHandlerError.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: workerHandlerError.relatedDiagnosticRecords }) } : workerHandlerError;
+          reportPlatformErrorDiagnostic(diagnostics, evidence, contextDiagnostic.context);
+        }
+      } catch { /* Preserve existing cleanup even when optional observation is unavailable. */ }
+      const contextEvidence = contextDiagnosticReported || own !== undefined ? { diagnosticAlreadyReported: true } : {};
+      if (contextDiagnosticReported) reportedErrors.add(workerHandlerError);
+      if (failedPhase === "handler") effect = "handler-failed";
 
       if (durableClaim.value.kind === "claimed") {
+        phase = "settlement";
         const settled = await settleFailedDurableOutboxProcessing({
           processing: options.durableOutboxProcessing!,
           outboxEntryId: durableClaim.value.outboxEntryId,
           fence: durableClaim.value.fence,
           terminal: entry.attempt >= maxAttempts,
-          now: options.deps.clock.now(),
-        });
+          now: (phase = "settlement-clock", options.deps.clock.now()),
+        }, diagnosticDefinitions, boundary);
         if (!settled.ok) {
+          reportedErrors.add(settled.error);
+          phase = "observation";
           recordDurablePersistenceObservation(
             options,
             entry.message,
@@ -354,11 +563,12 @@ export async function createPlatformWorkerShell(
             "failed",
             settled.error,
           );
-          recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: settled.error, handlerStarted: true });
+          recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, { outcome: "failed", error: settled.error, handlerStarted: true });
           endWorkerTrace(profile, traceSpan, { outcome: "failed", error: settled.error, handlerStarted: true });
           return settled;
         }
 
+        phase = "observation";
         recordDurablePersistenceObservation(
           options,
           entry.message,
@@ -370,19 +580,33 @@ export async function createPlatformWorkerShell(
       }
 
       if (entry.attempt < maxAttempts) {
-        const delayMs = retryBackoffMs(entry.attempt);
+        phase = "backoff";
+        const checkedDelay = validateWorkerRetryDelay(retryBackoffMs(entry.attempt));
+        if (!checkedDelay.ok) {
+          const invalidDelay = workerRetryDelayError(checkedDelay.error.reason);
+          observe(invalidDelay.diagnosticRecord);
+          rawBoundaryReported = true;
+          throw invalidDelay;
+        }
+        const delayMs = checkedDelay.value;
+        phase = "retry";
         const retry = queue.retry(entry, delayMs);
         if (!retry.ok) {
-          recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: retry.error, handlerStarted: true });
+          boundary("retry", "returned-failure", retry.error);
+          reportedErrors.add(retry.error);
+          phase = "observation";
+          recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, { outcome: "failed", error: retry.error, handlerStarted: true });
           endWorkerTrace(profile, traceSpan, { outcome: "failed", error: retry.error, handlerStarted: true });
           return retry;
         }
 
-        recordWorkerObservation(options, entry, profile, startedAt, {
+        phase = "observation";
+        recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
           outcome: "failed",
           deliveryDisposition: "retry_scheduled",
           error: workerHandlerError,
           handlerStarted: true,
+          ...contextEvidence,
         });
         endWorkerTrace(profile, traceSpan, {
           outcome: "failed",
@@ -404,12 +628,15 @@ export async function createPlatformWorkerShell(
         };
       }
 
+      phase = "dead-letter";
       queue.deadLetter(entry, workerHandlerError);
-      recordWorkerObservation(options, entry, profile, startedAt, {
+      phase = "observation";
+      recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
         outcome: "failed",
         deliveryDisposition: "dead_lettered",
         error: workerHandlerError,
         handlerStarted: true,
+        ...contextEvidence,
       });
       endWorkerTrace(profile, traceSpan, {
         outcome: "failed",
@@ -418,6 +645,10 @@ export async function createPlatformWorkerShell(
         handlerStarted: true,
       });
       return { ok: true, value: deadLettered(entry, workerHandlerError, job.name) };
+    }
+    } catch (error) {
+      if (!rawBoundaryReported) boundary(phase, "thrown", error);
+      throw error;
     }
   }
 
@@ -430,7 +661,7 @@ export async function createPlatformWorkerShell(
       start: async () => {
         const started = await lifecycle.start();
         if (!started.ok) {
-          return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker lifecycle failed to start.", {}, started.error);
+          return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker lifecycle failed to start.", {}, started.error, diagnosticDefinitions());
         }
 
         return workerSuccess();
@@ -456,15 +687,20 @@ export async function createPlatformWorkerShell(
         return { ok: true, value: results };
       },
       health: () => platformReadiness({
+        diagnostics,
         lifecycleReady: lifecycle.isReady(),
         healthChecks: mounted.value.healthChecks,
         clock: options.deps.clock,
       }),
       shutdown: async () => {
-        queue.close();
+        try { queue.close(); }
+        catch (error) {
+          reportWorkerBoundary(diagnostics, { operation: "shutdown", phase: "queue-close", boundary: "selection-or-invocation", effect: "lifecycle-shutdown-not-invoked" }, error, diagnosticDefinitions());
+          throw error;
+        }
         const shutdown = await lifecycle.shutdown();
         if (!shutdown.ok) {
-          return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker lifecycle failed to shut down.", {}, shutdown.error);
+          return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker lifecycle failed to shut down.", {}, shutdown.error, diagnosticDefinitions());
         }
 
         return workerSuccess();
@@ -473,16 +709,22 @@ export async function createPlatformWorkerShell(
   };
 }
 
-function validateJobPayload(job: PlatformJobRegistration, message: QueueMessage): PlatformWorkerError | undefined {
+function validateJobPayload(job: PlatformJobRegistration, message: QueueMessage, diagnosticDefinitions: () => readonly DiagnosticDefinition[], observe: (record: DiagnosticRecord, cause?: unknown) => void): PlatformWorkerError | undefined {
   if (job.validator === undefined || job.validator.validate(message.payload)) {
     return undefined;
   }
 
+  const detail = validationDiagnostic(job.validator, message.payload);
+  const own = workerDeliveryRejectedRecord({ field: "payload", condition: "validator-rejected", effect: "handler-not-invoked" });
+  observe(own, detail === undefined ? undefined : { diagnosticRecord: detail });
   return workerError("PLATFORM_WORKER_INVALID_PAYLOAD", "Queue message payload failed job validation.", {
     jobName: String(job.name),
     messageType: String(message.type),
-  });
+  }, detail === undefined ? undefined : { diagnosticRecord: detail }, diagnosticDefinitions(), own);
 }
+
+type WorkerBoundaryObserver = (phase: WorkerDeliveryBoundaryDetail["phase"], reason: WorkerDeliveryBoundaryDetail["reason"],
+  cause?: unknown, effect?: WorkerDeliveryBoundaryDetail["effect"]) => DiagnosticRecord;
 
 type DurableOutboxClaim =
   | { readonly kind: "not-configured" }
@@ -496,6 +738,9 @@ type DurableOutboxClaim =
 async function claimDurableOutboxProcessing(
   options: PlatformWorkerShellOptions,
   message: QueueMessage,
+  diagnosticDefinitions: () => readonly DiagnosticDefinition[],
+  boundary: WorkerBoundaryObserver,
+  observe: (record: DiagnosticRecord, cause?: unknown) => void,
 ): Promise<Result<DurableOutboxClaim, PlatformWorkerError>> {
   const processing = options.durableOutboxProcessing;
   if (processing === undefined) {
@@ -507,26 +752,32 @@ async function claimDurableOutboxProcessing(
     return identity;
   }
 
+  let phase: WorkerDeliveryBoundaryDetail["phase"] = "claim";
   try {
     const claim = await processing.processingStore.claim({
       outboxEntryId: identity.value,
       owner: processing.owner,
-      acquiredAt: isoDateTimeFromDate(options.deps.clock.now()),
-      leaseDurationMs: processing.leaseDurationMs,
+      acquiredAt: (phase = "claim-clock", isoDateTimeFromDate(options.deps.clock.now())),
+      leaseDurationMs: (phase = "claim", processing.leaseDurationMs),
     });
+    phase = "claim-result";
     if (!claim.ok) {
-      return { ok: false, error: durableProcessingFailure("claim", claim.error) };
+      const own = boundary("claim", "returned-failure", claim.error, "handler-not-invoked");
+      return { ok: false, error: durableProcessingFailure("claim", claim.error, diagnosticDefinitions(), own) };
     }
 
     if (claim.value.disposition === "already-completed") {
       const outcome = claim.value.record.completion?.outcome;
       if (outcome === undefined) {
+        const own = workerDeliveryRejectedRecord({ field: "completion-outcome", condition: "absent", effect: "handler-not-invoked" });
+        observe(own);
         return {
           ok: false,
           error: workerError(
             "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
             "Completed durable outbox processing did not supply a completion outcome.",
             { phase: "claim" },
+            undefined, [], own,
           ),
         };
       }
@@ -534,30 +785,35 @@ async function claimDurableOutboxProcessing(
     }
 
     if (claim.value.disposition === "lease-active") {
+      const own = workerCoordinationRecord("lease-active"); observe(own);
       return {
         ok: false,
         error: workerError(
           "PLATFORM_WORKER_DURABLE_PROCESSING_BUSY",
           "Durable outbox processing is already claimed by another worker.",
           { phase: "claim" },
+          undefined, [], own,
         ),
       };
     }
 
     const lease = claim.value.record.lease;
     if (lease === undefined) {
+      const own = workerDeliveryRejectedRecord({ field: "claimed-lease", condition: "absent", effect: "handler-not-invoked" }); observe(own);
       return {
         ok: false,
         error: workerError(
           "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
           "Durable outbox processing claim did not supply a lease.",
           { phase: "claim" },
+          undefined, [], own,
         ),
       };
     }
 
     return { ok: true, value: { kind: "claimed", outboxEntryId: identity.value, fence: lease.fence } };
   } catch (error) {
+    const own = boundary(phase, "thrown", error, "handler-not-invoked");
     return {
       ok: false,
       error: workerError(
@@ -565,6 +821,8 @@ async function claimDurableOutboxProcessing(
         "Durable outbox processing claim failed.",
         { phase: "claim" },
         error,
+        diagnosticDefinitions(),
+        own,
       ),
     };
   }
@@ -572,24 +830,29 @@ async function claimDurableOutboxProcessing(
 
 function durableOutboxEntryId(message: QueueMessage): Result<OutboxEntryId, PlatformWorkerError> {
   const payload = message.payload;
-  if (!isRecord(payload) || typeof payload.outboxEntryId !== "string" || payload.outboxEntryId.length === 0) {
-    return durableOutboxEnvelopeFailure();
+  let record = false;
+  let observedId: unknown;
+  if (!(record = isRecord(payload)) || typeof (observedId = (payload as Readonly<Record<string, unknown>>).outboxEntryId) !== "string" || (observedId = (payload as Readonly<Record<string, unknown>>).outboxEntryId as string).length === 0) {
+    return durableOutboxEnvelopeFailure(record ? "outbox-id" : "payload", !record ? payload === null ? "null" : Array.isArray(payload) ? "array" : "nonobject"
+      : observedId === undefined ? "absent" : typeof observedId !== "string" ? "wrong-type" : "empty");
   }
 
-  const outboxId = payload.outboxEntryId;
-  if (String(message.id) !== outboxId || String(message.idempotencyKey ?? "") !== outboxId) {
-    return durableOutboxEnvelopeFailure();
+  const outboxId = (payload as Readonly<Record<string, string>>).outboxEntryId!;
+  let messageMatches = false;
+  if (!(messageMatches = String(message.id) === outboxId) || String(message.idempotencyKey ?? "") !== outboxId) {
+    return durableOutboxEnvelopeFailure(messageMatches ? "idempotency-key" : "message-id", "mismatch");
   }
 
   return { ok: true, value: outboxEntryId(outboxId) };
 }
 
-function durableOutboxEnvelopeFailure(): Result<never, PlatformWorkerError> {
+function durableOutboxEnvelopeFailure(field: "payload" | "outbox-id" | "message-id" | "idempotency-key", condition: "null" | "array" | "nonobject" | "absent" | "wrong-type" | "empty" | "mismatch"): Result<never, PlatformWorkerError> {
   return {
     ok: false,
     error: workerError(
       "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID",
       "Durable outbox delivery must preserve one stable outbox identity.",
+      undefined, undefined, [], workerDeliveryRejectedRecord({ field, condition, effect: "handler-not-invoked" }),
     ),
   };
 }
@@ -644,7 +907,7 @@ async function settleFailedDurableOutboxProcessing(input: {
   readonly fence: import("@kanbien/platform-persistence").PlatformPersistenceFence;
   readonly terminal: boolean;
   readonly now: Date;
-}): Promise<Result<void, PlatformWorkerError>> {
+}, diagnosticDefinitions: () => readonly DiagnosticDefinition[], boundary: WorkerBoundaryObserver): Promise<Result<void, PlatformWorkerError>> {
   try {
     const settled = input.terminal
       ? await input.processing.processingStore.complete({
@@ -659,10 +922,12 @@ async function settleFailedDurableOutboxProcessing(input: {
         releasedAt: isoDateTimeFromDate(input.now),
       });
     if (!settled.ok) {
-      return { ok: false, error: durableProcessingFailure(input.terminal ? "complete" : "release", settled.error) };
+      const own = boundary(input.terminal ? "terminal-complete" : "release", "returned-failure", settled.error, "settlement-unknown");
+      return { ok: false, error: durableProcessingFailure(input.terminal ? "complete" : "release", settled.error, diagnosticDefinitions(), own) };
     }
     return { ok: true, value: undefined };
   } catch (error) {
+    const own = boundary(input.terminal ? "terminal-complete" : "release", "thrown", error, "settlement-unknown");
     return {
       ok: false,
       error: workerError(
@@ -670,6 +935,8 @@ async function settleFailedDurableOutboxProcessing(input: {
         "Durable outbox processing settlement failed.",
         { phase: input.terminal ? "complete" : "release" },
         error,
+        diagnosticDefinitions(),
+        own,
       ),
     };
   }
@@ -678,12 +945,16 @@ async function settleFailedDurableOutboxProcessing(input: {
 function durableProcessingFailure(
   phase: "claim" | "complete" | "release",
   error: { readonly code: string },
+  diagnosticDefinitions: readonly DiagnosticDefinition[],
+  fallback?: DiagnosticRecord,
 ): PlatformWorkerError {
   return workerError(
     "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
     "Durable outbox processing could not record its required state.",
     { phase, persistenceCode: error.code },
     error,
+    diagnosticDefinitions,
+    fallback,
   );
 }
 
@@ -713,15 +984,19 @@ function workerProfileForJob(
     return undefined;
   }
 
-  return profilesByName.get(String(job.observability.profile));
+  const profile = profilesByName.get(String(job.observability.profile));
+  return profile === undefined ? undefined : { ...profile,
+    errorClasses: Object.freeze([...new Set([...workerDiagnosticErrorCodes, ...(platformErrorClassDeclarations(profile) ?? [])])]) };
 }
 
-function recordWorkerObservation(
+function recordWorkerObservationUnchecked(
+  metricDiagnostics: PlatformMetricDiagnosticBinding,
   options: PlatformWorkerShellOptions,
   entry: PlatformWorkerQueueEntry,
   profile: PlatformCapabilityObservabilityProfile | undefined,
   startedAt: Date,
   event: PlatformWorkerObservabilityEvent,
+  observations?: PlatformObservationDiagnostics,
 ): void {
   if (profile === undefined) {
     return;
@@ -729,11 +1004,17 @@ function recordWorkerObservation(
 
   const nomenclature = workerNomenclature(profile, event);
   if (platformProfileAllowsSignal(profile, "operational_log")) {
+    if (event.error !== undefined && options.deps.diagnostics !== undefined) {
+      // Retain the original correlation accessor evaluation here even when the same context failure was already observed before cleanup.
+      const context: PlatformDiagnosticContext = { capability: "platform-worker", operation: "delivery", stage: "request",
+        ...(entry.message.correlationId === undefined ? {} : { correlationId: entry.message.correlationId }) };
+      if (!event.diagnosticAlreadyReported) reportPlatformErrorDiagnostic(options.deps.diagnostics, event.error, context);
+    }
     writePlatformLog(options.deps.logger, {
       level: workerLogLevel(event),
       message: "platform.worker.job.delivery",
       fields: platformProfileLogFields(profile, nomenclature),
-    });
+    }, profile, observations);
   }
 
   if (!platformProfileAllowsSignal(profile, "metric")) {
@@ -741,10 +1022,11 @@ function recordWorkerObservation(
   }
 
   const labels = platformProfileMetricLabels(profile, nomenclature);
+  const diagnosticBinding = platformProfileAllowsSignal(profile, "operational_log") ? metricDiagnostics : undefined;
   recordPlatformMetric(options.deps.metrics, options.deps.clock, {
     name: "platform.worker.job.delivery",
     labels,
-  });
+  }, diagnosticBinding === undefined ? undefined : { binding: diagnosticBinding, operation: "job-delivery" }, observations);
 
   const finishedAt = options.deps.clock.now();
   if (event.handlerStarted && platformProfileMeasuresLatency(profile, "job_execution_latency")) {
@@ -754,7 +1036,7 @@ function recordWorkerObservation(
       value: elapsedMilliseconds(startedAt, finishedAt),
       unit: "ms",
       labels,
-    });
+    }, diagnosticBinding === undefined ? undefined : { binding: diagnosticBinding, operation: "job-execution" }, observations);
   }
 
   if (platformProfileMeasuresLatency(profile, "queue_wait_latency")) {
@@ -764,14 +1046,15 @@ function recordWorkerObservation(
       value: elapsedMilliseconds(new Date(entry.enqueuedAt), startedAt),
       unit: "ms",
       labels,
-    });
+    }, diagnosticBinding === undefined ? undefined : { binding: diagnosticBinding, operation: "job-queue-wait" }, observations);
   }
 }
 
-function endWorkerTrace(
+function endWorkerTraceUnchecked(
   profile: PlatformCapabilityObservabilityProfile | undefined,
   span: TraceSpan | undefined,
   event: PlatformWorkerObservabilityEvent,
+  observations?: PlatformObservationDiagnostics,
 ): void {
   if (profile === undefined || span === undefined) {
     return;
@@ -780,13 +1063,14 @@ function endWorkerTrace(
   endPlatformTraceSpan(span, {
     outcome: event.outcome,
     attributes: platformProfileTraceFields(profile, workerNomenclature(profile, event)),
-  });
+  }, profile, observations);
 }
 
 function startWorkerTrace(
   tracer: PlatformWorkerShellOptions["tracer"] | undefined,
   entry: PlatformWorkerQueueEntry,
   profile: PlatformCapabilityObservabilityProfile | undefined,
+  observations?: PlatformObservationDiagnostics,
 ): TraceSpan | undefined {
   if (profile === undefined || !platformProfileAllowsSignal(profile, "trace")) {
     return undefined;
@@ -795,7 +1079,7 @@ function startWorkerTrace(
   return startPlatformTraceSpan(tracer ?? noopTracer, {
     name: "platform.worker.job",
     ...(entry.message.traceParent === undefined ? {} : { parent: entry.message.traceParent }),
-  });
+  }, profile, observations);
 }
 
 function workerNomenclature(
@@ -808,7 +1092,7 @@ function workerNomenclature(
     executionContext: "worker",
     outcome: event.outcome,
     ...(event.deliveryDisposition === undefined ? {} : { jobDeliveryDisposition: event.deliveryDisposition }),
-    ...(event.error === undefined ? {} : { errorClass: platformErrorClass(event.error) }),
+    ...(event.error === undefined ? {} : { errorClass: platformErrorClass(event.error, profile) }),
   };
 }
 
@@ -825,6 +1109,7 @@ function workerLogLevel(event: PlatformWorkerObservabilityEvent): "info" | "warn
 }
 
 interface PlatformWorkerObservabilityEvent {
+  readonly diagnosticAlreadyReported?: boolean;
   readonly outcome: TraceSpanOutcome;
   readonly deliveryDisposition?: PlatformJobDeliveryDisposition;
   readonly error?: PlatformWorkerError;

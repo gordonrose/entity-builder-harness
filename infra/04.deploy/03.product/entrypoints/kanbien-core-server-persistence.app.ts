@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-app
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-23"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -30,6 +30,8 @@ import {
   type PlatformApp,
   type PlatformCapabilityObservabilityProfile,
 } from "@kanbien/platform-contracts";
+import type { PlatformPersistenceDiagnosticOptions } from "@kanbien/platform-persistence";
+import { kanbienCoreAcceptanceDiagnosticCatalog, kanbienCoreAcceptanceRequestFailure } from "./kanbien-core-server-persistence-diagnostics";
 import {
   healthCheckName,
   healthCheckResult,
@@ -41,6 +43,7 @@ import {
 } from "@kanbien/core/shared";
 import {
   platformReleaseVerificationResponse,
+  serverDiagnosticErrorCodes,
   type PlatformReleaseIdentity,
 } from "@kanbien/platform-server";
 
@@ -64,10 +67,12 @@ const persistenceProfileName = requiredPlatformName(
  * fake. The verifier can observe only stable outcomes through the server.
  */
 export interface KanbienCorePersistenceRuntime {
+  /** Additive internal observation; old fake implementations remain valid. */
+  readonly readinessObservation?: () => Promise<import("@kanbien/platform-observability").PlatformReadinessProbeResult>;
   readonly readiness: () => Promise<"ready" | "not-ready">;
-  readonly createAcceptanceRecord: (record: KanbienPersistenceAcceptanceRecord) => Promise<"created" | "already-exists" | "conflict" | "unavailable" | "uncertain">;
-  readonly readAcceptanceRecord: (recordId: string) => Promise<KanbienPersistenceAcceptanceReadResult>;
-  readonly deleteAcceptanceRecord: (recordId: string) => Promise<"deleted" | "not-found" | "unavailable" | "uncertain">;
+  readonly createAcceptanceRecord: (record: KanbienPersistenceAcceptanceRecord, onDiagnostic?: PlatformPersistenceDiagnosticOptions["onDiagnostic"]) => Promise<"created" | "already-exists" | "conflict" | "unavailable" | "uncertain">;
+  readonly readAcceptanceRecord: (recordId: string, onDiagnostic?: PlatformPersistenceDiagnosticOptions["onDiagnostic"]) => Promise<KanbienPersistenceAcceptanceReadResult>;
+  readonly deleteAcceptanceRecord: (recordId: string, onDiagnostic?: PlatformPersistenceDiagnosticOptions["onDiagnostic"]) => Promise<"deleted" | "not-found" | "unavailable" | "uncertain">;
   readonly close: () => Promise<void>;
 }
 
@@ -89,6 +94,7 @@ const persistenceProfile: PlatformCapabilityObservabilityProfile = {
   name: persistenceProfileName,
   capability: requiredPlatformName(platformCapabilityName("kanbien-core-server.persistence")),
   action: "verify",
+  errorClasses: [...serverDiagnosticErrorCodes, "persistence_record_conflict", "persistence_outcome_uncertain", "persistence_unavailable", "persistence_acceptance_request_invalid"],
   signals: ["operational_log", "metric", "trace"],
   logFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
   metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
@@ -100,6 +106,7 @@ const releaseVerificationProfile: PlatformCapabilityObservabilityProfile = {
   name: releaseVerificationProfileName,
   capability: requiredPlatformName(platformCapabilityName("kanbien-core-server.release")),
   action: "verify",
+  errorClasses: serverDiagnosticErrorCodes,
   signals: ["operational_log", "metric", "trace"],
   logFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
   metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
@@ -126,6 +133,7 @@ export function createKanbienCoreServerPersistenceApp(
       },
     },
     mount(registry) {
+      registry.registerDiagnosticCatalog(kanbienCoreAcceptanceDiagnosticCatalog);
       registry.registerObservabilityProfile(releaseVerificationProfile);
       registry.registerObservabilityProfile(persistenceProfile);
       registry.registerRoute({
@@ -144,13 +152,16 @@ export function createKanbienCoreServerPersistenceApp(
       registry.registerHealthCheck({
         name: persistencePlatformHealthName,
         check: {
-          check: async () => healthCheckResult({
+          check: async () => {
+            const observation = await persistenceHealthObservation(persistence);
+            return { ...healthCheckResult({
             name: persistenceHealthName,
             type: "dependency",
             component: persistenceHealthComponent,
-            status: await persistenceHealthStatus(persistence),
+            status: observation.readiness === "ready" ? "healthy" : "unhealthy",
             checkedAt: isoDateTimeFromDate(systemClock.now()),
-          }),
+            }), ...healthDiagnosticEvidence(observation) };
+          },
         },
       });
       registry.registerRoute({
@@ -160,10 +171,11 @@ export function createKanbienCoreServerPersistenceApp(
         auth: { kind: "public" },
         observability: { kind: "profile", profile: persistenceProfileName },
         handler: {
-          handle: async (request) => {
-            const record = acceptanceRecordFromBody(request.body);
+          handle: async (request, context) => {
+            const record = acceptanceRecordFromBody(request.body, (field, reason) =>
+              observeInvalidAcceptance(context, "create", "body", field, reason));
             if (record === undefined) return invalidAcceptanceRequestResponse();
-            return createAcceptanceResponse(await persistence.createAcceptanceRecord(record));
+            return createAcceptanceResponse(await persistence.createAcceptanceRecord(record, context.onDiagnostic));
           },
         },
       });
@@ -174,10 +186,11 @@ export function createKanbienCoreServerPersistenceApp(
         auth: { kind: "public" },
         observability: { kind: "profile", profile: persistenceProfileName },
         handler: {
-          handle: async (request) => {
-            const recordId = acceptanceRecordIdFromQuery(request.query["record_id"]);
+          handle: async (request, context) => {
+            const recordId = acceptanceRecordIdFromQuery(request.query["record_id"], (reason) =>
+              observeInvalidAcceptance(context, "read", "query", "record_id", reason));
             if (recordId === undefined) return invalidAcceptanceRequestResponse();
-            return readAcceptanceResponse(await persistence.readAcceptanceRecord(recordId), releaseIdentity);
+            return readAcceptanceResponse(await persistence.readAcceptanceRecord(recordId, context.onDiagnostic), releaseIdentity);
           },
         },
       });
@@ -188,10 +201,11 @@ export function createKanbienCoreServerPersistenceApp(
         auth: { kind: "public" },
         observability: { kind: "profile", profile: persistenceProfileName },
         handler: {
-          handle: async (request) => {
-            const recordId = acceptanceRecordIdFromQuery(request.query["record_id"]);
+          handle: async (request, context) => {
+            const recordId = acceptanceRecordIdFromQuery(request.query["record_id"], (reason) =>
+              observeInvalidAcceptance(context, "delete", "query", "record_id", reason));
             if (recordId === undefined) return invalidAcceptanceRequestResponse();
-            return deleteAcceptanceResponse(await persistence.deleteAcceptanceRecord(recordId));
+            return deleteAcceptanceResponse(await persistence.deleteAcceptanceRecord(recordId, context.onDiagnostic));
           },
         },
       });
@@ -199,14 +213,30 @@ export function createKanbienCoreServerPersistenceApp(
   });
 }
 
-async function persistenceHealthStatus(
+async function persistenceHealthObservation(
   persistence: KanbienCorePersistenceRuntime,
-): Promise<"healthy" | "unhealthy"> {
+): Promise<import("@kanbien/platform-observability").PlatformReadinessProbeResult> {
   try {
-    return await persistence.readiness() === "ready" ? "healthy" : "unhealthy";
-  } catch {
-    return "unhealthy";
+    const observe = persistence.readinessObservation;
+    return observe === undefined
+      ? { readiness: await persistence.readiness() }
+      : await observe.call(persistence);
+  } catch (error) {
+    return { readiness: "not-ready", ...healthDiagnosticEvidence(error) };
   }
+}
+
+/** HealthCheck supports typed structural subtypes; the public projector omits
+ * these fields, while the internal reporter validates their owning catalogs.
+ */
+function healthDiagnosticEvidence(value: unknown): Pick<import("@kanbien/platform-observability").PlatformReadinessProbeResult, "diagnosticRecord" | "relatedDiagnosticRecords"> {
+  try {
+    if (typeof value !== "object" || value === null) return {};
+    const primary = Object.getOwnPropertyDescriptor(value, "diagnosticRecord");
+    const related = Object.getOwnPropertyDescriptor(value, "relatedDiagnosticRecords");
+    return { ...(primary && "value" in primary && primary.value !== undefined ? { diagnosticRecord: primary.value } : {}),
+      ...(related && "value" in related && related.value !== undefined ? { relatedDiagnosticRecords: related.value } : {}) };
+  } catch { return {}; }
 }
 
 function createAcceptanceResponse(outcome: Awaited<ReturnType<KanbienCorePersistenceRuntime["createAcceptanceRecord"]>>) {
@@ -251,15 +281,50 @@ function invalidAcceptanceRequestResponse() {
   };
 }
 
-function acceptanceRecordFromBody(value: unknown): KanbienPersistenceAcceptanceRecord | undefined {
-  if (!isRecord(value)) return undefined;
-  const id = value["record_id"];
-  const factDigest = value["fact_digest"];
-  return isAcceptanceRecordValue(id) && isFactDigest(factDigest) ? { id, factDigest } : undefined;
+type AcceptanceRequestReason = Parameters<typeof kanbienCoreAcceptanceRequestFailure>[3];
+const diagnosticPromiseThen = Promise.prototype.then;
+
+function observeInvalidAcceptance(
+  context: { readonly onDiagnostic?: PlatformPersistenceDiagnosticOptions["onDiagnostic"] },
+  operation: "create" | "read" | "delete", source: "body" | "query",
+  field: "body" | "record_id" | "fact_digest", reason: AcceptanceRequestReason,
+): void {
+  try {
+    const result = context.onDiagnostic?.(kanbienCoreAcceptanceRequestFailure(operation, source, field, reason));
+    if (result !== undefined) {
+      const ignore = (): void => undefined;
+      try { Reflect.apply(diagnosticPromiseThen, result, [undefined, ignore]); }
+      catch { Reflect.apply(diagnosticPromiseThen, Promise.resolve(result), [undefined, ignore]); }
+    }
+  } catch { /* Diagnostics do not replace the existing 400 response. */ }
 }
 
-function acceptanceRecordIdFromQuery(value: string | readonly string[] | undefined): string | undefined {
-  return typeof value === "string" && isAcceptanceRecordValue(value) ? value : undefined;
+function acceptanceRecordFromBody(value: unknown,
+  invalid: (field: "body" | "record_id" | "fact_digest", reason: AcceptanceRequestReason) => void,
+): KanbienPersistenceAcceptanceRecord | undefined {
+  if (!isRecord(value)) {
+    invalid("body", value === undefined ? "missing" : value === null ? "null" : Array.isArray(value) ? "array" : "wrong-type");
+    return undefined;
+  }
+  const id = value["record_id"];
+  const factDigest = value["fact_digest"];
+  if (!isAcceptanceRecordValue(id)) {
+    invalid("record_id", id === undefined ? "missing" : typeof id !== "string" ? "wrong-type" : "invalid-format");
+    return undefined;
+  }
+  if (!isFactDigest(factDigest)) {
+    invalid("fact_digest", factDigest === undefined ? "missing" : typeof factDigest !== "string" ? "wrong-type" : "invalid-format");
+    return undefined;
+  }
+  return { id, factDigest };
+}
+
+function acceptanceRecordIdFromQuery(value: string | readonly string[] | undefined,
+  invalid: (reason: AcceptanceRequestReason) => void,
+): string | undefined {
+  if (typeof value === "string" && isAcceptanceRecordValue(value)) return value;
+  invalid(value === undefined ? "missing" : Array.isArray(value) ? "array" : typeof value !== "string" ? "wrong-type" : "invalid-format");
+  return undefined;
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

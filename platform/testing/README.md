@@ -30,3 +30,24 @@ permission, route, job, or health name must begin with `<app-id>.`, while
 duplicate registrations remain global errors. A test that mounts successfully
 therefore proves the same registration ownership rule that the runtime applies;
 it does not merely check a looser fake.
+
+Equivalent registration checks retain the same value-free contract diagnostic
+records as the production registry, including first-match duplicate dimensions
+and deferred permission/profile references. An existing policy difference remains:
+production resolves resource-authorization permissions during complete-registry
+validation; this test helper does not currently perform that extra check.
+
+`validatePlatformTestConfigSchemas` accepts an optional third argument containing
+additional diagnostic definitions. It selects upstream configuration evidence
+against those definitions and the Core catalog, retaining validated primary and
+related records separately from its existing code, message and schema-index detail.
+Malformed or unselected evidence is omitted without changing schema parsing.
+
+`mountPlatformAppForTest` also accepts optional `diagnosticDefinitions`.
+When the existing app-mount catch returns a failure, it selects the thrown
+primary and up to eight companions against Core, explicit definitions and
+catalogs the app registered before throwing. Evidence is additive to the
+historical error code, contract errors and reason. A malformed primary does not
+erase valid companions; getters and nested causes are not diagnostic sources.
+The historical `Error.message` projection still runs first and may itself throw.
+There is no automatic sink or Runtime dependency in this test helper.

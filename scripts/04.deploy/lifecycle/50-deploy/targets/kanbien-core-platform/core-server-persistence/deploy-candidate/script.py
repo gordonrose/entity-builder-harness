@@ -91,12 +91,17 @@ def main() -> int:
     if not ok:
         return report("blocked", code)
     ok, stack, code = module.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
-    stack_status = stack.get("Stacks", [{}])[0].get("StackStatus") if ok and isinstance(stack, dict) else None
+    try: stack_status = stack.get("Stacks", [{}])[0].get("StackStatus") if ok and isinstance(stack, dict) else None
+    except (AttributeError, TypeError, KeyError, IndexError): return report("uncertain", "persistence-stack-observation-uncertain")
     if not ok and code != "aws-resource-missing":
         return report("blocked", code)
-    if not reviewable(change, stack_status, expected, receipt["image_digest"], receipt["source_revision"]):
+    try: reviewed = reviewable(change, stack_status, expected, receipt["image_digest"], receipt["source_revision"])
+    except (AttributeError, TypeError): return report("uncertain", "persistence-change-set-observation-invalid")
+    if not reviewed:
         return report("blocked", "persistence-change-set-not-reviewable")
-    if not parameters_match(change, module.candidate_parameters(outputs, infrastructure, receipt)):
+    try: matching = parameters_match(change, module.candidate_parameters(outputs, infrastructure, receipt))
+    except TypeError: return report("uncertain", "persistence-parameter-observation-invalid")
+    if not matching:
         return report("blocked", "persistence-change-set-live-parameters-mismatch")
     if change.get("ExecutionStatus") != "AVAILABLE":
         return reconcile(module, expected, receipt)
@@ -111,8 +116,10 @@ def reconcile(module, expected: str, receipt: dict) -> int:
     facts = {"change_set": expected, "candidate_image_digest": receipt["image_digest"], "candidate_source_revision": receipt["source_revision"]}
     ok, change, code = module.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", expected)
     if not ok or not isinstance(change, dict):
-        return report("uncertain", code, facts=facts)
-    if not reviewable(change, "REVIEW_IN_PROGRESS", expected, receipt["image_digest"], receipt["source_revision"]):
+        return report("uncertain", code if not ok else "persistence-change-set-observation-invalid", facts=facts)
+    try: reviewed = reviewable(change, "REVIEW_IN_PROGRESS", expected, receipt["image_digest"], receipt["source_revision"])
+    except (AttributeError, TypeError): return report("uncertain", "persistence-change-set-observation-invalid", facts=facts)
+    if not reviewed:
         return report("blocked", "persistence-change-set-reconciliation-identity-invalid", facts=facts)
     ok, observed, code = module.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
     stacks = observed.get("Stacks") if ok and isinstance(observed, dict) else None
@@ -120,11 +127,14 @@ def reconcile(module, expected: str, receipt: dict) -> int:
         return report("uncertain", "persistence-stack-observation-uncertain", facts=facts)
     stack = stacks[0]
     status = stack.get("StackStatus")
-    if status in {"REVIEW_IN_PROGRESS", "CREATE_IN_PROGRESS", "ROLLBACK_IN_PROGRESS"}:
+    try: pending = status in {"REVIEW_IN_PROGRESS", "CREATE_IN_PROGRESS", "ROLLBACK_IN_PROGRESS"}
+    except TypeError: return report("uncertain", "persistence-stack-status-unobservable", facts=facts)
+    if pending:
         return report("pending", "persistence-stack-operation-pending", facts=facts)
     if status in {"CREATE_FAILED", "ROLLBACK_FAILED", "ROLLBACK_COMPLETE", "DELETE_COMPLETE"}:
         return report("failed", "persistence-stack-creation-failed", facts=facts)
-    params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+    try: params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+    except (AttributeError, TypeError): return report("uncertain", "persistence-stack-parameters-unobservable", facts=facts)
     if status != "CREATE_COMPLETE" or change.get("ExecutionStatus") != "EXECUTE_COMPLETE" or any(params.get(key) != value for key, value in (("ImageDigest", receipt["image_digest"]), ("SupportImageDigest", receipt["image_digest"]), ("RestoreVerifierImageDigest", receipt["image_digest"]), ("SourceRevision", receipt["source_revision"]))):
         return report("uncertain", "persistence-stack-completion-identity-unproven", facts=facts)
     return report("deployed-awaiting-migration", "persistence-create-change-set-executed", facts=facts)

@@ -1,6 +1,9 @@
 import type { ISODateTime } from "../shared/index";
 import type { MetricName, MetricUnit } from "./identifiers";
 import { assertFiniteNumber, assertKnownValue, assertNonNegativeFiniteNumber, normalizeName } from "./validation";
+import { metricValidationError, type MetricValidationObserver } from "./diagnostics";
+import type { CoreMonitoringDiagnosticOptions } from "./boundary-diagnostics";
+import { MonitoringObservation } from "./observations";
 
 export const metricKinds = ["counter", "gauge", "histogram", "timer"] as const;
 export type MetricKind = (typeof metricKinds)[number];
@@ -73,26 +76,37 @@ export const noopMetrics: Metrics = {
   record: () => undefined,
 };
 
-export function metricLabels(input: MetricLabels, options: MetricLabelOptions = {}): MetricLabels {
-  const unsafeLabels = new Set(
-    [...defaultUnsafeMetricLabelNames, ...(options.additionalUnsafeLabelNames ?? [])].map(normalizeName),
-  );
-  const maxStringLength = options.maxStringLength ?? defaultMetricLabelStringLengthLimit;
-  assertNonNegativeFiniteNumber("metric label maxStringLength", maxStringLength);
+export function metricLabels(input: MetricLabels, options: MetricLabelOptions = {}, observer?: MetricValidationObserver, diagnostics?: CoreMonitoringDiagnosticOptions): MetricLabels {
+  const observation = new MonitoringObservation("metric-labels", diagnostics);
+  return observation.run(() => {
+  const unsafeLabels = observation.at("label-options", "additional-unsafe-label-names", () => new Set(
+    [...defaultUnsafeMetricLabelNames, ...(options.additionalUnsafeLabelNames ?? [])].map((name) => {
+      const normalized = observation.at("label-normalization", "additional-unsafe-label-names", () => normalizeName(name));
+      return observation.at("label-options", "additional-unsafe-label-names", () => normalized);
+    }),
+  ));
+  const maxStringLength = observation.at("label-options", "max-string-length", () => options.maxStringLength ?? defaultMetricLabelStringLengthLimit);
+  observation.at("predicate-invocation", "max-string-length", () => assertNonNegativeFiniteNumber("metric label maxStringLength", maxStringLength, (message, reason) => observation.reject(message, "max-string-length", reason)));
 
   const labels: Record<string, MetricLabelValue> = {};
 
-  for (const [key, value] of Object.entries(input)) {
-    assertMetricLabelName(key);
+  let index = 0;
+  for (const [key, value] of observation.at("label-enumeration", "labels", () => Object.entries(input))) {
+    observation.at("label-copy", "labels", () => {
+    assertMetricLabelName(key, index, observer, (error) => observation.existingRejection(error));
 
     if (unsafeLabels.has(normalizeName(key))) {
-      throw new TypeError(`metric label "${key}" is unsafe or too high-cardinality.`);
+      throw observation.existingRejection(metricValidationError(`metric label "${key}" is unsafe or too high-cardinality.`, "label", "unsafe-name", index, observer));
     }
 
-    labels[key] = copyMetricLabelValue(key, value, maxStringLength);
+    labels[key] = copyMetricLabelValue(key, value, maxStringLength, index, observer, (error) => observation.existingRejection(error));
+    });
+    index++;
+    observation.at("label-enumeration", "labels", () => undefined);
   }
 
   return labels;
+  });
 }
 
 export function metricPoint(input: {
@@ -102,39 +116,43 @@ export function metricPoint(input: {
   readonly unit: MetricUnit;
   readonly recordedAt: ISODateTime;
   readonly labels?: MetricLabels;
-}): MetricPoint {
-  assertKnownValue("metric kind", input.kind, metricKinds);
-  assertFiniteNumber("metric value", input.value);
-
-  return {
-    name: input.name,
-    kind: input.kind,
-    value: input.value,
-    unit: input.unit,
-    recordedAt: input.recordedAt,
-    ...(input.labels === undefined ? {} : { labels: metricLabels(input.labels) }),
-  };
+}, diagnostics?: CoreMonitoringDiagnosticOptions): MetricPoint {
+  const observation = new MonitoringObservation("metric-point", diagnostics);
+  return observation.run(() => {
+    const kind = observation.at("input-projection", "metric-kind", () => input.kind);
+    observation.at("predicate-invocation", "metric-kind", () => assertKnownValue("metric kind", kind, metricKinds, (message, reason) => observation.reject(message, "metric-kind", reason)));
+    const value = observation.at("input-projection", "metric-value", () => input.value);
+    observation.at("predicate-invocation", "metric-value", () => assertFiniteNumber("metric value", value, (message, reason) => observation.reject(message, "metric-value", reason)));
+    return {
+      name: observation.at("result-copy", "name", () => input.name),
+      kind: observation.at("result-copy", "metric-kind", () => input.kind),
+      value: observation.at("result-copy", "metric-value", () => input.value),
+      unit: observation.at("result-copy", "unit", () => input.unit),
+      recordedAt: observation.at("result-copy", "recorded-at", () => input.recordedAt),
+      ...(observation.at("input-projection", "labels", () => input.labels) === undefined ? {} : { labels: observation.at("label-copy", "labels", () => metricLabels(input.labels!)) }),
+    };
+  });
 }
 
-function assertMetricLabelName(value: string): void {
+function assertMetricLabelName(value: string, index: number, observer?: MetricValidationObserver, retain: (error: TypeError) => TypeError = (error) => error): void {
   if (!/^[a-z][a-z0-9_]*$/.test(value)) {
-    throw new TypeError(`metric label "${value}" must use lowercase snake_case.`);
+    throw retain(metricValidationError(`metric label "${value}" must use lowercase snake_case.`, "label", "invalid-format", index, observer));
   }
 }
 
-function copyMetricLabelValue(key: string, value: MetricLabelValue, maxStringLength: number): MetricLabelValue {
+function copyMetricLabelValue(key: string, value: MetricLabelValue, maxStringLength: number, index: number, observer?: MetricValidationObserver, retain: (error: TypeError) => TypeError = (error) => error): MetricLabelValue {
   if (typeof value === "number") {
-    assertFiniteNumber(`metric label "${key}"`, value);
+    if (!Number.isFinite(value)) throw retain(metricValidationError(`metric label "${key}" must be a finite number.`, "label", "not-finite", index, observer));
     return value;
   }
 
   if (typeof value === "string") {
     if (value.length === 0) {
-      throw new TypeError(`metric label "${key}" must not be empty.`);
+      throw retain(metricValidationError(`metric label "${key}" must not be empty.`, "label", "empty", index, observer));
     }
 
     if (value.length > maxStringLength) {
-      throw new TypeError(`metric label "${key}" must not exceed ${maxStringLength} characters.`);
+      throw retain(metricValidationError(`metric label "${key}" must not exceed ${maxStringLength} characters.`, "label", "too-long", index, observer));
     }
   }
 

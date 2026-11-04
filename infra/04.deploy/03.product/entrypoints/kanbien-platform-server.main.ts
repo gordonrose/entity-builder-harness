@@ -4,7 +4,7 @@
 //   version: 2
 //   status: active
 //   created_on: "2026-07-11"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -36,11 +36,15 @@ import {
   type PlatformServerTransportOptions,
 } from "@kanbien/platform-server";
 import { startPlatformServerProcess, type PlatformServerProcess } from "@kanbien/platform-server/main";
-import type { PlatformRateLimiter } from "@kanbien/platform-security";
-import { observabilityFromTargetEnvironment } from "./kanbien-platform-observability";
+import { type PlatformRateLimiter } from "@kanbien/platform-security";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { platformPersistenceDiagnosticCatalog } from "@kanbien/platform-persistence";
+import { reportTargetConfigurationError, selectTargetConfigurationEvidence, targetEnvironmentConfigurationRecord } from "./kanbien-platform-configuration-diagnostics";
+import { observabilityFromTargetEnvironment, reportTargetObservabilityConfiguration } from "./kanbien-platform-observability";
 import {
   createKanbienPlatformSmokePersistence,
   dynamoDbPersistenceConfigurationFromTargetEnvironment,
+  reportKanbienPlatformPersistenceStartupDiagnostic,
 } from "./kanbien-platform-persistence";
 
 interface TargetRuntimeConfiguration {
@@ -51,6 +55,8 @@ interface TargetRuntimeConfiguration {
 }
 
 interface TargetRuntimeConfigurationError {
+  readonly diagnosticRecord?: DiagnosticRecord;
+  readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
   readonly code: "KANBIEN_PLATFORM_TARGET_RUNTIME_CONFIG_INVALID";
   readonly defaultMessage: string;
   readonly details: Readonly<{
@@ -62,6 +68,7 @@ interface TargetRuntimeConfigurationError {
 export async function runKanbienPlatformServerMain(): Promise<void> {
   const authentication = authenticationFromTargetEnvironment(process.env);
   if (!authentication.ok) {
+    reportTargetConfigurationError(authentication.error);
     console.error(JSON.stringify({ level: "error", message: "kanbien-platform.server.auth_configuration_invalid", error: authentication.error }));
     process.exitCode = 1;
     return;
@@ -69,6 +76,7 @@ export async function runKanbienPlatformServerMain(): Promise<void> {
 
   const runtime = runtimeConfigurationFromTargetEnvironment(process.env);
   if (!runtime.ok) {
+    reportTargetConfigurationError(runtime.error);
     console.error(JSON.stringify({ level: "error", message: "kanbien-platform.server.runtime_configuration_invalid", error: runtime.error }));
     process.exitCode = 1;
     return;
@@ -76,12 +84,14 @@ export async function runKanbienPlatformServerMain(): Promise<void> {
 
   const observability = observabilityFromTargetEnvironment(process.env);
   if (!observability.ok) {
+    reportTargetObservabilityConfiguration(observability.error);
     console.error(JSON.stringify({ level: "error", message: "kanbien-platform.server.observability_configuration_invalid", error: observability.error }));
     process.exitCode = 1;
     return;
   }
 
   const started = await startPlatformServerProcess({
+    diagnosticCatalogs: [platformPersistenceDiagnosticCatalog],
     apps: createKanbienPlatformApps(runtime.value.productOptions),
     configKeys: productConfigKeys(),
     ...(authentication.value === undefined ? {} : { auth: authentication.value }),
@@ -93,6 +103,7 @@ export async function runKanbienPlatformServerMain(): Promise<void> {
   });
 
   if (!started.ok) {
+    // The generic process already attempted delivery at its startup boundary.
     console.error(JSON.stringify({
       level: "error",
       message: "kanbien-platform.server.start_failed",
@@ -133,6 +144,7 @@ function authenticationFromTargetEnvironment(env: NodeJS.ProcessEnv) {
       code: "KANBIEN_PLATFORM_TARGET_AUTH_PROVIDER_INVALID",
       defaultMessage: "The Kanbien platform target selected an unsupported authentication provider.",
       details: { path: "PLATFORM_AUTH_PROVIDER", reason: "The target composition does not have an adapter for this provider." },
+      diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_AUTH_PROVIDER", "unsupported"),
     },
   };
 }
@@ -142,12 +154,12 @@ function runtimeConfigurationFromTargetEnvironment(
 ): { readonly ok: true; readonly value: TargetRuntimeConfiguration } | { readonly ok: false; readonly error: TargetRuntimeConfigurationError } {
   const exposure = env["PLATFORM_DEPLOYMENT_EXPOSURE"];
   if (exposure !== undefined && exposure !== "private" && exposure !== "public") {
-    return targetRuntimeConfigurationError("PLATFORM_DEPLOYMENT_EXPOSURE", "Expected private or public.");
+    return targetRuntimeConfigurationError("PLATFORM_DEPLOYMENT_EXPOSURE", "Expected private or public.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_DEPLOYMENT_EXPOSURE", "unsupported") });
   }
 
   const isPublic = exposure === "public";
   if (isPublic && env["PLATFORM_AUTH_PROVIDER"] !== "cognito") {
-    return targetRuntimeConfigurationError("PLATFORM_AUTH_PROVIDER", "Public target requires the selected Cognito authentication provider.");
+    return targetRuntimeConfigurationError("PLATFORM_AUTH_PROVIDER", "Public target requires the selected Cognito authentication provider.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_AUTH_PROVIDER", "required-provider") });
   }
 
   const rateLimiter = rateLimiterFromTargetEnvironment(env, isPublic);
@@ -188,20 +200,20 @@ function productOptionsFromTargetEnvironment(
   const provider = env["PLATFORM_PERSISTENCE_PROVIDER"];
   if (provider === undefined || provider.length === 0) {
     return isPublic
-      ? targetRuntimeConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "Public staging requires the selected persistence provider for its controlled acceptance capability.")
+      ? targetRuntimeConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "Public staging requires the selected persistence provider for its controlled acceptance capability.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_PERSISTENCE_PROVIDER", provider === undefined ? "missing" : "empty") })
       : { ok: true, value: undefined };
   }
   if (provider !== "dynamodb") {
-    return targetRuntimeConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "Unsupported persistence provider.");
+    return targetRuntimeConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "Unsupported persistence provider.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_PERSISTENCE_PROVIDER", "unsupported") });
   }
 
   const configuration = dynamoDbPersistenceConfigurationFromTargetEnvironment(env);
   if (!configuration.ok) {
-    return targetRuntimeConfigurationError(configuration.error.details.path, configuration.error.details.reason);
+    return targetRuntimeConfigurationError(configuration.error.details.path, configuration.error.details.reason, configuration.error);
   }
 
   const persistence = createKanbienPlatformSmokePersistence({
-    client: createAwsSdkDynamoDbPersistenceCommandClient(configuration.value),
+    client: createAwsSdkDynamoDbPersistenceCommandClient(configuration.value, { onDiagnostic: reportKanbienPlatformPersistenceStartupDiagnostic }),
     configuration: configuration.value,
   });
   return {
@@ -221,16 +233,16 @@ function rateLimiterFromTargetEnvironment(
   const provider = env["PLATFORM_RATE_LIMIT_PROVIDER"];
   if (provider === undefined || provider.length === 0) {
     return isPublic
-      ? targetRuntimeConfigurationError("PLATFORM_RATE_LIMIT_PROVIDER", "Public target requires a shared rate-limit provider.")
+      ? targetRuntimeConfigurationError("PLATFORM_RATE_LIMIT_PROVIDER", "Public target requires a shared rate-limit provider.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_RATE_LIMIT_PROVIDER", provider === undefined ? "missing" : "empty") })
       : { ok: true, value: undefined };
   }
   if (provider !== "dynamodb") {
-    return targetRuntimeConfigurationError("PLATFORM_RATE_LIMIT_PROVIDER", "Unsupported rate-limit provider.");
+    return targetRuntimeConfigurationError("PLATFORM_RATE_LIMIT_PROVIDER", "Unsupported rate-limit provider.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_RATE_LIMIT_PROVIDER", "unsupported") });
   }
 
   const configured = createDynamoDbFixedWindowPlatformRateLimiterFromEnv(env);
   if (!configured.ok) {
-    return targetRuntimeConfigurationError(configured.error.details.path, configured.error.details.reason);
+    return targetRuntimeConfigurationError(configured.error.details.path, configured.error.details.reason, configured.error);
   }
   return { ok: true, value: configured.value };
 }
@@ -242,17 +254,22 @@ function clientAddressResolverFromTargetEnvironment(
   const ingressMode = env["PLATFORM_TRUSTED_INGRESS_MODE"];
   if (ingressMode === undefined || ingressMode.length === 0) {
     return isPublic
-      ? targetRuntimeConfigurationError("PLATFORM_TRUSTED_INGRESS_MODE", "Public target requires a trusted ingress mode.")
+      ? targetRuntimeConfigurationError("PLATFORM_TRUSTED_INGRESS_MODE", "Public target requires a trusted ingress mode.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_TRUSTED_INGRESS_MODE", ingressMode === undefined ? "missing" : "empty") })
       : { ok: true, value: undefined };
   }
   if (ingressMode !== "alb-security-group-only") {
-    return targetRuntimeConfigurationError("PLATFORM_TRUSTED_INGRESS_MODE", "Unsupported trusted ingress mode.");
+    return targetRuntimeConfigurationError("PLATFORM_TRUSTED_INGRESS_MODE", "Unsupported trusted ingress mode.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_TRUSTED_INGRESS_MODE", "unsupported") });
   }
 
-  return {
-    ok: true,
-    value: createAlbTrustedClientAddressResolver({ ingressMode }),
-  };
+  try {
+    return {
+      ok: true,
+      value: createAlbTrustedClientAddressResolver({ ingressMode }),
+    };
+  } catch (error) {
+    reportTargetConfigurationError(error);
+    throw error;
+  }
 }
 
 function transportFromTargetEnvironment(
@@ -277,13 +294,14 @@ function transportFromTargetEnvironment(
     const raw = env[environmentKey];
     if (raw === undefined || raw.length === 0) {
       if (isPublic) {
-        return targetRuntimeConfigurationError(environmentKey, "Public target requires an explicit positive integer transport limit.");
+        return targetRuntimeConfigurationError(environmentKey, "Public target requires an explicit positive integer transport limit.", { diagnosticRecord: targetEnvironmentConfigurationRecord(environmentKey, raw === undefined ? "missing" : "empty") });
       }
       continue;
     }
     const parsed = Number(raw);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      return targetRuntimeConfigurationError(environmentKey, "Expected a positive integer transport limit.");
+    const integer = Number.isInteger(parsed);
+    if (!integer || parsed <= 0) {
+      return targetRuntimeConfigurationError(environmentKey, "Expected a positive integer transport limit.", { diagnosticRecord: targetEnvironmentConfigurationRecord(environmentKey, !integer ? "invalid-integer" : "not-positive") });
     }
     values[optionKey] = parsed;
   }
@@ -294,7 +312,7 @@ function transportFromTargetEnvironment(
 
   const resolved = resolvePlatformServerTransportOptions(values);
   if (!resolved.ok) {
-    return targetRuntimeConfigurationError("PLATFORM_SERVER_*", resolved.reason);
+    return targetRuntimeConfigurationError("PLATFORM_SERVER_*", resolved.reason, resolved);
   }
   return { ok: true, value: values };
 }
@@ -302,6 +320,7 @@ function transportFromTargetEnvironment(
 function targetRuntimeConfigurationError(
   path: string,
   reason: string,
+  evidence?: unknown,
 ): { readonly ok: false; readonly error: TargetRuntimeConfigurationError } {
   return {
     ok: false,
@@ -309,6 +328,7 @@ function targetRuntimeConfigurationError(
       code: "KANBIEN_PLATFORM_TARGET_RUNTIME_CONFIG_INVALID",
       defaultMessage: "Kanbien platform target runtime configuration is invalid.",
       details: { path, reason },
+      ...selectTargetConfigurationEvidence(evidence),
     },
   };
 }

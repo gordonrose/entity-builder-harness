@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-qualification
 #   disciplines: [security, sre]
@@ -25,7 +25,7 @@ import time
 
 def invoke(args):
     try:return subprocess.run(['docker',*args],capture_output=True,text=True,timeout=30)
-    except (OSError,subprocess.SubprocessError):return None
+    except (OSError,UnicodeError,subprocess.SubprocessError):return None
 
 
 def absent(kind,name,result):
@@ -56,6 +56,7 @@ def cleanup(resources):
 
 def main():
     parser=argparse.ArgumentParser()
+    parser.error=lambda _message: parser.exit(2,'DIAGNOSTIC_CODE=DISPOSABLE_CLEANUP_ARGUMENTS_INVALID\n')
     for kind in ['container','network','volume']:parser.add_argument('--'+kind,action='append',default=[])
     args=parser.parse_args();resources=[(kind,name) for kind in ['container','network','volume'] for name in getattr(args,kind)]
     failures=cleanup(resources)

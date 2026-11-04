@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -65,6 +65,9 @@ with tempfile.TemporaryDirectory(prefix='publication-qualification-') as directo
     builder = fixture / module.BUILD
     builder.parent.mkdir(parents=True)
     shutil.copyfile(ROOT / module.BUILD, builder)
+    helper = Path('scripts/04.deploy/shared/safe-command-diagnostics.sh')
+    (fixture / helper).parent.mkdir(parents=True)
+    shutil.copyfile(ROOT / helper, fixture / helper)
     binaries = fixture / 'bin'
     binaries.mkdir()
     (binaries / 'git').write_text('#!/bin/bash\nprintf "%s\\n" "$QUAL_ROOT"\n')
@@ -110,7 +113,7 @@ if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path"
     with contextlib.chdir(fixture):
         assert module.qualification_route_valid(text)
         original = builder.read_text()
-        first_gate = module.BUILDER_PREAMBLE[5]
+        first_gate = next(line for line in module.BUILDER_PREAMBLE if line.startswith('bash scripts/04.deploy/lifecycle/00-target-alignment/'))
         last_gate = module.BUILDER_PREAMBLE[-1]
         for change, altered in {
             'missing-gate': original.replace(first_gate, '# removed declaration gate'),

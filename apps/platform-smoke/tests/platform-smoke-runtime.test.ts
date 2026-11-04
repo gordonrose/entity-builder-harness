@@ -1,4 +1,5 @@
-import { deepEqual, equal } from "node:assert/strict";
+import { deepEqual, equal, notEqual, rejects } from "node:assert/strict";
+import { createDiagnosticRecord, defineDiagnostic, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { Permission } from "@kanbien/core/authz";
 import { createInMemoryTracer } from "@kanbien/core/monitoring";
 import { persistenceError, type Transaction } from "@kanbien/core/persistence";
@@ -15,7 +16,16 @@ import {
   createPlatformOutboxRelay,
   platformPersistenceLeaseOwner,
   type PlatformOutboxQueuePayload,
+  type PlatformPersistenceDiagnosticOptions,
+  platformPersistenceDiagnosticCatalog,
+  platformPersistenceError,
+  persistenceLocalRejectionDiagnosticRecord,
+  observePlatformPersistenceDiagnostic,
+  resolvePlatformPersistenceDiagnosticOptions,
+  selectPlatformPersistenceDiagnosticEvidence,
 } from "@kanbien/platform-persistence";
+import { createPlatformRuntimeRequestContext } from "@kanbien/platform-runtime";
+import type { PlatformDiagnosticContext, PlatformDiagnosticReporter } from "@kanbien/platform-contracts";
 import { createPlatformServerShell } from "@kanbien/platform-server";
 import {
   createPlatformTestConfigSource,
@@ -45,6 +55,7 @@ import {
   createPlatformSmokeApp,
   platformSmokeWorkItemId,
   type PlatformSmokeWorkItemRepository,
+  platformSmokeWorkItemAcceptanceObservabilityProfileName,
 } from "../src/index";
 
 async function main(): Promise<void> {
@@ -400,6 +411,212 @@ async function main(): Promise<void> {
   }
   equal(durableProcessing.state, "completed");
   equal(durableProcessing.completion?.outcome, "succeeded");
+  await acceptanceDiagnosticCoverage();
+}
+
+async function acceptanceDiagnosticCoverage(): Promise<void> {
+  const canary = "synthetic-private-acceptance-canary";
+  const definition = defineDiagnostic({ code: "fixture.acceptance-source", version: 1,
+    classification: { failureKind: "unknown", failureSource: "unknown", severity: "error", recovery: "manual_investigation" },
+    detail: { type: "object", properties: { lane: { type: "enum", values: ["first", "second"] }, ordinal: { type: "integer", minimum: 0, maximum: 8 } } } } as const);
+  const sources = (lane: "first" | "second") => Array.from({ length: 9 }, (_, ordinal) => required(createDiagnosticRecord(definition, { lane, ordinal })));
+  const first = sources("first"), second = sources("second");
+  const failure = (records: readonly DiagnosticRecord[] = first) => platformPersistenceError({
+    code: "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED", defaultMessage: canary, params: { privateValue: canary }, diagnosticRecord: records[0]!,
+    relatedDiagnosticRecords: records.slice(1), relatedDiagnosticDefinitions: [definition],
+  });
+  const own = persistenceLocalRejectionDiagnosticRecord({ operation: "write_atomic", field: "participant", condition: "missing", phase: "preflight", effect: "not-started" });
+  const business = { schema: "core/diagnostic-record/v1", code: "platform-smoke.work-item-not-accepted", definitionVersion: 1,
+    detail: { operation: "accept-work-item", reason: "operation-failed", effect: "unknown" } };
+  const transaction: Transaction = { afterCommit() {} };
+  const fixtureCatalog = { owner: "fixture", definitions: [definition] };
+  const baseDeps = () => createPlatformTestMountDeps({ config: createPlatformTestConfigSource({ PLATFORM_SMOKE_APP_NAME: "Smoke Test" }) });
+  const repository: PlatformSmokeWorkItemRepository = { async create({ workItem }) { return successful(workItem); } };
+  const input = { id: required(platformSmokeWorkItemId("old-compatible-call")), acceptedAt: isoDateTimeFromDate(new Date("2026-10-30T12:00:00Z")), causationId: causationId("fixture") };
+  let argumentCount = 0;
+  let receivedOptions: PlatformPersistenceDiagnosticOptions | undefined;
+  const compatible: PlatformPersistenceAtomicWriter = {
+    async run(operation, diagnostics) {
+      equal(this, compatible); argumentCount = arguments.length; receivedOptions = diagnostics;
+      return operation({ transaction, async stage(mutation) { return successful(mutation); } });
+    },
+  };
+  equal((await acceptPlatformSmokeWorkItem(input, { repository, atomicWriter: compatible })).ok, true);
+  equal(argumentCount, 1);
+  const explicitOptions: PlatformPersistenceDiagnosticOptions = { diagnosticDefinitions: [definition], onDiagnostic: () => undefined };
+  equal((await acceptPlatformSmokeWorkItem(input, { repository, atomicWriter: compatible }, explicitOptions)).ok, true);
+  equal(argumentCount, 2); equal(receivedOptions, explicitOptions);
+  for (const failureAt of ["repository", "stage"] as const) {
+    const rejected = err(failure());
+    const calls: string[] = [];
+    const rejectedRepository: PlatformSmokeWorkItemRepository = { async create({ workItem, transaction: supplied }) {
+      equal(this, rejectedRepository); equal(supplied, transaction); calls.push("repository");
+      return failureAt === "repository" ? rejected : successful(workItem);
+    } };
+    const scopedWriter: PlatformPersistenceAtomicWriter = { async run(operation, diagnostics) {
+      equal(this, scopedWriter); equal(diagnostics, explicitOptions); calls.push("writer");
+      return operation({ transaction, async stage() { calls.push("stage"); return rejected; } });
+    } };
+    equal(await acceptPlatformSmokeWorkItem(input, { repository: rejectedRepository, atomicWriter: scopedWriter }, explicitOptions), rejected);
+    deepEqual(calls, failureAt === "repository" ? ["writer", "repository"] : ["writer", "repository", "stage"]);
+  }
+
+  for (const mode of ["default", "injected", "unavailable", "disabled", "metric-only"] as const) {
+    let fallbackAttempts = 0;
+    let observedInvocation: PlatformPersistenceDiagnosticOptions | undefined;
+    const atomicWriter: PlatformPersistenceAtomicWriter = {
+      async run(_operation, diagnostics) {
+        observedInvocation = diagnostics;
+        const selected = resolvePlatformPersistenceDiagnosticOptions({ onDiagnostic() { fallbackAttempts++; } }, diagnostics);
+        observePlatformPersistenceDiagnostic(selected, own, failure());
+        return err(failure());
+      },
+    };
+    const app = createPlatformSmokeApp({ workItemAcceptance: { repository, atomicWriter }, diagnosticDefinitions: [definition] });
+    const wrappedApp = { ...app, mount(registry: Parameters<typeof app.mount>[0], deps: Parameters<typeof app.mount>[1]) {
+      return app.mount({ ...registry,
+        registerRoute(route) { return registry.registerRoute(mode === "disabled" && route.path === "/smoke/work-items" ? { ...route, observability: { kind: "opt_out", reason: "externally_observed", justification: "Fixture disables request diagnostic reporting." } } : route); },
+        registerObservabilityProfile(profile) {
+          if (mode !== "metric-only" || profile.name !== platformSmokeWorkItemAcceptanceObservabilityProfileName) return registry.registerObservabilityProfile(profile);
+          const { logFieldNames: _logs, traceAttributeNames: _traces, ...metricProfile } = profile;
+          return registry.registerObservabilityProfile({ ...metricProfile, signals: ["metric"] });
+        },
+      }, deps);
+    } };
+    const logger = createPlatformTestLogger();
+    const injected: DiagnosticRecord[] = [];
+    const reporter: PlatformDiagnosticReporter = { report(record) { injected.push(record); if (mode === "unavailable") throw new Error(canary); return { status: "written" }; } };
+    const deps = { ...baseDeps(), logger, ...(mode === "injected" || mode === "unavailable" ? { diagnostics: reporter } : {}) };
+    const shellResult = await createPlatformServerShell({ apps: [wrappedApp], deps,
+      auth: authHookForPermissions([platformSmokeWorkItemCreatePermission]), diagnosticCatalogs: [platformPersistenceDiagnosticCatalog, fixtureCatalog] });
+    equal(shellResult.ok, true, `acceptance fixture ${mode} must mount`);
+    const shell = required(shellResult);
+    await shell.lifecycle.start();
+    injected.length = 0;
+    const before = logger.records().length;
+    const response = await shell.handle({ method: "POST", path: "/smoke/work-items", requestId: correlationId(`acceptance-${mode}`), headers: { authorization: "Bearer write" } });
+    equal(response.status, 503); deepEqual(response.body, { status: "not-accepted" });
+    equal(fallbackAttempts, 0, "invocation owns the observer even when route logging is disabled");
+    if (mode === "disabled" || mode === "metric-only") deepEqual(observedInvocation, {});
+    const records = logger.records().slice(before).filter((record) => record.message === "platform.diagnostic.observed").map((record) => record.fields?.["diagnostic"]);
+    deepEqual(records, mode === "default" ? [own, ...first, business] : []);
+    deepEqual(injected, mode === "injected" || mode === "unavailable" ? [own, ...first, business] : []);
+    equal(JSON.stringify(logger.records().slice(before)).includes(canary), false);
+    equal(JSON.stringify(response).includes(canary), false);
+    await shell.lifecycle.shutdown();
+  }
+
+  // Selection is own-data-only and explicit: neither accessors nor malformed/unselected records escape.
+  let unsafeReads = 0;
+  const unsafeEnvelope = {
+    ...failure(),
+    get diagnosticRecord(): DiagnosticRecord { unsafeReads++; throw new Error(canary); },
+    relatedDiagnosticRecords: [first[0]!, { ...first[1]!, detail: { lane: canary, ordinal: 1 } }],
+  };
+  const unsafeWriter: PlatformPersistenceAtomicWriter = { async run(_operation, diagnostics) {
+    diagnostics?.onDiagnostic?.(Object.defineProperty({ ...first[0]! }, "detail", { get() { unsafeReads++; throw new Error(canary); } }));
+    return err(unsafeEnvelope);
+  } };
+  for (const selected of [true, false]) {
+    const deps = baseDeps();
+    const mounted = required(await mountPlatformAppForTest(createPlatformSmokeApp({ workItemAcceptance: { repository, atomicWriter: unsafeWriter },
+      ...(selected ? { diagnosticDefinitions: [definition] } : {}) }), { deps }));
+    const route = mounted.routes.find((entry) => entry.path === "/smoke/work-items"); if (!route) throw new Error("Expected route.");
+    const records: DiagnosticRecord[] = [];
+    const context = { ...createPlatformRuntimeRequestContext({ requestId: correlationId("safe-data"), method: "POST", path: "/smoke/work-items", logger: deps.logger, metrics: deps.metrics, clock: deps.clock, config: deps.config, flags: deps.flags }),
+      onDiagnostic(record: DiagnosticRecord) { records.push(record); } };
+    const response = await route.handler.handle({ params: {}, query: {}, headers: {} }, context);
+    equal(response.status, 503); deepEqual(response.body, { status: "not-accepted" });
+    deepEqual(records, selected ? [first[0]] : []);
+    equal(JSON.stringify(records).includes(canary), false);
+  }
+  equal(unsafeReads, 0);
+
+  // Exercise the real mounted handler without a Server wrapper obscuring native throws or observer attempts.
+  for (const prior of ["none", "selected-only", "partial", "all", "repeated", "hostile"] as const) {
+    const records: DiagnosticRecord[] = [];
+    let hostileSerialization = 0;
+    const envelope = prior === "repeated" ? failure(Array(9).fill(first[0])) : failure();
+    const atomicWriter: PlatformPersistenceAtomicWriter = { async run(_operation, options) {
+      if (prior === "selected-only") selectPlatformPersistenceDiagnosticEvidence(options ?? {}, envelope);
+      if (prior === "partial") { options?.onDiagnostic?.(first[0]!); options?.onDiagnostic?.(first[1]!); }
+      if (prior === "all") for (const record of first) options?.onDiagnostic?.(record);
+      if (prior === "repeated") options?.onDiagnostic?.(first[0]!);
+      if (prior === "hostile") options?.onDiagnostic?.({ ...first[0]!, toJSON() { hostileSerialization++; throw new Error(canary); } } as DiagnosticRecord);
+      return err(envelope);
+    } };
+    const app = createPlatformSmokeApp({ workItemAcceptance: { repository, atomicWriter }, diagnosticDefinitions: [definition] });
+    const deps = baseDeps();
+    const mounted = required(await mountPlatformAppForTest(app, { deps }));
+    const route = mounted.routes.find((route) => route.path === "/smoke/work-items");
+    if (route === undefined) throw new Error("Expected acceptance route.");
+    const context = { ...createPlatformRuntimeRequestContext({ requestId: correlationId("direct-acceptance"), method: "POST", path: "/smoke/work-items",
+      logger: deps.logger, metrics: deps.metrics, clock: deps.clock, config: deps.config, flags: deps.flags }),
+      onDiagnostic(record: DiagnosticRecord) { equal(this, context); records.push(record); },
+    };
+    const response = await route.handler.handle({ params: {}, query: {}, headers: {} }, context);
+    equal(response.status, 503); deepEqual(response.body, { status: "not-accepted" });
+    deepEqual(records, prior === "repeated" ? Array(9).fill(first[0]) : first, "returned fallback depends on actual attempts, preserving source multiplicity");
+    deepEqual(response.observability?.diagnosticRecord, business);
+    equal(hostileSerialization, 0, "untrusted toJSON must never be invoked for deduplication");
+    for (const sinkMode of ["throwing", "rejecting"] as const) {
+      let calls = 0;
+      const failedSinkContext = { ...context, onDiagnostic() { calls++; if (sinkMode === "throwing") throw new Error(canary); return Promise.reject(new Error(canary)); } };
+      const unchanged = await route.handler.handle({ params: {}, query: {}, headers: {} }, failedSinkContext);
+      equal(unchanged.status, 503); equal(calls, 9);
+    }
+  }
+
+  // Concurrent operations share dependencies, but never their invocation callbacks or attempt counts.
+  const attemptInputs: PlatformPersistenceDiagnosticOptions[] = [];
+  let releaseFirst: (() => void) | undefined;
+  const secondFinished = new Promise<void>((resolve) => { releaseFirst = resolve; });
+  let callOrdinal = 0;
+  const concurrentWriter: PlatformPersistenceAtomicWriter = { async run(_operation, invocation) {
+    const ordinal = callOrdinal++; if (invocation !== undefined) attemptInputs.push(invocation);
+    if (ordinal === 0) await secondFinished;
+    const envelope = failure(ordinal === 0 ? first : second);
+    observePlatformPersistenceDiagnostic(invocation, own, envelope);
+    if (ordinal === 1) releaseFirst!();
+    return err(envelope);
+  } };
+  const concurrentApp = createPlatformSmokeApp({ workItemAcceptance: { repository, atomicWriter: concurrentWriter }, diagnosticDefinitions: [definition] });
+  const deliveries: { record: DiagnosticRecord; context: PlatformDiagnosticContext }[] = [];
+  const concurrentDeps = { ...baseDeps(), diagnostics: { report(record: DiagnosticRecord, context: PlatformDiagnosticContext) { deliveries.push({ record, context }); return { status: "written" as const }; } } };
+  const shell = required(await createPlatformServerShell({ apps: [concurrentApp], deps: concurrentDeps, auth: authHookForPermissions([platformSmokeWorkItemCreatePermission]), diagnosticCatalogs: [platformPersistenceDiagnosticCatalog, fixtureCatalog] }));
+  await shell.lifecycle.start(); deliveries.length = 0;
+  const responses = await Promise.all(["first", "second"].map((lane) => shell.handle({ method: "POST", path: "/smoke/work-items", requestId: correlationId(`concurrent-${lane}`), headers: { authorization: "Bearer write" } })));
+  deepEqual(responses.map((response) => response.status), [503, 503]);
+  equal(attemptInputs.length, 2); notEqual(attemptInputs[0], attemptInputs[1]); notEqual(attemptInputs[0]?.onDiagnostic, attemptInputs[1]?.onDiagnostic);
+  for (const [lane, source] of [["first", first], ["second", second]] as const) {
+    deepEqual(deliveries.filter(({ context }) => context.correlationId === `concurrent-${lane}`).map(({ record }) => record), [own, ...source, business]);
+  }
+  await shell.lifecycle.shutdown();
+
+  for (const code of ["PERSISTENCE_DUPLICATE", "PERSISTENCE_UNAVAILABLE"] as const) {
+    const rejectedRepository: PlatformSmokeWorkItemRepository = { async create() { return err(persistenceError({ ...failure(), code })); } };
+    const mounted = required(await mountPlatformAppForTest(createPlatformSmokeApp({ workItemAcceptance: { repository: rejectedRepository, atomicWriter: compatible }, diagnosticDefinitions: [definition] }), { deps: baseDeps() }));
+    const route = mounted.routes.find((route) => route.path === "/smoke/work-items"); if (!route) throw new Error("Expected route.");
+    const deps = baseDeps();
+    const context = createPlatformRuntimeRequestContext({ requestId: correlationId("valid-id"), method: "POST", path: "/smoke/work-items", logger: deps.logger, metrics: deps.metrics, clock: deps.clock, config: deps.config, flags: deps.flags });
+    const result = await route.handler.handle({ params: {}, query: {}, headers: {} }, context);
+    equal(result.status, code === "PERSISTENCE_DUPLICATE" ? 409 : 503); deepEqual(result.body, { status: "not-accepted" });
+  }
+  const rawThrow = Object.freeze(new Error(canary));
+  let writerCalls = 0;
+  const throwingWriter: PlatformPersistenceAtomicWriter = { async run() { writerCalls++; throw rawThrow; } };
+  const deps = baseDeps();
+  const mounted = required(await mountPlatformAppForTest(createPlatformSmokeApp({ workItemAcceptance: { repository, atomicWriter: throwingWriter } }), { deps }));
+  const route = mounted.routes.find((route) => route.path === "/smoke/work-items"); if (!route) throw new Error("Expected route.");
+  const context = createPlatformRuntimeRequestContext({ requestId: correlationId("valid-id"), method: "POST", path: "/smoke/work-items", logger: deps.logger, metrics: deps.metrics, clock: deps.clock, config: deps.config, flags: deps.flags });
+  await rejects(async () => route.handler.handle({ params: {}, query: {}, headers: {} }, context), (error: unknown) => error === rawThrow);
+  equal(writerCalls, 1);
+  const generatedRecords: DiagnosticRecord[] = [];
+  const invalidId = await route.handler.handle({ params: {}, query: {}, headers: {} }, { ...context, requestId: correlationId(""), onDiagnostic(record) { generatedRecords.push(record); } });
+  equal(invalidId.status, 500); deepEqual(invalidId.body, { status: "not-accepted" }); equal(writerCalls, 1);
+  deepEqual(generatedRecords, [{ schema: "core/diagnostic-record/v1", code: "core.persistence.validation-rejected", definitionVersion: 1,
+    detail: { operation: "record-id", field: "id", reason: "empty", effect: "rejected" } }]);
+  await new Promise<void>((resolve) => setImmediate(resolve));
 }
 
 function createRecordingAtomicWriter(

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-18"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -225,5 +225,64 @@ fi
 if grep -q 'estimated from session log' "$REPO/$LOG_FILE"; then
   fail "session log size was used as a token source"
 fi
+
+node - "$REPO" "$TMP_ROOT" <<'NODE'
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const repo = process.argv[2];
+const temporary = process.argv[3];
+const script = path.join(repo, 'scripts/00.chat/metrics/estimate-chat-cost/script.js');
+const pricing = path.join(temporary, 'private-pricing.json');
+const preload = path.join(temporary, 'cost-native.cjs');
+fs.writeFileSync(preload, `
+const fs = require('node:fs');
+const read = fs.readFileSync;
+const exists = fs.existsSync;
+fs.readFileSync = function (file) {
+  if (process.env.COST_FIXTURE_FAULT === 'read' && String(file) === process.env.CHAT_COST_PRICING_FILE) throw new Error('PRIVATE_COST_CANARY native');
+  return read.apply(this, arguments);
+};
+fs.existsSync = function (file) {
+  if (process.env.COST_FIXTURE_FAULT === 'discovery' && String(file).endsWith('/.git')) throw new Error('PRIVATE_COST_CANARY native');
+  return exists.apply(this, arguments);
+};
+`);
+function invoke(tokens = '1024', profile = '', fault = '') {
+  const result = spawnSync(process.execPath, ['--require', preload, script, tokens, profile], {
+    cwd: repo, encoding: 'utf8', env: { ...process.env, CHAT_COST_PROFILE: '', CHAT_COST_PRICING_FILE: pricing, COST_FIXTURE_FAULT: fault },
+  });
+  assert.equal(result.error, undefined);
+  assert.ok(!`${result.stdout}${result.stderr}`.includes('PRIVATE_COST_CANARY'));
+  return result;
+}
+fs.writeFileSync(pricing, '{PRIVATE_COST_CANARY');
+let result = invoke();
+assert.equal(result.status, 1); assert.equal(result.stderr, 'ERROR: pricing snapshot parse failed.\n'); assert.equal(result.stdout, '');
+fs.writeFileSync(pricing, JSON.stringify({ default_profile: 'neutral', profiles: { neutral: { estimate_rate_usd_per_1m_tokens: null } } }));
+result = invoke('1024', 'PRIVATE_COST_CANARY');
+assert.equal(result.status, 0);
+assert.equal(result.stdout, 'estimated_chat_cost: unavailable; pricing profile not found\nestimated_chat_cost_basis: unavailable; pricing profile not found\n');
+result = invoke();
+assert.equal(result.status, 0);
+assert.equal(result.stdout, 'estimated_chat_cost: unavailable; no pricing profile selected\nestimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE\n');
+fs.writeFileSync(pricing, JSON.stringify({ default_profile: 'PRIVATE_COST_CANARY', profiles: { PRIVATE_COST_CANARY: { estimate_rate_usd_per_1m_tokens: 'PRIVATE_COST_CANARY' } } }));
+result = invoke();
+assert.equal(result.status, 1); assert.equal(result.stderr, 'ERROR: invalid estimate_rate_usd_per_1m_tokens for selected profile.\n');
+fs.writeFileSync(pricing, 'null');
+result = invoke();
+assert.equal(result.status, 1); assert.equal(result.stderr, 'ERROR: chat cost observation failed: phase=pricing-projection.\n');
+for (const [fault, concern] of [['read', 'pricing snapshot read failed.'], ['discovery', 'chat cost observation failed: phase=repository-discovery.']]) {
+  result = invoke('1024', '', fault);
+  assert.equal(result.status, 1); assert.equal(result.stderr, `ERROR: ${concern}\n`); assert.equal(result.stdout, '');
+}
+result = invoke('PRIVATE_COST_CANARY');
+assert.equal(result.status, 1); assert.equal(result.stderr, 'ERROR: estimated-token-count must be a non-negative integer.\n');
+fs.unlinkSync(pricing);
+result = invoke();
+assert.equal(result.status, 0); assert.equal(result.stdout, 'estimated_chat_cost: unavailable; pricing snapshot not found\nestimated_chat_cost_basis: unavailable; pricing snapshot not found\n');
+console.log('imported chat cost diagnostic ports passed.');
+NODE
 
 echo "record chat commit metrics smoke test passed."

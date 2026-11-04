@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -29,6 +29,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
 
 if [ -z "${DOCKER_CONFIG:-}" ]; then
@@ -100,7 +101,7 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo 'DIAGNOSTIC_CODE=SHELL_IMAGE_ARGUMENTS_INVALID' >&2
       usage >&2
       exit 2
       ;;
@@ -134,7 +135,7 @@ if ! "$ENGINE" info >/dev/null 2>&1; then
   exit 1
 fi
 
-bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root >/dev/null
+safe_command_diagnostic SHELL_IMAGE_CONTAINER_BOUNDARY_FAILED package 'Container boundary validation failed.' 'Inspect the container boundary fixture.' -- bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root
 bash scripts/04.deploy/build-platform-shell-image/check-source.sh
 
 if [ ! -f "$DOCKERIGNORE" ]; then
@@ -162,7 +163,7 @@ fi
 
 BUILD_ARGS+=("$CONTEXT")
 
-"$ENGINE" "${BUILD_ARGS[@]}"
+safe_command_diagnostic SHELL_IMAGE_BUILD_FAILED package 'Local image build failed.' 'Inspect the retained build operation without replaying publication.' -- "$ENGINE" "${BUILD_ARGS[@]}"
 
 echo "Built platform shell image: $TAG"
 echo "Dockerfile: $DOCKERFILE"

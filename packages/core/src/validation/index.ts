@@ -1,4 +1,5 @@
 import { messageDescriptor, type MessageDescriptor, type MessageKey, type MessageParams } from "../shared/index";
+import type { DiagnosticRecord } from "../diagnostics/index";
 
 export type ValidationPath = readonly string[];
 
@@ -23,6 +24,13 @@ export type ValidationResult = ValidValidationResult | InvalidValidationResult;
 export interface Validator<TValue> {
   validate(value: unknown): value is TValue;
   explain(value: unknown): ValidationResult;
+  /** Optional closed internal projection. Public explanations remain a separate contract. */
+  diagnose?(value: unknown): DiagnosticRecord | undefined;
+}
+
+/** A failing diagnostic projection must not alter the validation decision. */
+export function validationDiagnostic(validator: Validator<unknown>, value: unknown): DiagnosticRecord | undefined {
+  try { return validator.diagnose?.(value); } catch { return undefined; }
 }
 
 export const validResult: ValidValidationResult = {

@@ -36,6 +36,7 @@ SUCCESS = {
 AWS_CONNECT_TIMEOUT_SECONDS = 5
 AWS_READ_TIMEOUT_SECONDS = 20
 AWS_PROCESS_TIMEOUT_SECONDS = 30
+_AWS_RESPONSE = None
 
 
 def aws(*parts: str):
@@ -46,9 +47,18 @@ def aws(*parts: str):
         )
     except subprocess.TimeoutExpired:
         return False, None, "aws-command-timeout"
+    except OSError:
+        return False, None, "aws-command-unavailable"
+    except UnicodeError:
+        return False, None, "aws-response-invalid"
     if result.returncode:
-        lowered = result.stderr.lower()
-        return False, None, "aws-access-denied" if "accessdenied" in lowered or "not authorized" in lowered else "aws-command-failed"
+        global _AWS_RESPONSE
+        if _AWS_RESPONSE is None:
+            spec = importlib.util.spec_from_file_location("aws_response", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
+            _AWS_RESPONSE = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(_AWS_RESPONSE)
+        return False, None, _AWS_RESPONSE.classify_error(parts[0], parts[1], result.stderr)
     try:
         return True, json.loads(result.stdout or "{}"), "ok"
     except json.JSONDecodeError:
@@ -70,6 +80,29 @@ def proof_receipts():
     assert spec and spec.loader
     spec.loader.exec_module(module)
     return module
+
+
+def failed_task_log(arn: object) -> dict[str, object]:
+    """One approved read of a positively identified failed verifier stream."""
+    if not isinstance(arn, str) or re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}", arn) is None:
+        return {"task_log_observation": "unavailable"}
+    stream = "persistence-verifier/private-persistence-verifier/" + arn.rsplit("/", 1)[-1]
+    try:
+        ok, value, _ = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head", "--limit", "100")
+    except Exception:
+        return {"task_log_observation": "failed"}
+    if not ok:
+        return {"task_log_observation": "failed"}
+    try:
+        path = ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py"
+        specification = importlib.util.spec_from_file_location("verifier_task_diagnostics", path)
+        module = importlib.util.module_from_spec(specification)
+        assert specification and specification.loader
+        specification.loader.exec_module(module)
+        failure, observation = module.collect_persistence_task_failure(value, "verification")
+        return {"task_log_observation": observation, **({"task_failure": failure} if failure is not None else {})}
+    except Exception:
+        return {"task_log_observation": "failed"}
 
 
 def outputs(stack_name: str) -> tuple[dict[str, str] | None, str]:
@@ -224,7 +257,11 @@ def historical_task_identity(task: dict[str, object], expected_digest: str) -> b
 
 
 def accepted_completion(task: dict[str, object], seconds: int, mode: str, on_receipt=None) -> int:
-    facts = {"verifier_task": task.get("taskArn"), "operation_id": task.get("startedBy")}
+    facts = {}
+    for key, item, pattern in (("verifier_task", task.get("taskArn"), r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}"),
+                               ("operation_id", task.get("startedBy"), r"kp-[0-9a-f]{32}")):
+        if isinstance(item, str) and re.fullmatch(pattern, item):
+            facts[key] = item
     observed_duration = duration(task)
     if observed_duration is None:
         return report("uncertain", "private-persistence-verifier-duration-unavailable", facts=facts)
@@ -233,6 +270,8 @@ def accepted_completion(task: dict[str, object], seconds: int, mode: str, on_rec
         return report("uncertain", "persistence-task-exit-evidence-unavailable", facts=facts)
     failure = "private-persistence-verifier-completion-deadline-exceeded" if observed_duration > seconds else "private-persistence-verifier-unsuccessful-completion" if not exited_zero(task) else None
     if failure is not None:
+        if not exited_zero(task):
+            facts.update(failed_task_log(task.get("taskArn")))
         if on_receipt is not None:
             try:
                 digest = image_digest(task.get("taskDefinitionArn"))
@@ -389,7 +428,10 @@ def observe_reserved(value: dict, path: Path, seconds: int, mode: str, *, wait: 
     proof = retained_completion(value)
     if proof is not None:
         accepted = proof["task"]["exit_code"] == 0 and proof["task"]["result_code"] == SUCCESS[mode]
-        return report("accepted" if accepted else "failed", proof["task"]["result_code"], facts={"operation_id": value["operation_id"], "mode": mode, "proof_receipt": value["proof_receipt"], "evidence_reuse": "historical-completion", "completed_at": proof["task"]["stopped_at"], "verifier_task": proof["task"]["arn"]})
+        facts = {"operation_id": value["operation_id"], "mode": mode, "proof_receipt": value["proof_receipt"], "evidence_reuse": "historical-completion", "completed_at": proof["task"]["stopped_at"], "verifier_task": proof["task"]["arn"]}
+        if proof["task"]["exit_code"] != 0:
+            facts.update(failed_task_log(proof["task"]["arn"]))
+        return report("accepted" if accepted else "failed", proof["task"]["result_code"], facts=facts)
     arn = value["task_arn"]
     if arn is None:
         arn, code = reconciliation_operation(value["operation_id"], value["request"]["task_definition"])

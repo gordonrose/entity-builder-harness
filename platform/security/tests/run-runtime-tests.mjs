@@ -5,7 +5,10 @@ import path, { join } from "node:path";
 const runtimeRoot = ".cache/platform-security-runtime";
 const testDirectory = join(runtimeRoot, "platform/security/tests");
 const coreModules = [
+  "config",
   "authz",
+  "diagnostics",
+  "security",
   "shared",
 ];
 

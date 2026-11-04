@@ -89,6 +89,78 @@ export type PlatformJobDeliveryDisposition = (typeof platformJobDeliveryDisposit
 
 export type PlatformCapabilityName = Brand<string, "PlatformCapabilityName">; // Distinguish a checked capability identity from a route name, job name, or ordinary string.
 
+/** Finite runtime-type groups, not claims about an operation's cause. */
+export const platformNativeErrorClasses = Object.freeze(["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError", "AggregateError"] as const);
+export interface PlatformErrorClassificationOptions { readonly errorClasses?: readonly string[] }
+export type PlatformErrorClassesIssue = { readonly condition: "array-required" | "plain-array-required" | "dense-array-required" | "data-fields-required" | "too-many-members" | "member-invalid" | "member-too-long" | "member-invalid-format" | "duplicate-member" | "inspection-threw"; readonly index?: number };
+export interface PlatformErrorClassesSnapshot { readonly present: boolean; readonly values?: readonly string[]; readonly issue?: PlatformErrorClassesIssue }
+
+/** Declaration-only64 limit; one descriptor snapshot supplies both values and issue. */
+export function inspectPlatformErrorClassDeclaration(options: PlatformErrorClassificationOptions): PlatformErrorClassesSnapshot {
+  try {
+    const field = Object.getOwnPropertyDescriptor(options, "errorClasses");
+    if (field === undefined) return { present: false };
+    if (!("value" in field)) return { present: true, issue: { condition: "data-fields-required" } };
+    return field.value === undefined ? { present: true } : { present: true, ...readErrorClasses(field.value, 64) };
+  } catch { return { present: true, issue: { condition: "inspection-threw" } }; }
+}
+
+/** Syntax admits declarations; exact membership alone approves supplied classes. */
+export function platformErrorClassesIssue(value: unknown): PlatformErrorClassesIssue | undefined {
+  return readErrorClasses(value, 64).issue;
+}
+
+function readErrorClasses(value: unknown, maximum = 128): { readonly values?: readonly string[]; readonly issue?: PlatformErrorClassesIssue } {
+  const fail = (condition: PlatformErrorClassesIssue["condition"], index?: number) => ({ issue: { condition, ...(index === undefined ? {} : { index }) } });
+  try {
+    if (!Array.isArray(value)) return fail("array-required");
+    if (Object.getPrototypeOf(value) !== Array.prototype) return fail("plain-array-required");
+    const length = Object.getOwnPropertyDescriptor(value, "length");
+    if (length === undefined || !("value" in length)) return fail("data-fields-required");
+    const count: unknown = length.value;
+    if (typeof count !== "number" || !Number.isInteger(count) || count < 0) return fail("dense-array-required");
+    if (count > maximum) return fail("too-many-members");
+    if (Reflect.ownKeys(value).length !== count + 1) return fail("dense-array-required");
+    const seen = new Set<string>();
+    const values: string[] = [];
+    for (let index = 0; index < count; index++) {
+      const field = Object.getOwnPropertyDescriptor(value, String(index));
+      if (field === undefined) return fail("dense-array-required", index);
+      if (!("value" in field) || !field.enumerable) return fail("data-fields-required", index);
+      const member: unknown = field.value;
+      if (typeof member !== "string") return fail("member-invalid", index);
+      if (member.length > 128) return fail("member-too-long", index);
+      if (!/^[A-Za-z][A-Za-z0-9._-]{0,127}$/.test(member)) return fail("member-invalid-format", index);
+      if (seen.has(member)) return fail("duplicate-member", index);
+      seen.add(member);
+      values.push(member);
+    }
+    return { values: Object.freeze(values) };
+  } catch { return fail("inspection-threw"); }
+}
+
+/** A checked snapshot, never an iterator/method/index read from the caller's array. */
+export function platformErrorClassDeclarations(options?: PlatformErrorClassificationOptions): readonly string[] | undefined {
+  try {
+    if (options === undefined) return undefined;
+    const field = Object.getOwnPropertyDescriptor(options, "errorClasses");
+    return field !== undefined && "value" in field && field.value !== undefined ? readErrorClasses(field.value).values : undefined;
+  } catch { return undefined; }
+}
+
+export function platformErrorClassification(value: unknown, options?: PlatformErrorClassificationOptions): string {
+  if (typeof value !== "string") return "unknown";
+  if ((platformNativeErrorClasses as readonly string[]).includes(value)) return value;
+  try {
+    return platformErrorClassDeclarations(options)?.includes(value) ? value : "unknown";
+  } catch { return "unknown"; }
+}
+
+/** Preserve absent optional fields and the caller's single, in-position property evaluation. */
+export function platformOptionalErrorClassification(value: unknown, options?: PlatformErrorClassificationOptions): string | undefined {
+  return value === undefined ? undefined : platformErrorClassification(value, options);
+}
+
 export interface PlatformOperationalNomenclature { // Describe the provider-neutral semantic facts a future observability profile may select.
   readonly capability: PlatformCapabilityName; // Identify the stable app-owned capability rather than a raw path or provider operation.
   readonly action: PlatformCapabilityAction; // Identify the controlled business verb rather than an HTTP method.

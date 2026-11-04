@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -28,6 +28,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
 TAG="entity-builder-harness/04.deploy/kanbien-core-server:local"
 ALLOW_SKIP=false
@@ -69,23 +70,23 @@ while [[ "$#" -gt 0 ]]; do
       exit 0
       ;;
     *)
-      printf 'ERROR: unknown argument: %s\n' "$1" >&2
+      printf '%s\n' 'DIAGNOSTIC_CODE=CORE_IMAGE_ARGUMENTS_INVALID' >&2
       usage >&2
       exit 2
       ;;
   esac
 done
 
-bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root >/dev/null
+safe_command_diagnostic CORE_IMAGE_CONTAINER_BOUNDARY_FAILED package 'Container boundary validation failed.' 'Inspect the container boundary fixture.' -- bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root
 
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 
-bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh \
-  --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json >/dev/null
-bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh --json >/dev/null
-bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/build.sh --out-dir "$TEMPORARY_DIRECTORY/artifacts"
-node scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs \
+safe_command_diagnostic CORE_IMAGE_PROGRAM_CONTRACT_FAILED package 'Runnable program validation failed.' 'Inspect the runnable program contract fixture.' -- bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh \
+  --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
+safe_command_diagnostic CORE_IMAGE_DEPENDENCY_BOUNDARY_FAILED package 'Dependency boundary validation failed.' 'Inspect the dependency boundary fixture.' -- bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh --json
+safe_command_diagnostic CORE_IMAGE_COMPILATION_FAILED package 'Candidate compilation failed.' 'Inspect the local compiler fixture.' -- bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/build.sh --out-dir "$TEMPORARY_DIRECTORY/artifacts"
+safe_command_diagnostic CORE_IMAGE_RUNTIME_PREPARATION_FAILED package 'Runtime preparation failed.' 'Inspect the runtime preparation fixture.' -- node scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs \
   --compiled-root "$TEMPORARY_DIRECTORY/artifacts"
 python3 scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py \
   --compiled-root "$TEMPORARY_DIRECTORY/artifacts" --json
@@ -113,5 +114,5 @@ if [[ "$NO_CACHE" == true ]]; then
   BUILD_ARGS+=(--no-cache)
 fi
 BUILD_ARGS+=("$ROOT")
-docker "${BUILD_ARGS[@]}"
+safe_command_diagnostic CORE_IMAGE_BUILD_FAILED package 'Local image build failed.' 'Inspect the retained build operation without replaying publication.' -- docker "${BUILD_ARGS[@]}"
 printf 'Built local core-server image: %s\n' "$TAG"

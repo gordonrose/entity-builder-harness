@@ -33,12 +33,13 @@ QUALIFICATION = [
 BUILDER_PREAMBLE = r'''set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 TAG="entity-builder-harness/04.deploy/kanbien-core-server-persistence:local"
 if [[ $# -eq 2 && "$1" == "--tag" && -n "$2" ]]; then TAG="$2"; elif [[ $# -ne 0 ]]; then printf '%s\n' 'Usage: script.sh [--tag <tag>]' >&2; exit 2; fi
 bash scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --json
 python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
 bash scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh --target-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes --json
-bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json >/dev/null
+safe_command_diagnostic PERSISTENCE_IMAGE_PROGRAM_CONTRACT_FAILED package 'Runnable program validation failed.' 'Inspect the runnable program contract fixture.' -- bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh'''.splitlines()
@@ -82,11 +83,11 @@ def custody_route_valid(steps, qualification_index):
  return custody_tail(steps,published_index=scan_index,target="kanbien-core-platform",environment="private-persistence-candidate",region="aws-eu-west-1",candidate="kanbien-core-server-persistence-candidate",contract="kanbien-core-server-persistence-image",program="kanbien-core-server-persistence",stem="core-server-persistence",artifact_name="kanbien-core-platform-persistence-package-custody-${{ github.run_id }}",qualification_outcome="${{ steps.qualification.outcome }}",scan_outcome="${{ steps.scan.outcome }}",scan_check="ecr_scan",provenance_name="Attest image provenance",attestation_name="Attest image SBOM",capture_name="Write and validate safe package-custody receipt",upload_name="Upload safe package-custody evidence",receipt_filename="package-custody-receipt.json",extra_artifacts=["${{ runner.temp }}/qualified-image.json","${{ runner.temp }}/ecr-scan.json"],registry_expression="${{ env.ECR_URI }}")
 
 def main():
- p=argparse.ArgumentParser(add_help=False); p.add_argument("--workflow",default=EXPECTED); p.add_argument("--json",action="store_true"); a,x=p.parse_known_args()
+ p=argparse.ArgumentParser(add_help=False); p.error=lambda _message:p.exit(2,"DIAGNOSTIC_CODE=PACKAGE_WORKFLOW_ARGUMENTS_INVALID\n"); p.add_argument("--workflow",default=EXPECTED); p.add_argument("--json",action="store_true"); a,x=p.parse_known_args()
  if x or a.workflow != EXPECTED: codes=("workflow-path-invalid",)
  else:
   try: text=Path(a.workflow).read_text(encoding="utf-8")
-  except OSError: text=""; codes=("workflow-missing",)
+  except (OSError, UnicodeError): text=""; codes=("workflow-missing",)
   else: codes=tuple(code for code,ok in (("workflow-requirement-missing",all(value in text for value in REQUIRED)),("workflow-qualification-route-invalid",qualification_route_valid(text)),("workflow-trigger-not-manual",not re.search(r"^\s*(push|pull_request|schedule):",text,re.M)),("workflow-target-mutation-present",not any(value in text.lower() for value in FORBIDDEN))) if not ok)
  result={"schema":"deploy/package-workflow-validation/v1","target":"kanbien-core-platform","verdict":"passed" if not codes else "failed","findings":[{"code":code} for code in codes]}
  print(json.dumps(result,sort_keys=True)); return 0 if not codes else 1

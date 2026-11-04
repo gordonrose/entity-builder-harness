@@ -45,8 +45,10 @@ export function brandedPlatformContractName<TName extends string>(
   };
 }
 
-export function isPlatformContractName(value: unknown): value is string {
-  return typeof value === "string" && contractNamePattern.test(value);
+export function isPlatformContractName(value: unknown, observe?: (condition: "string-required" | "invalid-format") => void): value is string {
+  if (typeof value !== "string") { try { observe?.("string-required"); } catch { /* Optional observation only. */ } return false; }
+  if (!contractNamePattern.test(value)) { try { observe?.("invalid-format"); } catch { /* Optional observation only. */ } return false; }
+  return true;
 }
 
 const contractNamePattern = /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$/;

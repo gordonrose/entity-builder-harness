@@ -7,6 +7,7 @@ import {
   type Result,
 } from "../shared/index";
 import { persistenceError, type PersistenceError } from "./errors";
+import { corePersistenceValidationRecord, type CorePersistenceValidationDetail } from "./diagnostics";
 
 /** A product record is available to ordinary reads unless it is logically deleted. */
 export type RecordLifecycleState = "active" | "deleted";
@@ -60,12 +61,15 @@ export function recordLifecyclePolicy(input: {
   readonly retentionPolicy: RecordRetentionPolicyReference;
   readonly legalHoldCheckRequired: true;
 }): Result<RecordLifecyclePolicy, PersistenceError> {
-  if (!Number.isSafeInteger(input.recoveryWindowMs) || input.recoveryWindowMs <= 0) {
-    return invalidLifecycle("Recovery window must be a positive whole number of milliseconds.", "recovery_window.invalid");
+  if (!Number.isSafeInteger(input.recoveryWindowMs)) {
+    return invalidLifecycle("Recovery window must be a positive whole number of milliseconds.", "recovery_window.invalid", "lifecycle-policy", "recovery-window", "not-safe-integer");
+  }
+  if (input.recoveryWindowMs <= 0) {
+    return invalidLifecycle("Recovery window must be a positive whole number of milliseconds.", "recovery_window.invalid", "lifecycle-policy", "recovery-window", "not-positive");
   }
 
   if (input.legalHoldCheckRequired !== true) {
-    return invalidLifecycle("Logical deletion policy must require a legal-hold check before purge.", "legal_hold_check.required");
+    return invalidLifecycle("Logical deletion policy must require a legal-hold check before purge.", "legal_hold_check.required", "lifecycle-policy", "legal-hold-check", "required");
   }
 
   return ok({
@@ -78,7 +82,7 @@ export function recordLifecyclePolicy(input: {
 /** Brand a reviewed policy reference; it is a name, never a free-form retention rule. */
 export function recordRetentionPolicyReference(value: string): Result<RecordRetentionPolicyReference, PersistenceError> {
   if (!recordRetentionPolicyPattern.test(value)) {
-    return invalidLifecycle("Retention policy reference must use lowercase identifier segments.", "retention_policy.invalid");
+    return invalidLifecycle("Retention policy reference must use lowercase identifier segments.", "retention_policy.invalid", "retention-reference", "retention-policy", "invalid-format");
   }
 
   return ok(brand<string, "RecordRetentionPolicyReference">(value));
@@ -91,13 +95,16 @@ export function logicallyDeleteRecord(input: {
   readonly policy: RecordLifecyclePolicy;
 }): Result<RecordLifecycle, PersistenceError> {
   if (input.current.state === "deleted") {
-    return invalidLifecycle("An already deleted record cannot be deleted again.", "already_deleted");
+    return invalidLifecycle("An already deleted record cannot be deleted again.", "already_deleted", "delete", "state", "already-deleted");
   }
 
   const deletedAtMs = Date.parse(input.deletedAt);
   const restoreEligibleUntil = new Date(deletedAtMs + input.policy.recoveryWindowMs);
-  if (!Number.isFinite(deletedAtMs) || Number.isNaN(restoreEligibleUntil.getTime())) {
-    return invalidLifecycle("Deletion time and recovery window must form a valid restore boundary.", "restore_boundary.invalid");
+  if (!Number.isFinite(deletedAtMs)) {
+    return invalidLifecycle("Deletion time and recovery window must form a valid restore boundary.", "restore_boundary.invalid", "delete", "deleted-at", "invalid-time");
+  }
+  if (Number.isNaN(restoreEligibleUntil.getTime())) {
+    return invalidLifecycle("Deletion time and recovery window must form a valid restore boundary.", "restore_boundary.invalid", "delete", "restore-boundary", "unrepresentable-boundary");
   }
 
   return ok({
@@ -118,6 +125,7 @@ export function restoreLogicallyDeletedRecord(input: {
       code: "PERSISTENCE_RECORD_NOT_DELETED",
       defaultMessage: "Only a logically deleted record can be restored.",
       messageKey: "persistence.lifecycle.restore.not_deleted",
+      diagnosticRecord: corePersistenceValidationRecord({ operation: "restore", field: "state", reason: "not-deleted" }),
     }));
   }
 
@@ -126,6 +134,7 @@ export function restoreLogicallyDeletedRecord(input: {
       code: "PERSISTENCE_RESTORE_WINDOW_EXPIRED",
       defaultMessage: "The configured recovery window has expired.",
       messageKey: "persistence.lifecycle.restore.window_expired",
+      diagnosticRecord: corePersistenceValidationRecord({ operation: "restore", field: "restore-time", reason: "window-expired" }),
     }));
   }
 
@@ -157,11 +166,12 @@ export function recordPurgeEligibility(input: {
 
 const recordRetentionPolicyPattern = /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$/;
 
-function invalidLifecycle(defaultMessage: string, reason: string): Result<never, PersistenceError> {
+function invalidLifecycle(defaultMessage: string, reason: string, operation: CorePersistenceValidationDetail["operation"], field: CorePersistenceValidationDetail["field"], predicate: CorePersistenceValidationDetail["reason"]): Result<never, PersistenceError> {
   return err(persistenceError({
     code: "PERSISTENCE_INVALID_RECORD_LIFECYCLE",
     defaultMessage,
     messageKey: "persistence.lifecycle.invalid",
     params: { reason },
+    diagnosticRecord: corePersistenceValidationRecord({ operation, field, reason: predicate }),
   }));
 }

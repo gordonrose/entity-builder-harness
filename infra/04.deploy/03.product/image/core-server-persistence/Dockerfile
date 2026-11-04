@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -39,6 +39,8 @@ COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-veri
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts

@@ -1,0 +1,462 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "platform-worker",
+    "definitions": [
+      {
+        "code": "platform-worker.retry-configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "configure-worker"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "max-attempts",
+                      "retry-delay-calculator"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "wrong-type",
+                      "not-finite",
+                      "invalid-integer",
+                      "not-positive",
+                      "not-callable"
+                    ]
+                  }
+                }
+              }
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "worker-not-created"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-worker.retry-delay-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "job-delivery"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "backoff"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "retry-delay"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "not-finite",
+                "negative"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "retry-not-submitted"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-worker.delivery-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "errorCode": {
+              "type": "enum",
+              "values": [
+                "PLATFORM_WORKER_MOUNT_FAILED",
+                "PLATFORM_WORKER_CONFIG_INVALID",
+                "PLATFORM_WORKER_QUEUE_CLOSED",
+                "PLATFORM_WORKER_NOT_READY",
+                "PLATFORM_WORKER_JOB_NOT_FOUND",
+                "PLATFORM_WORKER_INVALID_PAYLOAD",
+                "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID",
+                "PLATFORM_WORKER_DURABLE_PROCESSING_BUSY",
+                "PLATFORM_WORKER_DURABLE_PROCESSING_TERMINAL_FAILURE",
+                "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
+                "PLATFORM_WORKER_HANDLER_FAILED",
+                "PLATFORM_WORKER_IDEMPOTENCY_FAILED"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration",
+                "mount",
+                "admission",
+                "payload-validation",
+                "claim",
+                "handler",
+                "settlement",
+                "shutdown"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid",
+                "rejected",
+                "attempts-exhausted",
+                "interrupted",
+                "unclassified"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "rejected",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-worker.configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "queue-address",
+                      "region",
+                      "receive-wait",
+                      "visibility-timeout",
+                      "durable-lease-duration"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "empty",
+                      "blank",
+                      "wrong-type",
+                      "not-finite",
+                      "invalid-integer",
+                      "not-positive",
+                      "out-of-range",
+                      "not-below-visibility"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-worker.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "shutdown",
+                "process-start",
+                "signal-shutdown",
+                "job-delivery"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "queue-close",
+                "startup-log",
+                "shutdown-log",
+                "signal-registration",
+                "context-input",
+                "delivery-clock"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "selection",
+                "invocation",
+                "selection-or-invocation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "lifecycle-shutdown-not-invoked",
+                "process-not-returned",
+                "shutdown-not-completed",
+                "handler-not-invoked"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-worker.delivery-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "job-delivery",
+                "queue-enqueue",
+                "queue-retry"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "lifecycle",
+                "job",
+                "payload",
+                "outbox-id",
+                "message-id",
+                "idempotency-key",
+                "completion-outcome",
+                "claimed-lease",
+                "queue-state"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "not-ready",
+                "unmatched",
+                "validator-rejected",
+                "null",
+                "array",
+                "nonobject",
+                "absent",
+                "wrong-type",
+                "empty",
+                "mismatch",
+                "closed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "handler-not-invoked",
+                "queue-not-mutated"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-worker.coordination-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "type": "enum",
+              "values": [
+                "lease-active",
+                "already-completed",
+                "already-terminal",
+                "idempotency-duplicate"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "handler-not-invoked"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-worker.boundary-failed",
+        "version": 2,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "job-delivery",
+                "queue-enqueue",
+                "queue-retry",
+                "queue-dead-letter"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "dequeue",
+                "selection",
+                "validation",
+                "identity",
+                "claim-clock",
+                "claim",
+                "claim-result",
+                "lookup",
+                "context",
+                "handler",
+                "complete-clock",
+                "complete",
+                "idempotency-record",
+                "settlement-clock",
+                "settlement",
+                "release",
+                "terminal-complete",
+                "backoff",
+                "retry",
+                "dead-letter",
+                "observation",
+                "queue-clock",
+                "queue-mutation"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "thrown",
+                "returned-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "handler-not-invoked",
+                "handler-outcome-unknown",
+                "handler-succeeded",
+                "handler-failed",
+                "settlement-unknown",
+                "queue-not-mutated",
+                "queue-mutation-unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.state.rulebook-progress
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-22"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-04"
 #   layer: 01.harness
 #   domain: architecture
 #   disciplines:
@@ -26,6 +26,8 @@ version: 1
 status: active
 
 created_artifacts:
+  standards:
+    - .agentic/03.product/standards/config-runtime-settings.md
   layer_rulesets:
     - docs/03.product/rules/apps/layers/apps.yml
     - docs/03.product/rules/design-system/layers/design-system.yml
@@ -35,7 +37,6 @@ created_artifacts:
     - docs/03.product/rules/platform/layers/platform.yml
     - docs/01.harness/rules/layers/scripts-command-surface.yml
   concern_rulesets:
-    - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
     - docs/06.shared/rules/concerns/dependency-direction.yml
     - docs/03.product/rules/design-system/concerns/design-label-theming.yml
     - docs/03.product/rules/platform/concerns/events-messaging-async.yml

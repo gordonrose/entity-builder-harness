@@ -6,6 +6,16 @@ import {
   messageTemplate,
   safeTranslationParams,
   translationCatalog,
+  interpolateMessageTemplate,
+  coreI18nDiagnosticDefinitions,
+  coreI18nValidationDiagnosticRecord,
+  coreI18nSelectionDiagnosticRecord,
+  coreI18nBoundaryDiagnosticRecord,
+  type CoreI18nDiagnosticOptions,
+  type CoreI18nDiagnosticContext,
+  type CoreI18nValidationDetail,
+  type CoreI18nSelectionDetail,
+  type CoreI18nBoundaryDetail,
   type I18nError,
   type I18nErrorCode,
   type LocaleTag,
@@ -89,3 +99,38 @@ translationCatalog({ locale, messages: { "greeting.hello": { text: "Hello" } } }
 
 // @ts-expect-error i18n error codes are constrained.
 i18nError({ code: "I18N_BROKEN", defaultMessage: "Broken." });
+
+const observedContexts: CoreI18nDiagnosticContext[] = [];
+const diagnosticOptions: CoreI18nDiagnosticOptions = {
+  diagnosticDefinitions: coreI18nDiagnosticDefinitions,
+  onDiagnostic(_record, context) { observedContexts.push(context); return "observed"; },
+};
+localeTag("en-GB", diagnosticOptions);
+messageTemplate("template", diagnosticOptions);
+translationCatalog({ locale, messages: {} }, diagnosticOptions);
+safeTranslationParams({ name: "Ada" }, paramOptions, diagnosticOptions);
+interpolateMessageTemplate("{name}", { name: "Ada" }, diagnosticOptions);
+const observedTranslator: MessageTranslator = catalogMessageTranslator([catalogResult.value], diagnosticOptions);
+observedTranslator.translate(messageDescriptor({ code: "fixture", defaultMessage: "fixed" }), request, {});
+defaultMessageTranslator.translate(messageDescriptor({ code: "fixture", defaultMessage: "fixed" }), request, diagnosticOptions);
+i18nError({ code: "I18N_INVALID_TEMPLATE", defaultMessage: "fixed" }, diagnosticOptions);
+const oldTranslatorImplementation: MessageTranslator = { translate(_message, oldRequest) { return { ok: true, value: { locale: oldRequest.locale, text: "fixed", source: "default-message" } }; } };
+oldTranslatorImplementation.translate(messageDescriptor({ code: "fixture", defaultMessage: "fixed" }), request, diagnosticOptions);
+const validationDetail: CoreI18nValidationDetail = { operation: "translation-catalog", field: "template", reason: "empty", effect: "predicate-rejected", ordinal: 0 };
+const selectionDetail: CoreI18nSelectionDetail = { operation: "translate", phase: "source-selection", selection: "fallback-catalog", reason: "candidate-present", effect: "source-selected", ordinal: 2, catalogMisses: 1, templateMisses: 1 };
+const boundaryDetail: CoreI18nBoundaryDetail = { operation: "interpolate", phase: "parameter-coercion", field: "parameter", reason: "threw", effect: "value-not-produced", ordinal: 1 };
+coreI18nValidationDiagnosticRecord(validationDetail);
+coreI18nSelectionDiagnosticRecord(selectionDetail);
+coreI18nBoundaryDiagnosticRecord(boundaryDetail);
+// @ts-expect-error diagnostic detail never admits submitted parameter names.
+coreI18nValidationDiagnosticRecord({ ...validationDetail, parameterName: "private" });
+// @ts-expect-error source selection does not establish completed translation.
+coreI18nSelectionDiagnosticRecord({ ...selectionDetail, effect: "translation-completed" });
+// @ts-expect-error raw boundary failures do not prove validation rejection.
+coreI18nBoundaryDiagnosticRecord({ ...boundaryDetail, reason: "invalid-format" });
+// @ts-expect-error submitted field names are not an approved location vocabulary.
+coreI18nBoundaryDiagnosticRecord({ ...boundaryDetail, field: "customerId" });
+// @ts-expect-error diagnostics do not replace the existing translation-param options argument.
+safeTranslationParams({}, diagnosticOptions);
+// @ts-expect-error runtime source definitions are immutable.
+coreI18nDiagnosticDefinitions.push(coreI18nDiagnosticDefinitions[0]);

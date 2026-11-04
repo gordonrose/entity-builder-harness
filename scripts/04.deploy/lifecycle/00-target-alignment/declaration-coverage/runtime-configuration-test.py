@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -38,6 +38,32 @@ def copy_repository(root):
 
 
 class RuntimeConfigurationTests(unittest.TestCase):
+    def test_b10_rejected_reference_projection(self):
+        spec=importlib.util.spec_from_file_location('b10_coverage', COMMAND)
+        module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        canary='https://private.invalid/reference-canary'
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); contract=root/'contract.yml'
+            contract.write_text(yaml.safe_dump({'schema':'deploy/declaration-contract/v1','id':canary,'target':{'profile':canary},'requirements':[{'id':'requirement','required_by':[canary],'declarations':[{'path':{'private':canary},'expectation':'exists'}]}]}))
+            report=module.inspect_declaration(contract,root,{})
+            self.assertEqual(report['scope'],'invalid-scope'); self.assertEqual(report['target'],'invalid-target')
+            self.assertNotIn(canary,json.dumps(report)); self.assertIn('invalid-reference',json.dumps(report))
+            contract.write_text(yaml.safe_dump({'schema':'deploy/target-scope-contract/v1','target':canary,'scope':canary,'change_impact':{'schema':'deploy/change-impact/v1','inputs':[canary],'requirements':[{'id':'requirement','required_by':[canary],'declarations':[canary],'local_proofs':[],'package_proofs':[],'target_proofs':[],'run_proofs':[]}]}}))
+            report=module.inspect(contract,root,{})
+            self.assertNotIn(canary,json.dumps(report)); self.assertEqual(report['inputs'],[]); self.assertEqual(report['consumers'],[])
+            # A lexically valid but out-of-root symlink was rejected by within;
+            # it must not reappear through consumers, inputs or target fields.
+            with tempfile.TemporaryDirectory() as external:
+                rejected='linked-private'; (root/rejected).symlink_to(Path(external),target_is_directory=True)
+                legacy={'schema':'deploy/declaration-contract/v1','id':'Scope_With.Dots','target':{'profile':rejected},'requirements':[{'id':'requirement','required_by':[rejected,'missing/local-file.py'],'declarations':[{'path':rejected,'expectation':'exists'}]}]}
+                contract.write_text(yaml.safe_dump(legacy)); report=module.inspect_declaration(contract,root,{})
+                self.assertNotIn(rejected,json.dumps(report)); self.assertEqual(report['scope'],'Scope_With.Dots')
+                self.assertIn('missing/local-file.py',report['consumers']); self.assertIn({'code':'requirement-implementation-missing','reference':'missing/local-file.py'},report['findings'])
+                current={'schema':'deploy/target-scope-contract/v1','target':'Target_With.Dots','scope':'Scope_With.Dots','change_impact':{'schema':'deploy/change-impact/v1','inputs':[rejected,'missing/local-file.py'],'requirements':[{'id':'requirement','required_by':[rejected,'missing/local-file.py'],'declarations':[rejected],'local_proofs':[],'package_proofs':[],'target_proofs':[],'run_proofs':[]}]}}
+                contract.write_text(yaml.safe_dump(current)); report=module.inspect(contract,root,{})
+                self.assertNotIn(rejected,json.dumps(report)); self.assertEqual(report['scope'],'Scope_With.Dots'); self.assertEqual(report['target'],'Target_With.Dots')
+                self.assertEqual(report['inputs'],['missing/local-file.py']); self.assertEqual(report['consumers'],['missing/local-file.py'])
+
     def test_command_alias_requires_its_own_runtime_input_contract(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

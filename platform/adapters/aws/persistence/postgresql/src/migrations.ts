@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 import type { Result } from "@kanbien/core/shared";
-import { platformPersistenceError, type PlatformPersistenceError } from "@kanbien/platform-persistence";
+import { platformPersistenceError, type PlatformPersistenceError, type PersistenceLocalRejectionDetail } from "@kanbien/platform-persistence";
 import type { PostgreSqlStatement, PostgreSqlTransactionalClient } from "./connection";
-import { postgreSqlIdentifier, type PostgreSqlPersistenceConfiguration } from "./config";
+import { postgreSqlIdentifier, type PostgreSqlPersistenceConfiguration } from "./configuration/index";
 import { postgreSqlPersistenceOperationError } from "./errors";
 import { withPostgreSqlTransaction, type PostgreSqlTransactionOptions } from "./transactions";
+import { localRejection } from "./observations";
 
 export interface PostgreSqlMigration {
   readonly id: string;
@@ -38,11 +39,13 @@ export function createPostgreSqlMigrationRunner(
 ): PostgreSqlMigrationRunner {
   return {
     apply: async (manifest) => {
-      if (!toolVersionPattern.test(toolVersion)) return invalidMigration("Migration tool version is invalid.");
-      if (manifest.schema !== configuration.schema || postgreSqlIdentifier(manifest.schema) === undefined) {
-        return invalidMigration("Migration manifest schema must equal the reviewed adapter configuration schema.");
+      if (!toolVersionPattern.test(toolVersion)) return invalidMigration("Migration tool version is invalid.", options, "tool-version", "pattern");
+      const schemaMatches = manifest.schema === configuration.schema;
+      if (!schemaMatches || postgreSqlIdentifier(manifest.schema) === undefined) {
+        return invalidMigration("Migration manifest schema must equal the reviewed adapter configuration schema.", options, "schema", schemaMatches ? "pattern" : "mismatch");
       }
-      if (!validManifest(manifest)) return invalidMigration("Migration manifest identifiers, checksums, or statement list are invalid.");
+      const rejected = manifestRejection(manifest);
+      if (rejected !== undefined) return invalidMigration("Migration manifest identifiers, checksums, or statement list are invalid.", options, rejected.field, rejected.condition, rejected.ordinal);
       return withPostgreSqlTransaction(options, async (client) => {
         // The advisory lock is scoped to this transaction. A stopped or failed
         // migration releases it, while a competing executor waits only for the
@@ -53,7 +56,7 @@ export function createPostgreSqlMigrationRunner(
           text: "SELECT pg_advisory_xact_lock(hashtext($1))",
           values: [`kanbien-postgresql-migration:${manifest.schema}`],
         });
-        return applyManifest(client, manifest, toolVersion);
+        return applyManifest(client, manifest, toolVersion, options);
       });
     },
   };
@@ -86,6 +89,7 @@ async function applyManifest(
   client: PostgreSqlTransactionalClient,
   manifest: PostgreSqlMigrationManifest,
   toolVersion: string,
+  options: PostgreSqlTransactionOptions,
 ): Promise<Result<readonly PostgreSqlMigrationResult[], PlatformPersistenceError>> {
   const historyTable = qualified(manifest.schema, "platform_migration_history");
   try {
@@ -95,7 +99,7 @@ async function applyManifest(
         values: [manifest.schema],
       });
       if (existing.rows[0]?.exists !== true) {
-        return invalidMigration("Reviewed migration schema is absent; run the governed administrative bootstrap before the ordinary migration task.");
+        return invalidMigration("Reviewed migration schema is absent; run the governed administrative bootstrap before the ordinary migration task.", options, "schema", "not-found", undefined, "transaction-body");
       }
     } else {
       await client.query({ text: `CREATE SCHEMA IF NOT EXISTS ${quoted(manifest.schema)}` });
@@ -104,6 +108,7 @@ async function applyManifest(
       text: `CREATE TABLE IF NOT EXISTS ${historyTable} (migration_id text PRIMARY KEY, checksum text NOT NULL, tool_version text NOT NULL, applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
     });
     const results: PostgreSqlMigrationResult[] = [];
+    let ordinal = 0;
     for (const migration of manifest.migrations) {
       const recorded = await client.query<{ readonly checksum: string }>({
         text: `SELECT checksum FROM ${historyTable} WHERE migration_id = $1`,
@@ -111,8 +116,9 @@ async function applyManifest(
       });
       const prior = recorded.rows[0];
       if (prior !== undefined) {
-        if (prior.checksum !== migration.checksum) return checksumMismatch(migration.id);
+        if (prior.checksum !== migration.checksum) return checksumMismatch(migration.id, options, ordinal);
         results.push({ status: "already-applied", id: migration.id });
+        ordinal++;
         continue;
       }
       for (const statement of migration.statements) await client.query(statement);
@@ -121,29 +127,39 @@ async function applyManifest(
         values: [migration.id, migration.checksum, toolVersion],
       });
       results.push({ status: "applied", id: migration.id });
+      ordinal++;
     }
     return { ok: true, value: results };
   } catch (cause) {
-    return { ok: false, error: postgreSqlPersistenceOperationError("migration", cause) };
+    return { ok: false, error: postgreSqlPersistenceOperationError("migration", cause, options) };
   }
 }
 
-function validManifest(manifest: PostgreSqlMigrationManifest): boolean {
-  if (manifest.schemaPreprovisioned !== undefined && typeof manifest.schemaPreprovisioned !== "boolean") return false;
+function manifestRejection(manifest: PostgreSqlMigrationManifest): Pick<PersistenceLocalRejectionDetail, "field" | "condition" | "ordinal"> | undefined {
+  if (manifest.schemaPreprovisioned !== undefined && typeof manifest.schemaPreprovisioned !== "boolean") return { field: "schema-preprovisioned", condition: "wrong-type" };
   const identifiers = new Set<string>();
   let priorIdentifier: string | undefined;
-  return manifest.migrations.every((migration) => {
-    if (
-      !migrationIdentifierPattern.test(migration.id)
-      || !checksumPattern.test(migration.checksum)
-      || migration.statements.length === 0
-      || identifiers.has(migration.id)
-      || (priorIdentifier !== undefined && migration.id <= priorIdentifier)
-    ) return false;
+  let rejected: Pick<PersistenceLocalRejectionDetail, "field" | "condition" | "ordinal"> | undefined;
+  const accepted = manifest.migrations.every((migration, ordinal) => {
+    let local: typeof rejected;
+    if (!migrationIdentifierPattern.test(migration.id)) local = { field: "migration-id", condition: "pattern", ordinal };
+    else if (!checksumPattern.test(migration.checksum)) local = { field: "checksum", condition: "pattern", ordinal };
+    else if (migration.statements.length === 0) local = { field: "statements", condition: "empty", ordinal };
+    else if (identifiers.has(migration.id)) local = { field: "migration-id", condition: "duplicate", ordinal };
+    else if (priorIdentifier !== undefined && migration.id <= priorIdentifier) local = { field: "migration-id", condition: "out-of-order", ordinal };
+    if (local !== undefined) { rejected = local; return false; }
     identifiers.add(migration.id);
     priorIdentifier = migration.id;
-    return migration.statements.every((statement) => statement.text.trim().length > 0 && !statement.text.includes("\u0000"));
+    let statementRejection: typeof rejected;
+    const statementsAccepted = migration.statements.every((statement, statementOrdinal) => {
+      if (statement.text.trim().length === 0) { statementRejection = { field: "statement", condition: "blank", ordinal: statementOrdinal }; return false; }
+      if (statement.text.includes("\u0000")) { statementRejection = { field: "statement", condition: "nul", ordinal: statementOrdinal }; return false; }
+      return true;
+    });
+    if (!statementsAccepted) rejected = statementRejection ?? { field: "statements", condition: "predicate-rejected", ordinal };
+    return statementsAccepted;
   });
+  return accepted ? undefined : rejected ?? { field: "manifest", condition: "predicate-rejected" };
 }
 
 function quoted(identifier: string): string {
@@ -157,17 +173,22 @@ function qualified(schema: string, relation: string): string {
   return `${quoted(schema)}.${quoted(relation)}`;
 }
 
-function invalidMigration(defaultMessage: string): Result<never, PlatformPersistenceError> {
+function invalidMigration(defaultMessage: string, options: PostgreSqlTransactionOptions,
+  field: PersistenceLocalRejectionDetail["field"], condition: PersistenceLocalRejectionDetail["condition"], ordinal?: number,
+  phase: PersistenceLocalRejectionDetail["phase"] = "preflight"): Result<never, PlatformPersistenceError> {
   return {
     ok: false,
-    error: {
-      ...postgreSqlPersistenceOperationError("migration"),
+    error: platformPersistenceError({
+      code: "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED",
+      messageKey: "platform.persistence.store.operation_failed",
+      params: { operation: "migration", provider_failure_class: "unknown" },
       defaultMessage,
-    },
+      ...localRejection(options, { operation: "migration", field, condition, phase, effect: phase === "preflight" ? "not-started" : "unknown", ...(ordinal === undefined ? {} : { ordinal }) }),
+    }),
   };
 }
 
-function checksumMismatch(id: string): Result<never, PlatformPersistenceError> {
+function checksumMismatch(id: string, options: PostgreSqlTransactionOptions, ordinal: number): Result<never, PlatformPersistenceError> {
   return {
     ok: false,
     error: platformPersistenceError({
@@ -175,6 +196,7 @@ function checksumMismatch(id: string): Result<never, PlatformPersistenceError> {
       defaultMessage: "Applied migration checksum does not match the reviewed manifest.",
       messageKey: "platform.persistence.migration.checksum_mismatch",
       params: { migration_id: id },
+      ...localRejection(options, { operation: "migration", field: "checksum", condition: "checksum-mismatch", phase: "after-statements", effect: "unknown", ordinal }),
     }),
   };
 }

@@ -5,7 +5,7 @@
 #   version: 5
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -51,7 +51,7 @@ PROHIBITED_VALUE_PATTERNS = (
 def load(path: Path) -> dict[str, Any] | None:
     try:
         value = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
+    except (OSError, UnicodeError, yaml.YAMLError):
         return None
     return value if isinstance(value, dict) else None
 
@@ -269,6 +269,7 @@ def invalid_identity_entry(entry: Any, workload_types: dict[str, str], declared_
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=SECRET_DEPENDENCY_ARGUMENTS_INVALID\n")
     parser.add_argument("--scope-contract", type=Path, required=True)
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
@@ -311,8 +312,8 @@ def main() -> int:
                 persistence_dependencies_value = []
             if (
                 not isinstance(persistence_dependencies_value, list)
-                or len(persistence_dependencies_value) != len(set(persistence_dependencies_value))
                 or not all(text(item) and item in declared_dependencies for item in persistence_dependencies_value)
+                or len(persistence_dependencies_value) != len(set(persistence_dependencies_value))
             ):
                 codes.append("secret-dependency-persistence-classification-invalid")
                 persistence_dependencies_value = []

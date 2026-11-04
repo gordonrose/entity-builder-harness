@@ -16,6 +16,7 @@
       "@kanbien/platform-persistence": [
         "platform/persistence/src/index.ts"
       ],
+      "@kanbien/platform-security": ["platform/security/src/index.ts"],
       "@kanbien/platform-contracts": [
         "platform/contracts/src/index.ts"
       ],

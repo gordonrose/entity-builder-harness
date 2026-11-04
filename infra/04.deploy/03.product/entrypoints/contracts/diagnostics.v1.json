@@ -1,0 +1,542 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "kanbien-core-server",
+    "definitions": [
+      {
+        "code": "kanbien-core-server.persistence-implementation-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "implementation-selection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-type",
+                "blank",
+                "surrounding-whitespace",
+                "unsupported"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "database.host",
+                      "database.port",
+                      "database.name",
+                      "database.schema",
+                      "authentication.reference",
+                      "administrator.reference"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "blank",
+                      "surrounding-whitespace",
+                      "wrong-type",
+                      "invalid-format",
+                      "invalid-integer",
+                      "out-of-range",
+                      "inconsistent-settings"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.iam-configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "authentication.username",
+                      "authentication.region"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "blank",
+                      "surrounding-whitespace",
+                      "wrong-type",
+                      "invalid-format",
+                      "invalid-integer",
+                      "out-of-range",
+                      "inconsistent-settings"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.administrator-credentials-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "administrator.credentials",
+                      "administrator.username",
+                      "administrator.password"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "blank",
+                      "surrounding-whitespace",
+                      "wrong-type",
+                      "invalid-format",
+                      "invalid-integer",
+                      "out-of-range",
+                      "inconsistent-settings",
+                      "invalid-json",
+                      "wrong-shape",
+                      "empty",
+                      "forbidden-character"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.certificate-source-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "enum",
+              "values": [
+                "database.tls.authority-source"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "blank",
+                "surrounding-whitespace",
+                "location-not-allowed",
+                "path-not-normalized",
+                "extension-not-allowed"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration-source-validation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.certificate-source-read-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration-source-read"
+              ]
+            },
+            "source": {
+              "type": "enum",
+              "values": [
+                "database.tls.authority-source"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "not-found",
+                "read-denied",
+                "not-a-directory",
+                "is-a-directory",
+                "unclassified-read-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.administration-configuration-invalid.fields",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "administrator.username",
+                      "migration.username",
+                      "runtime.username",
+                      "administration.operation"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "blank",
+                      "surrounding-whitespace",
+                      "wrong-type",
+                      "invalid-format",
+                      "invalid-integer",
+                      "out-of-range",
+                      "inconsistent-settings"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.administration-configuration-invalid.relationships",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "relationshipIssues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "relationship": {
+                    "type": "enum",
+                    "values": [
+                      "administrator-migration-separation",
+                      "administrator-runtime-separation",
+                      "migration-runtime-separation"
+                    ]
+                  },
+                  "rule": {
+                    "type": "enum",
+                    "values": [
+                      "must-differ"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "kanbien-core-server.administration-configuration-invalid.fields-and-relationships",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "administrator.username",
+                      "migration.username",
+                      "runtime.username",
+                      "administration.operation"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "blank",
+                      "surrounding-whitespace",
+                      "wrong-type",
+                      "invalid-format",
+                      "invalid-integer",
+                      "out-of-range",
+                      "inconsistent-settings"
+                    ]
+                  }
+                }
+              }
+            },
+            "relationshipIssues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "relationship": {
+                    "type": "enum",
+                    "values": [
+                      "administrator-migration-separation",
+                      "administrator-runtime-separation",
+                      "migration-runtime-separation"
+                    ]
+                  },
+                  "rule": {
+                    "type": "enum",
+                    "values": [
+                      "must-differ"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.migration-instructions-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "migration.operation"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "wrong-type",
+                      "blank",
+                      "surrounding-whitespace",
+                      "unsupported-value"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.verification-instructions-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "verification.mode",
+                      "verification.expected-record-id",
+                      "verification.expected-fingerprint"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "wrong-type",
+                      "blank",
+                      "surrounding-whitespace",
+                      "invalid-format",
+                      "unsupported-value"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

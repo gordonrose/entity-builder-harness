@@ -7,7 +7,7 @@
 #   version: 6
 #   status: active
 #   created_on: "2026-09-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -64,10 +64,15 @@ class ReconciliationError(Exception):
     """Represent one bounded failure without exposing a provider payload."""
 
 
+class SafeArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        self.exit(2, "ERROR: shell-reconciliation-arguments-invalid\n")
+
+
 def parse_arguments() -> argparse.Namespace:
     """Accept only a static check, a recurring check, or a reviewed pre-change-set check."""
 
-    parser = argparse.ArgumentParser(description="Safely reconcile the declared Kanbien staging deployment state.")
+    parser = SafeArgumentParser(description="Safely reconcile the declared Kanbien staging deployment state.")
     parser.add_argument("--validate", action="store_true", help="Validate source only; make no AWS call.")
     parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set", "role-policy-alignment", "runtime-alignment", "service-update", "service-rollback", "service-operation-status"), default="continuous")
     parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for a Foundation preflight mode.")
@@ -149,7 +154,7 @@ def load_yaml(path: Path) -> dict[str, Any]:
     try:
         with path.open(encoding="utf-8") as handle:
             document = yaml.safe_load(handle)
-    except (OSError, yaml.YAMLError) as exception:
+    except (OSError, UnicodeError, yaml.YAMLError) as exception:
         raise ReconciliationError("target-profile-unreadable") from exception
     if not isinstance(document, dict):
         raise ReconciliationError("target-profile-invalid")
@@ -504,7 +509,7 @@ def run_aws(
         try:
             completed = subprocess.run(invocation, check=True, capture_output=True, text=True, timeout=arguments.timeout_seconds)
             return json.loads(completed.stdout)
-        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exception:
+        except (OSError, UnicodeError, subprocess.SubprocessError, json.JSONDecodeError) as exception:
             if attempt == AWS_MAX_ATTEMPTS - 1:
                 raise ReconciliationError(failure_code) from exception
             time.sleep(AWS_RETRY_BACKOFF_SECONDS[attempt])
@@ -527,6 +532,8 @@ def run_check(check_id: str, check: Callable[[], None]) -> None:
         if str(exception) == "aws-verification-unavailable":
             raise ReconciliationError(f"{check_id}-verification-unavailable") from exception
         raise
+    except (AttributeError, TypeError, KeyError, IndexError, ValueError, OSError, InvalidOperation) as exception:
+        raise ReconciliationError(f"{check_id}-observation-unavailable") from exception
 
 
 def bootstrap_effects_receipt_path() -> Path:
@@ -542,7 +549,7 @@ def bootstrap_effects_receipt_path() -> Path:
             timeout=5,
         )
         common = Path(result.stdout.strip())
-    except (OSError, subprocess.SubprocessError) as exception:
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exception:
         raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable") from exception
     if not common.is_absolute() or common.name != ".git":
         raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable")
@@ -849,15 +856,18 @@ def main() -> int:
 
     arguments = parse_arguments()
     checks: list[dict[str, str]] = []
+    stage = "source-policy-observation-unavailable"
     try:
         policy = resolve_policy(load_yaml(Path(arguments.target_profile)))
         checks.append({"id": "source-policy", "verdict": "passed"})
         if not arguments.validate:
+            stage = "delivery-inventory-observation-unavailable"
             spec=importlib.util.spec_from_file_location("aws_response",REPOSITORY_ROOT/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
             adapter=importlib.util.module_from_spec(spec);spec.loader.exec_module(adapter)
             if not adapter.inventory_covered(REPOSITORY_ROOT):raise ReconciliationError("delivery-inventory-not-covered")
 
         if not arguments.validate and arguments.mode in {"runtime-alignment","service-update","service-rollback","service-operation-status"}:
+            stage = "shell-release-adapter-unavailable"
             spec=importlib.util.spec_from_file_location("shell_release_control",Path(__file__).with_name("release_control.py"))
             control=importlib.util.module_from_spec(spec);spec.loader.exec_module(control)
             return control.run(sys.modules[__name__],arguments,policy)
@@ -957,6 +967,10 @@ def main() -> int:
         return 0
     except ReconciliationError as exception:
         checks.append({"id": str(exception), "verdict": "blocked"})
+        print(json.dumps(result(arguments.mode, checks, "blocked"), sort_keys=True))
+        return 1
+    except (AttributeError, TypeError, KeyError, IndexError, ValueError, OSError, subprocess.SubprocessError, InvalidOperation):
+        checks.append({"id": stage, "verdict": "blocked"})
         print(json.dumps(result(arguments.mode, checks, "blocked"), sort_keys=True))
         return 1
 

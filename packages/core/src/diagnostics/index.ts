@@ -1,3 +1,11 @@
+export { defineDiagnostic, validDiagnosticDefinition } from "./definition";
+export type { DiagnosticDefinition, DiagnosticClassification } from "./definition";
+export { createDiagnosticRecord, parseDiagnosticRecord, parseRelatedDiagnosticRecords, selectDiagnosticEvidence, diagnosticRelatedRecordLimit } from "./record";
+export { deliverDiagnosticRecord, deliverDiagnosticRecords } from "./reporting/delivery";
+export type { DiagnosticRecord, DiagnosticRecordError } from "./record";
+export { validDiagnosticSchema } from "./schema";
+export type { DiagnosticDetailSchema, DiagnosticDetail } from "./schema";
+
 export const failureKinds = [
   "user_input",
   "validation",

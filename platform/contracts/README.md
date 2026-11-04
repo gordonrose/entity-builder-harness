@@ -41,6 +41,7 @@ separate.
 | `src/identifiers.ts` | Branded app, route, job, health, and API-version names plus their constructors. | `npm run platform:contracts:check` |
 | `src/flags.ts` | Feature-flag name, context, reader, and fixed test reader. | `npm run platform:contracts:check` |
 | `src/contexts.ts` | Composed runtime, request, and job contexts. | `npm run platform:contracts:check` |
+| `src/diagnostics.ts` | Diagnostic catalog registration, safe reporting context and fixed operation-context bindings. | `npm run platform:contracts:check` |
 | `src/routes.ts` | HTTP request/response, route registration, and route auth, tenant, and resource-authorization declarations. | `npm run platform:contracts:check` |
 | `src/jobs.ts` | Job handler and job-registration declarations. | `npm run platform:contracts:check` |
 | `src/observability.ts` | Provider-neutral capability action, interaction, execution, outcome, and canonical field-name vocabulary. | `npm run platform:contracts:check` |
@@ -56,6 +57,34 @@ local relative imports or public `@kanbien/core` exports only.
 
 ## Operational Nomenclature
 
+### Diagnostic context supplied once by its owner
+
+A configuration checker can report that a database port is missing without
+knowing whether it is helping server startup or a background job. Its caller
+knows that context. `platformDiagnosticContext()` checks and snapshots permitted
+capability, operation, lifecycle stage and optional correlation information.
+
+`bindPlatformDiagnosticContext(context, definitions)` checks that declaration
+and retains its context and selected diagnostic definitions. Its returned
+`PlatformDiagnosticContextBinding.select(record)` accepts only a valid report
+from that selection and returns the checked record plus fixed context, or
+undefined for rejected evidence. Callers cannot override the context at selection
+time, and later edits to supplied declarations do not alter the binding.
+
+This constructor does not read settings, discover failures, log anything or
+prove the owner's operation name is truthful. Capabilities establish the facts;
+actual caller tests establish the attribution. Existing reporting capabilities
+deliver selected evidence. Core-server startup uses this contract before any
+normal reporter exists, preserving its existing error/diagnostic and adding
+safe `diagnostic_context` to internal failure output.
+
+The [safe diagnostic standard](../../.agentic/shared/standards/require-safe-diagnostic-record.md#context-and-consumer-obligations)
+owns the rule; this README explains implementation, not another requirement.
+The [context runtime tests](tests/diagnostic-context-runtime.test.ts) cover missing
+and malformed context, retained snapshots and unregistered/misattributed reports.
+
+### Capability vocabulary
+
 `src/observability.ts` locks the vocabulary that lets logs, metrics, traces,
 and future audit/security handoffs describe the same capability without
 confusing a business action with an HTTP method or a worker-delivery decision.
@@ -65,6 +94,11 @@ interval it needs measured.
 
 An app registers profiles while mounting. Every route and job then selects one
 registered profile or supplies a bounded, controlled opt-out justification.
+Optional `errorClasses` declares up to64 unique bounded class tokens; only exact
+membership (plus the fixed native error-type groups) admits a supplied class.
+All three profile projections map other present classes to `unknown`. Registries
+retain checked immutable data snapshots. Malformed new lists use scoped
+`platform-contracts.registration-rejected/v2`; historical v1 remains unchanged.
 The complete runtime registry verifies that relationship before the process is
 ready. A profile is not a provider configuration and does not contain a
 threshold, retention period, dashboard, alert, or cloud-service name.

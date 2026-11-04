@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -101,6 +102,12 @@ def deadline() -> int | None:
     return value if isinstance(value, int) and value > 0 else None
 
 
+class AdministrationArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        report("blocked", "persistence-administration-arguments-invalid")
+        self.exit(2)
+
+
 def current_task(task: dict[str, object], requested: str, definition: str) -> str:
     prefix = f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/"
     if not requested.startswith(prefix):
@@ -124,7 +131,7 @@ def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, s
             record = json.loads(message) if isinstance(message, str) else None
         except (json.JSONDecodeError, TypeError):
             continue
-        if isinstance(record, dict) and set(record) == {"verdict", "code"} and record.get("verdict") == "accepted" and record.get("code") in allowed:
+        if isinstance(record, dict) and set(record) == {"verdict", "code"} and record.get("verdict") == "accepted" and isinstance(record.get("code"), str) and record.get("code") in allowed:
             return record["code"], "ok"
     return None, code if not ok else "persistence-administration-not-confirmed"
 
@@ -136,7 +143,50 @@ def accept(task: dict[str, object], seconds: int, operation: str) -> int:
     if observed > seconds:
         return report("blocked", "persistence-administration-completion-deadline-exceeded")
     if not MIGRATION.task_exit(task):
-        return report("blocked", "persistence-administration-unsuccessful-completion")
+        # Use the task's actual log stream and a closed reader; never replay it.
+        arn = task.get("taskArn")
+        known_facts = {}
+        if isinstance(arn, str) and re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}", arn):
+            known_facts["administration_task"] = arn.rsplit("/", 1)[-1]
+        if isinstance(arn, str) and arn.rsplit("/", 1)[-1]:
+            ok, events, _ = MIGRATION.aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", f"persistence-administration/persistence-administration/{arn.rsplit('/', 1)[-1]}", "--start-from-head")
+            contract = None
+            try:
+                contract = module(ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py", "administration_safe_diagnostics")
+                failure, observation = contract.collect_persistence_task_failure(events, "administration") if ok and "administration_task" in known_facts else (None, "failed" if not ok else "unavailable")
+                known_facts["task_log_observation"] = observation
+                if failure is not None:
+                    return report("blocked", "persistence-administration-unsuccessful-completion", facts={**known_facts, "safe_result_code": failure["code"], "task_failure": failure})
+            except Exception:
+                known_facts["task_log_observation"] = "failed"
+            for event in events.get("events", []) if ok and isinstance(events, dict) else []:
+                try:
+                    value = json.loads(event.get("message"))
+                    if not {"verdict", "code", "diagnostic"} <= set(value) or set(value) - {"verdict", "code", "diagnostic", "related_diagnostics"} or value["verdict"] != "rejected":
+                        continue
+                    iam_preflight = operation == "prove-effective-privilege" and value["code"] == "PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED"
+                    if contract is None:
+                        contract = module(ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py", "administration_safe_diagnostics")
+                    native_record = value["diagnostic"]
+                    operational_family = isinstance(native_record, dict) and isinstance(native_record.get("code"), str) and native_record["code"].startswith(("persistence.", "core."))
+                    diagnostic = contract.validate_runtime_diagnostic(native_record, "administration" if operational_family else None, allow_core_source=True)
+                    operational = diagnostic["code"].startswith("core.") or (diagnostic["code"].startswith("persistence.") and diagnostic["detail"].get("operation") == "administration")
+                    if value["code"] == "PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID" and operational:
+                        continue
+                    if value["code"] != "PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID" and not iam_preflight and not operational:
+                        continue
+                    if iam_preflight and diagnostic["code"] != "kanbien-core-server.iam-configuration-invalid" and not operational:
+                        continue
+                    safe_code = value["code"] if value["code"] in {"PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID", "PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED", "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED", "PERSISTENCE_ADMINISTRATION_ACCESS_DENIED", "PERSISTENCE_ADMINISTRATION_CREDENTIAL_REJECTED"} else "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED"
+                    facts = {**known_facts, "safe_result_code": safe_code, "diagnostic": diagnostic}
+                    if "related_diagnostics" in value:
+                        if not operational:
+                            continue
+                        facts["related_diagnostics"] = contract.validate_related_diagnostics(value["related_diagnostics"], diagnostic)
+                    return report("blocked", "persistence-administration-unsuccessful-completion", facts=facts)
+                except Exception:
+                    continue
+        return report("blocked", "persistence-administration-unsuccessful-completion", facts=known_facts)
     result_code, code = accepted_log(task, operation)
     if result_code is None:
         return report("blocked", code)
@@ -193,7 +243,7 @@ def reused_observation(path: Path, receipt: dict[str, object], operation: str) -
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False)
+    parser = AdministrationArgumentParser(add_help=False)
     # Keep this literal tuple beside the controller contract.  The declaration
     # coverage gate intentionally reads the controller's permitted operations
     # without executing it, so a computed dictionary view is insufficient.

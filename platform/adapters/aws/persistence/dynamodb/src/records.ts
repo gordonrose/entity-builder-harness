@@ -36,6 +36,8 @@ import {
   type PlatformOutboxRecord,
   type PlatformProcessingRecord,
 } from "@kanbien/platform-persistence";
+import type { AttributeObservation } from "./observations";
+import type { PersistenceStoredAttributeDetail } from "@kanbien/platform-persistence";
 
 export type DynamoDbPersistenceItem = Record<string, AttributeValue>;
 
@@ -137,7 +139,8 @@ export function recordChangeToItem(change: RecordChange): DynamoDbPersistenceIte
   };
 }
 
-export function itemToOutboxRecord(item: DynamoDbPersistenceItem): PlatformOutboxRecord {
+export function itemToOutboxRecord(item: DynamoDbPersistenceItem, observation?: AttributeObservation): PlatformOutboxRecord {
+  const { requiredString, optionalString, requiredNumber, requiredIso, requiredResult, requiredOutboxState, itemToLease } = rowDecoder(observation);
   const entry = outboxEntry({
     id: outboxEntryId(requiredString(item, "outboxEntryId")),
     subject: recordReference({
@@ -163,7 +166,8 @@ export function itemToOutboxRecord(item: DynamoDbPersistenceItem): PlatformOutbo
   });
 }
 
-export function itemToProcessingRecord(item: DynamoDbPersistenceItem): PlatformProcessingRecord {
+export function itemToProcessingRecord(item: DynamoDbPersistenceItem, observation?: AttributeObservation): PlatformProcessingRecord {
+  const { requiredString, optionalString, requiredNumber, requiredIso, requiredResult, requiredProcessingState, requiredProcessingOutcome, itemToLease } = rowDecoder(observation);
   const state = requiredProcessingState(requiredString(item, "state"));
   const lease = item.leaseOwner === undefined ? undefined : itemToLease(item);
   const completionOutcome = optionalString(item, "completionOutcome");
@@ -182,15 +186,16 @@ export function itemToProcessingRecord(item: DynamoDbPersistenceItem): PlatformP
   });
 }
 
-export function itemToRecordChange(item: DynamoDbPersistenceItem): RecordChange {
+export function itemToRecordChange(item: DynamoDbPersistenceItem, observation?: AttributeObservation): RecordChange {
+  const { requiredString, optionalString, requiredNumber, requiredIso, requiredResult, requiredActorKind, itemToChangedFields, rejected } = rowDecoder(observation);
   const actorKind = optionalString(item, "actorKind");
   const actorId = optionalString(item, "actorId");
   if ((actorKind === undefined) !== (actorId === undefined)) {
-    throw new TypeError("Stored lineage actor is incomplete.");
+    throw rejected("Stored lineage actor is incomplete.", "actor", "incomplete");
   }
   const action = requiredString(item, "action");
   if (action !== "created" && action !== "updated" && action !== "deleted" && action !== "restored") {
-    throw new TypeError("Stored lineage action is invalid.");
+    throw rejected("Stored lineage action is invalid.", "action", "closed-value-rejected");
   }
   return requiredResult(recordChange({
     id: recordChangeId(requiredString(item, "recordChangeId")),
@@ -228,6 +233,11 @@ function leaseToItem(lease: {
   };
 }
 
+function rowDecoder(observation?: AttributeObservation) {
+type Field = PersistenceStoredAttributeDetail["issues"][number]["field"];
+type Condition = PersistenceStoredAttributeDetail["issues"][number]["condition"];
+let field: Field = "attribute";
+const rejected = (message: string, location: Field, condition: Condition, source?: unknown, ordinal?: number): TypeError => observation?.failure(message, location, condition, source, ordinal) ?? new TypeError(message);
 function itemToLease(item: DynamoDbPersistenceItem) {
   return requiredResult(platformPersistenceLease({
     owner: requiredResult(platformPersistenceLeaseOwner(requiredString(item, "leaseOwner"))),
@@ -240,75 +250,94 @@ function itemToLease(item: DynamoDbPersistenceItem) {
 
 function itemToChangedFields(value: AttributeValue): readonly RecordChangeFieldName[] {
   if (!Array.isArray(value.L)) {
-    throw new TypeError("Stored lineage changed fields are invalid.");
+    throw rejected("Stored lineage changed fields are invalid.", "changedFields", "not-array");
   }
-  return value.L.map((field) => requiredResult(recordChangeFieldName(requiredAttributeString(field, "changedFields"))));
+  return value.L.map((attribute, ordinal) => requiredResult(recordChangeFieldName(requiredAttributeString(attribute, "changedFields", ordinal)), ordinal));
 }
 
-function requiredString(item: DynamoDbPersistenceItem, name: string): string {
+function requiredString(item: DynamoDbPersistenceItem, name: Field): string {
   const value = optionalString(item, name);
   if (value === undefined) {
-    throw new TypeError("Stored persistence item is missing " + name + ".");
+    throw rejected("Stored persistence item is missing " + name + ".", name, "string-component-absent");
   }
   return value;
 }
 
-function optionalString(item: DynamoDbPersistenceItem, name: string): string | undefined {
+function optionalString(item: DynamoDbPersistenceItem, name: Field): string | undefined {
+  field = name;
   const value = item[name];
   return value?.S;
 }
 
-function requiredAttributeString(value: AttributeValue, name: string): string {
+function requiredAttributeString(value: AttributeValue, name: Field, ordinal?: number): string {
+  field = name;
   if (value.S === undefined) {
-    throw new TypeError("Stored persistence item has invalid " + name + ".");
+    throw rejected("Stored persistence item has invalid " + name + ".", name, "string-component-absent", undefined, ordinal);
   }
   return value.S;
 }
 
-function requiredNumber(item: DynamoDbPersistenceItem, name: string): number {
+function requiredNumber(item: DynamoDbPersistenceItem, name: Field): number {
+  field = name;
   const raw = item[name]?.N;
   const value = raw === undefined ? Number.NaN : Number(raw);
   if (!Number.isSafeInteger(value)) {
-    throw new TypeError("Stored persistence item has invalid " + name + ".");
+    throw rejected("Stored persistence item has invalid " + name + ".", name, raw === undefined ? "number-component-absent" : "not-safe-integer");
   }
   return value;
 }
 
-function requiredIso(item: DynamoDbPersistenceItem, name: string): ISODateTime {
+function requiredIso(item: DynamoDbPersistenceItem, name: Field): ISODateTime {
   return requiredResult(isoDateTime(requiredString(item, name)));
 }
 
 function requiredOutboxState(value: string): "pending" | "leased" | "published" {
   if (value === "pending" || value === "leased" || value === "published") return value;
-  throw new TypeError("Stored outbox state is invalid.");
+  throw rejected("Stored outbox state is invalid.", "state", "closed-value-rejected");
 }
 
 function requiredProcessingState(value: string): "claimed" | "retry-eligible" | "completed" {
   if (value === "claimed" || value === "retry-eligible" || value === "completed") return value;
-  throw new TypeError("Stored processing state is invalid.");
+  throw rejected("Stored processing state is invalid.", "state", "closed-value-rejected");
 }
 
 function requiredProcessingOutcome(value: string): "succeeded" | "terminal-failure" {
   if (value === "succeeded" || value === "terminal-failure") return value;
-  throw new TypeError("Stored processing outcome is invalid.");
+  throw rejected("Stored processing outcome is invalid.", "completionOutcome", "closed-value-rejected");
 }
 
 function requiredActorKind(value: string): "principal" | "system" {
+  field = "actorId";
   if (value === "principal" || value === "system") return value;
-  throw new TypeError("Stored lineage actor kind is invalid.");
+  throw rejected("Stored lineage actor kind is invalid.", "actorKind", "closed-value-rejected");
 }
-
-function stringValue(value: string): AttributeValue {
-  return { S: value };
-}
-
-function numberValue(value: number): AttributeValue {
-  return { N: String(value) };
-}
-
-function requiredResult<TValue>(result: { readonly ok: true; readonly value: TValue } | { readonly ok: false }): TValue {
+function requiredResult<TValue>(result: { readonly ok: true; readonly value: TValue } | { readonly ok: false }, ordinal?: number): TValue {
   if (!result.ok) {
-    throw new TypeError("Stored persistence item violated a Core or platform contract.");
+    let source: unknown;
+    let condition: Condition = "contract-rejected";
+    try {
+      const error = Object.getOwnPropertyDescriptor(result, "error"); source = error && "value" in error ? error.value : undefined;
+      const detail = ownValue(ownValue(source, "diagnosticRecord"), "detail");
+      const reason = ownValue(detail, "condition") ?? ownValue(detail, "reason");
+      const sourceField = ownValue(detail, "field");
+      if (sourceField === "changed-fields") field = "changedFields";
+      else if (sourceField === "actor-id") field = "actorId";
+      else if (sourceField === "expiry") field = "leaseExpiresAt";
+      if (reason === "too-many" || reason === "duplicate" || reason === "empty" || reason === "untrimmed" || reason === "not-positive" || reason === "negative" || reason === "not-integer" || reason === "not-after-acquisition") condition = reason;
+      else if (reason === "invalid-format" || reason === "pattern") condition = "invalid-format";
+    } catch { /* Unknown optional source detail remains a contract rejection. */ }
+    throw rejected("Stored persistence item violated a Core or platform contract.", field, condition, source, ordinal);
   }
   return result.value;
 }
+return { requiredString, optionalString, requiredNumber, requiredIso, requiredResult, requiredOutboxState, requiredProcessingState, requiredProcessingOutcome, requiredActorKind, itemToLease, itemToChangedFields, rejected };
+}
+
+function ownValue(value: unknown, key: string): unknown {
+  if (typeof value !== "object" || value === null) return undefined;
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  return descriptor !== undefined && "value" in descriptor ? descriptor.value : undefined;
+}
+
+function stringValue(value: string): AttributeValue { return { S: value }; }
+function numberValue(value: number): AttributeValue { return { N: String(value) }; }

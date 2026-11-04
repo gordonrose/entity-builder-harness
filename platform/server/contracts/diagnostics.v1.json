@@ -1,0 +1,851 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "platform-server",
+    "definitions": [
+      {
+        "code": "platform-server.operation-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "errorCode": {
+              "type": "enum",
+              "values": [
+                "PLATFORM_SERVER_MOUNT_FAILED",
+                "PLATFORM_SERVER_CONFIG_INVALID",
+                "PLATFORM_SERVER_START_FAILED",
+                "PLATFORM_SERVER_ROUTE_NOT_FOUND",
+                "PLATFORM_SERVER_METHOD_NOT_ALLOWED",
+                "PLATFORM_SERVER_RATE_LIMITED",
+                "PLATFORM_SERVER_UNAUTHENTICATED",
+                "PLATFORM_SERVER_FORBIDDEN",
+                "PLATFORM_SERVER_RESOURCE_NOT_FOUND",
+                "PLATFORM_SERVER_TENANT_RESOLVER_REQUIRED",
+                "PLATFORM_SERVER_AUTHORIZER_REQUIRED",
+                "PLATFORM_SERVER_AUTHZ_MAPPING_INVALID",
+                "PLATFORM_SERVER_TRANSPORT_CONFIG_INVALID",
+                "PLATFORM_SERVER_INVALID_REQUEST",
+                "PLATFORM_SERVER_PAYLOAD_TOO_LARGE",
+                "PLATFORM_SERVER_UNSUPPORTED_MEDIA_TYPE",
+                "PLATFORM_SERVER_REQUEST_TIMEOUT",
+                "PLATFORM_SERVER_SERVICE_UNAVAILABLE",
+                "PLATFORM_SERVER_HANDLER_FAILED"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration",
+                "mount",
+                "lifecycle",
+                "listen",
+                "authentication",
+                "authorization",
+                "tenant-resolution",
+                "context",
+                "readiness",
+                "request-validation",
+                "admission",
+                "handler",
+                "response",
+                "shutdown"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid",
+                "rejected",
+                "unavailable",
+                "deadline-exceeded",
+                "unclassified"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "rejected",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.listener-configuration-selected",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "http.host",
+                "http.port"
+              ]
+            },
+            "source": {
+              "type": "enum",
+              "values": [
+                "environment",
+                "process-option",
+                "default"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "provided",
+                "missing",
+                "empty",
+                "explicit-override"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "selected",
+                "default-selected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.port-configuration-fallback",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "http.port"
+              ]
+            },
+            "source": {
+              "type": "enum",
+              "values": [
+                "default"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "not-numeric",
+                "not-finite",
+                "not-integer",
+                "below-minimum",
+                "above-maximum"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "default-selected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.health-exposure-selected",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "http.health.liveness-exposure",
+                "http.health.readiness-exposure"
+              ]
+            },
+            "source": {
+              "type": "enum",
+              "values": [
+                "environment",
+                "default",
+                "authentication-default"
+              ]
+            },
+            "exposure": {
+              "type": "enum",
+              "values": [
+                "public",
+                "authenticated"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "provided",
+                "missing",
+                "empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "selected",
+                "default-selected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.health-exposure-fallback",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "http.health.liveness-exposure",
+                "http.health.readiness-exposure"
+              ]
+            },
+            "source": {
+              "type": "enum",
+              "values": [
+                "default",
+                "authentication-default"
+              ]
+            },
+            "exposure": {
+              "type": "enum",
+              "values": [
+                "public",
+                "authenticated"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unsupported"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "default-selected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.transport-configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "maxRequestBodyBytes",
+                "maxHeaderBytes",
+                "maxHeadersCount",
+                "headersTimeoutMs",
+                "requestTimeoutMs",
+                "keepAliveTimeoutMs",
+                "handlerTimeoutMs",
+                "shutdownDrainTimeoutMs",
+                "maxConcurrentRequests",
+                "maxRequestsPerSocket"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-type",
+                "not-finite",
+                "not-integer",
+                "not-positive"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.transport-configuration-inconsistent",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "relationship": {
+              "type": "enum",
+              "values": [
+                "headers-within-request-timeout"
+              ]
+            },
+            "rule": {
+              "type": "enum",
+              "values": [
+                "less-than-or-equal"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.transport-request-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "platform",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "url-invalid",
+                "method-unsupported",
+                "server-closing",
+                "concurrency-capacity-reached",
+                "declared-length-not-integer",
+                "declared-length-negative",
+                "declared-length-over-limit",
+                "streamed-body-over-limit",
+                "media-type-missing",
+                "media-type-empty",
+                "media-type-unsupported",
+                "body-decoding-threw",
+                "handler-deadline-observed",
+                "handler-result-unavailable"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "metadata",
+                "admission",
+                "body",
+                "handler"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "request-rejected",
+                "handler-still-pending",
+                "handler-result-not-returned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.transport-boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "metadata",
+                "admission",
+                "body-stream",
+                "handler",
+                "late-handler",
+                "response-headers",
+                "response-status",
+                "response-serialization",
+                "response-end",
+                "failure-projection",
+                "server-construction",
+                "listen",
+                "client-error",
+                "server-error",
+                "close-invocation",
+                "close-callback"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "error-event",
+                "callback-error"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "request-not-returned",
+                "handler-settled",
+                "listener-not-returned",
+                "close-not-confirmed",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.transport-state-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "platform",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "response-already-ended",
+                "response-destroyed",
+                "response-closed-before-end",
+                "drain-deadline-observed"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "response",
+                "shutdown"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "response-skipped",
+                "abort-requested",
+                "shutdown-still-pending"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.client-address-trust-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "http.client-address-trust"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unsupported"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.client-address-fallback-selected",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "platform",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "client-address-selection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "forwarded-header-missing",
+                "forwarded-final-address-invalid"
+              ]
+            },
+            "source": {
+              "type": "enum",
+              "values": [
+                "socket-peer",
+                "unavailable"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "fallback-selected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.configuration-omitted",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "release.source-commit",
+                "http.cors-origin",
+                "http.cors-allowlist"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "empty",
+                "normalization-empty",
+                "format-rejected"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "omitted"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.process-boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "startup-log",
+                "shutdown-log",
+                "shutdown-close",
+                "signal-registration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "boundary-threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "process-not-returned",
+                "shutdown-not-completed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.request-predicate-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "platform",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "tenant-result",
+                "tenantId",
+                "isolationKey",
+                "resource-result",
+                "resource.kind",
+                "resource.disclosure",
+                "principal",
+                "authorizer",
+                "request-body",
+                "resource",
+                "route"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "object-required",
+                "string-required",
+                "nonempty-required",
+                "kind-rejected",
+                "disclosure-rejected",
+                "unavailable",
+                "validator-rejected",
+                "not-found",
+                "forbidden-disclosure",
+                "method-not-registered",
+                "path-not-registered",
+                "tenant-unavailable"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "tenant-resolution",
+                "resource-resolution",
+                "authorization",
+                "request-validation",
+                "routing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "handler-not-invoked"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-server.request-boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "request-clock",
+                "request-identity",
+                "route-selection",
+                "route-parameter-decoding",
+                "tenant-resolution",
+                "resource-resolution",
+                "authorization",
+                "request-validation",
+                "handler",
+                "response",
+                "context"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "boundary-threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "handler-not-invoked",
+                "handler-invocation-outcome-unknown",
+                "handler-completed-response-not-returned"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -41,18 +41,38 @@ Usage:
 EOF
 }
 
+run_stage() {
+  local stage="$1" effect="$2" capture status
+  shift 2
+  if ! capture="$(mktemp -d 2>/dev/null)"; then
+    echo 'ERROR: BACKFILL_OBSERVATION_FAILED stage=child-capture condition=unavailable effect=not-assessed' >&2
+    return 1
+  fi
+  if { "$@" > "$capture/out" 2> "$capture/err"; } 2>/dev/null; then
+    status=0
+    cat "$capture/out" 2>/dev/null || echo 'ERROR: BACKFILL_OBSERVATION_FAILED stage=child-output condition=unavailable effect=not-assessed' >&2
+    cat "$capture/err" >&2 2>/dev/null || echo 'ERROR: BACKFILL_OBSERVATION_FAILED stage=child-output condition=unavailable effect=not-assessed' >&2
+  else
+    status=$?
+    printf 'ERROR: BACKFILL_CHILD_FAILED stage=%s condition=child-failed effect=%s child_status=%s\n' "$stage" "$effect" "$status" >&2
+  fi
+  rm -rf -- "$capture" 2>/dev/null || true
+  return "$status"
+}
+
 record_and_checkpoint() {
   local sha="$1"
   local message="$2"
   local summary="$3"
   local adr_impact="${4:-No ADR impact.}"
+  local effect="${5:-not-assessed}"
 
-  bash scripts/00.chat/session-log/record-chat-commit/script.sh "$sha" "$message" "$summary" "$adr_impact"
+  run_stage record-session "$effect" bash scripts/00.chat/session-log/record-chat-commit/script.sh "$sha" "$message" "$summary" "$adr_impact"
 
   local dirty
-  dirty="$(git status --short --untracked-files=no)"
+  dirty="$(run_stage record-status "$effect" git status --short --untracked-files=no)"
   if [[ -n "$dirty" ]]; then
-    bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+    run_stage checkpoint-session "$effect" bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
   fi
 }
 
@@ -63,22 +83,39 @@ import json
 import sys
 from pathlib import Path
 
-summary = json.loads(Path(sys.argv[1]).read_text()).get("summary", {})
-checks = {
-    "legacy_artifacts": summary.get("legacy_artifacts"),
-    "skipped": summary.get("skipped"),
-    "duplicate_ids": summary.get("duplicate_ids"),
-}
-errors = [f"{key}={value}" for key, value in checks.items() if value != 0]
+try:
+    content = Path(sys.argv[1]).read_text()
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=index-read condition=native-failure effect=headers-written") from None
+try:
+    parsed = json.loads(content)
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=index-parse condition=native-failure effect=headers-written") from None
+try:
+    summary = parsed.get("summary", {})
+    checks = {
+        "legacy_artifacts": summary.get("legacy_artifacts"),
+        "skipped": summary.get("skipped"),
+        "duplicate_ids": summary.get("duplicate_ids"),
+    }
+    errors = [key for key, value in checks.items() if value != 0]
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=index-projection condition=native-failure effect=headers-written") from None
 if errors:
-    raise SystemExit("artifact metadata index validation failed: " + ", ".join(errors))
-print(
-    "artifact metadata index ok: "
-    f"artifacts={summary.get('artifacts')} "
-    f"legacy={summary.get('legacy_artifacts')} "
-    f"skipped={summary.get('skipped')} "
-    f"duplicates={summary.get('duplicate_ids')}"
-)
+    raise SystemExit("ERROR: BACKFILL_INDEX_REJECTED stage=index-comparison condition=zero-comparison-rejected fields=" + ",".join(errors) + " effect=headers-written")
+artifact_count = summary.get("artifacts")
+if not (artifact_count is None or isinstance(artifact_count, (int, float))):
+    artifact_count = "unavailable"
+try:
+    print(
+        "artifact metadata index ok: "
+        f"artifacts={artifact_count} "
+        f"legacy={summary.get('legacy_artifacts')} "
+        f"skipped={summary.get('skipped')} "
+        f"duplicates={summary.get('duplicate_ids')}"
+    )
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=index-output condition=native-failure effect=headers-written") from None
 PY
 }
 
@@ -90,18 +127,31 @@ from pathlib import Path
 
 try:
     import yaml
-except Exception as exc:
-    raise SystemExit(f"PyYAML is required for YAML validation: {exc}")
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=yaml-dependency condition=unavailable effect=headers-written") from None
 
-paths = [Path(line.strip()) for line in Path(sys.argv[1]).read_text().splitlines() if line.strip()]
+try:
+    paths = [Path(line.strip()) for line in Path(sys.argv[1]).read_text().splitlines() if line.strip()]
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=yaml-path-list condition=native-failure effect=headers-written") from None
 yaml_paths = [path for path in paths if path.suffix.lower() in {".yml", ".yaml"}]
-for path in yaml_paths:
-    with path.open("r", encoding="utf-8") as handle:
-        yaml.safe_load(handle)
-if yaml_paths:
-    print(f"yaml parse ok: {len(yaml_paths)} files")
-else:
-    print("yaml parse skipped: no YAML files in batch")
+for ordinal, path in enumerate(yaml_paths):
+    try:
+        handle = path.open("r", encoding="utf-8")
+    except Exception:
+        raise SystemExit(f"ERROR: BACKFILL_OBSERVATION_FAILED stage=yaml-read condition=native-failure effect=headers-written ordinal={ordinal}") from None
+    try:
+        with handle:
+            yaml.safe_load(handle)
+    except Exception:
+        raise SystemExit(f"ERROR: BACKFILL_OBSERVATION_FAILED stage=yaml-parse condition=native-failure effect=headers-written ordinal={ordinal}") from None
+try:
+    if yaml_paths:
+        print(f"yaml parse ok: {len(yaml_paths)} files")
+    else:
+        print("yaml parse skipped: no YAML files in batch")
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=yaml-output condition=native-failure effect=headers-written") from None
 PY
 }
 
@@ -126,33 +176,43 @@ from pathlib import Path
 ROOTS = [Path(".agentic"), Path("docs"), Path("scripts")]
 EXTENSIONS = {".md", ".yml", ".yaml", ".sh"}
 counts = {"v2": 0, "v3": 0, "legacy": 0, "missing": 0}
-for root in ROOTS:
-    if not root.exists():
-        continue
-    for path in root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in EXTENSIONS:
+stage = "status-discovery"
+try:
+    for root in ROOTS:
+        if not root.exists():
             continue
-        text = path.read_text(encoding="utf-8")
-        # Inspect only the first header, never examples in the document body.
-        lines = text.splitlines()
-        header_lines = []
-        for index, line in enumerate(lines[:120]):
-            if "agentic-artifact:" not in line and "agentic-script:" not in line:
+        for path in root.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in EXTENSIONS:
                 continue
-            for following in lines[index + 1:]:
-                if "-->" in following or not following.strip():
-                    break
-                header_lines.append(following.lstrip("# /"))
-            break
-        if "schema: agentic-artifact/v3" in header_lines:
-            counts["v3"] += 1
-        elif "schema: agentic-artifact/v2" in header_lines:
-            counts["v2"] += 1
-        elif "agentic-artifact:" in text or "agentic-script:" in text:
-            counts["legacy"] += 1
-        else:
-            counts["missing"] += 1
-print(f"v2={counts['v2']} v3={counts['v3']} legacy={counts['legacy']} missing={counts['missing']}")
+            stage = "status-read"
+            text = path.read_text(encoding="utf-8")
+            stage = "status-projection"
+            # Inspect only the first header, never examples in the document body.
+            lines = text.splitlines()
+            header_lines = []
+            for index, line in enumerate(lines[:120]):
+                if "agentic-artifact:" not in line and "agentic-script:" not in line:
+                    continue
+                for following in lines[index + 1:]:
+                    if "-->" in following or not following.strip():
+                        break
+                    header_lines.append(following.lstrip("# /"))
+                break
+            if "schema: agentic-artifact/v3" in header_lines:
+                counts["v3"] += 1
+            elif "schema: agentic-artifact/v2" in header_lines:
+                counts["v2"] += 1
+            elif "agentic-artifact:" in text or "agentic-script:" in text:
+                counts["legacy"] += 1
+            else:
+                counts["missing"] += 1
+            stage = "status-discovery"
+except Exception:
+    raise SystemExit(f"ERROR: BACKFILL_OBSERVATION_FAILED stage={stage} condition=native-failure effect=not-started") from None
+try:
+    print(f"v2={counts['v2']} v3={counts['v3']} legacy={counts['legacy']} missing={counts['missing']}")
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=status-output condition=native-failure effect=not-started") from None
 PY
     exit 0
     ;;
@@ -169,9 +229,17 @@ PY
     ;;
 esac
 
-paths_file="$(mktemp)"
-index_json="$(mktemp)"
-trap 'rm -f "$paths_file" "$index_json"' EXIT
+if paths_file="$(mktemp 2>/dev/null)"; then :; else
+  status=$?
+  echo 'ERROR: BACKFILL_OBSERVATION_FAILED stage=path-list-temporary condition=unavailable effect=not-started' >&2
+  exit "$status"
+fi
+if index_json="$(mktemp 2>/dev/null)"; then :; else
+  status=$?
+  echo 'ERROR: BACKFILL_OBSERVATION_FAILED stage=index-temporary condition=unavailable effect=not-started' >&2
+  exit "$status"
+fi
+trap 'rm -f "$paths_file" "$index_json" 2>/dev/null || echo "ERROR: BACKFILL_OBSERVATION_FAILED stage=temporary-cleanup condition=unavailable effect=not-assessed" >&2' EXIT
 
 python3 - "$batch" > "$paths_file" <<'PY'
 from __future__ import annotations
@@ -181,9 +249,33 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import yaml
+try:
+    import yaml
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_OBSERVATION_FAILED stage=batch-dependency condition=unavailable effect=not-started") from None
 
-batch = int(sys.argv[1])
+try:
+    batch = int(sys.argv[1])
+except Exception:
+    raise SystemExit("ERROR: BACKFILL_BATCH_REJECTED stage=batch-input condition=integer-conversion-failed effect=not-started") from None
+
+
+class BackfillFailure(ValueError):
+    def __init__(self, stage: str, condition: str, message: str = "Backfill observation failed"):
+        super().__init__(message)
+        self.stage = stage
+        self.condition = condition
+
+
+def at(stage: str, action):
+    try:
+        return action()
+    except BackfillFailure:
+        raise
+    except Exception:
+        raise BackfillFailure(stage, "native-failure") from None
+
+
 EXTENSIONS = {".md", ".yml", ".yaml", ".sh"}
 ALLOWED_REF_PREFIXES = (
     ".agentic/",
@@ -244,7 +336,7 @@ def strip_comment(line: str) -> str:
 
 
 def parse_header(path: Path) -> dict[str, Any]:
-    lines = path.read_text(encoding="utf-8").splitlines()[:120]
+    lines = at("header-read", lambda: path.read_text(encoding="utf-8")).splitlines()[:120]
     for index, line in enumerate(lines):
         if "agentic-artifact:" not in line and "agentic-script:" not in line:
             continue
@@ -270,7 +362,7 @@ def parse_header(path: Path) -> dict[str, Any]:
                 if not following.strip():
                     break
                 break
-        parsed = yaml.safe_load("\n".join(header_lines)) or {}
+        parsed = at("header-parse", lambda: yaml.safe_load("\n".join(header_lines))) or {}
         return parsed if isinstance(parsed, dict) else {}
     return {}
 
@@ -289,10 +381,10 @@ def existing_metadata(path: Path) -> dict[str, Any]:
 def has_versioned_header(path: Path) -> bool:
     metadata = existing_metadata(path)
     schema = metadata.get("schema")
-    if schema in {"agentic-artifact/v2", "agentic-artifact/v3"}:
+    if at("header-schema", lambda: schema in {"agentic-artifact/v2", "agentic-artifact/v3"}):
         return True
-    if "schema" in metadata and schema not in {"agentic-artifact/v1", "agentic-script/v1"}:
-        raise ValueError(f"Unsupported metadata schema in {path}: {schema}")
+    if "schema" in metadata and at("header-schema", lambda: schema not in {"agentic-artifact/v1", "agentic-script/v1"}):
+        raise BackfillFailure("header-schema", "unsupported", "Unsupported metadata schema")
     return False
 
 
@@ -360,11 +452,11 @@ def selected_for_batch(path: Path) -> bool:
         return s.startswith("scripts/01.harness/") and "/artifact-metadata/" not in s
     if batch == 15:
         return s == "scripts/00.chat/README.md" or s.startswith(("docs/aws/", "docs/education/"))
-    raise SystemExit(f"Unknown batch: {batch}")
+    raise SystemExit("ERROR: BACKFILL_BATCH_REJECTED stage=batch-selection condition=unsupported effect=not-started")
 
 
 def title_from_markdown(path: Path) -> str | None:
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in at("title-read", lambda: path.read_text(encoding="utf-8")).splitlines():
         stripped = line.strip()
         if stripped.startswith("#"):
             return stripped.lstrip("#").strip().rstrip(".")
@@ -705,26 +797,35 @@ def insert_position_for_script(text: str) -> int:
 
 
 def replace_header(path: Path, payload: dict[str, Any]) -> None:
-    text = path.read_text(encoding="utf-8")
-    header = render_comment_header(payload) if path.suffix in {".sh", ".yml", ".yaml"} else render_html_header(payload)
+    text = at("rewrite-read", lambda: path.read_text(encoding="utf-8"))
+    header = at("header-render", lambda: render_comment_header(payload) if path.suffix in {".sh", ".yml", ".yaml"} else render_html_header(payload))
     span = header_span(text)
     if span:
         start, end = span
-        path.write_text(text[:start] + header + text[end:].lstrip("\n"), encoding="utf-8")
+        at("header-write", lambda: path.write_text(text[:start] + header + text[end:].lstrip("\n"), encoding="utf-8"))
         return
     if path.suffix == ".sh":
         position = insert_position_for_script(text)
-        path.write_text(text[:position] + "\n" + header + text[position:].lstrip("\n"), encoding="utf-8")
+        at("header-write", lambda: path.write_text(text[:position] + "\n" + header + text[position:].lstrip("\n"), encoding="utf-8"))
         return
-    path.write_text(header + text.lstrip("\n"), encoding="utf-8")
+    at("header-write", lambda: path.write_text(header + text.lstrip("\n"), encoding="utf-8"))
 
-selected = [path for path in all_artifacts() if selected_for_batch(path)]
-if not selected:
-    raise SystemExit(f"Batch {batch} has no remaining artifacts requiring v2 backfill.")
-for path in selected:
-    replace_header(path, v2_payload(path))
-for path in selected:
-    print(path.as_posix())
+completed_writes = 0
+ordinal = None
+try:
+    selected = at("batch-selection", lambda: [path for path in at("discovery", all_artifacts) if selected_for_batch(path)])
+    if not selected:
+        raise SystemExit("ERROR: BACKFILL_BATCH_REJECTED stage=batch-selection condition=no-remaining-artifacts effect=not-started")
+    for ordinal, path in enumerate(selected):
+        payload = at("payload", lambda: v2_payload(path))
+        at("header-rewrite", lambda: replace_header(path, payload))
+        completed_writes += 1
+    for path in selected:
+        at("path-output", lambda: print(path.as_posix()))
+except BackfillFailure as failure:
+    effect = "current-write-unknown" if failure.stage == "header-write" else "prior-writes-returned" if completed_writes else "not-started"
+    location = "" if ordinal is None else f" ordinal={ordinal}"
+    raise SystemExit(f"ERROR: BACKFILL_OBSERVATION_FAILED stage={failure.stage} condition={failure.condition} effect={effect} completed_writes={completed_writes}{location}") from None
 PY
 
 mapfile -t changed_paths < "$paths_file"
@@ -735,15 +836,15 @@ fi
 
 echo "Backfilled batch $batch (${#changed_paths[@]} files)."
 
-bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths "${changed_paths[@]}"
-bash scripts/01.harness/artifact-metadata/generate-index/script.sh --paths "${changed_paths[@]}" --strict > "$index_json"
+run_stage header-check headers-written bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths "${changed_paths[@]}"
+run_stage artifact-index headers-written bash scripts/01.harness/artifact-metadata/generate-index/script.sh --paths "${changed_paths[@]}" --strict > "$index_json"
 validate_index_json "$index_json"
 validate_yaml_paths "$paths_file"
 
-git add -- "${changed_paths[@]}"
-bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+run_stage git-stage staging-outcome-unknown git add -- "${changed_paths[@]}"
+run_stage session-prepare git-stage-returned bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 
-commit_message="$(python3 - "$batch" <<'PY'
+commit_message="$(run_stage commit-message git-stage-returned python3 - "$batch" <<'PY'
 import sys
 messages = {
     1: "Backfill governance root metadata headers",
@@ -766,7 +867,7 @@ print(messages[int(sys.argv[1])])
 PY
 )"
 
-commit_summary="$(python3 - "$batch" <<'PY'
+commit_summary="$(run_stage commit-summary git-stage-returned python3 - "$batch" <<'PY'
 import sys
 summaries = {
     1: "Backfilled artifact metadata v2 headers for harness/shared governance root artifacts.",
@@ -789,8 +890,8 @@ print(summaries[int(sys.argv[1])])
 PY
 )"
 
-git commit -m "$commit_message"
-commit_sha="$(git rev-parse --short HEAD)"
-record_and_checkpoint "$commit_sha" "$commit_message" "$commit_summary" "No ADR impact."
+run_stage git-commit commit-outcome-unknown git commit -m "$commit_message"
+commit_sha="$(run_stage commit-identity commit-returned git rev-parse --short HEAD)"
+record_and_checkpoint "$commit_sha" "$commit_message" "$commit_summary" "No ADR impact." commit-returned
 
 echo "Completed batch $batch at $commit_sha."

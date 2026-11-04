@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import { inspectIndex, inspectModuleDependencies } from "../../../scripts/repo/module-structure/check.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const srcRoot = path.join(packageRoot, "src");
@@ -48,7 +49,16 @@ async function walk(dir) {
 
 const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
 const exportEntries = Object.entries(packageJson.exports ?? {});
-const exportedModules = exportEntries
+const assetEntries = exportEntries.filter(([, target]) => typeof target === "string" && target.endsWith(".json"));
+assertSameValues(assetEntries.map(([key]) => key), ["./config/diagnostics.v1.json"], "public JSON assets");
+for (const [key, target] of assetEntries) {
+  assert.equal(target, "./src/config/contract/reporting/diagnostics.v1.json", `${key} must name its module-owned generated asset`);
+  assert.equal((await stat(path.join(packageRoot, target))).isFile(), true);
+  const asset = JSON.parse(await readFile(path.join(packageRoot, target), "utf8"));
+  assert.equal(asset.schema, "core/diagnostic-catalog-export/v1");
+  assert.equal(asset.catalog.owner, "core.config");
+}
+const exportedModules = exportEntries.filter(([, target]) => typeof target !== "string" || !target.endsWith(".json"))
   .filter(([key]) => key !== ".")
   .map(([key]) => {
     assert.ok(key.startsWith("./"), `package export ${key} must be a subpath export`);
@@ -78,11 +88,22 @@ for (const moduleName of expectedModules) {
 const sourceFiles = (await walk(srcRoot)).filter((file) => file.endsWith(".ts"));
 assert.ok(sourceFiles.length > expectedModules.length, "core should expose module files");
 
+assert.deepEqual(
+  inspectIndex("packages/core/src/config/index.ts", await readFile(path.join(srcRoot, "config/index.ts"), "utf8")).findings,
+  [],
+  "config public index must only expose implementation owned by dedicated files",
+);
+
 const importSpecifierPatterns = [
   /\bimport\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']/g,
   /\bexport\s+(?:type\s+)?[^"']*?\s+from\s+["']([^"']+)["']/g,
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];
+const coreSources = new Map(await Promise.all(sourceFiles.map(async file => [
+  `packages/core/${path.relative(packageRoot, file).split(path.sep).join('/')}`,
+  await readFile(file, 'utf8'),
+])));
+assert.deepEqual(inspectModuleDependencies(coreSources).findings, [], 'adopted Core modules must keep contract/capability dependencies acyclic and public');
 const forbiddenRuntimeWords = /\b(?:S3|Kafka|Redis|Fastify|Prisma|DynamoDB|CloudWatch)\b/;
 
 for (const file of sourceFiles) {

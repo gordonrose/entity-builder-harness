@@ -42,8 +42,7 @@ async function main(): Promise<void> {
   });
   equal(ready.status, "ready");
   equal(platformHealthHttpStatus(ready.status), 200);
-  equal(ready.checks[0]?.metadata?.["secret"], "[REDACTED]");
-  equal(ready.checks[0]?.metadata?.["dependency"], "ready");
+  deepEqual(ready.checks[0]?.metadata, { dependency: "ready" });
 
   const notReady = await platformReadiness({
     lifecycleReady: false,
@@ -67,7 +66,7 @@ async function main(): Promise<void> {
   });
   equal(failed.status, "not-ready");
   equal(failed.checks[0]?.status, "unhealthy");
-  deepEqual(failed.checks[0]?.metadata?.["error"], { name: "Error", message: "down" });
+  deepEqual(failed.checks[0]?.metadata, { failure: "check-failed" }, "public failure detail must not depend on exception properties");
 }
 
 main()

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -42,17 +42,117 @@ import sys
 from urllib.parse import quote
 
 sys.dont_write_bytecode = True
-sys.path.insert(0, str(Path(sys.argv[1]).resolve().parents[1]))
 try:
+    sys.path.insert(0, str(Path(sys.argv[1]).resolve().parents[1]))
     from header_discovery import (
         HeaderError, header_span, is_excluded, parse_header_text, recover_legacy_baseline,
     )
-except ImportError as exc:
-    raise SystemExit(f"ERROR: artifact metadata discovery support is required: {exc}")
+except Exception:
+    raise SystemExit("ERROR: artifact metadata discovery support is required") from None
+
+
+PLAN_CONCERNS = {
+    "date-format": "{field} must be a quoted YYYY-MM-DD string",
+    "date-calendar": "{field} is not a valid calendar date",
+    "date-future": "{field} is in the future",
+    "path-symlink": "symlink paths are not supported",
+    "path-outside-repository": "path must be a repository file outside .git",
+    "path-excluded": "bootstrap output scaffolds are excluded from lifecycle updates",
+    "path-missing": "file does not exist",
+    "artifact-encoding": "artifact must be UTF-8 text",
+    "header-parse-rejected": "artifact metadata header could not be parsed",
+    "header-required": "requires an existing file-level agentic-artifact/v2 or v3 header",
+    "header-schema": "only v2 and v3 headers can be updated",
+    "header-id": "artifact requires a valid stable ID",
+    "header-status": "artifact requires a valid status",
+    "superseded-schema": "status: superseded requires an existing v3 header",
+    "notice-title": "superseded Markdown artifact requires an H1 title for the visible notice",
+    "rename-source-unavailable": "cannot establish metadata identity for the detected rename source",
+    "rename-id-mismatch": "artifact ID differs from the detected HEAD rename source",
+    "rename-ambiguous": "multiple deleted HEAD artifacts share this ID; rename baseline is ambiguous",
+    "dates-required": "v3 requires created_on and updated_on",
+    "creation-after-update": "created_on must be on or before updated_on",
+    "event-date-range": "{field} must fall between created_on and updated_on",
+    "deprecation-date-required": "existing deprecation requires --deprecated-on with a confirmed historical date",
+    "supersession-date-required": "existing supersession requires --superseded-on with a confirmed historical date",
+    "event-date-order": "deprecated_on must be on or before superseded_on",
+    "supersession-pair": "superseded_on and superseded_by must be present together",
+    "supersession-status": "supersession metadata requires status: superseded or retired",
+    "deprecation-status": "active/draft artifacts cannot retain a deprecation date",
+    "replacement-self": "superseded_by cannot refer to the same artifact ID",
+    "replacement-duplicate": "duplicate replacement ID",
+    "replacement-cycle": "supersession cycle",
+    "replacement-required": "superseded artifacts require at least one --replacement",
+    "replacement-list": "superseded_by must be an array",
+    "replacement-shape": "replacement references require an ID and repository path",
+    "replacement-path": "replacement paths must be repository-relative without parent traversal",
+    "replacement-id-mismatch": "replacement ID does not match the referenced artifact",
+    "creation-overwrite": "--created-on cannot overwrite an existing creation date",
+    "history-additions-ambiguous": "Multiple addition events indicate ambiguous deletion/recreation history. Supply --created-on only with confirmed creation evidence.",
+    "history-added-path-ambiguous": "Could not identify an unambiguous original added path. Supply --created-on only with confirmed creation evidence.",
+    "history-id-mismatch": "The first-added artifact ID differs from the current ID. Supply --created-on only with confirmed creation evidence.",
+    "history-possible-rename": "No reliable addition event; possible uncommitted rename. Supply --created-on only with confirmed creation evidence.",
+    "history-shallow": "Shallow history. Supply --created-on only with confirmed creation evidence.",
+    "history-unavailable": "No reliable first-addition commit in available history. Supply --created-on only with confirmed creation evidence.",
+    "reactivation-rejected": "this bounded updater does not reactivate superseded or retired artifacts",
+    "transition-date": "a new lifecycle transition must use today's UTC date",
+    "event-overwrite": "cannot overwrite an existing {field} event",
+    "replacement-status": "--replacement requires status: superseded",
+    "creation-head-mismatch": "created_on differs from HEAD; creation dates are immutable after migration",
+    "path-duplicate": "duplicate explicit path",
+    "concurrent-change": "file changed during planning; rerun the report",
+}
 
 
 class PlanError(Exception):
-    pass
+    def __init__(self, condition, field=None):
+        # Retain the exact historical main-loop spellings for existing callers.
+        condition = {
+            "duplicate explicit path": "path-duplicate",
+            "file changed during planning; rerun the report": "concurrent-change",
+        }.get(condition, condition)
+        self.condition = condition
+        self.field = field
+        super().__init__(PLAN_CONCERNS[condition].format(field=field))
+
+
+def failure(error, stage, ordinal=None):
+    item = {"path": "<input>" if stage in ("planning", "selection") else "<planned-artifact>" if stage in ("references", "concurrent-recheck", "write") else "<batch>", "stage": stage}
+    if ordinal is not None:
+        item["ordinal"] = ordinal
+    if isinstance(error, PlanError):
+        item.update(code="lifecycle-" + error.condition, error=PLAN_CONCERNS[error.condition].format(field=error.field))
+        if error.field is not None:
+            item["field"] = error.field
+    else:
+        messages = {
+            "repository": "Repository identity could not be observed.",
+            "clock": "The current UTC lifecycle date could not be observed.",
+            "preparation-support": "Optional repository preparation support could not be loaded.",
+            "selection": "Changed artifact paths could not be observed.",
+            "planning": "Lifecycle planning could not read or interpret the selected artifact.",
+            "references": "Lifecycle replacement references could not be read or interpreted.",
+            "proposed-check": "Proposed header validation could not be completed.",
+            "concurrent-recheck": "Artifact state could not be rechecked before writing.",
+            "write": "Artifact write failed; earlier writes may already have occurred.",
+            "preparation-receipt": "Artifact preparation receipt could not be recorded; earlier artifact writes may already have occurred.",
+        }
+        item.update(code="lifecycle-" + stage + "-failed", error=messages[stage])
+    return item
+
+
+def emit_report(report, *, indent=None, validated=None):
+    try:
+        if validated is not None:
+            project_reference_reports(report, validated)
+        print(json.dumps(report, indent=indent))
+        return True
+    except Exception:
+        try:
+            print("ERROR: lifecycle-reporting-failed", file=sys.stderr)
+        except Exception:
+            pass
+        return False
 
 
 def git(*args, check=True):
@@ -61,19 +161,35 @@ def git(*args, check=True):
     )
 
 
-ROOT = Path(git("rev-parse", "--show-toplevel").stdout.decode().strip()).resolve()
-CHECKER = Path(sys.argv[1]).resolve().parents[1] / "check-headers" / "script.sh"
-TODAY = dt.datetime.now(dt.timezone.utc).date().isoformat()
+try:
+    ROOT = Path(git("rev-parse", "--show-toplevel").stdout.decode().strip()).resolve()
+except Exception as error:
+    emit_report({"plans": [], "errors": [failure(error, "repository")], "applied": False})
+    raise SystemExit(1)
+try:
+    CHECKER = Path(sys.argv[1]).resolve().parents[1] / "check-headers" / "script.sh"
+except Exception as error:
+    emit_report({"plans": [], "errors": [failure(error, "preparation-support")], "applied": False})
+    raise SystemExit(1)
+try:
+    TODAY = dt.datetime.now(dt.timezone.utc).date().isoformat()
+except Exception as error:
+    emit_report({"plans": [], "errors": [failure(error, "clock")], "applied": False})
+    raise SystemExit(1)
 ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*$")
 DATE_KEYS = ("created_on", "updated_on", "deprecated_on", "superseded_on")
 
 # Repository preparation receipts are optional in portable installations. Use
 # the existing cache owner when present, never an arbitrary report argument.
-CACHE_OWNER = Path(sys.argv[1]).resolve().parents[4] / "scripts/repo/check-selection"
 LocalCache = None
-if (CACHE_OWNER / "local_cache.py").is_file():
-    sys.path.insert(0, str(CACHE_OWNER))
-    from local_cache import LocalCache
+try:
+    CACHE_OWNER = Path(sys.argv[1]).resolve().parents[4] / "scripts/repo/check-selection"
+    if (CACHE_OWNER / "local_cache.py").is_file():
+        sys.path.insert(0, str(CACHE_OWNER))
+        from local_cache import LocalCache
+except Exception as error:
+    emit_report({"plans": [], "errors": [failure(error, "preparation-support")], "applied": False})
+    raise SystemExit(1)
 
 
 def already_prepared(path, raw):
@@ -88,13 +204,13 @@ def already_prepared(path, raw):
 
 def iso_date(value, key):
     if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-        raise PlanError(f"{key} must be a quoted YYYY-MM-DD string")
+        raise PlanError("date-format", key)
     try:
         dt.date.fromisoformat(value)
     except ValueError as exc:
-        raise PlanError(f"{key} is not a valid calendar date: {value}") from exc
+        raise PlanError("date-calendar", key) from exc
     if value > TODAY:
-        raise PlanError(f"{key} is in the future: {value}")
+        raise PlanError("date-future", key)
     return value
 
 
@@ -104,14 +220,14 @@ def explicit_path(raw):
         path = ROOT / path
     # Never follow a symlink, including one of the parent directories.
     if any(item.is_symlink() for item in (path, *path.parents)):
-        raise PlanError(f"symlink paths are not supported: {raw}")
+        raise PlanError("path-symlink", "path")
     path = path.resolve()
     if not path.is_relative_to(ROOT) or ".git" in path.relative_to(ROOT).parts:
-        raise PlanError(f"path must be a repository file outside .git: {raw}")
+        raise PlanError("path-outside-repository", "path")
     if is_excluded(path.relative_to(ROOT).as_posix()):
-        raise PlanError(f"bootstrap output scaffolds are excluded from lifecycle updates: {raw}")
+        raise PlanError("path-excluded", "path")
     if not path.is_file():
-        raise PlanError(f"file does not exist: {raw}")
+        raise PlanError("path-missing", "path")
     return path
 
 
@@ -133,7 +249,7 @@ def lifecycle_candidate(path):
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
-        raise PlanError(f"artifact must be UTF-8 text: {exc}") from exc
+        raise PlanError("artifact-encoding", "header") from exc
     try:
         span = header_span(text)
         if span is None or span.marker != "agentic-artifact":
@@ -151,16 +267,16 @@ class Header:
         try:
             self.lines = raw.decode("utf-8").splitlines(keepends=True)
         except UnicodeError as exc:
-            raise PlanError("artifact must be UTF-8 text") from exc
+            raise PlanError("artifact-encoding", "header") from exc
         self.newline = "\r\n" if any(s.endswith("\r\n") for s in self.lines) else "\n"
         try:
             text = raw.decode("utf-8")
             span = header_span(text)
             parsed = parse_header_text(text)
         except HeaderError as exc:
-            raise PlanError(str(exc)) from exc
+            raise PlanError("header-parse-rejected", "header") from exc
         if span is None or span.marker != "agentic-artifact":
-            raise PlanError("requires an existing file-level agentic-artifact/v2 or v3 header")
+            raise PlanError("header-required", "header")
         self.start = span.start
         self.markdown = span.style == "html"
         self.comment = span.comment
@@ -177,13 +293,13 @@ class Header:
             self.prefix = schema_line[:schema_line.index("schema:")] if schema_line else self.comment + "   "
         self.data = parsed["agentic-artifact"]
         if self.data.get("schema") not in ("agentic-artifact/v2", "agentic-artifact/v3"):
-            raise PlanError("only v2 and v3 headers can be updated")
+            raise PlanError("header-schema", "schema")
         if not isinstance(self.data.get("id"), str) or not ID_RE.fullmatch(self.data["id"]):
-            raise PlanError("artifact requires a valid stable ID")
+            raise PlanError("header-id", "id")
         if self.data.get("status") not in ("draft", "active", "deprecated", "superseded", "retired"):
-            raise PlanError("artifact requires a valid status")
+            raise PlanError("header-status", "status")
         if self.data["schema"] == "agentic-artifact/v2" and self.data["status"] == "superseded":
-            raise PlanError("status: superseded requires an existing v3 header")
+            raise PlanError("superseded-schema", "schema")
 
     def set_field(self, key, value):
         # Preserve comments on unchanged fields. Lifecycle fields deliberately
@@ -238,7 +354,7 @@ class Header:
             None,
         )
         if title is None:
-            raise PlanError("superseded Markdown artifact requires an H1 title for the visible notice")
+            raise PlanError("notice-title", "header")
         links = []
         for ref in references:
             relative = os.path.relpath(ROOT / ref["path"], path.parent)
@@ -289,14 +405,14 @@ def head_baseline(path, own_id):
             source_id = Header(previous.stdout).data["id"]
         except PlanError:
             if source in detected_sources:
-                raise PlanError("cannot establish metadata identity for the detected rename source")
+                raise PlanError("rename-source-unavailable", "id")
             continue
         if source_id == own_id:
             candidates[source] = previous.stdout
         elif source in detected_sources:
-            raise PlanError("artifact ID differs from the detected HEAD rename source")
+            raise PlanError("rename-id-mismatch", "id")
     if len(candidates) > 1:
-        raise PlanError("multiple deleted HEAD artifacts share this ID; rename baseline is ambiguous")
+        raise PlanError("rename-ambiguous", "id")
     if candidates:
         return next(iter(candidates.items()))
     return None, None
@@ -317,6 +433,7 @@ def evidence(path):
         result.update(
             basis="unknown",
             reason="Multiple addition events indicate ambiguous deletion/recreation history.",
+            _failure_condition="history-additions-ambiguous",
         )
     elif first and not shallow:
         commit, timestamp = first[-1].split("\0")
@@ -330,7 +447,7 @@ def evidence(path):
             ).stdout.decode().split("\0") if value
         ]
         if len(addition_paths) != 1:
-            result.update(basis="unknown", reason="Could not identify an unambiguous original added path.")
+            result.update(basis="unknown", reason="Could not identify an unambiguous original added path.", _failure_condition="history-added-path-ambiguous")
         else:
             added = git("show", f"{commit}:{addition_paths[0]}", check=False)
             if added.returncode == 0:
@@ -340,6 +457,7 @@ def evidence(path):
                         result.update(
                             basis="unknown",
                             reason="The first-added artifact ID differs from the current ID.",
+                            _failure_condition="history-id-mismatch",
                         )
                 except PlanError:
                     # Older versions may predate metadata; the Git date is
@@ -356,11 +474,13 @@ def evidence(path):
             result.update(
                 basis="unknown", reason="No reliable addition event; possible uncommitted rename.",
                 head_source=source,
+                _failure_condition="history-possible-rename",
             )
     else:
         result.update(
             basis="unknown",
             reason="Shallow history." if shallow else "No reliable first-addition commit in available history.",
+            _failure_condition="history-shallow" if shallow else "history-unavailable",
         )
     return result
 
@@ -370,25 +490,25 @@ def validate_dates(data):
         if key in data:
             iso_date(data[key], key)
     if not all(key in data for key in ("created_on", "updated_on")):
-        raise PlanError("v3 requires created_on and updated_on")
+        raise PlanError("dates-required", "created_on")
     if data["created_on"] > data["updated_on"]:
-        raise PlanError("created_on must be on or before updated_on")
+        raise PlanError("creation-after-update", "created_on")
     for key in ("deprecated_on", "superseded_on"):
         if key in data and not data["created_on"] <= data[key] <= data["updated_on"]:
-            raise PlanError(f"{key} must fall between created_on and updated_on")
+            raise PlanError("event-date-range", key)
     if data["status"] == "deprecated" and "deprecated_on" not in data:
-        raise PlanError("existing deprecation requires --deprecated-on with a confirmed historical date")
+        raise PlanError("deprecation-date-required", "deprecated_on")
     if data["status"] == "superseded" and "superseded_on" not in data:
-        raise PlanError("existing supersession requires --superseded-on with a confirmed historical date")
+        raise PlanError("supersession-date-required", "superseded_on")
     if "deprecated_on" in data and "superseded_on" in data:
         if data["deprecated_on"] > data["superseded_on"]:
-            raise PlanError("deprecated_on must be on or before superseded_on")
+            raise PlanError("event-date-order", "deprecated_on")
     if ("superseded_on" in data) != ("superseded_by" in data):
-        raise PlanError("superseded_on and superseded_by must be present together")
+        raise PlanError("supersession-pair", "superseded_by")
     if data["status"] not in ("superseded", "retired") and ("superseded_on" in data or "superseded_by" in data):
-        raise PlanError("supersession metadata requires status: superseded or retired")
+        raise PlanError("supersession-status", "status")
     if data["status"] in ("draft", "active") and "deprecated_on" in data:
-        raise PlanError("active/draft artifacts cannot retain a deprecation date")
+        raise PlanError("deprecation-status", "status")
 
 
 def replacement_refs(raw_paths, own_id):
@@ -399,38 +519,56 @@ def replacement_refs(raw_paths, own_id):
         header = Header(path.read_bytes())
         ref = {"id": header.data["id"], "path": path.relative_to(ROOT).as_posix()}
         if ref["id"] == own_id:
-            raise PlanError("superseded_by cannot refer to the same artifact ID")
+            raise PlanError("replacement-self", "superseded_by")
         if ref["id"] in seen:
-            raise PlanError(f"duplicate replacement ID: {ref['id']}")
+            raise PlanError("replacement-duplicate", "superseded_by")
         seen.add(ref["id"])
         result.append(ref)
     return result
 
 
-def check_references(data, plans, trail=()):
+def check_references(data, plans, trail=(), validated=None):
     own_id = data["id"]
     if own_id in trail:
-        raise PlanError("supersession cycle: " + " -> ".join((*trail, own_id)))
+        raise PlanError("replacement-cycle", "superseded_by")
     references = data.get("superseded_by", [])
     if data["status"] == "superseded" and not references:
-        raise PlanError("superseded artifacts require at least one --replacement")
+        raise PlanError("replacement-required", "superseded_by")
     if not isinstance(references, list):
-        raise PlanError("superseded_by must be an array")
+        raise PlanError("replacement-list", "superseded_by")
     seen = set()
+    selected = []
     for ref in references:
         if not isinstance(ref, dict) or not isinstance(ref.get("path"), str) or not isinstance(ref.get("id"), str):
-            raise PlanError("replacement references require an ID and repository path")
+            raise PlanError("replacement-shape", "superseded_by")
         if ref["id"] in seen:
-            raise PlanError(f"duplicate replacement ID: {ref['id']}")
+            raise PlanError("replacement-duplicate", "superseded_by")
         seen.add(ref["id"])
         if Path(ref["path"]).is_absolute() or ".." in Path(ref["path"]).parts:
-            raise PlanError("replacement paths must be repository-relative without parent traversal")
-        path = explicit_path(ref["path"])
+            raise PlanError("replacement-path", "superseded_by")
+        path = explicit_path(reference_path := ref["path"])
         target = plans.get(path)
         target_data = target["header"].data if target else Header(path.read_bytes()).data
-        if target_data["id"] != ref["id"]:
-            raise PlanError(f"replacement ID does not match {ref['path']}")
-        check_references(target_data, plans, (*trail, own_id))
+        if target_data["id"] != (reference_id := ref["id"]):
+            raise PlanError("replacement-id-mismatch", "superseded_by")
+        check_references(target_data, plans, (*trail, own_id), validated)
+        selected.append({"id": reference_id, "path": reference_path})
+    if validated is not None:
+        validated.append(selected)
+
+
+def project_reference_reports(report, validated):
+    # Only the original traversal establishes reference identity. This copies
+    # output data; it makes no reference read or admission decision.
+    for plan in report["plans"]:
+        for state in ("before", "after"):
+            raw = plan[state].get("superseded_by")
+            plan[state]["superseded_by"] = next((refs for refs in validated if raw == refs), None) if isinstance(raw, list) else None
+
+
+class SafeArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        self.exit(2, "ERROR: lifecycle-arguments-invalid\n")
 
 
 def prepare(path, args):
@@ -443,10 +581,11 @@ def prepare(path, args):
         if key in original:
             iso_date(original[key], key)
     history = evidence(path)
+    history_condition = history.pop("_failure_condition", None)
     if "created_on" in original:
         created = iso_date(original["created_on"], "created_on")
         if args.created_on and args.created_on != created:
-            raise PlanError("--created-on cannot overwrite an existing creation date")
+            raise PlanError("creation-overwrite", "created_on")
         provenance = {"basis": "existing-header", "created_on": created, "history": history}
     elif args.created_on:
         created = iso_date(args.created_on, "--created-on")
@@ -455,12 +594,12 @@ def prepare(path, args):
         created = history["created_on"]
         provenance = history
     else:
-        raise PlanError(history["reason"] + " Supply --created-on only with confirmed creation evidence.")
+        raise PlanError(history_condition or "history-unavailable", "created_on")
     header.set_field("schema", "agentic-artifact/v3")
     header.set_field("created_on", created)
     if args.status:
         if original["status"] in ("superseded", "retired") and args.status != original["status"]:
-            raise PlanError("this bounded updater does not reactivate superseded or retired artifacts")
+            raise PlanError("reactivation-rejected", "status")
         header.set_field("status", args.status)
         event = args.status + "_on"
         if original["status"] != args.status:
@@ -470,23 +609,23 @@ def prepare(path, args):
         if value:
             iso_date(value, "--" + key.replace("_", "-"))
             if args.status and original["status"] != args.status and key == args.status + "_on" and value != TODAY:
-                raise PlanError("a new lifecycle transition must use today's UTC date")
+                raise PlanError("transition-date", key)
             if key in original and original[key] != value:
-                raise PlanError(f"cannot overwrite an existing {key} event")
+                raise PlanError("event-overwrite", key)
             header.set_field(key, value)
     if args.replacement:
         if header.data["status"] != "superseded":
-            raise PlanError("--replacement requires status: superseded")
+            raise PlanError("replacement-status", "status")
         header.set_field("superseded_by", replacement_refs(args.replacement, header.data["id"]))
     if header.data["status"] == "superseded":
         references = header.data.get("superseded_by", [])
         if not references:
-            raise PlanError("superseded artifacts require at least one --replacement")
+            raise PlanError("replacement-required", "superseded_by")
         if not isinstance(references, list) or any(
             not isinstance(ref, dict) or not isinstance(ref.get("id"), str) or not isinstance(ref.get("path"), str)
             for ref in references
         ):
-            raise PlanError("replacement references require an ID and repository path")
+            raise PlanError("replacement-shape", "superseded_by")
         header.notice(path, references)
     relative = path.relative_to(ROOT).as_posix()
     baseline_path, baseline = head_baseline(path, original["id"])
@@ -502,7 +641,7 @@ def prepare(path, args):
                 raise
         if old_data["schema"] == "agentic-artifact/v3":
             if old_data.get("created_on") != created:
-                raise PlanError("created_on differs from HEAD; creation dates are immutable after migration")
+                raise PlanError("creation-head-mismatch", "created_on")
     # Ignore changes to the update-date line when deciding whether content
     # differs from HEAD. Reading an unchanged old artifact must be a no-op.
     def strip_updated(value):
@@ -544,7 +683,7 @@ def prepare(path, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(
+    parser = SafeArgumentParser(
         description="Report lifecycle changes for explicit paths; --apply writes only a fully valid plan. Never stages or commits."
     )
     selection = parser.add_mutually_exclusive_group(required=True)
@@ -560,43 +699,61 @@ def main():
     args = parser.parse_args(sys.argv[2:])
     if args.changed and (args.status or args.replacement or args.deprecated_on or args.superseded_on or args.created_on):
         parser.error("--changed only refreshes existing lifecycle metadata; use --paths for explicit transitions or dates")
-    raw_paths = changed_paths() if args.changed else args.paths
+    try:
+        raw_paths = changed_paths() if args.changed else args.paths
+    except Exception as error:
+        report = {"mode": "apply" if args.apply else "report", "selection": "changed-artifacts" if args.changed else "explicit-paths", "today_utc": TODAY, "plans": [], "skipped": [], "errors": [], "applied": False}
+        report["errors"].append(failure(error, "selection"))
+        emit_report(report, indent=2)
+        return 1
     skip_non_artifacts = args.changed or args.skip_non_artifacts
     report = {"mode": "apply" if args.apply else "report", "selection": "changed-artifacts" if args.changed else "explicit-paths", "today_utc": TODAY, "plans": [], "skipped": [], "errors": [], "applied": False}
     plans = {}
-    for raw_path in raw_paths:
+    ordinals = {}
+    planning_aborted = False
+    for ordinal, raw_path in enumerate(raw_paths, 1):
         try:
             path = explicit_path(raw_path)
             if path in plans:
-                raise PlanError("duplicate explicit path")
+                raise PlanError("path-duplicate")
             if skip_non_artifacts and not lifecycle_candidate(path):
                 report["skipped"].append({"path": path.relative_to(ROOT).as_posix(), "reason": "not-a-v2-or-v3-artifact"})
                 continue
             plan = prepare(path, args)
             plans[path] = plan
+            ordinals[path] = ordinal
             report["plans"].append(plan["report"])
         except (PlanError, OSError, ValueError) as exc:
-            report["errors"].append({"path": raw_path, "error": str(exc)})
-    for path, plan in plans.items():
-        try:
-            check_references(plan["header"].data, plans)
-        except (PlanError, OSError, ValueError) as exc:
-            report["errors"].append({"path": path.relative_to(ROOT).as_posix(), "error": str(exc)})
+            report["errors"].append(failure(exc, "planning", ordinal))
+        except Exception as exc:
+            report["errors"].append(failure(exc, "planning", ordinal))
+            planning_aborted = True
+            break
+    validated = []
+    if not planning_aborted:
+        for path, plan in plans.items():
+            try:
+                check_references(plan["header"].data, plans, validated=validated)
+            except (PlanError, OSError, ValueError) as exc:
+                report["errors"].append(failure(exc, "references", ordinals[path]))
+            except Exception as exc:
+                report["errors"].append(failure(exc, "references", ordinals[path]))
+                break
     if plans and not report["errors"]:
-        proposed = {
-            path.relative_to(ROOT).as_posix(): plan["rendered"].decode("utf-8")
-            for path, plan in plans.items()
-        }
-        validation = subprocess.run(
-            ["bash", str(CHECKER), "--proposed"],
-            input=json.dumps(proposed), text=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        )
-        if validation.returncode:
-            report["errors"].append({
-                "path": "<batch>",
-                "error": "Proposed header validation failed: " + validation.stdout + validation.stderr,
-            })
+        try:
+            proposed = {
+                path.relative_to(ROOT).as_posix(): plan["rendered"].decode("utf-8")
+                for path, plan in plans.items()
+            }
+            validation = subprocess.run(
+                ["bash", str(CHECKER), "--proposed"],
+                input=json.dumps(proposed), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            if validation.returncode:
+                report["errors"].append({"path": "<batch>", "stage": "proposed-check", "code": "lifecycle-proposed-check-rejected", "error": "Proposed header validation rejected the batch."})
+        except Exception as exc:
+            report["errors"].append(failure(exc, "proposed-check"))
     if args.apply and not report["errors"]:
         # Recheck every source immediately before any mutation. Invalid plans
         # or detected concurrent edits cause no writes; this is not a
@@ -604,22 +761,40 @@ def main():
         for path, plan in plans.items():
             try:
                 if explicit_path(str(path)).read_bytes() != plan["original"]:
-                    raise PlanError("file changed during planning; rerun the report")
+                    raise PlanError("concurrent-change")
             except (PlanError, OSError) as exc:
-                report["errors"].append({"path": path.relative_to(ROOT).as_posix(), "error": str(exc)})
+                report["errors"].append(failure(exc, "concurrent-recheck", ordinals[path]))
+            except Exception as exc:
+                report["errors"].append(failure(exc, "concurrent-recheck", ordinals[path]))
+                break
         if not report["errors"]:
+            completed_writes = 0
             for path, plan in plans.items():
                 if plan["rendered"] != plan["original"]:
-                    path.write_bytes(plan["rendered"])
-            if LocalCache is not None:
-                LocalCache(ROOT).record_artifacts({
-                    path.relative_to(ROOT).as_posix(): {
-                        "sha256": hashlib.sha256(plan["rendered"]).hexdigest(),
-                        "mode": path.stat().st_mode & 0o777,
-                    } for path, plan in plans.items()
-                })
-            report["applied"] = True
-    print(json.dumps(report, indent=2))
+                    try:
+                        path.write_bytes(plan["rendered"])
+                        completed_writes += 1
+                    except Exception as exc:
+                        issue = failure(exc, "write", ordinals[path])
+                        issue.update(completed_returned_writes=completed_writes, current_write="unknown")
+                        report["errors"].append(issue)
+                        break
+            if not report["errors"]:
+                try:
+                    if LocalCache is not None:
+                        LocalCache(ROOT).record_artifacts({
+                            path.relative_to(ROOT).as_posix(): {
+                                "sha256": hashlib.sha256(plan["rendered"]).hexdigest(),
+                                "mode": path.stat().st_mode & 0o777,
+                            } for path, plan in plans.items()
+                        })
+                    report["applied"] = True
+                except Exception as exc:
+                    issue = failure(exc, "preparation-receipt")
+                    issue.update(completed_returned_writes=completed_writes)
+                    report["errors"].append(issue)
+    if not emit_report(report, indent=2, validated=validated):
+        return 1
     return 1 if report["errors"] else 0
 
 

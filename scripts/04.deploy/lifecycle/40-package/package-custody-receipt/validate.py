@@ -12,7 +12,7 @@
 #   portability: { class: internal, targets: [] }
 #   effects: [read-only]
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   used_by:
 #   - id: deploy.command.package-custody-receipt
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh
@@ -42,6 +42,7 @@ def fail_if(value, pattern, code):
 
 def args():
     parser = argparse.ArgumentParser(add_help=False)
+    parser.error = lambda _message: parser.exit(2, report("failed", ("arguments-invalid",)) + "\n")
     parser.add_argument("--receipt", required=True); parser.add_argument("--expected-target", required=True)
     parser.add_argument("--expected-candidate", required=True); parser.add_argument("--expected-package-contract", required=True)
     parser.add_argument("--expected-program", required=True); parser.add_argument("--json", action="store_true")
@@ -77,7 +78,7 @@ def main():
     try:
         expected = args()
         try: receipt = json.loads(Path(expected.receipt).read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError): raise Failure("receipt-unreadable") from None
+        except (OSError, UnicodeError, json.JSONDecodeError): raise Failure("receipt-unreadable") from None
         validate(receipt, expected); print(report("passed", receipt=receipt))
     except Failure as error:
         print(report("failed", error.codes)); sys.exit(1)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import subprocess
 import sys
@@ -12,6 +13,8 @@ PROFILE, REGION, CLUSTER = "kanbien-dev", "eu-west-1", "kanbien-core-platform"
 STACK = "kanbien-core-platform-core-server-persistence"
 DATABASE = "kanbien-core-platform-persistence"
 SERVICE = "kanbien-core-platform-core-server-persistence"
+ROOT = Path(__file__).resolve().parents[8]
+_AWS_RESPONSE = None
 
 
 def aws(*parts: str):
@@ -19,13 +22,16 @@ def aws(*parts: str):
         result = subprocess.run(["aws", *parts, "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True, timeout=30)
     except subprocess.TimeoutExpired:
         return False, None, "aws-command-timeout"
+    except OSError:
+        return False, None, "aws-command-unavailable"
+    except UnicodeError:
+        return False, None, "aws-response-invalid"
     if result.returncode:
-        lowered = result.stderr.lower()
-        if "does not exist" in lowered or "not found" in lowered:
-            return False, None, "aws-resource-missing"
-        if "accessdenied" in lowered or "not authorized" in lowered:
-            return False, None, "aws-access-denied"
-        return False, None, "aws-command-failed"
+        global _AWS_RESPONSE
+        if _AWS_RESPONSE is None:
+            spec = importlib.util.spec_from_file_location("aws_response", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
+            _AWS_RESPONSE = importlib.util.module_from_spec(spec); spec.loader.exec_module(_AWS_RESPONSE)
+        return False, None, _AWS_RESPONSE.classify_error(parts[0], parts[1], result.stderr)
     try:
         return True, {} if not result.stdout.strip() else json.loads(result.stdout), "ok"
     except json.JSONDecodeError:
@@ -47,7 +53,8 @@ def failed_candidate_database() -> tuple[bool, str]:
         return False, code if not ok else "persistence-failed-candidate-stack-not-retirable"
     ok, resources, code = aws("cloudformation", "describe-stack-resources", "--stack-name", STACK)
     items = resources.get("StackResources") if ok and isinstance(resources, dict) else None
-    database = next((item for item in items or [] if isinstance(item, dict) and item.get("LogicalResourceId") == "PersistenceDatabase"), None)
+    try: database = next((item for item in items or [] if isinstance(item, dict) and item.get("LogicalResourceId") == "PersistenceDatabase"), None)
+    except TypeError: return False, "persistence-failed-candidate-resources-unobservable"
     if not isinstance(database, dict) or database.get("ResourceStatus") != "DELETE_FAILED" or database.get("PhysicalResourceId") != DATABASE:
         return False, code if not ok else "persistence-failed-candidate-database-not-isolated"
     return True, "ok"
@@ -91,7 +98,9 @@ def protected_target_database() -> tuple[bool, str]:
         return False, "persistence-failed-candidate-database-identity-invalid"
     ok, tags, code = aws("rds", "list-tags-for-resource", "--resource-name", arn)
     values = tags.get("TagList") if ok and isinstance(tags, dict) else None
-    if not any(isinstance(tag, dict) and tag.get("Key") == "Target" and tag.get("Value") == "kanbien-core-platform" for tag in values or []):
+    try: matched = any(isinstance(tag, dict) and tag.get("Key") == "Target" and tag.get("Value") == "kanbien-core-platform" for tag in values or [])
+    except TypeError: return False, "persistence-failed-candidate-tags-unobservable"
+    if not matched:
         return False, code if not ok else "persistence-failed-candidate-database-target-mismatch"
     return True, "ok"
 
@@ -124,7 +133,7 @@ def observed_retirement(stack_id: str, continue_delete: bool = False) -> int:
     for check in (failed_candidate_database, no_active_service, protected_target_database_after_unlock):
         valid, code = check()
         if not valid:
-            return report("uncertain" if code.startswith("aws-") else "blocked", code, facts=facts)
+            return report("uncertain" if code.startswith("aws-") or code in {"persistence-failed-candidate-resources-unobservable", "persistence-failed-candidate-tags-unobservable"} else "blocked", code, facts=facts)
     ok, _, code = aws("cloudformation", "delete-stack", "--stack-name", stack_id)
     return report("pending" if ok else "uncertain", "persistence-failed-candidate-deletion-submitted" if ok else code, facts=facts)
 
@@ -143,7 +152,7 @@ def main() -> int:
     for check in (failed_candidate_database, no_active_service, protected_target_database):
         valid, code = check()
         if not valid:
-            return report("uncertain" if code.startswith("aws-") else "blocked", code)
+            return report("uncertain" if code.startswith("aws-") or code in {"persistence-failed-candidate-resources-unobservable", "persistence-failed-candidate-tags-unobservable"} else "blocked", code)
     ok, data, code = aws("cloudformation", "describe-stacks", "--stack-name", STACK)
     stacks = data.get("Stacks") if ok and isinstance(data, dict) else None
     stack_id = stacks[0].get("StackId") if isinstance(stacks, list) and len(stacks) == 1 and isinstance(stacks[0], dict) else None
@@ -169,7 +178,9 @@ def protected_target_database_after_unlock() -> tuple[bool, str]:
         return False, "persistence-failed-candidate-database-identity-invalid"
     ok, tags, code = aws("rds", "list-tags-for-resource", "--resource-name", arn)
     values = tags.get("TagList") if ok and isinstance(tags, dict) else None
-    if not any(isinstance(tag, dict) and tag.get("Key") == "Target" and tag.get("Value") == "kanbien-core-platform" for tag in values or []):
+    try: matched = any(isinstance(tag, dict) and tag.get("Key") == "Target" and tag.get("Value") == "kanbien-core-platform" for tag in values or [])
+    except TypeError: return False, "persistence-failed-candidate-tags-unobservable"
+    if not matched:
         return False, code if not ok else "persistence-failed-candidate-database-target-mismatch"
     return True, "ok"
 

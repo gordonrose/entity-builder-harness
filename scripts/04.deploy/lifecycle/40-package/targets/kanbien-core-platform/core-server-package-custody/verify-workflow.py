@@ -12,7 +12,7 @@
 #   portability: { class: internal, targets: [] }
 #   effects: [read-only]
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.core-server-package-custody
 #     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh
@@ -52,11 +52,11 @@ def custody_route_valid(steps, qualification_index):
  return custody_tail(steps,published_index=scan_index,target="kanbien-core-platform",environment="private-bootstrap",region="aws-eu-west-1",candidate="kanbien-core-server-candidate",contract="kanbien-core-server-image",program="kanbien-core-server",stem="core-server",artifact_name="kanbien-core-platform-package-custody-${{ github.run_id }}",qualification_outcome="${{ steps.qualification.outcome }}",scan_outcome="${{ steps.scan.outcome }}",scan_check="ecr_scan",provenance_name="Attest image provenance",attestation_name="Attest image SBOM",capture_name="Write and validate safe package-custody receipt",upload_name="Upload safe package-custody evidence",receipt_filename="package-custody-receipt.json",extra_artifacts=["${{ runner.temp }}/qualified-image.json","${{ runner.temp }}/ecr-scan.json"],registry_expression="${{ env.ECR_URI }}")
 
 def main():
- p=argparse.ArgumentParser(add_help=False); p.add_argument("--workflow",default=EXPECTED); p.add_argument("--json",action="store_true"); a,x=p.parse_known_args()
+ p=argparse.ArgumentParser(add_help=False); p.error=lambda _message:p.exit(2,"DIAGNOSTIC_CODE=PACKAGE_WORKFLOW_ARGUMENTS_INVALID\n"); p.add_argument("--workflow",default=EXPECTED); p.add_argument("--json",action="store_true"); a,x=p.parse_known_args()
  if x or a.workflow != EXPECTED: codes=("workflow-path-invalid",)
  else:
   try: text=Path(a.workflow).read_text(encoding="utf-8")
-  except OSError: text=""; codes=("workflow-missing",)
+  except (OSError, UnicodeError): text=""; codes=("workflow-missing",)
   else:
    codes=tuple(code for code,ok in (("workflow-qualification-route-invalid",qualification_route_valid(text)),("workflow-requirement-missing",all(value in text for value in REQUIRED)),("workflow-trigger-not-manual",not re.search(r"^\s*(push|pull_request|schedule):",text,re.M)),("workflow-target-mutation-present",not any(value in text.lower() for value in FORBIDDEN))) if not ok)
  result={"schema":"deploy/package-workflow-validation/v1","target":"kanbien-core-platform","verdict":"passed" if not codes else "failed","findings":[{"code":code} for code in codes]}

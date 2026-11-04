@@ -4,7 +4,7 @@ id: product.adrs.readme
 version: 1
 status: active
 created_on: "2026-08-31"
-updated_on: "2026-10-20"
+updated_on: "2026-10-27"
 layer: 03.product
 domain: architecture
 disciplines:
@@ -36,3 +36,6 @@ matching `docs/03.product/` corpus subdirectories.
 
 The old prototype ADR pointers have been retired. Use this owner-aligned ADR
 root directly for product-owned decision history.
+
+- [ADR 0043 Own diagnostic contracts in runtime code](0043-own-diagnostic-contracts-in-runtime-code.md)
+  records schema ownership, internal reporting, generated exports and incremental adoption.

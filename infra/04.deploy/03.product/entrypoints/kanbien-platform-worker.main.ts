@@ -4,7 +4,7 @@
 //   version: 2
 //   status: active
 //   created_on: "2026-09-23"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -42,17 +42,23 @@ import { // Start only the generic worker process and its declared job shell.
 } from "@kanbien/platform-workers/main"; // Import the explicit worker process boundary rather than worker internals.
 import { // Construct a validated durable worker owner rather than sharing an unsafe static lease identity.
   type PlatformPersistenceLeaseOwner, // Name the provider-neutral durable lease identity directly.
+  platformPersistenceDiagnosticCatalog,
 } from "@kanbien/platform-persistence"; // Keep leases and fences provider-neutral.
 import { // Reuse the shared target metrics composition helper.
   observabilityFromTargetEnvironment, // Build the reviewed target metric runtime from deployment environment configuration.
 } from "./kanbien-platform-observability"; // Keep target configuration parsing local to this deploy composition.
 import { // Compose the selected DynamoDB processing store only at this target boundary.
   createKanbienPlatformDurableWorkerProcessing, // Supply the generic worker's durable-processing seam.
+  reportKanbienPlatformPersistenceStartupDiagnostic,
   createKanbienPlatformPersistenceTransitionObserver, // Bind durable transitions to the app-approved safe telemetry profile.
   dynamoDbPersistenceConfigurationFromTargetEnvironment, // Reconstruct non-secret persistence configuration consistently with the server.
   type KanbienPlatformDurableWorkerProcessing, // Retain the target composition shape without leaking it into generic workers.
 } from "./kanbien-platform-persistence"; // Keep target persistence selection separate from worker lifecycle mechanics.
 import { targetTaskLeaseOwnerFromEnvironment } from "./kanbien-platform-task-lease-owner"; // Share Fargate-safe durable owner derivation with the relay.
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { workerConfigurationDiagnosticRecord } from "@kanbien/platform-workers";
+import { reportTargetConfigurationError, selectTargetConfigurationEvidence, targetEnvironmentConfigurationRecord, workerQueueConfigurationEvidence } from "./kanbien-platform-configuration-diagnostics";
+import { reportKanbienPlatformDeliveryFailure, reportKanbienPlatformQueueDiagnostic, targetDeliveryErrorSource, type KanbienPlatformDeliveryBoundaryDetail } from "./kanbien-platform-delivery-diagnostics";
 
 interface TargetWorkerConfiguration { // Describe the deployment-owned worker-specific queue policy.
   readonly queue: PlatformSqsWorkerQueue; // Supply the selected provider queue adapter to the target poll loop.
@@ -62,6 +68,8 @@ interface TargetWorkerConfiguration { // Describe the deployment-owned worker-sp
 }
 
 interface TargetWorkerConfigurationError { // Return safe startup diagnostics without raw environment values.
+  readonly diagnosticRecord?: DiagnosticRecord;
+  readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
   readonly code: "KANBIEN_PLATFORM_TARGET_WORKER_CONFIG_INVALID"; // Expose one stable target configuration error category.
   readonly defaultMessage: string; // Give operators a non-sensitive summary.
   readonly details: Readonly<{ // Name the selected deployment key and safe expected form.
@@ -98,6 +106,7 @@ export async function runKanbienPlatformWorkerMain(): Promise<void> { // Start o
   }
 
   const started = await startPlatformWorkerProcess({ // Start provider-neutral lifecycle and registered job execution.
+    diagnosticCatalogs: [platformPersistenceDiagnosticCatalog],
     apps: kanbienPlatformApps, // Mount only public product app contributions.
     configKeys: productConfigKeys(), // Make product-declared worker configuration visible to mounted app schemas.
     ...(observability.value === undefined ? {} : { metrics: observability.value.metrics }), // Pass a provider-neutral Core metrics sink to generic workers.
@@ -106,7 +115,7 @@ export async function runKanbienPlatformWorkerMain(): Promise<void> { // Start o
     installSignalHandlers: false, // Coordinate worker and metrics shutdown together in this composition root.
   }); // Finish provider-neutral worker start.
   if (!started.ok) { // Stop if app mounting, config validation, or lifecycle startup failed.
-    writeStartupFailure("kanbien-platform.worker.start_failed", started.error); // Emit only the stable worker failure code and message.
+    writeStartupFailure("kanbien-platform.worker.start_failed", started.error, false); // The generic process already attempted diagnostic delivery; retain only the target summary.
     await shutdownObservability(observability.value); // Flush and close target metrics before the failed task exits.
     process.exitCode = 1; // Surface the startup failure to ECS.
     return; // Never poll with an unready worker shell.
@@ -137,12 +146,15 @@ async function workerConfigurationFromTargetEnvironment( // Select and validate 
   env: NodeJS.ProcessEnv, // Read only deployment-owned ECS environment values.
   persistenceObserver: import("@kanbien/platform-persistence").PlatformPersistenceObserver, // Supply the already-validated no-payload transition observer to optional durable processing.
 ): Promise<{ readonly ok: true; readonly value: TargetWorkerConfiguration } | { readonly ok: false; readonly error: TargetWorkerConfigurationError }> {
-  if (env["PLATFORM_WORKER_QUEUE_PROVIDER"] !== "sqs") { // Reject absent or unimplemented providers before lifecycle startup.
-    return targetWorkerConfigurationError("PLATFORM_WORKER_QUEUE_PROVIDER", "The staging worker requires the selected SQS queue provider."); // Keep provider choice explicit at the target boundary.
+  const provider = env["PLATFORM_WORKER_QUEUE_PROVIDER"];
+  if (provider !== "sqs") { // Reject absent or unimplemented providers before lifecycle startup.
+    return targetWorkerConfigurationError("PLATFORM_WORKER_QUEUE_PROVIDER", "The staging worker requires the selected SQS queue provider.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_WORKER_QUEUE_PROVIDER", provider === undefined ? "missing" : provider.length === 0 ? "empty" : "unsupported") }); // Keep provider choice explicit at the target boundary.
   }
-  const queue = createAwsSdkPlatformSqsWorkerQueueFromEnv(env); // Let the adapter validate URLs, region, long-poll, and visibility bounds.
+  const queue = createAwsSdkPlatformSqsWorkerQueueFromEnv(env, {
+    onDiagnostic: (record, context) => reportKanbienPlatformQueueDiagnostic("worker", record, context),
+  }); // Keep provider evidence on the selected queue diagnostic path, not a persistence transition.
   if (!queue.ok) { // Translate adapter validation into a target-owned startup error.
-    return targetWorkerConfigurationError(queue.error.details?.path ?? "PLATFORM_WORKER_SQS_*", queue.error.details?.reason ?? queue.error.defaultMessage); // Do not copy raw config values.
+    return targetWorkerConfigurationError(queue.error.details?.path ?? "PLATFORM_WORKER_SQS_*", queue.error.details?.reason ?? queue.error.defaultMessage, workerQueueConfigurationEvidence(queue.error)); // Do not copy raw config values.
   }
   const failureBackoffMs = positiveInteger(env, "PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS"); // Bound pressure after a transient provider failure.
   if (!failureBackoffMs.ok) return failureBackoffMs; // Fail closed for a missing or unsafe polling backoff.
@@ -166,7 +178,7 @@ function oneShotSuccessfulDeliveryLimit( // Parse only the fixed one-delivery re
 ): { readonly ok: true; readonly value: number | undefined } | { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
   const value = env["PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES"]; // Read the optional recovery-only switch.
   if (value === undefined) return { ok: true, value: undefined }; // Preserve the normal long-running worker service behaviour.
-  if (value !== "1") return targetWorkerConfigurationError("PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES", "Only the fixed one-successful-delivery recovery task limit is permitted."); // Prevent an arbitrary task-local processing policy.
+  if (value !== "1") return targetWorkerConfigurationError("PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES", "Only the fixed one-successful-delivery recovery task limit is permitted.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES", "fixed-value-required") }); // Prevent an arbitrary task-local processing policy.
   return { ok: true, value: 1 }; // Return the sole approved bounded task limit.
 }
 
@@ -177,11 +189,11 @@ async function durableOutboxProcessingFromTargetEnvironment( // Select durable d
   const provider = env["PLATFORM_PERSISTENCE_PROVIDER"]; // Read the target's explicit persistence-provider choice.
   if (provider === undefined || provider.length === 0) return { ok: true, value: undefined }; // Keep the pre-existing direct consumer behaviour explicit until the target enables the persistence path.
   if (provider !== "dynamodb") { // Reject a provider that this target composition cannot safely construct.
-    return targetWorkerConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "The staging durable worker supports the selected DynamoDB persistence provider only."); // Prevent accidental provider fallback.
+    return targetWorkerConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "The staging durable worker supports the selected DynamoDB persistence provider only.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_PERSISTENCE_PROVIDER", "unsupported") }); // Prevent accidental provider fallback.
   }
   const configuration = dynamoDbPersistenceConfigurationFromTargetEnvironment(env); // Validate table and index names without logging their raw values.
   if (!configuration.ok) { // Translate the adapter's safe field-level error into target startup vocabulary.
-    return targetWorkerConfigurationError(configuration.error.details.path, configuration.error.details.reason); // Stop before SQS polling begins.
+    return targetWorkerConfigurationError(configuration.error.details.path, configuration.error.details.reason, configuration.error); // Stop before SQS polling begins.
   }
   const owner = await durableLeaseOwnerFromTargetEnvironment(env); // Derive one process-specific ownership identity for leases and fences.
   if (!owner.ok) return owner; // Require a valid unique process component before claiming durable work.
@@ -190,7 +202,7 @@ async function durableOutboxProcessingFromTargetEnvironment( // Select durable d
   return {
     ok: true,
     value: createKanbienPlatformDurableWorkerProcessing({ // Keep DynamoDB selection confined to the target composition root.
-      client: createAwsSdkDynamoDbPersistenceCommandClient(configuration.value), // Construct no SDK call until the generic worker needs a durable claim.
+      client: createAwsSdkDynamoDbPersistenceCommandClient(configuration.value, { onDiagnostic: reportKanbienPlatformPersistenceStartupDiagnostic }), // Construction does not make a connection.
       configuration: configuration.value, // Supply only validated non-secret adapter configuration.
       owner: owner.value, // Preserve the current process identity for a claim record.
       leaseDurationMs: leaseDurationMs.value, // Preserve the target's bounded recovery window.
@@ -203,7 +215,7 @@ async function durableLeaseOwnerFromTargetEnvironment( // Derive a unique durabl
   env: NodeJS.ProcessEnv, // Read the process-local hostname only at composition time.
 ): Promise<{ readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetWorkerConfigurationError }> {
   const owner = await targetTaskLeaseOwnerFromEnvironment(env, "kanbien.worker.instance-"); // Prefer the task-specific non-sensitive Fargate identity.
-  if (!owner.ok) return targetWorkerConfigurationError(owner.error.path, owner.error.reason); // Translate shared safe errors into worker vocabulary.
+  if (!owner.ok) return targetWorkerConfigurationError(owner.error.path, owner.error.reason, owner.error); // Translate shared safe errors into worker vocabulary.
   return owner; // Return the branded provider-neutral owner.
 }
 
@@ -211,9 +223,14 @@ function durableLeaseDurationFromTargetEnvironment( // Validate a lease that lea
   env: NodeJS.ProcessEnv, // Read target-owned queue and persistence policy values.
 ): { readonly ok: true; readonly value: number } | { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
   const visibilitySeconds = Number(env["PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS"]); // Reuse the worker delivery policy already validated by the SQS adapter.
-  const leaseDurationMs = Number(env["PLATFORM_PERSISTENCE_WORKER_LEASE_DURATION_MS"]); // Parse the durable coordination lease once.
-  if (!Number.isInteger(leaseDurationMs) || leaseDurationMs <= 0 || !Number.isInteger(visibilitySeconds) || leaseDurationMs >= visibilitySeconds * 1000) { // Require positive milliseconds strictly below visibility so a redelivery never sees a still-active crashed claim.
-    return targetWorkerConfigurationError("PLATFORM_PERSISTENCE_WORKER_LEASE_DURATION_MS", "A positive integer strictly below the configured SQS visibility timeout in milliseconds is required."); // Explain the safe relationship without returning values.
+  const rawLeaseDuration = env["PLATFORM_PERSISTENCE_WORKER_LEASE_DURATION_MS"];
+  const leaseDurationMs = Number(rawLeaseDuration); // Parse the durable coordination lease once.
+  const issue = !Number.isInteger(leaseDurationMs) ? { setting: "durable-lease-duration", reason: rawLeaseDuration === undefined ? "missing" : "invalid-integer" }
+    : leaseDurationMs <= 0 ? { setting: "durable-lease-duration", reason: rawLeaseDuration?.length === 0 ? "blank" : "not-positive" }
+    : !Number.isInteger(visibilitySeconds) ? { setting: "visibility-timeout", reason: "invalid-integer" }
+    : leaseDurationMs >= visibilitySeconds * 1000 ? { setting: "durable-lease-duration", reason: "not-below-visibility" } : undefined;
+  if (issue !== undefined) { // Require positive milliseconds strictly below visibility so a redelivery never sees a still-active crashed claim.
+    return targetWorkerConfigurationError("PLATFORM_PERSISTENCE_WORKER_LEASE_DURATION_MS", "A positive integer strictly below the configured SQS visibility timeout in milliseconds is required.", { diagnosticRecord: workerConfigurationDiagnosticRecord(issue.setting, issue.reason) }); // Explain the safe relationship without returning values.
   }
   return { ok: true, value: leaseDurationMs }; // Return the bounded target-controlled duration.
 }
@@ -228,37 +245,57 @@ async function pollUntilStopped(input: { // Keep provider polling coordination l
 }): Promise<void> {
   let successfulDeliveries = 0; // Count only acknowledged successful work inside this one task process.
   while (!input.isStopping()) { // Keep one delivery in flight until ECS requests shutdown.
+    let boundary: KanbienPlatformDeliveryBoundaryDetail["boundary"] = "receive";
+    let effect: KanbienPlatformDeliveryBoundaryDetail["effect"] = "work-not-invoked";
     try { // Treat provider failures as retryable operational conditions, not process crashes.
       const received = await input.queue.receive(); // Long poll for at most one provider delivery.
+      boundary = "delivery-selection";
       if (input.isStopping() || received.kind === "empty") continue; // Do not begin a new job after shutdown or for an empty long poll.
       if (received.kind === "invalid") { // SQS delivered a body that is not a valid platform queue envelope.
+        boundary = "release";
         await input.queue.release(received.receiptHandle); // Let infrastructure redrive the malformed delivery to the configured DLQ after bounded receives.
+        boundary = "summary";
         console.warn(JSON.stringify({ level: "warn", message: "kanbien-platform.worker.invalid_delivery_released", fields: { code: received.error.code } })); // Exclude provider body, receipt, message ID, and error payload.
+        boundary = "flush";
         await flushObservability(input.observability); // Flush any preceding worker metric batch before the next poll.
         continue; // Poll the next delivery without acknowledging invalid work.
       }
 
+      boundary = "enqueue";
       const enqueued = input.worker.shell.enqueue(received.message); // Add the validated provider delivery to generic worker execution.
       if (!enqueued.ok) { // The local worker queue may be closed during shutdown or otherwise unavailable.
+        reportKanbienPlatformDeliveryFailure({ workload: "worker", boundary, condition: "returned-failure", effect }, targetDeliveryErrorSource(enqueued));
+        boundary = "release";
         await input.queue.release(received.receiptHandle); // Preserve at-least-once delivery instead of dropping the provider message.
+        boundary = "summary";
         console.warn(JSON.stringify({ level: "warn", message: "kanbien-platform.worker.delivery_released", fields: { code: enqueued.error.code } })); // Keep provider data out of logs.
+        boundary = "flush";
         await flushObservability(input.observability); // Flush pending safe worker telemetry.
         continue; // Resume polling only after the provider delivery is safely released.
       }
 
+      boundary = "run-next";
+      effect = "work-outcome-unknown";
       const outcome = await input.worker.shell.runNext(); // Execute exactly the delivery just enqueued.
       if (!outcome.ok || outcome.value.status !== "succeeded") { // Failed, rejected, unknown, or retried work stays owned by SQS redrive policy.
+        boundary = "release";
         await input.queue.release(received.receiptHandle); // Make the delivery immediately available for a bounded SQS retry/DLQ cycle.
         const code = outcome.ok ? outcome.value.status : outcome.error.code; // Retain one safe operational outcome only.
+        boundary = "summary";
         console.warn(JSON.stringify({ level: "warn", message: "kanbien-platform.worker.delivery_released", fields: { code } })); // Do not log queue payload, ID, receipt, tenant, or provider error.
       } else { // The generic worker completed the declared app job successfully.
+        boundary = "acknowledge";
+        effect = "work-success-acknowledgement-unknown";
         await input.queue.acknowledge(received.receiptHandle); // Delete only after successful job handling.
+        effect = "work-success-acknowledgement-returned";
         successfulDeliveries += 1; // Count only the acknowledged success toward the optional one-shot exit limit.
       }
+      boundary = "flush";
       await flushObservability(input.observability); // Bound metric-loss exposure at every settled delivery outcome.
       if (input.stopAfterSuccessfulDeliveries !== undefined && successfulDeliveries >= input.stopAfterSuccessfulDeliveries) return; // Exit the isolated recovery task without polling for unrelated work.
-    } catch { // Keep raw AWS/provider failures out of operational logs and the task's public evidence.
+    } catch (error) { // Keep raw AWS/provider failures out of operational logs and the task's public evidence.
       if (input.isStopping()) break; // Finish cleanly when the failed call raced with ECS shutdown.
+      reportKanbienPlatformDeliveryFailure({ workload: "worker", boundary, condition: "threw", effect }, error);
       console.warn(JSON.stringify({ level: "warn", message: "kanbien-platform.worker.poll_failed" })); // Emit a safe diagnostic without provider error content.
       await delay(input.failureBackoffMs); // Prevent an unavailable provider from causing a hot error loop.
     }
@@ -283,11 +320,13 @@ function installTargetShutdownHandlers( // Coordinate the generic worker and tar
 
 function positiveInteger( // Parse one required positive deployment integer without returning its raw value.
   env: NodeJS.ProcessEnv, // Read target-owned ECS configuration.
-  path: string, // Name the reviewed configuration key.
+  path: "PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS", // Name the reviewed configuration key.
 ): { readonly ok: true; readonly value: number } | { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
-  const value = Number(env[path]); // Convert exactly once so invalid values fail consistently.
-  if (!Number.isInteger(value) || value <= 0) { // Reject missing, non-numeric, zero, negative, and fractional values.
-    return targetWorkerConfigurationError(path, "A positive integer is required."); // Explain the expected shape without disclosing the configured value.
+  const raw = env[path];
+  const value = Number(raw); // Convert exactly once so invalid values fail consistently.
+  const integer = Number.isInteger(value);
+  if (!integer || value <= 0) { // Reject missing, non-numeric, zero, negative, and fractional values.
+    return targetWorkerConfigurationError(path, "A positive integer is required.", { diagnosticRecord: targetEnvironmentConfigurationRecord(path, raw === undefined ? "missing" : raw.length === 0 ? "empty" : !integer ? "invalid-integer" : "not-positive") }); // Explain the expected shape without disclosing the configured value.
   }
   return { ok: true, value }; // Return the bounded parsed configuration to the target poll loop.
 }
@@ -295,6 +334,7 @@ function positiveInteger( // Parse one required positive deployment integer with
 function targetWorkerConfigurationError( // Construct a stable non-sensitive target worker configuration error.
   path: string, // Identify the reviewed configuration field that failed validation.
   reason: string, // Describe the expected safe shape.
+  evidence?: unknown,
 ): { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
   return { // Preserve the same result shape used by other target configuration parsers.
     ok: false, // Mark target worker configuration unavailable.
@@ -302,6 +342,7 @@ function targetWorkerConfigurationError( // Construct a stable non-sensitive tar
       code: "KANBIEN_PLATFORM_TARGET_WORKER_CONFIG_INVALID", // Provide one stable startup failure code.
       defaultMessage: "Kanbien platform target worker configuration is invalid.", // Avoid including environment values.
       details: { path, reason }, // Give operators a direct configuration location and expected form.
+      ...selectTargetConfigurationEvidence(evidence),
     }, // Finish safe configuration error construction.
   };
 }
@@ -309,7 +350,9 @@ function targetWorkerConfigurationError( // Construct a stable non-sensitive tar
 function writeStartupFailure( // Emit a safe target-worker startup diagnostic.
   message: string, // Name the startup stage without exposing runtime configuration.
   error: { readonly code: string; readonly defaultMessage: string }, // Restrict output to stable safe error vocabulary.
+  reportDiagnostic = true, // Returned generic startup failures already own their delivery attempt.
 ): void {
+  if (reportDiagnostic) reportTargetConfigurationError(error);
   console.error(JSON.stringify({ level: "error", message, error: { code: error.code, message: error.defaultMessage } })); // Do not log raw provider/config errors.
 }
 

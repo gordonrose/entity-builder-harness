@@ -2,8 +2,13 @@ import { createHash } from "node:crypto";
 import type { Clock } from "@kanbien/core";
 import type { PlatformAuthenticationResult } from "./authentication";
 import type { PlatformSecurityError } from "./errors";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { observeSecurityFailure, securityDiagnosticRecordsFrom, securityFailureDiagnosticRecord, securityOperationDiagnosticRecord, securityRateLimitClockFailureRecord } from "./diagnostics";
+
+import { assertPlatformRateLimitPositiveInteger } from "./rate-limit-configuration";
 
 export interface PlatformRateLimitDecision {
+  readonly diagnosticRecord?: DiagnosticRecord;
   readonly allowed: boolean;
   readonly retryAfterMs?: number;
 }
@@ -40,20 +45,26 @@ export function createInMemoryPlatformRateLimiter(
   const limit = options.limit ?? 1000;
   const windowMs = options.windowMs ?? 60_000;
   const maxBuckets = options.maxBuckets ?? 10_000;
-  assertPositiveInteger("limit", limit);
-  assertPositiveInteger("windowMs", windowMs);
-  assertPositiveInteger("maxBuckets", maxBuckets);
+  assertPlatformRateLimitPositiveInteger("limit", limit);
+  assertPlatformRateLimitPositiveInteger("windowMs", windowMs);
+  assertPlatformRateLimitPositiveInteger("maxBuckets", maxBuckets);
   const clock = options.clock ?? { now: () => new Date() };
   const buckets = new Map<string, RateLimitBucket>();
 
   return {
     check(key) {
-      const nowMs = clock.now().getTime();
+      let nowMs: number;
+      try { nowMs = clock.now().getTime(); }
+      catch (error) {
+        // Private retention works for frozen objects, without wrapping primitives.
+        if (typeof error === "object" && error !== null) observeSecurityFailure(error, securityRateLimitClockFailureRecord());
+        throw error;
+      }
       const current = buckets.get(key);
       if (current === undefined || nowMs - current.windowStartedAtMs >= windowMs) {
         pruneExpiredBuckets(buckets, nowMs, windowMs);
         if (buckets.size >= maxBuckets && current === undefined) {
-          return { allowed: false, retryAfterMs: windowMs };
+          return { allowed: false, retryAfterMs: windowMs, diagnosticRecord: securityOperationDiagnosticRecord("rate-limit", "bucket-capacity-exhausted") };
         }
         buckets.set(key, { windowStartedAtMs: nowMs, count: 1 });
         return { allowed: true };
@@ -62,6 +73,7 @@ export function createInMemoryPlatformRateLimiter(
       if (current.count >= limit) {
         return {
           allowed: false,
+          diagnosticRecord: securityOperationDiagnosticRecord("rate-limit", "quota-exhausted"),
           retryAfterMs: Math.max(0, windowMs - (nowMs - current.windowStartedAtMs)),
         };
       }
@@ -101,9 +113,20 @@ function pruneExpiredBuckets(
   }
 }
 
-function assertPositiveInteger(name: string, value: number): void {
-  if (!Number.isInteger(value) || value <= 0) {
-    throw new RangeError(`${name} must be a positive integer.`);
+
+/** Record the actual limiter invocation, never derive category by inspecting its key. */
+export async function observePlatformRateLimitCheck(limiter: PlatformRateLimiter, key: string, context: { readonly boundary: "transport" | "principal"; readonly keyCategory: "client-address" | "principal" | "anonymous" }): Promise<PlatformRateLimitDecision> {
+  try {
+    const decision = await limiter.check(key);
+    if (decision.allowed) return decision;
+    const retained = securityFailureDiagnosticRecord(decision);
+    const reason = retained?.code === "security.rate-limit.quota-exhausted" ? "quota-exhausted" : retained?.code === "security.rate-limit.bucket-capacity-exhausted" ? "bucket-capacity-exhausted" : "rejected-unclassified";
+    const retryAfterMs = decision.retryAfterMs;
+    return { allowed: false, ...(retryAfterMs === undefined ? {} : { retryAfterMs }), diagnosticRecord: securityOperationDiagnosticRecord("rate-limit", reason, context) };
+  } catch (error) {
+    const companions = securityDiagnosticRecordsFrom(error).filter((record) => record.code.startsWith("security.peer-")
+      || record.code === "security.rate-limit-clock-failed" && record.definitionVersion === 1);
+    throw observeSecurityFailure(error, securityOperationDiagnosticRecord("rate-limit", "dependency-failed", context), companions);
   }
 }
 

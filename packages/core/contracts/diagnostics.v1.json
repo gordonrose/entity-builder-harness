@@ -1,0 +1,2193 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "core",
+    "definitions": [
+      {
+        "code": "core.config.primitive-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "environment-name",
+                "secret-reference",
+                "value"
+              ]
+            },
+            "reader": {
+              "type": "enum",
+              "values": [
+                "environment-name",
+                "secret-reference",
+                "required",
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "invalid-format",
+                "missing",
+                "wrong-type",
+                "non-finite"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.config.source-threw",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reader": {
+              "type": "enum",
+              "values": [
+                "required",
+                "optional",
+                "string",
+                "number",
+                "boolean",
+                "schema"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "source-read"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invocation-threw"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "core.config.declaration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "definitions",
+                "setting",
+                "source",
+                "minimum",
+                "maximum",
+                "bounds"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "too-many",
+                "identity-count-mismatch",
+                "invalid-format",
+                "reserved",
+                "not-safe-integer",
+                "reversed",
+                "predicate-rejected-unclassified"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "core.config.relationship-declaration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "relationships",
+                "relationship",
+                "rule",
+                "left",
+                "right",
+                "participants"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "too-many",
+                "identity-count-mismatch",
+                "invalid-format",
+                "unsupported",
+                "undeclared",
+                "self-reference",
+                "duplicate-pair",
+                "predicate-rejected-unclassified"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "core.config.choice-declaration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-type",
+                "empty",
+                "too-many",
+                "blank",
+                "surrounding-whitespace",
+                "duplicate"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "core.shared.date-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-format",
+                "parse-rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.shared.date-normalization-threw",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "string-normalization",
+                "date-normalization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invocation-threw"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.shared.json-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "non-finite-number",
+                "non-plain-object"
+              ]
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "path": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 16,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "pathTruncated": {
+              "type": "boolean"
+            },
+            "locationUnavailable": {
+              "type": "boolean"
+            }
+          },
+          "optional": [
+            "locationUnavailable"
+          ]
+        }
+      },
+      {
+        "code": "core.security.primitive-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "secret-string",
+                "hash-algorithm",
+                "hash-value",
+                "security-policy-id",
+                "sensitive-value-kind",
+                "data-sensitivity"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "surrounding-whitespace",
+                "whitespace",
+                "unsupported"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.authz.permission-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "resource",
+                "action"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "surrounding-whitespace",
+                "colon-separator",
+                "whitespace"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.authn.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "principal"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "claims-enumeration",
+                "claims-copy",
+                "scopes-copy",
+                "result-projection"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "id",
+                "type",
+                "subject",
+                "current-tenant-id",
+                "claims",
+                "scopes"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "value-not-produced"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.tenancy.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "tenant-context"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "result-projection"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "tenant-id",
+                "isolation-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "value-not-produced"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.persistence.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "lifecycle-policy",
+                "retention-reference",
+                "delete",
+                "restore",
+                "record-kind",
+                "record-id",
+                "record-revision",
+                "change-field",
+                "change-actor",
+                "record-change",
+                "outbox-type",
+                "outbox-version",
+                "outbox-policy",
+                "page-total",
+                "page-totals",
+                "page-request",
+                "save"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "recovery-window",
+                "legal-hold-check",
+                "retention-policy",
+                "state",
+                "deleted-at",
+                "restore-boundary",
+                "restore-time",
+                "kind",
+                "id",
+                "revision",
+                "field-name",
+                "actor-id",
+                "changed-fields",
+                "message-type",
+                "message-version",
+                "delivery-policy",
+                "total",
+                "totalItems",
+                "totalMatchingItems",
+                "totals",
+                "limit",
+                "cursor",
+                "transaction",
+                "concurrency-token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "not-safe-integer",
+                "not-integer",
+                "not-positive",
+                "negative",
+                "required",
+                "invalid-format",
+                "already-deleted",
+                "invalid-time",
+                "unrepresentable-boundary",
+                "not-deleted",
+                "window-expired",
+                "empty",
+                "untrimmed",
+                "too-many",
+                "duplicate",
+                "matching-exceeds-total",
+                "unsupported",
+                "record-absent",
+                "token-unavailable",
+                "token-mismatch"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.persistence.in-memory-boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "initialize",
+                "get",
+                "save",
+                "unit-of-work",
+                "after-commit-registration"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "get-id",
+                "clone-initial",
+                "clone-read",
+                "get-concurrency-token",
+                "clone-before-write",
+                "clone-after-write",
+                "operation",
+                "after-commit",
+                "closed-registration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "boundary-threw",
+                "transaction-closed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "write-not-reached",
+                "write-completed",
+                "read-only",
+                "operation-not-returned",
+                "operation-returned",
+                "registration-rejected"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "core.queue.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "validate",
+                "send",
+                "receive",
+                "decode",
+                "acknowledge",
+                "release"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "message-type",
+                "message-version",
+                "delay",
+                "attempt",
+                "dead-letter-reason",
+                "idempotency-key",
+                "message-group-key",
+                "retry-attempt",
+                "delivery-disposition",
+                "body",
+                "envelope",
+                "id",
+                "enqueued-at",
+                "payload",
+                "trace-parent",
+                "trace-id",
+                "span-id",
+                "parent-span-id",
+                "receipt-handle"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "empty",
+                "wrong-type",
+                "not-record",
+                "not-finite",
+                "not-integer",
+                "not-positive",
+                "negative",
+                "above-maximum",
+                "invalid-format",
+                "unsupported",
+                "exceeds-maximum-attempt",
+                "conflicting",
+                "predicate-rejected"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.queue.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "client-initialization",
+                "send",
+                "receive",
+                "decode",
+                "acknowledge",
+                "release"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "construction",
+                "selection",
+                "encoding",
+                "invocation",
+                "response",
+                "json-parse",
+                "envelope",
+                "trace-parent",
+                "payload-copy"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "rejected",
+                "returned-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "native": {
+              "type": "object",
+              "properties": {
+                "codeAvailability": {
+                  "type": "enum",
+                  "values": [
+                    "absent",
+                    "wrong-type",
+                    "unavailable",
+                    "recognized",
+                    "unrecognized"
+                  ]
+                },
+                "condition": {
+                  "type": "enum",
+                  "values": [
+                    "queue-absent-reported",
+                    "receipt-rejected",
+                    "message-not-in-flight",
+                    "address-rejected",
+                    "message-content-rejected",
+                    "request-security-rejected",
+                    "operation-unsupported",
+                    "request-throttled",
+                    "limit-reported",
+                    "key-access-rejected",
+                    "key-throttled",
+                    "key-rejected",
+                    "unknown"
+                  ]
+                }
+              }
+            }
+          },
+          "optional": [
+            "native"
+          ]
+        }
+      },
+      {
+        "code": "core.queue.receive-reduced",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "receive"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "enum",
+                    "values": [
+                      "response",
+                      "messages",
+                      "message",
+                      "attributes",
+                      "receipt-handle",
+                      "body",
+                      "receive-count"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "absent",
+                      "empty",
+                      "not-record",
+                      "not-array",
+                      "wrong-type",
+                      "not-integer",
+                      "not-positive"
+                    ]
+                  },
+                  "reduction": {
+                    "type": "enum",
+                    "values": [
+                      "empty-receive",
+                      "empty-attributes",
+                      "field-unavailable",
+                      "count-one"
+                    ]
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "optional": [
+                  "count"
+                ]
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "reduction-observed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.monitoring.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "identifier",
+                "component",
+                "health-result",
+                "signal-definition",
+                "metric-point",
+                "metric-labels"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "component-name",
+                "component-type",
+                "health-name",
+                "health-type",
+                "health-status",
+                "signal-name",
+                "signal-category",
+                "signal-owner",
+                "signal-intents",
+                "signal-intent",
+                "span-name",
+                "trace-id",
+                "span-id",
+                "duration",
+                "metric-kind",
+                "metric-value",
+                "max-string-length"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "untrimmed",
+                "invalid-format",
+                "closed-value-rejected",
+                "not-finite",
+                "negative"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "core.monitoring.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "identifier",
+                "component",
+                "health-result",
+                "signal-definition",
+                "metric-point",
+                "metric-labels",
+                "metadata",
+                "fixed-health-check",
+                "trace-context",
+                "trace-start",
+                "trace-end",
+                "trace-snapshot"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "predicate-invocation",
+                "component-copy",
+                "metadata-enumeration",
+                "metadata-copy",
+                "intent-iteration",
+                "result-copy",
+                "label-options",
+                "label-normalization",
+                "label-enumeration",
+                "label-copy",
+                "parent-projection",
+                "context-copy",
+                "attribute-copy",
+                "append",
+                "return-context",
+                "record-lookup",
+                "end-projection",
+                "record-replacement",
+                "snapshot-copy"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "component-name",
+                "component-type",
+                "health-name",
+                "health-type",
+                "health-status",
+                "signal-name",
+                "signal-category",
+                "signal-owner",
+                "signal-intents",
+                "signal-intent",
+                "span-name",
+                "trace-id",
+                "span-id",
+                "duration",
+                "metric-kind",
+                "metric-value",
+                "max-string-length",
+                "name",
+                "type",
+                "status",
+                "component",
+                "checked-at",
+                "message",
+                "metadata",
+                "additional-unsafe-label-names",
+                "labels",
+                "intents",
+                "metric",
+                "description",
+                "unit",
+                "recorded-at",
+                "parent",
+                "parent-trace-id",
+                "parent-span-id",
+                "attributes",
+                "outcome",
+                "context",
+                "end"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "result-not-returned",
+                "sequence-advanced-record-not-added",
+                "sequence-advanced-append-unknown",
+                "record-added-span-not-returned",
+                "end-marked-record-not-replaced",
+                "end-marked-replacement-unknown",
+                "snapshot-not-returned"
+              ]
+            }
+          },
+          "optional": [
+            "field"
+          ]
+        }
+      },
+      {
+        "code": "core.logging.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "log-record",
+                "redact-fields",
+                "create-redactor",
+                "redact",
+                "write"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "key-projection",
+                "key-normalization",
+                "key-iteration",
+                "field-enumeration",
+                "value-inspection",
+                "value-traversal",
+                "field-assignment",
+                "record-projection",
+                "redactor-selection",
+                "redactor-invocation",
+                "inner-selection",
+                "inner-invocation"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "level",
+                "message",
+                "correlation-id",
+                "fields",
+                "redaction-keys",
+                "replacement",
+                "redactor",
+                "logger"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "rejected"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "result-not-returned",
+                "inner-not-invoked",
+                "inner-outcome-unknown"
+              ]
+            }
+          },
+          "optional": [
+            "field"
+          ]
+        }
+      },
+      {
+        "code": "core.audit.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "event-type",
+                "event-version",
+                "target"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "type",
+                "version",
+                "target-type",
+                "target-id"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-format",
+                "not-integer",
+                "not-positive",
+                "empty",
+                "untrimmed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.audit.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "event-type",
+                "event-version",
+                "actor",
+                "target",
+                "event",
+                "record",
+                "recorded-events"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "predicate",
+                "parameter-formatting",
+                "input-projection",
+                "actor-copy",
+                "target-copy",
+                "metadata-enumeration",
+                "metadata-copy",
+                "record-copy",
+                "record-append",
+                "snapshot-copy"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "type",
+                "version",
+                "id",
+                "outcome",
+                "actor",
+                "actor-type",
+                "actor-id",
+                "subject",
+                "tenant-id",
+                "occurred-at",
+                "correlation-id",
+                "target",
+                "target-type",
+                "target-id",
+                "parent",
+                "reason",
+                "metadata"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "result-not-returned",
+                "append-not-reached",
+                "append-outcome-unknown",
+                "snapshot-not-returned"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "field",
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "core.events.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "event-type",
+                "event-version"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "type",
+                "version"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-format",
+                "not-integer",
+                "not-positive"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.events.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "event-type",
+                "event-version",
+                "envelope",
+                "bus-construction",
+                "publish",
+                "published-events"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "predicate",
+                "parameter-formatting",
+                "input-projection",
+                "payload-copy",
+                "handler-declaration",
+                "batch-copy",
+                "event-iteration",
+                "handler-iteration",
+                "handler-selection",
+                "handler-argument-copy",
+                "handler-invocation",
+                "handler-completion",
+                "published-append",
+                "snapshot-copy"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "type",
+                "version",
+                "id",
+                "occurred-at",
+                "tenant-id",
+                "correlation-id",
+                "causation-id",
+                "payload",
+                "handlers",
+                "events",
+                "handler"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "rejected"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "result-not-returned",
+                "bus-not-created",
+                "publish-not-appended",
+                "append-outcome-unknown",
+                "snapshot-not-returned"
+              ]
+            },
+            "handlerEffect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown"
+              ]
+            },
+            "eventOrdinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "handlerOrdinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "field",
+            "handlerEffect",
+            "eventOrdinal",
+            "handlerOrdinal"
+          ]
+        }
+      },
+      {
+        "code": "core.files.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "name",
+                "content-type",
+                "size",
+                "checksum-algorithm",
+                "checksum-value",
+                "storage-key",
+                "scan-result",
+                "access-intent"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "name",
+                "content-type",
+                "size",
+                "checksum-algorithm",
+                "checksum-value",
+                "storage-key",
+                "scan-status",
+                "scanner",
+                "access-operation"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "too-long",
+                "untrimmed",
+                "path-separator",
+                "control-character",
+                "invalid-format",
+                "not-safe-integer",
+                "negative",
+                "whitespace",
+                "absolute-path",
+                "empty-segment",
+                "dot-segment",
+                "parent-segment",
+                "closed-value-rejected",
+                "blank",
+                "predicate-rejected"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "core.files.operation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "put",
+                "get",
+                "delete"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "id",
+                "access-operation",
+                "tenant-id",
+                "file-name",
+                "content-type",
+                "size",
+                "correlation-id",
+                "checksum",
+                "metadata",
+                "scan",
+                "retention",
+                "duplicate-strategy"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "existing-file",
+                "idempotent-mismatch",
+                "file-absent",
+                "operation-mismatch",
+                "tenant-mismatch"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected-before-write"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.files.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "name",
+                "content-type",
+                "size",
+                "checksum-algorithm",
+                "checksum-value",
+                "storage-key",
+                "scan-result",
+                "access-intent",
+                "checksum",
+                "metadata",
+                "storage-ref",
+                "retention-policy",
+                "file-object",
+                "put-input",
+                "error",
+                "initialize",
+                "put",
+                "get",
+                "delete",
+                "accepted-puts",
+                "stored-files"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "normalization",
+                "predicate-invocation",
+                "result-projection",
+                "metadata-enumeration",
+                "metadata-copy",
+                "storage-copy",
+                "checksum-copy",
+                "scan-copy",
+                "retention-copy",
+                "options-enumeration",
+                "options-copy",
+                "storage-key-selection",
+                "storage-key-invocation",
+                "default-storage-key",
+                "map-selection",
+                "map-lookup",
+                "map-write",
+                "history-selection",
+                "history-copy",
+                "history-append",
+                "json-comparison",
+                "map-delete",
+                "snapshot-selection",
+                "snapshot-iteration",
+                "snapshot-copy",
+                "state-creation"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "name",
+                "content-type",
+                "size",
+                "checksum-algorithm",
+                "checksum-value",
+                "storage-key",
+                "scan-status",
+                "scanner",
+                "access-operation",
+                "id",
+                "tenant-id",
+                "file-name",
+                "correlation-id",
+                "checksum",
+                "metadata",
+                "scan",
+                "retention",
+                "duplicate-strategy",
+                "body",
+                "storage",
+                "created-at",
+                "scanned-at",
+                "scan-details",
+                "retain-until",
+                "legal-hold",
+                "expires-at",
+                "reason",
+                "options",
+                "storage-key-for",
+                "now",
+                "error-code",
+                "default-message",
+                "message-key",
+                "params",
+                "cause",
+                "diagnostic",
+                "diagnostic-record",
+                "details"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "value-not-produced",
+                "put-write-not-reached",
+                "map-write-unknown",
+                "map-written-history-not-appended",
+                "map-written-history-append-unknown",
+                "map-written-history-appended",
+                "delete-not-reached",
+                "delete-unknown",
+                "delete-returned",
+                "read-only"
+              ]
+            }
+          },
+          "optional": [
+            "field"
+          ]
+        }
+      },
+      {
+        "code": "core.i18n.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "locale-tag",
+                "message-template",
+                "translation-catalog",
+                "translation-params",
+                "interpolate"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "locale",
+                "template",
+                "catalog-key",
+                "parameter"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-format",
+                "empty",
+                "contains-whitespace",
+                "unsafe-name",
+                "missing-own-property"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "predicate-rejected"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "core.i18n.selection-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "translate"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "source-selection"
+              ]
+            },
+            "selection": {
+              "type": "enum",
+              "values": [
+                "requested-catalog",
+                "fallback-catalog",
+                "default-message"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "candidate-present",
+                "no-message-key",
+                "no-candidate-match",
+                "default-translator"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "source-selected"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "catalogMisses": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "templateMisses": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal",
+            "catalogMisses",
+            "templateMisses"
+          ]
+        }
+      },
+      {
+        "code": "core.i18n.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "locale-tag",
+                "message-template",
+                "translation-catalog",
+                "translation-params",
+                "interpolate",
+                "catalog-translator",
+                "translate",
+                "error"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "predicate-invocation",
+                "normalization",
+                "catalog-enumeration",
+                "catalog-copy",
+                "catalog-index",
+                "candidate-iteration",
+                "catalog-lookup",
+                "template-lookup",
+                "unsafe-name-declaration",
+                "parameter-enumeration",
+                "parameter-copy",
+                "interpolation",
+                "parameter-coercion",
+                "result-projection",
+                "error-projection"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "locale",
+                "template",
+                "catalog-key",
+                "parameter",
+                "catalogs",
+                "catalog",
+                "messages",
+                "message",
+                "request",
+                "fallback-locales",
+                "message-key",
+                "default-message",
+                "params",
+                "additional-unsafe-param-names",
+                "code",
+                "cause",
+                "diagnostic",
+                "diagnostic-record",
+                "details"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "value-not-produced"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "field",
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "core.localization.validation-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "currency-code",
+                "region-code",
+                "time-zone-id",
+                "number",
+                "currency"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "currency",
+                "region",
+                "time-zone",
+                "value",
+                "amount",
+                "minimum-fraction-digits",
+                "maximum-fraction-digits",
+                "fraction-range"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-format",
+                "parent-sequence-rejected",
+                "not-finite",
+                "not-integer",
+                "negative",
+                "minimum-exceeds-maximum"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "predicate-rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.localization.unsupported-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "format"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "implementation-selection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unsupported-implementation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "format-not-performed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.localization.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "currency-code",
+                "region-code",
+                "time-zone-id",
+                "number",
+                "currency",
+                "date-time",
+                "region",
+                "localized-format",
+                "format",
+                "error"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "predicate-invocation",
+                "normalization",
+                "parameter-formatting",
+                "result-projection",
+                "reason-projection",
+                "error-projection"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "currency",
+                "region",
+                "time-zone",
+                "value",
+                "amount",
+                "minimum-fraction-digits",
+                "maximum-fraction-digits",
+                "fraction-range",
+                "locale",
+                "kind",
+                "text",
+                "date-style",
+                "time-style",
+                "reason",
+                "code",
+                "default-message",
+                "message-key",
+                "params",
+                "cause",
+                "diagnostic",
+                "diagnostic-record",
+                "details"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "value-not-produced"
+              ]
+            }
+          },
+          "optional": [
+            "field"
+          ]
+        }
+      }
+    ]
+  }
+}

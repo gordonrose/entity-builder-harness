@@ -1,5 +1,7 @@
 import type { Permission } from "@kanbien/core/authz";
 import {
+  assertPlatformRateLimitPositiveInteger,
+  securityRateLimitPositiveIntegerFailureRecord,
   authzMappingPermissions,
   authorizePlatformPermissions,
   createJwtBearerAuthenticationHook,
@@ -7,6 +9,8 @@ import {
   createPlatformSecurityHeaders,
   denyByDefaultAuthenticationResult,
   platformRateLimitKey,
+  principalFromPlatformAuthenticationResult,
+  type PlatformPrincipalDiagnosticOptions,
   type PlatformAuthzPermissionMapping,
   type PlatformJwtVerifier,
 } from "../src/index";
@@ -49,3 +53,18 @@ const invalidAuthz: PlatformAuthzPermissionMapping = {
   valueClaims: [{ claim: "roles", format: "string-array", values: { admins: [1] } }],
 };
 void invalidAuthz;
+
+const principalDiagnostics: PlatformPrincipalDiagnosticOptions = {
+  onMissingAttribute(attribute) { const field: "principal-id" | "principal-type" | "subject" = attribute; void field; },
+  onDiagnostic(_record, context) { const origin: "owned" | "source" = context.evidence; void origin; },
+};
+void principalFromPlatformAuthenticationResult(denyByDefaultAuthenticationResult, principalDiagnostics);
+
+assertPlatformRateLimitPositiveInteger("limit", 1);
+void securityRateLimitPositiveIntegerFailureRecord("bucket-capacity", 1);
+if (false) {
+  // @ts-expect-error Direct option names are closed, not arbitrary source keys.
+  assertPlatformRateLimitPositiveInteger("PRIVATE_ENV_KEY", 1);
+  // @ts-expect-error The record uses the logical field, not the direct option spelling.
+  void securityRateLimitPositiveIntegerFailureRecord("windowMs", 1);
+}

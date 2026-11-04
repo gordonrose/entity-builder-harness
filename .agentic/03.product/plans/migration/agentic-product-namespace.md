@@ -4,7 +4,7 @@ id: product.migration-plan.agentic-product-namespace
 version: 2
 status: active
 created_on: "2026-08-30"
-updated_on: "2026-10-26"
+updated_on: "2026-11-04"
 layer: 03.product
 domain: migration
 disciplines:
@@ -95,7 +95,7 @@ Session-history references under `commitLogs/` are intentionally not migrated.
 
 ## Validation Plan
 
-- Passed: `bash scripts/01.harness/smoke-test-artifact-path-migration.sh`
+- Passed: `bash scripts/01.harness/smoke-test-artifact-path-migration.sh` (historical invocation; current governed invocation: `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/smoke-test-artifact-path-migration.sh`).
 - Passed: `bash scripts/01.harness/check-artifact-path-migration.sh --plan .agentic/03.product/plans/migration/agentic-product-namespace.md .agentic/product .agentic/03.product`
 - Passed: `bash scripts/01.harness/check-artifact-path-migration.sh --plan .agentic/03.product/plans/migration/agentic-product-namespace.md scripts/product scripts/03.product`
 - Passed: `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`

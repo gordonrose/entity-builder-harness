@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.deployment-operation-diagnostic.v1
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -16,6 +16,15 @@
 #     path: scripts/04.deploy/shared/deployment-operation-diagnostics.py
 schema: deploy/deployment-operation-diagnostic-schema/v1
 report_schema: deploy/deployment-operation-diagnostic/v1
+field_guide:
+  - path: diagnostic
+    what: Optional core record preserving exact configuration, certificate-content or persistence-operation observations without values.
+    does: Retains validated implementation detail alongside the original operation outcome.
+    validation: Read the explicitly selected generated contracts; reject unknown fields, mismatched operations or result codes and success envelopes carrying failure detail.
+  - path: execution.vocabulary_source
+    what: Generated persistence capability definitions.
+    does: Supplies phase, code-status and classification values to compatible Python readers.
+    validation: Runtime source owns values; generated snapshots must be current and committed identities remain readable.
 companion_guide: .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.guide.md
 required_fields:
   - schema
@@ -52,8 +61,6 @@ allowed_collection_statuses:
   - collected
   - unavailable
   - failed
-  - pending
-  - partial
 allowed_fact_fields:
   - artifact_identity
   - change_set_id
@@ -72,13 +79,31 @@ prohibited_values:
   - raw provider response bodies
   - request or response headers
 
-optional_fields: [facts, execution]
+optional_fields: [facts, execution, diagnostic, related_diagnostics, task_failure]
+task_failure:
+  schema: deploy/persistence-task-failure/v1
+  reader: scripts/04.deploy/shared/deployment-operation-diagnostics.py#validate_persistence_task_failure
+  contract_source: infra/04.deploy/03.product/entrypoints/contracts/kanbien-core-server-persistence-operation-diagnostics.v1.json
+  vocabulary_source: delivery.taskFailure
+  observation_catalog_source: catalog
+  limits_source: [delivery.taskFailure.maxObservations, delivery.taskFailure.maxSourceBundles, delivery.taskFailure.maxOverflowCount]
+  additional_fields: false
+  meaning: Preserve a validated rejected task observation independently from the original operation outcome; never acceptance or retry authority.
+diagnostic:
+  contract_source: infra/04.deploy/03.product/entrypoints/contracts/diagnostics.v1.json
+  additional_contract_sources: [platform/persistence/contracts/diagnostics.v1.json, platform/security/contracts/diagnostics.v1.json]
+  reader: scripts/repo/diagnostic-coverage/runtime_contract.py
+related_diagnostics:
+  contract_source: platform/security/contracts/diagnostics.v1.json
+  limit_source: infra/04.deploy/03.product/entrypoints/contracts/diagnostics.v1.json#/delivery/maxRelatedRecords
+  requires: diagnostic
+  reader: scripts/repo/diagnostic-coverage/runtime_contract.py
+  additional_fields: false
 execution:
   required_fields: [phase, elapsed_ms, code_status, classification]
   additional_fields: false
-  allowed_phases: [pool_connect, pool_query, query, authentication_value, tcp_probe, tls_probe, unknown]
-  allowed_code_statuses: [recognized, unrecognized, absent]
-  allowed_classifications: [authentication_rejected, authentication_material_invalid, permission_denied, content_unavailable, tls_trust_invalid, transport_unavailable, timeout, conflict, constraint, transaction_rolled_back, validation, query_canceled, unknown]
+  vocabulary_source: platform/persistence/contracts/diagnostics.v1.json
+  vocabulary_fields: {phase: phase, code_status: codeStatus, classification: classification}
   elapsed_ms: {type: integer-or-null, minimum: 0, maximum: 3600000, unknown_phase_requires_null: true}
 collection:
   required_fields: [status]
@@ -93,7 +118,7 @@ compatibility: Historical v1 reports without optional execution or collection ob
 verifier_result_reader:
   current_schema: deploy/persistence-restore-verifier-result/v2
   required_fields: [schema, verdict, code]
-  optional_fields: [execution]
+  optional_fields: [execution, diagnostic, related_diagnostics]
   additional_fields: false
   allowed_verdicts: [accepted, rejected, diagnosed, diagnostic-failed]
   historical_fields: [verdict, code]

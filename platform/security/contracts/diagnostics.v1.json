@@ -1,0 +1,4094 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "security",
+    "definitions": [
+      {
+        "code": "security.trust-material-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "certificate-content-parsing"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-type",
+                "no-certificate-blocks",
+                "malformed-certificate-block"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "security.peer-identity-verification-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "peer-identity-verification"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "hostname-mismatch",
+                "unclassified-peer-identity-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "security.peer-trust-verification-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "peer-trust-verification"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "untrusted-chain",
+                "expired",
+                "not-yet-valid",
+                "revoked",
+                "unclassified-peer-trust-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "security.certificate-block-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "certificate-content-parsing"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "malformed-certificate-block",
+                "unfinished-certificate-block",
+                "unmatched-certificate-end"
+              ]
+            },
+            "blockNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "security.configuration-predicate-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "table",
+                "region",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "wrong-type",
+                "not-finite",
+                "not-integer",
+                "not-positive"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "security.rate-limit-clock-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "clock-evaluation"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "evaluation-threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "decision-not-returned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "security.authentication.principal-boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "principal-from-authentication"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "authenticated",
+                "principal-id",
+                "principal-type",
+                "subject",
+                "claims",
+                "scopes"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "value-not-produced"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "security.authentication-header.missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication-header"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication-header.unsupported-scheme",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication-header"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unsupported-scheme"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication-header.malformed-bearer",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication-header"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "malformed-bearer"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.verifier-rejected-unclassified",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "verifier-rejected-unclassified"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.verifier-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "verifier-failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.component-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "component-failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.subject-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "subject-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.subject-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "subject-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.subject-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "subject-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.hook-unavailable",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "hook-unavailable"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.principal-attribute-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "principal-attribute-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "attribute": {
+              "type": "enum",
+              "values": [
+                "principal-id",
+                "principal-type",
+                "subject"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authentication.additional-observations-omitted",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authentication"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "additional-observations-omitted"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "omittedCount": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.segment-count",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "segment-count"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.empty-segment",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty-segment"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.header-json-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "header-json-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.header-not-object",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "header-not-object"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.payload-json-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "payload-json-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.payload-not-object",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "payload-not-object"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.algorithm-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "algorithm-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.algorithm-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "algorithm-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.algorithm-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "algorithm-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.algorithm-unsupported",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "algorithm-unsupported"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.key-id-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-id-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.key-id-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-id-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.key-id-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-id-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.signature-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "signature-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.issuer-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "issuer-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.issuer-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "issuer-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.issuer-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "issuer-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.issuer-mismatch",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "issuer-mismatch"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.required-claim-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "required-claim-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.required-claim-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "required-claim-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.required-claim-mismatch",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "required-claim-mismatch"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.expiry-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "expiry-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.expiry-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "expiry-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.expired",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "expired"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.not-before-in-future",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "not-before-in-future"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.issued-at-in-future",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "issued-at-in-future"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.not-before-wrong-type-ignored",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "not-before-wrong-type-ignored"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.issued-at-wrong-type-ignored",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "issued-at-wrong-type-ignored"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.subject-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "subject-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.subject-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "subject-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.token.subject-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "token"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "subject-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.fetch-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "fetch-failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.http-unsuccessful",
+        "version": 1,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "http-unsuccessful"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.response-json-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "response-json-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.key-set-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-set-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.key-material-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-material-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.key-entry-unreadable",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-entry-unreadable"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.key-id-absent",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-id-absent"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.key-type-unsupported",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-type-unsupported"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.key-modulus-absent",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-modulus-absent"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.key-exponent-absent",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "key-exponent-absent"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.no-matching-usable-key",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "no-matching-usable-key"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.signing-key.additional-observations-omitted",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "signing-key"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "additional-observations-omitted"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "omittedCount": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.permission-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "permission-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.undeclared-permission",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "undeclared-permission"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.claim-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "claim-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.claim-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "claim-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.claim-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "claim-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.claim-unmapped",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "claim-unmapped"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.claim-mismatch",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "claim-mismatch"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.component-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "component-failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.resource-denied",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "resource-denied"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.authorization.additional-observations-omitted",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "authorization"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "additional-observations-omitted"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "omittedCount": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.cors.origin-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "cors"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "origin-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.cors.origin-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "cors"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "origin-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.cors.origin-allowed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "cors"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "origin-allowed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.cors.origin-not-allowlisted",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "cors"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "origin-not-allowlisted"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.cors.preflight-path-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "cors"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "preflight-path-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.cors.preflight-path-present",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "cors"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "preflight-path-present"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.response-header.platform-owned-override-ignored",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "response-header"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "platform-owned-override-ignored"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "headerReference": {
+              "type": "enum",
+              "values": [
+                "access-control-allow-credentials",
+                "access-control-allow-headers",
+                "access-control-allow-methods",
+                "access-control-allow-origin",
+                "access-control-max-age",
+                "allow",
+                "content-security-policy",
+                "content-type",
+                "permissions-policy",
+                "referrer-policy",
+                "retry-after",
+                "vary",
+                "x-content-type-options",
+                "x-frame-options",
+                "x-request-id"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.rate-limit.quota-exhausted",
+        "version": 1,
+        "classification": {
+          "failureKind": "rate_limited",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "rate-limit"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "quota-exhausted"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "transport",
+                "principal"
+              ]
+            },
+            "keyCategory": {
+              "type": "enum",
+              "values": [
+                "client-address",
+                "principal",
+                "anonymous"
+              ]
+            }
+          },
+          "optional": [
+            "boundary",
+            "keyCategory"
+          ]
+        }
+      },
+      {
+        "code": "security.rate-limit.bucket-capacity-exhausted",
+        "version": 1,
+        "classification": {
+          "failureKind": "resource_exhausted",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "rate-limit"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "bucket-capacity-exhausted"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "transport",
+                "principal"
+              ]
+            },
+            "keyCategory": {
+              "type": "enum",
+              "values": [
+                "client-address",
+                "principal",
+                "anonymous"
+              ]
+            }
+          },
+          "optional": [
+            "boundary",
+            "keyCategory"
+          ]
+        }
+      },
+      {
+        "code": "security.rate-limit.configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "rate-limit"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "configuration-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.rate-limit.dependency-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "rate-limit"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "dependency-failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "transport",
+                "principal"
+              ]
+            },
+            "keyCategory": {
+              "type": "enum",
+              "values": [
+                "client-address",
+                "principal",
+                "anonymous"
+              ]
+            }
+          },
+          "optional": [
+            "boundary",
+            "keyCategory"
+          ]
+        }
+      },
+      {
+        "code": "security.rate-limit.rejected-unclassified",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "rate-limit"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "rejected-unclassified"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "transport",
+                "principal"
+              ]
+            },
+            "keyCategory": {
+              "type": "enum",
+              "values": [
+                "client-address",
+                "principal",
+                "anonymous"
+              ]
+            }
+          },
+          "optional": [
+            "boundary",
+            "keyCategory"
+          ]
+        }
+      },
+      {
+        "code": "security.adapter-configuration.missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.invalid-json",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-json"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.wrong-shape",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-shape"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.entry-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "entry-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.entry-empty",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "entry-empty"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.attribute-missing",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "attribute-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "attribute": {
+              "type": "enum",
+              "values": [
+                "claim",
+                "equals",
+                "permissions"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.attribute-wrong-type",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "attribute-wrong-type"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "attribute": {
+              "type": "enum",
+              "values": [
+                "claim",
+                "equals",
+                "permissions"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.attribute-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "attribute-invalid"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "attribute": {
+              "type": "enum",
+              "values": [
+                "claim",
+                "equals",
+                "permissions"
+              ]
+            },
+            "itemIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.duplicate-item",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "duplicate-item"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "referenceIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.adapter-configuration.invalid-positive-integer",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "adapter-configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-positive-integer"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            },
+            "reference": {
+              "type": "enum",
+              "values": [
+                "region",
+                "identity-pool",
+                "client",
+                "additional-clients",
+                "group-mapping",
+                "scope-mapping",
+                "claim-mapping",
+                "table",
+                "limit",
+                "window",
+                "bucket-capacity"
+              ]
+            }
+          },
+          "optional": []
+        }
+      },
+      {
+        "code": "security.jwt-configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "verifier-construction"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "verifier-not-created"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "configuration",
+                      "issuer",
+                      "key-source",
+                      "clock-tolerance",
+                      "required-claims",
+                      "required-claim.name",
+                      "required-claim.comparison",
+                      "required-claim.value",
+                      "clock.now",
+                      "key-fetcher.fetch"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "wrong-type",
+                      "empty",
+                      "blank",
+                      "surrounding-whitespace",
+                      "invalid-format",
+                      "unsupported-value",
+                      "not-finite",
+                      "negative",
+                      "unsupported-scheme",
+                      "comparison-missing",
+                      "comparison-conflict",
+                      "not-callable"
+                    ]
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "attributeIndex": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "optional": [
+                  "index",
+                  "attributeIndex"
+                ]
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

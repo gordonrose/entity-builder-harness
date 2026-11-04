@@ -12,6 +12,12 @@
       "@kanbien/platform-persistence": [
         "platform/persistence/src/index.ts"
       ],
+      "@kanbien/platform-security": ["platform/security/src/index.ts"],
+      "@kanbien/platform-config": ["platform/config/src/index.ts"],
+      "@kanbien/platform-health": ["platform/health/src/index.ts"],
+      "@kanbien/platform-runtime": ["platform/runtime/src/index.ts"],
+      "@kanbien/platform-server": ["platform/server/src/index.ts"],
+      "@kanbien/platform-workers": ["platform/workers/src/index.ts"],
       "@kanbien/app-platform-smoke": [
         "apps/platform-smoke/src/index.ts"
       ],

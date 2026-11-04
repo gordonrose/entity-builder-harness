@@ -1,6 +1,7 @@
 import type { OutboxEntryId } from "@kanbien/core/persistence";
 import type { ISODateTime, Result } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
+import { observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 import {
   nextPlatformPersistenceLease,
   initialPlatformPersistenceAttempt,
@@ -42,8 +43,11 @@ export interface PlatformProcessingStore {
   }): Promise<Result<PlatformProcessingRecord, PlatformPersistenceError>>;
 }
 
-export function createInMemoryPlatformProcessingStore(): PlatformProcessingStore {
+export function createInMemoryPlatformProcessingStore(options: PlatformPersistenceDiagnosticOptions = {}): PlatformProcessingStore {
   const records = new Map<OutboxEntryId, PlatformProcessingRecord>();
+  const reject = (code: PlatformPersistenceError["code"], message: string, key: string,
+    operation: PersistenceLocalRejectionDetail["operation"], field: PersistenceLocalRejectionDetail["field"], condition: PersistenceLocalRejectionDetail["condition"]) =>
+    failure(code, message, key, { operation, field, condition, phase: "state-check", effect: "local-state-unchanged" }, options);
 
   return {
     async get(outboxEntryId) {
@@ -69,6 +73,8 @@ export function createInMemoryPlatformProcessingStore(): PlatformProcessingStore
         durationMs: input.leaseDurationMs,
       });
       if (!lease.ok) {
+        if (lease.error.diagnosticRecord !== undefined) observePlatformPersistenceDiagnostic(options, lease.error.diagnosticRecord,
+          { relatedDiagnosticRecords: lease.error.relatedDiagnosticRecords });
         return { ok: false, error: lease.error };
       }
 
@@ -85,10 +91,11 @@ export function createInMemoryPlatformProcessingStore(): PlatformProcessingStore
     async complete(input) {
       const record = records.get(input.outboxEntryId);
       if (record === undefined) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_PROCESSING_NOT_CLAIMED",
           "Processing must be claimed before it can complete.",
           "platform.persistence.processing.not_claimed",
+          "complete_processing", "record", "not-found",
         );
       }
 
@@ -97,26 +104,29 @@ export function createInMemoryPlatformProcessingStore(): PlatformProcessingStore
       }
 
       if (record.state !== "claimed" || record.lease === undefined) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_PROCESSING_NOT_CLAIMED",
           "Processing must have an active claim before it can complete.",
           "platform.persistence.processing.not_claimed",
+          "complete_processing", record.state !== "claimed" ? "state" : "lease", record.state !== "claimed" ? "wrong-state" : "absent",
         );
       }
 
       if (record.lease.fence !== input.fence) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_STALE_FENCE",
           "Processing completion used a stale fence.",
           "platform.persistence.processing.stale_fence",
+          "complete_processing", "fence", "stale",
         );
       }
 
       if (platformLeaseExpired(record.lease, input.completedAt)) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_LEASE_EXPIRED",
           "Processing completion used an expired lease.",
           "platform.persistence.processing.lease.expired",
+          "complete_processing", "lease", "expired",
         );
       }
 
@@ -133,26 +143,30 @@ export function createInMemoryPlatformProcessingStore(): PlatformProcessingStore
     async release(input) {
       const record = records.get(input.outboxEntryId);
       if (record === undefined || record.state !== "claimed" || record.lease === undefined) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_PROCESSING_NOT_CLAIMED",
           "Processing must have an active claim before it can be released.",
           "platform.persistence.processing.not_claimed",
+          "release_processing", record === undefined ? "record" : record.state !== "claimed" ? "state" : "lease",
+          record === undefined ? "not-found" : record.state !== "claimed" ? "wrong-state" : "absent",
         );
       }
 
       if (record.lease.fence !== input.fence) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_STALE_FENCE",
           "Processing release used a stale fence.",
           "platform.persistence.processing.stale_fence",
+          "release_processing", "fence", "stale",
         );
       }
 
       if (platformLeaseExpired(record.lease, input.releasedAt)) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_LEASE_EXPIRED",
           "Processing release used an expired lease.",
           "platform.persistence.processing.lease.expired",
+          "release_processing", "lease", "expired",
         );
       }
 
@@ -181,9 +195,13 @@ function failure(
   code: PlatformPersistenceError["code"],
   defaultMessage: string,
   key: string,
+  detail: PersistenceLocalRejectionDetail,
+  options: PlatformPersistenceDiagnosticOptions,
 ): Result<never, PlatformPersistenceError> {
+  const diagnosticRecord = persistenceLocalRejectionDiagnosticRecord(detail);
+  observePlatformPersistenceDiagnostic(options, diagnosticRecord);
   return {
     ok: false,
-    error: platformPersistenceError({ code, defaultMessage, messageKey: key }),
+    error: platformPersistenceError({ code, defaultMessage, messageKey: key, diagnosticRecord }),
   };
 }

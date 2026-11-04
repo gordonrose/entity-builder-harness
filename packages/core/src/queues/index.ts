@@ -16,7 +16,10 @@ import {
   type MessageParams,
   type Result,
 } from "../shared/index";
-import type { DiagnosticDescriptor } from "../diagnostics/index";
+import { selectDiagnosticEvidence, type DiagnosticDescriptor, type DiagnosticRecord } from "../diagnostics/index";
+import { coreDiagnosticCatalog } from "../diagnostic-catalog";
+import { coreQueueValidationDiagnosticRecord, type CoreQueueDiagnosticOptions, type CoreQueueValidationDetail, type CoreQueueDiagnosticContext } from "./diagnostics";
+export * from "./diagnostics";
 import { traceContext, type TraceContext } from "../monitoring/index";
 import type { TenantId } from "../tenancy/index";
 
@@ -128,6 +131,7 @@ export function queueMessageType(value: string): Result<QueueMessageType, QueueE
         defaultMessage: "Queue message type must use dot-separated lowercase segments.",
         messageKey: "queues.type.invalid",
         params: { type: value },
+        diagnosticRecord: queueValidation("message-type", "invalid-format"),
       }),
     );
   }
@@ -136,13 +140,15 @@ export function queueMessageType(value: string): Result<QueueMessageType, QueueE
 }
 
 export function queueMessageVersion(value: number): Result<QueueMessageVersion, QueueError> {
-  if (!Number.isInteger(value) || value <= 0) {
+  const integer = Number.isInteger(value);
+  if (!integer || value <= 0) {
     return err(
       queueError({
         code: "QUEUE_INVALID_VERSION",
         defaultMessage: "Queue message version must be a positive integer.",
         messageKey: "queues.version.invalid",
         params: { version: String(value) },
+        diagnosticRecord: queueValidation("message-version", integer ? "not-positive" : "not-integer"),
       }),
     );
   }
@@ -151,13 +157,15 @@ export function queueMessageVersion(value: number): Result<QueueMessageVersion, 
 }
 
 export function queueDelaySeconds(value: number): Result<QueueDelaySeconds, QueueError> {
-  if (!Number.isInteger(value) || value < 0) {
+  const integer = Number.isInteger(value);
+  if (!integer || value < 0) {
     return err(
       queueError({
         code: "QUEUE_INVALID_DELAY",
         defaultMessage: "Queue delay must be a non-negative integer number of seconds.",
         messageKey: "queues.delay.invalid",
         params: { delaySeconds: String(value) },
+        diagnosticRecord: queueValidation("delay", integer ? "negative" : "not-integer"),
       }),
     );
   }
@@ -166,13 +174,15 @@ export function queueDelaySeconds(value: number): Result<QueueDelaySeconds, Queu
 }
 
 export function queueAttempt(value: number): Result<QueueAttempt, QueueError> {
-  if (!Number.isInteger(value) || value <= 0) {
+  const integer = Number.isInteger(value);
+  if (!integer || value <= 0) {
     return err(
       queueError({
         code: "QUEUE_INVALID_ATTEMPT",
         defaultMessage: "Queue attempt must be a positive integer.",
         messageKey: "queues.attempt.invalid",
         params: { attempt: String(value) },
+        diagnosticRecord: queueValidation("attempt", integer ? "not-positive" : "not-integer"),
       }),
     );
   }
@@ -181,11 +191,11 @@ export function queueAttempt(value: number): Result<QueueAttempt, QueueError> {
 }
 
 export function queueIdempotencyKey(value: string): QueueIdempotencyKey {
-  return brand<string, "QueueIdempotencyKey">(requireNonEmpty(value, "Queue idempotency key"));
+  return brand<string, "QueueIdempotencyKey">(requireNonEmpty(value, "Queue idempotency key", "idempotency-key"));
 }
 
 export function queueMessageGroupKey(value: string): QueueMessageGroupKey {
-  return brand<string, "QueueMessageGroupKey">(requireNonEmpty(value, "Queue message group key"));
+  return brand<string, "QueueMessageGroupKey">(requireNonEmpty(value, "Queue message group key", "message-group-key"));
 }
 
 export function queueDeadLetterReason(value: string): Result<QueueDeadLetterReason, QueueError> {
@@ -196,6 +206,7 @@ export function queueDeadLetterReason(value: string): Result<QueueDeadLetterReas
         defaultMessage: "Queue dead-letter reason must use lowercase segments.",
         messageKey: "queues.dead_letter.reason.invalid",
         params: { reason: value },
+        diagnosticRecord: queueValidation("dead-letter-reason", "invalid-format"),
       }),
     );
   }
@@ -210,6 +221,8 @@ export function queueError(input: {
   readonly params?: MessageParams;
   readonly cause?: unknown;
   readonly diagnostic?: DiagnosticDescriptor;
+  readonly diagnosticRecord?: CoreError["diagnosticRecord"];
+  readonly relatedDiagnosticRecords?: CoreError["relatedDiagnosticRecords"];
   readonly details?: Readonly<Record<string, unknown>>;
 }): QueueError {
   return {
@@ -219,6 +232,8 @@ export function queueError(input: {
     ...(input.params === undefined ? {} : { params: input.params }),
     ...(input.cause === undefined ? {} : { cause: input.cause }),
     ...(input.diagnostic === undefined ? {} : { diagnostic: input.diagnostic }),
+    ...(input.diagnosticRecord === undefined ? {} : { diagnosticRecord: input.diagnosticRecord }),
+    ...(input.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: input.relatedDiagnosticRecords }),
     ...(input.details === undefined ? {} : { details: input.details }),
   };
 }
@@ -274,6 +289,7 @@ export function queueRetryMetadata(input: {
           attempt: String(input.attempt),
           maxAttempts: String(input.maxAttempts),
         },
+        diagnosticRecord: queueValidation("retry-attempt", "exceeds-maximum-attempt"),
       }),
     );
   }
@@ -311,7 +327,7 @@ export function queueDelivery<TPayload extends QueuePayloadValue>(input: {
   readonly deadLetter?: QueueDeadLetterMetadata;
 }): QueueDelivery<TPayload> {
   if (input.retry !== undefined && input.deadLetter !== undefined) {
-    throw new TypeError("Queue delivery cannot be both retryable and dead-lettered.");
+    throw Object.assign(new TypeError("Queue delivery cannot be both retryable and dead-lettered."), { diagnosticRecord: queueValidation("delivery-disposition", "conflicting") });
   }
 
   const base = {
@@ -389,10 +405,41 @@ function copyQueuePayloadValue(value: QueuePayloadValue): QueuePayloadValue {
   return copyJsonValue(value, "queue payload");
 }
 
-function requireNonEmpty(value: string, label: string): string {
+function requireNonEmpty(value: string, label: string, field: "idempotency-key" | "message-group-key"): string {
   if (value.length === 0) {
-    throw new TypeError(`${label} must not be empty.`);
+    throw Object.assign(new TypeError(`${label} must not be empty.`), { diagnosticRecord: queueValidation(field, "empty") });
   }
 
   return value;
+}
+
+function queueValidation(field: CoreQueueValidationDetail["field"], reason: CoreQueueValidationDetail["reason"]) {
+  return coreQueueValidationDiagnosticRecord({ operation: "validate", field, reason, effect: "rejected" });
+}
+
+/** Functions read the completed catalog only at invocation, never during its initialization. */
+export function selectCoreQueueDiagnosticEvidence(options: CoreQueueDiagnosticOptions | undefined, cause: unknown): ReturnType<typeof selectDiagnosticEvidence> {
+  let definitions = coreDiagnosticCatalog.definitions as readonly import("../diagnostics/index").DiagnosticDefinition[];
+  try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; } catch { /* Core ownership remains selected when optional definitions are unavailable. */ }
+  return selectDiagnosticEvidence(definitions, cause);
+}
+const queuePromiseThen = Promise.prototype.then;
+function ignoreQueueDiagnosticRejection(value: unknown): void {
+  if (value === undefined) return;
+  try { Reflect.apply(queuePromiseThen, value, [undefined, () => undefined]); }
+  catch { try { Reflect.apply(queuePromiseThen, Promise.resolve(value), [undefined, () => undefined]); } catch { /* Unavailable optional sink. */ } }
+}
+export function observeCoreQueueDiagnostic(options: CoreQueueDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown): ReturnType<typeof selectDiagnosticEvidence> {
+  const selected = selectCoreQueueDiagnosticEvidence(options, cause);
+  const checked = selectCoreQueueDiagnosticEvidence(options, { diagnosticRecord: own }).diagnosticRecord;
+  if (checked === undefined || !["core.queue.validation-rejected", "core.queue.boundary-failed", "core.queue.receive-reduced"].includes(checked.code)) return selected;
+  const detail = checked.detail as CoreQueueDiagnosticContext;
+  const context: CoreQueueDiagnosticContext = Object.freeze({ operation: detail.operation, ...(detail.boundary === undefined ? {} : { boundary: detail.boundary }) });
+  const deliver = (record: DiagnosticRecord): void => {
+    try { ignoreQueueDiagnosticRejection(options?.onDiagnostic?.(record, context)); } catch { /* Preserve workload behavior and callback receiver. */ }
+  };
+  deliver(checked);
+  if (selected.diagnosticRecord !== undefined) deliver(selected.diagnosticRecord);
+  for (const record of selected.relatedDiagnosticRecords ?? []) deliver(record);
+  return selected;
 }

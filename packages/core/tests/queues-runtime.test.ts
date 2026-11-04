@@ -16,9 +16,17 @@ import {
   queueMessageVersion,
   queueRetryMetadata,
   queueSendOptions,
+  coreQueueValidationDiagnosticRecord,
+  coreQueueBoundaryDiagnosticRecord,
+  coreQueueBoundaryDiagnostic,
+  coreQueueReceiveReductionDiagnosticRecord,
+  observeCoreQueueDiagnostic,
+  selectCoreQueueDiagnosticEvidence,
+  type CoreQueueValidationDetail,
+  type CoreQueueDiagnosticContext,
   type QueueMessage,
 } from "../src/queues/index";
-import { diagnosticDescriptor } from "../src/diagnostics/index";
+import { diagnosticDescriptor, createDiagnosticRecord, defineDiagnostic, type DiagnosticRecord } from "../src/diagnostics/index";
 import { spanId, traceContext, traceId } from "../src/monitoring/index";
 import { causationId, correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
@@ -273,6 +281,65 @@ async function main(): Promise<void> {
 
   const noopResult = await noopQueue.send(message);
   equal(isOk(noopResult), true);
+
+  const own = coreQueueBoundaryDiagnosticRecord({ operation: "send", boundary: "invocation", reason: "rejected", effect: "unknown" });
+  deepEqual(own, { schema: "core/diagnostic-record/v1", code: "core.queue.boundary-failed", definitionVersion: 1,
+    detail: { operation: "send", boundary: "invocation", reason: "rejected", effect: "unknown" } });
+  const nativeOwn = coreQueueBoundaryDiagnosticRecord({ operation: "send", boundary: "invocation", reason: "rejected", effect: "unknown", native: { codeAvailability: "recognized", condition: "request-throttled" } });
+  deepEqual(nativeOwn.detail.native, { codeAvailability: "recognized", condition: "request-throttled" });
+  deepEqual(coreQueueBoundaryDiagnostic.classification, { failureKind: "unknown", failureSource: "unknown", severity: "error", recovery: "manual_investigation", retryable: false, userCorrectable: false });
+  throws(() => coreQueueBoundaryDiagnosticRecord({ ...own.detail, native: { codeAvailability: "recognized", condition: "AccessDeniedException" } } as never), /CORE_QUEUE_DIAGNOSTIC_INVALID/);
+  const rejection = (result: { ok: boolean; error?: unknown }, field: CoreQueueValidationDetail["field"], reason: CoreQueueValidationDetail["reason"]): void => {
+    equal(result.ok, false);
+    deepEqual((result.error as { diagnosticRecord: unknown }).diagnosticRecord, coreQueueValidationDiagnosticRecord({ operation: "validate", field, reason, effect: "rejected" }));
+  };
+  rejection(queueMessageType("PRIVATE_QUEUE_CANARY"), "message-type", "invalid-format");
+  rejection(queueDeadLetterReason("PRIVATE_QUEUE_CANARY"), "dead-letter-reason", "invalid-format");
+  for (const value of [NaN, Infinity, 0.5]) {
+    rejection(queueMessageVersion(value), "message-version", "not-integer");
+    rejection(queueDelaySeconds(value), "delay", "not-integer");
+    rejection(queueAttempt(value), "attempt", "not-integer");
+  }
+  for (const value of [0, -1]) { rejection(queueMessageVersion(value), "message-version", "not-positive"); rejection(queueAttempt(value), "attempt", "not-positive"); }
+  rejection(queueDelaySeconds(-1), "delay", "negative");
+  let retryReads: string[] = [];
+  const exceeded = queueRetryMetadata({ get attempt() { retryReads.push("attempt"); return maxAttempts.value; }, get maxAttempts() { retryReads.push("max"); return firstAttempt.value; } });
+  rejection(exceeded, "retry-attempt", "exceeds-maximum-attempt");
+  deepEqual(retryReads, ["max", "attempt", "max", "attempt", "max"]);
+  for (const [construct, field] of [[queueIdempotencyKey, "idempotency-key"], [queueMessageGroupKey, "message-group-key"]] as const) {
+    throws(() => construct(""), (error: unknown) => { equal(error instanceof TypeError, true); deepEqual((error as { diagnosticRecord: unknown }).diagnosticRecord,
+      coreQueueValidationDiagnosticRecord({ operation: "validate", field, reason: "empty", effect: "rejected" })); return true; });
+  }
+  let dispositionReads: string[] = [];
+  throws(() => queueDelivery({ message, receivedAt: receivedAt.value, attempt: firstAttempt.value,
+    get retry() { dispositionReads.push("retry"); return retry.value; }, get deadLetter() { dispositionReads.push("dead"); return deadLetter; } } as never),
+  (error: unknown) => { deepEqual((error as { diagnosticRecord: unknown }).diagnosticRecord, coreQueueValidationDiagnosticRecord({ operation: "validate", field: "delivery-disposition", reason: "conflicting", effect: "rejected" })); return true; });
+  deepEqual(dispositionReads, ["retry", "dead"]);
+  const raw = Object.freeze(new Error("PRIVATE_QUEUE_CANARY"));
+  throws(() => queueIdempotencyKey(Object.defineProperty({}, "length", { get() { throw raw; } }) as never), (error) => error === raw);
+
+  const source = Array.from({ length: 9 }, (_, index) => coreQueueValidationDiagnosticRecord({ operation: "validate", field: "attempt", reason: index === 0 ? "not-integer" : "not-positive", effect: "rejected" }));
+  const sourceError = Object.freeze({ diagnosticRecord: source[0], relatedDiagnosticRecords: source.slice(1), message: "PRIVATE_QUEUE_CANARY" });
+  const seen: DiagnosticRecord[] = [];
+  const contexts: CoreQueueDiagnosticContext[] = [];
+  const owner = { onDiagnostic(record: DiagnosticRecord, context: CoreQueueDiagnosticContext) { equal(this, owner); seen.push(record); contexts.push(context); } };
+  deepEqual(observeCoreQueueDiagnostic(owner, own, sourceError), { diagnosticRecord: source[0], relatedDiagnosticRecords: source.slice(1) });
+  deepEqual(seen, [own, ...source]);
+  equal(contexts.length, 10); contexts.forEach((context) => { equal(context, contexts[0]); deepEqual(context, { operation: "send", boundary: "invocation" }); });
+  deepEqual(queueError({ code: "QUEUE_SEND_FAILED", defaultMessage: "Legacy.", diagnosticRecord: source[0]!, relatedDiagnosticRecords: source.slice(1) }).relatedDiagnosticRecords, source.slice(1));
+  const definition = defineDiagnostic({ code: "queue-fixture.selected", version: 1, classification: { failureKind: "unknown", failureSource: "unknown", severity: "info", recovery: "not_recoverable", action: "none" }, detail: { type: "object", properties: {} } } as const);
+  const selected = createDiagnosticRecord(definition, {}); if (!selected.ok) throw new Error("Fixture invalid");
+  deepEqual(selectCoreQueueDiagnosticEvidence(undefined, { diagnosticRecord: selected.value }), {});
+  equal(selectCoreQueueDiagnosticEvidence({ diagnosticDefinitions: [definition] }, { diagnosticRecord: selected.value }).diagnosticRecord?.code, definition.code);
+  let accessorReads = 0;
+  deepEqual(selectCoreQueueDiagnosticEvidence(undefined, Object.defineProperty({}, "diagnosticRecord", { get() { accessorReads++; throw raw; } })), {}); equal(accessorReads, 0);
+  for (const cause of [0, "PRIVATE_QUEUE_CANARY", raw, Object.freeze({ name: "AccessDenied" })]) deepEqual(selectCoreQueueDiagnosticEvidence(undefined, cause), {});
+  for (const onDiagnostic of [() => { throw raw; }, async () => { throw raw; }, () => Object.defineProperty(Promise.reject(raw), "then", { value: () => { throw raw; } }), () => ({ then(_resolve: unknown, reject: (reason: unknown) => void) { reject(raw); } })]) observeCoreQueueDiagnostic({ onDiagnostic }, own, sourceError);
+  observeCoreQueueDiagnostic(Object.defineProperty({}, "onDiagnostic", { get() { throw raw; } }), own, sourceError);
+  deepEqual(selectCoreQueueDiagnosticEvidence(Object.defineProperty({}, "diagnosticDefinitions", { get() { throw raw; } }), sourceError), { diagnosticRecord: source[0], relatedDiagnosticRecords: source.slice(1) });
+  const reduction = coreQueueReceiveReductionDiagnosticRecord({ operation: "receive", issues: [{ field: "receive-count", reason: "not-positive", reduction: "count-one" }], truncated: false, effect: "reduction-observed" });
+  equal(reduction.code, "core.queue.receive-reduced"); equal(JSON.stringify([...seen, reduction]).includes("PRIVATE_QUEUE_CANARY"), false);
+  await Promise.resolve();
 }
 
 main()

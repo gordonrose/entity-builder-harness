@@ -1,10 +1,13 @@
+export { postgreSqlPersistenceConfigurationTextRules, postgreSqlLoginNameRule } from "./configuration/index";
+export { postgreSqlPasswordCredentials } from "./credentials";
+export type { PostgreSqlPasswordCredentials, PostgreSqlCredentialIssue } from "./credentials";
 export {
   postgreSqlPersistenceConfiguration,
-} from "./config";
+} from "./configuration/index";
 export type {
   PostgreSqlPersistenceConfiguration,
   PostgreSqlPersistenceConfigurationError,
-} from "./config";
+} from "./configuration/index";
 
 export {
   createNodePostgreSqlConnectionPool,
@@ -18,7 +21,7 @@ export type {
   PostgreSqlStatement,
   PostgreSqlTransactionalClient,
 } from "./connection";
-export { rdsIamAuthenticationToken } from "./rds-iam-authentication";
+export { rdsIamAuthenticationToken, rdsIamAuthenticationTextRules } from "./rds-iam-authentication";
 export type { RdsIamAuthenticationTokenOptions } from "./rds-iam-authentication";
 
 export {
@@ -75,12 +78,11 @@ export type {
   PostgreSqlPersistenceTelemetrySink,
 } from "./telemetry";
 
-export const adapterMetadata = {
-  provider: "aws",
-  capability: "persistence",
-  implementation: "postgresql",
-  packageName: "@kanbien/platform-adapter-aws-persistence-postgresql",
-} as const;
+export { adapterMetadata } from "./metadata";
 
-export { observePostgreSqlOperation, postgreSqlFailureDiagnostic, postgreSqlFailureClassifications } from "./errors";
+export { observePostgreSqlOperation, postgreSqlFailureDiagnostic, postgreSqlFailureClassifications, postgreSqlPersistenceOperationError } from "./errors";
 export type { PostgreSqlFailureDiagnostic, PostgreSqlFailureFacts, PostgreSqlFailureClassification, PostgreSqlObservedPhase } from "./errors";
+export { postgreSqlSecurityDiagnosticRecords } from "./errors";
+
+export { postgreSqlPersistenceRequirements, assemblePostgreSqlPersistenceConfiguration } from "./configuration/index";
+export type { PostgreSqlPersistenceConfigurationPolicy } from "./configuration/index";

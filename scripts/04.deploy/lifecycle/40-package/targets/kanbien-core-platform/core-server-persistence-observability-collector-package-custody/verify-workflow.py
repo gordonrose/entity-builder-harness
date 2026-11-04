@@ -6,7 +6,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -43,7 +43,7 @@ FORBIDDEN = ("aws cloudformation", "aws ecs", "aws lambda", "terraform apply", "
 
 def qualification_route_valid(text):
     try:
-        protected_script(Path('scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh'), 'set -euo pipefail\nROOT="$(git rev-parse --show-toplevel)"\nimage="kanbien-observability-collector:qualification"\nif [[ "$#" -gt 0 ]]; then\n  if [[ "$#" -ne 2 || "$1" != --image || -z "$2" ]]; then echo "Usage: qualify-image.sh [--image <reference>]" >&2; exit 2; fi\n  image="$2"\nfi\nname="kanbien-observability-collector-qualification-${GITHUB_RUN_ID:-$$}"\ncleanup() { python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py" --container "$name"; }\nfinish() {\n  local original=$? cleanup_status=0\n  trap - EXIT\n  cleanup || cleanup_status=$?\n  if [[ "$original" -ne 0 ]]; then exit "$original"; fi\n  exit "$cleanup_status"\n}\ntrap finish EXIT\ndocker run --detach --rm --name "$name" --network none --read-only \\\n  --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL \\\n  --security-opt no-new-privileges \\\n  -e AWS_EC2_METADATA_DISABLED=true \\\n  -e "AOT_CONFIG_CONTENT=$(cat infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml)" \\\n  "$image" >/dev/null\nsleep 5\ntest "$(docker inspect --format \'{{.State.Running}}\' "$name")" = true\nlogs="$(docker logs "$name" 2>&1)"\n! grep -Ei \'error.*(config|awsemf)|failed.*(config|awsemf)\' <<<"$logs"\ncleanup\ntrap - EXIT\n\nexec python3 -B "$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py" --image "$image"')
+        protected_script(Path("scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh"), "set -euo pipefail\nROOT=\"$(git rev-parse --show-toplevel)\"\nsource \"$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh\"\nimage=\"kanbien-observability-collector:qualification\"\nif [[ \"$#\" -gt 0 ]]; then\n  if [[ \"$#\" -ne 2 || \"$1\" != --image || -z \"$2\" ]]; then echo \"Usage: qualify-image.sh [--image <reference>]\" >&2; exit 2; fi\n  image=\"$2\"\nfi\nname=\"kanbien-observability-collector-qualification-${GITHUB_RUN_ID:-$$}\"\ncleanup() { python3 -B \"$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py\" --container \"$name\"; }\nfinish() {\n  local original=$? cleanup_status=0\n  trap - EXIT\n  cleanup || cleanup_status=$?\n  if [[ \"$original\" -ne 0 ]]; then exit \"$original\"; fi\n  exit \"$cleanup_status\"\n}\ntrap finish EXIT\nsafe_command_diagnostic COLLECTOR_CONTAINER_START_FAILED package 'Disposable collector start failed.' 'Inspect the collector startup fixture.' -- docker run --detach --rm --name \"$name\" --network none --read-only \\\n  --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL \\\n  --security-opt no-new-privileges \\\n  -e AWS_EC2_METADATA_DISABLED=true \\\n  -e \"AOT_CONFIG_CONTENT=$(cat infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml)\" \\\n  \"$image\"\nsleep 5\ncollector_running() { test \"$(docker inspect --format '{{.State.Running}}' \"$name\")\" = true; }\nsafe_command_diagnostic COLLECTOR_RUNNING_OBSERVATION_FAILED package 'Collector running observation did not qualify.' 'Inspect the collector running observation fixture.' -- collector_running\ncollector_logs() { logs=\"$(docker logs \"$name\" 2>&1)\"; }\nsafe_command_diagnostic COLLECTOR_LOG_OBSERVATION_FAILED package 'Collector log observation failed.' 'Inspect the collector log observation fixture.' -- collector_logs\ncollector_logs_qualify() { ! grep -Ei 'error.*(config|awsemf)|failed.*(config|awsemf)' <<<\"$logs\"; }\nsafe_command_diagnostic COLLECTOR_LOG_QUALIFICATION_FAILED package 'Observed collector logs did not qualify.' 'Inspect the collector log qualification fixture.' -- collector_logs_qualify\ncleanup\ntrap - EXIT\n\nexec python3 -B \"$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py\" --image \"$image\"")
         build = job_steps(text, "build-and-qualify")
         scan = job_steps(text, "scan-qualified-payload")
         custody = job_steps(text, "complete-custody")
@@ -111,10 +111,11 @@ echo "digest=$digest" >> "$GITHUB_OUTPUT"''')
         _,scan_artifact=protected_step(custody,"Retrieve clean collector scan evidence")
         if scan_artifact.get("uses")!="actions/download-artifact@v4" or scan_artifact.get("with")!={"name":"kanbien-core-platform-observability-collector-vulnerability-scan-${{ github.run_id }}","path":"scan-proof"}:return False
         return custody_tail(custody,published_index=publish_index,target="kanbien-core-platform",environment="private-persistence-candidate",region="aws-eu-west-1",candidate="observability-collector",contract="core-server-persistence-observability-collector-image",program="kanbien-observability-collector",stem="observability-collector",artifact_name="kanbien-core-platform-observability-collector-package-custody-${{ github.run_id }}",qualification_outcome="${{ needs.build-and-qualify.result }}",scan_outcome="${{ needs.scan-qualified-payload.result }}",scan_check="vulnerability_scan",provenance_name="Attest collector provenance",attestation_name="Attest collector SBOM",capture_name="Write and validate safe collector custody receipt",upload_name="Upload safe collector custody evidence",receipt_filename="observability-collector-package-custody-receipt.json",extra_artifacts=["scan-input/qualified-image.json","scan-proof/observability-collector.trivy.json"],registry_expression="${{ env.ECR_URI }}")
-    except (OSError, ValueError, TypeError, KeyError, AttributeError, yaml.YAMLError): return False
+    except (OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError, yaml.YAMLError): return False
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=PACKAGE_WORKFLOW_ARGUMENTS_INVALID\n")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--workflow", type=Path, default=DEFAULT_WORKFLOW)
     parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
@@ -127,7 +128,7 @@ def main() -> int:
         codes.append("arguments-invalid")
     try:
         workflow, contract, config, dockerfile, components = (args.workflow.read_text(encoding="utf-8"), args.contract.read_text(encoding="utf-8"), args.config.read_text(encoding="utf-8"), args.dockerfile.read_text(encoding="utf-8"), args.component_manifest.read_text(encoding="utf-8"))
-    except OSError:
+    except (OSError, UnicodeError):
         codes.append("collector-custody-artifact-unreadable")
         workflow = contract = config = dockerfile = components = ""
     if not qualification_route_valid(workflow):

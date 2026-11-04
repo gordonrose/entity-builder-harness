@@ -7,7 +7,7 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const srcRoot = path.join(packageRoot, "src"); // Locate the adapter implementation source directory.
 const packageJsonPath = path.join(packageRoot, "package.json"); // Locate the package contract metadata.
 const repositoryRoot = path.resolve(packageRoot, "../../../../.."); // Locate the repository root for readable test diagnostics.
-const allowedSourceImportPattern = /^(?:@opentelemetry\/(?:api|exporter-metrics-otlp-proto|resources|sdk-metrics)|@kanbien\/core\/monitoring)$/; // Permit only Core monitoring and OTel SDK imports inside this provider adapter.
+const allowedSourceImportPattern = /^(?:@opentelemetry\/(?:api|exporter-metrics-otlp-proto|resources|sdk-metrics)|@kanbien\/core\/(?:monitoring|config|shared)|@kanbien\/platform-observability)$/; // The generic package owns metric policy; the adapter owns provider translation.
 
 const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8")); // Read the adapter package metadata once.
 assert.equal(packageJson.name, "@kanbien/platform-adapter-aws-observability-cloudwatch"); // Prove the public package identity matches the adapter path.
@@ -23,7 +23,10 @@ for (const file of sourceFiles) { // Check every implementation file individuall
   const text = await readFile(file, "utf8"); // Read source as text so imports and forbidden layers can be checked.
   assert.equal(/(?:^|\/)(?:apps|infra)(?:\/|$)/m.test(text), false, relative + " must not import app or infra layers"); // Keep provider adapter code independent of applications and CloudFormation.
   for (const match of text.matchAll(/\bimport\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']/g)) { // Inspect each static ES module import.
-    assert.ok(allowedSourceImportPattern.test(match[1]), relative + " has disallowed import " + match[1]); // Reject cross-layer, provider-client, or app imports not owned by this adapter.
+    if (match[1].startsWith(".")) {
+      const resolved = path.relative(srcRoot, path.resolve(path.dirname(file), match[1]));
+      assert.equal(resolved.startsWith("..") || path.isAbsolute(resolved), false, "Relative adapter imports must remain inside its source package.");
+    } else assert.ok(allowedSourceImportPattern.test(match[1]), relative + " has disallowed import " + match[1]);
   }
 }
 

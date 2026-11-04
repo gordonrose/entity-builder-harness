@@ -5,7 +5,7 @@
 //   version: 1
 //   status: active
 //   created_on: "2026-06-19"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-31"
 //   layer: 00.chat
 //   domain: metrics
 //   disciplines:
@@ -58,6 +58,9 @@ function findRepoRoot(start) {
   return start;
 }
 
+let phase = 'arguments';
+
+function main() {
 const tokenValue = process.argv[2];
 const requestedProfile = process.argv[3] || process.env.CHAT_COST_PROFILE || '';
 
@@ -72,29 +75,38 @@ if (!/^\d+$/.test(tokenValue)) {
 }
 
 const tokenCount = Number(tokenValue);
+phase = 'repository-discovery';
 const repoRoot = findRepoRoot(process.cwd());
 const pricingPath = process.env.CHAT_COST_PRICING_FILE ||
   path.join(repoRoot, 'scripts/00.chat/metrics/data/chat-pricing.json');
 
+phase = 'pricing-read';
 if (!fs.existsSync(pricingPath)) {
   unavailable('pricing snapshot not found');
   process.exit(0);
 }
 
+let contents;
+try {
+  contents = fs.readFileSync(pricingPath, 'utf8');
+} catch {
+  console.error('ERROR: pricing snapshot read failed.');
+  process.exit(1);
+}
 let pricing;
 try {
-  pricing = JSON.parse(fs.readFileSync(pricingPath, 'utf8'));
-} catch (error) {
-  console.error(`ERROR: failed to parse pricing snapshot: ${pricingPath}`);
-  console.error(error.message);
+  pricing = JSON.parse(contents);
+} catch {
+  console.error('ERROR: pricing snapshot parse failed.');
   process.exit(1);
 }
 
+phase = 'pricing-projection';
 const profileName = requestedProfile || pricing.default_profile;
 const profile = pricing.profiles && pricing.profiles[profileName];
 
 if (!profile) {
-  unavailable(`pricing profile not found: ${profileName || 'none'}`);
+  unavailable('pricing profile not found');
   process.exit(0);
 }
 
@@ -106,7 +118,7 @@ if (profile.estimate_rate_usd_per_1m_tokens === null ||
 
 const rate = Number(profile.estimate_rate_usd_per_1m_tokens);
 if (!Number.isFinite(rate) || rate < 0) {
-  console.error(`ERROR: invalid estimate_rate_usd_per_1m_tokens for profile: ${profileName}`);
+  console.error('ERROR: invalid estimate_rate_usd_per_1m_tokens for selected profile.');
   process.exit(1);
 }
 
@@ -128,5 +140,14 @@ const basis = [
   `source=${source}`,
 ].join('; ');
 
+phase = 'success-report';
 console.log(`estimated_chat_cost: ${currency} ${formatUsd(cost)} estimated from estimated_chat_tokens`);
 console.log(`estimated_chat_cost_basis: ${basis}`);
+}
+
+try {
+  main();
+} catch {
+  console.error(`ERROR: chat cost observation failed: phase=${phase}.`);
+  process.exit(1);
+}

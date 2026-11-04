@@ -11,9 +11,22 @@ application entity. The first provider implementation will live separately at
 
 ## Source map
 
+The [leasing module](src/leasing/README.md) owns the shared positive-whole-number
+duration check used by relay construction, durable worker configuration and
+individual lease creation. Targets still choose durations; these checks do not
+grant leases or prove database availability.
+
+The [maintenance instruction module](src/maintenance/README.md) owns supported
+migration/restore job choices and reference-proof requirements. It checks those
+instructions without opening a database. Targets bind environment names and
+run the existing jobs using the returned checked instructions. Its local JSON
+catalogue is exported as `@kanbien/platform-persistence/maintenance/diagnostics.v1.json`;
+the existing combined catalogue remains available too.
+
 | File | Owns | Does not own |
 | --- | --- | --- |
 | `errors.ts` | Stable, provider-neutral platform-persistence failure meanings. | Provider exception objects or application error policy. |
+| `diagnostics.ts` | Versioned finite validation, stored-record reduction, native operation and resource-boundary evidence; safe source selection and optional observation. | Native classifiers, SQL, submitted values, replay authority or provider selection. |
 | `observability/port.ts` | Closed no-payload transition vocabulary and best-effort observer port. | Logging, metric, trace-provider selection, profile policy, or cloud delivery. |
 | `observability/integration.ts` | Persistence-owned translation from a closed transition into generic observability helpers. | Provider selection, telemetry delivery, or cloud configuration. |
 | `observability/index.ts` | Deliberate transition-observability exports. | A second package or target boundary. |
@@ -58,6 +71,15 @@ shutdown. Those responsibilities remain with the existing worker and provider
 queue boundaries. The concrete queue sender and durable outbox store remain
 future adapter work.
 
+Relay boundary records distinguish raw throws from returned failures and retain
+the last observed send/publication milestone. A failed send leaves acceptance
+unknown; a failed marker after send success retains both facts. Missing leases
+reuse the local contract predicate, and envelope rejection retains both original
+Core type/version results. Optional direct queue-message diagnostic options and
+relay selected definitions preserve source primary/eight without replacing raw
+throws. Raw relay evidence uses the existing observer's `relay` operation;
+ordinary idle/contention remains free of failure diagnostics.
+
 ## Transition observability
 
 The relay and optional durable worker emit closed transition facts through an
@@ -75,6 +97,40 @@ may link logs, while an existing trace parent may link spans; neither becomes a
 metric label or general trace attribute. Until an owning app registers a
 profile and target composition approves its metric catalogue entries, these
 local observer hooks are not live target evidence.
+
+Local mutation, lease and in-memory state rejections carry finite diagnostic
+records while retaining their existing errors, parameters and successful
+duplicate/contention outcomes. A failed lease sequence retains both independently
+failed fence and attempt observations. No new input or date validation is added.
+
+Adapters can observe local predicates, transaction/resource boundaries and
+stored-row reductions using the exported builders. Stored-row findings use a
+bounded list (at most sixteen safe field/condition observations) with explicit
+truncation; adapters coalesce findings at the existing operation boundary.
+Missing data and malformed returned data remain distinct, and a reconciliation
+read establishes observed state without proving ownership of earlier writes.
+
+`PlatformPersistenceDiagnosticOptions` selects Core, Persistence and explicitly
+supplied definitions. Its optional `onDiagnostic` receives an independent local
+record and all validated source evidence (primary plus eight companions) without
+replacing the thrown value or waiting for the observer. The transition observer
+also accepts an independent `diagnosticRecord` and an optional injected reporter;
+selection and operational-log profile permissions apply to both default and
+injected delivery. Historical native v1/v2 schemas and emission remain unchanged;
+the additive v3 constructor is restricted to generic create/read/delete and the
+actual primary/reconciliation boundary.
+An informational reconciliation record names the observed read result without attributing a prior write to this invocation.
+
+Command v4 observations retain the actual call boundary and finite native category.
+Recognized invocation condition rejection uses an informational command-condition
+record without classifying the workflow as failed. Stored-attribute v1 findings
+are bounded with explicit truncation, and state
+reconciliation v2 records only the read result. Atomic writers accept optional
+per-invocation diagnostic options: omission retains defaults, while a supplied
+empty object silences the default observer. Resolution touches only diagnostic
+properties and preserves observer receivers. Background stores can use the
+existing persistence observer's optional `onDiagnostic` method, which honors
+the same selected catalogs and operational-log profile permission.
 
 ## The worker-processing boundary
 

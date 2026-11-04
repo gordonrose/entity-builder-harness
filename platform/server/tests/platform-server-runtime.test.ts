@@ -35,6 +35,7 @@ import {
 import { startPlatformServerProcess } from "../src/main";
 
 async function main(): Promise<void> {
+  let reportedClass = "SMOKE_OPERATION_NOT_ACCEPTED";
   const runtimeConfiguration = resolvePlatformServerRuntimeConfiguration({
     env: {
       HOST: "127.0.0.1",
@@ -124,6 +125,7 @@ async function main(): Promise<void> {
         name: observabilityProfileName.value,
         capability: capabilityName.value,
         action: "execute",
+        errorClasses: ["SMOKE_OPERATION_NOT_ACCEPTED"],
         signals: ["operational_log", "metric", "trace"],
         logFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
         metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
@@ -164,7 +166,7 @@ async function main(): Promise<void> {
           handle: () => ({
             status: 503,
             body: { status: "not-accepted" },
-            observability: { errorClass: "SMOKE_OPERATION_NOT_ACCEPTED" },
+            observability: { errorClass: reportedClass },
           }),
         },
       });
@@ -419,6 +421,17 @@ async function main(): Promise<void> {
       && span.end?.attributes?.["http_status_code"] === 503
       && span.end.attributes["error_class"] === "SMOKE_OPERATION_NOT_ACCEPTED");
   equal(reportedFailureTrace?.end?.attributes?.["error_class"], "SMOKE_OPERATION_NOT_ACCEPTED");
+  const failurePointsBefore = metrics.points().filter((point) => point.name === "platform.server.request.outcome").length;
+  reportedClass = "private-class-canary@example.invalid";
+  const undeclaredFailure = await shell.value.handle({ method: "POST", path: "/operation-failed" });
+  equal(undeclaredFailure.status, 503);
+  deepEqual(undeclaredFailure.body, { status: "not-accepted" });
+  equal(logger.records().at(-1)?.fields?.["error_class"], "unknown");
+  equal(metrics.points().filter((point) => point.name === "platform.server.request.outcome").length, failurePointsBefore + 1);
+  equal(metrics.points().filter((point) => point.name === "platform.server.request.outcome").at(-1)?.labels?.["error_class"], "unknown");
+  equal(tracer.spans().at(-1)?.end?.attributes?.["error_class"], "unknown");
+  equal(JSON.stringify([logger.records(), metrics.points(), tracer.spans()]).includes(reportedClass), false);
+  reportedClass = "SMOKE_OPERATION_NOT_ACCEPTED";
 
   const denied = await shell.value.handle({
     method: "POST",

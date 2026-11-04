@@ -9,16 +9,31 @@ import {
   type QueueMessage,
   type QueuePayload,
   type QueueSendOptions,
+  type CoreQueueDiagnosticOptions,
 } from "@kanbien/core";
 import { encodePlatformQueueMessage } from "./messages";
+import { assertSqsConfigurationText } from "./errors";
 import type { PlatformSqsCommandClient } from "./worker";
+import { sqsObservation, type SqsObservation } from "./observations";
+import type { ConfigSource, Result } from "@kanbien/core";
+import { validateSqsSenderConfiguration, type SqsConfigurationCheck, type SqsConfigurationFailure } from "./configuration/index";
 
-export interface PlatformSqsQueueOptions {
+export function createAwsSdkPlatformSqsQueueFromConfiguration<TPayload extends QueuePayload = QueuePayload>(
+  source: ConfigSource, diagnostics?: CoreQueueDiagnosticOptions, check?: SqsConfigurationCheck,
+): Result<Queue<TPayload>, SqsConfigurationFailure> {
+  const configuration = validateSqsSenderConfiguration(source, check, diagnostics);
+  return configuration.ok ? { ok: true, value: createAwsSdkPlatformSqsQueue<TPayload>({ ...configuration.value,
+    onDiagnostic(record, context) { return diagnostics?.onDiagnostic?.(record, context); },
+    get diagnosticDefinitions() { return diagnostics?.diagnosticDefinitions ?? []; },
+  }) } : configuration;
+}
+
+export interface PlatformSqsQueueOptions extends CoreQueueDiagnosticOptions {
   readonly queueUrl: string;
   readonly client: PlatformSqsCommandClient;
 }
 
-export interface AwsSdkPlatformSqsQueueOptions {
+export interface AwsSdkPlatformSqsQueueOptions extends CoreQueueDiagnosticOptions {
   readonly queueUrl: string;
   readonly region: string;
 }
@@ -31,20 +46,22 @@ export interface AwsSdkPlatformSqsQueueOptions {
 export function createPlatformSqsQueue<TPayload extends QueuePayload = QueuePayload>(
   options: PlatformSqsQueueOptions,
 ): Queue<TPayload> {
-  assertNonEmpty("queueUrl", options.queueUrl);
+  sqsObservation(options, "client-initialization").at("selection", () => assertSqsConfigurationText("queueUrl", options.queueUrl, "queue-address"));
   return {
     async send(message: QueueMessage<TPayload>, sendOptions?: QueueSendOptions) {
-      if (message.messageGroupKey !== undefined) {
+      const observed = sqsObservation(options, "send");
+      if (observed.at("selection", () => message.messageGroupKey !== undefined)) {
         return err(queueError({
           code: "QUEUE_SEND_FAILED",
           defaultMessage: "The selected SQS Standard queue does not support message groups.",
           messageKey: "queues.sqs.standard.message_group.unsupported",
+          ...observed.reject("message-group-key", "unsupported"),
         }));
       }
-      const delay = validDelay(sendOptions?.delaySeconds);
+      const delay = observed.at("selection", () => validDelay(sendOptions?.delaySeconds, observed));
       if (!delay.ok) return delay;
       try {
-        await options.client.send(new SendMessageCommand({
+        await observed.send(options, () => new SendMessageCommand({
           QueueUrl: options.queueUrl,
           MessageBody: encodePlatformQueueMessage(message),
           ...(delay.value === undefined ? {} : { DelaySeconds: Number(delay.value) }),
@@ -55,6 +72,7 @@ export function createPlatformSqsQueue<TPayload extends QueuePayload = QueuePayl
           code: "QUEUE_SEND_FAILED",
           defaultMessage: "AWS SQS did not accept the queue message.",
           messageKey: "queues.sqs.send.failed",
+          ...observed.evidence(),
         }));
       }
     },
@@ -64,25 +82,27 @@ export function createPlatformSqsQueue<TPayload extends QueuePayload = QueuePayl
 export function createAwsSdkPlatformSqsQueue<TPayload extends QueuePayload = QueuePayload>(
   options: AwsSdkPlatformSqsQueueOptions,
 ): Queue<TPayload> {
-  assertNonEmpty("region", options.region);
+  const observed = sqsObservation(options, "client-initialization");
+  observed.at("selection", () => assertSqsConfigurationText("region", options.region, "region"));
   return createPlatformSqsQueue<TPayload>({
-    queueUrl: options.queueUrl,
-    client: new SQSClient({ region: options.region }) as unknown as PlatformSqsCommandClient,
+    queueUrl: observed.at("selection", () => options.queueUrl),
+    client: observed.at("construction", () => new SQSClient({ region: options.region })) as unknown as PlatformSqsCommandClient,
+    onDiagnostic(record, context) { return options.onDiagnostic?.(record, context); },
+    get diagnosticDefinitions() { return options.diagnosticDefinitions ?? []; },
   });
 }
 
 function validDelay(
   delay: QueueDelaySeconds | undefined,
+  observed: SqsObservation,
 ): { readonly ok: true; readonly value: QueueDelaySeconds | undefined } | { readonly ok: false; readonly error: QueueError } {
   if (delay === undefined) return { ok: true, value: undefined };
-  if (Number.isInteger(delay) && Number(delay) >= 0 && Number(delay) <= 900) return { ok: true, value: delay };
+  let reason: "not-integer" | "negative" | "above-maximum" = "not-integer";
+  if (Number.isInteger(delay) && (reason = "negative", Number(delay) >= 0) && (reason = "above-maximum", Number(delay) <= 900)) return { ok: true, value: delay };
   return err(queueError({
     code: "QUEUE_INVALID_DELAY",
     defaultMessage: "SQS Standard delay must be an integer from 0 to 900 seconds.",
     messageKey: "queues.sqs.delay.invalid",
+    ...observed.reject("delay", reason),
   }));
-}
-
-function assertNonEmpty(name: string, value: string): void {
-  if (value.length === 0) throw new RangeError(`${name} must not be empty.`);
 }

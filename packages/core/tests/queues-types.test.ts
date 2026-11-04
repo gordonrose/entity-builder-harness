@@ -15,6 +15,10 @@ import {
   queueMessageVersion,
   queueRetryMetadata,
   queueSendOptions,
+  coreQueueBoundaryDiagnosticRecord,
+  observeCoreQueueDiagnostic,
+  type CoreQueueDiagnosticOptions,
+  type CoreQueueDiagnosticContext,
   type Queue,
   type QueueAttempt,
   type QueueDeadLetterMetadata,
@@ -48,6 +52,17 @@ const acceptedError: QueueError = queueError({
   defaultMessage: "Queue send failed.",
   messageKey: "queues.send.failed",
 });
+const diagnosticOptions: CoreQueueDiagnosticOptions = { onDiagnostic: () => undefined };
+const contextualDiagnosticOptions: CoreQueueDiagnosticOptions = { onDiagnostic(_record, context: CoreQueueDiagnosticContext) { const operation: CoreQueueDiagnosticContext["operation"] = context.operation; void operation; } };
+void contextualDiagnosticOptions;
+const boundary = coreQueueBoundaryDiagnosticRecord({ operation: "send", boundary: "invocation", reason: "rejected", effect: "unknown" });
+coreQueueBoundaryDiagnosticRecord({ operation: "send", boundary: "invocation", reason: "rejected", effect: "unknown", native: { codeAvailability: "recognized", condition: "request-throttled" } });
+// @ts-expect-error raw provider codes are not portable observed conditions.
+coreQueueBoundaryDiagnosticRecord({ operation: "send", boundary: "invocation", reason: "rejected", effect: "unknown", native: { codeAvailability: "recognized", condition: "AccessDeniedException" } });
+observeCoreQueueDiagnostic(diagnosticOptions, boundary, { diagnosticRecord: boundary, relatedDiagnosticRecords: [boundary] });
+queueError({ code: "QUEUE_SEND_FAILED", defaultMessage: "Legacy.", diagnosticRecord: boundary, relatedDiagnosticRecords: [boundary] });
+// @ts-expect-error provider names are not a queue operation.
+coreQueueBoundaryDiagnosticRecord({ operation: "SQS_SEND", boundary: "invocation", reason: "rejected", effect: "unknown" });
 const payloadValue: QueuePayloadValue = {
   principalId: "principal-123",
   locale: "en-GB",

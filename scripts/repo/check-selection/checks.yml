@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 5
+#   version: 12
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-04"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -14,6 +14,8 @@
 #   used_by:
 #   - id: repo.command.check-selection
 #     path: scripts/repo/check-selection/script.sh
+#   - id: deploy.compiler.delivery-inventory
+#     path: scripts/04.deploy/inventory-deploy-control/delivery_inventory.py
 schema: repo/check-catalog/v1
 dormant_impact_roots:
 - .agentic/02.rag-rulebook
@@ -26,6 +28,434 @@ dormant_package_commands:
 - package.json#scripts.rag:image:build
 - package.json#scripts.rag:image:smoke
 checks:
+  module-index-structure:
+    boundary: commit
+    argv: [bash, scripts/repo/module-structure/script.sh]
+    stage: local
+    evidence_class: static
+    effects: [read-only]
+    owner: repo.module-structure.command
+    scope_inputs: false
+    inputs:
+    - scripts/repo/module-structure
+    - .agentic/03.product/standards/public-module-structure.md
+    - .agentic/03.product/standards/config-runtime-settings.md
+    - packages
+    - platform
+    - apps
+    - products
+    - infra
+    - package.json
+    - package-lock.json
+    runtime:
+      tools: [bash, node, typescript]
+      node_packages: [typescript]
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH]
+      config_inputs: [.node-version, .nvmrc]
+  module-index-structure-regression:
+    boundary: integration
+    argv: [bash, scripts/repo/module-structure/smoke-test.sh]
+    stage: local
+    evidence_class: static
+    effects: [read-only]
+    owner: repo.module-structure.regression
+    scope_inputs: false
+    inputs:
+    - scripts/repo/module-structure
+    - packages
+    - platform
+    - apps
+    - products
+    - infra
+    - .agentic/03.product/standards/public-module-structure.md
+    - .agentic/03.product/standards/config-runtime-settings.md
+    - package.json
+    - package-lock.json
+    runtime:
+      tools: [bash, node, typescript]
+      node_packages: [typescript]
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH]
+      config_inputs: [.node-version, .nvmrc]
+  harness-artifact-migration-regression:
+    boundary: integration
+    argv: [bash, scripts/01.harness/smoke-test-artifact-path-migration.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: harness.script.smoke-test-artifact-path-migration
+    scope_inputs: false
+    inputs:
+    - scripts/01.harness/check-artifact-path-migration.sh
+    - scripts/01.harness/plan-artifact-path-migration.sh
+    - scripts/01.harness/smoke-test-artifact-path-migration.sh
+    runtime:
+      tools: [bash, git]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, TMPDIR]
+  chat-export-regression:
+    boundary: integration
+    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-export]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/00.chat/export/smoke-test.sh
+    - scripts/00.chat/export/create-worktree-bundle/script.js
+    - scripts/00.chat/export/worktree/script.sh
+    - scripts/00.chat/export/worktree-diff/script.sh
+    - bin/llm-workbench.js
+    - bin/llm-workbench-ownership.js
+    - package.json
+    runtime:
+      tools: [bash, node, git]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TMPDIR]
+      config_inputs: [.node-version, .nvmrc]
+  chat-commit-metrics-regression:
+    boundary: integration
+    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-commit-metrics]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
+    - scripts/00.chat/session-log/record-chat-commit/script.sh
+    - scripts/00.chat/session-log/paths/lib.sh
+    - scripts/00.chat/transcript/discover-codex-session-log/script.sh
+    - scripts/00.chat/metrics/estimate-chat-cost/script.js
+    - scripts/00.chat/metrics/data/chat-pricing.json
+    runtime:
+      tools: [bash, node, git]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TMPDIR, CHAT_COST_PROFILE, CHAT_COST_PRICING_FILE, CHAT_TRANSCRIPT_PROVIDER, CHAT_TRANSCRIPT_PATH, CHAT_TRANSCRIPT_BYTES, CHAT_TRANSCRIPT_SOURCE, CHAT_TRANSCRIPT_METRICS_MODE, TRANSCRIPT_PROVIDER, TRANSCRIPT_PATH, TRANSCRIPT_BYTES, TRANSCRIPT_SOURCE, CODEX_SESSION_LOG_PATH, LLM_WORKBENCH_TRANSCRIPT_PROVIDER, ESTIMATED_CHAT_TOKENS, ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS]
+      config_inputs: [.node-version, .nvmrc]
+  harness-index-regression:
+    boundary: integration
+    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, harness-index]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/01.harness/artifact-metadata/generate-index
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - scripts/01.harness/artifact-metadata/backfill-v2-headers
+    - scripts/01.harness/artifact-metadata/check-headers/script.sh
+    - scripts/01.harness/check-artifact-metadata-headers.sh
+    - .agentic/01.harness/artifact-metadata/examples/markdown.v2.md
+    - .agentic/01.harness/artifact-metadata/examples/yaml.v2.yml
+    - docs/02.rag-rulebook/rules/README.md
+    - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    runtime:
+      tools: [bash, python3, git]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONDONTWRITEBYTECODE, RAG_REPO_ROOT, RAG_SOURCE_COMMIT_SHA]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  harness-agent-validator-regression:
+    boundary: integration
+    argv: [bash, scripts/01.harness/agents/validate-harness-agents/diagnostic-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: harness.test.agents.validate-harness-agents.diagnostics
+    scope_inputs: false
+    inputs:
+    - scripts/01.harness/agents/validate-harness-agents
+    - scripts/01.harness/metrics/compare-task-token-consumption
+    - .agentic/01.harness/agents
+    - .agentic/01.harness/templates/agent-review-report.md
+    - .agentic/01.harness/templates/agent-scorecard.yml
+    - .agentic/01.harness/templates/agent-scorecard.schema.yml
+    - .agentic/01.harness/templates/agent-scorecard.example.yml
+    - .agentic/01.harness/templates/examples/cfo-token-efficiency-scorecard.yml
+    - .agentic/01.harness/workflows/run-agent-review.md
+    - .agentic/01.harness/workflows/run-review-board.md
+    - .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+    - .agentic/01.harness/standards/agent-contracts.md
+    - .agentic/01.harness/manifest.yml
+    - .agentic/01.harness/README.md
+    runtime:
+      tools: [bash, node, git]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH]
+      config_inputs: [.node-version, .nvmrc]
+  security-cognito-diagnostics:
+    boundary: integration
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --security-adapter, cognito]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: repo.diagnostics.verification
+    scope_inputs: false
+    inputs:
+    - scripts/repo/diagnostic-coverage/verify.sh
+    - packages/core
+    - platform/contracts
+    - platform/config
+    - platform/health
+    - platform/observability
+    - platform/runtime
+    - platform/security
+    - platform/server
+    - platform/testing
+    - platform/adapters/aws/auth/cognito
+    - package.json
+    - package-lock.json
+    runtime:
+      tools: [bash, node, npm, typescript]
+      node_packages: [typescript, '@types/node', '@kanbien/core', '@kanbien/platform-security', '@kanbien/platform-contracts', '@kanbien/platform-config', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-server', '@kanbien/platform-testing', '@kanbien/platform-health', '@kanbien/platform-adapter-aws-auth-cognito']
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
+      config_inputs: [.npmrc, .node-version, .nvmrc]
+  security-shared-rate-limit-diagnostics:
+    boundary: integration
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --security-adapter, dynamodb-rate-limiter]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: repo.diagnostics.verification
+    scope_inputs: false
+    inputs:
+    - scripts/repo/diagnostic-coverage/verify.sh
+    - packages/core
+    - platform/security
+    - platform/adapters/aws/security/dynamodb-rate-limiter
+    - package.json
+    - package-lock.json
+    runtime:
+      tools: [bash, node, npm, typescript]
+      node_packages: [typescript, '@types/node', '@aws-sdk/client-dynamodb', '@kanbien/core', '@kanbien/platform-security', '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter']
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
+      config_inputs: [.npmrc, .node-version, .nvmrc]
+  diagnostic-adoption:
+    argv: [bash, scripts/repo/diagnostic-coverage/script.sh]
+    stage: local
+    evidence_class: static
+    effects: [read-only]
+    owner: repo.diagnostics.coverage
+    scope_inputs: false
+    inputs:
+    - scripts/repo/diagnostic-coverage
+    - package.json
+    - scripts/repo/check-selection/checks.yml
+    runtime:
+      tools: [bash, python3, git]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  diagnostic-runtime-contracts:
+    aggregate_branch: default
+    members: [diagnostic-base-runtime, platform-server-runtime, kanbien-platform-runtime]
+    focused_prerequisites: &startup_prerequisites
+    - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/adapters/aws/persistence/postgresql, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition]
+      checks: [persistence-composition]
+    - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/workers, products/kanbien-platform, apps/platform-smoke, platform/adapters/aws/auth/cognito, platform/adapters/aws/persistence/dynamodb, platform/adapters/aws/queue/sqs, platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/security/dynamodb-rate-limiter, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/build-platform-shell-image]
+      checks: [platform-shell-payload]
+    boundary: integration
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: repo.diagnostics.verification
+    scope_inputs: false
+    inputs:
+    - scripts/repo/diagnostic-coverage
+    - scripts/repo/check-selection
+    - scripts/04.deploy
+    - infra/04.deploy/03.product/targets/kanbien-core-platform
+    - packages/core
+    - platform
+    - apps/platform-smoke
+    - products/kanbien-platform
+    - infra/04.deploy/03.product/entrypoints
+    - package.json
+    - package-lock.json
+    runtime: &verification_unit_runtime
+      tools: [bash, python3, node, npm, typescript, git]
+      node_packages: [typescript, '@types/node', '@types/pg', pg, '@aws-sdk/client-dynamodb', '@aws-sdk/client-sqs', '@aws-sdk/rds-signer', '@opentelemetry/api', '@opentelemetry/exporter-metrics-otlp-proto', '@opentelemetry/resources', '@opentelemetry/sdk-metrics', '@kanbien/core', '@kanbien/platform-config', '@kanbien/platform-persistence', '@kanbien/platform-testing', '@kanbien/platform-security', '@kanbien/platform-server', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-contracts', '@kanbien/platform-health', '@kanbien/platform-workers', '@kanbien/platform-adapter-aws-queue-sqs', '@kanbien/platform-adapter-aws-runtime-ecs-fargate', '@kanbien/platform-adapter-aws-auth-cognito', '@kanbien/platform-adapter-aws-observability-cloudwatch', '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter', '@kanbien/platform-adapter-aws-persistence-dynamodb', '@kanbien/platform-adapter-aws-persistence-postgresql', '@kanbien/product-kanbien-platform', '@kanbien/app-platform-smoke']
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt, .npmrc, .node-version, .nvmrc]
+  diagnostic-catalog-readers: &diagnostic_unit
+    boundary: integration
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, catalog]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: repo.diagnostics.verification
+    scope_inputs: false
+    # Catalog compilation consumes target configuration and its package imports.
+    inputs:
+    - scripts/repo/diagnostic-coverage
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence
+    - scripts/04.deploy/build-platform-shell-image/check-source.sh
+    - infra/04.deploy/03.product/targets/kanbien-core-platform
+    - packages/core
+    - platform
+    - apps/platform-smoke
+    - products/kanbien-platform
+    - infra/04.deploy/03.product/entrypoints
+    - package.json
+    - package-lock.json
+    runtime: *verification_unit_runtime
+  diagnostic-base-runtime:
+    <<: *diagnostic_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, base]
+    members: [diagnostic-catalog-readers, core-runtime, platform-contracts-runtime, platform-config-runtime, platform-security-runtime, platform-observability-runtime, platform-health-runtime, platform-persistence-runtime, platform-runtime-runtime, platform-testing-runtime, platform-workers-runtime, platform-smoke-runtime]
+    aggregate_branch: unit-base
+    focused_prerequisites: *startup_prerequisites
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh]
+  core-runtime: &package_unit
+    boundary: integration
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, core]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: repo.diagnostics.verification
+    scope_inputs: false
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, scripts/repo/module-structure/check.mjs, package.json, package-lock.json]
+    runtime: &package_runtime
+      tools: [bash, node, npm, typescript]
+      node_packages: [typescript, '@types/node', '@kanbien/core']
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
+      config_inputs: [.npmrc, .node-version, .nvmrc]
+  platform-contracts-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, contracts]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/contracts, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-contracts']}
+  platform-config-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, config]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/config, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-config']}
+  platform-security-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, security]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/security, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-security']}
+  platform-observability-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, observability]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/observability, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-observability']}
+  platform-health-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, health]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/health, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-health']}
+  platform-persistence-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, persistence]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/persistence, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-persistence']}
+  dynamodb-persistence-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, dynamodb-persistence]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, platform/persistence, platform/adapters/aws/persistence/dynamodb, package.json, package-lock.json]
+    runtime:
+      <<: *package_runtime
+      node_packages: [typescript, '@types/node', '@aws-sdk/client-dynamodb', '@kanbien/core', '@kanbien/platform-persistence', '@kanbien/platform-adapter-aws-persistence-dynamodb']
+  sqs-queue-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, sqs-queue]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, platform/adapters/aws/queue/sqs, package.json, package-lock.json]
+    runtime:
+      <<: *package_runtime
+      node_packages: [typescript, '@types/node', '@aws-sdk/client-sqs', '@kanbien/core', '@kanbien/platform-adapter-aws-queue-sqs']
+  platform-runtime-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, runtime]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/runtime, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-runtime']}
+  platform-testing-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, testing]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/testing, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-testing']}
+  platform-workers-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, workers]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/workers, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-workers']}
+  platform-smoke-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, smoke-app]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, apps/platform-smoke, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/app-platform-smoke']}
+  cloudwatch-observability-runtime:
+    <<: *diagnostic_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, cloudwatch]
+    inputs:
+    - scripts/repo/diagnostic-coverage/verify.sh
+    - packages/core
+    - platform/contracts
+    - platform/observability
+    - platform/adapters/aws/observability/cloudwatch
+    - package.json
+    - package-lock.json
+  platform-server-runtime:
+    <<: *diagnostic_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, server]
+    inputs: &package_unit_inputs
+    - scripts/repo/diagnostic-coverage/verify.sh
+    - packages/core
+    - platform
+    - apps/platform-smoke
+    - products/kanbien-platform
+    - infra/04.deploy/03.product/entrypoints
+    - package.json
+    - package-lock.json
+  ecs-fargate-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, ecs-fargate]
+    inputs:
+    - scripts/repo/diagnostic-coverage/verify.sh
+    - packages/core
+    - platform/contracts
+    - platform/config
+    - platform/health
+    - platform/observability
+    - platform/runtime
+    - platform/security
+    - platform/server
+    - platform/testing
+    - platform/adapters/aws/runtime/ecs-fargate
+    - package.json
+    - package-lock.json
+    runtime:
+      <<: *package_runtime
+      node_packages: [typescript, '@types/node', '@kanbien/core', '@kanbien/platform-contracts', '@kanbien/platform-config', '@kanbien/platform-health', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-security', '@kanbien/platform-server', '@kanbien/platform-testing', '@kanbien/platform-adapter-aws-runtime-ecs-fargate']
+  kanbien-platform-runtime:
+    <<: *diagnostic_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, product]
+    inputs: *package_unit_inputs
+  platform-shell-payload:
+    boundary: integration
+    scope_inputs: false
+    argv: [bash, scripts/04.deploy/build-platform-shell-image/check-source.sh, --payload-only]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.check.platform-shell-package-source
+    inputs:
+    - packages/core
+    - infra/04.deploy/03.product/entrypoints
+    - scripts/04.deploy/build-platform-shell-image
+    - platform
+    - products/kanbien-platform
+    - apps/platform-smoke
+    - infra/04.deploy/03.product/image
+    - package.json
+    - package-lock.json
+    runtime: *verification_unit_runtime
   observability-mvp-declaration-regression:
     argv:
     - bash
@@ -88,10 +518,11 @@ checks:
     evidence_class: static
     effects:
     - read-only
+    - writes-files
     owner: deploy.test.target-alignment-validation
     inputs:
     - scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment
-    runtime:
+    runtime: &alignment_fixture_runtime
       tools:
       - bash
       - python3
@@ -106,6 +537,110 @@ checks:
       - .python-version
       - pyproject.toml
       - requirements.txt
+  aws-runtime-alignment-regression:
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.aws.runtime-alignment
+    scope_inputs: false
+    inputs:
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    runtime: *alignment_fixture_runtime
+  provider-condition-evidence-regression:
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.validate-provider-condition-evidence
+    scope_inputs: false
+    inputs:
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence
+    runtime: *alignment_fixture_runtime
+  delivery-access-contract-regression:
+    argv: [bash, scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.validate-delivery-access-contract
+    scope_inputs: false
+    inputs:
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
+    - scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract
+    - scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/validate-delivery-access
+    runtime: *alignment_fixture_runtime
+  core-target-declaration-regression:
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.core-platform-target-declaration
+    scope_inputs: false
+    inputs:
+    - scripts/04.deploy/lifecycle/00-target-alignment
+    - scripts/04.deploy/lifecycle/60-run
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - platform/persistence/contracts/diagnostics.v1.json
+    - infra/04.deploy/03.product/targets/kanbien-core-platform
+    - infra/04.deploy/03.product/image/core-server/image-contract.yml
+    - infra/04.deploy/03.product/image/core-server-persistence-observability-collector
+    - .github/workflows/publish-kanbien-core-platform-core-server.yml
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
+    runtime: *alignment_fixture_runtime
+  bootstrap-target-controls-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.kanbien-core-platform.target-controls
+    scope_inputs: false
+    inputs:
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime
+    - scripts/04.deploy/lifecycle/00-target-alignment
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+    - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
+    - scripts/04.deploy/lifecycle/60-run/promote-accepted-scope
+    - scripts/04.deploy/lifecycle/60-run/release-succession
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - platform/persistence/contracts/diagnostics.v1.json
+    - .agentic/04.deploy/60-run/schemas
+    - infra/04.deploy/03.product/image
+    - infra/04.deploy/03.product/entrypoints
+    - infra/04.deploy/03.product/targets/kanbien-core-platform
+    runtime: *alignment_fixture_runtime
+  foundation-budget-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.kanbien-core-platform.provision-target-budget
+    scope_inputs: false
+    inputs:
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget
+    - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+    runtime: *alignment_fixture_runtime
   runtime-credential-lifecycle-regression:
     argv:
     - bash
@@ -256,6 +791,18 @@ checks:
     - platform/adapters/aws/persistence/postgresql
     - platform/persistence
     - packages/core
+    - platform/contracts
+    - platform/security
+    - platform/observability
+    - platform/config
+    - platform/health
+    - platform/runtime
+    - platform/server
+    - platform/workers
+    - apps/platform-smoke
+    - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-platform-configuration-diagnostics.ts
     - package.json
     - package-lock.json
     - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
@@ -307,6 +854,7 @@ checks:
     inputs:
     - "platform/contracts"
     - "platform/observability"
+    - platform/security
     - platform/adapters/aws/persistence/postgresql
     - platform/persistence
     - packages/core
@@ -941,17 +1489,98 @@ checks:
         required: true
         schema: deploy/acceptance-inputs/v1
     acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
-  check-selection-regression:
+  check-selection-mechanics:
     boundary: integration
     argv:
     - bash
     - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - mechanics
     stage: local
     evidence_class: local-runtime
     effects:
     - read-only
     - writes-files
     owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/repo/check-selection
+    - scripts/repo/commit-gates
+    - scripts/repo/diagnostic-coverage/script.py
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - scripts/01.harness/artifact-metadata/update-lifecycle/script.sh
+    - scripts/01.harness/artifact-metadata/check-headers/script.sh
+    - scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+    - scripts/00.chat/session-log/paths/lib.sh
+    - scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
+    - scripts/04.deploy/inventory-deploy-control/delivery_inventory.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
+    - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+    - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    runtime:
+      tools:
+      - bash
+      - python3
+      - git
+      - node
+      - openssl
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      node_packages: []
+  check-selection-repository-contracts:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - repository-contracts
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - .agentic
+    - docs
+    - AGENTS.md
+    - scripts/00.chat
+    - scripts/01.harness
+    - scripts/00.chat/main-refresh/apply-rehearsed-refresh
+    - scripts/repo/check-selection
+    - package.json
+    - package-lock.json
+    - infra/04.deploy/03.product/entrypoints
+    - packages/core
+    - platform
+    - scripts/04.deploy
+    - infra/04.deploy
+    - scripts/repo/commit-gates
+    - scripts/00.chat/session-log/prepare-chat-session-before-commit
+    - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main
+    - scripts/01.harness/artifact-metadata
+    - .github/workflows/delivery-coverage.yml
     runtime:
       tools:
       - bash
@@ -978,58 +1607,329 @@ checks:
       - .node-version
       - .nvmrc
       node_packages:
-      - "@aws-sdk/client-dynamodb"
-      - "@aws-sdk/client-sqs"
-      - "@aws-sdk/rds-signer"
-      - "@opentelemetry/api"
-      - "@opentelemetry/exporter-metrics-otlp-proto"
-      - "@opentelemetry/resources"
-      - "@opentelemetry/sdk-metrics"
-      - "@types/pg"
-      - "@kanbien/core"
-      - "@kanbien/platform-config"
-      - "@kanbien/platform-persistence"
-      - "@kanbien/platform-testing"
-      - "@kanbien/platform-security"
-      - "@kanbien/platform-server"
-      - "@kanbien/platform-observability"
-      - "@kanbien/platform-runtime"
-      - "@kanbien/platform-contracts"
-      - "@kanbien/platform-health"
-      - "@kanbien/platform-workers"
-      - "@kanbien/platform-adapter-aws-queue-sqs"
-      - "@kanbien/platform-adapter-aws-runtime-ecs-fargate"
-      - "@kanbien/platform-adapter-aws-auth-cognito"
-      - "@kanbien/platform-adapter-aws-observability-cloudwatch"
-      - "@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter"
-      - "@kanbien/platform-adapter-aws-persistence-dynamodb"
-      - "@kanbien/platform-adapter-aws-persistence-postgresql"
-      - "@kanbien/product-kanbien-platform"
-      - "@kanbien/app-platform-smoke"
+      - '@aws-sdk/client-dynamodb'
+      - '@aws-sdk/client-sqs'
+      - '@aws-sdk/rds-signer'
+      - '@opentelemetry/api'
+      - '@opentelemetry/exporter-metrics-otlp-proto'
+      - '@opentelemetry/resources'
+      - '@opentelemetry/sdk-metrics'
+      - '@types/pg'
+      - '@kanbien/core'
+      - '@kanbien/platform-config'
+      - '@kanbien/platform-persistence'
+      - '@kanbien/platform-testing'
+      - '@kanbien/platform-security'
+      - '@kanbien/platform-server'
+      - '@kanbien/platform-observability'
+      - '@kanbien/platform-runtime'
+      - '@kanbien/platform-contracts'
+      - '@kanbien/platform-health'
+      - '@kanbien/platform-workers'
+      - '@kanbien/platform-adapter-aws-queue-sqs'
+      - '@kanbien/platform-adapter-aws-runtime-ecs-fargate'
+      - '@kanbien/platform-adapter-aws-auth-cognito'
+      - '@kanbien/platform-adapter-aws-observability-cloudwatch'
+      - '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter'
+      - '@kanbien/platform-adapter-aws-persistence-dynamodb'
+      - '@kanbien/platform-adapter-aws-persistence-postgresql'
+      - '@kanbien/product-kanbien-platform'
+      - '@kanbien/app-platform-smoke'
       - pg
       - '@types/node'
       - typescript
+  harness-lifecycle-metadata-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - harness-lifecycle
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
     inputs:
-    - .agentic
-    - docs
-    - AGENTS.md
-    - scripts/00.chat
-    - scripts/01.harness
-    - "scripts/00.chat/main-refresh/apply-rehearsed-refresh"
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/01.harness/artifact-metadata/update-lifecycle
+    - scripts/01.harness/artifact-metadata/check-headers
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - scripts/repo/check-selection/local_cache.py
+    runtime:
+      tools:
+      - bash
+      - python3
+      - git
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  harness-header-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - harness-header
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/01.harness/artifact-metadata/check-headers
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - .agentic/00.chat/workflows/chat-start.md
+    - .agentic/shared/standards/upstream-repo-bootstrap.md
+    - docs/00.chat/README.md
+    - scripts/00.chat/startup/start-chat-session/script.sh
+    runtime:
+      tools:
+      - bash
+      - python3
+      - git
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  chat-session-preparation-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - chat-session
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/00.chat/session-log/prepare-chat-session-before-commit
+    - scripts/00.chat/session-log/paths/lib.sh
+    runtime:
+      tools:
+      - bash
+      - python3
+      - git
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  chat-local-merge-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - chat-local-merge
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main
+    - scripts/00.chat/session-log/paths/lib.sh
+    - scripts/00.chat/worktree/paths/lib.sh
+    runtime:
+      tools:
+      - bash
+      - python3
+      - git
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  chat-main-refresh-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - chat-main-refresh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/00.chat/main-refresh/rehearse-refresh-from-main
+    - scripts/00.chat/main-refresh/apply-rehearsed-refresh
+    - scripts/00.chat/main-refresh/classify-refresh-readiness
+    - scripts/00.chat/session-log/paths/lib.sh
+    - scripts/00.chat/reporting/generate-commit-log-summary
+    runtime:
+      tools:
+      - bash
+      - python3
+      - git
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  check-selection-regression:
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    aggregate_branch: default
+    members:
+    - check-selection-mechanics
+    - check-selection-repository-contracts
+    - harness-lifecycle-metadata-regression
+    - harness-header-regression
+    - chat-session-preparation-regression
+    - chat-local-merge-regression
+    - chat-main-refresh-regression
+    inputs:
     - scripts/repo/check-selection
-    - package.json
-    - package-lock.json
+    runtime:
+      tools:
+      - bash
+      - python3
+      - node
+      - npm
+      - typescript
+      - git
+      - openssl
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      - TS_NODE_PROJECT
+      - TS_NODE_COMPILER_OPTIONS
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - .npmrc
+      - .node-version
+      - .nvmrc
+      node_packages:
+      - '@aws-sdk/client-dynamodb'
+      - '@aws-sdk/client-sqs'
+      - '@aws-sdk/rds-signer'
+      - '@opentelemetry/api'
+      - '@opentelemetry/exporter-metrics-otlp-proto'
+      - '@opentelemetry/resources'
+      - '@opentelemetry/sdk-metrics'
+      - '@types/pg'
+      - '@kanbien/core'
+      - '@kanbien/platform-config'
+      - '@kanbien/platform-persistence'
+      - '@kanbien/platform-testing'
+      - '@kanbien/platform-security'
+      - '@kanbien/platform-server'
+      - '@kanbien/platform-observability'
+      - '@kanbien/platform-runtime'
+      - '@kanbien/platform-contracts'
+      - '@kanbien/platform-health'
+      - '@kanbien/platform-workers'
+      - '@kanbien/platform-adapter-aws-queue-sqs'
+      - '@kanbien/platform-adapter-aws-runtime-ecs-fargate'
+      - '@kanbien/platform-adapter-aws-auth-cognito'
+      - '@kanbien/platform-adapter-aws-observability-cloudwatch'
+      - '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter'
+      - '@kanbien/platform-adapter-aws-persistence-dynamodb'
+      - '@kanbien/platform-adapter-aws-persistence-postgresql'
+      - '@kanbien/product-kanbien-platform'
+      - '@kanbien/app-platform-smoke'
+      - pg
+      - '@types/node'
+      - typescript
+  bootstrap-payload-regression:
+    boundary: integration
+    scope_inputs: false
+    argv: [bash, scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/payload-fixture-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.core-server-image-payload-fixture
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server
+    runtime:
+      tools: [bash, python3, node, npm, typescript]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt, .npmrc, .node-version, .nvmrc]
+      node_packages: ['@types/node', typescript]
+    inputs:
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-image
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
+    - scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image
+    - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
     - infra/04.deploy/03.product/entrypoints
+    - infra/04.deploy/03.product/image/core-server
     - packages/core
     - platform
-    - scripts/04.deploy
-    - infra/04.deploy
-    - scripts/repo/commit-gates
-    - scripts/00.chat/session-log/prepare-chat-session-before-commit
-    - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main
-    - scripts/01.harness/artifact-metadata
-    - .github/workflows/delivery-coverage.yml
-    scope_inputs: false
+    - package.json
+    - package-lock.json
   persistence-payload-regression:
     boundary: integration
     argv:
@@ -1079,7 +1979,10 @@ checks:
       - '@types/node'
       - typescript
     inputs:
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
     - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image
+    - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
     - package.json
     - package-lock.json
     - infra/04.deploy/03.product/entrypoints
@@ -1305,7 +2208,28 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - packages/core/contracts
+    - platform/config/contracts
+    - platform/contracts/contracts
+    - platform/health/contracts
+    - platform/observability/contracts
+    - platform/persistence/contracts
+    - platform/runtime/contracts
+    - platform/security/contracts
+    - platform/server/contracts
+    - platform/workers/contracts
+    - apps/platform-smoke/contracts
+    - infra/04.deploy/03.product/entrypoints/contracts
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh
     - scripts/04.deploy/shared/safe-command-diagnostics.sh
@@ -1341,6 +2265,7 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
     - infra/04.deploy/03.product/image/core-server-persistence-observability-collector
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
     - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
@@ -1439,6 +2364,7 @@ checks:
       tools:
       - bash
       - python3
+      - git
       environment:
       - PATH
       - LANG
@@ -1454,6 +2380,7 @@ checks:
     - scripts/04.deploy/inventory-deploy-control
     - scripts/repo/check-selection
     - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
     - .github/workflows/delivery-coverage.yml
     - scripts/04.deploy/lifecycle/40-package/build-core-server-image
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
@@ -1465,6 +2392,7 @@ checks:
     - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
     - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
     - scripts/01.harness/artifact-metadata/header_discovery.py
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
   shell-runtime-alignment:
     argv:
     - bash
@@ -1510,6 +2438,28 @@ checks:
       - pyproject.toml
       - requirements.txt
   shell-infrastructure:
+    aggregate_branch: whole
+    members:
+    - shell-infrastructure-policy
+    - shell-synthetic-scheduler-check
+    - shell-metric-coverage-policy-check
+    - shell-artifact-store-policy
+    - shell-postgresql-reference-regression
+    - shell-deployment-reconciliation-policy-check
+    - shell-drift-detection-boundary-check
+    - shell-negative-authz-client-check
+    - shell-negative-authz-smoke-check
+    - shell-persistence-write-client-check
+    - shell-persistence-smoke-check
+    - shell-persistence-admission-probe-check
+    - shell-persistence-delivery-proof-check
+    - shell-rate-limit-smoke-check
+    - shell-ingress-smoke-check
+    - shell-worker-smoke-check
+    - shell-postgresql-relational-smoke-check
+    - shell-candidate-preflight-regression
+    scope_inputs: false
+    inputs: [scripts/04.deploy/verify-platform-shell-infrastructure/script.sh]
     applicability:
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
@@ -1537,6 +2487,27 @@ checks:
       - .python-version
       - pyproject.toml
       - requirements.txt
+  shell-infrastructure-policy:
+    argv: [bash, scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh]
+    stage: local
+    evidence_class: static
+    effects: [read-only, writes-files]
+    owner: deploy.script.verify-platform-shell-infrastructure-policy
+    scope_inputs: false
+    inputs: [scripts/04.deploy, infra/04.deploy, docs/04.deploy, .github, package.json, platform, products, packages/core, .agentic/04.deploy, .agentic/aws]
+    runtime: &shell_policy_runtime
+      tools: [bash, python3]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  shell-artifact-store-policy:
+    argv: [bash, scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh]
+    stage: local
+    evidence_class: static
+    effects: [read-only]
+    owner: deploy.script.verify-platform-shell-deployment-artifact-store.smoke-test
+    scope_inputs: false
+    inputs: [scripts/04.deploy/verify-platform-shell-deployment-artifact-store, infra/04.deploy/03.product/targets/kanbien, .github, docs/04.deploy, scripts/04.deploy/shared]
+    runtime: *shell_policy_runtime
   shell-publication:
     applicability:
       kind: profile
@@ -1565,6 +2536,11 @@ checks:
       - pyproject.toml
       - requirements.txt
   shell-package-source:
+    aggregate_branch: default
+    members: [platform-server-runtime, kanbien-platform-runtime, platform-shell-payload]
+    focused_prerequisites:
+    - inputs: [packages/core, platform, products/kanbien-platform, apps/platform-smoke, infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/build-platform-shell-image]
+      checks: [platform-shell-payload]
     boundary: integration
     scope_inputs: false
     argv:
@@ -1579,69 +2555,19 @@ checks:
     applicability: &id001
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
-    runtime: &id003
-      tools:
-      - "npm"
-      - bash
-      - python3
-      - node
-      - typescript
-      environment:
-      - PATH
-      - LANG
-      - LC_ALL
-      - PYTHONPATH
-      - PYTHONHOME
-      - PYTHONHASHSEED
-      - NODE_OPTIONS
-      - NODE_PATH
-      node_packages:
-      - "@aws-sdk/client-dynamodb"
-      - "@aws-sdk/client-sqs"
-      - "@aws-sdk/rds-signer"
-      - "@opentelemetry/api"
-      - "@opentelemetry/exporter-metrics-otlp-proto"
-      - "@opentelemetry/resources"
-      - "@opentelemetry/sdk-metrics"
-      - "pg"
-      - "@types/node"
-      - "@types/pg"
-      - "@kanbien/core"
-      - "@kanbien/platform-config"
-      - "@kanbien/platform-persistence"
-      - "@kanbien/platform-testing"
-      - "@kanbien/platform-security"
-      - "@kanbien/platform-server"
-      - "@kanbien/platform-observability"
-      - "@kanbien/platform-runtime"
-      - "@kanbien/platform-contracts"
-      - "@kanbien/platform-health"
-      - "@kanbien/platform-workers"
-      - "@kanbien/platform-adapter-aws-queue-sqs"
-      - "@kanbien/platform-adapter-aws-runtime-ecs-fargate"
-      - "@kanbien/platform-adapter-aws-auth-cognito"
-      - "@kanbien/platform-adapter-aws-observability-cloudwatch"
-      - "@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter"
-      - "@kanbien/platform-adapter-aws-persistence-dynamodb"
-      - "@kanbien/platform-adapter-aws-persistence-postgresql"
-      - "@kanbien/product-kanbien-platform"
-      - "@kanbien/app-platform-smoke"
-      - typescript
-      config_inputs:
-      - ".npmrc"
-      - .python-version
-      - pyproject.toml
-      - requirements.txt
-      - package.json
-      - package-lock.json
+    runtime: *verification_unit_runtime
     inputs:
-    - "packages/core"
-    - "infra/04.deploy/03.product/entrypoints"
+    - packages/core
+    - scripts/repo/check-selection
+    - scripts/repo/diagnostic-coverage/verify.sh
+    - infra/04.deploy/03.product/entrypoints
     - scripts/04.deploy/build-platform-shell-image
     - platform
     - products/kanbien-platform
     - apps/platform-smoke
     - infra/04.deploy/03.product/image
+    - package.json
+    - package-lock.json
   shell-image-smoke:
     argv:
     - bash
@@ -2559,6 +3485,51 @@ checks:
     - read-only
     - writes-files
     owner: deploy.test.package-custody-receipt
+    runtime:
+      <<: *verification_unit_runtime
+      node_packages: [typescript, '@types/node', '@kanbien/core', '@kanbien/platform-config', '@kanbien/platform-contracts', '@kanbien/platform-health', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-security', '@kanbien/platform-server']
+    inputs:
+    - scripts/04.deploy/lifecycle/40-package
+    - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
+    - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+    - scripts/04.deploy/inventory-deploy-control
+    - scripts/04.deploy/validate-container-boundaries
+    - scripts/04.deploy/build-platform-shell-image/script.sh
+    - scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+    - scripts/04.deploy/verify-platform-shell-deployment-workflow
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
+    - scripts/04.deploy/shared/provider-adapters/docker
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py
+    - infra/04.deploy/03.product/entrypoints
+    - infra/04.deploy/03.product/image
+    - infra/04.deploy/03.product/targets/kanbien-core-platform
+    - infra/04.deploy/03.product/targets/kanbien/staging
+    - .github/workflows/deploy-platform-shell-staging.yml
+    - .github/workflows/publish-kanbien-core-platform-core-server.yml
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
+    - packages/core
+    - platform/config
+    - platform/contracts
+    - platform/health
+    - platform/observability
+    - platform/runtime
+    - platform/security
+    - platform/server
+    - package.json
+    - package-lock.json
+  core-package-custody-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.test.kanbien-core-platform.core-server-package-custody
     runtime: &id004
       tools:
       - bash
@@ -2574,18 +3545,6 @@ checks:
       - .python-version
       - pyproject.toml
       - requirements.txt
-    inputs:
-    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
-  core-package-custody-regression:
-    argv:
-    - bash
-    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/smoke-test.sh
-    stage: local
-    evidence_class: local-runtime
-    effects:
-    - read-only
-    owner: deploy.test.kanbien-core-platform.core-server-package-custody
-    runtime: *id004
     inputs:
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody
   container-boundaries-regression:
@@ -2628,6 +3587,7 @@ checks:
       - requirements.txt
     inputs:
     - scripts/04.deploy/verify-platform-shell-deploy-readiness
+    - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
     - scripts/04.deploy/lifecycle/60-run/release-succession
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation
@@ -2791,6 +3751,148 @@ checks:
     inputs:
     - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
 repository_inputs:
+- inputs:
+  - scripts/repo/module-structure/check.mjs
+  checks: [core-runtime]
+- inputs:
+  - packages
+  - platform
+  - apps
+  - products
+  - infra
+  - scripts/repo/module-structure
+  - .agentic/03.product/standards/public-module-structure.md
+  - .agentic/03.product/standards/config-runtime-settings.md
+  - package.json
+  - package-lock.json
+  checks: [module-index-structure]
+- inputs:
+  - scripts/repo/module-structure
+  - packages/core/src/config/index.ts
+  - packages/core/tests/core-boundaries.test.mjs
+  - .agentic/03.product/standards/public-module-structure.md
+  - .agentic/03.product/standards/config-runtime-settings.md
+  checks: [module-index-structure-regression]
+- inputs:
+  - scripts/01.harness/check-artifact-path-migration.sh
+  - scripts/01.harness/plan-artifact-path-migration.sh
+  - scripts/01.harness/smoke-test-artifact-path-migration.sh
+  checks: [harness-artifact-migration-regression]
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/00.chat/export/smoke-test.sh
+  - scripts/00.chat/export/create-worktree-bundle/script.js
+  - scripts/00.chat/export/worktree/script.sh
+  - scripts/00.chat/export/worktree-diff/script.sh
+  - bin/llm-workbench.js
+  - bin/llm-workbench-ownership.js
+  - package.json
+  checks: [chat-export-regression]
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
+  - scripts/00.chat/session-log/record-chat-commit/script.sh
+  - scripts/00.chat/session-log/paths/lib.sh
+  - scripts/00.chat/transcript/discover-codex-session-log/script.sh
+  - scripts/00.chat/metrics/estimate-chat-cost/script.js
+  - scripts/00.chat/metrics/data/chat-pricing.json
+  checks: [chat-commit-metrics-regression]
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/repo/check-selection
+  - scripts/repo/commit-gates
+  - scripts/repo/diagnostic-coverage/script.py
+  - scripts/01.harness/artifact-metadata/header_discovery.py
+  - scripts/01.harness/artifact-metadata/update-lifecycle/script.sh
+  - scripts/01.harness/artifact-metadata/check-headers/script.sh
+  - scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+  - scripts/00.chat/session-log/paths/lib.sh
+  - scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
+  - scripts/04.deploy/inventory-deploy-control/delivery_inventory.py
+  - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+  - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+  - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
+  - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
+  - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery
+  - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+  - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
+  - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime
+  - scripts/repo/diagnostic-coverage/runtime_contract.py
+  checks:
+  - check-selection-mechanics
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - .agentic
+  - docs
+  - AGENTS.md
+  - scripts/00.chat
+  - scripts/01.harness
+  - scripts/00.chat/main-refresh/apply-rehearsed-refresh
+  - scripts/repo/check-selection
+  - package.json
+  - package-lock.json
+  - infra/04.deploy/03.product/entrypoints
+  - packages/core
+  - platform
+  - scripts/04.deploy
+  - infra/04.deploy
+  - scripts/repo/commit-gates
+  - scripts/00.chat/session-log/prepare-chat-session-before-commit
+  - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main
+  - scripts/01.harness/artifact-metadata
+  - .github/workflows/delivery-coverage.yml
+  checks:
+  - check-selection-repository-contracts
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/01.harness/artifact-metadata/update-lifecycle
+  - scripts/01.harness/artifact-metadata/check-headers
+  - scripts/01.harness/artifact-metadata/header_discovery.py
+  - scripts/repo/check-selection/local_cache.py
+  checks:
+  - harness-lifecycle-metadata-regression
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/01.harness/artifact-metadata/check-headers
+  - scripts/01.harness/artifact-metadata/header_discovery.py
+  - .agentic/00.chat/workflows/chat-start.md
+  - .agentic/shared/standards/upstream-repo-bootstrap.md
+  - docs/00.chat/README.md
+  - scripts/00.chat/startup/start-chat-session/script.sh
+  checks:
+  - harness-header-regression
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/00.chat/session-log/prepare-chat-session-before-commit
+  - scripts/00.chat/session-log/paths/lib.sh
+  checks:
+  - chat-session-preparation-regression
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main
+  - scripts/00.chat/session-log/paths/lib.sh
+  - scripts/00.chat/worktree/paths/lib.sh
+  checks:
+  - chat-local-merge-regression
+- inputs:
+  - scripts/repo/check-selection/smoke-test.sh
+  - scripts/00.chat/main-refresh/rehearse-refresh-from-main
+  - scripts/00.chat/main-refresh/apply-rehearsed-refresh
+  - scripts/00.chat/main-refresh/classify-refresh-readiness
+  - scripts/00.chat/session-log/paths/lib.sh
+  - scripts/00.chat/reporting/generate-commit-log-summary
+  checks:
+  - chat-main-refresh-regression
+- inputs: [packages, platform, apps, products, scripts, infra, package.json, scripts/repo/check-selection/checks.yml]
+  checks: [diagnostic-adoption]
+- inputs: [.agentic/shared/workflows/verify-diagnostic-coverage.md, .agentic/shared/standards/require-safe-diagnostic-record.md, scripts/repo/diagnostic-coverage]
+  exclude_inputs: [scripts/repo/diagnostic-coverage/reviews.v1.json]
+  checks: [diagnostic-adoption, diagnostic-runtime-contracts]
+- inputs: [platform/config/contracts, platform/server/contracts, platform/workers/contracts, platform/persistence/contracts, apps/platform-smoke/contracts, infra/04.deploy/03.product/entrypoints/contracts]
+  checks: [diagnostic-runtime-contracts]
+- inputs: [docs/03.product/rules/core/layers/packages-core.yml, docs/03.product/rules/core/concerns/validation-api-errors.yml, docs/03.product/rules/platform/layers/platform.yml, .agentic/03.product/standards/config-runtime-settings.md]
+  checks: [diagnostic-adoption, diagnostic-runtime-contracts]
 - inputs:
   - .github/workflows/deploy-rag-rulebook-staging.yml
   - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml

@@ -11,7 +11,7 @@ not an alert journal, mail archive, or general execution history.
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -29,6 +29,7 @@ import json
 import os
 import re
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -108,6 +109,18 @@ def observation(receipt_type: str, value: object) -> dict[str, Any]:
     timestamp(value.get("alarm_state_updated_at"), "observability-receipt-observation-invalid")
     timestamp(value.get("metric_observed_at"), "observability-receipt-observation-invalid")
     return value
+
+
+def same_alarm_episode(failure: dict[str, Any], notification: dict[str, Any]) -> bool:
+    """Compare instants, not timestamp spelling or an operator attestation."""
+    try:
+        first = datetime.fromisoformat(failure["alarm_state_updated_at"].replace("Z", "+00:00"))
+        second = datetime.fromisoformat(notification["alarm_state_updated_at"].replace("Z", "+00:00"))
+        if first.tzinfo is None or second.tzinfo is None:
+            raise ValueError()
+    except (KeyError, TypeError, AttributeError, ValueError) as error:
+        raise ReceiptError("observability-receipt-alarm-episode-invalid") from error
+    return first == second
 
 
 def validate(receipt: object) -> dict[str, Any]:

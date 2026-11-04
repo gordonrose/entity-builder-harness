@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-program-runtime
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-19"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines:
@@ -23,6 +23,7 @@
 //   - id: deploy.test.core-server-dependency-boundary
 //     path: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh
 
+import { deepEqual } from "node:assert/strict";
 import { request as httpRequest } from "node:http";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -46,6 +47,7 @@ const packages = {
     "./logging": "packages/core/src/logging/index.js",
     "./monitoring": "packages/core/src/monitoring/index.js",
     "./queues": "packages/core/src/queues/index.js",
+    "./security": "packages/core/src/security/index.js",
     "./shared": "packages/core/src/shared/index.js",
     "./tenancy": "packages/core/src/tenancy/index.js",
     "./validation": "packages/core/src/validation/index.js",
@@ -69,13 +71,14 @@ for (const [packageName, exportsMap] of Object.entries(packages)) {
 const program = await import(pathToFileUrl(join(runtimeRoot, "infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.js")));
 const serverMain = await import(pathToFileUrl(join(runtimeRoot, "platform/server/src/main.js")));
 const releaseIdentity = { sourceCommitSha: "runtime-proof-2026.10.19" };
+const startupLogs = [];
 const started = await serverMain.startPlatformServerProcess({
   apps: [program.createKanbienCoreServerVerificationApp(releaseIdentity)],
-  env: { HOST: "127.0.0.1", PORT: "3000", PLATFORM_SOURCE_COMMIT_SHA: releaseIdentity.sourceCommitSha },
+  env: { HOST: "synthetic-private-listener.internal", PORT: "invalid-private-port", PLATFORM_SOURCE_COMMIT_SHA: releaseIdentity.sourceCommitSha },
   host: "127.0.0.1",
   port: 0,
   installSignalHandlers: false,
-  logger: { write: () => undefined },
+  logger: { write: (record) => startupLogs.push(record) },
 });
 
 if (!started.ok) {
@@ -83,6 +86,24 @@ if (!started.ok) {
 }
 
 try {
+  const configuration = startupLogs.filter((record) => record.message === "platform.diagnostic.observed"
+    && record.fields?.capability === "platform-server" && record.fields?.operation === "configure" && record.fields?.stage === "configuration");
+  const choiceCodes = new Set(["platform-server.listener-configuration-selected", "platform-server.port-configuration-fallback",
+    "platform-server.health-exposure-selected", "platform-server.health-exposure-fallback"]);
+  const choices = configuration.filter((record) => choiceCodes.has(record.fields.diagnostic.code));
+  const diagnostic = (code, detail) => ({ schema: "core/diagnostic-record/v1", code, definitionVersion: 1, detail });
+  deepEqual(choices.map((record) => record.fields.diagnostic), [
+    diagnostic("platform-server.listener-configuration-selected", { phase: "configuration", setting: "http.host", source: "process-option", reason: "explicit-override", effect: "selected" }),
+    diagnostic("platform-server.listener-configuration-selected", { phase: "configuration", setting: "http.port", source: "process-option", reason: "explicit-override", effect: "selected" }),
+    diagnostic("platform-server.health-exposure-selected", { phase: "configuration", setting: "http.health.liveness-exposure", source: "default", exposure: "public", reason: "missing", effect: "default-selected" }),
+    diagnostic("platform-server.health-exposure-selected", { phase: "configuration", setting: "http.health.readiness-exposure", source: "default", exposure: "public", reason: "missing", effect: "default-selected" }),
+  ], "Compiled bootstrap retains the exact four listener/health choices independently of other configuration diagnostics.");
+  deepEqual(configuration.filter((record) => record.fields.diagnostic.code === "platform-server.configuration-omitted").map((record) => record.fields.diagnostic), [
+    diagnostic("platform-server.configuration-omitted", { phase: "configuration", setting: "http.cors-origin", reason: "missing", effect: "omitted" }),
+    diagnostic("platform-server.configuration-omitted", { phase: "configuration", setting: "http.cors-allowlist", reason: "missing", effect: "omitted" }),
+  ], "Absent CORS choices are omitted; the supplied valid release identity must not be reported as omitted.");
+  if (JSON.stringify(startupLogs).includes("synthetic-private-listener.internal")
+    || JSON.stringify(startupLogs).includes("invalid-private-port")) throw new Error("Compiled bootstrap must retain safe configuration choices and explicit option precedence.");
   const response = await localGet(started.value.handle.port, "/internal/release-verification");
   if (response.status !== 200 || response.body !== JSON.stringify({ release: releaseIdentity })) {
     throw new Error("Core server release-verification response did not match its safe identity contract.");

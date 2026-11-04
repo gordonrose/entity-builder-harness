@@ -5,6 +5,7 @@ import type {
 } from "@kanbien/core/persistence";
 import { err, ok, type Result } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
+import { persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 
 /**
  * The safe facts that must be written with a product's state change.
@@ -37,6 +38,7 @@ export interface PlatformPersistenceAtomicWriter {
     operation: (
       scope: PlatformPersistenceTransactionScope,
     ) => Promise<Result<TValue, TFailure>> | Result<TValue, TFailure>,
+    diagnostics?: PlatformPersistenceDiagnosticOptions,
   ): Promise<Result<TValue, TFailure | PlatformPersistenceError>>;
 }
 
@@ -44,19 +46,21 @@ export function platformPersistenceMutation(input: {
   readonly recordChange: RecordChange;
   readonly outboxEntry: OutboxEntry;
 }): Result<PlatformPersistenceMutation, PlatformPersistenceError> {
-  if (
-    input.recordChange.record.kind !== input.outboxEntry.subject.kind ||
-    input.recordChange.record.id !== input.outboxEntry.subject.id
-  ) {
-    return invalidMutation("The outbox subject must match the record-change subject.", "subject_mismatch");
+  if (input.recordChange.record.kind !== input.outboxEntry.subject.kind) {
+    return invalidMutation("The outbox subject must match the record-change subject.", "subject_mismatch", "subject-kind", "mismatch");
+  }
+  if (input.recordChange.record.id !== input.outboxEntry.subject.id) {
+    return invalidMutation("The outbox subject must match the record-change subject.", "subject_mismatch", "subject-id", "mismatch");
   }
 
-  if (
-    input.recordChange.causationId === undefined ||
-    input.outboxEntry.causationId === undefined ||
-    input.recordChange.causationId !== input.outboxEntry.causationId
-  ) {
-    return invalidMutation("The outbox entry and record change must share one direct cause.", "causation_mismatch");
+  if (input.recordChange.causationId === undefined) {
+    return invalidMutation("The outbox entry and record change must share one direct cause.", "causation_mismatch", "causation", "left-absent");
+  }
+  if (input.outboxEntry.causationId === undefined) {
+    return invalidMutation("The outbox entry and record change must share one direct cause.", "causation_mismatch", "causation", "right-absent");
+  }
+  if (input.recordChange.causationId !== input.outboxEntry.causationId) {
+    return invalidMutation("The outbox entry and record change must share one direct cause.", "causation_mismatch", "causation", "mismatch");
   }
 
   if (
@@ -64,7 +68,7 @@ export function platformPersistenceMutation(input: {
     input.outboxEntry.tenantId !== undefined &&
     input.recordChange.tenantId !== input.outboxEntry.tenantId
   ) {
-    return invalidMutation("The outbox entry and record change must not cross tenant scope.", "tenant_mismatch");
+    return invalidMutation("The outbox entry and record change must not cross tenant scope.", "tenant_mismatch", "tenant", "mismatch");
   }
 
   if (
@@ -72,7 +76,7 @@ export function platformPersistenceMutation(input: {
     input.outboxEntry.correlationId !== undefined &&
     input.recordChange.correlationId !== input.outboxEntry.correlationId
   ) {
-    return invalidMutation("The outbox entry and record change must not conflict on correlation.", "correlation_mismatch");
+    return invalidMutation("The outbox entry and record change must not conflict on correlation.", "correlation_mismatch", "correlation", "mismatch");
   }
 
   return ok({
@@ -100,6 +104,8 @@ function copyOutboxEntry(entry: OutboxEntry): OutboxEntry {
 function invalidMutation(
   defaultMessage: string,
   reason: string,
+  field: PersistenceLocalRejectionDetail["field"],
+  condition: PersistenceLocalRejectionDetail["condition"],
 ): Result<never, PlatformPersistenceError> {
   return err(
     platformPersistenceError({
@@ -107,6 +113,7 @@ function invalidMutation(
       defaultMessage,
       messageKey: "platform.persistence.transaction.mutation.invalid",
       params: { reason },
+      diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-mutation", field, condition, phase: "validation", effect: "not-started" }),
     }),
   );
 }

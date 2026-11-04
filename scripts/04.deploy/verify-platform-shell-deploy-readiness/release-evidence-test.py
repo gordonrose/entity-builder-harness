@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -94,6 +94,61 @@ def tests():
             manifest_path.write_text(yaml.safe_dump(value,sort_keys=False));report=command(readiness,expected,reason)
             assert report['evidence_class']=='simulated';checks+=1
         ready(manifest)
+        # Output projection is independent of admission: supported reports keep
+        # their normal shape; rejected arbitrary metadata never enters either format.
+        normal=command(readiness)
+        assert normal['summary']['proof']==manifest['proof']
+        assert normal['summary']['runtime']['server_health']==manifest['runtime']['server']['health']
+        historical=yaml.safe_load((ROOT/evidence.TARGET_PATH/'deploy-readiness.yml').read_text())
+        historical_report=command(['bash',str(OWNER/'script.sh'),'--manifest',str(ROOT/evidence.TARGET_PATH/'deploy-readiness.yml'),'--allow-blocked','--caller-intent','planning','--json'])
+        assert historical_report['summary']['proof']==historical['proof']
+        varied=copy.deepcopy(manifest);varied['proof']=copy.deepcopy(historical['proof'])
+        varied_proof=varied['proof'];varied_proof['public_boundary']['executed_on_utc']='2032-02-29'
+        varied_proof['public_boundary']['rate_limit_429']['attempted_request_count']=0
+        varied_proof['public_boundary']['rate_limit_429']['total_duration_ms']=0.125
+        varied_proof['exporter_loss_rehearsal']['source_commit_sha']='1'*40
+        varied_proof['exporter_loss_rehearsal']['fault_smoke']['github_run_id']='9'*20
+        varied_proof['exporter_loss_rehearsal']['fault_smoke']['github_run_url']='https://github.com/gordonrose/entity-builder-harness/actions/runs/'+'9'*20
+        varied_proof['exporter_loss_rehearsal']['baseline_task_definition_revision']='12345'
+        varied_proof['exporter_loss_rehearsal']['operator_alert_receipt']['confirmed_on_utc']='2033-01-01'
+        manifest_path.write_text(yaml.safe_dump(varied,sort_keys=False))
+        assert command(readiness)['summary']['proof']==varied_proof
+        unsafe=copy.deepcopy(varied)
+        unsafe['proof']['public_boundary']['executed_on_utc']='2033-02-29'
+        unsafe['proof']['public_boundary']['rate_limit_429']['attempted_request_count']=-1
+        unsafe['proof']['public_boundary']['rate_limit_429']['total_duration_ms']=float('inf')
+        unsafe['proof']['exporter_loss_rehearsal']['source_commit_sha']='private-dynamic-canary'
+        unsafe['proof']['exporter_loss_rehearsal']['fault_smoke']['github_run_id']='9'*21
+        unsafe['proof']['exporter_loss_rehearsal']['fault_smoke']['github_run_url']='https://github.com/private-dynamic-canary/actions/runs/1'
+        manifest_path.write_text(yaml.safe_dump(unsafe,sort_keys=False))
+        invalid_projection=command(readiness)['summary']['proof']
+        assert invalid_projection['public_boundary']['executed_on_utc'] is None
+        assert invalid_projection['public_boundary']['rate_limit_429']['attempted_request_count'] is None
+        assert invalid_projection['public_boundary']['rate_limit_429']['total_duration_ms'] is None
+        assert invalid_projection['exporter_loss_rehearsal']['source_commit_sha'] is None
+        assert invalid_projection['exporter_loss_rehearsal']['fault_smoke']['github_run_id'] is None
+        assert invalid_projection['exporter_loss_rehearsal']['fault_smoke']['github_run_url'] is None
+        assert 'private-dynamic-canary' not in json.dumps(invalid_projection)
+        canary='private-report-canary'
+        rejected=copy.deepcopy(manifest);rejected['runtime']['family']=canary;rejected['source']['repository']=canary;rejected['runtime']['server']['health']['private']=canary
+        rejected['proof']['policy_checks']={'native':canary};rejected['proof']['extra']=canary;rejected['github']['environment']['name']=canary
+        rejected['target_profile']={'schema':'deploy/platform-shell-target-profile/v1','path':canary}
+        manifest_path.write_text(yaml.safe_dump(rejected,sort_keys=False))
+        projected=command(readiness,1)
+        assert canary not in json.dumps(projected)
+        assert projected['summary']['runtime']['family'] is None and projected['summary']['proof']['policy_checks'] is None
+        assert projected['summary']['runtime']['server_health']==manifest['runtime']['server']['health']
+        text=subprocess.run(readiness[:-1],cwd=ROOT,text=True,capture_output=True)
+        assert text.returncode==1 and canary not in text.stdout+text.stderr
+        malformed=copy.deepcopy(manifest);malformed['status']=[canary];manifest_path.write_text(yaml.safe_dump(malformed))
+        failed=command(readiness+['--allow-blocked','--caller-intent','planning'],1)
+        assert failed['exit_overridden_for_planning'] is False and canary not in json.dumps(failed)
+        assert failed['blocking_gaps'][-1]['path']=='status'
+        invalid_yaml=root/'private-yaml-canary.yml';invalid_yaml.write_text('field: [private-yaml-canary')
+        for argv in [['--manifest',str(invalid_yaml)],['--manifest',str(root/'private-missing-canary.yml')],['--private-argument-canary']]:
+            failure=subprocess.run(['bash',str(OWNER/'script.sh'),*argv],cwd=ROOT,text=True,capture_output=True)
+            assert failure.returncode==2 and 'canary' not in failure.stdout+failure.stderr
+        manifest_path.write_text(yaml.safe_dump(manifest,sort_keys=False))
         command(['bash',str(OWNER/'script.sh'),'--manifest',str(manifest_path),'--json'],1);checks+=1
         no_acceptance=copy.deepcopy(manifest);del no_acceptance['acceptance'];ready(no_acceptance,1,'shell-release-acceptance-record-required')
         mismatch=copy.deepcopy(manifest);mismatch['artifacts']['source_commit_sha']='f'*40;ready(mismatch,1,'shell-release-source-identity-mismatch')

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: persistence.diagnostics
 #   disciplines: [security, sre]
@@ -114,6 +114,14 @@ class DiagnosticTests(unittest.TestCase):
   for field in ['message','stack','host','password','sql','values','certificate','connection_string']:
    value={'schema':'deploy/persistence-restore-verifier-result/v2','verdict':'rejected','code':FAILURE,'execution':{**execution,field:CANARY}}
    self.assertEqual(self.m.observe_terminal_result(Logs([logs([event(value)])]),'fixture/task-1')['status'],'malformed')
+ def test_setting_detail_survives_collection_without_values(self):
+  detail={'schema':'core/diagnostic-record/v1','code':'kanbien-core-server.configuration-invalid','definitionVersion':1,'detail':{'issues':[{'setting':'database.host','reason':'missing'}]}}
+  result={'schema':'deploy/persistence-restore-verifier-result/v2','verdict':'rejected','code':'PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID','diagnostic':detail}
+  observed=self.m.observe_terminal_result(Logs([logs([event(result)])]),'fixture/task-1')
+  self.assertEqual(observed['diagnostic'],detail)
+  other={**detail,'detail':{'issues':[{'setting':'database.port','reason':'blank'}]}}
+  conflicting=self.m.observe_terminal_result(Logs([logs([event(result),event({**result,'diagnostic':other})])]),'fixture/task-1')
+  self.assertIsNone(conflicting['diagnostic'],'conflicting safe records cannot justify selecting an arbitrary issue')
  def test_server_collection_and_preserved_failure(self):
   task={'startedAt':'2026-10-26T02:00:00Z','stoppedAt':'2026-10-26T02:00:01Z','containers':[{'exitCode':7,'imageDigest':IMAGE}]}
   for response,state in [(logs([]),'empty'),(logs([{'message':CANARY}]),'unrecognized'),(logs([None]),'malformed'),(logs([{'message':CANARY}]*100),'incomplete'),(logs([{'message':'PAM authentication failed '+CANARY}],nextToken='more'),'incomplete'),((False,None,'aws-access-denied'),'failed')]:

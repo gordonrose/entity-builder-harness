@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -25,8 +25,10 @@ from types import SimpleNamespace
 from validate import validate,Failure,BASE_CHECKS
 
 OUTCOMES=['QUALIFICATION_OUTCOME','ACCESS_OUTCOME','PUBLICATION_OUTCOME','SCAN_OUTCOME','SBOM_OUTCOME','PROVENANCE_OUTCOME','SBOM_ATTESTATION_OUTCOME']
+INTENTIONAL_FAILURES={'custody-prerequisite-not-successful','custody-scan-kind-invalid','custody-sbom-invalid'}
 def main():
     parser=argparse.ArgumentParser()
+    parser.error=lambda _message: parser.exit(2,json.dumps({'verdict':'failed','code':'custody-evidence-invalid'})+'\n')
     for name in ['target','environment-class','provider-region-alias','candidate','package-contract','program','scan-check','sbom','output']:parser.add_argument('--'+name,required=True)
     args=parser.parse_args()
     if any(os.environ.get(key)!='success' for key in OUTCOMES):raise ValueError('custody-prerequisite-not-successful')
@@ -40,4 +42,5 @@ def main():
 if __name__=='__main__':
     try:raise SystemExit(main())
     except (OSError,ValueError,TypeError,Failure) as error:
-        print(json.dumps({'verdict':'failed','code':str(error) if isinstance(error,ValueError) else 'custody-evidence-invalid'}));raise SystemExit(1)
+        code=error.args[0] if type(error) is ValueError and len(error.args)==1 and isinstance(error.args[0],str) and error.args[0] in INTENTIONAL_FAILURES else 'custody-evidence-invalid'
+        print(json.dumps({'verdict':'failed','code':code}));raise SystemExit(1)

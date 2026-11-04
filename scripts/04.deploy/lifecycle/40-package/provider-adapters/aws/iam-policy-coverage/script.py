@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.delivery-access
 #   disciplines:
@@ -38,6 +38,7 @@ ACTION_PATTERN = re.compile(r"\b[a-z0-9-]+:[A-Za-z0-9*]+\b")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Produce safe AWS IAM policy coverage for a declared role.")
+    parser.error = lambda _message: parser.exit(2, 'DIAGNOSTIC_CODE=DELIVERY_POLICY_COVERAGE_ARGUMENTS_INVALID\n')
     parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--template", type=Path, required=True)
     parser.add_argument("--role-logical-id", required=True)
@@ -87,7 +88,7 @@ def main() -> int:
         }
         args.output.write_text(json.dumps(report, sort_keys=True) + "\n", encoding="utf-8")
         return 0 if verdict == "covered" else 1
-    except (OSError, ValueError):
+    except (OSError, UnicodeError, ValueError):
         report = {
             "schema": "deploy/provider-policy-coverage/v1",
             "provider": "aws",
@@ -96,7 +97,10 @@ def main() -> int:
             "granted_actions": [],
             "verdict": "unreadable",
         }
-        args.output.write_text(json.dumps(report, sort_keys=True) + "\n", encoding="utf-8")
+        try:
+            args.output.write_text(json.dumps(report, sort_keys=True) + "\n", encoding="utf-8")
+        except (OSError, UnicodeError):
+            print('DIAGNOSTIC_CODE=DELIVERY_POLICY_COVERAGE_OUTPUT_UNAVAILABLE',file=sys.stderr)
         return 1
 
 

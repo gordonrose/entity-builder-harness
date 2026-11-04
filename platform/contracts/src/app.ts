@@ -12,6 +12,7 @@ import type { PlatformAppId, PlatformHealthName } from "./identifiers";
 import type { PlatformJobRegistration } from "./jobs";
 import type { PlatformCapabilityObservabilityProfile } from "./observability-profiles";
 import type { PlatformRouteRegistration } from "./routes";
+import type { PlatformDiagnosticCatalog, PlatformDiagnosticReporter } from "./diagnostics";
 
 export interface PlatformPermissionDeclaration {
   readonly permission: Permission;
@@ -31,6 +32,7 @@ export interface PlatformLifecycleHooks {
 }
 
 export interface PlatformAppRegistry {
+  registerDiagnosticCatalog(catalog: PlatformDiagnosticCatalog): Result<void, PlatformContractError>;
   registerPermission(permission: PlatformPermissionDeclaration): Result<void, PlatformContractError>;
   registerRoute(route: PlatformRouteRegistration): Result<void, PlatformContractError>;
   registerJob(job: PlatformJobRegistration): Result<void, PlatformContractError>;
@@ -40,6 +42,7 @@ export interface PlatformAppRegistry {
 }
 
 export interface PlatformMountDeps {
+  readonly diagnostics?: PlatformDiagnosticReporter;
   readonly logger: Logger;
   readonly metrics: Metrics;
   readonly config: ConfigSource;

@@ -6,6 +6,7 @@ const runtimeRoot = ".cache/platform-config-runtime";
 const testDirectory = join(runtimeRoot, "platform/config/tests");
 const coreModules = [
   "config",
+  "diagnostics",
   "shared",
   "validation",
 ];

@@ -1,10 +1,10 @@
 export {
   dynamoDbPersistenceConfiguration,
-} from "./configuration";
+} from "./configuration/index";
 export type {
   DynamoDbPersistenceConfiguration,
   DynamoDbPersistenceConfigurationError,
-} from "./configuration";
+} from "./configuration/index";
 
 export {
   createAwsSdkDynamoDbPersistenceCommandClient,

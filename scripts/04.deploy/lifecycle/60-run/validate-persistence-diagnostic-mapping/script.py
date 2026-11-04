@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-persistence-diagnostic-mapping.implementation
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-30"
 #   layer: 04.deploy
 #   domain: deployment.persistence-diagnostics
 #   disciplines: [security, sre, agentic]
@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import importlib.util
 import re
 from pathlib import Path
 from typing import Any
@@ -27,13 +28,12 @@ from typing import Any
 import yaml
 
 CODE = re.compile(r"^persistence\.[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$")
-KNOWN_CODES = frozenset({
-    "persistence.transport-unavailable", "persistence.trust-validation-failed",
-    "persistence.credential-rejected", "persistence.runtime-permission-denied",
-    "persistence.capacity-exhausted", "persistence.schema-incompatible",
-    "persistence.operation-timed-out", "persistence.outcome-uncertain",
-    "persistence.unclassified-failure",
-})
+_reader_path = Path(__file__).resolve().parents[5] / "scripts/repo/diagnostic-coverage/runtime_contract.py"
+_reader_spec = importlib.util.spec_from_file_location("persistence_diagnostic_contract", _reader_path)
+assert _reader_spec and _reader_spec.loader
+_reader = importlib.util.module_from_spec(_reader_spec)
+_reader_spec.loader.exec_module(_reader)
+KNOWN_CODES = frozenset(definition["code"] for definition in _reader.persistence_operation_definitions())
 STAGES = frozenset({"configuration", "startup", "readiness", "request", "migration", "candidate-deployment", "update", "retirement", "recovery", "image-rollback", "database-restore"})
 RETRYABILITY = frozenset({"bounded-retry", "target-correction-required", "no-automatic-retry", "stop-and-escalate"})
 EFFECTS = {

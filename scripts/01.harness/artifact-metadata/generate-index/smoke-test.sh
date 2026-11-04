@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -69,8 +69,8 @@ import yaml
 # Compile only the legacy selector functions; never execute its mutation/commit path.
 legacy_script = Path(sys.argv[1]).parent.parent / "backfill-v2-headers/script.sh"
 legacy_source = legacy_script.read_text().split("python3 - \"$batch\" > \"$paths_file\" <<'PY'\n", 1)[1].split("\nPY", 1)[0]
-function_names = {"strip_comment", "parse_header", "existing_metadata", "has_versioned_header", "selected_for_batch"}
-functions = [node for node in ast.parse(legacy_source).body if isinstance(node, ast.FunctionDef) and node.name in function_names]
+function_names = {"strip_comment", "parse_header", "existing_metadata", "has_versioned_header", "selected_for_batch", "at", "BackfillFailure"}
+functions = [node for node in ast.parse(legacy_source).body if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name in function_names]
 legacy = {"Path": Path, "Any": Any, "yaml": yaml, "batch": 1}
 exec(compile(ast.Module(body=functions, type_ignores=[]), str(legacy_script), "exec"), legacy)
 
@@ -153,6 +153,9 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-index-") as temporar
     shutil.copyfile(sys.argv[1], capability)
     library = Path(sys.argv[1]).resolve().parents[1] / "header_discovery.py"
     shutil.copyfile(library, capability.parents[1] / "header_discovery.py")
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, str(library.parent))
+    import header_discovery as discovery
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     environment = {**os.environ, "RAG_REPO_ROOT": str(root), "RAG_SOURCE_COMMIT_SHA": "b" * 40}
 
@@ -173,7 +176,39 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-index-") as temporar
                                 env=environment if env is None else env, capture_output=True, text=True)
         assert (result.returncode == 0) == succeeds, result.stderr + result.stdout
         assert "Traceback" not in result.stderr
+        assert "PRIVATE_INDEX_CANARY" not in result.stdout + result.stderr
         return json.loads(result.stdout) if succeeds else result
+
+    canary = "PRIVATE_INDEX_CANARY"
+    # The shared error remains ValueError-compatible, with unchanged legacy
+    # text; only the index selects its additive owning facts.
+    legacy_error = discovery.HeaderError(canary)
+    assert isinstance(legacy_error, ValueError) and str(legacy_error) == canary
+    assert legacy_error.args == (canary,) and legacy_error.condition is legacy_error.field is None
+    header_failures = [
+        ("<!-- agentic-artifact:\nschema: x\n--> trailing\n", "closing-marker-inline", "header",
+         "metadata closing marker must occupy its own line"),
+        ("<!-- agentic-artifact:\nschema: x\n", "header-unterminated", "header", "unterminated metadata header"),
+        ("# agentic-artifact:\n#   " + canary + ": one\n#   " + canary + ": two\n", "key-duplicate", "mapping-key",
+         "duplicate metadata key: " + canary),
+        ("<!-- agentic-artifact:\n? [one, two]\n: value\n-->\n", "key-nonscalar", "mapping-key",
+         "metadata mapping keys must be scalar values"),
+        ("# agentic-artifact:\n#   schema: x\n\0", "nul-byte", "header", "declared metadata must not contain NUL bytes"),
+        ("# agentic-artifact:\n#   schema: [" + canary + "\n", "yaml-invalid", "header", None),
+        ("# agentic-artifact: " + canary + "\n", "shape-invalid", "header", "invalid metadata header shape"),
+    ]
+    for content, condition, field, original_text in header_failures:
+        try:
+            discovery.parse_header_text(content)
+        except discovery.HeaderError as error:
+            assert type(error) is discovery.HeaderError
+            assert (error.condition, error.field) == (condition, field)
+            if original_text is not None:
+                assert str(error) == original_text
+            else:
+                assert str(error).startswith("invalid metadata YAML: ") and canary in str(error)
+        else:
+            raise AssertionError("actual declared header must fail")
 
     declared = {
         "application/component.ts": header("typescript", "//") + "export const x = 1;\n",
@@ -200,6 +235,13 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-index-") as temporar
     write("ignored/declared.custom", header("ignored"))
     (root / "binary.asset").write_bytes(b"\0\xff\x80")
     subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+    try:
+        discovery.repository_paths(root / "application")
+    except discovery.HeaderError as error:
+        assert (error.condition, error.field) == ("root-mismatch", "source-root")
+        assert str(error) == f"artifact discovery requires the exact Git root: {root / 'application'}"
+    else:
+        raise AssertionError("nested Git root must retain its original rejection")
     declared["new/untracked.py"] = header("untracked") + "print(3)\n"
     write("new/untracked.py", declared["new/untracked.py"])
     outside = temporary / "outside.txt"
@@ -252,6 +294,172 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-index-") as temporar
         failure = generate("--all", "--check-coverage", succeeds=False)
         assert "outside/broken.custom" in failure.stderr
     broken.unlink()
+    # Exact safe skipped reasons retain strict/non-strict disposition and never
+    # copy the rejected schema, YAML text, duplicate key or decoder contents.
+    for content, reason in [
+        ("# agentic-artifact:\n#   schema: " + canary + "\n", "unsupported metadata schema"),
+        (header_failures[2][0], "duplicate metadata key"),
+        (header_failures[5][0], "invalid metadata YAML"),
+        (header_failures[0][0], "metadata closing marker must occupy its own line"),
+        (header_failures[1][0], "unterminated metadata header"),
+        (header_failures[3][0], "metadata mapping keys must be scalar values"),
+        (header_failures[4][0], "declared metadata must not contain NUL bytes"),
+        (header_failures[6][0], "invalid metadata header shape"),
+        (header("encoding").encode() + b"\xff", "metadata header is not valid UTF-8"),
+    ]:
+        if isinstance(content, bytes):
+            broken.write_bytes(content)
+        else:
+            broken.write_text(content)
+        data = generate("--all")
+        assert data["skipped"] == [{"path": "outside/broken.custom", "reason": reason}]
+        assert data["summary"]["skipped"] == 1
+        rejected = generate("--all", "--strict", succeeds=False)
+        assert rejected.returncode == 1
+        assert rejected.stderr == f"ERROR: skipped outside/broken.custom: {reason}\n"
+    broken.unlink()
+    duplicate = write("application/duplicate.ts", declared["application/component.ts"])
+    duplicated = generate("--all")
+    assert duplicated["summary"]["duplicate_ids"] == 1
+    assert duplicated["duplicate_ids"] == [{"id": "test.discovery.typescript",
+        "first_path": "application/component.ts", "path": "application/duplicate.ts"}]
+    duplicate_failure = generate("--all", "--strict", succeeds=False)
+    assert duplicate_failure.returncode == 1
+    assert duplicate_failure.stderr == "ERROR: duplicate id: application/component.ts and application/duplicate.ts\n"
+    duplicate.unlink()
+    assert generate("--" + canary, succeeds=False).returncode == 2
+    assert generate("--paths", "../" + canary, succeeds=False).stderr == "ERROR: path must stay inside source root\n"
+    assert generate("--paths", ".git/" + canary, succeeds=False).stderr == "ERROR: Git metadata is not an artifact path\n"
+    (root / ("link-" + canary)).symlink_to(outside)
+    assert generate("--paths", "link-" + canary, succeeds=False).stderr == "ERROR: symlink paths are not supported\n"
+    (root / ("link-" + canary)).unlink()
+    assert generate("--paths", "missing-" + canary)["summary"]["artifacts"] == 0
+
+    # Existing unhashable schema failure remains exit 1 rather than being
+    # silently admitted or changed into a non-strict skip.
+    broken.write_text("# agentic-artifact:\n#   schema: [" + canary + "]\n")
+    for extra in ((), ("--strict",)):
+        rejected = generate("--all", *extra, succeeds=False)
+        assert rejected.returncode == 1
+        assert rejected.stderr == "ERROR: artifact normalization failed [ARTIFACT_INDEX_NORMALIZATION_FAILED]\n"
+    broken.unlink()
+
+    # Faults occur in the actual child at the actual native read/serialization
+    # seams, not in a second implementation of index generation.
+    injection = temporary / "injection"
+    injection.mkdir()
+    (injection / "sitecustomize.py").write_text('''
+import json, os, subprocess
+from pathlib import Path
+mode = os.environ.get("INDEX_DIAGNOSTIC_INJECTION")
+target = Path(os.environ["RAG_REPO_ROOT"]) / "application/component.ts"
+class PrivateIndexNativeError(OSError):
+    pass
+reads = 0
+original_bytes, original_text = Path.read_bytes, Path.read_text
+def read_bytes(self):
+    global reads
+    if self == target:
+        reads += 1
+        if (mode, reads) in {("discovery", 1), ("hash", 2), ("coverage", 3)}:
+            raise PrivateIndexNativeError("PRIVATE_INDEX_CANARY")
+    return original_bytes(self)
+def read_text(self, *args, **kwargs):
+    if self == target and mode == "normalization":
+        raise PrivateIndexNativeError("PRIVATE_INDEX_CANARY")
+    return original_text(self, *args, **kwargs)
+Path.read_bytes, Path.read_text = read_bytes, read_text
+original_run = subprocess.run
+def run(args, *rest, **kwargs):
+    if mode == "provenance" and args[-2:] == ["rev-parse", "HEAD"]:
+        raise PrivateIndexNativeError("PRIVATE_INDEX_CANARY")
+    return original_run(args, *rest, **kwargs)
+subprocess.run = run
+if mode == "output":
+    def dumps(*args, **kwargs):
+        raise PrivateIndexNativeError("PRIVATE_INDEX_CANARY")
+    json.dumps = dumps
+if mode in {"unselected-header", "wrong-header-field", "malformed-header-condition", "header-subclass"}:
+    import header_discovery
+    def parse_header_text(text):
+        condition, field = {
+            "unselected-header": ("PRIVATE_INDEX_CANARY", "PRIVATE_INDEX_CANARY"),
+            "wrong-header-field": ("key-duplicate", "header"),
+            "malformed-header-condition": (["PRIVATE_INDEX_CANARY"], "mapping-key"),
+            "header-subclass": ("key-duplicate", "mapping-key"),
+        }[mode]
+        error_type = header_discovery.HeaderError
+        if mode == "header-subclass":
+            class PrivateHeaderError(header_discovery.HeaderError):
+                pass
+            error_type = PrivateHeaderError
+        raise error_type("PRIVATE_INDEX_CANARY", condition=condition, field=field)
+    header_discovery.parse_header_text = parse_header_text
+''')
+    injection_env = {**environment, "PYTHONDONTWRITEBYTECODE": "1",
+                     "PYTHONPATH": str(injection) + os.pathsep + str(capability.parents[1])}
+    for mode, args, expected in [
+        ("discovery", ("--paths", "application/component.ts"), "artifact declaration observation failed [ARTIFACT_INDEX_DISCOVERY_FAILED]"),
+        ("normalization", ("--paths", "application/component.ts"), "artifact normalization failed [ARTIFACT_INDEX_NORMALIZATION_FAILED]"),
+        ("hash", ("--paths", "application/component.ts"), "artifact normalization failed [ARTIFACT_INDEX_NORMALIZATION_FAILED]"),
+        ("coverage", ("--all", "--check-coverage"), "artifact coverage observation failed [ARTIFACT_INDEX_COVERAGE_FAILED]"),
+        ("output", ("--all",), "artifact index output failed [ARTIFACT_INDEX_OUTPUT_FAILED]"),
+        ("provenance", ("--all",), "source provenance observation failed [ARTIFACT_INDEX_PROVENANCE_FAILED]"),
+    ]:
+        fault_env = {**injection_env, "INDEX_DIAGNOSTIC_INJECTION": mode}
+        if mode == "provenance":
+            fault_env.pop("RAG_SOURCE_COMMIT_SHA")
+        failure = generate(*args, env=fault_env, succeeds=False)
+        assert failure.returncode == 1 and failure.stdout == ""
+        assert failure.stderr == "ERROR: " + expected + "\n"
+    for mode in ("unselected-header", "wrong-header-field", "malformed-header-condition", "header-subclass"):
+        unselected = generate("--paths", "application/component.ts",
+                              env={**injection_env, "INDEX_DIAGNOSTIC_INJECTION": mode})
+        assert unselected["skipped"] == [{"path": "application/component.ts", "reason": "metadata observation failed"}]
+
+    # Actual failed Git children emit a canary on stderr. Both root setup and
+    # repository enumeration capture it, without an extra diagnostic Git call.
+    fake_bin = temporary / "fake-git"
+    fake_bin.mkdir()
+    git_calls = temporary / "git-calls.jsonl"
+    (fake_bin / "git").write_text("#!" + sys.executable + '''
+import json, os, sys
+with open(os.environ["INDEX_GIT_CALLS"], "a") as handle:
+    handle.write(json.dumps(sys.argv[1:]) + "\\n")
+if (os.environ["INDEX_GIT_FAILURE"] == "root" or "ls-files" in sys.argv
+        or os.environ["INDEX_GIT_FAILURE"] == "head" and sys.argv[-2:] == ["rev-parse", "HEAD"]):
+    print("PRIVATE_INDEX_CANARY", file=sys.stderr)
+    sys.exit(17)
+print(os.environ["INDEX_GIT_ROOT"])
+''')
+    (fake_bin / "git").chmod(0o755)
+    for mode, expected_calls, expected in [
+        ("root", [["rev-parse", "--show-toplevel"]], "source-root setup failed [ARTIFACT_INDEX_ROOT_FAILED]"),
+        ("collection", [["-C", str(root), "rev-parse", "--show-toplevel"],
+                        ["-C", str(root), "rev-parse", "--show-toplevel"],
+                        ["-C", str(root), "ls-files", "--cached", "-z", "--others", "--exclude-standard"]],
+         "artifact collection failed [ARTIFACT_INDEX_COLLECTION_FAILED]"),
+        ("head", [["-C", str(root), "rev-parse", "--show-toplevel"],
+                  ["-C", str(root), "rev-parse", "HEAD"]],
+         "source commit observation failed; provide RAG_SOURCE_COMMIT_SHA"),
+    ]:
+        fault_env = {**environment, "PATH": str(fake_bin) + os.pathsep + os.environ["PATH"],
+                     "INDEX_GIT_CALLS": str(git_calls), "INDEX_GIT_ROOT": str(root), "INDEX_GIT_FAILURE": mode}
+        if mode == "root":
+            fault_env.pop("RAG_REPO_ROOT")
+        if mode == "head":
+            fault_env.pop("RAG_SOURCE_COMMIT_SHA")
+        args = ("--paths", "application/component.ts") if mode == "head" else ("--all",)
+        failure = generate(*args, env=fault_env, succeeds=False)
+        assert failure.returncode == 1 and failure.stderr == "ERROR: " + expected + "\n"
+        assert [json.loads(line) for line in git_calls.read_text().splitlines()] == expected_calls
+        git_calls.unlink()
+
+    no_head_env = dict(environment)
+    no_head_env.pop("RAG_SOURCE_COMMIT_SHA")
+    assert generate("--all", env=no_head_env, succeeds=False).stderr == "ERROR: source commit observation failed; provide RAG_SOURCE_COMMIT_SHA\n"
+    assert all(((root / path).read_bytes(), (root / path).stat().st_mtime_ns) == value for path, value in snapshot.items())
+    assert subprocess.check_output(["git", "-C", str(root), "write-tree"]) == index_tree
     # Discovery does not broaden which headerless files require metadata.
     missing = write("scripts/missing.sh", "#!/usr/bin/env bash\nprintf 'hello'\n")
     assert generate("--all", "--check-coverage")["summary"]["skipped"] == 1
@@ -283,8 +491,12 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-index-") as temporar
     assert without_git["coverage"]["scope"] == "source-archive"
     assert without_git["artifacts"] == data["artifacts"]
     archive_env.pop("RAG_SOURCE_COMMIT_SHA")
-    assert "RAG_SOURCE_COMMIT_SHA is required" in generate("--all", env=archive_env, succeeds=False).stderr
+    archive_failure = generate("--all", env=archive_env, succeeds=False)
+    assert archive_failure.returncode == 1
+    assert archive_failure.stderr == "ERROR: RAG_SOURCE_COMMIT_SHA is required when source Git root cannot be confirmed\n"
 
 PY
+
+python3 -B "$repo_root/scripts/01.harness/artifact-metadata/backfill-v2-headers/diagnostic-test.py"
 
 echo "Artifact metadata index generator smoke test passed."

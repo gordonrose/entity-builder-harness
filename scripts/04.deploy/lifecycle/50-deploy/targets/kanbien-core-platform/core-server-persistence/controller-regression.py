@@ -5,7 +5,7 @@
 #   version: 6
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -75,6 +75,61 @@ class Provider:
         return True, 'ok'
 
 class ControllerRegression(unittest.TestCase):
+    def test_native_reconciliation_shapes_are_unknown_without_mutations(self):
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
+        name='retained-operation'
+        for field,value,expected in [('Status',[],'persistence-update-review-status-unobservable'),('ExecutionStatus',{},'persistence-update-execution-status-unobservable')]:
+            change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE',field:value}
+            with patch.object(prepare,'aws',return_value=(True,change,'ok')) as provider:
+                self.assertEqual(prepare.observe_update(name,{},lambda _change:True),('uncertain',expected))
+                self.assertEqual(provider.call_count,1)
+        with patch.object(prepare,'aws',return_value=(True,{'ChangeSetName':name,'Status':'CREATE_COMPLETE'},'ok')) as provider:
+            self.assertEqual(prepare.observe_update(name,{},lambda _change:(_ for _ in ()).throw(ValueError('private-native-canary'))),('uncertain','persistence-update-review-unobservable'))
+            self.assertEqual(provider.call_count,1)
+        for stack in [{'StackStatus':[],'Parameters':[]},{'StackStatus':'UPDATE_COMPLETE','Parameters':[{'ParameterKey':[],'ParameterValue':'private-native-canary'}]}]:
+            provider=Provider(lambda parts:(False,None,'aws-resource-missing') if parts[1]=='describe-change-set' else (True,{'Stacks':[stack]},'ok'))
+            with patch.object(prepare,'aws',side_effect=provider.aws):
+                outcome,code=prepare.observe_update(name,{},lambda _change:(_ for _ in ()).throw(AssertionError('missing review is not replayed')))
+            self.assertEqual(outcome,'uncertain');self.assertIn(code,{'persistence-update-stack-status-unobservable','persistence-update-stack-parameters-unobservable'})
+            self.assertEqual([parts[1] for parts in provider.calls],['describe-change-set','describe-stacks'])
+        with patch.object(prepare,'candidate_runnable_manifest',return_value=('sha256:'+'b'*64,'ok')),patch.object(prepare,'aws',return_value=(True,{'imageScanStatus':None},'ok')):
+            self.assertEqual(prepare.candidate_image(receipt),(False,'persistence-candidate-image-scan-observation-invalid'))
+        with patch.object(prepare,'aws',return_value=(True,{'Budget':{'BudgetLimit':{'Amount':'sNaN','Unit':'USD'}}},'ok')):
+            self.assertEqual(prepare.live_budget(),(False,'target-budget-amount-observation-invalid'))
+        create=load(DEPLOY/'create-change-set/script.py')
+        for field,value,code in [('Status',[],'persistence-change-set-status-unobservable'),('Parameters',[{'ParameterKey':[],'ParameterValue':'private-native-canary'}],'persistence-change-set-parameters-unobservable')]:
+            provider=Provider(lambda _parts:(True,{'ChangeSetName':name,'Status':'CREATE_COMPLETE','Parameters':[],field:value},'ok'));provider.change_name_matches=prepare.change_name_matches
+            status,report,_=result(lambda:create.reconcile(provider,name,receipt))
+            self.assertEqual((status,report['verdict'],report['findings']),(1,'uncertain',[{'code':code}]))
+            self.assertEqual(len(provider.calls),1);self.assertNotIn('private-native-canary',json.dumps(report))
+        retire=load(DEPLOY/'retire-failed-candidate/script.py')
+        with patch.object(retire,'aws',side_effect=[(True,{'Stacks':[{'StackStatus':'ROLLBACK_FAILED'}]},'ok'),(True,{'StackResources':1},'ok')]) as provider:
+            self.assertEqual(retire.failed_candidate_database(),(False,'persistence-failed-candidate-resources-unobservable'));self.assertEqual(provider.call_count,2)
+        for checker,unlocked in [(retire.protected_target_database,False),(retire.protected_target_database_after_unlock,True)]:
+            instance={'DBInstanceIdentifier':retire.DATABASE,'PubliclyAccessible':False,'DeletionProtection':not unlocked,'DBInstanceStatus':'available','DBInstanceArn':'fixture-arn'}
+            with patch.object(retire,'aws',side_effect=[(True,{'DBInstances':[instance]},'ok'),(True,{'TagList':1},'ok')]) as provider:
+                self.assertEqual(checker(),(False,'persistence-failed-candidate-tags-unobservable'));self.assertEqual(provider.call_count,2)
+
+    def test_create_parameter_file_failures_preserve_submission_boundary(self):
+        module=load(DEPLOY/'create-change-set/script.py')
+        receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
+        provider=SimpleNamespace(validate_receipt=lambda _path:receipt,declaration_covered=lambda:True,foundation_outputs=lambda:({},'ok'),infrastructure_parameters=lambda _:({},'ok'),candidate_image=lambda _:(True,'ok'),live_budget=lambda:(True,'ok'),candidate_parameters=lambda *args:{'ImageDigest':receipt['image_digest']})
+        class CleanupFailure(io.StringIO):
+            name='fixture-only.json'
+            def __exit__(self,*args):super().__exit__(*args);raise OSError('private-native-canary')
+        for cleanup in (False,True):
+            calls=[]
+            def aws(*parts):
+                calls.append(parts[1]);return (False,None,'aws-resource-missing') if parts[1]=='describe-stacks' else (True,{},'ok')
+            provider.aws=aws
+            temporary=patch.object(module.tempfile,'NamedTemporaryFile',return_value=CleanupFailure()) if cleanup else patch.object(module.tempfile,'NamedTemporaryFile',side_effect=OSError('private-native-canary'))
+            with temporary,patch.object(module,'controls',return_value=provider),patch.object(module,'diagnostic_path_is_governed',return_value=True),patch.object(module,'diagnostics_ready',return_value=True),patch.object(module,'package_gates',return_value=True),patch.object(sys,'argv',['fixture','--receipt','fixture']):
+                status,report,_=result(module.main)
+            self.assertEqual((status,report['verdict']),(1,'uncertain' if cleanup else 'blocked'))
+            self.assertEqual(calls,['describe-stacks','create-change-set'] if cleanup else ['describe-stacks'])
+            self.assertEqual(report['findings'],[{'code':'persistence-submission-or-parameter-cleanup-unavailable' if cleanup else 'persistence-parameter-file-unavailable'}]);self.assertNotIn('private-native-canary',json.dumps(report))
+
     def test_exact_change_set_and_restore_image_parameter(self):
         module = load(DEPLOY / 'deploy-candidate/script.py')
         digest, revision, name = 'sha256:'+'a'*64, 'a'*40, 'candidate-name'
@@ -353,7 +408,7 @@ class ControllerRegression(unittest.TestCase):
                     self.assertEqual(result(call)[1]['verdict'],'uncertain')
 
     def test_transition_failure_retains_allowlisted_diagnostic(self):
-        """A circuit-breaker failure survives controller reconciliation safely."""
+        """Retain the failed operation, not an uncorrelated event's cause."""
         module=load(DEPLOY/'transition-qualified-release/script.py')
         prepare=load(DEPLOY/'prepare-candidate/script.py')
         digest='sha256:'+'a'*64; revision='a'*40; name='kanbien-core-platform-persistence-rollback-'+'a'*12
@@ -376,7 +431,11 @@ class ControllerRegression(unittest.TestCase):
             self.assertTrue(path.is_file())
             saved=json.loads(path.read_text(encoding='utf-8'))
             self.assertEqual(saved['operation_outcome'],'failed')
-            self.assertEqual(saved['facts']['resource_logical_id'],'CoreServerPersistenceService')
+            self.assertEqual(saved['original_failure']['code'],'persistence-update-stack-failed')
+            self.assertEqual(saved['classification']['code'],'provider-details-unavailable')
+            self.assertEqual(saved['facts']['provider_status'],'CREATE_COMPLETE')
+            self.assertNotIn('resource_logical_id',saved['facts'])
+            self.assertNotIn('resource_type',saved['facts'])
             self.assertNotIn('ECS deployment circuit breaker triggered',path.read_text(encoding='utf-8'))
         self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
 
@@ -568,13 +627,16 @@ class ControllerRegression(unittest.TestCase):
     def test_parent_preserves_timeout_operation_receipt(self):
         import subprocess
         module=load(RUN/'rehearse-runtime-credential-lifecycle/script.py')
-        receipt={'verdict':'pending','facts':{'administration_task':'task-safe','secret':'must-not-escape'}}
+        command='scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh'
+        receipt={'schema':'deploy/persistence-administration-report/v1','target':'kanbien-core-platform','scope':'core-server-persistence','verdict':'pending','facts':{'administration_task':'a'*32,'secret':'must-not-escape'}}
         error=subprocess.TimeoutExpired(['synthetic'],180,stderr=json.dumps(receipt).encode())
         with patch.object(module.subprocess,'run',side_effect=error):
-            self.assertIsNone(module.child('synthetic-controller'))
+            self.assertIsNone(module.child(command))
         report=result(lambda:module.report('blocked','child-unconfirmed'))[1]
         self.assertEqual(report['verdict'],'pending')
-        self.assertEqual(report['facts']['child_checkpoint']['facts'],{'administration_task':'task-safe'})
+        self.assertEqual(report['facts']['child_checkpoint']['command'],command)
+        self.assertEqual(report['facts']['child_checkpoint']['schema'],'deploy/persistence-administration-report/v1')
+        self.assertEqual(report['facts']['child_checkpoint']['facts'],{'administration_task':'a'*32})
         self.assertNotIn('must-not-escape',json.dumps(report))
 
     def test_malformed_endpoint_group_blocks_before_mutation(self):

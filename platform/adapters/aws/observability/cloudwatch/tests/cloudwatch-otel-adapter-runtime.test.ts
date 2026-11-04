@@ -1,10 +1,14 @@
-import { deepEqual, throws } from "node:assert/strict"; // Use strict assertions to prove target catalogue enforcement and instrument translation.
+import { deepEqual, equal, throws } from "node:assert/strict"; // Use strict assertions to prove target catalogue enforcement and instrument translation.
 import { isoDateTimeFromDate } from "@kanbien/core/shared"; // Construct the Core-required timestamp without involving a real clock.
-import { metricName, metricUnit, type MetricKind, type MetricLabelValue, type MetricPoint } from "@kanbien/core/monitoring"; // Build valid provider-neutral points for the adapter boundary.
+import { metricName, metricUnit, coreMonitoringValidationDiagnosticRecord, type MetricKind, type MetricLabelValue, type MetricPoint } from "@kanbien/core/monitoring"; // Build valid provider-neutral points for the adapter boundary.
+import { createPlatformMetricDiagnosticBinding, recordPlatformMetric, type PlatformObservationDiagnostics } from "@kanbien/platform-observability";
+import { MeterProvider } from "@opentelemetry/sdk-metrics";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { // Import only the public adapter surface under test.
   cloudWatchOtelMetricViews, // Inspect the generated SDK policy for histogram boundaries and cardinality limits.
   createCloudWatchOtelMetrics, // Adapt Core points through a deterministic fake meter.
   createCloudWatchOtelMetricsRuntime, // Prove unsafe exporter configuration fails before a target can serve traffic.
+  validateCloudWatchOtelMetricsConfiguration,
   type CloudWatchOtelMetricMeter, // Type the fake meter to the small adapter-owned OTel surface.
   type CloudWatchOtelMetricSeries, // Type the reviewed catalogue fixture.
 } from "../src/index"; // Test the package's deliberate public barrel.
@@ -106,6 +110,37 @@ void dedicated.shutdown(); // No metric is recorded in this boundary test; stop 
 
 console.log("CloudWatch OTel metrics adapter runtime test passed."); // Make successful standalone execution clear in governed check output.
 
+const configuration = { endpoint: "http://127.0.0.1:4318/v1/metrics", region: "eu-west-1", serviceName: "fixture-service", serviceVersion: "test", deploymentEnvironment: "fixture", exportIntervalMs: 1000, exportTimeoutMs: 1000, series };
+equal(validateCloudWatchOtelMetricsConfiguration(configuration).ok, true);
+function rejectedOptions(overrides: Record<string, unknown>) {
+  const r = validateCloudWatchOtelMetricsConfiguration({ ...configuration, ...overrides }); if (r.ok) throw Error("Expected rejected provider options");
+  equal(JSON.stringify(r.error).includes("synthetic-private"), false); return r.error.issues;
+}
+for (const [endpoint, reasons] of [
+  ["synthetic-private", ["malformed-url"]], ["https://127.0.0.1:4318/v1/metrics", ["protocol-not-allowed"]],
+  ["http://127.0.0.1:4319/v1/metrics", ["port-not-allowed"]], ["http://127.0.0.1:4318/private", ["path-not-allowed"]],
+  ["http://synthetic-private@127.0.0.1:4318/v1/metrics", ["credentials-not-allowed"]],
+  ["http://127.0.0.1:4318/v1/metrics?token=synthetic-private", ["query-not-allowed"]],
+  ["http://127.0.0.1:4318/v1/metrics#synthetic-private", ["fragment-not-allowed"]],
+  ["http://synthetic-private.example:4318/v1/metrics", ["host-not-allowed"]],
+] as const) deepEqual(rejectedOptions({ endpoint }), reasons.map(reason => ({ setting: "metrics.endpoint", reason })));
+for (const [key, setting] of [["endpoint", "metrics.endpoint"], ["region", "metrics.region"], ["serviceName", "metrics.service-name"], ["serviceVersion", "metrics.service-version"], ["deploymentEnvironment", "metrics.deployment-environment"]] as const) {
+  for (const [raw, reason] of [[undefined, "missing"], [null, "wrong-type"], [42, "wrong-type"], ["", "blank"]] as const) deepEqual(rejectedOptions({ [key]: raw }), [{ setting, reason }]);
+}
+deepEqual(rejectedOptions({ region: "synthetic-private" }), [{ setting: "metrics.region", reason: "invalid-format" }]);
+for (const region of ["eu-west-1", "us-gov-west-1", "aa-x-123"]) equal(validateCloudWatchOtelMetricsConfiguration({ ...configuration, region }).ok, true);
+for (const [key, setting] of [["exportIntervalMs", "metrics.export-interval"], ["exportTimeoutMs", "metrics.export-timeout"]] as const) {
+  for (const [raw, reason] of [[undefined, "missing"], ["1000", "wrong-type"], [null, "wrong-type"], [NaN, "invalid-integer"], [Infinity, "not-finite"], [1.5, "invalid-integer"], [0, "not-positive"]] as const) deepEqual(rejectedOptions({ [key]: raw }), [{ setting, reason }]);
+}
+deepEqual(rejectedOptions({ exportIntervalMs: 999, exportTimeoutMs: 1000 }), [
+  { setting: "metrics.export-interval", reason: "interval-too-short" }, { setting: "metrics.export-timeout", reason: "timeout-exceeds-interval" },
+]);
+let providerGetterReads = 0;
+const hostileOptions = Object.defineProperty({ ...configuration }, "endpoint", { get() { providerGetterReads++; throw Error("synthetic-private"); } });
+equal(validateCloudWatchOtelMetricsConfiguration(hostileOptions).ok, false); equal(providerGetterReads, 0);
+throws(() => createCloudWatchOtelMetricsRuntime({ ...configuration, region: "synthetic-private" }),
+  (error: unknown) => error instanceof RangeError && JSON.stringify((error as RangeError & { diagnosticRecord: unknown }).diagnosticRecord).includes('"setting":"metrics.region"'));
+
 function point(input: { // Construct one valid Core MetricPoint from readable test input.
   readonly name: string; // Accept one test metric identity.
   readonly kind: MetricKind; // Accept one Core metric kind.
@@ -122,3 +157,170 @@ function point(input: { // Construct one valid Core MetricPoint from readable te
     ...(input.labels === undefined ? {} : { labels: input.labels }), // Include labels only when the test supplied them.
   }; // Finish the provider-neutral point.
 }
+
+// Assert meaning, not merely the presence of a schema-valid companion.
+const basic = { name: series[0]!.sourceName, kind: "counter" as const, value: 1, unit: "count" };
+let creations = 0, invocations = 0;
+const isolatedMeter: CloudWatchOtelMetricMeter = {
+  createCounter() { creations++; return { add() { invocations++; } } as any; },
+  createGauge() { creations++; return { record() { invocations++; } } as any; },
+  createHistogram() { creations++; return { record() { invocations++; } } as any; },
+};
+const checkedPort = createCloudWatchOtelMetrics({ meter: isolatedMeter, series });
+for (const [input, expected] of [
+  [{ ...basic, name: "synthetic.private" }, { reason: "undeclared-metric" }],
+  [{ ...basic, kind: "gauge" as const, unit: "ms", value: NaN }, { reason: "kind-mismatch", seriesIndex: 0 }],
+  [{ ...basic, unit: "ms", value: NaN }, { reason: "unit-mismatch", seriesIndex: 0 }],
+  [{ ...basic, value: NaN }, { reason: "not-finite", seriesIndex: 0 }],
+  [{ ...basic, value: Infinity }, { reason: "not-finite", seriesIndex: 0 }],
+  [{ ...basic, value: -1 }, { reason: "negative-counter", seriesIndex: 0 }],
+  [{ name: series[1]!.sourceName, kind: "timer" as const, value: -1, unit: "ms" }, { reason: "negative-distribution", seriesIndex: 1 }],
+  [{ ...basic, labels: { outcome: "succeeded", private_extra: "synthetic-canary" } }, { reason: "unapproved-label", seriesIndex: 0, index: 1 }],
+] as const) {
+  const observed: DiagnosticRecord[] = [];
+  const binding = createPlatformMetricDiagnosticBinding({ report(record, context) { observed.push(record); equal(context.operation, "request-outcome"); return { status: "written" }; } }, { capability: "observability", stage: "request" });
+  recordPlatformMetric(checkedPort, { now: () => new Date() }, input, { binding, operation: "request-outcome" });
+  deepEqual(observed, [{ schema: "core/diagnostic-record/v1", code: "observability.metric-rejected", definitionVersion: 1,
+    detail: { phase: "point-validation", effect: "recording-not-attempted", ...expected } }], "adapter must report the independently expected rejecting predicate");
+  equal(creations, 0); equal(invocations, 0);
+  equal(JSON.stringify(observed).includes("synthetic-canary"), false);
+}
+checkedPort.record(point(basic)); checkedPort.record(point({ ...basic, value: 0 }));
+equal(creations, 1); equal(invocations, 2, "accepted counter preserves calls and reuses its instrument");
+for (const [values, expectedReason, expectedReads] of [
+  [[NaN, 1], "not-finite", 1], [[Infinity, -1], "not-finite", 1], [[1, -1], "negative-counter", 2],
+] as const) {
+  let valueReads = 0;
+  const mutable = Object.defineProperty(point(basic), "value", { get() { return values[Math.min(valueReads++, values.length - 1)]; } });
+  throws(() => checkedPort.record(mutable), (error: unknown) => {
+    equal(error instanceof RangeError, true);
+    deepEqual(Object.getOwnPropertyDescriptor(error, "diagnosticRecord")?.value,
+      { schema: "core/diagnostic-record/v1", code: "observability.metric-rejected", definitionVersion: 1,
+        detail: { phase: "point-validation", reason: expectedReason, effect: "recording-not-attempted", seriesIndex: 0 } },
+      "numeric diagnosis must use the exact observed rejecting check, not a later getter value");
+    return true;
+  });
+  equal(valueReads, expectedReads); equal(creations, 1); equal(invocations, 2);
+}
+const gaugeSeries: CloudWatchOtelMetricSeries = { ...series[0]!, sourceName: "fixture.gauge", sourceKind: "gauge", instrumentName: "fixture.gauge", allowedLabelNames: ["safe"] };
+const gaugePort = createCloudWatchOtelMetrics({ meter: isolatedMeter, series: [gaugeSeries] });
+gaugePort.record(point({ name: "fixture.gauge", kind: "gauge", unit: "count", value: -10, labels: { safe: false } }));
+equal(invocations, 3, "negative gauges and approved scalar attributes remain accepted");
+for (const kind of ["counter", "gauge", "histogram", "timer"] as const) {
+  const one: CloudWatchOtelMetricSeries = { ...series[0]!, sourceName: "fixture.instrument", instrumentName: "fixture.instrument", sourceKind: kind,
+    ...(kind === "timer" || kind === "histogram" ? { histogramBucketBoundaries: [1, 2] } : {}) };
+  for (const phase of ["creation", "record"] as const) {
+    let createAttempts = 0, recordAttempts = 0;
+    const create = () => { createAttempts++; if (phase === "creation") throw new Error("SDK-private-canary");
+      const fail = () => { recordAttempts++; throw new Error("SDK-private-canary"); };
+      return { add: fail, record: fail } as any; };
+    const port = createCloudWatchOtelMetrics({ meter: { createCounter: create, createGauge: create, createHistogram: create }, series: [one] });
+    const observed: DiagnosticRecord[] = [];
+    const binding = createPlatformMetricDiagnosticBinding({ report(record) { observed.push(record); return { status: "written" }; } }, { capability: "observability", stage: "request" });
+    recordPlatformMetric(port, { now: () => new Date() }, { name: "fixture.instrument", kind }, { binding, operation: "metric" });
+    deepEqual(observed, [phase === "creation"
+      ? { schema: "core/diagnostic-record/v1", code: "observability.metric-instrument-creation-failed", definitionVersion: 1,
+        detail: { reason: "unclassified-creation-failure", phase: "instrument-creation", effect: "recording-not-attempted", seriesIndex: 0 } }
+      : { schema: "core/diagnostic-record/v1", code: "observability.metric-recording-failed", definitionVersion: 1,
+        detail: { reason: "unclassified-invocation-failure", phase: "record-invocation", effect: "unknown", seriesIndex: 0 } }],
+      "creation and invocation meanings must be independent of the production record constructors");
+    equal(createAttempts, 1); equal(recordAttempts, phase === "creation" ? 0 : 1);
+    equal(JSON.stringify(observed).includes("SDK-private-canary"), false);
+  }
+}
+
+// Independent own/source evidence must not consume a source's ninth slot.
+const sourceNine = Array.from({ length: 9 }, (_, ordinal) => coreMonitoringValidationDiagnosticRecord({ operation: "signal-definition", field: "signal-intent", ordinal, reason: "closed-value-rejected", effect: "rejected" }));
+const sourceFailure = Object.freeze({ diagnosticRecord: sourceNine[0], relatedDiagnosticRecords: sourceNine.slice(1), message: "SDK-private-canary" });
+const boundaryRecords: DiagnosticRecord[] = [], boundaryContexts: unknown[] = [];
+const observationOptions: PlatformObservationDiagnostics = {
+  reporter: { report(record, context) { equal(this, observationOptions.reporter); boundaryRecords.push(record); boundaryContexts.push(context); return { status: "written" }; } },
+  context: { capability: "observability", operation: "metrics", stage: "startup" },
+};
+for (const phase of ["creation", "record"] as const) {
+  let createCalls = 0, recordCalls = 0;
+  const create = () => { createCalls++; if (phase === "creation") throw sourceFailure; return { add() { recordCalls++; throw sourceFailure; } } as any; };
+  const port = createCloudWatchOtelMetrics({ meter: { createCounter: create, createGauge: create, createHistogram: create }, series }, observationOptions);
+  boundaryRecords.length = 0; boundaryContexts.length = 0;
+  let wrapped: unknown;
+  try { port.record(point(basic)); } catch (error) { wrapped = error; }
+  equal(wrapped instanceof Error, true);
+  equal((wrapped as Error).message, phase === "creation" ? "Metric instrument creation did not complete." : "Metric recording invocation did not complete.");
+  equal(Object.getOwnPropertyDescriptor(wrapped, "diagnosticRecord")?.value.code, phase === "creation" ? "observability.metric-instrument-creation-failed" : "observability.metric-recording-failed");
+  equal(boundaryRecords.length, 10); deepEqual(boundaryRecords.slice(1), sourceNine);
+  deepEqual(boundaryRecords[0]?.detail, { operation: phase === "creation" ? "metric-instrument-creation" : "metric-recording", phase: phase === "creation" ? "instrument-creation" : "instrument-recording", field: phase === "creation" ? "meter" : "record", reason: "threw", effect: "unknown" });
+  equal(createCalls, 1); equal(recordCalls, phase === "creation" ? 0 : 1);
+  equal(JSON.stringify(boundaryRecords).includes("SDK-private-canary"), false);
+  deepEqual(boundaryContexts, Array.from({ length: 10 }, () => ({ capability: "observability", operation: "metrics", stage: "runtime" })));
+}
+const rawPort = createCloudWatchOtelMetrics({ meter: isolatedMeter, series }, observationOptions);
+boundaryRecords.length = 0;
+throws(() => rawPort.record({ ...point(basic), get name(): never { throw sourceFailure; } }), (error) => error === sourceFailure);
+deepEqual(boundaryRecords[0]?.detail, { operation: "metric-recording", phase: "input-projection", field: "name", reason: "threw", effect: "not-attempted" });
+deepEqual(boundaryRecords.slice(1), sourceNine);
+let oldGuard: unknown;
+try { rawPort.record(point({ ...basic, value: -1 })); } catch (error) { oldGuard = error; }
+boundaryRecords.length = 0;
+throws(() => rawPort.record({ ...point(basic), get name(): never { throw oldGuard; } }), (error) => error === oldGuard);
+deepEqual(boundaryRecords.map(({ code }) => code), ["observability.boundary-failed", "observability.metric-rejected"]);
+for (const [property, field] of [["endpoint", "endpoint"], ["exportIntervalMs", "export-interval"], ["exportTimeoutMs", "export-timeout"], ["serviceName", "service-name"], ["serviceVersion", "service-version"], ["deploymentEnvironment", "environment"], ["region", "region"]] as const) {
+  boundaryRecords.length = 0;
+  const mutable = new Proxy(configuration, { get(target, key, receiver) { if (key === property) throw sourceFailure; return Reflect.get(target, key, receiver); } });
+  throws(() => createCloudWatchOtelMetricsRuntime(mutable, undefined, observationOptions), (error) => error === sourceFailure);
+  deepEqual(boundaryRecords[0]?.detail, { operation: "metric-runtime-construction", phase: "input-projection", field, reason: "threw", effect: "unknown" });
+  equal(boundaryRecords.length, 10, "one per-current-call report, never nested duplicate source9");
+  deepEqual(boundaryRecords.slice(1), sourceNine);
+}
+const nativeGetMeter = MeterProvider.prototype.getMeter;
+let selectedProvider: MeterProvider | undefined;
+boundaryRecords.length = 0;
+try {
+  MeterProvider.prototype.getMeter = function () { selectedProvider = this; throw sourceFailure; };
+  throws(() => createCloudWatchOtelMetricsRuntime(configuration, undefined, observationOptions), (error) => error === sourceFailure);
+} finally { MeterProvider.prototype.getMeter = nativeGetMeter; void selectedProvider?.shutdown(); }
+deepEqual(boundaryRecords[0]?.detail, { operation: "metric-runtime-construction", phase: "meter-selection", reason: "threw", effect: "unknown" });
+deepEqual(boundaryRecords.slice(1), sourceNine);
+boundaryRecords.length = 0;
+let catalogueReads = 0;
+const changingCatalogue = new Proxy(configuration, { get(target, key, receiver) { if (key === "series" && ++catalogueReads === 4) throw sourceFailure; return Reflect.get(target, key, receiver); } });
+try {
+  MeterProvider.prototype.getMeter = function (...args) { selectedProvider = this; return Reflect.apply(nativeGetMeter, this, args); };
+  throws(() => createCloudWatchOtelMetricsRuntime(changingCatalogue, undefined, observationOptions), (error) => error === sourceFailure);
+} finally { MeterProvider.prototype.getMeter = nativeGetMeter; void selectedProvider?.shutdown(); }
+equal(catalogueReads, 4);
+deepEqual(boundaryRecords[0]?.detail, { operation: "metric-runtime-construction", phase: "input-projection", field: "series", reason: "threw", effect: "unknown" });
+deepEqual(boundaryRecords.slice(1), sourceNine);
+boundaryRecords.length = 0;
+let versionReads = 0;
+const changingVersion = new Proxy(configuration, { get(target, key, receiver) { if (key === "serviceVersion" && ++versionReads === 2) throw sourceFailure; return Reflect.get(target, key, receiver); } });
+const nativeGetMeterDescriptor = Object.getOwnPropertyDescriptor(MeterProvider.prototype, "getMeter")!;
+try {
+  Object.defineProperty(MeterProvider.prototype, "getMeter", { configurable: true, get(this: MeterProvider) { selectedProvider = this; return nativeGetMeter; } });
+  throws(() => createCloudWatchOtelMetricsRuntime(changingVersion, undefined, observationOptions), (error) => error === sourceFailure);
+} finally { Object.defineProperty(MeterProvider.prototype, "getMeter", nativeGetMeterDescriptor); void selectedProvider?.shutdown(); }
+equal(versionReads, 2);
+deepEqual(boundaryRecords[0]?.detail, { operation: "metric-runtime-construction", phase: "input-projection", field: "service-version", reason: "threw", effect: "unknown" });
+equal(boundaryRecords.length, 10); deepEqual(boundaryRecords.slice(1), sourceNine);
+boundaryRecords.length = 0;
+const nativeReaderFailure = new Proxy(configuration, { get(target, key, receiver) { return key === "exportIntervalMs" ? -1 : Reflect.get(target, key, receiver); } });
+throws(() => createCloudWatchOtelMetricsRuntime(nativeReaderFailure, undefined, observationOptions), Error);
+deepEqual(boundaryRecords[0]?.detail, { operation: "metric-runtime-construction", phase: "reader-construction", reason: "threw", effect: "unknown" });
+equal(boundaryRecords.length, 1, "opaque SDK constructor failure does not inherit the last successful field read");
+const reads: PropertyKey[] = [];
+const readOrder = new Proxy(configuration, { get(target, key, receiver) { reads.push(key); return Reflect.get(target, key, receiver); } });
+const orderRuntime = createCloudWatchOtelMetricsRuntime(readOrder, undefined, observationOptions);
+deepEqual(reads, ["endpoint", "exportIntervalMs", "exportTimeoutMs", "series", "series", "serviceName", "serviceVersion", "deploymentEnvironment", "region", "series", "serviceVersion", "series"]);
+void orderRuntime.shutdown();
+let contextReads = 0;
+const accessorContext = { get capability() { contextReads++; return "observability"; }, operation: "metrics", stage: "startup" as const };
+boundaryRecords.length = 0;
+const invalidContextPort = createCloudWatchOtelMetrics({ meter: { ...isolatedMeter, createCounter() { throw sourceFailure; } }, series }, { ...observationOptions, context: accessorContext });
+throws(() => invalidContextPort.record(point(basic)), /Metric instrument creation/);
+equal(contextReads, 0); equal(boundaryRecords.length, 0, "context accessors remain invalid and are never flattened into trusted data");
+let definitionReads = 0;
+const definitionFallback: PlatformObservationDiagnostics = { ...observationOptions, get definitions(): never { definitionReads++; throw sourceFailure; } };
+const fallbackPort = createCloudWatchOtelMetrics({ meter: { ...isolatedMeter, createCounter() { throw sourceFailure; } }, series }, definitionFallback);
+equal(definitionReads, 0, "stage binding must not eagerly read optional definition getters");
+boundaryRecords.length = 0;
+throws(() => fallbackPort.record(point(basic)), /Metric instrument creation/);
+equal(definitionReads, 1); equal(boundaryRecords.length, 10); deepEqual(boundaryRecords.slice(1), sourceNine);

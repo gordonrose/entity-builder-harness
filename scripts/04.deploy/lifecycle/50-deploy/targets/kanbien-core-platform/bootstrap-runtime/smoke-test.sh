@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 6
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -167,3 +167,4 @@ PY
 echo "Fixed core-platform target control tests passed."
 
 python3 -B "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py"
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/smoke-test.py"

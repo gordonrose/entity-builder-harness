@@ -1,7 +1,7 @@
 import type { Tracer } from "@kanbien/core/monitoring";
 import type { QueueMessage } from "@kanbien/core/queues";
 import type { ISODateTime, Result } from "@kanbien/core/shared";
-import type { PlatformApp, PlatformJobName, PlatformMountDeps } from "@kanbien/platform-contracts";
+import type { PlatformApp, PlatformDiagnosticCatalog, PlatformJobName, PlatformMountDeps } from "@kanbien/platform-contracts";
 import type { PlatformReadinessSummary } from "@kanbien/platform-health";
 import type {
   PlatformPersistenceLeaseOwner,
@@ -84,6 +84,7 @@ export type PlatformWorkerRunNextResult =
     };
 
 export interface PlatformWorkerShellOptions {
+  readonly diagnosticCatalogs?: readonly PlatformDiagnosticCatalog[];
   readonly apps: readonly PlatformApp[];
   readonly deps: PlatformMountDeps;
   readonly queue?: PlatformWorkerQueue;

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -29,6 +29,7 @@ import yaml
 def inspect(contract, binding, image, template_path, root):
     findings = []
     def gap(code, reference):
+        if not isinstance(reference, str) or not re.fullmatch(r'[A-Za-z0-9._/,:-]*', reference): reference = "invalid-reference"
         item = {"code": code, "reference": reference}
         if item not in findings: findings.append(item)
     requirements = binding.get("runtime_requirements")

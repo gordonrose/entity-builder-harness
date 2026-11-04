@@ -1,0 +1,2 @@
+export { defineConfigurationDiagnostic, configurationDiagnostic, defineConfigurationSourceReadDiagnostic, configurationSourceReadDiagnosticRecord, defineConfigurationRelationshipDiagnostics, configurationRelationshipDiagnostic } from "@kanbien/core/config";
+export { platformConfigDiagnostic, platformConfigWideDiagnostic, platformConfigThrownDiagnostic, platformConfigDiagnosticCatalog } from "./contract/diagnostics";

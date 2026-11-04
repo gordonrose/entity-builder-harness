@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -229,7 +229,7 @@ def full_route():
         def run(argv,*args,**kwargs):
             if argv[0]=='aws':
                 assert argv[1:3]==['rds','describe-db-instances'] and '-restore-' in argv[4],argv
-                return subprocess.CompletedProcess(argv,1 if state['cleanup'] else 0,'{}','DBInstanceNotFound' if state['cleanup'] else '')
+                return subprocess.CompletedProcess(argv,1 if state['cleanup'] else 0,'{}','An error occurred (DBInstanceNotFound) when calling the DescribeDBInstances operation: synthetic missing' if state['cleanup'] else '')
             return real_run(argv,*args,**kwargs)
         with patch.object(collector,'aws',aws),patch.object(collector,'live_budget',lambda:None),patch('subprocess.run',run):
             parsed_observability = collector.parse_observability_receipts([name+'='+path for name,path in observability_receipts.items()], facts['candidate_digest'])

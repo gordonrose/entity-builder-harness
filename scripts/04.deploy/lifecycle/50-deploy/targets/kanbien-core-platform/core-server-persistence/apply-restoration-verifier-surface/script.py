@@ -59,14 +59,17 @@ def discard_rejected_image_review(m,name,digest,expected):
  if change.get("Status")!="CREATE_COMPLETE" or change.get("ExecutionStatus")!="AVAILABLE":return emit("blocked","persistence-restoration-image-review-not-unexecuted")
  if parameter_values(change)!=expected or review(change,name,digest,"image",expected):return emit("blocked","persistence-restoration-image-review-not-guard-rejected")
  ok,_,code=m.aws("cloudformation","delete-change-set","--stack-name",STACK,"--change-set-name",name)
- if not ok:return emit("blocked",code)
+ if not ok:return emit("uncertain",code,facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":"image"})
  for attempt in range(6):
   exists,_,observed=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
   if not exists and observed=="aws-resource-missing":return emit("discarded","persistence-restoration-image-review-discarded",facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":"image"})
   if attempt<5:time.sleep(2)
- return emit("blocked","persistence-restoration-image-review-discard-not-confirmed")
+ return emit("uncertain","persistence-restoration-image-review-discard-not-confirmed",facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":"image"})
+class RestorationArgumentParser(argparse.ArgumentParser):
+ def error(self,message):
+  emit("blocked","persistence-restoration-surface-arguments-invalid");self.exit(2)
 def main():
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--mode",choices=("surface","egress","image"),default="surface");p.add_argument("--json",action="store_true");p.add_argument("--reconcile",action="store_true");p.add_argument("--discard-rejected-image-review",action="store_true");a,u=p.parse_known_args()
+ p=RestorationArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--mode",choices=("surface","egress","image"),default="surface");p.add_argument("--json",action="store_true");p.add_argument("--reconcile",action="store_true");p.add_argument("--discard-rejected-image-review",action="store_true");a,u=p.parse_known_args()
  if u or a.receipt is None or (a.reconcile and a.discard_rejected_image_review) or (a.discard_rejected_image_review and a.mode!="image"):return emit("blocked","persistence-restoration-surface-arguments-invalid")
  m=load();receipt=m.validate_receipt(a.receipt)
  if receipt is None:return emit("blocked","package-custody-receipt-invalid")

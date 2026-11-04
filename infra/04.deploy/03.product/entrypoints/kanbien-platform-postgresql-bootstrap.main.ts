@@ -1,5 +1,6 @@
 // One-shot bootstrap only: create the two least-privilege database identities
 // from ECS-injected generated credentials, then exit without printing values.
+import { reportTargetConfigurationError } from "./kanbien-platform-configuration-diagnostics";
 
 import {
   type BootstrapFailureCategory,
@@ -41,6 +42,7 @@ async function main(): Promise<void> {
     await pool.query({ text: "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA platform_smoke TO psmokeruntime" });
     writeOutcome("bootstrap_completed", "succeeded");
   } catch (error) {
+    reportTargetConfigurationError(error);
     writeOutcome("bootstrap_completed", "failed", bootstrapFailureCategory(error, phase));
     process.exitCode = 1;
   } finally {

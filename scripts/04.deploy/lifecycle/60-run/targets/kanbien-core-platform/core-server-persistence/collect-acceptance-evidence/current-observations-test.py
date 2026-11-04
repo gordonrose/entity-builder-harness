@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -17,6 +17,9 @@
 #   - id: deploy.test.kanbien-core-platform.persistence-acceptance-receipts
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py
 import copy
+import contextlib
+import io
+import os
 from datetime import datetime, timedelta, timezone
 import importlib.util
 import json
@@ -27,6 +30,42 @@ from unittest.mock import patch
 spec = importlib.util.spec_from_file_location('current_acceptance', Path(__file__).with_name('script.py'))
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
+
+# The real provider boundary preserves its one read and existing admission.
+# Native and provider text never become the collector's public finding.
+parts = ('ecs', 'describe-services', '--cluster', collector.CLUSTER)
+expected = ['aws', *parts, '--profile', collector.PROFILE, '--region', collector.REGION, '--output', 'json']
+for fault, code in [(OSError('PRIVATE_COLLECTOR_NATIVE_CANARY'), 'acceptance-evidence-aws-command-unavailable'),
+                    (UnicodeDecodeError('utf8', b'\xff', 0, 1, 'PRIVATE_COLLECTOR_NATIVE_CANARY'), 'acceptance-evidence-aws-response-invalid'),
+                    (subprocess.TimeoutExpired(['PRIVATE_COLLECTOR_NATIVE_CANARY'], 30), 'acceptance-evidence-aws-observation-timeout')]:
+    output, errors = io.StringIO(), io.StringIO()
+    with patch.object(collector.subprocess, 'run', side_effect=fault) as provider, contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+        try: collector.aws(*parts)
+        except collector.EvidenceFailure as error:
+            assert str(error) == code and error.__cause__ is fault
+        else: raise AssertionError('native provider observation passed')
+    assert provider.call_count == 1 and provider.call_args.args == (expected,)
+    assert provider.call_args.kwargs == {'capture_output': True, 'text': True, 'timeout': 30, 'env': {**os.environ, 'AWS_PAGER': ''}, 'check': False}
+    assert output.getvalue() + errors.getvalue() == ''
+for status, stdout, stderr, value, code in [
+    (0, '', '', {}, None), (0, '{"services":[]}', '', {'services': []}, None),
+    (0, '{PRIVATE_COLLECTOR_NATIVE_CANARY', '', None, 'acceptance-evidence-aws-response-invalid'),
+    (0, '[]', '', None, 'acceptance-evidence-aws-response-invalid'),
+    (0, ' ', '', None, 'acceptance-evidence-aws-response-invalid'),
+    (254, '', 'An error occurred (AccessDeniedException) when calling the DescribeServices operation: PRIVATE_COLLECTOR_NATIVE_CANARY', None, 'acceptance-evidence-aws-access-denied'),
+    (254, '', 'PRIVATE_COLLECTOR_NATIVE_CANARY accessdenied not authorized', None, 'acceptance-evidence-aws-observation-failed'),
+    (254, '', 'An error occurred (ResourceNotFoundException) when calling the DescribeServices operation: PRIVATE_COLLECTOR_NATIVE_CANARY', None, 'acceptance-evidence-aws-observation-failed'),
+]:
+    output, errors = io.StringIO(), io.StringIO()
+    with patch.object(collector.subprocess, 'run', return_value=subprocess.CompletedProcess([], status, stdout, stderr)) as provider, contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+        try: observed = collector.aws(*parts)
+        except collector.EvidenceFailure as error:
+            assert code is not None and str(error) == code
+        else: assert code is None and observed == value
+    assert provider.call_count == 1 and provider.call_args.args == (expected,)
+    assert provider.call_args.kwargs == {'capture_output': True, 'text': True, 'timeout': 30, 'env': {**os.environ, 'AWS_PAGER': ''}, 'check': False}
+    assert output.getvalue() + errors.getvalue() == ''
+
 now = datetime.now(timezone.utc)
 def stamp(delta): return (now + timedelta(seconds=delta)).isoformat().replace('+00:00', 'Z')
 candidate = {'image_digest': 'sha256:' + 'a' * 64, 'source_revision': 'c' * 40}
@@ -93,7 +132,7 @@ with patch.object(collector, 'aws', side_effect=observe):
         else: state['health']['startedAt'] = []
         rejects(lambda: collector.current_health(health_arn, health_definition, candidate, child))
     reset()
-    with patch.object(collector.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, '', 'DBInstanceNotFound')) as cleanup:
+    with patch.object(collector.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, '', 'An error occurred (DBInstanceNotFound) when calling the DescribeDBInstances operation: synthetic missing')) as cleanup:
         proof = collector.database_posture(snapshot_id, record_proof)
         assert proof['record_proof_digest'] == record_proof['integrity']['payload_sha256'] and proof['restore_cleanup'] == 'confirmed-absent'
         assert cleanup.call_count == 1 and cleanup.call_args.kwargs['timeout'] == 30
@@ -108,4 +147,9 @@ with patch.object(collector, 'aws', side_effect=observe):
     reset()
     with patch.object(collector.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, '{}', '')):
         rejects(lambda: collector.database_posture(snapshot_id, record_proof))
+    for stderr in ('permission denied mentioning DBInstanceNotFound PRIVATE_RDS_CANARY', 'An error occurred (AccessDenied) when calling the DescribeDBInstances operation: DBInstanceNotFound PRIVATE_RDS_CANARY'):
+        reset()
+        with patch.object(collector.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, '', stderr)) as cleanup:
+            rejects(lambda: collector.database_posture(snapshot_id, record_proof))
+            assert cleanup.call_count == 1
 print('Fresh acceptance observations passed: exact qualified image/source/overrides, bounded health freshness, retained record/snapshot/source ordering and fresh cleanup; 20 negative observations rejected without provider access.')

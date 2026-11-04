@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: migration
 #   disciplines:
@@ -86,19 +86,33 @@ case "$OLD_PATH:$NEW_PATH" in
     ;;
 esac
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-cd "$REPO_ROOT"
+if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  :
+else
+  status=$?
+  echo "ERROR: artifact-path-migration-repository-observation-unavailable" >&2
+  exit "$status"
+fi
+if cd "$REPO_ROOT" 2>/dev/null; then
+  :
+else
+  status=$?
+  echo "ERROR: artifact-path-migration-repository-access-unavailable" >&2
+  exit "$status"
+fi
 
 if [ -n "$PLAN_PATH" ] && [ ! -f "$PLAN_PATH" ]; then
-  echo "ERROR: --plan path is not a file: $PLAN_PATH" >&2
+  echo "ERROR: artifact-path-migration-plan-not-file" >&2
   exit 2
 fi
 
 all_files() {
   {
-    git ls-files
-    git ls-files --others --exclude-standard
-  } | sort -u
+    local failed=0
+    git ls-files 2>/dev/null || failed=1
+    git ls-files --others --exclude-standard 2>/dev/null || failed=1
+    [ "$failed" -eq 0 ]
+  } | sort -u 2>/dev/null
 }
 
 is_historical_path() {
@@ -116,7 +130,14 @@ is_historical_path() {
 }
 
 active_old_refs() {
-  local file
+  local file files matches status
+
+  if files="$(all_files)"; then
+    :
+  else
+    echo "ERROR: artifact-path-migration-enumeration-unavailable" >&2
+    return 1
+  fi
 
   while IFS= read -r file; do
     [ -f "$file" ] || continue
@@ -124,16 +145,28 @@ active_old_refs() {
     if [ -n "$PLAN_PATH" ] && [ "$file" = "$PLAN_PATH" ]; then
       continue
     fi
-    grep -nF "$OLD_PATH" "$file" 2>/dev/null | while IFS=: read -r line_no text; do
-      printf '%s:%s\n  %s\n' "$file" "$line_no" "$text"
-    done
-  done < <(all_files)
+    if matches="$(grep -nF "$OLD_PATH" "$file" 2>/dev/null)"; then
+      while IFS=: read -r line_no text; do
+        printf '%s:%s\n' "$file" "$line_no"
+      done <<< "$matches"
+    else
+      status=$?
+      if [ "$status" -ne 1 ]; then
+        echo "ERROR: artifact-path-migration-reference-read-unavailable" >&2
+        return 1
+      fi
+    fi
+  done <<< "$files"
 }
 
-ACTIVE_REFS="$(active_old_refs || true)"
+if ACTIVE_REFS="$(active_old_refs)"; then
+  :
+else
+  exit 1
+fi
 
 if [ -n "$ACTIVE_REFS" ] && [ "$ALLOW_ACTIVE_OLD_PATH" != "yes" ]; then
-  echo "ERROR: active old-path references remain: $OLD_PATH" >&2
+  echo "ERROR: active old-path references remain (artifact-path-migration-active-references)." >&2
   printf '%s\n' "$ACTIVE_REFS" >&2
   echo "Update active references or rerun with --allow-active-old-path after approving an alias, wrapper, or pointer." >&2
   exit 1

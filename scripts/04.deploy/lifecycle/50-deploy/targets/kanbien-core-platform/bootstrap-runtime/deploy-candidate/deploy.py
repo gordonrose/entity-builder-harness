@@ -5,7 +5,7 @@
 #   version: 4
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -27,6 +27,10 @@ PROFILE, REGION, STACK = "kanbien-dev", "eu-west-1", "kanbien-core-platform-boot
 ALLOWED_TYPES = {"AWS::ECS::TaskDefinition", "AWS::ECS::Service"}
 TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
 _TEMPLATES = None
+
+class SafeArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        self.exit(2, "ERROR: runtime-deployment-arguments-invalid\n")
 
 
 def template_adapter():
@@ -59,6 +63,10 @@ def aws(*parts: str):
         r = subprocess.run(["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json", "--cli-connect-timeout", "5", "--cli-read-timeout", "20"], capture_output=True, text=True, timeout=30)
     except subprocess.TimeoutExpired:
         return False, None, "aws-command-timeout"
+    except OSError:
+        return False, None, "aws-command-unavailable"
+    except UnicodeError:
+        return False, None, "aws-response-invalid"
     if r.returncode:
         return False, None, aws_response().classify_error(parts[0], parts[1], r.stderr)
     try: return True, decoded_aws_response(r.stdout), "ok"
@@ -82,8 +90,11 @@ def update_change_set_is_reviewable(change, runtime_stack_status: str | None) ->
     )
 def candidate(path: Path):
     validator=ROOT/"scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"
-    r=subprocess.run(["bash",str(validator),"--receipt",str(path),"--expected-target","kanbien-core-platform","--expected-candidate","kanbien-core-server-candidate","--expected-package-contract","kanbien-core-server-image","--expected-program","kanbien-core-server","--json"],capture_output=True,text=True)
-    return json.loads(r.stdout) if not r.returncode else None
+    try:
+        r=subprocess.run(["bash",str(validator),"--receipt",str(path),"--expected-target","kanbien-core-platform","--expected-candidate","kanbien-core-server-candidate","--expected-package-contract","kanbien-core-server-image","--expected-program","kanbien-core-server","--json"],capture_output=True,text=True)
+        return json.loads(r.stdout) if not r.returncode else None
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
 def prerequisites(receipt, operation):
     """Direct Python and shell entrypoints share every mutation prerequisite."""
     base=ROOT/"scripts/04.deploy/lifecycle"
@@ -94,7 +105,7 @@ def prerequisites(receipt, operation):
     ]
     for path,arguments,code in checks:
         try:r=subprocess.run(["bash",str(path),*arguments,"--json"],capture_output=True,text=True,timeout=120)
-        except (OSError,subprocess.TimeoutExpired):return code
+        except (OSError,UnicodeError,subprocess.TimeoutExpired):return code
         if r.returncode:return code
     return None
 
@@ -167,22 +178,34 @@ def reconcile(name, receipt):
     if not ok or not isinstance(change,dict):report("uncertain",code if not ok else "runtime-change-set-observation-invalid");return 1
     actual=change.get("ChangeSetName")
     if actual!=name and not (isinstance(actual,str) and actual.split(":changeSet/",1)[-1].split("/",1)[0]==name):report("blocked","runtime-change-set-identity-invalid");return 1
-    if change.get("Status") in {"CREATE_PENDING","CREATE_IN_PROGRESS"}:report("pending","runtime-change-set-review-pending");return 1
-    if change.get("Status") in {"FAILED","DELETE_FAILED","DELETE_COMPLETE"}:report("failed","runtime-change-set-failed");return 1
-    if not matching_parameters(change,receipt):report("blocked","change-set-candidate-mismatch");return 1
-    if change.get("ExecutionStatus") in {"AVAILABLE","EXECUTE_IN_PROGRESS"}:report("pending","runtime-change-set-execution-pending");return 1
+    try: pending=change.get("Status") in {"CREATE_PENDING","CREATE_IN_PROGRESS"}
+    except TypeError:report("uncertain","runtime-change-set-status-unobservable");return 1
+    if pending:report("pending","runtime-change-set-review-pending");return 1
+    try: failed=change.get("Status") in {"FAILED","DELETE_FAILED","DELETE_COMPLETE"}
+    except TypeError:report("uncertain","runtime-change-set-status-unobservable");return 1
+    if failed:report("failed","runtime-change-set-failed");return 1
+    try: matching=matching_parameters(change,receipt)
+    except (AttributeError,TypeError):report("uncertain","runtime-change-set-parameters-unobservable");return 1
+    if not matching:report("blocked","change-set-candidate-mismatch");return 1
+    try: pending=change.get("ExecutionStatus") in {"AVAILABLE","EXECUTE_IN_PROGRESS"}
+    except TypeError:report("uncertain","runtime-change-set-execution-status-unobservable");return 1
+    if pending:report("pending","runtime-change-set-execution-pending");return 1
     if change.get("ExecutionStatus")!="EXECUTE_COMPLETE":report("uncertain","runtime-change-set-execution-unknown");return 1
     ok,data,code=aws("cloudformation","describe-stacks","--stack-name",STACK)
     stacks=data.get("Stacks") if ok and isinstance(data,dict) else None
     if not isinstance(stacks,list) or len(stacks)!=1 or not isinstance(stacks[0],dict):report("uncertain",code if not ok else "runtime-stack-observation-invalid");return 1
     stack=stacks[0];status=stack.get("StackStatus")
-    if status in {"UPDATE_IN_PROGRESS","UPDATE_COMPLETE_CLEANUP_IN_PROGRESS","UPDATE_ROLLBACK_IN_PROGRESS","UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"}:report("pending","runtime-stack-update-pending");return 1
+    try: pending=status in {"UPDATE_IN_PROGRESS","UPDATE_COMPLETE_CLEANUP_IN_PROGRESS","UPDATE_ROLLBACK_IN_PROGRESS","UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"}
+    except TypeError:report("uncertain","runtime-stack-status-unobservable");return 1
+    if pending:report("pending","runtime-stack-update-pending");return 1
     if status in {"UPDATE_FAILED","UPDATE_ROLLBACK_FAILED","UPDATE_ROLLBACK_COMPLETE","DELETE_COMPLETE"}:report("failed","runtime-stack-update-failed");return 1
-    if status!="UPDATE_COMPLETE" or not matching_parameters(stack,receipt):report("uncertain","runtime-stack-completion-identity-unproven");return 1
+    try: unproven=status!="UPDATE_COMPLETE" or not matching_parameters(stack,receipt)
+    except (AttributeError,TypeError):report("uncertain","runtime-stack-parameters-unobservable");return 1
+    if unproven:report("uncertain","runtime-stack-completion-identity-unproven");return 1
     report("deployed-awaiting-private-verification","runtime-change-set-executed");return 0
 
 def main():
-    parser = argparse.ArgumentParser(add_help=False)
+    parser = SafeArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--operation", choices=("update", "restore"))
     parser.add_argument("--approved-change-set")
@@ -194,7 +217,8 @@ def main():
     c = candidate(args.receipt)
     if not c:
         report("blocked", "package-custody-receipt-invalid"); return 1
-    expected = f"kanbien-core-platform-{args.operation}-{c['image_digest'][7:19]}"
+    try: expected = f"kanbien-core-platform-{args.operation}-{c['image_digest'][7:19]}"
+    except (TypeError, KeyError): report("blocked", "package-custody-receipt-invalid"); return 1
     if args.approved_change_set != expected:
         report("blocked", "approved-change-set-does-not-match-qualified-digest"); return 1
     if args.reconcile:return reconcile(expected,c)
@@ -214,13 +238,19 @@ def main():
         report("blocked", stack_code); return 1
     if not isinstance(change,dict):report("uncertain","runtime-change-set-observation-invalid");return 1
     if change.get("ExecutionStatus") != "AVAILABLE":return reconcile(expected,c)
-    if not update_change_set_is_reviewable(change, runtime_stack_status):
+    try: reviewable = update_change_set_is_reviewable(change, runtime_stack_status)
+    except TypeError: report("uncertain", "runtime-change-set-observation-invalid"); return 1
+    if not reviewable:
         report("blocked", "change-set-not-reviewable"); return 1
-    if not reviewed_parameters_match(change,stacks[0],c,source):
+    try: parameters_match = reviewed_parameters_match(change,stacks[0],c,source)
+    except (AttributeError, TypeError, KeyError, IndexError): report("uncertain", "runtime-parameter-observation-invalid"); return 1
+    if not parameters_match:
         report("blocked", "change-set-candidate-mismatch"); return 1
     actual_name=change.get("ChangeSetName")
     if actual_name!=expected and not (isinstance(actual_name,str) and actual_name.startswith("arn:aws:cloudformation:") and actual_name.split(":changeSet/",1)[-1].split("/",1)[0]==expected):report("blocked","runtime-change-set-identity-invalid");return 1
-    if not reviewed_resources_match(change):
+    try: resources_match = reviewed_resources_match(change)
+    except (AttributeError, TypeError, KeyError): report("uncertain", "runtime-resource-observation-invalid"); return 1
+    if not resources_match:
         report("blocked", "change-set-resource-boundary-violated"); return 1
     template_code,provider_code=reviewed_templates_match(expected,source)
     if template_code:report("blocked",template_code,*([provider_code] if provider_code else []));return 1
