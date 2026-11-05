@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-05T21:04:39Z
-latest_commit_sha: 9d34cf8084e5a9d60f2ac740ca32a18ba2d43226
-chat_duration: 12574s (00:03:29:34)
+latest_commit_at_utc: 2026-11-05T21:59:09Z
+latest_commit_sha: 8188dfba0b2e6d23dcfd253fd4ad2eb4e13b1152
+chat_duration: 15844s (00:04:24:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -389,6 +389,17 @@ Summary: Approved packaging batch is frozen and its focused payload/custody unit
 
 Durable evidence: The qualification plan and journal contain the actual BuildKit omission, approvals, unchanged runtime scope, core image identity and incomplete integration boundary. Focused result /tmp/diagnostics-qualification-packaging-focused-20261105.json and progress passed both registered units. Dockerfile hash e463add94011b248ad5e8a4d78b1e887d43fad0fafd6bf70c95f150af9cc27ec; existing recovery hash 6c136d12661d527b1eb0b56f038aea33af769bfcc79b00266bded43077657435. Current six task paths only; staged gate and exact-SHA checkpoint precede new image builds. All prior Docker runs ended, no source integration/deployment/publication occurred.
 
+
+### 2026-11-05T21:59:09Z - Commit recorded
+
+Commit: `8188dfba0b2e6d23dcfd253fd4ad2eb4e13b1152`
+
+Message: fix(package): include persistence composition in image closure
+
+Summary: Approved packaging-only correction: one existing composition source COPY, exact reviewed Dockerfile hash in the existing same-engine anonymous recovery, and explicit omission/import counterexamples in the owned payload fixture; no runtime logic/dependency/base/registry change. Focused package-custody and persistence-payload regressions passed in 347.31 seconds. First staged selector passed with zero findings in 199.56 seconds but its outer command returned 143 after the ready marker; retained as an unsuccessful gate invocation. Confirmation exited 0, zero findings, 30 reused receipts and no executed checks in 44.47 selector seconds. Full integration and fresh-source images remain pending; prior core image is qualified only for its recorded 4e3d4853 source.
+
+ADR impact: No architecture decision; existing package closure, source review and qualification boundaries retained.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -416,6 +427,13 @@ Durable evidence: The qualification plan and journal contain the actual BuildKit
   Message: test(diagnostics): reconcile qualification evidence and acceptance fixtures
   Summary: Qualification checkpoint: exact source-review bindings, strengthened missing-cache execution/unsafe-cache regression, restoration receipt prerequisite in the raw-proof rejection fixture, bounded qualification plan, and explicit DIAG-013 follow-on requirement. Before-verification preparation passed; staged gate passed with 36 executed checks and zero findings in 310.83 selector seconds. Complete source integration, images and live acceptance remain pending.
   ADR impact: No new diagnostic architecture or telemetry implementation.
+
+
+- Commit: `8188dfba0b2e6d23dcfd253fd4ad2eb4e13b1152`
+  Time UTC: 2026-11-05T21:59:09Z
+  Message: fix(package): include persistence composition in image closure
+  Summary: Approved packaging-only correction: one existing composition source COPY, exact reviewed Dockerfile hash in the existing same-engine anonymous recovery, and explicit omission/import counterexamples in the owned payload fixture; no runtime logic/dependency/base/registry change. Focused package-custody and persistence-payload regressions passed in 347.31 seconds. First staged selector passed with zero findings in 199.56 seconds but its outer command returned 143 after the ready marker; retained as an unsuccessful gate invocation. Confirmation exited 0, zero findings, 30 reused receipts and no executed checks in 44.47 selector seconds. Full integration and fresh-source images remain pending; prior core image is qualified only for its recorded 4e3d4853 source.
+  ADR impact: No architecture decision; existing package closure, source review and qualification boundaries retained.
 
 ## Main Refresh Conflicts
 
@@ -561,9 +579,9 @@ Reason: This qualification continuation documents and verifies existing contract
 ## Session Metrics
 
 Raised at UTC: 2026-11-05T17:35:05Z
-Latest commit at UTC: 2026-11-05T21:04:39Z
-Latest commit SHA: 9d34cf8084e5a9d60f2ac740ca32a18ba2d43226
-Chat duration: 12574s (00:03:29:34)
+Latest commit at UTC: 2026-11-05T21:59:09Z
+Latest commit SHA: 8188dfba0b2e6d23dcfd253fd4ad2eb4e13b1152
+Chat duration: 15844s (00:04:24:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
