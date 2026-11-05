@@ -7,6 +7,7 @@ import {
   type TenantId,
   type TenantResolution,
   type TenantResolver,
+  type CoreTenancyDiagnosticOptions,
 } from "../src/tenancy/index";
 
 type PrincipalId = EntityId<"PrincipalId">;
@@ -38,3 +39,6 @@ tenantContext({ tenantId: rejectedPrincipalId });
 // @ts-expect-error tenant resolution is either a tenant context or null.
 const invalidResolution: TenantResolution = undefined;
 void invalidResolution;
+
+const diagnostics: CoreTenancyDiagnosticOptions = { onDiagnostic(_record, context) { const operation: "tenant-context" = context.operation; void operation; } };
+tenantContext({ tenantId: acceptedTenantId }, diagnostics);

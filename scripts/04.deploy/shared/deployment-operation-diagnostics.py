@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.shared.deployment-operation-diagnostics
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -25,6 +25,7 @@ raw response supplied to the classifier.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -46,13 +47,238 @@ DECISIONS = {
 }
 COLLECTION = {"collected", "unavailable", "failed"}
 COLLECTION_OBSERVATIONS = {"complete", "empty", "unrecognized", "malformed", "incomplete", "unavailable", "failed"}
-EXECUTION_PHASES = {"pool_connect", "pool_query", "query", "authentication_value", "tcp_probe", "tls_probe", "unknown"}
-CODE_STATUSES = {"recognized", "unrecognized", "absent"}
-FAILURE_CLASSIFICATIONS = {
-    "authentication_rejected", "authentication_material_invalid", "permission_denied", "content_unavailable", "tls_trust_invalid",
-    "transport_unavailable", "timeout", "conflict", "constraint", "transaction_rolled_back",
-    "validation", "query_canceled", "unknown",
-}
+def runtime_contract():
+    path = Path(__file__).resolve().parents[2] / "repo/diagnostic-coverage/runtime_contract.py"
+    spec = importlib.util.spec_from_file_location("diagnostic_runtime_contract", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("diagnostic-contract-unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+EXECUTION_PHASES = runtime_contract().persistence_vocabulary("phase")
+CODE_STATUSES = runtime_contract().persistence_vocabulary("codeStatus")
+FAILURE_CLASSIFICATIONS = runtime_contract().persistence_vocabulary("classification")
+
+
+def validate_runtime_diagnostic(value: object, operation: str | None = None, *, allow_core_source: bool = False) -> dict[str, Any]:
+    """Read the executable contract export; never maintain a second vocabulary."""
+    try:
+        contract = runtime_contract()
+        return contract.validate_operation_record(value, operation, allow_core_source=allow_core_source) if operation else contract.validate_configuration_record(value)
+    except Exception as error:
+        raise DiagnosticFailure("diagnostic-record-invalid") from error
+
+def validate_related_diagnostics(value: object, primary: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    try:
+        return runtime_contract().validate_related_records(value, primary)
+    except Exception as error:
+        raise DiagnosticFailure("diagnostic-related-invalid") from error
+
+
+def validate_persistence_task_failure(value: object, expected_task: str) -> dict[str, Any]:
+    """Private task evidence has its own explicit source and observation ports.
+
+    Historical configuration/native/verifier readers are deliberately unchanged.
+    Every complete source bundle retains its own primary and eight companions.
+    """
+    try:
+        contract = runtime_contract()
+        limits = contract.persistence_task_failure_contract()
+        required = {"schema", "task", "verdict", "code", "observations"}
+        optional = {"diagnostic", "related_diagnostics", "source_bundles", "overflow"}
+        if (type(value) is not dict or not required <= set(value) or set(value) - required - optional
+                or type(expected_task) is not str or expected_task not in limits["codes"]
+                or value["schema"] != limits["schema"] or value["task"] != expected_task
+                or value["verdict"] != "rejected" or type(value["code"]) is not str
+                or value["code"] not in limits["codes"][expected_task]
+                or type(value["observations"]) is not list or len(value["observations"]) > limits["maxObservations"]):
+            raise ValueError()
+        result = {key: value[key] for key in ("schema", "task", "verdict", "code")}
+        result["observations"] = [contract.validate_persistence_task_observation(item, expected_task) for item in value["observations"]]
+
+        def source_bundle(bundle: object) -> dict[str, Any]:
+            if type(bundle) is not dict or "diagnostic" not in bundle or set(bundle) - {"diagnostic", "related_diagnostics"}:
+                raise ValueError()
+            checked = {"diagnostic": contract.validate_persistence_task_source(bundle["diagnostic"], expected_task)}
+            if "related_diagnostics" in bundle:
+                checked["related_diagnostics"] = contract.validate_related_records(bundle["related_diagnostics"], checked["diagnostic"])
+            return checked
+
+        root_source = {key: value[key] for key in ("diagnostic", "related_diagnostics") if key in value}
+        selected = []
+        if root_source:
+            root_source = source_bundle(root_source)
+            result.update(root_source)
+            selected.append(root_source)
+        if "source_bundles" in value:
+            bundles = value["source_bundles"]
+            if type(bundles) is not list or len(bundles) > limits["maxSourceBundles"] or bundles and not root_source:
+                raise ValueError()
+            result["source_bundles"] = []
+            for raw in bundles:
+                checked = source_bundle(raw)
+                if checked in selected:
+                    raise ValueError()
+                selected.append(checked)
+                result["source_bundles"].append(checked)
+        if "overflow" in value:
+            overflow = value["overflow"]
+            if (type(overflow) is not dict or set(overflow) != {"observations", "source_bundles"}
+                    or any(type(item) is not int or not 0 <= item <= limits["maxOverflowCount"] for item in overflow.values())
+                    or not any(overflow.values())):
+                raise ValueError()
+            result["overflow"] = dict(overflow)
+        return result
+    except Exception as error:
+        raise DiagnosticFailure("persistence-task-failure-invalid") from error
+
+
+def collect_persistence_task_failure(response: object, expected_task: str) -> tuple[dict[str, Any] | None, str]:
+    """Reduce one bounded observation of the already identified task stream.
+
+    A malformed/unrelated message is not authority to discard selected evidence
+    or accept the failed task. No pagination, retry, or provider call lives here.
+    """
+    events = response.get("events") if type(response) is dict else None
+    if type(events) is not list:
+        return None, "malformed"
+    state = "incomplete" if len(events) >= 100 else "complete" if events else "empty"
+    limits = runtime_contract().persistence_task_failure_contract()
+    selected = None
+    for event in events[:100]:
+        try:
+            if type(event) is not dict or type(event.get("message")) is not str:
+                raise ValueError()
+            value = json.loads(event["message"])
+            if type(value) is not dict or value.get("schema") != limits["schema"]:
+                continue
+            checked = validate_persistence_task_failure(value, expected_task)
+        except Exception:
+            if state != "incomplete":
+                state = "malformed"
+            continue
+        if selected is None:
+            selected = checked
+            continue
+        candidate = {**selected, "observations": list(selected["observations"])}
+        bundles = [{key: selected[key] for key in ("diagnostic", "related_diagnostics") if key in selected}]
+        bundles = [item for item in bundles if item] + list(selected.get("source_bundles", []))
+        counts = dict(selected.get("overflow", {"observations": 0, "source_bundles": 0}))
+        try:
+            def omitted(kind: str, count: int) -> None:
+                if counts[kind] + count > limits["maxOverflowCount"]:
+                    raise OverflowError()
+                counts[kind] += count
+
+            for kind, count in checked.get("overflow", {}).items():
+                omitted(kind, count)
+            for record in checked["observations"]:
+                if len(candidate["observations"]) < limits["maxObservations"]:
+                    candidate["observations"].append(record)
+                else:
+                    omitted("observations", 1)
+            incoming = [{key: checked[key] for key in ("diagnostic", "related_diagnostics") if key in checked}]
+            for bundle in [item for item in incoming if item] + checked.get("source_bundles", []):
+                if bundle in bundles:
+                    continue
+                if len(bundles) < 1 + limits["maxSourceBundles"]:
+                    bundles.append(bundle)
+                else:
+                    omitted("source_bundles", 1)
+            if bundles:
+                candidate.update(bundles[0])
+                if len(bundles) > 1 or "source_bundles" in candidate:
+                    candidate["source_bundles"] = bundles[1:]
+            if any(counts.values()):
+                candidate["overflow"] = counts
+            selected = candidate
+        except OverflowError:
+            # Earlier valid facts remain truthful; no wrapped/saturated count
+            # or newly guessed evidence is substituted for this failed merge.
+            state = "incomplete"
+    return selected, state
+
+
+def validate_persistence_controller_checkpoint(value: object, command: str) -> dict[str, Any] | None:
+    """Select independent facts from the four actual bounded caller ports.
+
+    This is not a generic report reader. A bad identity never erases unrelated
+    valid source evidence, and a bad source never blesses or erases an identity.
+    """
+    prefix = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/"
+    ports = {
+        prefix + "run-administration/script.sh": ("deploy/persistence-administration-report/v1", "administration"),
+        prefix + "verify-candidate/script.sh": ("deploy/private-persistence-verification-report/v1", "verification"),
+        prefix + "rehearse-server-replacement/script.sh": ("deploy/persistence-server-replacement-report/v1", None),
+        prefix + "rehearse-runtime-credential-lifecycle/script.sh": ("deploy/persistence-runtime-identity-lifecycle-report/v1", None),
+    }
+    port = ports.get(command)
+    if (port is None or type(value) is not dict or value.get("schema") != port[0]
+            or value.get("target") != "kanbien-core-platform" or value.get("scope") != "core-server-persistence"
+            or type(value.get("verdict")) is not str
+            or value["verdict"] not in {"accepted", "prepared", "replaced", "pending", "failed", "uncertain", "blocked"}):
+        return None
+    raw = value.get("facts") if type(value.get("facts")) is dict else {}
+    facts: dict[str, Any] = {}
+    task_arn = re.compile(r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}")
+    receipt = re.compile(r"infra/04\.deploy/03\.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/[A-Za-z0-9_-][A-Za-z0-9_.-]*\.json")
+    for key in ("verifier_task", "original_task", "replacement_task", "task_arn"):
+        item = raw.get(key)
+        if type(item) is str and task_arn.fullmatch(item):
+            facts[key] = item
+    for key, pattern in (("operation_id", r"kp-[0-9a-f]{32}"), ("administration_task", r"[0-9a-f]{32}")):
+        item = raw.get(key)
+        if type(item) is str and re.fullmatch(pattern, item):
+            facts[key] = item
+    for key in ("proof_receipt", "unready_verifier_receipt", "ready_verifier_receipt"):
+        item = raw.get(key)
+        if type(item) is str and receipt.fullmatch(item) and ".." not in item.rsplit("/", 1)[-1]:
+            facts[key] = item
+    for key in ("recovery_boundary", "completed_at"):
+        if key in raw:
+            try:
+                facts[key] = _timestamp(raw[key], key)
+            except DiagnosticFailure:
+                pass
+    if raw.get("evidence_reuse") in ("historical-completion", "fresh-terminal-observation"):
+        facts["evidence_reuse"] = raw["evidence_reuse"]
+    if raw.get("mode") in ("create", "read", "cleanup", "health-ready", "health-unready"):
+        facts["mode"] = raw["mode"]
+    if raw.get("operation") in ("revoke-runtime", "restore-runtime"):
+        facts["operation"] = raw["operation"]
+    if type(raw.get("task_log_observation")) is str and raw["task_log_observation"] in COLLECTION_OBSERVATIONS:
+        facts["task_log_observation"] = raw["task_log_observation"]
+    if port[1] is not None:
+        if "diagnostic" in raw:
+            try:
+                facts["diagnostic"] = runtime_contract().validate_persistence_task_source(raw["diagnostic"], port[1])
+                if "related_diagnostics" in raw:
+                    facts["related_diagnostics"] = validate_related_diagnostics(raw["related_diagnostics"], facts["diagnostic"])
+            except Exception:
+                pass
+        if "task_failure" in raw:
+            try:
+                facts["task_failure"] = validate_persistence_task_failure(raw["task_failure"], port[1])
+            except DiagnosticFailure:
+                pass
+    if port[0] == "deploy/persistence-runtime-identity-lifecycle-report/v1":
+        child = raw.get("child_checkpoint")
+        if type(child) is dict and type(child.get("command")) is str and child["command"] in ports and child["command"] != command:
+            nested = validate_persistence_controller_checkpoint(child, child["command"])
+            if nested is not None:
+                facts["child_checkpoint"] = {"command": child["command"], **nested}
+        operations = raw.get("verifier_operations")
+        if type(operations) is dict:
+            selected = {}
+            for mode in ("create", "read", "cleanup", "health-ready", "health-unready"):
+                if mode in operations:
+                    nested = validate_persistence_controller_checkpoint({"schema": ports[prefix + "verify-candidate/script.sh"][0], "target": value["target"], "scope": value["scope"], "verdict": "accepted", "facts": operations[mode]}, prefix + "verify-candidate/script.sh")
+                    if nested and nested["facts"]:
+                        selected[mode] = nested["facts"]
+            if selected:
+                facts["verifier_operations"] = selected
+    return {"schema": port[0], "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": value["verdict"], "facts": facts}
 FACT_KEYS = {
     "artifact_identity", "change_set_id", "provider_status", "property_path",
     "resource_logical_id", "resource_type",
@@ -142,7 +368,7 @@ def validate_verifier_result(value: object) -> dict[str, Any]:
     if set(value) == {"verdict", "code"}:
         verdicts = {"accepted", "rejected"}
     else:
-        if value.get("schema") != "deploy/persistence-restore-verifier-result/v2" or not {"schema", "verdict", "code"} <= set(value) or set(value) - {"schema", "verdict", "code", "execution"}:
+        if value.get("schema") != "deploy/persistence-restore-verifier-result/v2" or not {"schema", "verdict", "code"} <= set(value) or set(value) - {"schema", "verdict", "code", "execution", "diagnostic", "related_diagnostics"}:
             raise DiagnosticFailure("verifier-result-fields-invalid")
         verdicts = {"accepted", "rejected", "diagnosed", "diagnostic-failed"}
     if not isinstance(value.get("verdict"), str) or value["verdict"] not in verdicts:
@@ -152,6 +378,20 @@ def validate_verifier_result(value: object) -> dict[str, Any]:
         if value["verdict"] in {"accepted", "diagnosed"}:
             raise DiagnosticFailure("verifier-success-failure-observation-invalid")
         validate_execution(value["execution"])
+    if "diagnostic" in value:
+        if value["verdict"] in {"accepted", "diagnosed"}:
+            raise DiagnosticFailure("verifier-success-failure-observation-invalid")
+        if value["code"] != "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID" and "execution" not in value:
+            raise DiagnosticFailure("verifier-diagnostic-outcome-mismatch")
+        primary = validate_runtime_diagnostic(value["diagnostic"], None if value["code"] == "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID" else "restore_verification", allow_core_source=True)
+        if "execution" in value and primary["code"].startswith("persistence.") and {"phase", "classification", "codeStatus"} <= primary["detail"].keys():
+            expected = {"phase": primary["detail"].get("phase"), "classification": primary["detail"].get("classification"), "code_status": primary["detail"].get("codeStatus")}
+            if any(value["execution"].get(key) != item for key, item in expected.items()):
+                raise DiagnosticFailure("verifier-diagnostic-execution-mismatch")
+    if "related_diagnostics" in value:
+        if "execution" not in value or "diagnostic" not in value or value["verdict"] in {"accepted", "diagnosed"}:
+            raise DiagnosticFailure("verifier-related-outcome-mismatch")
+        validate_related_diagnostics(value["related_diagnostics"], value["diagnostic"])
     return value
 
 
@@ -163,11 +403,20 @@ def validate(report: object) -> dict[str, Any]:
         "original_failure", "operation_outcome", "classification", "evidence",
         "next_action", "collection",
     }
-    allowed = required | {"facts", "execution"}
+    allowed = required | {"facts", "execution", "diagnostic", "related_diagnostics", "task_failure"}
     if not required <= set(report) or set(report) - allowed:
         raise DiagnosticFailure("report-fields-invalid")
     if report.get("schema") != SCHEMA:
         raise DiagnosticFailure("report-schema-invalid")
+    if "task_failure" in report:
+        task_failure = report["task_failure"]
+        validate_persistence_task_failure(task_failure, task_failure.get("task") if type(task_failure) is dict else None)
+    if "diagnostic" in report:
+        runtime_contract().validate_selected_record(report["diagnostic"])
+    if "related_diagnostics" in report:
+        if "diagnostic" not in report:
+            raise DiagnosticFailure("diagnostic-related-primary-missing")
+        validate_related_diagnostics(report["related_diagnostics"], report["diagnostic"])
     _safe_identifier(report.get("target"), field="target")
     _safe_identifier(report.get("scope"), field="scope")
     _safe_identifier(report.get("operation_id"), field="operation-id", pattern=OPERATION)
@@ -225,6 +474,9 @@ def build_report(
     facts: dict[str, str] | None = None, observed_at: str | None = None,
     execution: dict[str, Any] | None = None, collection_observation: str | None = None,
     collection_attempts: int | None = None, task_observation: str | None = None, task_attempts: int | None = None,
+    diagnostic: dict[str, Any] | None = None,
+    related_diagnostics: list[dict[str, Any]] | None = None,
+    task_failure: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     report: dict[str, Any] = {
         "schema": SCHEMA,
@@ -250,6 +502,12 @@ def build_report(
         report["collection"]["task_attempts"] = task_attempts
     if execution is not None:
         report["execution"] = execution
+    if diagnostic is not None:
+        report["diagnostic"] = runtime_contract().validate_selected_record(diagnostic)
+    if related_diagnostics is not None:
+        report["related_diagnostics"] = validate_related_diagnostics(related_diagnostics, diagnostic)
+    if task_failure is not None:
+        report["task_failure"] = validate_persistence_task_failure(task_failure, task_failure.get("task") if type(task_failure) is dict else None)
     if facts:
         report["facts"] = facts
     return validate(report)
@@ -318,25 +576,22 @@ def _event_facts(event: object) -> dict[str, str]:
 
 
 def classify_cloudformation_failure(change_set: object, events: object) -> tuple[str, dict[str, str], str]:
-    """Classify a named change set and bounded stack events without retaining raw text."""
+    """Only the named change set establishes this operation's cause/status.
+
+    The existing event observation has no positive change-set correlation.
+    Historical stack events therefore cannot supply or override these facts.
+    """
     change = change_set if isinstance(change_set, dict) else {}
-    classification = _reason_classification(change.get("StatusReason"))
+    reason = change.get("StatusReason")
+    classification = _reason_classification(reason)
     facts: dict[str, str] = {}
+    if isinstance(reason, str):
+        match = PROPERTY_PATH.search(reason)
+        if match:
+            facts["property_path"] = match.group(0)
     status = change.get("Status")
-    if isinstance(status, str) and SAFE_FACT.fullmatch(status):
+    if isinstance(status, str) and status in {"CREATE_PENDING", "CREATE_IN_PROGRESS", "CREATE_COMPLETE", "DELETE_PENDING", "DELETE_IN_PROGRESS", "DELETE_COMPLETE", "DELETE_FAILED", "FAILED"}:
         facts["provider_status"] = status
-    if isinstance(events, list):
-        for event in events[:50]:
-            if not isinstance(event, dict):
-                continue
-            event_classification = _reason_classification(event.get("ResourceStatusReason"))
-            if event_classification != "provider-details-unavailable":
-                classification = event_classification
-                facts.update(_event_facts(event))
-                break
-            resource_status = event.get("ResourceStatus")
-            if classification == "provider-details-unavailable" and isinstance(resource_status, str) and resource_status.endswith("FAILED"):
-                facts.update(_event_facts(event))
     outcome = "rejected" if change.get("Status") == "FAILED" else "pending" if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"} else "unknown"
     return classification, facts, outcome
 
@@ -365,8 +620,14 @@ def collect_cloudformation_failure(
     return classification, facts, outcome, "collected" if events_ok else "unavailable"
 
 
+class DiagnosticArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        # argparse's message can contain rejected arguments or numeric values.
+        self.exit(2, "ERROR: deployment-operation-diagnostic-arguments-invalid\n")
+
+
 def _cli() -> int:
-    parser = argparse.ArgumentParser(add_help=False)
+    parser = DiagnosticArgumentParser(add_help=False)
     sub = parser.add_subparsers(dest="command", required=True)
     validate_parser = sub.add_parser("validate", add_help=False)
     validate_parser.add_argument("--report", required=True, type=Path)

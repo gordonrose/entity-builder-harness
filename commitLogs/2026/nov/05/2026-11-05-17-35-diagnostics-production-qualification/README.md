@@ -153,6 +153,72 @@ Decision: User authorized a narrow conflict-harness update and reviewed integrat
 
 Rationale: Add deterministic handling only for lifecycle metadata-only conflicts; retain manual review for semantic deployment contracts. Resolve the six recorded conflicts in a fresh preflight by preserving structured diagnostics, timeout/lifecycle safety, safe provider uncertainty, and truthful acceptance evidence. Planned proof: classifier smoke test, harness drift checks, changed deployment fixtures, and selected integration proof.
 
+
+### 2026-11-05T19:09:23Z - Main refresh conflict recorded
+
+Path: `infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts`
+
+Type: `unsupported-conflict`
+
+Mode: manual
+
+Action: Structured diagnostic configuration retained; restored 30-second migration/restore connect bounds and matching regression expectations.
+
+
+### 2026-11-05T19:09:24Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Merged source diagnostic regressions with current lifecycle timeout assertions.
+
+
+### 2026-11-05T19:09:24Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Retained exact no-change acceptance and added safe malformed-status uncertainty handling.
+
+
+### 2026-11-05T19:09:24Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Preserved custody and sensitive-error fixtures while reconciled artifact metadata date.
+
+
+### 2026-11-05T19:09:25Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Retained predecessor proof custody and chronological collection checks; added exact alarm-episode binding.
+
+
+### 2026-11-05T19:09:25Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Retained independent restore proof, predecessor binding and premature-collection rejection; added alarm-episode tests.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -229,6 +295,72 @@ Rationale: Add deterministic handling only for lifecycle metadata-only conflicts
   Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-b1969c783ae0-20261105180213`
   Files changed by resolution: none
   Checks: rehearsal detected normal repository conflict; no resolution checks run.
+
+
+- Path: `infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts`
+  Type: `unsupported-conflict`
+  Mode: manual
+  Reason: Approved manual resolution reconciled independently established safety and compatibility contracts.
+  Action: Structured diagnostic configuration retained; restored 30-second migration/restore connect bounds and matching regression expectations.
+  Preflight branch: `agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e/20261105185826`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e-20261105185826`
+  Files changed by resolution: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+  Checks: configuration entrypoint and composition test; targeted composition check pending local TypeScript compiler
+
+
+- Path: `scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Approved manual resolution reconciled independently established safety and compatibility contracts.
+  Action: Merged source diagnostic regressions with current lifecycle timeout assertions.
+  Preflight branch: `agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e/20261105185826`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e-20261105185826`
+  Files changed by resolution: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs
+  Checks: configuration test; targeted composition check pending local TypeScript compiler
+
+
+- Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Approved manual resolution reconciled independently established safety and compatibility contracts.
+  Action: Retained exact no-change acceptance and added safe malformed-status uncertainty handling.
+  Preflight branch: `agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e/20261105185826`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e-20261105185826`
+  Files changed by resolution: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py
+  Checks: candidate controller; controller-regression.py passed (40 tests)
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Approved manual resolution reconciled independently established safety and compatibility contracts.
+  Action: Preserved custody and sensitive-error fixtures while reconciled artifact metadata date.
+  Preflight branch: `agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e/20261105185826`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e-20261105185826`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py
+  Checks: acceptance-route-rehearsal smoke test passed
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Approved manual resolution reconciled independently established safety and compatibility contracts.
+  Action: Retained predecessor proof custody and chronological collection checks; added exact alarm-episode binding.
+  Preflight branch: `agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e/20261105185826`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e-20261105185826`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py
+  Checks: collector; collector smoke test and observability receipt tests passed
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Approved manual resolution reconciled independently established safety and compatibility contracts.
+  Action: Retained independent restore proof, predecessor binding and premature-collection rejection; added alarm-episode tests.
+  Preflight branch: `agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e/20261105185826`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-7867b1a2d25e-20261105185826`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py
+  Checks: collector smoke test passed
 
 ## ADR Disposition
 

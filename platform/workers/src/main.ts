@@ -2,12 +2,16 @@ import { recordConfigSource, type ConfigRecord } from "@kanbien/core/config";
 import type { Logger, LogRecord } from "@kanbien/core/logging";
 import { noopMetrics, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { systemClock, type Result } from "@kanbien/core/shared";
-import { fixedFeatureFlagReader, type PlatformApp, type PlatformMountDeps } from "@kanbien/platform-contracts";
+import type { DiagnosticDefinition } from "@kanbien/core/diagnostics";
+import { fixedFeatureFlagReader, type PlatformApp, type PlatformDiagnosticCatalog, type PlatformDiagnosticReporter, type PlatformMountDeps } from "@kanbien/platform-contracts";
+import { createPlatformDiagnosticReporter } from "@kanbien/platform-observability";
 import type { PlatformWorkerError } from "./errors";
 import type { PlatformWorkerDurableOutboxProcessingOptions, PlatformWorkerShell } from "./types";
-import { createPlatformWorkerShell } from "./worker";
+import { createPlatformWorkerShell, workerBuiltinDiagnosticCatalogs } from "./worker";
+import { reportWorkerBoundary } from "./diagnostics";
 
 export interface PlatformWorkerProcessOptions {
+  readonly diagnosticCatalogs?: readonly PlatformDiagnosticCatalog[];
   readonly apps?: readonly PlatformApp[];
   readonly configKeys?: readonly string[];
   readonly env?: NodeJS.ProcessEnv;
@@ -31,6 +35,7 @@ export async function startPlatformWorkerProcess(
   const env = options.env ?? process.env;
   const logger = options.logger ?? consoleJsonLogger;
   const shell = await createPlatformWorkerShell({
+    ...(options.diagnosticCatalogs === undefined ? {} : { diagnosticCatalogs: options.diagnosticCatalogs }),
     apps: options.apps ?? [],
     deps: createWorkerProcessMountDeps(env, logger, options.configKeys ?? [], options.metrics ?? noopMetrics),
     ...(options.durableOutboxProcessing === undefined ? {} : { durableOutboxProcessing: options.durableOutboxProcessing }),
@@ -43,6 +48,19 @@ export async function startPlatformWorkerProcess(
   const started = await shell.value.start();
   if (!started.ok) return started;
 
+  let selectedReporter: PlatformDiagnosticReporter | undefined;
+  const diagnostics: PlatformDiagnosticReporter = { report(record, context) {
+    try {
+      selectedReporter ??= createPlatformDiagnosticReporter({ catalogs: [...workerBuiltinDiagnosticCatalogs,
+        ...(options.diagnosticCatalogs ?? []), ...shell.value.mounted.diagnosticCatalogs], logger, clock: systemClock });
+      return selectedReporter.report(record, context);
+    } catch { return { status: "unavailable" }; }
+  } };
+  const diagnosticDefinitions = (): readonly DiagnosticDefinition[] => {
+    try { return [...workerBuiltinDiagnosticCatalogs, ...(options.diagnosticCatalogs ?? []), ...shell.value.mounted.diagnosticCatalogs].flatMap((catalog) => catalog.definitions); }
+    catch { return []; }
+  };
+
   const processHandle: PlatformWorkerProcess = {
     shell: shell.value,
     close: async () => {
@@ -51,10 +69,15 @@ export async function startPlatformWorkerProcess(
   };
 
   if (options.installSignalHandlers ?? true) {
-    installShutdownHandlers(processHandle, logger);
+    installShutdownHandlers(processHandle, logger, diagnostics, diagnosticDefinitions);
   }
 
-  logger.write({ level: "info", message: "platform.worker.started" });
+  let boundary: "selection" | "invocation" = "selection";
+  try { logger.write((boundary = "invocation", { level: "info", message: "platform.worker.started" })); }
+  catch (error) {
+    reportWorkerBoundary(diagnostics, { operation: "process-start", phase: "startup-log", boundary, effect: "process-not-returned" }, error, diagnosticDefinitions());
+    throw error;
+  }
   return { ok: true, value: processHandle };
 }
 
@@ -99,16 +122,29 @@ function configRecordFromEnv(env: NodeJS.ProcessEnv, extraConfigKeys: readonly s
   return values;
 }
 
-function installShutdownHandlers(processHandle: PlatformWorkerProcess, logger: Logger): void {
+function installShutdownHandlers(processHandle: PlatformWorkerProcess, logger: Logger, diagnostics: PlatformDiagnosticReporter,
+  diagnosticDefinitions: () => readonly DiagnosticDefinition[]): void {
   let shuttingDown = false;
   const shutdown = async (signal: NodeJS.Signals) => {
     if (shuttingDown) return;
     shuttingDown = true;
-    logger.write({ level: "info", message: "platform.worker.shutdown", fields: { signal } });
+    let boundary: "selection" | "invocation" = "selection";
+    try { logger.write((boundary = "invocation", { level: "info", message: "platform.worker.shutdown", fields: { signal } })); }
+    catch (error) {
+      reportWorkerBoundary(diagnostics, { operation: "signal-shutdown", phase: "shutdown-log", boundary, effect: "shutdown-not-completed" }, error, diagnosticDefinitions());
+      throw error;
+    }
     await processHandle.close();
   };
-  process.once("SIGTERM", () => { void shutdown("SIGTERM"); });
-  process.once("SIGINT", () => { void shutdown("SIGINT"); });
+  let boundary: "selection" | "invocation" = "selection";
+  try {
+    process.once("SIGTERM", (boundary = "invocation", () => { void shutdown("SIGTERM"); }));
+    boundary = "selection";
+    process.once("SIGINT", (boundary = "invocation", () => { void shutdown("SIGINT"); }));
+  } catch (error) {
+    reportWorkerBoundary(diagnostics, { operation: "process-start", phase: "signal-registration", boundary, effect: "process-not-returned" }, error, diagnosticDefinitions());
+    throw error;
+  }
 }
 
 const consoleJsonLogger: Logger = {

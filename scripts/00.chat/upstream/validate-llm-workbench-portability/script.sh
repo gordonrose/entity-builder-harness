@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.validate-llm-workbench-portability
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-07-03"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -37,6 +37,18 @@ require_file() {
   [ -f "$path" ] || fail "missing file: $path"
 }
 
+read_failed() {
+  echo "ERROR: portability-observation-unavailable; stage=$1." >&2
+  exit 2
+}
+observe() { local stage="$1"; shift; "$@" 2>/dev/null || read_failed "$stage"; }
+matches() {
+  local status
+  if grep "$@" 2>/dev/null; then return 0; else status=$?; fi
+  [ "$status" -eq 1 ] && return 1
+  read_failed pattern-read
+}
+
 require_dir_absent() {
   local path="$1"
   [ ! -d "$path" ] || fail "unexpected directory exists: $path"
@@ -45,22 +57,22 @@ require_dir_absent() {
 require_grep() {
   local pattern="$1"
   local path="$2"
-  grep -Eq -- "$pattern" "$path" || fail "missing pattern '$pattern' in $path"
+  matches -Eq -- "$pattern" "$path" || fail "missing required pattern."
 }
 
 reject_grep() {
   local pattern="$1"
   local path="$2"
-  if grep -Eq -- "$pattern" "$path"; then
-    fail "unexpected pattern '$pattern' in $path"
+  if matches -Eq -- "$pattern" "$path"; then
+    fail "unexpected forbidden pattern."
   fi
 }
 
 reject_tree_grep() {
   local pattern="$1"
   local path="$2"
-  if grep -RIEq -- "$pattern" "$path"; then
-    fail "unexpected pattern '$pattern' under $path"
+  if matches -RIEq -- "$pattern" "$path"; then
+    fail "unexpected forbidden tree pattern."
   fi
 }
 
@@ -131,7 +143,7 @@ build_public_workbench() {
     --apply > "$TMP_ROOT/public-workbench-apply.out"
 }
 
-SOURCE_ROOT="$(git rev-parse --show-toplevel)"
+SOURCE_ROOT="$(observe source-root git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-portability-acceptance.XXXXXX")"
 
 cleanup() {
@@ -166,7 +178,7 @@ if [ -d "$WORKBENCH_REPO/.agentic/00.chat" ] && [ -d "$WORKBENCH_REPO/.agentic/a
   fail "duplicate canonical chat harness trees found in generated public repo"
 fi
 
-if grep -RIEq '\.agentic/01\.harness' "$WORKBENCH_REPO/.agentic" 2>/dev/null; then
+if matches -RIEq '\.agentic/01\.harness' "$WORKBENCH_REPO/.agentic"; then
   fail "public export .agentic surface references missing .agentic/01.harness"
 fi
 
@@ -296,19 +308,20 @@ reject_source_maintenance_harness_scripts "$EXISTING_REPO"
 reject_public_adrs "$EXISTING_REPO"
 require_dir_absent "$EXISTING_REPO/.agentic/01.harness"
 
-if find "$EXISTING_REPO/.agentic" -path '*/01.harness/*' -o -path '*/01.harness' | grep -q .; then
+HARNESS_PATHS="$(observe installed-tree find "$EXISTING_REPO/.agentic" -path '*/01.harness/*' -o -path '*/01.harness')"
+if [ -n "$HARNESS_PATHS" ]; then
   fail "installed target contains upstream .agentic/01.harness files"
 fi
 
-if grep -RIEq 'Future Codex sessions continuing rulebook work|Architecture Rulebook Operating Pack|RAG/rulebook machinery now has its own layer' \
-  "$EXISTING_REPO/.agentic" 2>/dev/null; then
+if matches -RIEq 'Future Codex sessions continuing rulebook work|Architecture Rulebook Operating Pack|RAG/rulebook machinery now has its own layer' \
+  "$EXISTING_REPO/.agentic"; then
   fail "installed target contains source-specific RAG/rulebook harness guidance"
 fi
 
 reject_grep 'RAG/rulebook|\.agentic/02\.rag-rulebook|scripts/02\.rag-rulebook' \
   "$EXISTING_REPO/.agentic/00.chat/checklists/before-commit.md"
 
-if grep -RIEq '\.agentic/01\.harness' "$EXISTING_REPO/.agentic" 2>/dev/null; then
+if matches -RIEq '\.agentic/01\.harness' "$EXISTING_REPO/.agentic"; then
   fail "installed target .agentic surface references missing .agentic/01.harness"
 fi
 

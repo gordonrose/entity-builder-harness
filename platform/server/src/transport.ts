@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import { createServer as createNodeServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { correlationId, type CorrelationId } from "@kanbien/core/shared";
+import { createDiagnosticRecord, diagnosticRelatedRecordLimit, selectDiagnosticEvidence, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { observeServerDiagnostic, platformServerDiagnosticCatalog, serverTransportBoundaryRecord, serverTransportObservationRecord,
+  serverTransportRejectionRecord, serverTransportConfigurationDiagnostic, serverTransportRelationshipDiagnostic,
+  type serverTransportBoundaryPhases, type serverTransportConfigurationFields } from "./diagnostics";
 import type { PlatformServerErrorCode, PlatformServerRequest, PlatformServerResponse } from "./index";
 
 export interface PlatformServerTransportOptions {
@@ -20,6 +24,7 @@ export interface PlatformServerTransportOptions {
 export interface PlatformClientAddressResolverInput {
   readonly socketPeerAddress?: string;
   readonly headers: Readonly<Record<string, string | readonly string[]>>;
+  readonly onDiagnostic?: (record: DiagnosticRecord) => unknown;
 }
 
 export interface PlatformClientAddressResolver {
@@ -50,7 +55,12 @@ export interface PlatformServerTransportFailure {
   readonly error?: unknown;
   readonly allow?: readonly string[];
   readonly retryAfterMs?: number;
+  readonly diagnosticRecord?: DiagnosticRecord;
+  readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
 }
+
+export type PlatformServerTransportDiagnosticRequest = Pick<PlatformServerTransportFailure, "method" | "path">
+  & Partial<Pick<PlatformServerTransportFailure, "headers" | "requestId">>;
 
 export interface PlatformServerTransportAdmission {
   readonly requestId: CorrelationId;
@@ -70,7 +80,7 @@ export interface PlatformServerHandle {
 
 export function resolvePlatformServerTransportOptions(
   options: PlatformServerTransportOptions = {},
-): { readonly ok: true; readonly value: ResolvedPlatformServerTransportOptions } | { readonly ok: false; readonly reason: string } {
+): { readonly ok: true; readonly value: ResolvedPlatformServerTransportOptions } | { readonly ok: false; readonly reason: string; readonly diagnosticRecord: DiagnosticRecord } {
   const resolved: ResolvedPlatformServerTransportOptions = {
     maxRequestBodyBytes: options.maxRequestBodyBytes ?? 1_048_576,
     maxHeaderBytes: options.maxHeaderBytes ?? 16_384,
@@ -85,13 +95,25 @@ export function resolvePlatformServerTransportOptions(
   };
 
   for (const [name, value] of Object.entries(resolved)) {
-    if (!Number.isInteger(value) || value <= 0) {
-      return { ok: false, reason: `${name} must be a positive integer.` };
+    const integer = Number.isInteger(value);
+    if (!integer || value <= 0) {
+      const reason = typeof value !== "number" ? "wrong-type"
+        : value !== value || value === Infinity || value === -Infinity ? "not-finite"
+        : !integer ? "not-integer" : "not-positive";
+      const observed = createDiagnosticRecord(serverTransportConfigurationDiagnostic, {
+        field: name as (typeof serverTransportConfigurationFields)[number], reason, phase: "configuration", effect: "rejected",
+      });
+      if (!observed.ok) throw new TypeError("PLATFORM_SERVER_DIAGNOSTIC_INVALID");
+      return { ok: false, reason: `${name} must be a positive integer.`, diagnosticRecord: observed.value };
     }
   }
 
   if (resolved.headersTimeoutMs > resolved.requestTimeoutMs) {
-    return { ok: false, reason: "headersTimeoutMs must not exceed requestTimeoutMs." };
+    const observed = createDiagnosticRecord(serverTransportRelationshipDiagnostic, {
+      relationship: "headers-within-request-timeout", rule: "less-than-or-equal", phase: "configuration", effect: "rejected",
+    });
+    if (!observed.ok) throw new TypeError("PLATFORM_SERVER_DIAGNOSTIC_INVALID");
+    return { ok: false, reason: "headersTimeoutMs must not exceed requestTimeoutMs.", diagnosticRecord: observed.value };
   }
 
   return { ok: true, value: resolved };
@@ -105,38 +127,74 @@ export async function listenNodePlatformServer(input: {
   readonly options: PlatformServerListenOptions;
   readonly transport: ResolvedPlatformServerTransportOptions;
   readonly clientAddressResolver?: PlatformClientAddressResolver;
+  readonly onDiagnostic?: (record: DiagnosticRecord, request?: PlatformServerTransportDiagnosticRequest) => unknown;
+  readonly onRequestMetadata?: (request: PlatformServerRequest, records: readonly DiagnosticRecord[]) => unknown;
 }): Promise<PlatformServerHandle> {
   let accepting = true;
   let inFlight = 0;
+  let listeningCompleted = false;
   const controllers = new Set<AbortController>();
-  const server = createNodeServer({
-    headersTimeout: input.transport.headersTimeoutMs,
-    keepAliveTimeout: input.transport.keepAliveTimeoutMs,
-    maxHeaderSize: input.transport.maxHeaderBytes,
-    requestTimeout: input.transport.requestTimeoutMs,
-  }, (req, res) => {
-    void handleNodeRequest(req, res);
-  });
+  const observe = (record: DiagnosticRecord, request?: PlatformServerTransportDiagnosticRequest): void => {
+    observeServerDiagnostic((value) => input.onDiagnostic?.(value, request), record);
+  };
+  let server: Server;
+  try {
+    server = createNodeServer({
+      headersTimeout: input.transport.headersTimeoutMs,
+      keepAliveTimeout: input.transport.keepAliveTimeoutMs,
+      maxHeaderSize: input.transport.maxHeaderBytes,
+      requestTimeout: input.transport.requestTimeoutMs,
+    }, (req, res) => {
+      void handleNodeRequest(req, res);
+    });
+  } catch (error) {
+    observe(serverTransportBoundaryRecord("server-construction", "threw", "listener-not-returned"));
+    throw error;
+  }
   server.maxHeadersCount = input.transport.maxHeadersCount;
   server.maxRequestsPerSocket = input.transport.maxRequestsPerSocket;
   server.on("clientError", (error, socket) => {
+    observe(serverTransportBoundaryRecord("client-error", "error-event", "unknown"));
     input.onServerError(error);
     socket.destroy();
   });
-  server.on("error", input.onServerError);
+  // Preserve the original unbound callback receiver and argument ordering.
+  const onServerError = input.onServerError;
+  if (typeof onServerError !== "function") {
+    // Keep Node's original constructor-time listener validation for untyped callers.
+    server.on("error", onServerError);
+  } else {
+    server.on("error", function (this: Server, error: unknown) {
+      observe(serverTransportBoundaryRecord(listeningCompleted ? "server-error" : "listen", "error-event",
+        listeningCompleted ? "unknown" : "listener-not-returned"));
+      return Reflect.apply(onServerError, this, [error]);
+    });
+  }
 
   async function handleNodeRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const controller = new AbortController();
+    let metadataForObservation: PlatformServerTransportDiagnosticRequest | undefined;
     controllers.add(controller);
     res.once("close", () => {
       if (!res.writableEnded) {
         controller.abort();
+        observe(serverTransportObservationRecord("response-closed-before-end", "response", "abort-requested"), metadataForObservation);
       }
     });
 
     let request: PlatformServerRequest | undefined;
     let counted = false;
     let handlerOutlivedResponse = false;
+    let boundaryPhase: (typeof serverTransportBoundaryPhases)[number] = "metadata";
+    const writeResponse = (response: PlatformServerResponse): void => {
+      boundaryPhase = "response-headers";
+      writeNodeResponse(res, response, (record) => observe(record, metadataForObservation));
+    };
+    const failureResponse = (failure: PlatformServerTransportFailure): PlatformServerResponse => {
+      metadataForObservation ??= failure;
+      boundaryPhase = "failure-projection";
+      return input.failure(failure);
+    };
     const releaseRequestCapacity = (): void => {
       if (counted) {
         inFlight -= 1;
@@ -145,15 +203,25 @@ export async function listenNodePlatformServer(input: {
       controllers.delete(controller);
     };
     try {
-      const metadata = requestMetadata(req, controller.signal, input.clientAddressResolver);
+      const resolverRecords: DiagnosticRecord[] = [];
+      const metadata = requestMetadata(req, controller.signal, input.clientAddressResolver, (record) => {
+        if (resolverRecords.length >= diagnosticRelatedRecordLimit) return;
+        const selected = selectDiagnosticEvidence(platformServerDiagnosticCatalog.definitions, { diagnosticRecord: record });
+        if (selected.diagnosticRecord !== undefined) resolverRecords.push(selected.diagnosticRecord);
+      });
       if (!metadata.ok) {
-        writeNodeResponse(res, input.failure(metadata.failure));
+        metadataForObservation = metadata.failure;
+        writeResponse(failureResponse(metadata.failure));
         return;
+      }
+      metadataForObservation = metadata.value;
+      if (resolverRecords.length > 0) {
+        observeServerDiagnostic(() => input.onRequestMetadata?.(metadata.value, Object.freeze(resolverRecords)), resolverRecords[0]!);
       }
 
       if (!accepting || inFlight >= input.transport.maxConcurrentRequests) {
         const requestId = metadata.value.requestId ?? platformServerRequestId(undefined);
-        writeNodeResponse(res, input.failure({
+        writeResponse(failureResponse({
           method: metadata.value.method,
           path: metadata.value.path,
           headers: metadata.value.headers ?? {},
@@ -161,30 +229,35 @@ export async function listenNodePlatformServer(input: {
           status: 503,
           code: "PLATFORM_SERVER_SERVICE_UNAVAILABLE",
           message: "The platform server is temporarily unavailable.",
+          diagnosticRecord: serverTransportRejectionRecord(!accepting ? "server-closing" : "concurrency-capacity-reached", "admission"),
         }));
         return;
       }
 
       inFlight += 1;
       counted = true;
+      boundaryPhase = "admission";
       const admission = await input.admit(metadata.value);
       if (admission.response !== undefined) {
-        writeNodeResponse(res, admission.response);
+        writeResponse(admission.response);
         return;
       }
 
+      boundaryPhase = "body-stream";
       const parsed = await readNodeRequestBody(req, metadata.value, admission.requestId, input.transport.maxRequestBodyBytes);
       if (!parsed.ok) {
-        writeNodeResponse(res, input.failure(parsed.failure));
+        writeResponse(failureResponse(parsed.failure));
         return;
       }
 
       request = parsed.value;
+      boundaryPhase = "handler";
       const handler = input.handle(request);
+      let handlerDeadlineObserved = false;
       const response = await settleWithin(
         handler,
         input.transport.handlerTimeoutMs,
-        () => controller.abort(),
+        () => { handlerDeadlineObserved = true; controller.abort(); },
       );
       if (response === undefined) {
         handlerOutlivedResponse = true;
@@ -193,11 +266,12 @@ export async function listenNodePlatformServer(input: {
             releaseRequestCapacity();
           },
           (error: unknown) => {
+            observe(serverTransportBoundaryRecord("late-handler", "threw", "handler-settled"), request);
             input.onServerError(error);
             releaseRequestCapacity();
           },
         );
-        writeNodeResponse(res, input.failure({
+        writeResponse(failureResponse({
           method: request.method,
           path: request.path,
           headers: request.headers ?? {},
@@ -205,14 +279,16 @@ export async function listenNodePlatformServer(input: {
           status: 504,
           code: "PLATFORM_SERVER_REQUEST_TIMEOUT",
           message: "The platform request timed out.",
+          diagnosticRecord: serverTransportRejectionRecord(handlerDeadlineObserved ? "handler-deadline-observed" : "handler-result-unavailable", "handler",
+            handlerDeadlineObserved ? "handler-still-pending" : "handler-result-not-returned"),
         }));
         return;
       }
 
-      writeNodeResponse(res, response);
+      writeResponse(response);
     } catch (error) {
       const requestId = request?.requestId ?? metadataRequestId(req);
-      writeNodeResponse(res, input.failure({
+      writeResponse(failureResponse({
         method: request?.method ?? req.method ?? "UNKNOWN",
         path: request?.path ?? safePath(req.url),
         headers: request?.headers ?? nodeHeaders(req),
@@ -221,6 +297,9 @@ export async function listenNodePlatformServer(input: {
         code: "PLATFORM_SERVER_HANDLER_FAILED",
         message: "Platform request processing failed.",
         error,
+        ...((boundaryPhase as (typeof serverTransportBoundaryPhases)[number]) === "response-headers" ? {} : {
+          diagnosticRecord: serverTransportBoundaryRecord(boundaryPhase, "threw", "request-not-returned"),
+        }),
       }));
     } finally {
       if (!handlerOutlivedResponse) {
@@ -236,11 +315,16 @@ export async function listenNodePlatformServer(input: {
     };
     const onListen = () => {
       server.off("error", onListenError);
+      listeningCompleted = true;
       resolve();
     };
     server.once("error", onListenError);
     server.once("listening", onListen);
-    server.listen(input.options.port ?? 0, input.options.host);
+    try { server.listen(input.options.port ?? 0, input.options.host); }
+    catch (error) {
+      observe(serverTransportBoundaryRecord("listen", "threw", "listener-not-returned"));
+      throw error;
+    }
   });
 
   const address = server.address() as AddressInfo;
@@ -249,8 +333,9 @@ export async function listenNodePlatformServer(input: {
     ...(input.options.host === undefined ? {} : { host: input.options.host }),
     close: async () => {
       accepting = false;
-      const closed = closeServer(server);
+      const closed = closeServer(server, observe);
       const drained = await settleWithin(closed, input.transport.shutdownDrainTimeoutMs, () => {
+        observe(serverTransportObservationRecord("drain-deadline-observed", "shutdown", "shutdown-still-pending"));
         for (const controller of controllers) {
           controller.abort();
         }
@@ -267,6 +352,7 @@ function requestMetadata(
   req: IncomingMessage,
   abortSignal: AbortSignal,
   clientAddressResolver?: PlatformClientAddressResolver,
+  onDiagnostic?: (record: DiagnosticRecord) => unknown,
 ): { readonly ok: true; readonly value: PlatformServerRequest } | { readonly ok: false; readonly failure: PlatformServerTransportFailure } {
   const headers = nodeHeaders(req);
   const requestId = metadataRequestId(req);
@@ -282,6 +368,7 @@ function requestMetadata(
         status: 400,
         code: "PLATFORM_SERVER_INVALID_REQUEST",
         message: "The request URL is invalid.",
+        diagnosticRecord: serverTransportRejectionRecord("url-invalid", "metadata"),
       },
     };
   }
@@ -298,11 +385,12 @@ function requestMetadata(
         status: 405,
         code: "PLATFORM_SERVER_METHOD_NOT_ALLOWED",
         message: "The request method is not allowed.",
+        diagnosticRecord: serverTransportRejectionRecord("method-unsupported", "metadata"),
       },
     };
   }
 
-  const clientAddress = resolvedClientAddress(clientAddressResolver, req.socket.remoteAddress, headers);
+  const clientAddress = resolvedClientAddress(clientAddressResolver, req.socket.remoteAddress, headers, onDiagnostic);
 
   return {
     ok: true,
@@ -323,9 +411,11 @@ function resolvedClientAddress(
   clientAddressResolver: PlatformClientAddressResolver | undefined,
   socketPeerAddress: string | undefined,
   headers: Readonly<Record<string, string | readonly string[]>>,
+  onDiagnostic?: (record: DiagnosticRecord) => unknown,
 ): string | undefined {
   return clientAddressResolver?.resolve({
     headers,
+    ...(onDiagnostic === undefined ? {} : { onDiagnostic }),
     ...(socketPeerAddress === undefined ? {} : { socketPeerAddress }),
   }) ?? socketPeerAddress;
 }
@@ -339,11 +429,14 @@ async function readNodeRequestBody(
   const contentLength = firstHeaderValue(metadata.headers ?? {}, "content-length");
   if (contentLength !== undefined && contentLength.length > 0) {
     const declaredLength = Number(contentLength);
-    if (!Number.isInteger(declaredLength) || declaredLength < 0) {
-      return transportFailure(metadata, requestId, 400, "PLATFORM_SERVER_INVALID_REQUEST", "The request content length is invalid.");
+    const integer = Number.isInteger(declaredLength);
+    if (!integer || declaredLength < 0) {
+      return transportFailure(metadata, requestId, 400, "PLATFORM_SERVER_INVALID_REQUEST", "The request content length is invalid.",
+        serverTransportRejectionRecord(!integer ? "declared-length-not-integer" : "declared-length-negative", "body"));
     }
     if (declaredLength > maxRequestBodyBytes) {
-      return transportFailure(metadata, requestId, 413, "PLATFORM_SERVER_PAYLOAD_TOO_LARGE", "The request payload is too large.");
+      return transportFailure(metadata, requestId, 413, "PLATFORM_SERVER_PAYLOAD_TOO_LARGE", "The request payload is too large.",
+        serverTransportRejectionRecord("declared-length-over-limit", "body"));
     }
   }
 
@@ -357,7 +450,8 @@ async function readNodeRequestBody(
     const buffer = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
     totalBytes += buffer.length;
     if (totalBytes > maxRequestBodyBytes) {
-      return transportFailure(metadata, requestId, 413, "PLATFORM_SERVER_PAYLOAD_TOO_LARGE", "The request payload is too large.");
+      return transportFailure(metadata, requestId, 413, "PLATFORM_SERVER_PAYLOAD_TOO_LARGE", "The request payload is too large.",
+        serverTransportRejectionRecord("streamed-body-over-limit", "body"));
     }
     chunks.push(buffer);
   }
@@ -367,8 +461,10 @@ async function readNodeRequestBody(
   }
 
   const contentType = firstHeaderValue(metadata.headers ?? {}, "content-type");
-  if (!isJsonContentType(contentType)) {
-    return transportFailure(metadata, requestId, 415, "PLATFORM_SERVER_UNSUPPORTED_MEDIA_TYPE", "The request content type must be application/json.");
+  const normalizedContentType = contentType?.toLowerCase().split(";", 1)[0]?.trim();
+  if (normalizedContentType !== "application/json") {
+    return transportFailure(metadata, requestId, 415, "PLATFORM_SERVER_UNSUPPORTED_MEDIA_TYPE", "The request content type must be application/json.",
+      serverTransportRejectionRecord(contentType === undefined ? "media-type-missing" : normalizedContentType === "" ? "media-type-empty" : "media-type-unsupported", "body"));
   }
 
   try {
@@ -382,7 +478,8 @@ async function readNodeRequestBody(
       },
     };
   } catch (error) {
-    return transportFailure(metadata, requestId, 400, "PLATFORM_SERVER_INVALID_REQUEST", "The request body is not valid JSON.", error);
+    return transportFailure(metadata, requestId, 400, "PLATFORM_SERVER_INVALID_REQUEST", "The request body is not valid JSON.",
+      serverTransportRejectionRecord("body-decoding-threw", "body"), error);
   }
 }
 
@@ -392,6 +489,7 @@ function transportFailure(
   status: number,
   code: PlatformServerErrorCode,
   message: string,
+  diagnosticRecord: DiagnosticRecord,
   error?: unknown,
 ): { readonly ok: false; readonly failure: PlatformServerTransportFailure } {
   return {
@@ -404,6 +502,7 @@ function transportFailure(
       status,
       code,
       message,
+      diagnosticRecord,
       ...(error === undefined ? {} : { error }),
     },
   };
@@ -465,10 +564,6 @@ function mayCarryJsonBody(method: PlatformServerRequest["method"]): boolean {
   return method === "POST" || method === "PUT" || method === "PATCH";
 }
 
-function isJsonContentType(value: string | undefined): boolean {
-  return value?.toLowerCase().split(";", 1)[0]?.trim() === "application/json";
-}
-
 function firstHeaderValue(headers: Readonly<Record<string, string | readonly string[]>>, name: string): string | undefined {
   const entry = Object.entries(headers).find(([key]) => key.toLowerCase() === name.toLowerCase());
   const value = entry?.[1];
@@ -509,29 +604,51 @@ async function settleWithin<T>(
   }
 }
 
-function writeNodeResponse(res: ServerResponse, platformResponse: PlatformServerResponse): void {
-  if (res.writableEnded || res.destroyed) {
+function writeNodeResponse(res: ServerResponse, platformResponse: PlatformServerResponse,
+  observe: (record: DiagnosticRecord) => void): void {
+  if (res.writableEnded) {
+    observe(serverTransportObservationRecord("response-already-ended", "response", "response-skipped"));
+    return;
+  }
+  if (res.destroyed) {
+    observe(serverTransportObservationRecord("response-destroyed", "response", "response-skipped"));
     return;
   }
 
-  for (const [key, value] of Object.entries(platformResponse.headers)) {
-    res.setHeader(key, value);
-  }
+  let phase: "response-headers" | "response-status" | "response-serialization" | "response-end" = "response-headers";
+  try {
+    for (const [key, value] of Object.entries(platformResponse.headers)) {
+      res.setHeader(key, value);
+    }
 
-  res.statusCode = platformResponse.status;
-  res.end(JSON.stringify(platformResponse.body ?? null));
+    phase = "response-status";
+    res.statusCode = platformResponse.status;
+    phase = "response-end";
+    let body: string | undefined;
+    // Resolve the original end method before body projection, as before.
+    res.end((phase = "response-serialization", body = JSON.stringify(platformResponse.body ?? null), phase = "response-end", body));
+  } catch (error) {
+    observe(serverTransportBoundaryRecord(phase, "threw", "unknown"));
+    throw error;
+  }
 }
 
-async function closeServer(server: Server): Promise<void> {
+async function closeServer(server: Server, observe: (record: DiagnosticRecord) => void): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    server.close((error) => {
-      if (error === undefined) {
-        resolve();
-        return;
-      }
+    try {
+      server.close((error) => {
+        if (error === undefined) {
+          resolve();
+          return;
+        }
 
-      reject(error);
-    });
+        observe(serverTransportBoundaryRecord("close-callback", "callback-error", "close-not-confirmed"));
+        reject(error);
+      });
+    } catch (error) {
+      observe(serverTransportBoundaryRecord("close-invocation", "threw", "close-not-confirmed"));
+      throw error;
+    }
   });
 }
 

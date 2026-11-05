@@ -21,6 +21,7 @@ private source files.
 | Path | Responsibility | Verification |
 | --- | --- | --- |
 | `src/errors.ts` | Stable runtime and mount failure vocabulary. | `npm run platform:runtime:check` |
+| `src/diagnostics.ts` | Closed runtime state/boundary meanings and isolated optional observation. | `npm run platform:runtime:check` |
 | `src/registry.ts` | Per-process registry, app-scoped registration view, validation, and app-mount orchestration. | `npm run platform:runtime:check` |
 | `src/contexts.ts` | Provider-neutral request/job context and shared runtime-dependency factories. | `npm run platform:runtime:check` |
 | `src/lifecycle.ts` | Ordered startup, readiness, graceful shutdown, resource, and telemetry coordination. | `npm run platform:runtime:check` |
@@ -49,3 +50,35 @@ are not name registrations in the current contract.
 The registry is built anew during process startup. A deployment system decides
 how to retain old capacity, cut traffic over, and roll back; this package only
 decides whether its own process has a valid catalogue before it becomes ready.
+
+## Diagnostic observation
+
+`platformRuntimeDiagnosticCatalog` (owner `platform-runtime`) exports version-one
+`platform-runtime.state-rejected` and `platform-runtime.boundary-failed` definitions.
+Lifecycle, mount, and context inputs accept optional `onDiagnostic` and
+`diagnosticDefinitions`. No observer is installed globally. Definitions are selected
+only after failure, using Core's data-only evidence selector; they are not an
+additional app or dependency admission policy.
+
+State rejections describe the known unchanged state. Boundary observations describe
+the operation, phase, subject, boundary, and known effect, not a guessed cause.
+Optional `ordinal` is the zero-based yield position within that phase, not an
+assertion about the original collection's indexing. IDs, resource names, native
+messages, paths, and supplied dependency values are absent from these records.
+
+Mount/lifecycle observers receive their own boundary record followed by selected
+upstream evidence. The returned error retains a selected upstream primary and all
+eight possible companions unchanged in meaning; the runtime location is delivered
+independently rather than becoming a ninth companion. Without a selected primary,
+the runtime record is the primary. Mount observers additionally receive the current
+validated registered catalog snapshot, so a host can select app definitions before
+output. Context observers emit only the runtime location; synchronous throws retain
+their exact identity and upstream evidence for the caller to handle once.
+
+Observation failures (including rejecting asynchronous callbacks) are isolated and
+never awaited. Success, callback receivers and getter/iteration order, first-failure
+behavior, lifecycle transitions, and legacy returned-error versus raw-throw boundaries
+remain unchanged. A completed step followed by timestamp or event-append failure is
+not reported as an uninvoked step. Construction and snapshot/projection failures are
+observed separately, including the shutdown snapshots that already escaped as raw
+rejections. This adds evidence, not rollback, retry, cleanup, or readiness policy.

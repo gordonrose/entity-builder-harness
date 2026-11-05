@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -38,14 +38,19 @@ def response_adapter():
     return root,module
 
 def command(args: argparse.Namespace, *items: str) -> tuple[bool, Any, str]:
-    root,adapter=response_adapter()
-    if not adapter.inventory_covered(root):return False,None,"delivery-inventory-not-covered"
+    try:
+        root,adapter=response_adapter()
+        if not adapter.inventory_covered(root):return False,None,"delivery-inventory-not-covered"
+    except (OSError, UnicodeError, ValueError, TypeError, AttributeError, ImportError, subprocess.SubprocessError):
+        return False,None,"unavailable"
     try:result = subprocess.run(["aws", *items, "--profile", args.profile, "--region", args.region, "--output", "json"], capture_output=True, text=True,timeout=30)
-    except (OSError,subprocess.SubprocessError):return False,None,"unavailable"
+    except (OSError,UnicodeError,subprocess.SubprocessError):return False,None,"unavailable"
     if result.returncode:
         code=adapter.classify_error(items[0],items[1],result.stderr)
         return False,None,{"aws-resource-missing":"not-found","aws-access-denied":"access-denied"}.get(code,"unavailable")
-    try:return True,json.loads(result.stdout),"ok"
+    try:
+        value = json.loads(result.stdout)
+        return (True,value,"ok") if isinstance(value, dict) else (False,None,"invalid-response")
     except json.JSONDecodeError:return False,None,"invalid-response"
 
 def assertion(identifier: str, matched: bool, code: str, failed_outcome: str = "unknown") -> dict[str, str]:
@@ -56,7 +61,7 @@ def accepted_release(path: Path | None) -> dict[str, Any] | None:
         return None
     try:
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
+    except (OSError, UnicodeError, yaml.YAMLError):
         return None
     if not isinstance(document, dict) or document.get("schema") != "deploy/accepted-release/v1" or document.get("status") != "accepted":
         return None
@@ -67,6 +72,7 @@ def accepted_release(path: Path | None) -> dict[str, Any] | None:
 
 def main() -> int:
     p = argparse.ArgumentParser(add_help=False)
+    p.error = lambda _message: p.exit(2, "DIAGNOSTIC_CODE=RUNTIME_ALIGNMENT_ARGUMENTS_INVALID\n")
     p.add_argument("--profile", required=True); p.add_argument("--region", required=True); p.add_argument("--account-id", required=True)
     p.add_argument("--repository", required=True); p.add_argument("--image-digest", required=True)
     p.add_argument("--foundation-stack", required=True); p.add_argument("--runtime-stack", required=True)
@@ -85,11 +91,14 @@ def main() -> int:
     assertions["package-destination"] = assertion("package-destination", ok and bool(details), "immutable-digest-present" if ok else code, "missing" if ok else "unknown")
     ok, foundation, code = command(args, "cloudformation", "describe-stacks", "--stack-name", args.foundation_stack)
     stacks = foundation.get("Stacks", []) if isinstance(foundation, dict) else []
-    outputs = {entry.get("OutputKey") for entry in stacks[0].get("Outputs", [])} if stacks else set()
     required_outputs = {"VpcId", "PrivateSubnetIds", "RepositoryUri", "ClusterArn", "LogGroupName", "TaskExecutionRoleArn", "ServiceSecurityGroupId", "VerifierSecurityGroupId", "ServiceDiscoveryArn"}
-    foundation_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES and required_outputs <= outputs
-    foundation_failure = "unknown" if not ok else ("mismatch" if stacks and stacks[0].get("StackStatus") not in STABLE_SUCCESSFUL_STACK_STATUSES else "missing")
-    assertions["right-application"] = assertion("right-application", foundation_ready, "foundation-ready" if foundation_ready else "foundation-runtime-output-missing", foundation_failure)
+    try:
+        outputs = {entry.get("OutputKey") for entry in stacks[0].get("Outputs", [])} if stacks else set()
+        foundation_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES and required_outputs <= outputs
+        foundation_failure = "unknown" if not ok else ("mismatch" if stacks and stacks[0].get("StackStatus") not in STABLE_SUCCESSFUL_STACK_STATUSES else "missing")
+    except (TypeError, AttributeError, KeyError, IndexError):
+        ok, code, foundation_ready, foundation_failure = False, "invalid-response", False, "unknown"
+    assertions["right-application"] = assertion("right-application", foundation_ready, "foundation-ready" if foundation_ready else code if not ok else "foundation-runtime-output-missing", foundation_failure)
     baseline = accepted_release(args.accepted_release)
     if args.operation in {"update", "restore"} and baseline is None:
         assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", False, "accepted-release-invalid", "missing")
@@ -99,21 +108,36 @@ def main() -> int:
             assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", not ok and code == "not-found", "runtime-absent" if not ok and code == "not-found" else "runtime-not-absent", "mismatch" if ok else "unknown")
         else:
             stacks = runtime.get("Stacks", []) if isinstance(runtime, dict) else []
-            stack_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES
+            try:
+                stack_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES
+            except (TypeError, AttributeError, KeyError, IndexError):
+                ok, code, stack_ready = False, "invalid-response", False
             service_ok, service, service_code = command(args, "ecs", "describe-services", "--cluster", args.cluster, "--services", args.runtime_stack)
             services = service.get("services", []) if isinstance(service, dict) else []
-            service_ready = service_ok and len(services) == 1 and services[0].get("runningCount") == 1 and all(item.get("rolloutState") == "COMPLETED" for item in services[0].get("deployments", []) if isinstance(item, dict))
+            try:
+                service_ready = service_ok and len(services) == 1 and services[0].get("runningCount") == 1 and all(item.get("rolloutState") == "COMPLETED" for item in services[0].get("deployments", []) if isinstance(item, dict))
+            except (TypeError, AttributeError, KeyError, IndexError):
+                service_ok, service_ready, service_code = False, False, "invalid-response"
             task_definition = services[0].get("taskDefinition") if service_ready else None
+            if task_definition and not isinstance(task_definition, str):
+                service_ok, service_ready, task_definition, service_code = False, False, None, "invalid-response"
             task_ok, task, task_code = command(args, "ecs", "describe-task-definition", "--task-definition", task_definition) if task_definition else (False, None, "runtime-task-definition-missing")
-            containers = task.get("taskDefinition", {}).get("containerDefinitions", []) if isinstance(task, dict) else []
-            current_image_matches = any(isinstance(item, dict) and item.get("name") == "kanbien-core-server" and str(item.get("image", "")).endswith("@" + baseline["image_digest"]) for item in containers)
+            try:
+                containers = task.get("taskDefinition", {}).get("containerDefinitions", []) if isinstance(task, dict) else []
+                current_image_matches = any(isinstance(item, dict) and item.get("name") == "kanbien-core-server" and str(item.get("image", "")).endswith("@" + baseline["image_digest"]) for item in containers)
+            except (TypeError, AttributeError, KeyError, IndexError):
+                task_ok, task_code, current_image_matches = False, "invalid-response", False
             baseline_ok = stack_ready and service_ready and task_ok and (current_image_matches if args.operation == "update" else True)
             failure = "unknown" if not ok or not service_ok or not task_ok else "mismatch"
-            code = "accepted-runtime-healthy" if baseline_ok and args.operation == "update" else ("restore-source-runtime-healthy" if baseline_ok else (service_code if not service_ok else task_code if not task_ok else "accepted-runtime-not-healthy"))
+            code = "accepted-runtime-healthy" if baseline_ok and args.operation == "update" else ("restore-source-runtime-healthy" if baseline_ok else (code if not ok else service_code if not service_ok else task_code if not task_ok else "accepted-runtime-not-healthy"))
             assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", baseline_ok, code, failure)
     ok, cluster, code = command(args, "ecs", "describe-clusters", "--clusters", args.cluster)
     clusters = cluster.get("clusters", []) if isinstance(cluster, dict) else []
-    assertions["required-settings"] = assertion("required-settings", ok and bool(clusters) and clusters[0].get("status") == "ACTIVE", "runtime-configuration-declared" if ok else code)
+    try:
+        settings_ready = ok and bool(clusters) and clusters[0].get("status") == "ACTIVE"
+    except (TypeError, AttributeError, KeyError, IndexError):
+        ok, code, settings_ready = False, "invalid-response", False
+    assertions["required-settings"] = assertion("required-settings", settings_ready, "runtime-configuration-declared" if ok else code)
     delivery_ok, _, delivery_code = command(args, "iam", "get-role", "--role-name", args.delivery_role)
     execution_ok, _, execution_code = command(args, "iam", "get-role", "--role-name", args.execution_role)
     assertions["required-access"] = assertion("required-access", delivery_ok and execution_ok, "roles-present" if delivery_ok and execution_ok else (delivery_code if not delivery_ok else execution_code))

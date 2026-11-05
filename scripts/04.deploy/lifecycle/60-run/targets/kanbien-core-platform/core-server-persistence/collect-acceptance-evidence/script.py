@@ -6,7 +6,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-05"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -50,6 +50,7 @@ EVIDENCE_ROOT = RECORD.parent
 TASK_ARN = re.compile(rf"^arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/[0-9a-f]{{32}}$")
 SNAPSHOT = re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
 TASKS: dict[str, dict[str, Any]] = {}
+_AWS_RESPONSE = None
 
 
 class EvidenceFailure(Exception):
@@ -220,9 +221,16 @@ def aws(*parts: str) -> dict[str, Any]:
         completed = subprocess.run(["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True, timeout=30, env={**os.environ, "AWS_PAGER": ""}, check=False)
     except subprocess.TimeoutExpired as error:
         raise EvidenceFailure("acceptance-evidence-aws-observation-timeout") from error
+    except OSError as error:
+        raise EvidenceFailure("acceptance-evidence-aws-command-unavailable") from error
+    except UnicodeError as error:
+        raise EvidenceFailure("acceptance-evidence-aws-response-invalid") from error
     if completed.returncode:
-        detail = completed.stderr.lower()
-        code = "acceptance-evidence-aws-access-denied" if "accessdenied" in detail or "not authorized" in detail else "acceptance-evidence-aws-observation-failed"
+        global _AWS_RESPONSE
+        if _AWS_RESPONSE is None:
+            _AWS_RESPONSE = controller("scripts/04.deploy/shared/provider-adapters/aws/response.py")
+        classified = _AWS_RESPONSE.classify_error(parts[0], parts[1], completed.stderr)
+        code = "acceptance-evidence-aws-access-denied" if classified == "aws-access-denied" else "acceptance-evidence-aws-observation-failed"
         raise EvidenceFailure(code)
     try:
         parsed = json.loads(completed.stdout or "{}")
@@ -580,6 +588,8 @@ def parse_observability_receipts(values: list[str], expected_digest: str, receip
             observed = observed_proofs.get(proof_name)
             if proof_name not in reusable or not isinstance(observed, dict) or source["image_digest"] != predecessor.get("image_digest") or source["task_arn"] != observed.get("task_arn") or source["task_definition"] != observed.get("task_definition") or source["result_code"] != observed.get("result_code"):
                 raise EvidenceFailure("acceptance-evidence-observability-source-invalid")
+    if not module.same_alarm_episode(failure["observation"], notification["observation"]):
+        raise EvidenceFailure("acceptance-evidence-observability-alarm-episode-mismatch")
     # CloudWatch can update an alarm from a datapoint before a controller's
     # later query observes that same recovery metric.  The receipt therefore
     # proves an ordered recovery observation (not a fabricated causal clock):
@@ -714,7 +724,8 @@ def database_posture(snapshot_id: str, record_proof: dict) -> dict[str, str]:
     check = subprocess.run(["aws", "rds", "describe-db-instances", "--db-instance-identifier", restored_identifier, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True, timeout=30, env={**os.environ, "AWS_PAGER": ""}, check=False)
     if check.returncode == 0:
         raise EvidenceFailure("acceptance-evidence-restored-database-not-cleaned-up")
-    if "DBInstanceNotFound" not in check.stderr:
+    response = controller("scripts/04.deploy/shared/provider-adapters/aws/response.py")
+    if response.classify_error("rds", "describe-db-instances", check.stderr) != "aws-resource-missing":
         raise EvidenceFailure("acceptance-evidence-restored-database-observation-failed")
     return {"database": DATABASE, "snapshot": snapshot_id, "restored_database": restored_identifier, "restore_cleanup": "confirmed-absent", **recovery_facts, "source_created_at": instance["InstanceCreateTime"]}
 

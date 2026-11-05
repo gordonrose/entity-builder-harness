@@ -1,0 +1,239 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "core.config",
+    "definitions": [
+      {
+        "code": "core.config.primitive-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "environment-name",
+                "secret-reference",
+                "value"
+              ]
+            },
+            "reader": {
+              "type": "enum",
+              "values": [
+                "environment-name",
+                "secret-reference",
+                "required",
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "invalid-format",
+                "missing",
+                "wrong-type",
+                "non-finite"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.config.source-threw",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reader": {
+              "type": "enum",
+              "values": [
+                "required",
+                "optional",
+                "string",
+                "number",
+                "boolean",
+                "schema"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "source-read"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invocation-threw"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "core.config.declaration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "definitions",
+                "setting",
+                "source",
+                "minimum",
+                "maximum",
+                "bounds"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "too-many",
+                "identity-count-mismatch",
+                "invalid-format",
+                "reserved",
+                "not-safe-integer",
+                "reversed",
+                "predicate-rejected-unclassified"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "core.config.relationship-declaration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "relationships",
+                "relationship",
+                "rule",
+                "left",
+                "right",
+                "participants"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "too-many",
+                "identity-count-mismatch",
+                "invalid-format",
+                "unsupported",
+                "undeclared",
+                "self-reference",
+                "duplicate-pair",
+                "predicate-rejected-unclassified"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "core.config.choice-declaration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-type",
+                "empty",
+                "too-many",
+                "blank",
+                "surrounding-whitespace",
+                "duplicate"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      }
+    ]
+  }
+}

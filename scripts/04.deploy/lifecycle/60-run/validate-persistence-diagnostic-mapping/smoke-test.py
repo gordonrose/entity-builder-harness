@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-30"
 #   layer: 04.deploy
 #   domain: deployment.persistence-diagnostics
 #   disciplines: [security, sre, agentic]
@@ -135,6 +135,18 @@ def main() -> None:
     contract, binding = valid_documents()
     status, report = run(contract, binding)
     require(status == 0 and report["verdict"] == "passed", "valid persistence diagnostic mapping must pass")
+
+    extra_configuration = copy.deepcopy(contract)
+    extra = copy.deepcopy(extra_configuration["persistence_diagnostics"]["workloads"][0]["mappings"][0])
+    extra["code"] = "persistence.configuration-invalid"
+    extra_configuration["persistence_diagnostics"]["workloads"][0]["mappings"].append(extra)
+    status, report = run(extra_configuration, binding)
+    require(status != 0 and finding(report, "persistence-diagnostic-code-invalid"), "a configuration definition must not extend the operation mapping family")
+
+    replaced_operation = copy.deepcopy(contract)
+    replaced_operation["persistence_diagnostics"]["workloads"][0]["mappings"][0]["code"] = "persistence.configuration-invalid"
+    status, report = run(replaced_operation, binding)
+    require(status != 0 and finding(report, "persistence-diagnostic-code-invalid") and finding(report, "persistence-diagnostic-code-coverage-incomplete"), "same-count configuration substitution must not satisfy a required operation mapping")
 
     no_persistence = copy.deepcopy(contract)
     no_persistence["dependencies"] = {"required": [], "optional": [], "excluded": ["persistence"], "persistence": []}

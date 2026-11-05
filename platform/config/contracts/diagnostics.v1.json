@@ -1,0 +1,152 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "platform-config",
+    "definitions": [
+      {
+        "code": "platform-config.schema-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "schemaIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "invalid"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-config.schema-rejected",
+        "version": 2,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "schemaIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "invalid"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-config.schema-boundary-threw",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "schemaIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "parse",
+                "projection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "boundary-threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "result-not-returned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-config.loading-declaration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "requirements",
+                "bindings",
+                "source",
+                "assembly"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-type",
+                "identity-count-mismatch",
+                "missing",
+                "invalid-format",
+                "reserved"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

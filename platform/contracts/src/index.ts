@@ -1,3 +1,16 @@
+export { validatePlatformDiagnosticCatalog, platformDiagnosticContext, bindPlatformDiagnosticContext } from "./diagnostics";
+export type { PlatformDiagnosticContextBinding } from "./diagnostics";
+export { platformContractDiagnosticCatalog, platformContractRegistrationDiagnosticDefinition, platformContractDiagnosticRecord, withPlatformContractDiagnostic } from "./registration-diagnostics";
+export { platformContractClassificationDiagnosticDefinition, platformContractClassificationDiagnosticRecord } from "./registration-diagnostics";
+export { platformOperationalEventDiagnosticDefinition, platformOperationalBoundaryDiagnosticDefinition, platformOperationalEventDiagnosticRecord, platformOperationalBoundaryDiagnosticRecord } from "./registration-diagnostics";
+export type { PlatformOperationalEventDiagnosticDetail, PlatformOperationalBoundaryDiagnosticDetail } from "./registration-diagnostics";
+export { observePlatformOperationalDiagnostic } from "./operational-observations";
+export type { PlatformOperationalDiagnosticOptions, PlatformOperationalDiagnosticContext } from "./operational-observations";
+export { platformNativeErrorClasses, platformErrorClassification, platformErrorClassDeclarations, inspectPlatformErrorClassDeclaration } from "./observability";
+export { platformOptionalErrorClassification } from "./observability";
+export type { PlatformErrorClassificationOptions, PlatformErrorClassesSnapshot } from "./observability";
+export type { PlatformContractDiagnosticField, PlatformContractDiagnosticCondition, PlatformContractObservation, PlatformContractObserver } from "./registration-diagnostics";
+export type { PlatformDiagnosticCatalog, PlatformDiagnosticContext, PlatformDiagnosticReporter } from "./diagnostics";
 export {
   duplicatePlatformRegistration,
   malformedPlatformJob,

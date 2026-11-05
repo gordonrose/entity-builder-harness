@@ -1,0 +1,62 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "persistence",
+    "definitions": [
+      {
+        "code": "persistence.relay-configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "configure-relay"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "lease-duration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "not-finite",
+                "invalid-integer",
+                "not-positive"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "relay-not-created"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -126,7 +126,7 @@ echo "Runnable-program contract local tests passed."
 
 python3 - "$FIXTURES/valid-contract.yml" "$TEMPORARY_DIRECTORY" <<'PYTHON'
 from pathlib import Path
-import copy, subprocess, sys, yaml
+import copy, json, subprocess, sys, yaml
 original=yaml.safe_load(Path(sys.argv[1]).read_text())
 entry=original['runnable_programs'][0]['entrypoint']
 for command in [['echo',entry],['sh',entry],['node','--eval','0',entry]]:
@@ -134,4 +134,16 @@ for command in [['echo',entry],['sh',entry],['node','--eval','0',entry]]:
     path=Path(sys.argv[2])/'runtime-mismatch.yml';path.write_text(yaml.safe_dump(document))
     result=subprocess.run(['python3','-B','scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py','--contract',str(path),'--json'],capture_output=True,text=True)
     assert result.returncode==1 and 'image-command-invalid' in result.stdout
+for owner,field,code in [('runnable_programs','runtime_executable','program-runtime-unsupported'),('package_candidates','image_contract','image-contract-missing')]:
+    for value in [[],{}]:
+        document=copy.deepcopy(original); document[owner][0][field]=value
+        path=Path(sys.argv[2])/'shape.yml'; path.write_text(yaml.safe_dump(document))
+        result=subprocess.run([sys.executable,'-B','scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py','--contract',str(path)],capture_output=True,text=True)
+        assert result.returncode==1 and json.loads(result.stdout)['findings']==[{'code':code}]
+for value in [[],{}]:
+    document=copy.deepcopy(original); document['candidate_verification']['candidate']=value
+    path.write_text(yaml.safe_dump(document)); result=subprocess.run([sys.executable,'-B','scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py','--contract',str(path)],capture_output=True,text=True)
+    assert result.returncode==1 and json.loads(result.stdout)['findings']==[{'code':'candidate-verification-invalid'}]
+path.write_bytes(b'\xff'); result=subprocess.run([sys.executable,'-B','scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py','--contract',str(path)],capture_output=True,text=True)
+assert json.loads(result.stdout)['findings']==[{'code':'contract-unreadable'}]
 PYTHON

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -50,6 +50,11 @@ copy_verifier_scripts() {
   cp "$SOURCE_ROOT/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh" "$repo/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$repo/scripts/00.chat/worktree/paths/lib.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$repo/scripts/00.chat/session-log/paths/lib.sh"
+  mkdir -p "$repo/scripts/00.chat/local-merge/list-active-chat-branches" "$repo/scripts/00.chat/reporting/report-chat-workspaces"
+  cp "$SOURCE_ROOT/scripts/00.chat/local-merge/list-active-chat-branches/script.sh" "$repo/scripts/00.chat/local-merge/list-active-chat-branches/script.sh"
+  cp "$SOURCE_ROOT/scripts/00.chat/reporting/report-chat-workspaces/script.sh" "$repo/scripts/00.chat/reporting/report-chat-workspaces/script.sh"
+  mkdir -p "$repo/scripts/00.chat/local-merge/report-chat-branch-overlaps"
+  cp "$SOURCE_ROOT/scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh" "$repo/scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh"
 }
 
 init_repo() {
@@ -181,6 +186,44 @@ branch="chat/$session"
 create_chat_branch_with_log "$repo" "$session"
 run_expect_state "$repo" "$branch" "eligible" "yes"
 
+# Report callers retain successful inventory rows and refuse unavailable reads.
+worktree="$(canonical_worktree_path "$repo" "$branch")"
+mkdir -p "$worktree/commitLogs/$session"
+cp "$worktree/commitLogs/2026/jun/16/$session/README.md" "$worktree/commitLogs/$session/README.md"
+git -C "$worktree" add "commitLogs/$session"
+git -C "$worktree" commit -qm "add legacy branch-log fixture"
+export REAL_GIT="$(command -v git)"
+mkdir "$TMP_ROOT/report-fault-bin"
+cat > "$TMP_ROOT/report-fault-bin/git" <<'EOF'
+#!/usr/bin/env bash
+args=("$@")
+if [ "${1:-}" = -C ]; then shift 2; fi
+case "$FAULT:${1:-}:${2:-}" in
+  root:rev-parse:--show-toplevel|reference:show-ref:*|list:branch:--format=*|comparison:rev-list:*|status:status:*|tree:ls-tree:*|content:show:*)
+    "$REAL_GIT" "${args[@]}"
+    echo private-report-canary@example.invalid >&2
+    exit 79 ;;
+esac
+exec "$REAL_GIT" "${args[@]}"
+EOF
+chmod +x "$TMP_ROOT/report-fault-bin/git"
+for report in reporting/report-chat-workspaces local-merge/list-active-chat-branches; do
+  success="$(cd "$repo" && bash "scripts/00.chat/$report/script.sh")"
+  [[ "$success" == *"$branch"* ]] || fail "report omitted supported branch"
+  for stage in root reference list comparison status tree content; do
+    case "$report:$stage" in
+      reporting/*:tree|reporting/*:content|local-merge/*:status) continue ;;
+    esac
+    if failure="$(cd "$repo" && PATH="$TMP_ROOT/report-fault-bin:$PATH" FAULT="$stage" \
+      bash "scripts/00.chat/$report/script.sh" 2>&1)"; then
+      fail "report accepted failed $stage read"
+    else
+      [ "$?" -eq 2 ] || fail "report lost unavailable status"
+    fi
+    [[ "$failure" == *read-failed* && "$failure" != *private-report-canary* && "$failure" != *missing-log* ]] || fail "report replaced failed observation with absence"
+  done
+done
+
 repo="$(init_repo renamed-log)"
 session="2026-06-16-22-32-renamed-log"
 branch="chat/$session"
@@ -191,6 +234,40 @@ git -C "$worktree" mv \
   "commitLogs/2026/jun/16/2026-06-16-22-32-short-log-name"
 git -C "$worktree" commit -q -m "rename session log folder"
 run_expect_state "$repo" "$branch" "eligible" "yes"
+
+overlap_repo="$(init_repo overlap)"
+git -C "$overlap_repo" switch -q -c chat/overlap-one
+printf 'one\n' >> "$overlap_repo/base.txt"
+git -C "$overlap_repo" commit -qam one
+git -C "$overlap_repo" switch -q -c chat/overlap-two main
+printf 'two\n' >> "$overlap_repo/base.txt"
+git -C "$overlap_repo" commit -qam two
+(cd "$overlap_repo"; bash scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh) > "$TMP_ROOT/overlap.out"
+grep -q 'chat/overlap-one <-> chat/overlap-two' "$TMP_ROOT/overlap.out" || fail "ordinary overlap lost"
+export OVERLAP_REAL_GIT="$(command -v git)"
+mkdir -p "$TMP_ROOT/overlap-bin"
+cat > "$TMP_ROOT/overlap-bin/git" <<'SH'
+#!/usr/bin/env bash
+case "$OVERLAP_FAULT:$*" in
+  base-reference:show-ref*|branch-list:'branch --format='*|branch-paths:'diff --name-only main...'*)
+    echo OVERLAP_NATIVE_CANARY >&2; exit 99 ;;
+esac
+exec "$OVERLAP_REAL_GIT" "$@"
+SH
+cat > "$TMP_ROOT/overlap-bin/comm" <<'SH'
+#!/usr/bin/env bash
+echo OVERLAP_NATIVE_CANARY >&2
+exit 99
+SH
+chmod +x "$TMP_ROOT/overlap-bin/"*
+for fault in base-reference branch-list branch-paths path-comparison; do
+  status=0
+  (cd "$overlap_repo"; OVERLAP_FAULT="$fault" PATH="$TMP_ROOT/overlap-bin:$PATH" \
+    bash scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh) > "$TMP_ROOT/overlap-fault.out" 2>&1 || status=$?
+  [ "$status" -eq 2 ] || fail "overlap $fault status"
+  grep -q "stage=$fault" "$TMP_ROOT/overlap-fault.out" || fail "overlap $fault reason"
+  if grep -Eq 'OVERLAP_NATIVE_CANARY|No overlapping|does not exist' "$TMP_ROOT/overlap-fault.out"; then fail "overlap $fault misreported"; fi
+done
 
 repo="$(init_repo behind)"
 session="2026-06-16-22-33-behind"
@@ -277,6 +354,59 @@ rm -f "$(git -C "$worktree" rev-parse --git-path integration-invoked)"
 FIXTURE_DELIVERY_EXIT=1 run_expect_state "$repo" "$branch" "blocked-delivery-coverage" "no"
 test ! -f "$(git -C "$worktree" rev-parse --git-path integration-invoked)" || fail "proof ran despite failed delivery census"
 FIXTURE_INTEGRATION_EXIT=1 run_expect_state "$repo" "$branch" "blocked-integration-proof" "no"
+
+# Exercise actual callers with failing observations, including valid-looking
+# stdout followed by failure. No pre-proof failure may invoke integration.
+export REAL_GIT="$(command -v git)" REAL_AWK="$(command -v awk)"
+export PROOF_MARKER="$(git -C "$worktree" rev-parse --git-path integration-invoked)"
+mkdir "$TMP_ROOT/fault-bin"
+cat > "$TMP_ROOT/fault-bin/git" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+args=("$@")
+cwd=""
+if [ "${1:-}" = -C ]; then cwd="$2"; shift 2; fi
+failed=no
+case "$FAULT:${1:-}:${2:-}" in
+  root:rev-parse:--show-toplevel|reference:show-ref:*|branch:branch:*|tree:ls-tree:*|content:show:*|comparison:rev-list:*|ancestry:merge-base:*)
+    failed=yes ;;
+  root-status:status:*) [ "$cwd" != "$CHAT_PATH" ] || exit 88; failed=yes ;;
+  chat-status:status:*) [ "$cwd" != "$CHAT_PATH" ] || failed=yes ;;
+  post-status:status:*) [ ! -f "$PROOF_MARKER" ] || failed=yes ;;
+  post-head:rev-parse:refs/heads/main) [ ! -f "$PROOF_MARKER" ] || failed=yes ;;
+esac
+if [ "$failed" = yes ]; then
+  "$REAL_GIT" "${args[@]}"
+  echo private-merge-canary@example.invalid >&2
+  exit 128
+fi
+exec "$REAL_GIT" "${args[@]}"
+EOF
+cat > "$TMP_ROOT/fault-bin/awk" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+"$REAL_AWK" "$@"
+if [ "$FAULT" = metadata ] && [ "${2:-}" = key=branch ]; then
+  echo private-merge-canary@example.invalid >&2
+  exit 2
+fi
+EOF
+chmod +x "$TMP_ROOT/fault-bin/git" "$TMP_ROOT/fault-bin/awk"
+for stage in root reference branch tree content metadata root-status chat-status comparison ancestry post-status post-head; do
+  rm -f "$PROOF_MARKER"
+  if failure="$(cd "$repo" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" CHAT_PATH="$worktree" \
+    bash scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh "$branch" 2>&1)"; then
+    fail "failed $stage read permitted eligibility"
+  else
+    [ "$?" -eq 2 ] || fail "$stage unavailable outcome became a state diagnosis: $failure"
+  fi
+  [[ "$failure" == *read-failed* && "$failure" != *private-merge-canary* && "$failure" != *State:\ eligible* ]] || fail "$stage safe failure lost"
+  case "$stage" in
+    post-*) [ -f "$PROOF_MARKER" ] || fail "post-proof observation was not exercised" ;;
+    *) [ ! -f "$PROOF_MARKER" ] || fail "$stage failed observation permitted integration checks" ;;
+  esac
+done
+
 FIXTURE_INTEGRATION_DRIFT=1 run_expect_state "$repo" "$branch" "blocked-integration-input-drift" "no"
 
 echo "local merge readiness verifier smoke test passed."

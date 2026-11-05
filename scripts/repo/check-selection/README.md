@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 5
+version: 9
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-10-26"
+updated_on: "2026-11-04"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -30,6 +30,18 @@ uses `20-scopes/scope-index.yml` for discovery and the generic scope validators
 for health, secrets and persistence applicability. It does not infer unsupported
 consumers or treat incomplete coverage as a pass.
 
+Diagnostic adoption also discovers ordinary executable code independently of
+deployment scopes. `diagnostic-adoption` runs at commit boundaries;
+`diagnostic-runtime-contracts` runs at integration. Source-matched reviews in
+`scripts/repo/diagnostic-coverage/reviews.v1.json` name registered local checks;
+their sources and tests select those checks through this same selector. These
+reviews add selection edges, never arbitrary commands or execution permission.
+
+`bootstrap-payload-regression` and `persistence-payload-regression` exercise
+compiled package imports and deliberately broken payloads locally, before any
+container stage. Their export-map checks include shared security dependencies;
+they do not replace actual container or live deployment qualification.
+
 ```bash
 bash scripts/repo/check-selection/script.sh --paths platform/adapters/aws/persistence/postgresql/src/index.ts --json
 bash scripts/repo/check-selection/script.sh --paths platform/adapters/aws/persistence/postgresql/src/index.ts --execute-local --json
@@ -44,6 +56,75 @@ Directory input matching observes slash boundaries, so `src-extra` cannot
 silently match an input declared as `src`.
 
 The default is a plan, with pending checks and explicit later-stage obligations.
+For focused verification of an already identified registered unit, use:
+
+```bash
+bash scripts/repo/check-selection/script.sh --checks platform-server-runtime --execute-local --json
+```
+
+`--checks` is mutually exclusive with impact, staged and CI selection. It proves
+only the requested identities, not completeness of change impact. Unknown,
+duplicate or scope-parameter-dependent requests fail before execution. The
+normal stage, effects, contract validation and private-cache rules still apply.
+Failed commands and arbitrary reports never create passing evidence.
+
+The [shared change-completion standard](../../../.agentic/shared/standards/require-change-completion.md#verification-and-stage-boundaries)
+owns when registered units must be used and the regression expectations for new
+or changed aggregates. This guide owns their command syntax. Use impact selection
+to identify the full obligations; use `--checks` for appropriate focused units,
+then complete impact-selected verification against the final inputs. Do not add
+a separate aggregate invocation when matching selected proof already covers it.
+
+Diagnostic verification requests `diagnostic-base-runtime` (the separate
+`diagnostic-catalog-readers` and eleven complete registered package units),
+`platform-server-runtime` and `kanbien-platform-runtime`. The shell source
+preflight requests those same server/product units plus
+`platform-shell-payload`, which runs the existing compiled image-runtime check.
+Both default aggregate commands retain their complete original coverage. A
+focused registered pass can therefore seed the same receipt later used by either
+aggregate. Direct npm runs remain useful exploratory checks but do not seed it.
+Aggregate proofs bind the consumed catalog and selector; changed child contracts
+invalidate an aggregate without invalidating unchanged sibling unit contracts.
+Package units bind their whole owned package tree (including new tests and
+tsconfig files), root npm scripts/lockfile, transitive workspace dependencies and
+actual installed dependency closure. They do not bind unrelated deployment
+fixtures merely because a former aggregate grouped them. Catalog compilation
+and legacy subject-bound checks retain their wider actual consumer inputs.
+Container and live qualification remain separate obligations.
+
+`members` is the authoritative aggregate membership. `focused_prerequisites`
+names workload-specific input conditions and required check identities; the
+selector also follows affected package/metadata consumers. It validates unknown
+references, cycles, stage/effect incompatibility and ambiguous scope instances,
+runs applicable focused units first and checks their current identities again
+before broad execution. An aggregate wrapper still executes; it requests its
+catalog members through `--aggregate-members`, and consumes matching child
+receipts rather than repeating their commands. Its dispatch branch is validated
+against undeclared executable children. Child contracts bind parent receipts.
+Caller-inherited focused prerequisites remain ordering/freshness gates, not
+extra inputs to an unchanged member command's proof. A standalone member receipt
+therefore remains reusable inside an applicable aggregate; the aggregate still
+binds its own declared focused prerequisites and consumed member proofs.
+
+Explicit broad/default requests require the existing matching preparation
+record. `--task-paths` can identify that task, but cannot replace or disagree with
+its prepared context or input identities. Missing/stale context fails before
+execution; leaf focused/exploratory units remain independently usable. Impact,
+staged and CI/all selection derive their context from the selected inputs.
+During nested execution only, a random reference identifies a runner-written
+binding in the existing private preparation record. It binds allowed members,
+catalog, task paths and source/preparation identities, preserves lifecycle data,
+is revalidated in the child and is removed/restored on completion or failure.
+Environment paths alone and expired bindings grant no readiness authority.
+Nested execution currently requires the Linux runner's `/proc` process-birth
+identity. Missing/malformed process identity fails closed before writing a new
+active binding; PID reuse and dead runners cannot qualify one. This does not
+claim macOS support for nested execution. Ordinary planning stays read-only.
+The staging deployment workflow explicitly prepares its fixed registered shell
+roots on its fresh installed checkout and proves the focused payload first.
+Its original npm checks retain lifecycle hooks; their pre-existing repetition
+with the later source preflight remains a distinct command-identity boundary.
+
 The default scheduling boundary is `integration`. `--boundary commit` requires
 only checks scheduled for commit preparation. The catalogue's `boundary` field
 is independent of `stage`, `effects` and evidence class: an integration check
@@ -82,6 +163,21 @@ checks, selected check IDs and elapsed/execution seconds. A rerun after a previo
 `invalidated_checks` reasons: verified input bytes changed, the declared runtime
 identity changed, or the verification contract changed. These reasons explain
 why a new local run is needed; they never make an old receipt acceptable.
+
+`execution_summary.timings` separates planning, source/semantic fingerprinting,
+runtime identity, receipt validation, direct command wall time and remaining
+overhead. The buckets are disjoint within one report. Nested summaries explain
+executed/reused children; their elapsed time is already inside the wrapper's
+wall time and must not be added again. JSON progress on stderr contains only
+event/check identity, status and completed/total counts, never argv, environment
+values or child output. Stdout remains one machine-readable JSON report.
+
+Diagnostic reviews bind relevant semantic entries and their actual sources,
+tests and definitions, not every other review merely through a shared ledger.
+The whole ledger still receives structural validation. Ledger changes compare
+both sides against HEAD or the validated CI/promotion base, retaining deleted
+owners' obligations and rejecting malformed/unavailable comparisons. Initial
+adoption with no ledger in a valid base legitimately selects all added owners.
 
 `--record-preparation` stores the exact selected preparation identities in the same
 private worktree cache, without executing checks. The chat pre-verification
@@ -149,6 +245,21 @@ Inputs and runtime identities are recomputed after execution; changes during a
 check yield uncertain evidence. Source revision is provenance, not a reuse key:
 unrelated commits and session records do not invalidate unchanged local proof.
 
+Runtime declarations share tool/PyYAML measurements and original installed-package
+frames only inside a runner-owned in-memory measurement window. Package resolution
+and declared environment remain specific to each declaration; replaying frames
+does not change the installation digest. Retained package frames are bounded at
+128 MiB; exceeding that budget falls back to measuring the uncached trees again.
+This is not a persistent or timestamp-based identity cache.
+
+Consecutive receipt-only checks can share that window. Before any actual command,
+the runner discards it and freshly revalidates the command's prerequisites,
+catalog and own inputs/runtime, including after receipt lookup. It discards the
+window again after the command and independently before the final sweep. A later
+mutation can revoke an earlier pass; receipt reuse cannot authorize execution
+from an old snapshot. Nested runners own separate windows and do not trust a
+parent's in-memory measurements.
+
 `--staged` rejects relevant unstaged or untracked selected inputs before running
 or reusing checks. This prevents proving working-tree bytes while committing
 different index bytes. Unrelated unstaged work remains untouched. Later-stage
@@ -161,8 +272,13 @@ edges. Artifact metadata consumer relationships are followed transitively for
 both scope checks and repository check mappings. The catalog may declare
 `dormant_impact_roots`: metadata `used_by` edges into or out of those roots are
 excluded from ordinary impact traversal, while direct repository-input mappings
-continue to select the owning checks when that dormant surface is changed
-explicitly. Authoritative schemas,
+continue to select the owning checks when that dormant surface's code or
+authoritative definitions change. Correcting ordinary governance prose within
+a dormant root does not activate its runtime checks; the mandatory document
+checks still apply. For example, fixing a command reference in a retained RAG
+plan must not build the RAG runtime. Explicit `--checks` and `--all` requests
+still include the requested dormant checks. Deleted inputs are treated
+conservatively because their former headers cannot be read. Authoritative schemas,
 contracts and configuration need executable coverage; an unmapped definition is
 `changed-input-uncovered`. Ordinary prose and nonexecutable session records
 remain covered by their mandatory metadata/process checks. Scope requirements
@@ -181,3 +297,63 @@ disposable target. Existing generic validators accept its valid persistence
 non-applicability. The same selector discovers it and executes its local proof
 without a target name in generic code; missing/unsupported proof requirements,
 wrong program/image binding, unsupported generic arguments, unsafe effects, stale evidence and unclassified impact fail closed. A temporary repository exercises the actual commit hook twice for reuse, a relevant unstaged mismatch, and rerun after staging. The fixture also proves unrelated revision changes retain valid proof.
+
+
+## Runner verification ownership
+
+`check-selection-mechanics` proves runner behavior with disposable repositories;
+`check-selection-repository-contracts` inspects actual catalog, package and scope
+wiring. The latter retains conservative repository and installed-package inputs
+because its real planning tests consume them. Mechanics instead binds the exact
+copied bootstrap scope, provider helper, validators, runner/commit/refresh support
+and tools it actually consumes; it has no installed application/SDK packages.
+Temporary fixtures do not make those real source dependencies disappear.
+
+The existing complete `check-selection-regression` identity and default
+`smoke-test.sh` command remain an aggregate of both components and five registered
+owner suites. The Python compatibility entrypoint also retains historical
+`SelectionTests.method` focused calls, including recursive process-isolation
+tests. Shared `test_support.py` contains fixture helpers, never test methods.
+Collection discovery rejects unassigned or shadowed executable tests and tests
+loaded into more than one component. Original test retention is audited against
+the pre-split snapshot in the implementation plan, not a runtime chat-plan input.
+
+```bash
+bash scripts/repo/check-selection/script.sh --checks check-selection-mechanics check-selection-repository-contracts --execute-local --json
+bash scripts/repo/check-selection/smoke-test.sh --unit mechanics
+bash scripts/repo/check-selection/smoke-test.sh --unit repository-contracts
+```
+
+Direct unit commands are exploratory; use registered commands for reusable final
+proof. The full default aggregate requires the normal prepared task and reuses
+matching component receipts. Do not run it again after an impact-selected pass
+already supplies the same complete proof.
+
+Five fixture-only owner units expose the existing lifecycle metadata, header,
+session preparation, local-merge and main-refresh smoke scripts. The fixed wrapper
+branches accept no arbitrary command/path or extra argument. Those child scripts
+retain broader fixture Git-operation metadata; source review confirms their Git
+operations and cleanup target only self-created temporary roots. The wrapper's
+existing writes-files boundary is not permission for real repository staging,
+commits, branch/worktree operations or cleanup, nor a general local-effects
+exception. The runner allowlist is unchanged. Their input closures bind the child
+scripts and copied/read support files; parent aggregate results bind all members.
+
+Selection mappings and evidence inputs have different jobs. Ordinary HTTP source
+changes select runtime and required real-wiring proof, not mechanics or unrelated
+owner suites. Runner/suite contract changes select the full aggregate. Relevant
+fixture/helper changes select their consumers; an unrelated runtime body neither
+selects nor invalidates mechanics. Initial worktree impact against the old
+catalog/review baseline can legitimately be broader than a future ordinary edit.
+Exact selection is tested through real catalog/metadata/review rules; pure-plan
+tests use bounded tool identities and reference-only proof fingerprints while
+retaining the real catalog-authority fingerprint, without executing child suites
+or changing the actual selection wiring. Existing execution regressions prove real tools,
+source/runtime/contract invalidation, reuse and failed-child propagation.
+
+
+The delivery inventory regression imports `test_support.py` directly and creates
+`FixtureSupport`, not an executable runner test class. Foreign spec-based imports
+of the retained smoke facade still bootstrap sibling imports and expose the known
+`selection` alias. An isolated external-directory import test forbids subprocess
+launches, proving imports cannot silently execute the complete suite.

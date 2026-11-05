@@ -16,6 +16,7 @@ import type {
 import { tenantContext, tenantId } from "@kanbien/core/tenancy";
 import {
   definePlatformApp,
+  bindPlatformDiagnosticContext,
   featureFlagName,
   fixedFeatureFlagReader,
   platformAppId,
@@ -38,7 +39,27 @@ import {
   type PlatformResponse,
   type PlatformRouteRegistration,
   type PlatformTenantResolver,
+  type PlatformDiagnosticContext,
+  platformReadinessObservationEvent,
+  platformOperationalEventDiagnosticRecord,
+  platformOperationalBoundaryDiagnosticRecord,
+  type PlatformOperationalDiagnosticOptions,
 } from "../src/index";
+
+const runtimeDiagnosticContext: PlatformDiagnosticContext = { capability: "observability", operation: "export", stage: "runtime" };
+void runtimeDiagnosticContext;
+if (false) {
+  // @ts-expect-error an operation binding requires context and definitions.
+  bindPlatformDiagnosticContext();
+  // @ts-expect-error missing operation cannot be hidden by otherwise valid context.
+  bindPlatformDiagnosticContext({ capability: 'persistence', stage: 'startup' }, []);
+  const binding = bindPlatformDiagnosticContext(runtimeDiagnosticContext, []);
+  // @ts-expect-error callers cannot override an owner's context when selecting evidence.
+  binding.select({} as never, { ...runtimeDiagnosticContext, stage: 'startup' });
+}
+// @ts-expect-error lifecycle stages remain a closed vocabulary.
+const unknownDiagnosticStage: PlatformDiagnosticContext = { ...runtimeDiagnosticContext, stage: "periodic-private-stage" };
+void unknownDiagnosticStage;
 
 const appId = platformAppId("crm");
 const routeName = platformRouteName("crm.deals.show");
@@ -81,6 +102,7 @@ const observabilityProfile: PlatformCapabilityObservabilityProfile = {
   name: observabilityProfileName.value,
   capability: capabilityName.value,
   action: "export",
+  errorClasses: ["CRM_DEAL_EXPORT_UNAVAILABLE"],
   signals: ["operational_log", "metric", "trace"],
   logFieldNames: ["capability", "action", "outcome"],
   metricDimensionFieldNames: ["capability", "action", "outcome"],
@@ -88,6 +110,9 @@ const observabilityProfile: PlatformCapabilityObservabilityProfile = {
   nfrObjectives: [{ nfrClass: "async_completion", measurement: "job_execution_latency" }],
 };
 void observabilityProfile;
+// @ts-expect-error classification declarations contain strings only.
+const invalidClassDeclaration: PlatformCapabilityObservabilityProfile = { ...observabilityProfile, errorClasses: [42] };
+void invalidClassDeclaration;
 
 // @ts-expect-error NFR objective classes must use the controlled central-policy vocabulary.
 const invalidObservabilityProfile: PlatformCapabilityObservabilityProfile = { ...observabilityProfile, nfrObjectives: [{ nfrClass: "fast", measurement: "job_execution_latency" }] };
@@ -98,6 +123,20 @@ const metrics: Metrics = { record: () => undefined };
 const config: ConfigSource = { get: () => undefined };
 const clock: Clock = { now: () => new Date("2026-07-08T00:00:00.000Z") };
 const flags: FeatureFlagReader = fixedFeatureFlagReader({ [flagName.value]: true });
+const operationalDiagnostics: PlatformOperationalDiagnosticOptions = { onDiagnostic(record, context) { void record.code; void context.operation; void context.evidence; } };
+const observedFlags: FeatureFlagReader = fixedFeatureFlagReader({ [flagName.value]: true }, false, operationalDiagnostics);
+void observedFlags;
+const observedEvent = platformReadinessObservationEvent({}, operationalDiagnostics);
+if (!observedEvent.ok) { const retained = observedEvent.error.diagnosticRecord; void retained; }
+platformOperationalEventDiagnosticRecord({ field: "target", condition: "invalid-format" });
+platformOperationalBoundaryDiagnosticRecord({ operation: "fixed-feature-flags", phase: "read", field: "value", effect: "value-not-produced" });
+// @ts-expect-error arbitrary rejected keys are not diagnostic fields.
+platformOperationalEventDiagnosticRecord({ field: "private-input-name", condition: "invalid-format" });
+// @ts-expect-error flag observations do not claim a write or mutation.
+platformOperationalBoundaryDiagnosticRecord({ operation: "fixed-feature-flags", phase: "read", field: "value", effect: "write-completed" });
+// @ts-expect-error observer sources are records, never raw values.
+const rawOperationalObserver: PlatformOperationalDiagnosticOptions = { onDiagnostic: (record: string) => record };
+void rawOperationalObserver;
 const tenant = { tenantId: "tenant-123", isolationKey: "tenant-123" } as TenantContext;
 const principal = {
   id: "principal-123",
@@ -129,6 +168,14 @@ const request: PlatformRequest = {
   headers: {},
 };
 void request;
+
+const observingRequestContext: PlatformRequestContext = {
+  ...requestContext,
+  onDiagnostic: (record) => { void record.code; return undefined; },
+};
+void observingRequestContext;
+// @ts-expect-error observations carry a diagnostic record, never raw exception text.
+observingRequestContext.onDiagnostic?.("raw-provider-error");
 
 const response: PlatformResponse = {
   status: 200,
@@ -250,6 +297,7 @@ const app: PlatformApp = definePlatformApp({
 void app.mount(
   {
     registerPermission: () => ({ ok: true, value: undefined }),
+    registerDiagnosticCatalog: () => ({ ok: true, value: undefined }),
     registerRoute: () => ({ ok: true, value: undefined }),
     registerJob: () => ({ ok: true, value: undefined }),
     registerObservabilityProfile: () => ({ ok: true, value: undefined }),

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-30"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -72,7 +72,7 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "DIAGNOSTIC_CODE=CONTAINER_BOUNDARY_ARGUMENTS_INVALID" >&2
       usage >&2
       exit 2
       ;;
@@ -236,7 +236,11 @@ def line_covers_token(line: str, token: str) -> bool:
 
 def validate_ignore_coverage(path: Path) -> None:
     path_text = rel(path)
-    lines = normalized_ignore_lines(path)
+    try:
+        lines = normalized_ignore_lines(path)
+    except (OSError, UnicodeError):
+        error(path_text, "Ignore file could not be read as UTF-8.", "Restore a readable UTF-8 ignore file and rerun this read-only check.")
+        return
     missing: list[str] = []
     for family, tokens in MINIMUM_IGNORE_FAMILIES:
         if not any(line_covers_token(line, token) for line in lines for token in tokens):
@@ -248,7 +252,11 @@ def validate_ignore_coverage(path: Path) -> None:
             "Add ignore patterns for: " + ", ".join(missing) + ".",
         )
 
-    parsed = parsed_ignore_lines(path)
+    try:
+        parsed = parsed_ignore_lines(path)
+    except (OSError, UnicodeError):
+        error(path_text, "Ignore file could not be read as UTF-8.", "Restore a readable UTF-8 ignore file and rerun this read-only check.")
+        return
     negated_indexes = [index for index, negated, _line in parsed if negated]
     if not negated_indexes:
         return

@@ -4,9 +4,23 @@ import {
   ReceiveMessageCommand,
   SQSClient,
 } from "@aws-sdk/client-sqs";
-import type { QueueMessage } from "@kanbien/core";
-import { invalidConfig, invalidMessage, operationError, type PlatformSqsWorkerQueueError } from "./errors";
+import type { QueueMessage, CoreQueueDiagnosticOptions } from "@kanbien/core";
+import { assertSqsConfigurationText, invalidConfig, invalidMessage, operationError, type PlatformSqsConfigurationIssue, type PlatformSqsWorkerQueueError } from "./errors";
 import { decodePlatformQueueMessage } from "./messages";
+import { sqsObservation, receiveReductions, type SqsObservation, type ReceiveReductions } from "./observations";
+import type { ConfigSource, Result } from "@kanbien/core";
+import { validateSqsWorkerConfiguration, sqsReceiveWaitConstraint, sqsVisibilityTimeoutConstraint,
+  type SqsConfigurationCheck, type SqsConfigurationFailure } from "./configuration/index";
+
+export function createAwsSdkPlatformSqsWorkerQueueFromConfiguration(
+  source: ConfigSource, diagnostics?: CoreQueueDiagnosticOptions, check?: SqsConfigurationCheck,
+): Result<PlatformSqsWorkerQueue, SqsConfigurationFailure> {
+  const configuration = validateSqsWorkerConfiguration(source, check, diagnostics);
+  return configuration.ok ? { ok: true, value: createAwsSdkPlatformSqsWorkerQueue({ ...configuration.value,
+    onDiagnostic(record, context) { return diagnostics?.onDiagnostic?.(record, context); },
+    get diagnosticDefinitions() { return diagnostics?.diagnosticDefinitions ?? []; },
+  }) } : configuration;
+}
 
 export interface PlatformSqsWorkerQueue {
   receive(): Promise<PlatformSqsReceiveResult>;
@@ -35,14 +49,14 @@ export interface PlatformSqsCommandClient {
   send(command: unknown): Promise<unknown>;
 }
 
-export interface PlatformSqsWorkerQueueOptions {
+export interface PlatformSqsWorkerQueueOptions extends CoreQueueDiagnosticOptions {
   readonly queueUrl: string;
   readonly waitTimeSeconds: number;
   readonly visibilityTimeoutSeconds: number;
   readonly client: PlatformSqsCommandClient;
 }
 
-export interface AwsSdkPlatformSqsWorkerQueueOptions {
+export interface AwsSdkPlatformSqsWorkerQueueOptions extends CoreQueueDiagnosticOptions {
   readonly queueUrl: string;
   readonly region: string;
   readonly waitTimeSeconds: number;
@@ -52,27 +66,32 @@ export interface AwsSdkPlatformSqsWorkerQueueOptions {
 export function createPlatformSqsWorkerQueue(
   options: PlatformSqsWorkerQueueOptions,
 ): PlatformSqsWorkerQueue {
-  assertNonEmpty("queueUrl", options.queueUrl);
-  assertWholeNumberInRange("waitTimeSeconds", options.waitTimeSeconds, 0, 20);
-  assertWholeNumberInRange("visibilityTimeoutSeconds", options.visibilityTimeoutSeconds, 0, 43_200);
+  sqsObservation(options, "client-initialization").at("selection", () => {
+    assertSqsConfigurationText("queueUrl", options.queueUrl, "queue-address");
+    assertWholeNumberInRange("waitTimeSeconds", options.waitTimeSeconds, sqsReceiveWaitConstraint.minimum, sqsReceiveWaitConstraint.maximum, "receive-wait");
+    assertWholeNumberInRange("visibilityTimeoutSeconds", options.visibilityTimeoutSeconds, sqsVisibilityTimeoutConstraint.minimum, sqsVisibilityTimeoutConstraint.maximum, "visibility-timeout");
+  });
 
   return {
     receive: async () => {
+      const observed = sqsObservation(options, "receive");
+      const reductions = receiveReductions(options);
       try {
-        const response = await options.client.send(new ReceiveMessageCommand({
+        const response = await observed.send(options, () => new ReceiveMessageCommand({
           QueueUrl: options.queueUrl,
           MaxNumberOfMessages: 1,
           WaitTimeSeconds: options.waitTimeSeconds,
           VisibilityTimeout: options.visibilityTimeoutSeconds,
           MessageSystemAttributeNames: ["ApproximateReceiveCount"],
         }));
-        const message = firstSqsMessage(response);
+        const message = observed.at("response", () => firstSqsMessage(response, reductions));
         if (message === undefined) return { kind: "empty" };
         if (message.receiptHandle === undefined) {
+          observed.reject("receipt-handle", "missing");
           return invalidDelivery("ReceiptHandle", "SQS delivery did not contain a receipt handle.", "");
         }
-        const receiveCount = parseReceiveCount(message.receiveCount);
-        const decoded = decodePlatformQueueMessage(message.body);
+        const receiveCount = observed.at("response", () => parseReceiveCount(message.receiveCount, reductions));
+        const decoded = decodePlatformQueueMessage(message.body, options);
         if (!decoded.ok) {
           return {
             kind: "invalid",
@@ -88,27 +107,29 @@ export function createPlatformSqsWorkerQueue(
           message: decoded.value,
         };
       } catch {
-        throw operationError("receive");
-      }
+        throw operationError("receive", observed.evidence());
+      } finally { reductions.flush(); }
     },
     acknowledge: async (receiptHandle) => {
-      assertNonEmpty("receiptHandle", receiptHandle);
+      const observed = sqsObservation(options, "acknowledge");
+      assertNonEmpty("receiptHandle", receiptHandle, observed);
       try {
-        await options.client.send(new DeleteMessageCommand({ QueueUrl: options.queueUrl, ReceiptHandle: receiptHandle }));
+        await observed.send(options, () => new DeleteMessageCommand({ QueueUrl: options.queueUrl, ReceiptHandle: receiptHandle }));
       } catch {
-        throw operationError("acknowledge");
+        throw operationError("acknowledge", observed.evidence());
       }
     },
     release: async (receiptHandle) => {
-      assertNonEmpty("receiptHandle", receiptHandle);
+      const observed = sqsObservation(options, "release");
+      assertNonEmpty("receiptHandle", receiptHandle, observed);
       try {
-        await options.client.send(new ChangeMessageVisibilityCommand({
+        await observed.send(options, () => new ChangeMessageVisibilityCommand({
           QueueUrl: options.queueUrl,
           ReceiptHandle: receiptHandle,
           VisibilityTimeout: 0,
         }));
       } catch {
-        throw operationError("release");
+        throw operationError("release", observed.evidence());
       }
     },
   };
@@ -117,22 +138,27 @@ export function createPlatformSqsWorkerQueue(
 export function createAwsSdkPlatformSqsWorkerQueue(
   options: AwsSdkPlatformSqsWorkerQueueOptions,
 ): PlatformSqsWorkerQueue {
-  assertNonEmpty("region", options.region);
+  const observed = sqsObservation(options, "client-initialization");
+  observed.at("selection", () => assertSqsConfigurationText("region", options.region, "region"));
   return createPlatformSqsWorkerQueue({
-    queueUrl: options.queueUrl,
-    waitTimeSeconds: options.waitTimeSeconds,
-    visibilityTimeoutSeconds: options.visibilityTimeoutSeconds,
-    client: new SQSClient({ region: options.region }) as unknown as PlatformSqsCommandClient,
+    queueUrl: observed.at("selection", () => options.queueUrl),
+    waitTimeSeconds: observed.at("selection", () => options.waitTimeSeconds),
+    visibilityTimeoutSeconds: observed.at("selection", () => options.visibilityTimeoutSeconds),
+    client: observed.at("construction", () => new SQSClient({ region: options.region })) as unknown as PlatformSqsCommandClient,
+    onDiagnostic(record, context) { return options.onDiagnostic?.(record, context); },
+    get diagnosticDefinitions() { return options.diagnosticDefinitions ?? []; },
   });
 }
 
 export function createAwsSdkPlatformSqsWorkerQueueFromEnv(
   env: Readonly<Record<string, string | undefined>>,
+  diagnostics?: CoreQueueDiagnosticOptions,
 ): { readonly ok: true; readonly value: PlatformSqsWorkerQueue } | { readonly ok: false; readonly error: PlatformSqsWorkerQueueError } {
-  const queueUrl = requiredString(env, "PLATFORM_WORKER_SQS_QUEUE_URL");
-  const region = requiredString(env, "PLATFORM_WORKER_SQS_REGION");
-  const waitTimeSeconds = boundedInteger(env, "PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS", 0, 20);
-  const visibilityTimeoutSeconds = boundedInteger(env, "PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS", 0, 43_200);
+  const observed = sqsObservation(diagnostics, "client-initialization");
+  const queueUrl = observed.at("selection", () => requiredString(env, "PLATFORM_WORKER_SQS_QUEUE_URL", "queue-address"));
+  const region = observed.at("selection", () => requiredString(env, "PLATFORM_WORKER_SQS_REGION", "region"));
+  const waitTimeSeconds = observed.at("selection", () => boundedInteger(env, "PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS", sqsReceiveWaitConstraint.minimum, sqsReceiveWaitConstraint.maximum, "receive-wait"));
+  const visibilityTimeoutSeconds = observed.at("selection", () => boundedInteger(env, "PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS", sqsVisibilityTimeoutConstraint.minimum, sqsVisibilityTimeoutConstraint.maximum, "visibility-timeout"));
   if (!queueUrl.ok) return queueUrl;
   if (!region.ok) return region;
   if (!waitTimeSeconds.ok) return waitTimeSeconds;
@@ -144,28 +170,34 @@ export function createAwsSdkPlatformSqsWorkerQueueFromEnv(
       region: region.value,
       waitTimeSeconds: waitTimeSeconds.value,
       visibilityTimeoutSeconds: visibilityTimeoutSeconds.value,
+      onDiagnostic(record, context) { return diagnostics?.onDiagnostic?.(record, context); },
+      get diagnosticDefinitions() { return diagnostics?.diagnosticDefinitions ?? []; },
     }),
   };
 }
 
-function firstSqsMessage(response: unknown): { readonly receiptHandle: string | undefined; readonly body: string | undefined; readonly receiveCount: string | undefined } | undefined {
-  if (!isRecord(response) || !Array.isArray(response.Messages)) return undefined;
-  const first = response.Messages[0];
-  if (!isRecord(first)) return undefined;
-  const attributes = isRecord(first.Attributes) ? first.Attributes : {};
+function firstSqsMessage(response: unknown, reductions: ReceiveReductions): { readonly receiptHandle: string | undefined; readonly body: string | undefined; readonly receiveCount: string | undefined } | undefined {
+  if (!isRecord(response)) { reductions.add("response", "not-record", "empty-receive"); return undefined; }
+  let messages: unknown;
+  if (!Array.isArray(messages = response.Messages)) { if (messages !== undefined) reductions.add("messages", "not-array", "empty-receive"); return undefined; }
+  const first = (response.Messages as readonly unknown[])[0];
+  if (!isRecord(first)) { if (first !== undefined) reductions.add("message", "not-record", "empty-receive"); return undefined; }
+  let suppliedAttributes: unknown;
+  const attributes = isRecord(suppliedAttributes = first.Attributes) ? first.Attributes as Readonly<Record<string, unknown>> : (reductions.add("attributes", suppliedAttributes === undefined ? "absent" : "not-record", "empty-attributes"), {});
   return {
-    receiptHandle: stringValue(first.ReceiptHandle),
-    body: stringValue(first.Body),
-    receiveCount: stringValue(attributes.ApproximateReceiveCount),
+    receiptHandle: projectedString(first.ReceiptHandle, "receipt-handle", reductions),
+    body: projectedString(first.Body, "body", reductions),
+    receiveCount: projectedString(attributes.ApproximateReceiveCount, "receive-count", reductions),
   };
 }
 
 function requiredString(
   env: Readonly<Record<string, string | undefined>>,
   path: string,
+  setting: "queue-address" | "region",
 ): { readonly ok: true; readonly value: string } | { readonly ok: false; readonly error: PlatformSqsWorkerQueueError } {
   const value = env[path];
-  if (value === undefined || value.trim().length === 0) return invalidConfig(path, "A non-empty value is required.");
+  if (value === undefined || value.trim().length === 0) return invalidConfig(path, "A non-empty value is required.", { setting, reason: value === undefined ? "missing" : "blank" });
   return { ok: true, value };
 }
 
@@ -174,15 +206,21 @@ function boundedInteger(
   path: string,
   min: number,
   max: number,
+  setting: "receive-wait" | "visibility-timeout",
 ): { readonly ok: true; readonly value: number } | { readonly ok: false; readonly error: PlatformSqsWorkerQueueError } {
-  const value = Number(env[path]);
-  if (!Number.isInteger(value) || value < min || value > max) return invalidConfig(path, `Expected an integer from ${min} to ${max}.`);
+  const raw = env[path];
+  const value = Number(raw);
+  const integer = Number.isInteger(value);
+  if (!integer || value < min || value > max) return invalidConfig(path, `Expected an integer from ${min} to ${max}.`, { setting, reason: raw === undefined ? "missing" : !integer ? "invalid-integer" : "out-of-range" });
   return { ok: true, value };
 }
 
-function parseReceiveCount(value: string | undefined): number {
+function parseReceiveCount(value: string | undefined, reductions: ReceiveReductions): number {
   const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+  let reason: "not-integer" | "not-positive" = "not-integer";
+  if (Number.isInteger(parsed) && (reason = "not-positive", parsed > 0)) return parsed;
+  reductions.add("receive-count", value === undefined ? "absent" : reason, "count-one");
+  return 1;
 }
 
 function invalidDelivery(path: string, reason: string, receiptHandle: string): PlatformSqsReceiveResult {
@@ -195,17 +233,25 @@ function invalidDelivery(path: string, reason: string, receiptHandle: string): P
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
+function projectedString(value: unknown, field: "receipt-handle" | "body" | "receive-count", reductions: ReceiveReductions): string | undefined {
+  const projected = stringValue(value);
+  if (projected === undefined) reductions.add(field, value === undefined ? "absent" : "wrong-type", "field-unavailable");
+  return projected;
+}
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function assertNonEmpty(name: string, value: string): void {
-  if (value.length === 0) throw new RangeError(`${name} must not be empty.`);
+function assertNonEmpty(name: string, value: string, observed: SqsObservation): void {
+  const empty = observed.at("selection", () => value.length === 0);
+  if (empty) throw Object.assign(new RangeError(`${name} must not be empty.`), observed.reject("receipt-handle", "empty"));
 }
 
-function assertWholeNumberInRange(name: string, value: number, min: number, max: number): void {
-  if (!Number.isInteger(value) || value < min || value > max) {
-    throw new RangeError(`${name} must be an integer from ${min} to ${max}.`);
+function assertWholeNumberInRange(name: string, value: number, min: number, max: number, setting: "receive-wait" | "visibility-timeout"): void {
+  const integer = Number.isInteger(value);
+  if (!integer || value < min || value > max) {
+    const reason: PlatformSqsConfigurationIssue["reason"] = value === undefined ? "missing" : typeof value !== "number" ? "wrong-type" : value !== value || value === Infinity || value === -Infinity ? "not-finite" : !integer ? "invalid-integer" : "out-of-range";
+    throw Object.assign(new RangeError(`${name} must be an integer from ${min} to ${max}.`), { configurationIssue: { setting, reason } });
   }
 }

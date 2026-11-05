@@ -5,7 +5,7 @@
 #   version: 9
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -87,6 +87,7 @@ class DeclarationFailure(Exception):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=TARGET_DECLARATION_ARGUMENTS_INVALID\n")
     parser.add_argument("--target-root")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
@@ -104,7 +105,7 @@ def parse_args() -> argparse.Namespace:
 def mapping(path: Path, code: str) -> dict[str, Any]:
     try:
         value = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
+    except (OSError, UnicodeError, yaml.YAMLError):
         raise DeclarationFailure(code) from None
     if not isinstance(value, dict):
         raise DeclarationFailure(code)
@@ -128,7 +129,7 @@ def timestamp(value: Any) -> datetime | None:
 def provider_resource_types(template: Path) -> dict[str, str]:
     try:
         text = template.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, UnicodeError):
         raise DeclarationFailure("provider-runtime-template-unreadable") from None
     return {
         match.group("id"): match.group("type")
@@ -141,6 +142,8 @@ def provider_resource_types(template: Path) -> dict[str, str]:
 
 
 def required_mapping(document: dict[str, Any], key: str, code: str) -> dict[str, Any]:
+    if not isinstance(document, dict):
+        raise DeclarationFailure(code)
     value = document.get(key)
     if not isinstance(value, dict):
         raise DeclarationFailure(code)
@@ -172,7 +175,7 @@ def check_profile(profile: dict[str, Any]) -> None:
             raise DeclarationFailure("e0-fact-invalid")
         fact_id = fact["id"]
         found.add(fact_id)
-        if fact.get("status") not in allowed_fact_statuses:
+        if not isinstance(fact.get("status"), str) or fact.get("status") not in allowed_fact_statuses:
             raise DeclarationFailure("e0-fact-status-invalid")
         if not non_empty(fact.get("owner")):
             raise DeclarationFailure("e0-fact-unowned")
@@ -193,7 +196,7 @@ def check_foundation(root: Path) -> None:
     for item in resources:
         if not isinstance(item, dict) or not non_empty(item.get("id")) or not non_empty(item.get("declaration")):
             raise DeclarationFailure("foundation-resource-invalid")
-        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation", "cost-control-waiver-active", "cost-control-verified-fresh-alignment-required", "target-budget-provisioning-required-before-mutation"}:
+        if not isinstance(item.get("status"), str) or item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation", "cost-control-waiver-active", "cost-control-verified-fresh-alignment-required", "target-budget-provisioning-required-before-mutation"}:
             raise DeclarationFailure("foundation-resource-status-invalid")
         if not non_empty(item.get("owner")):
             raise DeclarationFailure("foundation-resource-unowned")
@@ -203,7 +206,7 @@ def check_foundation(root: Path) -> None:
         raise DeclarationFailure("private-verifier-invalid")
     access = mapping(foundation_root / "technical-access.yml", "technical-access-unreadable")
     intents = access.get("access_intents")
-    if not isinstance(intents, list) or {item.get("id") for item in intents if isinstance(item, dict)} != {"delivery-custody", "workload-startup"}:
+    if not isinstance(intents, list) or any(isinstance(item, dict) and not isinstance(item.get("id"), str) for item in intents) or {item.get("id") for item in intents if isinstance(item, dict)} != {"delivery-custody", "workload-startup"}:
         raise DeclarationFailure("technical-access-invalid")
     for intent in intents:
         if not isinstance(intent, dict) or not isinstance(intent.get("provider_identity"), str) or not intent["provider_identity"].endswith("fresh-e4-evidence-required") or not non_empty(intent.get("owner")):
@@ -214,7 +217,7 @@ def check_foundation(root: Path) -> None:
         cost.get("schema") != "deploy/provider-condition-declaration/v1"
         or cost.get("target") != TARGET
         or cost.get("condition_id") != "target-cost-allocation-tag-active"
-        or cost.get("status") not in {"not-requested", "requested", "waiting-on-provider", "verified", "expired", "waived-by-approved-exception"}
+        or not isinstance(cost.get("status"), str) or cost.get("status") not in {"not-requested", "requested", "waiting-on-provider", "verified", "expired", "waived-by-approved-exception"}
         or not non_empty(cost.get("owner"))
         or not non_empty(cost.get("required_evidence"))
         or cost.get("evidence_validator") != "scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh"
@@ -267,7 +270,10 @@ def check_scope(root: Path, rehearsal_root: Path | None = None) -> None:
     configuration = required_mapping(contract, "configuration", "scope-configuration-missing")
     if configuration.get("value_policy") != "names-and-shapes-only-no-values" or configuration.get("secret_names") != []:
         raise DeclarationFailure("scope-configuration-invalid")
-    names = configuration.get("required_names", []) + configuration.get("optional_names", [])
+    required_names, optional_names = configuration.get("required_names", []), configuration.get("optional_names", [])
+    if not isinstance(required_names, list) or not isinstance(optional_names, list):
+        raise DeclarationFailure("scope-configuration-invalid")
+    names = required_names + optional_names
     if not names or not all(isinstance(name, str) and SAFE_CONFIG_NAME.fullmatch(name) for name in names):
         raise DeclarationFailure("scope-configuration-invalid")
     verification = required_mapping(contract, "verification", "scope-verification-missing")
@@ -326,11 +332,11 @@ def check_scope(root: Path, rehearsal_root: Path | None = None) -> None:
         raise DeclarationFailure("scope-exclusions-invalid")
     for section, code in (("receipt", "receipt-declaration-invalid"), ("rollback", "rollback-declaration-invalid")):
         value = required_mapping(contract, section, code)
-        if value.get("status") not in {"qualified-receipt-required-before-update-or-restore", "retained-accepted-immutable-release-required-for-restoration"} or not non_empty(value.get("owner")):
+        if not isinstance(value.get("status"), str) or value.get("status") not in {"qualified-receipt-required-before-update-or-restore", "retained-accepted-immutable-release-required-for-restoration"} or not non_empty(value.get("owner")):
             raise DeclarationFailure(code)
     receipt = required_mapping(contract, "receipt", "receipt-declaration-invalid")
     receipt_fields = receipt.get("safe_fields")
-    if not isinstance(receipt_fields, list) or not receipt_fields or not set(receipt_fields).issubset(SAFE_RECEIPT_FIELDS):
+    if not isinstance(receipt_fields, list) or not receipt_fields or not all(isinstance(field, str) for field in receipt_fields) or not set(receipt_fields).issubset(SAFE_RECEIPT_FIELDS):
         raise DeclarationFailure("receipt-declaration-invalid")
     mutation = required_mapping(binding, "mutation", "workload-binding-invalid")
     expected_workloads = {("core-server-service", "long-running-server", "service"), ("private-release-verifier-task", "run-to-completion-task", "task")}
@@ -372,7 +378,7 @@ def check_scope(root: Path, rehearsal_root: Path | None = None) -> None:
     }
     try:
         template_text = template_path.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, UnicodeError):
         raise DeclarationFailure("workload-execution-source-invalid") from None
     repo_root = Path(__file__).resolve().parents[5]
     if (
@@ -543,7 +549,7 @@ def check_persistence_provider_identity_bindings(root: Path) -> None:
     template_path = root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml"
     try:
         template = template_path.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, UnicodeError):
         raise DeclarationFailure("persistence-provider-template-unreadable") from None
 
     configuration = declaration.get("configuration")
@@ -649,6 +655,13 @@ def main() -> int:
         return 0
     except DeclarationFailure as failure:
         print(report("failed", failure.codes))
+        return 1
+    except (OSError, UnicodeError, subprocess.SubprocessError):
+        print(report("failed", ("declaration-observation-unavailable",)))
+        return 1
+    except (TypeError, KeyError, AttributeError, IndexError, ValueError, RecursionError):
+        # No provider or absence conclusion follows from malformed local shape.
+        print(report("failed", ("declaration-shape-invalid",)))
         return 1
 
 

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines: [security, sre]
@@ -17,6 +17,9 @@
 #   - id: deploy.script.reconcile-platform-shell-staging.smoke-test
 #     path: scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
 import importlib.util,json,os,shutil,subprocess,sys,tempfile,unittest
+import contextlib,io
+from types import SimpleNamespace
+from unittest.mock import patch
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
 import yaml
@@ -84,6 +87,23 @@ def loaded(path,name):
  spec=importlib.util.spec_from_file_location(name,path);value=importlib.util.module_from_spec(spec);spec.loader.exec_module(value);return value
 
 class ReleaseControl(unittest.TestCase):
+ def test_native_and_owned_failure_bridges_do_not_trust_exception_text(self):
+  control=loaded(ROOT/OWNER/'release_control.py','shell_control_boundaries');args=SimpleNamespace(mode='runtime-alignment')
+  for error,reason in [(ValueError('private-native-canary'),'shell-release-input-observation-unavailable'),(ValueError('native-safe-looking-token'),'shell-release-input-observation-unavailable'),(control.ShellControlError('shell-provider-map-duplicate'),'shell-provider-map-duplicate')]:
+   out=io.StringIO()
+   with patch.object(control,'Control',side_effect=error),contextlib.redirect_stdout(out):self.assertEqual(control.run(self.owner,args,{}),1)
+   report=json.loads(out.getvalue());self.assertEqual(report['reason'],reason);self.assertNotIn('private-native-canary',out.getvalue());self.assertNotIn('native-safe-looking-token',out.getvalue())
+  with self.assertRaisesRegex(control.ShellControlError,'^shell-provider-map-observation-unavailable$'):control.unique([{'Key':[],'Value':'private-native-canary'}],'Key','Value')
+  with self.assertRaisesRegex(control.ShellControlError,'^shell-provider-map-duplicate$'):control.unique([{'Key':'same','Value':1},{'Key':'same','Value':2}],'Key','Value')
+  with self.assertRaisesRegex(self.owner.ReconciliationError,'^fixture-time-observation-unavailable$'):
+   self.owner.run_check('fixture-time',lambda:(_ for _ in ()).throw(ValueError('private-native-canary')))
+  observed=control.Control.__new__(control.Control);observed.args=SimpleNamespace(aws_cli='fixture',aws_credential_source='environment',timeout_seconds=20);observed.policy={'region':'eu-west-1'}
+  with patch.object(control.subprocess,'run',side_effect=UnicodeDecodeError('utf8',b'\xff',0,1,'private-native-canary')) as child:
+   with self.assertRaisesRegex(control.ShellControlError,'^shell-operation-uncertain$'):observed.aws('cloudformation','execute-change-set',mutation=True)
+   self.assertEqual(child.call_count,1)
+  result=subprocess.run([sys.executable,'-B',str(ROOT/OWNER/'script.py'),'--mode','private-argument-canary\nsecond-line'],cwd=ROOT,text=True,capture_output=True,timeout=10)
+  self.assertEqual((result.returncode,result.stdout,result.stderr),(2,'','ERROR: shell-reconciliation-arguments-invalid\n'))
+
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory(prefix='shell-release-control-');self.root=Path(self.temp.name);r=self.root
   subprocess.run(['git','init','-q',str(r)],check=True,capture_output=True)

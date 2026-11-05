@@ -1,9 +1,13 @@
 import { recordConfigSource, type ConfigRecord, type ConfigSchema, type ConfigSource } from "@kanbien/core/config";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { defaultSensitiveLogFieldNames, type LogRecord, type Logger } from "@kanbien/core/logging";
 import type { HealthCheckResult, MetricPoint, Metrics } from "@kanbien/core/monitoring";
 import type { QueueMessage, QueueMessageType, QueueMessageVersion } from "@kanbien/core/queues";
 import { fixedClock, type Clock, type CorrelationId, type ISODateTime, type JsonValue, type Result } from "@kanbien/core/shared";
 import type { Validator } from "@kanbien/core/validation";
+import { validatePlatformDiagnosticCatalog, type PlatformDiagnosticCatalog } from "@kanbien/platform-contracts";
+import { inspectPlatformErrorClassDeclaration, malformedPlatformObservabilityProfile, platformContractClassificationDiagnosticRecord } from "@kanbien/platform-contracts";
 import {
   defaultReservedPlatformRoutePaths,
   duplicatePlatformRegistration,
@@ -42,6 +46,8 @@ export interface PlatformTestError {
   readonly code: PlatformTestErrorCode;
   readonly defaultMessage: string;
   readonly details?: Readonly<Record<string, JsonValue>>;
+  readonly diagnosticRecord?: DiagnosticRecord;
+  readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
 }
 
 export interface PlatformTestMountFailure extends PlatformTestError {
@@ -58,6 +64,7 @@ export interface PlatformTestMetrics extends Metrics {
 }
 
 export interface PlatformTestRegistry extends PlatformAppRegistry {
+  diagnosticCatalogs(): readonly PlatformDiagnosticCatalog[];
   forApp(appId: PlatformAppId): PlatformAppRegistry;
   permissions(): readonly PlatformPermissionDeclaration[];
   routes(): readonly PlatformRouteRegistration[];
@@ -75,9 +82,11 @@ export interface PlatformTestRegistryOptions {
 
 export interface PlatformTestMountOptions extends PlatformTestRegistryOptions {
   readonly deps?: PlatformMountDeps;
+  readonly diagnosticDefinitions?: readonly DiagnosticDefinition[];
 }
 
 export interface PlatformTestMountResult {
+  readonly diagnosticCatalogs: readonly PlatformDiagnosticCatalog[];
   readonly app: PlatformApp;
   readonly deps: PlatformMountDeps;
   readonly registry: PlatformTestRegistry;
@@ -168,6 +177,7 @@ export function createPlatformTestMountDeps(input: Partial<PlatformMountDeps> = 
 export function createPlatformTestRegistry(options: PlatformTestRegistryOptions = {}): PlatformTestRegistry {
   const reservedPaths = options.reservedPaths ?? defaultReservedPlatformRoutePaths;
   const permissions: PlatformPermissionDeclaration[] = [];
+  const diagnosticCatalogs: PlatformDiagnosticCatalog[] = [];
   const routes: PlatformRouteRegistration[] = [];
   const jobs: PlatformJobRegistration[] = [];
   const observabilityProfiles: PlatformCapabilityObservabilityProfile[] = [];
@@ -181,6 +191,12 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
   }
 
   const registry: PlatformTestRegistry = {
+    registerDiagnosticCatalog(catalog) {
+      const checked = validatePlatformDiagnosticCatalog(catalog, diagnosticCatalogs);
+      if (!checked.ok) return track(checked.error);
+      diagnosticCatalogs.push(checked.value);
+      return contractSuccess();
+    },
     registerPermission(permissionDeclaration) {
       const validation = validatePlatformPermissionDeclaration(permissionDeclaration);
       if (!validation.ok) {
@@ -188,7 +204,7 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
       }
 
       if (permissions.some((registered) => registered.permission === permissionDeclaration.permission)) {
-        return track(duplicatePlatformRegistration("permission", permissionDeclaration.permission));
+        return track(duplicatePlatformRegistration("permission", permissionDeclaration.permission, "duplicate-permission"));
       }
 
       permissions.push({ ...permissionDeclaration });
@@ -200,8 +216,9 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
         return track(validation.error);
       }
 
-      if (routes.some((registered) => registered.name === route.name || routeKey(registered) === routeKey(route))) {
-        return track(duplicatePlatformRegistration("route", routeKey(route)));
+      let dimension: "duplicate-name" | "duplicate-route-key" = "duplicate-name";
+      if (routes.some((registered) => registered.name === route.name || (routeKey(registered) === routeKey(route) && (dimension = "duplicate-route-key", true)))) {
+        return track(duplicatePlatformRegistration("route", routeKey(route), dimension));
       }
 
       routes.push(route);
@@ -213,8 +230,9 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
         return track(validation.error);
       }
 
-      if (jobs.some((registered) => registered.name === job.name || registered.messageType === job.messageType)) {
-        return track(duplicatePlatformRegistration("job", String(job.name)));
+      let dimension: "duplicate-name" | "duplicate-message-type" = "duplicate-name";
+      if (jobs.some((registered) => registered.name === job.name || (registered.messageType === job.messageType && (dimension = "duplicate-message-type", true)))) {
+        return track(duplicatePlatformRegistration("job", String(job.name), dimension));
       }
 
       jobs.push(job);
@@ -227,22 +245,29 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
       }
 
       if (observabilityProfiles.some((registered) => registered.name === profile.name)) {
-        return track(duplicatePlatformRegistration("observability-profile", String(profile.name)));
+        return track(duplicatePlatformRegistration("observability-profile", String(profile.name), "duplicate-name"));
       }
 
-      observabilityProfiles.push({
+      const classes = inspectPlatformErrorClassDeclaration(profile);
+      if (classes.issue !== undefined) return track({ ...malformedPlatformObservabilityProfile("Observability profile error classes must be distinct bounded data declarations."),
+        diagnosticRecord: platformContractClassificationDiagnosticRecord(classes.issue) });
+      const snapshot = {
         ...profile,
         signals: [...profile.signals],
         ...(profile.logFieldNames === undefined ? {} : { logFieldNames: [...profile.logFieldNames] }),
         ...(profile.metricDimensionFieldNames === undefined ? {} : { metricDimensionFieldNames: [...profile.metricDimensionFieldNames] }),
         ...(profile.traceAttributeNames === undefined ? {} : { traceAttributeNames: [...profile.traceAttributeNames] }),
         ...(profile.nfrObjectives === undefined ? {} : { nfrObjectives: profile.nfrObjectives.map((objective) => ({ ...objective })) }),
-      });
+      };
+      // Never retain a raw value copied by spread when the descriptor snapshot is absent.
+      delete snapshot.errorClasses;
+      if (classes.values !== undefined) snapshot.errorClasses = classes.values;
+      observabilityProfiles.push(snapshot);
       return contractSuccess();
     },
     registerHealthCheck(healthCheck) {
       if (healthChecks.some((registered) => registered.name === healthCheck.name)) {
-        return track(duplicatePlatformRegistration("health", String(healthCheck.name)));
+        return track(duplicatePlatformRegistration("health", String(healthCheck.name), "duplicate-name"));
       }
 
       healthChecks.push(healthCheck);
@@ -254,6 +279,9 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
     },
     forApp(appId) {
       return {
+        registerDiagnosticCatalog(catalog) {
+          return registerInAppNamespace(appId, "diagnostic-catalog", `${catalog.owner}.catalog`, () => registry.registerDiagnosticCatalog(catalog));
+        },
         registerPermission(permissionDeclaration) {
           return registerInAppNamespace(appId, "permission", permissionDeclaration.permission, () =>
             registry.registerPermission(permissionDeclaration));
@@ -277,6 +305,7 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
         },
       };
     },
+    diagnosticCatalogs: () => JSON.parse(JSON.stringify(diagnosticCatalogs)) as PlatformDiagnosticCatalog[],
     permissions: () => permissions.map((permission) => ({ ...permission })),
     routes: () => [...routes],
     jobs: () => [...jobs],
@@ -308,14 +337,14 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
         }
       }
 
-      for (const registration of [...routes, ...jobs]) {
+      for (const [kind, registration] of [...routes.map((route) => ["route", route] as const), ...jobs.map((job) => ["job", job] as const)]) {
         if (registration.observability.kind !== "profile") {
           continue;
         }
 
         if (!declaredObservabilityProfiles.includes(String(registration.observability.profile))) {
           validationErrors.push(
-            unknownPlatformObservabilityProfile(String(registration.observability.profile), declaredObservabilityProfiles),
+            unknownPlatformObservabilityProfile(String(registration.observability.profile), declaredObservabilityProfiles, kind),
           );
         }
       }
@@ -356,7 +385,10 @@ export async function mountPlatformAppForTest(
     await app.mount(registry.forApp(appId.value), deps);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown app mount failure.";
-    return mountFailure(registry.errors(), { reason: message });
+    const evidence = selectedConfigEvidence(error,
+      () => options.diagnosticDefinitions ?? [],
+      () => registry.diagnosticCatalogs().flatMap((catalog) => catalog.definitions));
+    return mountFailure(registry.errors(), { reason: message }, evidence);
   }
 
   const contractErrors = registry.validate();
@@ -370,6 +402,7 @@ export async function mountPlatformAppForTest(
       app,
       deps,
       registry,
+      diagnosticCatalogs: registry.diagnosticCatalogs(),
       permissions: registry.permissions(),
       routes: registry.routes(),
       jobs: registry.jobs(),
@@ -432,18 +465,21 @@ export function createPlatformTestJobContext(input: PlatformTestJobContextInput)
 export function validatePlatformTestConfigSchemas(
   schemas: readonly ConfigSchema<unknown>[],
   source: ConfigSource = createPlatformTestConfigSource(),
+  diagnosticDefinitions: readonly DiagnosticDefinition[] = [],
 ): Result<readonly unknown[], PlatformTestError> {
   const parsedValues: unknown[] = [];
 
   for (const [schemaIndex, schema] of schemas.entries()) {
     const parsed = schema.parse(source);
     if (!parsed.ok) {
+      const error = parsed.error;
       return {
         ok: false,
         error: {
           code: "PLATFORM_TEST_INVALID_CONFIG",
           defaultMessage: "A platform test config schema rejected the supplied config source.",
-          details: { schemaIndex, configCode: parsed.error.code },
+          details: { schemaIndex, configCode: error.code },
+          ...selectedConfigEvidence(error, () => diagnosticDefinitions),
         },
       };
     }
@@ -452,6 +488,15 @@ export function validatePlatformTestConfigSchemas(
   }
 
   return { ok: true, value: parsedValues };
+}
+
+function selectedConfigEvidence(error: unknown, ...readDefinitions: readonly (() => readonly DiagnosticDefinition[])[]) {
+  let definitions = coreDiagnosticCatalog.definitions;
+  for (const read of readDefinitions) {
+    try { definitions = [...definitions, ...read()]; }
+    catch { /* An unavailable optional catalogue must not erase independently selected evidence. */ }
+  }
+  return selectDiagnosticEvidence(definitions, error);
 }
 
 export async function runPlatformTestHealthChecks(
@@ -501,6 +546,7 @@ export function validatorForTest<TValue>(isValue: (value: unknown) => value is T
 function mountFailure(
   contractErrors: readonly PlatformContractError[],
   details?: Readonly<Record<string, JsonValue>>,
+  evidence: Pick<PlatformTestError, "diagnosticRecord" | "relatedDiagnosticRecords"> = {},
 ): Result<never, PlatformTestMountFailure> {
   return {
     ok: false,
@@ -509,6 +555,7 @@ function mountFailure(
       defaultMessage: "Platform app failed to mount in the test registry.",
       contractErrors: [...contractErrors],
       ...(details === undefined ? {} : { details }),
+      ...evidence,
     },
   };
 }

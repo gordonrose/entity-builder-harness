@@ -4,7 +4,7 @@ id: rag-rulebook.migration-plan.prototype-corpus-domain-split
 version: 1
 status: active
 created_on: "2026-08-31"
-updated_on: "2026-10-22"
+updated_on: "2026-11-04"
 layer: 02.rag-rulebook
 domain: corpus
 disciplines:
@@ -483,7 +483,7 @@ At minimum, each execution slice should run:
 
 ```bash
 bash scripts/00.chat/worktree/check-write-location/script.sh
-bash scripts/01.harness/smoke-test-artifact-path-migration.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/smoke-test-artifact-path-migration.sh
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
 bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current

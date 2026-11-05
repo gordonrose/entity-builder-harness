@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-09-06"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-28"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -180,6 +180,15 @@ sys.path.insert(0, str(Path("scripts/04.deploy/lifecycle/40-package/package-cust
 from workflow_guard import protected_script, job_steps, protected_step, unconditional_run, scan_step
 try:
     guarded = job_steps(WORKFLOW_PATH.read_text(), "build-image")
+    expected_source_checks = '''bash scripts/repo/check-selection/script.sh --checks shell-package-source shell-infrastructure shell-publication --task-paths scripts/04.deploy/build-platform-shell-image/check-source.sh scripts/04.deploy/verify-platform-shell-infrastructure/script.sh .github/workflows/deploy-platform-shell-staging.yml --record-preparation --json
+bash scripts/repo/check-selection/script.sh --checks platform-shell-payload --execute-local --json
+npm run platform:server:check
+npm run platform:server:image-runtime-check
+npm run product:kanbien-platform:check
+npm run platform:shell:infrastructure:check
+npm run platform:shell:deployment-workflow:check
+bash scripts/04.deploy/validate-container-boundaries/script.sh'''
+    protected_step(guarded, "Run platform shell checks", [shlex.split(line) for line in expected_source_checks.splitlines()])
     scan_step(guarded, ["python3","scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py","--repository","$ECR_REPOSITORY","--image-digest","${{ steps.image.outputs.digest }}","--report","$RUNNER_TEMP/ecr-scan.json"], "Read ECR scan finding counts", "${{ inputs.publish_image }}")
     expected_published='''set -euo pipefail
 expected_platform="linux/amd64"

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.readme
-version: 1
+version: 2
 status: active
 created_on: "2026-06-15"
-updated_on: "2026-10-20"
+updated_on: "2026-11-04"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -75,6 +75,9 @@ workflow.
 
 ## Capabilities
 
+- [README writing](../shared/skills/write-readme.md) - source-backed README
+  authoring, governed by the [shared writing standard](../shared/standards/require-readable-readmes.md)
+  with an adaptable [module template](../shared/templates/module-readme.md).
 - `artifact-metadata/` - owns the versioned artifact metadata model, taxonomy,
   versioned lifecycle contracts, date maintenance, and artifact indexing.
 - `agents/` - defines reusable harness review agents, use-case quality bars,

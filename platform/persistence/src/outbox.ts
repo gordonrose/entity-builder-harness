@@ -1,6 +1,7 @@
 import type { OutboxEntry, OutboxEntryId } from "@kanbien/core/persistence";
 import type { ISODateTime, Result } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
+import { capturePlatformPersistenceDiagnostic, observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 import {
   nextPlatformPersistenceLease,
   platformLeaseExpired,
@@ -35,16 +36,20 @@ export interface PlatformOutboxStore {
   }): Promise<Result<PlatformOutboxRecord, PlatformPersistenceError>>;
 }
 
-export function createInMemoryPlatformOutboxStore(): PlatformOutboxStore {
+export function createInMemoryPlatformOutboxStore(options: PlatformPersistenceDiagnosticOptions = {}): PlatformOutboxStore {
   const records = new Map<OutboxEntryId, PlatformOutboxRecord>();
+  const reject = (code: PlatformPersistenceError["code"], message: string, key: string,
+    operation: PersistenceLocalRejectionDetail["operation"], field: PersistenceLocalRejectionDetail["field"], condition: PersistenceLocalRejectionDetail["condition"]) =>
+    failure(code, message, key, { operation, field, condition, phase: "state-check", effect: "local-state-unchanged" }, options);
 
   return {
     async create(entry) {
       if (records.has(entry.id)) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_DUPLICATE_OUTBOX_ENTRY",
           "Outbox entry already exists.",
           "platform.persistence.outbox.duplicate",
+          "create_outbox", "record", "duplicate",
         );
       }
 
@@ -59,11 +64,13 @@ export function createInMemoryPlatformOutboxStore(): PlatformOutboxStore {
     },
 
     async listDeliverable(input) {
-      if (!Number.isInteger(input.limit) || input.limit <= 0) {
-        return failure(
+      const limitIsInteger = Number.isInteger(input.limit);
+      if (!limitIsInteger || input.limit <= 0) {
+        return reject(
           "PLATFORM_PERSISTENCE_INVALID_LIMIT",
           "Outbox delivery limit must be a positive integer.",
           "platform.persistence.outbox.limit.invalid",
+          "list_outbox", "limit", limitIsInteger ? "not-positive" : "not-integer",
         );
       }
 
@@ -79,10 +86,11 @@ export function createInMemoryPlatformOutboxStore(): PlatformOutboxStore {
     async claim(input) {
       const record = records.get(input.id);
       if (record === undefined) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_OUTBOX_NOT_FOUND",
           "Outbox entry was not found.",
           "platform.persistence.outbox.not_found",
+          "claim_outbox", "record", "not-found",
         );
       }
 
@@ -102,6 +110,8 @@ export function createInMemoryPlatformOutboxStore(): PlatformOutboxStore {
         durationMs: input.leaseDurationMs,
       });
       if (!lease.ok) {
+        if (lease.error.diagnosticRecord !== undefined) observePlatformPersistenceDiagnostic(options, lease.error.diagnosticRecord,
+          { relatedDiagnosticRecords: lease.error.relatedDiagnosticRecords });
         return { ok: false, error: lease.error };
       }
 
@@ -118,10 +128,11 @@ export function createInMemoryPlatformOutboxStore(): PlatformOutboxStore {
     async markPublished(input) {
       const record = records.get(input.id);
       if (record === undefined) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_OUTBOX_NOT_FOUND",
           "Outbox entry was not found.",
           "platform.persistence.outbox.not_found",
+          "publish_outbox", "record", "not-found",
         );
       }
 
@@ -130,26 +141,29 @@ export function createInMemoryPlatformOutboxStore(): PlatformOutboxStore {
       }
 
       if (record.state !== "leased" || record.lease === undefined) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_OUTBOX_NOT_LEASED",
           "Outbox entry must be leased before it can be published.",
           "platform.persistence.outbox.not_leased",
+          "publish_outbox", record.state !== "leased" ? "state" : "lease", record.state !== "leased" ? "wrong-state" : "absent",
         );
       }
 
       if (record.lease.fence !== input.fence) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_STALE_FENCE",
           "Outbox publish used a stale fence.",
           "platform.persistence.outbox.stale_fence",
+          "publish_outbox", "fence", "stale",
         );
       }
 
       if (platformLeaseExpired(record.lease, input.publishedAt)) {
-        return failure(
+        return reject(
           "PLATFORM_PERSISTENCE_LEASE_EXPIRED",
           "Outbox publish used an expired lease.",
           "platform.persistence.outbox.lease.expired",
+          "publish_outbox", "lease", "expired",
         );
       }
 
@@ -183,9 +197,13 @@ function failure(
   code: PlatformPersistenceError["code"],
   defaultMessage: string,
   key: string,
+  detail: PersistenceLocalRejectionDetail,
+  options: PlatformPersistenceDiagnosticOptions,
 ): Result<never, PlatformPersistenceError> {
+  const diagnosticRecord = capturePlatformPersistenceDiagnostic(() => persistenceLocalRejectionDiagnosticRecord(detail));
+  observePlatformPersistenceDiagnostic(options, diagnosticRecord);
   return {
     ok: false,
-    error: platformPersistenceError({ code, defaultMessage, messageKey: key }),
+    error: platformPersistenceError({ code, defaultMessage, messageKey: key, diagnosticRecord }),
   };
 }

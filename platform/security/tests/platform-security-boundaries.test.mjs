@@ -42,6 +42,7 @@ function assertInsidePackage(specifier, resolvedPath, relative) {
 const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
 assert.equal(packageJson.name, "@kanbien/platform-security");
 assert.equal(packageJson.exports?.["."], "./src/index.ts");
+assert.equal(packageJson.exports?.["./jwt-configuration/diagnostics.v1.json"], "./src/jwt-configuration/contract/reporting/diagnostics.v1.json");
 assert.equal(packageJson.dependencies?.["@kanbien/core"], "0.0.0");
 
 const sourceFiles = (await walk(srcRoot)).filter((file) => file.endsWith(".ts"));

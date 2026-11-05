@@ -21,6 +21,34 @@ available, creates lifecycle control, and compiles route patterns. It exposes
 two paths: `handle` for deterministic tests or non-Node hosts, and `listen`
 for the Node transport.
 
+Configuration rejection reports the exact transport field/relationship, schema
+position and explicitly selected Core/app evidence before listening. Failed
+registration reports contract-owned predicates without starting lifecycle work.
+The default reporter selects built-in and mounted app catalogs; an injected
+reporter retains precedence. Catalog-selection failures use the fixed contract
+catalog, not the invalid selection itself. Reporting is optional and cannot
+change existing failure codes, public details, thrown identity or retry policy.
+
+Failed mounting can select catalogs registered before the app throws. Runtime
+observers deliver lifecycle/state evidence at the actual boundary, including
+unsuccessful shutdown Results the process historically ignores. Context
+construction observes its own clock/normalization location; selected source
+evidence remains independent. Tenant/resource guards report only the predicate
+that actually failed, preserving short-circuit getter reads. Parameter decoding
+still throws its original URIError; diagnostics do not create a new HTTP policy.
+Transport response-writing and process-log failures preserve the original
+throw and cleanup order. No success is inferred from an attempted close.
+
+The optional request-context `onDiagnostic` callback uses that matched route's
+operational-log permission, selected built-in/app/target catalogs and existing
+default or injected reporter. It is absent for opted-out and metric-only routes.
+Each observation is independently validated/copied and correlated to that request;
+an own location can be reported alongside all nine source records without
+packing a tenth record into a companion list. Unknown/malformed records are
+excluded before injected sinks; unavailable or throwing sinks do not change the
+handler result. No diagnostic is copied into the HTTP response, and a successful
+reconciliation does not erase an earlier observation or fabricate an error response.
+
 The request path owns exact-origin CORS, standard security headers, pre-auth
 rate-limit checks, health endpoints, route matching, authentication, broad
 permission authorization, tenant derivation, request context, input validation,

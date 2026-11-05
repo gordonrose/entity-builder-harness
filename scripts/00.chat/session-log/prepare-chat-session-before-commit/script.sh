@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.prepare-chat-session-before-commit
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -27,6 +27,8 @@ set -euo pipefail
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"
+
+read_failed() { echo "ERROR: preparation-$1-read-failed" >&2; exit 2; }
 
 usage() {
   cat <<'EOF'
@@ -54,7 +56,7 @@ prepare_before_verification() {
     exit 2
   fi
 
-  local lifecycle_report
+  local lifecycle_report lifecycle_paths
   local -a lifecycle_artifacts
   lifecycle_report="$(mktemp "${TMPDIR:-/tmp}/verification-preparation-lifecycle.XXXXXX")"
 
@@ -66,16 +68,26 @@ prepare_before_verification() {
     rm -f "$lifecycle_report"
     return 1
   fi
-  cat "$lifecycle_report"
-  mapfile -t lifecycle_artifacts < <(python3 - "$lifecycle_report" <<'PY'
+  if ! lifecycle_paths="$(python3 - "$lifecycle_report" 2>/dev/null <<'PY'
 import json
 import sys
 report = json.load(open(sys.argv[1], encoding='utf-8'))
-for plan in report.get('plans', []):
-    if isinstance(plan, dict) and isinstance(plan.get('path'), str):
-        print(plan['path'])
+if not isinstance(report, dict) or not isinstance(report.get('plans'), list):
+    raise ValueError('invalid lifecycle report')
+for plan in report['plans']:
+    if not isinstance(plan, dict) or not isinstance(plan.get('path'), str) or not plan['path']:
+        raise ValueError('invalid lifecycle plan')
+    print(plan['path'])
 PY
-)
+)"; then
+    rm -f "$lifecycle_report"
+    read_failed lifecycle-report
+  fi
+  cat "$lifecycle_report"
+  lifecycle_artifacts=()
+  while IFS= read -r artifact; do
+    [ -z "$artifact" ] || lifecycle_artifacts+=("$artifact")
+  done <<< "$lifecycle_paths"
   if [ "${#lifecycle_artifacts[@]}" -gt 0 ]; then
     bash scripts/01.harness/artifact-metadata/generate-index/script.sh --paths "${lifecycle_artifacts[@]}" --strict > /dev/null
   fi
@@ -103,7 +115,7 @@ case "${1:-}" in
   "")
     ;;
   *)
-    echo "ERROR: unknown argument: $1" >&2
+    echo "ERROR: unknown argument" >&2
     usage >&2
     exit 2
     ;;
@@ -121,30 +133,30 @@ REPO_COMMIT_GATES_SCRIPT="${CHAT_REPO_COMMIT_GATES_SCRIPT:-${LLM_WORKBENCH_OPTIO
 if [ -n "${REPO_COMMIT_GATES_SCRIPT//[[:space:]]/}" ] && [ -e "$REPO_COMMIT_GATES_SCRIPT" ]; then
   case "$REPO_COMMIT_GATES_SCRIPT" in
     /*|../*|*/../*|*/..|..|-*|*$'\n'*|*$'\r'*)
-      echo "ERROR: refused non-repository commit extension hook: $REPO_COMMIT_GATES_SCRIPT" >&2
+      echo "ERROR: refused non-repository commit extension hook" >&2
       exit 1
       ;;
   esac
 
   if [ ! -x "$REPO_COMMIT_GATES_SCRIPT" ]; then
-    echo "ERROR: repository commit extension hook is not executable: $REPO_COMMIT_GATES_SCRIPT" >&2
+    echo "ERROR: repository commit extension hook is not executable" >&2
     exit 1
   fi
 
   bash "$REPO_COMMIT_GATES_SCRIPT"
 fi
 
-BRANCH="$(git branch --show-current)"
+BRANCH="$(git branch --show-current 2>/dev/null)" || read_failed branch
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  echo "ERROR: current branch is not a chat branch" >&2
   exit 1
 fi
 
 LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE" >&2
+  echo "ERROR: missing chat log" >&2
   exit 1
 fi
 
@@ -172,12 +184,12 @@ section_has_recorded_entry() {
     END {
       exit found ? 0 : 1
     }
-  ' "$LOG_FILE"
+  ' "$LOG_FILE" 2>/dev/null
 }
 
 field_value() {
   local label="$1"
-  sed -n "s/^${label}: //p" "$LOG_FILE" | tail -n 1
+  { sed -n "s/^${label}: //p" "$LOG_FILE" | tail -n 1; } 2>/dev/null || read_failed field
 }
 
 adr_paths() {
@@ -207,7 +219,7 @@ adr_paths() {
     in_section && in_paths && /^[^[:space:]-]/ {
       in_paths = 0
     }
-  ' "$LOG_FILE"
+  ' "$LOG_FILE" 2>/dev/null
 }
 
 is_governed_adr_path() {
@@ -227,8 +239,12 @@ require_section_entry() {
   local section="$1"
   local description="$2"
 
-  if ! section_has_recorded_entry "$section"; then
-    fail "$description is still missing in $LOG_FILE"
+  if section_has_recorded_entry "$section"; then
+    return
+  else
+    section_status=$?
+    [ "$section_status" -eq 1 ] || read_failed section
+    fail "$description is still missing in the session log"
   fi
 }
 
@@ -241,9 +257,11 @@ ADR_NEEDED="$(field_value "ADR needed")"
 ADR_REASON="$(field_value "Reason")"
 ADR_PATHS=()
 
+adr_path_list="$(adr_paths)" || read_failed adr-paths
 while IFS= read -r adr_path; do
+  [ -n "$adr_path" ] || continue
   ADR_PATHS+=("$adr_path")
-done < <(adr_paths)
+done <<< "$adr_path_list"
 
 case "$ADR_NEEDED" in
   yes)
@@ -252,9 +270,9 @@ case "$ADR_NEEDED" in
     else
       for ADR_PATH in "${ADR_PATHS[@]}"; do
         if ! is_governed_adr_path "$ADR_PATH"; then
-          fail "ADR path must be under docs/<numbered-layer>/adrs/ or docs/<track>/architecture/adrs/: $ADR_PATH"
+          fail "ADR path must be under docs/<numbered-layer>/adrs/ or docs/<track>/architecture/adrs/"
         elif [ ! -f "$ADR_PATH" ]; then
-          fail "ADR path does not exist: $ADR_PATH"
+          fail "ADR path does not exist"
         fi
       done
     fi
@@ -269,7 +287,7 @@ case "$ADR_NEEDED" in
     fi
     ;;
   *)
-    fail "ADR needed must be yes or no, got: ${ADR_NEEDED:-missing}"
+    fail "ADR needed must be yes or no"
     ;;
 esac
 

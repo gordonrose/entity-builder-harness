@@ -1,5 +1,6 @@
 import type { JsonValue, Result } from "@kanbien/core/shared";
 import type { PlatformContractError } from "@kanbien/platform-contracts";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 
 export type PlatformRuntimeErrorCode =
   | "PLATFORM_RUNTIME_APP_MOUNT_FAILED"
@@ -12,6 +13,8 @@ export interface PlatformRuntimeError {
   readonly defaultMessage: string;
   readonly details?: Readonly<Record<string, JsonValue>>;
   readonly cause?: unknown;
+  readonly diagnosticRecord?: DiagnosticRecord;
+  readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
 }
 
 export interface PlatformRuntimeMountFailure extends PlatformRuntimeError {
@@ -24,6 +27,7 @@ export function platformRuntimeMountFailure(
   contractErrors: readonly PlatformContractError[],
   details?: Readonly<Record<string, JsonValue>>,
   cause?: unknown,
+  evidence: Pick<PlatformRuntimeError, "diagnosticRecord" | "relatedDiagnosticRecords"> = {},
 ): Result<never, PlatformRuntimeMountFailure> {
   return {
     ok: false,
@@ -35,6 +39,7 @@ export function platformRuntimeMountFailure(
       contractErrors: [...contractErrors],
       ...(details === undefined ? {} : { details }),
       ...(cause === undefined ? {} : { cause }),
+      ...evidence,
     },
   };
 }
@@ -44,6 +49,7 @@ export function platformRuntimeFailure(
   defaultMessage: string,
   details?: Readonly<Record<string, JsonValue>>,
   cause?: unknown,
+  evidence: Pick<PlatformRuntimeError, "diagnosticRecord" | "relatedDiagnosticRecords"> = {},
 ): Result<never, PlatformRuntimeError> {
   return {
     ok: false,
@@ -52,6 +58,7 @@ export function platformRuntimeFailure(
       defaultMessage,
       ...(details === undefined ? {} : { details }),
       ...(cause === undefined ? {} : { cause }),
+      ...evidence,
     },
   };
 }

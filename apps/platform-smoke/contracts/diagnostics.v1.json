@@ -1,0 +1,186 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "platform-smoke",
+    "definitions": [
+      {
+        "code": "platform-smoke.work-item-not-accepted",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "app",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "accept-work-item"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "duplicate",
+                "operation-failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-smoke.attribute-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "app",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "payload",
+                "payload.rebuild"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unexpected-body",
+                "missing",
+                "wrong-type"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-smoke.configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "app",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "app-name"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-smoke.accepted-payload-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "app",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "payload",
+                "payload.outboxEntryId"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-shape",
+                "missing",
+                "wrong-type",
+                "empty"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-smoke.accepted-payload-not-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "payload.outboxEntryId"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "diagnostic-projection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "accessor-not-read",
+                "inspection-threw",
+                "prototype-limit"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

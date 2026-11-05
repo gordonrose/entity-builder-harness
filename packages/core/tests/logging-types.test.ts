@@ -10,6 +10,8 @@ import {
   type Logger,
   type LogLevel,
   type Redactor,
+  type CoreLoggingDiagnosticOptions,
+  type CoreLoggingBoundaryDetail,
 } from "../src/logging/index";
 import { correlationId } from "../src/shared/index";
 
@@ -54,3 +56,13 @@ logRecord({ level: "info" });
 
 // @ts-expect-error custom sensitive field names must be strings.
 createLogRedactor({ additionalKeys: [123] });
+
+const diagnostics: CoreLoggingDiagnosticOptions = { onDiagnostic(_record, context) { const operation: CoreLoggingBoundaryDetail["operation"] = context.operation; void operation; return Promise.resolve(); } };
+logRecord({ level, message: "safe" }, diagnostics);
+createLogRedactor({}, diagnostics);
+keyRedactor([], undefined, diagnostics);
+const unchangedVoid: void = redactingLogger(logger, redactor, diagnostics).write(record);
+void unchangedVoid;
+// @ts-expect-error no raw supplied field names in diagnostic locations.
+const invalidLocation: CoreLoggingBoundaryDetail["field"] = "password";
+void invalidLocation;

@@ -14,6 +14,8 @@ import type {
   PlatformPersistenceAtomicWriter,
   PlatformPersistenceError,
   PlatformPersistenceMutation,
+  PlatformPersistenceDiagnosticOptions,
+  PlatformPersistenceTransactionScope,
 } from "@kanbien/platform-persistence";
 import { platformPersistenceMutation } from "@kanbien/platform-persistence";
 import {
@@ -38,6 +40,7 @@ export interface PlatformSmokeAcceptWorkItemDependencies {
 export async function acceptPlatformSmokeWorkItem(
   input: PlatformSmokeAcceptWorkItemInput,
   dependencies: PlatformSmokeAcceptWorkItemDependencies,
+  diagnostics?: PlatformPersistenceDiagnosticOptions,
 ): Promise<Result<PlatformSmokeAcceptedWorkItemFacts, PlatformSmokeWorkItemPersistenceError>> {
   const workItem: PlatformSmokeWorkItem = {
     id: input.id,
@@ -48,7 +51,7 @@ export async function acceptPlatformSmokeWorkItem(
   const mutation = platformSmokeWorkItemMutation(input, workItem);
   if (!mutation.ok) return mutation;
 
-  return dependencies.atomicWriter.run<PlatformSmokeAcceptedWorkItemFacts, PlatformSmokeWorkItemPersistenceError>(async (scope) => {
+  const operation = async (scope: PlatformPersistenceTransactionScope): Promise<Result<PlatformSmokeAcceptedWorkItemFacts, PlatformSmokeWorkItemPersistenceError>> => {
     const created = await dependencies.repository.create({
       workItem,
       transaction: scope.transaction,
@@ -57,7 +60,11 @@ export async function acceptPlatformSmokeWorkItem(
     const staged = await scope.stage(mutation.value);
     if (!staged.ok) return staged;
     return ok({ workItem: created.value, outboxEntryId: mutation.value.outboxEntry.id });
-  });
+  };
+  // An omitted observation input retains the historical one-argument invocation.
+  return diagnostics === undefined
+    ? dependencies.atomicWriter.run<PlatformSmokeAcceptedWorkItemFacts, PlatformSmokeWorkItemPersistenceError>(operation)
+    : dependencies.atomicWriter.run<PlatformSmokeAcceptedWorkItemFacts, PlatformSmokeWorkItemPersistenceError>(operation, diagnostics);
 }
 
 function platformSmokeWorkItemMutation(

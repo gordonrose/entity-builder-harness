@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -84,6 +84,7 @@ class BoundaryFacts:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=DEPENDENCY_BOUNDARY_ARGUMENTS_INVALID\n")
     parser.add_argument("--build-output", required=True)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
@@ -140,7 +141,7 @@ def source_file_for_specifier(source: Path, specifier: str) -> Path | None:
 def import_specifiers(source: Path) -> tuple[str, ...]:
     try:
         text = source.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, UnicodeError):
         raise BoundaryFailure("typescript-source-unreadable") from None
     return tuple(match.group(1) for match in IMPORT_RE.finditer(text))
 
@@ -199,8 +200,10 @@ def discover_manifest_dependencies(initial_package_names: set[str]) -> set[str]:
         package_path = ROOT / PACKAGE_ROOTS[package_name][0] / "package.json"
         try:
             document = json.loads(package_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        except (OSError, UnicodeError, json.JSONDecodeError):
             raise BoundaryFailure("package-manifest-unreadable") from None
+        if not isinstance(document, dict):
+            raise BoundaryFailure("package-manifest-invalid")
         dependencies = document.get("dependencies", {})
         if not isinstance(dependencies, dict):
             raise BoundaryFailure("package-manifest-invalid")
@@ -215,8 +218,10 @@ def discover_manifest_dependencies(initial_package_names: set[str]) -> set[str]:
 def ensure_lockfile_records(package_names: set[str]) -> None:
     try:
         lockfile = json.loads((ROOT / "package-lock.json").read_text(encoding="utf-8"))
+        if not isinstance(lockfile, dict):
+            raise BoundaryFailure("lockfile-invalid")
         records = lockfile["packages"]
-    except (OSError, json.JSONDecodeError, KeyError):
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError):
         raise BoundaryFailure("lockfile-unreadable") from None
     if not isinstance(records, dict):
         raise BoundaryFailure("lockfile-invalid")
@@ -233,7 +238,7 @@ def ensure_build_output(build_output: Path) -> None:
         raise BoundaryFailure("build-output-entrypoint-missing")
     try:
         compiled_sources = "\n".join(path.read_text(encoding="utf-8") for path in sorted(build_output.rglob("*.js")))
-    except OSError:
+    except (OSError, UnicodeError):
         raise BoundaryFailure("build-output-unreadable") from None
     imported = set(REQUIRE_RE.findall(compiled_sources))
     if any(specifier.startswith(FORBIDDEN_PACKAGE_PREFIXES) for specifier in imported):
@@ -243,7 +248,7 @@ def ensure_build_output(build_output: Path) -> None:
 def contract_dependencies() -> tuple[set[str], set[str]]:
     try:
         document = yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
+    except (OSError, UnicodeError, yaml.YAMLError):
         raise BoundaryFailure("program-contract-unreadable") from None
     if not isinstance(document, dict):
         raise BoundaryFailure("program-contract-invalid")

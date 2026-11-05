@@ -1,4 +1,6 @@
 import type { MessageDescriptor } from "../shared/index";
+import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { coreSecurityPrimitiveRecord } from "./diagnostics";
 
 export const dataSensitivities = ["public", "internal", "confidential", "restricted", "secret"] as const;
 export type DataSensitivity = (typeof dataSensitivities)[number];
@@ -38,11 +40,11 @@ export function dataClassification(input: {
 }
 
 function assertKnownValue<TValue extends string>(
-  label: string,
+  label: "sensitive value kind" | "data sensitivity",
   value: string,
   allowedValues: readonly TValue[],
 ): asserts value is TValue {
   if (!allowedValues.includes(value as TValue)) {
-    throw new TypeError(`${label} must be one of: ${allowedValues.join(", ")}.`);
+    throw attachCoreDiagnosticRecord(new TypeError(`${label} must be one of: ${allowedValues.join(", ")}.`), coreSecurityPrimitiveRecord(label === "sensitive value kind" ? "sensitive-value-kind" : "data-sensitivity", "unsupported"));
   }
 }

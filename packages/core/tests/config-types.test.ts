@@ -1,10 +1,20 @@
 import {
   booleanConfigValue,
   configError,
+  configReasonNames,
   environmentName,
   recordConfigSource,
   secretReference,
   stringConfigValue,
+  validateConfigSettings,
+  validateConfigRequirements,
+  type ConfigSettingRequirement,
+  createConfigIssueCollector,
+  destinationPortConstraint,
+  coreConfigDiagnosticCatalog,
+  type ConfigRelationshipIssue,
+  type ConfigIssueReason,
+  type ConfigSettingRelationship,
   type ConfigError,
   type ConfigRecord,
   type ConfigSchema,
@@ -25,6 +35,43 @@ const values: ConfigRecord = {
 };
 
 const source: ConfigSource = recordConfigSource(values);
+const configCatalogueOwner: "core.config" = coreConfigDiagnosticCatalog.owner;
+void configCatalogueOwner;
+if (false) {
+  // @ts-expect-error callers cannot replace the module's selected definition set.
+  coreConfigDiagnosticCatalog.definitions = [];
+}
+const reusable: ConfigSettingRequirement = { setting: "database.port", rule: destinationPortConstraint };
+const choice: ConfigSettingRequirement = { setting: "operation", rule: { kind: "choice", values: ["apply"] } };
+validateConfigRequirements(source, [choice]);
+const unsupportedReason: ConfigIssueReason = configReasonNames.unsupportedValue;
+void unsupportedReason;
+// @ts-expect-error permitted choices are text, not arbitrary values.
+const wrongChoices: ConfigSettingRequirement = { setting: "operation", rule: { kind: "choice", values: [1] } };
+void wrongChoices;
+validateConfigRequirements(source, [reusable]);
+// @ts-expect-error configuration instructions do not accept arbitrary checking kinds.
+const invalidRequirement: ConfigSettingRequirement = { setting: "database.port", rule: { kind: "service-specific" } };
+void invalidRequirement;
+validateConfigSettings(source, [{ setting: "database.port", source: "PORT", rule: destinationPortConstraint }]);
+function destinationPortCompileOnly(): void {
+  // @ts-expect-error the shared lower bound is readonly.
+  destinationPortConstraint.minimum = 0;
+  // @ts-expect-error the shared upper bound is readonly.
+  destinationPortConstraint.maximum = 70_000;
+  // @ts-expect-error consumers cannot change the shared checking kind.
+  destinationPortConstraint.kind = "text";
+}
+void destinationPortCompileOnly;
+const namedReason: ConfigIssueReason = configReasonNames.invalidJson;
+void namedReason;
+if (false) {
+  // @ts-expect-error available names are an immutable code-owned contract.
+  configReasonNames.missing = "changed";
+  // @ts-expect-error a name not declared by Core is not a general configuration reason.
+  const unknownReason: ConfigIssueReason = "fixture-future-reason";
+  void unknownReason;
+}
 const optionalValue: ConfigValue | undefined = source.get("API_URL");
 void optionalValue;
 
@@ -80,3 +127,28 @@ void rejectedEnvironmentName;
 // @ts-expect-error secret references must be explicitly created and branded.
 const rejectedSecretReference: SecretReference = "kanbien/staging/api-token";
 void rejectedSecretReference;
+
+const relationSettings = [{ setting: "left", source: "LEFT", rule: { kind: "text" } }, { setting: "right", source: "RIGHT", rule: { kind: "text" } }] as const;
+const relation = { relationship: "separation", rule: "must-differ", left: "left", right: "right" } as const satisfies ConfigSettingRelationship<"left" | "right">;
+const relationshipResult = validateConfigSettings(source, relationSettings, [relation]);
+if (!relationshipResult.ok) {
+  const issues: readonly ConfigRelationshipIssue[] = relationshipResult.error.relationshipIssues;
+  void issues;
+  // @ts-expect-error failed configuration does not expose parsed values
+  relationshipResult.value;
+}
+const legacyResult = validateConfigSettings(source, relationSettings);
+if (!legacyResult.ok) {
+  // @ts-expect-error old calls retain the historical failure contract
+  legacyResult.error.relationshipIssues;
+}
+// @ts-expect-error relationship references must belong to the declared setting tuple
+validateConfigSettings(source, relationSettings, [{ ...relation, right: "unknown" }]);
+// @ts-expect-error no speculative relationship rules
+validateConfigSettings(source, relationSettings, [{ ...relation, rule: "must-match" }]);
+const issueCollector = createConfigIssueCollector<"missing" | "duplicate">();
+issueCollector.add({ setting: "fixture.setting", reason: "duplicate", index: 1, relatedIndex: 0 });
+// @ts-expect-error the caller-selected reason vocabulary is closed
+issueCollector.add({ setting: "fixture.setting", reason: "invented" });
+// @ts-expect-error issues never contain submitted values
+issueCollector.add({ setting: "fixture.setting", reason: "missing", value: "private" });

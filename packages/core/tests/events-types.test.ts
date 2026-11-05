@@ -16,6 +16,7 @@ import {
   type EventPublisher,
   type EventType,
   type EventVersion,
+  type CoreEventDiagnosticOptions,
 } from "../src/events/index";
 import { causationId, correlationId, isOk, isoDateTime, type Result } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
@@ -59,6 +60,16 @@ const handler: EventHandler = {
 };
 const bus: EventBus = inMemoryEventBus({ handlers: [handler] });
 const publisher: EventPublisher = noopEventBus;
+const diagnosticOptions: CoreEventDiagnosticOptions = { diagnosticDefinitions: [], onDiagnostic(record, context) {
+  const code: string = record.code; const operation: string = context.operation; void code; void operation; return Promise.resolve();
+} };
+eventType("deal.updated", diagnosticOptions);
+eventVersion(1, diagnosticOptions);
+eventEnvelope(event, diagnosticOptions);
+inMemoryEventBus({ handlers: [handler] }, diagnosticOptions);
+eventPublishError({ code: "EVENT_HANDLER_FAILED", defaultMessage: "Fixed." }, { relatedDiagnosticDefinitions: [], relatedDiagnosticRecords: [] });
+// @ts-expect-error new companion evidence requires explicitly selected definitions.
+eventPublishError({ code: "EVENT_HANDLER_FAILED", defaultMessage: "Fixed." }, { relatedDiagnosticRecords: [] });
 
 void acceptedError;
 void payloadValue;

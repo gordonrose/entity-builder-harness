@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.check-llm-workbench-contract
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-07-03"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -57,15 +57,20 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument." >&2
       usage >&2
       exit 2
       ;;
   esac
 done
 
+read_failed() {
+  echo "ERROR: workbench-contract-observation-unavailable; stage=$1." >&2
+  exit 2
+}
+
 if [ -z "$REPO" ]; then
-  REPO="$(git rev-parse --show-toplevel)"
+  REPO="$(git rev-parse --show-toplevel 2>/dev/null)" || read_failed repository-root
 fi
 
 fail() {
@@ -91,14 +96,21 @@ require_absent_file() {
 require_grep() {
   local pattern="$1"
   local path="$2"
-  grep -Eq -- "$pattern" "$REPO/$path" || fail "missing pattern '$pattern' in $path"
+  local status
+  if grep -Eq -- "$pattern" "$REPO/$path" 2>/dev/null; then return 0; else status=$?; fi
+  [ "$status" -eq 1 ] || read_failed required-pattern
+  fail "missing pattern '$pattern' in $path"
 }
 
 reject_grep() {
   local pattern="$1"
   local path="$2"
-  if grep -Eq -- "$pattern" "$REPO/$path"; then
+  local status
+  if grep -Eq -- "$pattern" "$REPO/$path" 2>/dev/null; then
     fail "unexpected pattern '$pattern' in $path"
+  else
+    status=$?
+    [ "$status" -eq 1 ] || read_failed forbidden-pattern
   fi
 }
 
@@ -106,8 +118,12 @@ reject_tree_grep() {
   local pattern="$1"
   local path="$2"
   [ -e "$REPO/$path" ] || return 0
-  if grep -RIEq -- "$pattern" "$REPO/$path"; then
+  local status
+  if grep -RIEq -- "$pattern" "$REPO/$path" 2>/dev/null; then
     fail "unexpected pattern '$pattern' under $path"
+  else
+    status=$?
+    [ "$status" -eq 1 ] || read_failed forbidden-tree-pattern
   fi
 }
 

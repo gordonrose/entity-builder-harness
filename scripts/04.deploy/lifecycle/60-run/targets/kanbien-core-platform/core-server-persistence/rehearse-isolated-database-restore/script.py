@@ -211,7 +211,7 @@ def retain_verifier_rejection(m, operation, result, restored_database, task, exe
   if isinstance(artifact,str) and re.fullmatch(r"sha256:[a-f0-9]{64}",artifact):facts["artifact_identity"]=artifact
   task_id=task.get("taskArn","").rsplit("/",1)[-1] if isinstance(task.get("taskArn"),str) else ""
   evidence_reference=f"provider-operation:{operation}"+(f"/{task_id}" if re.fullmatch(r"[a-f0-9]{32}",task_id) else "")
-  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code=result,exit_status=exit_status,outcome="failed",classification=observation["classification"],evidence_reference=evidence_reference,next_decision="inspect-retained-evidence",collection_status=observation["status"],collection_observation=observation["observation"],collection_attempts=observation["attempts"],execution=execution,facts=facts,task_observation=("complete" if task_observation["status"] in {"accepted","rejected","diagnosed","diagnostic-failed"} else task_observation["status"]) if task_observation else None,task_attempts=task_observation["attempts"] if task_observation else None)
+  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code=result,exit_status=exit_status,outcome="failed",classification=observation["classification"],evidence_reference=evidence_reference,next_decision="inspect-retained-evidence",collection_status=observation["status"],collection_observation=observation["observation"],collection_attempts=observation["attempts"],execution=execution,facts=facts,diagnostic=task_observation.get("diagnostic") if task_observation else None,related_diagnostics=task_observation.get("related_diagnostics") if task_observation else None,task_observation=("complete" if task_observation["status"] in {"accepted","rejected","diagnosed","diagnostic-failed"} else task_observation["status"]) if task_observation else None,task_attempts=task_observation["attempts"] if task_observation else None)
   persist_observation(module,report)
   findings=[]
   if observation["status"]!="collected":findings.append("persistence-diagnostic-collection-"+observation["status"])
@@ -422,7 +422,9 @@ def observe_terminal_result(m,arn,diagnostic=False):
   codes={result["code"] for result in failures}
   retained=failures[0] if len(codes)==1 else results[0] if len(results)==1 and status in {"accepted","diagnosed"} else None
   execution=retained.get("execution") if retained and all(value.get("execution")==retained.get("execution") for value in failures) else None
-  return {"status":status,"result":retained["code"] if retained else None,"execution":execution,"attempts":attempt}
+  detail=retained.get("diagnostic") if retained and all(value.get("diagnostic")==retained.get("diagnostic") for value in failures) else None
+  related=retained.get("related_diagnostics") if detail and all(value.get("related_diagnostics")==retained.get("related_diagnostics") for value in failures) else None
+  return {"status":status,"result":retained["code"] if retained else None,"execution":execution,"diagnostic":detail,"related_diagnostics":related,"attempts":attempt}
  for attempt in range(1,LOG_READ_LIMIT+1):
   args=("--next-token",token) if token else ()
   ok,value,code=m.aws("logs","get-log-events","--log-group-name",LOG_GROUP,"--log-stream-name",f"persistence-restoration-verifier/persistence-restoration-verifier/{tid}","--start-from-head","--limit",str(RESTORE_SERVER_LOG_EVENT_LIMIT),*args)

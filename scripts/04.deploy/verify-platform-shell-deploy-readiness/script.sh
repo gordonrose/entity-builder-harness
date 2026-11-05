@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -93,7 +93,7 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: readiness-arguments-invalid" >&2
       usage >&2
       exit 2
       ;;
@@ -116,6 +116,8 @@ from __future__ import annotations
 
 import json
 import importlib.util
+from datetime import date
+import math
 import tempfile
 import re
 import sys
@@ -124,8 +126,8 @@ from typing import Any
 
 try:
     import yaml
-except Exception as exc:  # pragma: no cover - surfaced in shell usage
-    print(f"ERROR: PyYAML is required: {exc}", file=sys.stderr)
+except Exception:  # pragma: no cover - surfaced in shell usage
+    print("ERROR: readiness-yaml-loader-unavailable", file=sys.stderr)
     sys.exit(2)
 
 ROOT = Path.cwd()
@@ -133,7 +135,10 @@ manifest_path = Path(sys.argv[1])
 emit_json = sys.argv[2] == "true"
 allow_blocked = sys.argv[3] == "true"
 caller_intent = sys.argv[4]
-rehearsal_root = Path(sys.argv[5]).resolve() if sys.argv[5] else None
+try:
+    rehearsal_root = Path(sys.argv[5]).resolve() if sys.argv[5] else None
+except (OSError, ValueError):
+    print("ERROR: readiness-rehearsal-root-unavailable",file=sys.stderr);sys.exit(2)
 if rehearsal_root is not None and (not rehearsal_root.is_relative_to(Path(tempfile.gettempdir()).resolve()) or rehearsal_root.is_relative_to(ROOT)):
     print("ERROR: rehearsal root must be temporary and outside repository",file=sys.stderr);sys.exit(2)
 
@@ -218,7 +223,7 @@ REQUIRED_BLOCKED_PATHS = [
 
 def load_manifest(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        raise FileNotFoundError(f"manifest does not exist: {path}")
+        raise FileNotFoundError("readiness-manifest-unavailable")
     with path.open(encoding="utf-8") as handle:
         data = yaml.safe_load(handle) or {}
     if not isinstance(data, dict):
@@ -276,7 +281,7 @@ def require_string(data: dict[str, Any], path: str, *, pattern: str | None = Non
         block(path, "required string is missing or pending", f"Set `{path}` in the platform shell readiness manifest.")
         return
     if pattern and not re.fullmatch(pattern, value.strip()):
-        block(path, f"value has invalid shape: {value}", f"Set `{path}` to the governed expected format.")
+        block(path, "value has invalid shape", f"Set `{path}` to the governed expected format.")
 
 
 def require_bool_ready(data: dict[str, Any], path: str) -> None:
@@ -286,27 +291,31 @@ def require_bool_ready(data: dict[str, Any], path: str) -> None:
 
 
 def require_file(data: dict[str, Any], path: str) -> None:
+    global validation_location
+    validation_location = path
     value = get(data, path)
     if not isinstance(value, str) or is_pending(value):
         block(path, "required local file path is missing or pending", f"Set `{path}` to a repo-relative file path.")
         return
     target = ROOT / value
     if not target.is_file():
-        block(path, f"referenced file does not exist: {value}", f"Create the referenced file or update `{path}`.")
+        block(path, "referenced file does not exist", f"Create the referenced file or update `{path}`.")
 
 
 def require_github_workflow(data: dict[str, Any], path: str) -> None:
+    global validation_location
+    validation_location = path
     value = get(data, path)
     if not isinstance(value, str) or is_pending(value):
         block(path, "required GitHub workflow path is missing or pending", f"Set `{path}` to a repo-relative workflow path.")
         return
     if not re.fullmatch(r"\.github/workflows/[^/]+\.ya?ml", value):
-        block(path, f"workflow path has invalid shape: {value}", "Use a workflow under `.github/workflows/`.")
+        block(path, "workflow path has invalid shape", "Use a workflow under `.github/workflows/`.")
         return
 
     target = ROOT / value
     if not target.is_file():
-        block(path, f"referenced workflow does not exist: {value}", f"Create `{value}` or update `{path}`.")
+        block(path, "referenced workflow does not exist", f"Create the referenced workflow or update `{path}`.")
         return
 
     text = target.read_text(encoding="utf-8")
@@ -326,7 +335,7 @@ def require_github_workflow(data: dict[str, Any], path: str) -> None:
         if not re.search(environment_pattern, text):
             block(
                 "github.environment.name",
-                f"workflow does not use GitHub environment `{environment_name}`",
+                "workflow does not use the selected GitHub environment",
                 "Set the deploy job environment to the protected staging environment.",
             )
 
@@ -338,19 +347,19 @@ def require_yaml_file(data: dict[str, Any], path: str, *, schema: str | None = N
         return None
     target = ROOT / value
     if not target.is_file():
-        block(path, f"referenced file does not exist: {value}", f"Create the referenced file or update `{path}`.")
+        block(path, "referenced file does not exist", f"Create the referenced file or update `{path}`.")
         return None
     try:
         with target.open(encoding="utf-8") as handle:
             loaded = yaml.safe_load(handle) or {}
-    except Exception as exc:
-        block(path, f"referenced YAML could not be parsed: {exc}", f"Fix YAML syntax in `{value}`.")
+    except Exception:
+        block(path, "referenced YAML could not be read or parsed", f"Inspect the referenced YAML for `{path}`.")
         return None
     if not isinstance(loaded, dict):
-        block(path, "referenced YAML must be an object", f"Make `{value}` a YAML object.")
+        block(path, "referenced YAML must be an object", f"Make the referenced `{path}` YAML an object.")
         return None
     if schema and loaded.get("schema") != schema:
-        block(path, f"referenced YAML schema must be `{schema}`", f"Set `{value}` schema to `{schema}`.")
+        block(path, f"referenced YAML schema must be `{schema}`", f"Set the referenced YAML schema to `{schema}`.")
     return loaded
 
 
@@ -414,9 +423,12 @@ def validate_blocked_coverage(data: dict[str, Any], blocked_paths: set[str]) -> 
 
 
 def validate(data: dict[str, Any]) -> None:
+    global validation_location
+    validation_location = 'schema'
     if data.get("schema") != SCHEMA:
         block("schema", "manifest schema is missing or unsupported", f"Use schema `{SCHEMA}`.")
 
+    validation_location = 'target_profile'
     profile = get(data, "target_profile")
     if profile is not None:
         if not isinstance(profile, dict):
@@ -442,6 +454,7 @@ def validate(data: dict[str, Any]) -> None:
                             f"Keep `{left}` aligned with the reusable target profile.",
                         )
 
+    validation_location = 'status'
     status = data.get("status")
     if status not in {"ready", "blocked"}:
         block("status", "status must be ready or blocked", "Set `status` to `ready` or `blocked`.")
@@ -518,6 +531,7 @@ def validate(data: dict[str, Any]) -> None:
     if get(data, "runtime.server.container_port") != 3000:
         block("runtime.server.container_port", "container port must match the image blueprint", "Set container_port to 3000.")
 
+    validation_location = 'auth'
     require_string(data, "auth.provider")
     if get(data, "auth.provider") != "cognito":
         block("auth.provider", "Milestone 10a selected Cognito for the first platform shell auth path", "Use `auth.provider: cognito` or update the governed auth provider ADR first.")
@@ -536,8 +550,10 @@ def validate(data: dict[str, Any]) -> None:
     require_bool_ready(data, "auth.route_exposure.protected_dummy_route.local_401_test")
     require_bool_ready(data, "auth.route_exposure.protected_dummy_route.local_403_test")
     require_bool_ready(data, "auth.route_exposure.protected_dummy_route.local_success_test")
+    validation_location = 'auth.health_exposure.livez'
     if get(data, "auth.health_exposure.livez") not in {"public", "authenticated"}:
         block("auth.health_exposure.livez", "liveness exposure must be explicit", "Set liveness exposure to public or authenticated.")
+    validation_location = 'auth.health_exposure.readyz'
     if get(data, "auth.health_exposure.readyz") not in {"public", "authenticated"}:
         block("auth.health_exposure.readyz", "readiness exposure must be explicit", "Set readiness exposure to public or authenticated.")
     if get(data, "auth.cors.allowlist_source") != "target-profile-env":
@@ -550,6 +566,7 @@ def validate(data: dict[str, Any]) -> None:
     if get(data, "auth.secrets.committed_secret_values") is not False:
         block("auth.secrets.committed_secret_values", "secret values must not be committed", "Keep Cognito secrets and provider credentials in the target secret store or environment.")
 
+    validation_location = 'blockers'
     blocked_paths = blocker_paths(data)
     if status == "blocked":
         if not blocked_paths:
@@ -564,7 +581,7 @@ def validate(data: dict[str, Any]) -> None:
             evidence=importlib.util.module_from_spec(spec);spec.loader.exec_module(evidence)
             evidence.validate_ready(data,root=rehearsal_root or ROOT,evidence_class='simulated' if rehearsal_root else 'live')
         except Exception as error:
-            code=str(error) if isinstance(error,ValueError) else 'shell-release-evidence-invalid'
+            code=str(error) if 'evidence' in locals() and isinstance(error,getattr(evidence,'ReleaseEvidenceError',())) else 'shell-release-evidence-unavailable'
             block('acceptance',code,'Collect current runtime proof, retain immutable candidate receipts and promote with the generic release-succession command.')
         for path in REQUIRED_BLOCKED_PATHS:
             if is_pending(get(data, path)):
@@ -611,16 +628,18 @@ def validate(data: dict[str, Any]) -> None:
                 block(path, "ready public targets require implemented rate-limit and ingress protection", "Select and prove the target-specific shared limiter, ingress address policy, transport limits, and edge protection before setting readiness to ready.")
         require_string(data, "auth.secrets.source")
     else:
+        validation_location = 'proof.image_smoke'
         if get(data, "proof.image_smoke") != "passed-local":
             warn("proof.image_smoke", "local image smoke proof is not recorded as passed-local")
+        validation_location = 'proof.local_runtime_smoke'
         if get(data, "proof.local_runtime_smoke") not in {"passed-server-health-only", "passed-product-smoke-local"}:
             warn("proof.local_runtime_smoke", "local runtime smoke proof is not recorded as passed locally")
 
 
 try:
     manifest = load_manifest(manifest_path)
-except Exception as exc:
-    print(f"ERROR: {exc}", file=sys.stderr)
+except Exception:
+    print("ERROR: readiness-manifest-read-or-parse-failed", file=sys.stderr)
     sys.exit(2)
 
 if allow_blocked and caller_intent not in ALLOWED_BLOCKED_CALLER_INTENTS:
@@ -636,45 +655,206 @@ if record_compatibility:
         facts=evidence.write_compatibility_from_history(manifest,record_compatibility,root=rehearsal_root or ROOT,evidence_class='simulated' if rehearsal_root else 'live')
         print(json.dumps({'schema':'deploy/platform-shell-rollback-compatibility-report/v1','verdict':'recorded','evidence_class':'simulated' if rehearsal_root else 'live','facts':facts},sort_keys=True));sys.exit(0)
     except Exception as error:
-        code=str(error) if isinstance(error,ValueError) else 'shell-release-evidence-invalid'
+        code=str(error) if 'evidence' in globals() and isinstance(error,getattr(evidence,'ReleaseEvidenceError',())) else 'shell-release-compatibility-unavailable'
         print(json.dumps({'schema':'deploy/platform-shell-rollback-compatibility-report/v1','verdict':'blocked','findings':[{'code':code}]}));sys.exit(1)
 
-validate(manifest)
+validation_unavailable = False
+validation_location = 'manifest'
+try:
+    validate(manifest)
+except (OSError, ValueError, TypeError, AttributeError, KeyError, IndexError, yaml.YAMLError):
+    validation_unavailable = True
+    block(validation_location, 'readiness-validation-observation-unavailable', 'Inspect the declared manifest and referenced local proof without changing deployment state.')
+
+# Reviewed report values only; this projection never participates in admission.
+PROOF_COUNT = ('nonnegative-integer',)
+PROOF_DURATION = ('nonnegative-duration',)
+PROOF_UTC_DATE = ('utc-calendar-date',)
+PROOF_SOURCE_SHA = ('source-sha40',)
+PROOF_DECIMAL_ID = ('decimal-id',)
+PROOF_GITHUB_RUN_URL = ('github-run-url',)
+PROOF_REPORT_FIELDS = {
+    "static_validation": "passed-local",
+    "policy_checks": "passed-local",
+    "generated_output_review": "public-tls-repair-executed-and-externally-verified-2026-09-06",
+    "image_smoke": "passed-local",
+    "compiled_runtime_payload": "passed-local-2026-09-06",
+    "local_runtime_smoke": "passed-product-smoke-local",
+    "aws_read_only_inspection": "container-insights-enhanced-five-platform-alarms-ok-and-both-stacks-update-complete-2026-09-22",
+    "deployment_smoke": "public-livez-200-protected-401-and-correctly-scoped-200-and-cloudwatch-otel-counter-histogram-query-proven-2026-09-22",
+    "controlled_smoke_command": "implemented-and-locally-validated-2026-09-22",
+    "public_boundary": {
+        "status": "deployed-and-proven",
+        "executed_on_utc": PROOF_UTC_DATE,
+        "rate_limit_429": {
+            "result": "passed",
+            "attempted_request_count": PROOF_COUNT,
+            "allowed_request_count": PROOF_COUNT,
+            "first_429_request": PROOF_COUNT,
+            "final_status": PROOF_COUNT,
+            "total_duration_ms": PROOF_DURATION,
+        },
+        "waf_routing_and_ingress": {
+            "result": "passed",
+            "http_status": PROOF_COUNT,
+            "duration_ms": PROOF_DURATION,
+            "host_rule_priority": PROOF_COUNT,
+        },
+        "retained_evidence": "aggregate-status-count-duration-and-rule-priority-only-no-address-response-body-header-or-provider-payload",
+    },
+    "worker_consumer_and_metric_observation": {
+        "status": "deployed-and-proven",
+        "executed_on_utc": PROOF_UTC_DATE,
+        "command": "npm run platform:shell:worker-smoke -- --execute --approve-live-worker-smoke",
+        "result": "passed",
+        "worker_task_definition_revision": PROOF_DECIMAL_ID,
+        "duration_ms": PROOF_DURATION,
+        "message_count": PROOF_COUNT,
+        "inter_message_wait_seconds": PROOF_DURATION,
+        "metric_export_settlement_wait_seconds": PROOF_DURATION,
+        "metric_coverage": "observed",
+        "post_proof_state": "worker-desired-and-running-zero-source-and-dead-letter-queues-empty",
+        "retained_evidence": "safe-status-count-duration-task-revision-and-verdict-only-no-message-body-id-receipt-queue-url-or-provider-payload",
+    },
+    "rollback_proof": "collector-receiver-mismatch-baseline-telemetry-recovery-and-operator-alert-receipt-proven-2026-09-22",
+    "exporter_loss_rehearsal": {
+        "status": "live-proven-with-operator-alert-receipt",
+        "source_commit_sha": PROOF_SOURCE_SHA,
+        "baseline_task_definition_revision": PROOF_DECIMAL_ID,
+        "disposable_fault_task_definition_revision": PROOF_DECIMAL_ID,
+        "fault_boundary": "application-fixed-4318-collector-receiver-only-4319",
+        "fault_smoke": {
+            "github_run_id": PROOF_DECIMAL_ID,
+            "github_run_url": PROOF_GITHUB_RUN_URL,
+            "result": "passed",
+            "http_status": PROOF_COUNT,
+            "duration_ms": PROOF_DURATION,
+        },
+        "isolated_coverage": {
+            "github_run_id": PROOF_DECIMAL_ID,
+            "github_run_url": PROOF_GITHUB_RUN_URL,
+            "result": "expected-failure",
+            "metric_coverage": "missing",
+            "affected_slo_confidence": "insufficient-confidence",
+            "alert_publish_path": "completed-without-operator-receipt-claim",
+        },
+        "recovery": {
+            "restored_task_definition_revision": PROOF_DECIMAL_ID,
+            "baseline_smoke": {
+                "github_run_id": PROOF_DECIMAL_ID,
+                "github_run_url": PROOF_GITHUB_RUN_URL,
+                "result": "passed",
+                "http_status": PROOF_COUNT,
+                "duration_ms": PROOF_DURATION,
+            },
+            "counter_advancing_smoke": {
+                "github_run_id": PROOF_DECIMAL_ID,
+                "github_run_url": PROOF_GITHUB_RUN_URL,
+                "result": "passed",
+                "http_status": PROOF_COUNT,
+                "duration_ms": PROOF_DURATION,
+            },
+            "coverage_result": "observed",
+            "coverage_execution": "governed-local-read-only-query-after-refreshed-sso",
+            "counter_semantics": "first-fresh-task-request-establishes-a-cumulative-baseline-second-request-advances-it-for-promql-increase",
+        },
+        "two_point_synthetic_workflow": {
+            "source_commit_sha": PROOF_SOURCE_SHA,
+            "github_run_id": PROOF_DECIMAL_ID,
+            "github_run_url": PROOF_GITHUB_RUN_URL,
+            "result": "passed",
+            "request_count": PROOF_COUNT,
+            "inter_request_wait_seconds": PROOF_DURATION,
+            "metric_coverage": "observed",
+            "affected_slo_confidence": "not-determined",
+            "coverage_execution": "governed-local-read-only-query-after-five-minute-arrival-grace",
+            "meaning": "proves-the-main-only-workflow-establishes-and-advances-the-cumulative-counter-not-clock-trigger",
+        },
+        "operator_alert_receipt": {
+            "status": "confirmed-by-operator",
+            "confirmed_on_utc": PROOF_UTC_DATE,
+            "event": "declared-metric-coverage-missing-insufficient-confidence",
+            "retained_evidence": "human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content",
+        },
+        "retained_evidence_policy": "no-secrets-tokens-headers-request-bodies-response-bodies-or-raw-provider-responses",
+    },
+}
+PROOF_ALTERNATIVES = {
+    "static_validation": {"passed-local"}, "policy_checks": {"passed", "passed-local"},
+    "generated_output_review": {"passed"}, "image_smoke": {"passed-local"},
+    "local_runtime_smoke": {"passed-server-health-only", "passed-product-smoke-local"},
+    "aws_read_only_inspection": {"passed"}, "deployment_smoke": {"passed"}, "rollback_proof": {"passed"},
+}
+
+
+def project_proof(value: Any, rule: Any, field: str = "") -> Any:
+    if isinstance(rule, dict):
+        if not isinstance(value, dict): return None
+        return {key: project_proof(value[key], child_rule, key) for key, child_rule in rule.items() if key in value}
+    if rule is PROOF_COUNT:
+        return value if type(value) is int and 0 <= value <= 9007199254740991 else None
+    if rule is PROOF_DURATION:
+        return value if type(value) in (int, float) and 0 <= value <= 9007199254740991 and math.isfinite(value) else None
+    if isinstance(value, str):
+        if rule is PROOF_UTC_DATE:
+            if re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+                try: date.fromisoformat(value); return value
+                except ValueError: pass
+            return None
+        if rule is PROOF_SOURCE_SHA: return value if re.fullmatch(r"[a-f0-9]{40}", value) else None
+        if rule is PROOF_DECIMAL_ID: return value if re.fullmatch(r"[0-9]{1,20}", value) else None
+        if rule is PROOF_GITHUB_RUN_URL: return value if re.fullmatch(r"https://github\.com/gordonrose/entity-builder-harness/actions/runs/[0-9]{1,20}", value) else None
+        if value == rule or value in PENDING_VALUES or value in PROOF_ALTERNATIVES.get(field, ()): return value
+    return None
+
+
+def selected(value: Any, *allowed: str) -> str | None:
+    return value if isinstance(value, str) and (value in allowed or value in PENDING_VALUES) else None
+
+
+def report_manifest_path() -> str | None:
+    # Retain actual repository artifact identity, not rejected caller text.
+    try:
+        resolved = manifest_path.resolve()
+        if resolved.is_relative_to(ROOT.resolve()) and resolved.is_file():
+            return resolved.relative_to(ROOT.resolve()).as_posix()
+    except (OSError, ValueError): pass
+    return None
 
 status = "ready" if not blocking_gaps and manifest.get("status") == "ready" else "blocked"
 ok = status == "ready"
-exit_overridden = bool(allow_blocked and status == "blocked")
+exit_overridden = bool(allow_blocked and status == "blocked" and not validation_unavailable)
 report = {
     "schema": REPORT_SCHEMA,
     "evidence_class": "simulated" if rehearsal_root else "live",
     "ok": ok,
     "status": status,
-    "caller_intent": caller_intent or None,
+    "caller_intent": selected(caller_intent, 'planning', 'explanation') or None,
     "exit_overridden_for_planning": exit_overridden,
-    "manifest": manifest_path.as_posix(),
+    "manifest": report_manifest_path(),
     "summary": {
         "target": {
-            "client": get(manifest, "client.id"),
-            "environment": get(manifest, "environment.id"),
-            "source_provider": get(manifest, "source.provider"),
-            "source_repository": get(manifest, "source.repository"),
-            "cloud_provider": get(manifest, "cloud.provider"),
+            "client": selected(get(manifest, "client.id"), "kanbien"),
+            "environment": selected(get(manifest, "environment.id"), "staging"),
+            "source_provider": selected(get(manifest, "source.provider"), "github"),
+            "source_repository": selected(get(manifest, "source.repository"), "gordonrose/entity-builder-harness", "owner/entity-builder-harness"),
+            "cloud_provider": selected(get(manifest, "cloud.provider"), "aws"),
         },
         "deployment": {
-            "service_id": get(manifest, "deployment.service_id"),
-            "environment": get(manifest, "deployment.environment"),
-            "runtime_target": get(manifest, "deployment.runtime_target"),
-            "mutation_authorized": get(manifest, "deployment.mutation_authorized"),
+            "service_id": selected(get(manifest, "deployment.service_id"), "platform-shell"),
+            "environment": selected(get(manifest, "deployment.environment"), "staging"),
+            "runtime_target": selected(get(manifest, "deployment.runtime_target"), "aws.ecs-fargate.platform-shell-staging"),
+            "mutation_authorized": get(manifest, "deployment.mutation_authorized") if type(get(manifest, "deployment.mutation_authorized")) is bool else None,
         },
         "runtime": {
-            "provider": get(manifest, "runtime.provider"),
-            "family": get(manifest, "runtime.family"),
-            "adapter": get(manifest, "runtime.adapter"),
-            "server_health": get(manifest, "runtime.server.health"),
-            "worker_status": get(manifest, "runtime.worker.status"),
+            "provider": selected(get(manifest, "runtime.provider"), "aws"),
+            "family": selected(get(manifest, "runtime.family"), "ecs-fargate"),
+            "adapter": selected(get(manifest, "runtime.adapter"), "platform/adapters/aws/runtime/ecs-fargate/"),
+            "server_health": {key: selected(get(manifest, 'runtime.server.health.' + key), expected) for key, expected in (('liveness', '/livez'), ('readiness', '/readyz'))} if isinstance(get(manifest, 'runtime.server.health'), dict) else None,
+            "worker_status": selected(get(manifest, "runtime.worker.status"), "ready"),
         },
-        "proof": manifest.get("proof", {}),
-        "blocker_count": len(manifest.get("blockers") or []),
+        "proof": project_proof(manifest.get("proof", {}), PROOF_REPORT_FIELDS),
+        "blocker_count": len(manifest.get("blockers") or []) if isinstance(manifest.get("blockers") or [], (list, dict, str)) else None,
     },
     "blocking_gaps": blocking_gaps,
     "warnings": warnings,
@@ -684,15 +864,15 @@ if emit_json:
     print(json.dumps(report, indent=2, sort_keys=True))
 else:
     print(f"Platform shell deploy readiness: {status}")
-    print(f"Manifest: {manifest_path.as_posix()}")
-    print(f"Runtime family: {get(manifest, 'runtime.family')}")
-    print(f"Blockers: {len(manifest.get('blockers') or [])}")
+    print(f"Manifest: {report['manifest'] or 'unavailable'}")
+    print(f"Runtime family: {report['summary']['runtime']['family'] or 'unavailable'}")
+    print(f"Blockers: {report['summary']['blocker_count']}")
     if blocking_gaps:
         print("Blocking gaps:")
         for gap in blocking_gaps:
             print(f"- {gap['path']}: {gap['message']}")
     if exit_overridden:
-        print(f"Blocked exit overridden for caller intent: {caller_intent}")
+        print(f"Blocked exit overridden for caller intent: {report['caller_intent']}")
 
 if ok or exit_overridden:
     sys.exit(0)

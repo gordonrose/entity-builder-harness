@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: migration
 #   disciplines:
@@ -58,8 +58,20 @@ case "$OLD_PATH:$NEW_PATH" in
     ;;
 esac
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-cd "$REPO_ROOT"
+if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  :
+else
+  status=$?
+  echo "ERROR: artifact-path-migration-repository-observation-unavailable" >&2
+  exit "$status"
+fi
+if cd "$REPO_ROOT" 2>/dev/null; then
+  :
+else
+  status=$?
+  echo "ERROR: artifact-path-migration-repository-access-unavailable" >&2
+  exit "$status"
+fi
 
 bucket_for_path() {
   case "$1" in
@@ -92,14 +104,23 @@ bucket_for_path() {
 
 all_files() {
   {
-    git ls-files
-    git ls-files --others --exclude-standard
-  } | sort -u
+    local failed=0
+    git ls-files 2>/dev/null || failed=1
+    git ls-files --others --exclude-standard 2>/dev/null || failed=1
+    [ "$failed" -eq 0 ]
+  } | sort -u 2>/dev/null
 }
 
 matching_refs() {
   local needle="$1"
-  local file
+  local file files matches status
+
+  if files="$(all_files)"; then
+    :
+  else
+    echo "ERROR: artifact-path-migration-enumeration-unavailable" >&2
+    return 1
+  fi
 
   while IFS= read -r file; do
     [ -f "$file" ] || continue
@@ -108,10 +129,18 @@ matching_refs() {
         continue
         ;;
     esac
-    grep -nF "$needle" "$file" 2>/dev/null | while IFS=: read -r line_no text; do
-      printf '%s\t%s\t%s\n' "$(bucket_for_path "$file")" "$file:$line_no" "$text"
-    done
-  done < <(all_files)
+    if matches="$(grep -nF "$needle" "$file" 2>/dev/null)"; then
+      while IFS=: read -r line_no text; do
+        printf '%s\t%s\t%s\n' "$(bucket_for_path "$file")" "$file:$line_no" "$text"
+      done <<< "$matches"
+    else
+      status=$?
+      if [ "$status" -ne 1 ]; then
+        echo "ERROR: artifact-path-migration-reference-read-unavailable" >&2
+        return 1
+      fi
+    fi
+  done <<< "$files"
 }
 
 print_refs_for() {
@@ -120,7 +149,11 @@ print_refs_for() {
   local refs
   local bucket
 
-  refs="$(matching_refs "$needle" || true)"
+  if refs="$(matching_refs "$needle")"; then
+    :
+  else
+    return 1
+  fi
   printf '%s\n' "$label"
   printf 'path=%s\n' "$needle"
 

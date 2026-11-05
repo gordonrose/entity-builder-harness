@@ -9,13 +9,26 @@ route.
 API after the source split, but it does not expose internal helpers merely
 because another topic file uses them.
 
+Direct limiter configuration guards preserve their historical primary record
+and add a closed `security.configuration-predicate-invalid` companion. Its fixed
+field and observed numeric/empty reason do not include a table, region, supplied
+number or source value. In-memory and shared-store implementations now call one numeric check/report
+owner in `rate-limit-configuration.ts`; exact adapter bindings remain in the adapter. Number-normalized
+environment input reports the observed numeric rejection, not a guessed original
+text format. No clock/store call or new accepted-input policy is introduced.
+
 | File | Owns | Why the boundary matters |
 | --- | --- | --- |
 | `errors.ts` | `PlatformSecurityError` and its stable codes. | Authentication, authorization, JWT, and rate limiting can report a common safe error shape without importing one another’s mechanisms. |
+| `diagnostics.ts` | Versioned security catalog, safe record extraction, private failure retention and observed peer-code translation. | Each operation/reason has a closed schema; only validated copies reach delivery. Certificate parsing, credential denial, dependency failure and policy decisions remain distinct. |
+| `certificates.ts` | Pure certificate-content syntax validation using `X509Certificate`. | Parsing neither accesses files nor establishes certificate lifetime, chain trust or hostname identity. |
 | `authorization.ts` | Permission matching and configured claim-to-permission mappings. | It translates identity facts into declared permissions; it does not verify a token or decide product roles. |
-| `jwt.ts` | JWT/JWKS types, verification, signing-key conversion/cache, and token-claim validation. | Cryptographic parsing and validation remain together, separate from provider configuration and app policy. |
+| `jwt.ts` | Checked construction, verification, signing-key conversion/cache, and token-claim validation. | Cryptographic parsing remains separate from startup instruction checking and provider choices. |
+| `jwt-contract.ts` | JWT options, claims, verifier, key and fetcher interfaces. | One contract shared by checking and verification, without a contract importing its implementation. |
+| `jwt-configuration/` | Check and snapshot verifier instructions, with safe configuration reports. | The [module guide](jwt-configuration/README.md) explains how startup failures differ from rejected tokens and later key-fetch failures. |
 | `authentication.ts` | Authentication-hook contract, denied default, principal bridge, bearer parsing, and JWT-hook composition. | The server receives one provider-neutral authentication result instead of JWT or provider details. |
 | `headers.ts` | Security-header and CORS vocabulary plus exact-origin policy construction. | Browser transport protection is independent of identity and request-rate accounting. |
+| `rate-limit-configuration.ts` | Shared positive-whole-number check, safe problem record and direct-constructor assertion. | Both limiters reuse one predicate while keeping their own defaults, source reading and failure policy. |
 | `rate-limiting.ts` | Rate-limit contract, in-memory implementation, key derivation, and failure shape. | It can reuse safe header parsing while keeping throttling state and token hashing separate from authentication decisions. |
 | `index.ts` | Approved public exports only. | Callers keep one stable import even when internal responsibilities evolve. |
 
@@ -55,6 +68,12 @@ group membership, and the specific invoice allow the action.
 
 ### `jwt.ts` — proving that a token is trustworthy
 
+Construction first uses the [configuration checker](jwt-configuration/README.md).
+It consumes the returned checked copy, not mutable original options. The file
+retains compatible type re-exports from `jwt-contract.ts`; those declarations
+no longer live among verification operations. Invalid configuration throws an
+owned configuration error before a usable verifier is returned.
+
 This file owns the generic JWT/JWKS mechanics. It decodes the three JWT
 segments, checks the expected signing algorithm and key ID, obtains a matching
 public key from JWKS, verifies the signature, and validates issuer, time, and
@@ -87,6 +106,10 @@ The low-level header and bearer-token readers are exported only for sibling
 source files such as rate limiting. They are intentionally absent from the
 public barrel, so external callers do not depend on this internal arrangement.
 
+The public `observeBearerTokenFromHeaders` helper separately exposes the safe
+header decision alongside its private token result. Only its diagnostic record
+is suitable for internal reporting; callers must never forward the whole result.
+
 ### `headers.ts` — browser-facing transport protection
 
 This file builds the defensive HTTP headers that apply consistently to browser
@@ -117,6 +140,35 @@ header. This is an operational safeguard, not a finished distributed
 production rate-limit store; a public multi-replica target must select a shared
 adapter and a target-owned trusted-ingress address policy.
 
+### `rate-limit-configuration.ts` — check the same number once in one owner
+
+This file receives an already supplied value and a permitted logical name. It
+does not read environment variables or choose a default. One function returns
+no report for a valid number or an exact problem report for an invalid one; the
+other uses that function and throws the existing direct-constructor error.
+The [package guide](../README.md#shared-number-checks-for-rate-limiters) explains
+both public names, input/output examples and the two real caller paths.
+
+### Certificate content and peer verification
+
+`diagnostics.ts` uses the shared reasons from `@kanbien/core/security` and the
+existing diagnostic engine. Its separate definitions prevent a content-parsing
+record from claiming a peer-verification outcome. The application-operation
+effect remains `not-assessed`; these observations alone cannot establish whether
+a business operation happened or grant permission to replay it.
+
+`certificates.ts` finds complete certificate blocks and parses each with Node's
+`X509Certificate`. Its compatibility default ignores text outside those blocks;
+the explicit strict marker policy also checks marker pairing without rejecting
+ordinary comments. Malformed complete blocks and strict marker failures identify
+a one-based block position using a separate closed definition. Success reports
+a syntax observation only. File paths,
+environment settings, provider errors and target selection stay outside this
+module. Native parse exceptions are discarded; certificate contents and
+identifying metadata never enter diagnostic detail. The shared reporter can
+emit the selected catalog internally, but operational logging does not satisfy
+security-incident or audit-record delivery requirements.
+
 ### `index.ts` — the one public doorway
 
 `index.ts` is a barrel: a deliberate list of contracts and functions that the
@@ -137,6 +189,10 @@ authorization mapping into an authentication hook. `rate-limiting.ts` may use
 the narrowly scoped bearer/header parsing helpers from `authentication.ts` to
 avoid copying parsing rules. `headers.ts` is independent. Finally, `index.ts`
 exports the approved public contracts.
+
+The certificate path is independent of request authentication: `diagnostics.ts`
+depends on Core's diagnostic and security contracts, and `certificates.ts` uses
+those definitions. It does not select a provider or modify JWT behavior.
 
 The source-level helper exports used between topic files are intentionally not
 re-exported by `index.ts`. They are implementation details, not a promise that

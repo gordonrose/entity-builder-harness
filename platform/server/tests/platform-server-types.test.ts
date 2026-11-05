@@ -11,6 +11,8 @@ import {
   platformReleaseVerificationResponse,
   resolvePlatformReleaseIdentity,
   resolvePlatformServerRuntimeConfiguration,
+  resolvePlatformServerRuntimeConfigurationWithDiagnostics,
+  type PlatformServerRuntimeConfigurationObservation,
   type PlatformServerAuthHook,
   type PlatformHealthExposurePolicy,
   type PlatformServerMiddlewareStep,
@@ -55,6 +57,7 @@ const shell = createPlatformServerShell({
   auth,
   corsAllowlist: ["https://app.example.test"],
   healthExposure,
+  diagnosticCatalogs: [],
 });
 void shell;
 
@@ -72,6 +75,13 @@ const runtimeConfiguration = resolvePlatformServerRuntimeConfiguration({
   },
 });
 void runtimeConfiguration.config;
+const configurationObservation: PlatformServerRuntimeConfigurationObservation = resolvePlatformServerRuntimeConfigurationWithDiagnostics({ env: {}, port: 0 });
+void configurationObservation.configuration.port;
+void configurationObservation.diagnosticRecords;
+// @ts-expect-error process port options remain numeric, not environment text.
+resolvePlatformServerRuntimeConfigurationWithDiagnostics({ env: {}, port: "3000" });
+// @ts-expect-error old resolver retains its configuration-only shape.
+void runtimeConfiguration.diagnosticRecords;
 const releaseVerification = platformReleaseVerificationResponse(
   resolvePlatformReleaseIdentity("release_2026.10.19"),
 );

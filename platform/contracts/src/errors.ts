@@ -1,9 +1,12 @@
 import type { Permission } from "@kanbien/core/authz";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { platformContractDiagnosticRecord, type PlatformContractDiagnosticField } from "./registration-diagnostics";
 import type { JsonValue } from "@kanbien/core/shared";
 
-export type PlatformRegistrationKind = "app" | "route" | "permission" | "job" | "health" | "config" | "observability-profile";
+export type PlatformRegistrationKind = "app" | "route" | "permission" | "job" | "health" | "config" | "observability-profile" | "diagnostic-catalog";
 
 export type PlatformContractErrorCode =
+  | "PLATFORM_CONTRACT_MALFORMED_DIAGNOSTIC_CATALOG"
   | "PLATFORM_CONTRACT_INVALID_NAME"
   | "PLATFORM_CONTRACT_DUPLICATE_REGISTRATION"
   | "PLATFORM_CONTRACT_RESERVED_PATH"
@@ -19,13 +22,16 @@ export interface PlatformContractError {
   readonly code: PlatformContractErrorCode;
   readonly defaultMessage: string;
   readonly details?: Readonly<Record<string, JsonValue>>;
+  readonly diagnosticRecord?: DiagnosticRecord;
+  readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
 }
 
-export function duplicatePlatformRegistration(kind: PlatformRegistrationKind, key: string): PlatformContractError {
+export function duplicatePlatformRegistration(kind: PlatformRegistrationKind, key: string, dimension: "duplicate-name" | "duplicate-route-key" | "duplicate-message-type" | "duplicate-permission" | "duplicate-identity" = "duplicate-identity"): PlatformContractError {
   return {
     code: "PLATFORM_CONTRACT_DUPLICATE_REGISTRATION",
     defaultMessage: `Duplicate platform ${kind} registration.`,
     details: { kind, key },
+    diagnosticRecord: platformContractDiagnosticRecord(kind, "identity", dimension, "registration"),
   };
 }
 
@@ -34,25 +40,29 @@ export function reservedPlatformPath(path: string, reservedPath: string): Platfo
     code: "PLATFORM_CONTRACT_RESERVED_PATH",
     defaultMessage: "Route path uses a reserved platform path.",
     details: { path, reservedPath },
+    diagnosticRecord: platformContractDiagnosticRecord("route", "path", "reserved-path"),
   };
 }
 
-export function unknownPlatformPermission(permission: Permission, declaredPermissions: readonly Permission[]): PlatformContractError {
+export function unknownPlatformPermission(permission: Permission, declaredPermissions: readonly Permission[], field: PlatformContractDiagnosticField = "permission"): PlatformContractError {
   return {
     code: "PLATFORM_CONTRACT_UNKNOWN_PERMISSION",
     defaultMessage: "Route references a permission that has not been declared.",
     details: { permission, declaredPermissions: [...declaredPermissions] },
+    diagnosticRecord: platformContractDiagnosticRecord("route", field, "undeclared-permission", "resolution"),
   };
 }
 
 export function unknownPlatformObservabilityProfile(
   profile: string,
   declaredProfiles: readonly string[],
+  registration: "route" | "job" | "identifier" = "identifier",
 ): PlatformContractError {
   return {
     code: "PLATFORM_CONTRACT_UNKNOWN_OBSERVABILITY_PROFILE",
     defaultMessage: "Route or job references an observability profile that has not been declared.",
     details: { profile, declaredProfiles: [...declaredProfiles] },
+    diagnosticRecord: platformContractDiagnosticRecord(registration, "observability", "undeclared-profile", "resolution"),
   };
 }
 
@@ -65,6 +75,7 @@ export function platformRegistrationNamespaceMismatch(
     code: "PLATFORM_CONTRACT_NAMESPACE_MISMATCH",
     defaultMessage: "Platform registration name does not belong to the mounting app namespace.",
     details: { kind, appId, name },
+    diagnosticRecord: platformContractDiagnosticRecord(kind, "name", "namespace-mismatch", "registration"),
   };
 }
 
@@ -92,6 +103,7 @@ export function invalidContractName(label: string, value: unknown): PlatformCont
     code: "PLATFORM_CONTRACT_INVALID_NAME",
     defaultMessage: `${label} must use dot-separated lowercase segments.`,
     details: { value: stringifyDetail(value) },
+    diagnosticRecord: platformContractDiagnosticRecord("identifier", "name", typeof value === "string" ? "invalid-format" : "string-required"),
   };
 }
 
@@ -104,6 +116,9 @@ function platformContractError(
     code,
     defaultMessage,
     ...(details === undefined ? {} : { details }),
+    diagnosticRecord: platformContractDiagnosticRecord(
+      code === "PLATFORM_CONTRACT_MALFORMED_ROUTE" ? "route" : code === "PLATFORM_CONTRACT_MALFORMED_JOB" ? "job" : code === "PLATFORM_CONTRACT_MALFORMED_PERMISSION" ? "permission" : "observability-profile",
+      "declaration", "declaration-rejected"),
   };
 }
 

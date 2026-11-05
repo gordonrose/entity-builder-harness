@@ -1,5 +1,6 @@
 import type { TraceContext } from "@kanbien/core/monitoring";
 import type { CorrelationId } from "@kanbien/core/shared";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 
 export const platformPersistenceTransitions = [
   "outbox.delivery.lookup_failed",
@@ -33,10 +34,14 @@ export interface PlatformPersistenceObservation {
   readonly correlationId?: CorrelationId;
   readonly traceParent?: TraceContext;
   readonly error?: unknown;
+  /** Independent boundary evidence; does not displace the error's primary/eight. */
+  readonly diagnosticRecord?: DiagnosticRecord;
 }
 
 export interface PlatformPersistenceObserver {
   record(observation: PlatformPersistenceObservation): void;
+  /** Selected store evidence uses the same profile-governed internal reporter. */
+  onDiagnostic?(record: DiagnosticRecord, operation?: "store-observation" | "relay"): unknown;
 }
 
 export function recordPlatformPersistenceObservation(
@@ -48,8 +53,14 @@ export function recordPlatformPersistenceObservation(
   }
 
   try {
-    observer.record(observation);
+    const pending: unknown = observer.record(observation);
+    if (pending !== undefined) {
+      const ignore = (): void => undefined;
+      try { Reflect.apply(intrinsicPromiseThen, pending, [undefined, ignore]); }
+      catch { Reflect.apply(intrinsicPromiseThen, Promise.resolve(pending), [undefined, ignore]); }
+    }
   } catch {
     // Telemetry failure must not alter an already-completed durable transition.
   }
 }
+const intrinsicPromiseThen = Promise.prototype.then;

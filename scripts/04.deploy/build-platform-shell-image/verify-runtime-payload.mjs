@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.script.build-platform-shell-image.verify-runtime-payload
-//   version: 6
+//   version: 7
 //   status: active
 //   created_on: "2026-09-06"
-//   updated_on: "2026-10-26"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -22,10 +22,13 @@
 //   - id: package.script.platform-server-image-runtime-check
 //     path: package.json
 
+import { deepEqual } from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { verifyTargetConfigurationDiagnostics } from "./configuration-diagnostic-test.mjs";
+import { verifyTargetProcessDiagnostics, verifyEcsProcessDiagnostics } from "./process-diagnostic-test.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const runtimeRoot = join(repositoryRoot, ".cache", "platform-shell-image-build");
@@ -71,6 +74,11 @@ let workspaceHidden = false;
 try {
   renameSync(workspacePackageScope, hiddenWorkspaceScope);
   workspaceHidden = true;
+  verifySecurityConfigurationRetention();
+  verifyObservabilityConfigurationRetention();
+  await verifyTargetConfigurationDiagnostics(runtimeRoot, repositoryRoot);
+  await verifyTargetProcessDiagnostics(runtimeRoot);
+  await verifyEcsProcessDiagnostics(runtimeRoot);
   await verifyCompiledPersistenceComposition();
   verifyCompiledRelationalBootstrap();
   verifyCompiledRelationalRestoreVerification();
@@ -89,9 +97,10 @@ try {
       PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: "4n7kuqstbvb97ur3btbur8afjt",
       PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: '["15po9eg4hgknb2pi2d1bdfhdds"]',
       PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"],"platform-shell/smoke.write":["platform-smoke.persistence.work-item:create"]}',
+      PLATFORM_CORS_ORIGIN: "", // Own the omission predicate instead of inheriting the developer shell's value.
       PLATFORM_CORS_ALLOWLIST: "https://staging.platform.kanbien.com",
       PLATFORM_HEALTH_LIVEZ_EXPOSURE: "public",
-      PLATFORM_HEALTH_READYZ_EXPOSURE: "authenticated",
+      PLATFORM_HEALTH_READYZ_EXPOSURE: "synthetic-private-health-setting",
       PLATFORM_RATE_LIMIT_PROVIDER: "dynamodb",
       PLATFORM_RATE_LIMIT_DYNAMODB_TABLE: "kanbien-staging-platform-shell-rate-limits",
       PLATFORM_RATE_LIMIT_DYNAMODB_REGION: "eu-west-1",
@@ -144,12 +153,30 @@ try {
         },
       ]),
     },
-    stdio: "inherit",
+    encoding: "utf8",
   });
 
   if (serverResult.status !== 0) {
     throw new Error(`Compiled platform shell server runtime failed with exit code ${String(serverResult.status)}.`);
   }
+  const serverOutput = serverResult.stdout + serverResult.stderr;
+  const startupConfiguration = serverOutput.split("\n").filter((line) => line.startsWith("{")).map((line) => JSON.parse(line))
+    .filter((record) => record.message === "platform.diagnostic.observed" && record.fields?.capability === "platform-server"
+      && record.fields?.operation === "configure" && record.fields?.stage === "configuration");
+  const choiceCodes = new Set(["platform-server.listener-configuration-selected", "platform-server.port-configuration-fallback",
+    "platform-server.health-exposure-selected", "platform-server.health-exposure-fallback"]);
+  const startupChoices = startupConfiguration.filter((record) => choiceCodes.has(record.fields.diagnostic.code));
+  const diagnostic = (code, detail) => ({ schema: "core/diagnostic-record/v1", code, definitionVersion: 1, detail });
+  deepEqual(startupChoices.map((record) => record.fields.diagnostic), [
+    diagnostic("platform-server.listener-configuration-selected", { phase: "configuration", setting: "http.host", source: "environment", reason: "provided", effect: "selected" }),
+    diagnostic("platform-server.listener-configuration-selected", { phase: "configuration", setting: "http.port", source: "environment", reason: "provided", effect: "selected" }),
+    diagnostic("platform-server.health-exposure-selected", { phase: "configuration", setting: "http.health.liveness-exposure", source: "environment", exposure: "public", reason: "provided", effect: "selected" }),
+    diagnostic("platform-server.health-exposure-fallback", { phase: "configuration", setting: "http.health.readiness-exposure", source: "authentication-default", exposure: "authenticated", reason: "unsupported", effect: "default-selected" }),
+  ], "Compiled shell retains its four exact listener/health choices, including authenticated readiness fallback.");
+  deepEqual(startupConfiguration.filter((record) => record.fields.diagnostic.code === "platform-server.configuration-omitted").map((record) => record.fields.diagnostic), [
+    diagnostic("platform-server.configuration-omitted", { phase: "configuration", setting: "http.cors-origin", reason: "empty", effect: "omitted" }),
+  ], "Only the explicitly empty CORS origin is omitted; the supplied allowlist and release identity remain selected.");
+  if (serverOutput.includes("synthetic-private-health-setting")) throw new Error("Compiled shell must not disclose the rejected health setting.");
 
   const workerResult = spawnSync(process.execPath, [workerEntrypoint], {
     cwd: repositoryRoot,
@@ -281,6 +308,77 @@ async function verifyCompiledPersistenceComposition() {
   ) {
     throw new Error("Compiled persistence proof must preserve the reviewed three-write record order.");
   }
+
+  const corePersistence = await import(pathToFileURL(join(runtimeRoot, "packages/core/src/persistence/index.js")).href);
+  const sources = Array.from({ length: 9 }, (_, ordinal) => corePersistence.corePersistenceInMemoryBoundaryRecord({
+    operation: "initialize", phase: "get-id", reason: "boundary-threw", effect: "write-not-reached", ordinal,
+  }));
+  const failure = Object.assign(new Error("private-compiled-persistence-canary"), {
+    name: "AccessDeniedException", diagnosticRecord: sources[0], relatedDiagnosticRecords: sources.slice(1),
+  });
+  const observed = [], defaults = [];
+  let failedCalls = 0;
+  const failing = persistenceModule.createKanbienPlatformSmokePersistence({
+    client: { async send() { failedCalls++; throw failure; } },
+    configuration: { region: "eu-west-1", tableName: "platform-shell-persistence-proof", outboxDueIndexName: "due-index", lineageCauseIndexName: "cause-index" },
+    onDiagnostic(record) { defaults.push(record); },
+  });
+  const input = { id: workItemId.value, acceptedAt: sharedModule.isoDateTimeFromDate(new Date("2026-09-24T12:00:00.000Z")),
+    causationId: sharedModule.causationId("compiled-persistence-proof") };
+  const failed = await smokeModule.acceptPlatformSmokeWorkItem(input, failing, { onDiagnostic(record) { observed.push(record); } });
+  if (failed.ok || failed.error.code !== "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED") throw new Error("Compiled adapter failure changed the existing feature result.");
+  deepEqual(observed.filter((record) => record.code.startsWith("core.")), sources);
+  deepEqual(observed.filter((record) => !record.code.startsWith("core.")), [{ schema: "core/diagnostic-record/v1",
+    code: "persistence.runtime-permission-denied", definitionVersion: 4,
+    detail: { operation: "write_atomic", boundary: "invocation", role: "primary", condition: "access-rejected", codeStatus: "recognized", effect: "unknown" } }]);
+  deepEqual(defaults, [], "Invocation observer replaces, rather than duplicates, default delivery");
+  await smokeModule.acceptPlatformSmokeWorkItem(input, failing, {});
+  deepEqual(defaults, [], "Explicit opt-out does not fall back to the default observer");
+  if (failedCalls !== 2 || JSON.stringify(observed).includes("canary")) throw new Error("Compiled diagnostics retried work or exposed a private value.");
+  await verifyCompiledStoreObserverBridges(persistenceModule, sources, failure);
+}
+
+async function verifyCompiledStoreObserverBridges(target, sources, failure) {
+  const persistence = await import(pathToFileURL(join(runtimeRoot, "platform/persistence/src/index.js")).href);
+  const monitoring = await import(pathToFileURL(join(runtimeRoot, "packages/core/src/monitoring/index.js")).href);
+  const product = await import(pathToFileURL(join(runtimeRoot, "products/kanbien-platform/src/index.js")).href);
+  const owner = persistence.platformPersistenceLeaseOwner("compiled-observer-proof");
+  if (!owner.ok) throw new Error("Compiled observer owner fixture invalid.");
+  const clock = { now: () => new Date("2026-09-24T12:00:00.000Z") };
+  const configuration = { region: "eu-west-1", tableName: "private-bridge-table-canary", outboxDueIndexName: "due-index", lineageCauseIndexName: "cause-index" };
+  for (const enabled of [true, false]) {
+    const logs = [], attempts = [];
+    const profile = product.kanbienPlatformSmokeWorkItemDeliveryObservabilityProfile;
+    const selected = persistence.createPlatformPersistenceTransitionObserver({
+      profile: enabled ? profile : { name: profile.name, capability: profile.capability, action: profile.action,
+        signals: ["metric"], metricDimensionFieldNames: profile.metricDimensionFieldNames },
+      executionContext: "worker", metrics: monitoring.noopMetrics, clock,
+      logger: { write(log) { logs.push(log); } },
+    });
+    if (!selected.ok) throw new Error("Compiled observer profile fixture invalid.");
+    const observer = { record(observation) { selected.value.record(observation); }, onDiagnostic(record) {
+      if (this !== observer) throw new Error("Observer bridge lost its receiver.");
+      attempts.push(record); selected.value.onDiagnostic(record);
+    } };
+    let sends = 0, queueSends = 0;
+    const client = { async send() { sends++; throw failure; } };
+    const relay = target.createKanbienPlatformOutboxRelay({ client, configuration, observer, owner: owner.value,
+      leaseDurationMs: 1_000, clock, queue: { async send() { queueSends++; throw new Error("Unexpected queue send"); } } });
+    const relayed = await relay.runOnce();
+    if (relayed.ok) throw new Error("Failed store read unexpectedly relayed work.");
+    const worker = target.createKanbienPlatformDurableWorkerProcessing({ client, configuration, observer, owner: owner.value, leaseDurationMs: 1_000 });
+    try { await worker.processingStore.get("private-processing-id-canary"); throw new Error("Failed get unexpectedly succeeded"); }
+    catch (cause) { if (cause !== failure) throw cause; }
+    if (sends !== 2 || queueSends !== 0) throw new Error("Store diagnostics changed send/retry behavior.");
+    const expected = ["list_outbox", "read_processing"].flatMap((operation) => [{ schema: "core/diagnostic-record/v1",
+      code: "persistence.runtime-permission-denied", definitionVersion: 4,
+      detail: { operation, boundary: "invocation", role: "primary", condition: "access-rejected", codeStatus: "recognized", effect: "not-assessed" } }, ...sources]);
+    deepEqual(attempts, expected, "Both real target store bridges preserve own plus source9 and observer receiver");
+    const delivered = logs.filter((log) => log.message === "platform.diagnostic.observed" && log.fields.operation === "store-observation");
+    deepEqual(delivered.map((log) => log.fields.diagnostic), enabled ? expected : [], "Actual selected reporter honors profile opt-out");
+    if (delivered.some((log) => log.fields.stage !== "runtime" || log.correlationId !== undefined)
+      || JSON.stringify(logs).includes("canary")) throw new Error("Background store evidence invented request context or exposed private values.");
+  }
 }
 
 function verifyCompiledRelationalBootstrap() {
@@ -320,5 +418,45 @@ function verifyCompiledRelationalRestoreVerification() {
   });
   if (result.status !== 1 || result.stdout.trim() !== expected) {
     throw new Error("Compiled relational restore verification payload must load and retain its reviewed safe failure outcome.");
+  }
+}
+
+function verifySecurityConfigurationRetention() {
+  for (const [env, reference, publicCode] of [
+    [{ PLATFORM_AUTH_PROVIDER: "cognito", PLATFORM_AUTH_COGNITO_REGION: "" }, "region", "PLATFORM_ADAPTER_AWS_COGNITO_CONFIG_INVALID"],
+    [{ PLATFORM_AUTH_PROVIDER: "none", PLATFORM_DEPLOYMENT_EXPOSURE: "private", PLATFORM_RATE_LIMIT_PROVIDER: "dynamodb", PLATFORM_RATE_LIMIT_DYNAMODB_TABLE: "", PLATFORM_RATE_LIMIT_DYNAMODB_REGION: "synthetic-private-canary", PLATFORM_RATE_LIMIT_LIMIT: "1", PLATFORM_RATE_LIMIT_WINDOW_MS: "1000" }, "table", "KANBIEN_PLATFORM_TARGET_RUNTIME_CONFIG_INVALID"],
+  ]) {
+    const result = spawnSync(process.execPath, [serverEntrypoint], { cwd: repositoryRoot, env: { ...process.env, ...env }, encoding: "utf8" });
+    const output = result.stdout + result.stderr;
+    const entries = output.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));
+    const diagnostic = entries.find((entry) => entry.message === "platform.diagnostic.observed")?.fields?.diagnostic;
+    const legacy = entries.find((entry) => entry.error?.code === publicCode);
+    if (result.status !== 1 || !legacy || diagnostic?.code !== "security.adapter-configuration.empty"
+      || JSON.stringify(diagnostic.detail) !== JSON.stringify({ phase: "adapter-configuration", reason: "empty", effect: "not-assessed", reference })
+      || output.includes("synthetic-private-canary")) throw new Error("Compiled target must preserve the exact safe adapter configuration observation without changing the original startup code or disclosing configuration values.");
+  }
+}
+
+function verifyObservabilityConfigurationRetention() {
+  for (const entrypoint of [serverEntrypoint, workerEntrypoint]) {
+    const result = spawnSync(process.execPath, [entrypoint], { cwd: repositoryRoot, encoding: "utf8", env: {
+      ...process.env, PLATFORM_AUTH_PROVIDER: "none", PLATFORM_DEPLOYMENT_EXPOSURE: "private",
+      PLATFORM_RATE_LIMIT_PROVIDER: "", PLATFORM_OBSERVABILITY_METRICS_PROVIDER: "cloudwatch-otel",
+      PLATFORM_OBSERVABILITY_METRICS_ENDPOINT: "https://synthetic-private-canary:4318/v1/metrics",
+      PLATFORM_OBSERVABILITY_METRICS_REGION: "eu-west-1", PLATFORM_OBSERVABILITY_SERVICE_NAME: "fixture-service",
+      PLATFORM_SOURCE_COMMIT_SHA: "fixture-version", PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: "fixture",
+      PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "1000", PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "1001",
+      PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON: "[]",
+    } });
+    const output = result.stdout + result.stderr;
+    const entries = output.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));
+    const record = entries.find((entry) => entry.message === "platform.diagnostic.observed")?.fields?.diagnostic;
+    const legacy = entries.find((entry) => entry.error?.code === "KANBIEN_PLATFORM_TARGET_OBSERVABILITY_CONFIG_INVALID");
+    if (result.status !== 1 || !legacy || record?.code !== "observability.configuration-invalid"
+      || record.detail.effect !== "not-started" || record.detail.truncated !== false
+      || !record.detail.issues.some((issue) => issue.setting === "metrics.endpoint" && issue.reason === "protocol-not-allowed")
+      || !record.detail.issues.some((issue) => issue.setting === "metrics.export-timeout" && issue.reason === "timeout-exceeds-interval")
+      || !record.detail.issues.some((issue) => issue.setting === "metrics.series" && issue.reason === "empty")
+      || output.includes("synthetic-private-canary")) throw new Error("Compiled server and worker must retain safe, granular telemetry diagnostics and the existing startup code before starting work.");
   }
 }

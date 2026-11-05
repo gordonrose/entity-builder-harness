@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.delivery-access
 #   disciplines:
@@ -29,6 +29,7 @@ if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != "--json" ]; }; then
 fi
 
 ROOT="$(git rev-parse --show-toplevel)"
+source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 CONTRACT="infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-server-package-custody.delivery-access.yml"
 TEMPLATE="infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml"
 WORKFLOW=".github/workflows/publish-kanbien-core-platform-core-server.yml"
@@ -36,7 +37,7 @@ POLICY_SOURCE="${TEMPLATE}#DeliveryRole"
 COVERAGE="$(mktemp)"
 trap 'rm -f "$COVERAGE"' EXIT
 
-python3 "$ROOT/scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py" \
+safe_command_diagnostic DELIVERY_POLICY_COVERAGE_FAILED package 'Delivery policy coverage could not be established.' 'Inspect the delivery policy coverage fixture.' -- python3 "$ROOT/scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py" \
   --contract "$ROOT/$CONTRACT" \
   --template "$ROOT/$TEMPLATE" \
   --role-logical-id DeliveryRole \

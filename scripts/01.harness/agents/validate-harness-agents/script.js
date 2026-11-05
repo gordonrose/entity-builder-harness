@@ -5,7 +5,7 @@
 //   version: 1
 //   status: active
 //   created_on: "2026-07-02"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-31"
 //   layer: 01.harness
 //   domain: governance.agents
 //   disciplines:
@@ -116,7 +116,7 @@ function parseArgs(argv) {
       console.log('Usage: script.sh [--scorecard <path>] [--scorecard-dir <path>]');
       process.exit(0);
     } else {
-      failures.push(`unknown argument: ${arg}`);
+      failures.push('unknown argument [HARNESS_AGENT_ARGUMENT_UNRECOGNIZED]');
     }
   }
   return options;
@@ -128,7 +128,8 @@ function read(relativePath) {
     failures.push(`missing file: ${relativePath}`);
     return '';
   }
-  return fs.readFileSync(fullPath, 'utf8');
+  try { return fs.readFileSync(fullPath, 'utf8'); }
+  catch { failures.push(`${relativePath} could not be read [HARNESS_AGENT_INPUT_READ_FAILED]`); return ''; }
 }
 
 function parseJsonCompatibleFile(relativePath, expectedDescription) {
@@ -141,20 +142,16 @@ function resolveInputPath(inputPath) {
   return path.isAbsolute(inputPath) ? inputPath : path.join(repoRoot, inputPath);
 }
 
-function labelForPath(inputPath) {
-  const resolved = resolveInputPath(inputPath);
-  const relative = path.relative(repoRoot, resolved);
-  return relative.startsWith('..') ? resolved : relative;
-}
-
 function parseJsonCompatiblePath(inputPath, expectedDescription) {
   const resolved = resolveInputPath(inputPath);
-  const label = labelForPath(inputPath);
+  const label = 'CLI scorecard input';
   if (!fs.existsSync(resolved)) {
     failures.push(`missing file: ${label}`);
     return null;
   }
-  const content = fs.readFileSync(resolved, 'utf8');
+  let content;
+  try { content = fs.readFileSync(resolved, 'utf8'); }
+  catch { failures.push(`${label} could not be read [HARNESS_AGENT_INPUT_READ_FAILED]`); return null; }
   const parsed = parseJsonCompatibleContent(content, label, expectedDescription);
   return parsed ? { content, data: parsed, path: resolved, label } : null;
 }
@@ -169,8 +166,8 @@ function parseJsonCompatibleContent(content, label, expectedDescription) {
 
   try {
     return JSON.parse(content.slice(start, end + 1));
-  } catch (error) {
-    failures.push(`${label} is not parseable JSON-compatible YAML: ${error.message}`);
+  } catch {
+    failures.push(`${label} is not parseable JSON-compatible YAML [HARNESS_AGENT_JSON_PARSE_FAILED]`);
     return null;
   }
 }
@@ -202,8 +199,8 @@ function parseWorkflowJsonBlock(relativePath, markerName, expectedSchema) {
       failures.push(`${relativePath} ${markerName}.schema must equal ${expectedSchema}`);
     }
     return data;
-  } catch (error) {
-    failures.push(`${relativePath} ${markerName} JSON block is invalid: ${error.message}`);
+  } catch {
+    failures.push(`${relativePath} ${markerName} JSON block is invalid [HARNESS_AGENT_WORKFLOW_JSON_PARSE_FAILED]`);
     return null;
   }
 }
@@ -696,8 +693,8 @@ function validateRoutingConfig(routingConfig, label) {
       route.match_patterns.forEach((pattern, patternIndex) => {
         try {
           RegExp(pattern, 'i');
-        } catch (error) {
-          errors.push(`${routeLabel}.match_patterns[${patternIndex}] is invalid regex: ${error.message}`);
+        } catch {
+          errors.push(`${routeLabel}.match_patterns[${patternIndex}] is invalid regex [HARNESS_AGENT_REGEX_COMPILE_FAILED]`);
         }
       });
     }
@@ -715,7 +712,10 @@ function selectedAgentsForFixture(fixture, routingConfig) {
   const selected = new Set();
   for (const route of routingConfig?.routes || []) {
     const patterns = Array.isArray(route.match_patterns) ? route.match_patterns : [];
-    if (patterns.some((pattern) => RegExp(pattern, 'i').test(text))) {
+    if (patterns.some((pattern) => {
+      try { return RegExp(pattern, 'i').test(text); }
+      catch { failures.push('run-agent-review routing match could not compile [HARNESS_AGENT_REGEX_COMPILE_FAILED]'); return false; }
+    })) {
       selected.add(route.agent_id);
     }
   }
@@ -795,7 +795,10 @@ function selectedAgentsFromComposition(fixture, boardComposition) {
   const selected = new Set();
   for (const rule of boardComposition?.rules || []) {
     const patterns = Array.isArray(rule.when_any) ? rule.when_any : [];
-    if (patterns.some((pattern) => RegExp(pattern, 'i').test(text))) {
+    if (patterns.some((pattern) => {
+      try { return RegExp(pattern, 'i').test(text); }
+      catch { failures.push('run-review-board composition match could not compile [HARNESS_AGENT_REGEX_COMPILE_FAILED]'); return false; }
+    })) {
       selected.add(rule.agent_id);
     }
   }
@@ -841,8 +844,8 @@ function validateBoardCompositionConfig(boardComposition, label) {
       rule.when_any.forEach((pattern, patternIndex) => {
         try {
           RegExp(pattern, 'i');
-        } catch (error) {
-          errors.push(`${ruleLabel}.when_any[${patternIndex}] is invalid regex: ${error.message}`);
+        } catch {
+          errors.push(`${ruleLabel}.when_any[${patternIndex}] is invalid regex [HARNESS_AGENT_REGEX_COMPILE_FAILED]`);
         }
       });
     }
@@ -1473,7 +1476,10 @@ function walkScorecardFiles(dir) {
   if (!fs.existsSync(dir)) {
     return [];
   }
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+  catch { failures.push('CLI scorecard directory could not be read [HARNESS_AGENT_DIRECTORY_READ_FAILED]'); return []; }
+  return entries.flatMap((entry) => {
     const entryPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       return walkScorecardFiles(entryPath);
@@ -1500,13 +1506,16 @@ function validateCliScorecards() {
       continue;
     }
     const resolved = resolveInputPath(inputDir);
-    if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
-      failures.push(`missing scorecard directory: ${labelForPath(inputDir)}`);
+    let directory;
+    try { directory = fs.existsSync(resolved) && fs.statSync(resolved).isDirectory(); }
+    catch { failures.push('CLI scorecard directory could not be inspected [HARNESS_AGENT_DIRECTORY_INSPECTION_FAILED]'); continue; }
+    if (!directory) {
+      failures.push('missing CLI scorecard directory');
       continue;
     }
     const files = walkScorecardFiles(resolved);
     if (files.length === 0) {
-      failures.push(`scorecard directory contains no scorecard-like files: ${labelForPath(inputDir)}`);
+      failures.push('CLI scorecard directory contains no scorecard-like files');
     }
     files.forEach((filePath) => paths.add(filePath));
   }
@@ -1797,103 +1806,110 @@ function validateCfoFixture() {
     return;
   }
   if (!fs.existsSync(cfoOutputPath)) {
-    failures.push(`missing CFO fixture output file: ${cfoOutputPath}`);
+    failures.push('missing CFO fixture output file');
     return;
   }
-  const output = fs.readFileSync(cfoOutputPath, 'utf8');
-  const parsed = JSON.parse(output);
+  let output, parsed;
+  try { output = fs.readFileSync(cfoOutputPath, 'utf8'); }
+  catch { failures.push('CFO fixture output could not be read [HARNESS_AGENT_CFO_READ_FAILED]'); return; }
+  try { parsed = JSON.parse(output); }
+  catch { failures.push('CFO fixture output is not parseable JSON [HARNESS_AGENT_CFO_JSON_PARSE_FAILED]'); return; }
 
-  if (parsed.schema !== 'harness/cfo-token-comparison/v3.1') {
-    failures.push(`CFO fixture expected schema v3.1, got ${parsed.schema}`);
-  }
-  if (parsed.similar_tasks.count !== 3) {
-    failures.push(`CFO fixture expected 3 similar tasks, got ${parsed.similar_tasks.count}`);
-  }
-  if (parsed.similarity_basis.method !== 'weighted_jaccard_task_workflow_paths_agents') {
-    failures.push(`CFO fixture expected weighted similarity, got ${parsed.similarity_basis.method}`);
-  }
-  if (parsed.token_statistics.min !== 100) {
-    failures.push(`CFO fixture expected min 100, got ${parsed.token_statistics.min}`);
-  }
-  if (parsed.token_statistics.max !== 300) {
-    failures.push(`CFO fixture expected max 300, got ${parsed.token_statistics.max}`);
-  }
-  if (parsed.token_statistics.median !== 200) {
-    failures.push(`CFO fixture expected median 200, got ${parsed.token_statistics.median}`);
-  }
-  if (parsed.token_statistics.q1 !== 150) {
-    failures.push(`CFO fixture expected q1 150, got ${parsed.token_statistics.q1}`);
-  }
-  if (parsed.token_statistics.q3 !== 250) {
-    failures.push(`CFO fixture expected q3 250, got ${parsed.token_statistics.q3}`);
-  }
-  if (parsed.trend.direction !== 'up') {
-    failures.push(`CFO fixture expected upward trend, got ${parsed.trend.direction}`);
-  }
-  if (parsed.trend.sample_size !== 3) {
-    failures.push(`CFO fixture expected trend sample size 3, got ${parsed.trend.sample_size}`);
-  }
-  if (parsed.trend.confidence.level !== 'medium') {
-    failures.push(`CFO fixture expected medium trend confidence, got ${parsed.trend.confidence.level}`);
-  }
-  if (!parsed.cost_trend || parsed.cost_trend.direction !== 'up') {
-    failures.push(`CFO fixture expected upward cost trend, got ${parsed.cost_trend?.direction}`);
-  }
-  if (!parsed.cost_trend || parsed.cost_trend.sample_size !== 3) {
-    failures.push(`CFO fixture expected cost trend sample size 3, got ${parsed.cost_trend?.sample_size}`);
-  }
-  if (!parsed.cost_per_query_trend || parsed.cost_per_query_trend.direction !== 'up') {
-    failures.push(`CFO fixture expected upward cost-per-query trend, got ${parsed.cost_per_query_trend?.direction}`);
-  }
-  if (!parsed.cost_per_query_trend || parsed.cost_per_query_trend.sample_size !== 3) {
-    failures.push(`CFO fixture expected cost-per-query trend sample size 3, got ${parsed.cost_per_query_trend?.sample_size}`);
-  }
-  if (parsed.date_range.day_span !== 2) {
-    failures.push(`CFO fixture expected date range day_span 2, got ${parsed.date_range.day_span}`);
-  }
-  if (!parsed.current_task || parsed.current_task.delta_from_median !== -20) {
-    failures.push('CFO fixture expected current task delta from median to equal -20');
-  }
-  if (!parsed.current_task || parsed.current_task.cost_usd !== 0.018) {
-    failures.push('CFO fixture expected current task cost_usd to equal 0.018');
-  }
-  if (!parsed.current_task || parsed.current_task.cost_per_query_usd !== 0.0018) {
-    failures.push('CFO fixture expected current task cost_per_query_usd to equal 0.0018');
-  }
-  if (!parsed.cost_statistics || parsed.cost_statistics.estimated_chat_cost_usd.median !== 0.02) {
-    failures.push('CFO fixture expected historical cost median to equal 0.02');
-  }
-  if (!parsed.cost_statistics || parsed.cost_statistics.estimated_cost_per_query_usd.median !== 0.002) {
-    failures.push('CFO fixture expected historical cost-per-query median to equal 0.002');
-  }
-  if (!parsed.pricing_basis || parsed.pricing_basis.source !== 'fixture token and cost basis') {
-    failures.push('CFO fixture expected pricing basis source to be preserved');
-  }
-  if (!parsed.pricing_basis || parsed.pricing_basis.mode !== 'token_and_cost_when_available') {
-    failures.push('CFO fixture expected token_and_cost_when_available pricing mode');
-  }
-  if (!parsed.pricing_basis || parsed.pricing_basis.historical_cost_samples !== 3) {
-    failures.push('CFO fixture expected 3 historical cost samples');
-  }
-  if (!parsed.similar_tasks.sessions.every((session) => session.cost_basis_fields?.model === 'fixture-model')) {
-    failures.push('CFO fixture expected model cost-basis fields on every similar session');
-  }
-  if (!parsed.delegation || parsed.delegation.required !== true) {
-    failures.push('CFO fixture expected delegation to be required for upward token, cost, or cost-per-query trend');
-  }
-  if (parsed.delegation?.required === true && (!Array.isArray(parsed.delegation.delegate_to) || parsed.delegation.delegate_to.length === 0)) {
-    failures.push('CFO fixture required delegation must include at least one delegate_to target');
-  }
-  for (const reason of ['trend direction is up', 'cost trend direction is up', 'cost per query trend direction is up']) {
-    if (!parsed.delegation?.reasons?.includes(reason)) {
-      failures.push(`CFO fixture expected delegation reason: ${reason}`);
+  try {
+    if (parsed.schema !== 'harness/cfo-token-comparison/v3.1') {
+      failures.push('CFO fixture expected schema v3.1 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
     }
-  }
-  if (!parsed.delegation.delegate_to.includes('harness.agents.senior-prompt-engineer')) {
-    failures.push('CFO fixture expected delegation to Senior Prompt Engineer for workflow token trend');
-  }
-  if (parsed.delegation.delegate_to.includes('harness.agents.ux-ui-engineer')) {
-    failures.push('CFO fixture must not delegate to UX/UI for bare chat workflow text without a human-facing interface signal');
+    if (parsed.similar_tasks.count !== 3) {
+      failures.push('CFO fixture expected 3 similar tasks [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.similarity_basis.method !== 'weighted_jaccard_task_workflow_paths_agents') {
+      failures.push('CFO fixture expected weighted similarity [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.token_statistics.min !== 100) {
+      failures.push('CFO fixture expected min 100 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.token_statistics.max !== 300) {
+      failures.push('CFO fixture expected max 300 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.token_statistics.median !== 200) {
+      failures.push('CFO fixture expected median 200 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.token_statistics.q1 !== 150) {
+      failures.push('CFO fixture expected q1 150 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.token_statistics.q3 !== 250) {
+      failures.push('CFO fixture expected q3 250 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.trend.direction !== 'up') {
+      failures.push('CFO fixture expected upward trend [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.trend.sample_size !== 3) {
+      failures.push('CFO fixture expected trend sample size 3 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.trend.confidence.level !== 'medium') {
+      failures.push('CFO fixture expected medium trend confidence [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (!parsed.cost_trend || parsed.cost_trend.direction !== 'up') {
+      failures.push('CFO fixture expected upward cost trend [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (!parsed.cost_trend || parsed.cost_trend.sample_size !== 3) {
+      failures.push('CFO fixture expected cost trend sample size 3 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (!parsed.cost_per_query_trend || parsed.cost_per_query_trend.direction !== 'up') {
+      failures.push('CFO fixture expected upward cost-per-query trend [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (!parsed.cost_per_query_trend || parsed.cost_per_query_trend.sample_size !== 3) {
+      failures.push('CFO fixture expected cost-per-query trend sample size 3 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (parsed.date_range.day_span !== 2) {
+      failures.push('CFO fixture expected date range day_span 2 [HARNESS_AGENT_CFO_VALUE_MISMATCH]');
+    }
+    if (!parsed.current_task || parsed.current_task.delta_from_median !== -20) {
+      failures.push('CFO fixture expected current task delta from median to equal -20');
+    }
+    if (!parsed.current_task || parsed.current_task.cost_usd !== 0.018) {
+      failures.push('CFO fixture expected current task cost_usd to equal 0.018');
+    }
+    if (!parsed.current_task || parsed.current_task.cost_per_query_usd !== 0.0018) {
+      failures.push('CFO fixture expected current task cost_per_query_usd to equal 0.0018');
+    }
+    if (!parsed.cost_statistics || parsed.cost_statistics.estimated_chat_cost_usd.median !== 0.02) {
+      failures.push('CFO fixture expected historical cost median to equal 0.02');
+    }
+    if (!parsed.cost_statistics || parsed.cost_statistics.estimated_cost_per_query_usd.median !== 0.002) {
+      failures.push('CFO fixture expected historical cost-per-query median to equal 0.002');
+    }
+    if (!parsed.pricing_basis || parsed.pricing_basis.source !== 'fixture token and cost basis') {
+      failures.push('CFO fixture expected pricing basis source to be preserved');
+    }
+    if (!parsed.pricing_basis || parsed.pricing_basis.mode !== 'token_and_cost_when_available') {
+      failures.push('CFO fixture expected token_and_cost_when_available pricing mode');
+    }
+    if (!parsed.pricing_basis || parsed.pricing_basis.historical_cost_samples !== 3) {
+      failures.push('CFO fixture expected 3 historical cost samples');
+    }
+    if (!parsed.similar_tasks.sessions.every((session) => session.cost_basis_fields?.model === 'fixture-model')) {
+      failures.push('CFO fixture expected model cost-basis fields on every similar session');
+    }
+    if (!parsed.delegation || parsed.delegation.required !== true) {
+      failures.push('CFO fixture expected delegation to be required for upward token, cost, or cost-per-query trend');
+    }
+    if (parsed.delegation?.required === true && (!Array.isArray(parsed.delegation.delegate_to) || parsed.delegation.delegate_to.length === 0)) {
+      failures.push('CFO fixture required delegation must include at least one delegate_to target');
+    }
+    for (const reason of ['trend direction is up', 'cost trend direction is up', 'cost per query trend direction is up']) {
+      if (!parsed.delegation?.reasons?.includes(reason)) {
+        failures.push(`CFO fixture expected delegation reason: ${reason}`);
+      }
+    }
+    if (!parsed.delegation.delegate_to.includes('harness.agents.senior-prompt-engineer')) {
+      failures.push('CFO fixture expected delegation to Senior Prompt Engineer for workflow token trend');
+    }
+    if (parsed.delegation.delegate_to.includes('harness.agents.ux-ui-engineer')) {
+      failures.push('CFO fixture must not delegate to UX/UI for bare chat workflow text without a human-facing interface signal');
+    }
+  } catch {
+    failures.push('CFO fixture comparison could not be checked [HARNESS_AGENT_CFO_VALIDATION_FAILED]');
   }
 }
 

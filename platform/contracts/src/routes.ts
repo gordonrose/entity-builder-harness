@@ -77,6 +77,8 @@ export interface PlatformResponse<TBody = unknown> {
  */
 export interface PlatformResponseObservability {
   readonly errorClass?: string;
+  /** Internal only. The selected catalog validates this record before logging. */
+  readonly diagnosticRecord?: import("@kanbien/core/diagnostics").DiagnosticRecord;
 }
 
 export interface PlatformRouteHandler<TBody = unknown, TResponse = unknown> {

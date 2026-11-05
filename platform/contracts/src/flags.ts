@@ -3,6 +3,7 @@ import type { Brand, CorrelationId, JsonValue, Result } from "@kanbien/core/shar
 import type { TenantContext } from "@kanbien/core/tenancy";
 import type { PlatformContractError } from "./errors";
 import { brandedPlatformContractName } from "./identifiers";
+import { PlatformOperationalObservation, type PlatformOperationalDiagnosticOptions } from "./operational-observations";
 
 export type FeatureFlagName = Brand<string, "FeatureFlagName">;
 
@@ -21,10 +22,15 @@ export function featureFlagName(value: string): Result<FeatureFlagName, Platform
   return brandedPlatformContractName(value, "FeatureFlagName", "feature flag name");
 }
 
-export function fixedFeatureFlagReader(flags: Readonly<Record<string, boolean>>, defaultEnabled = false): FeatureFlagReader {
-  const snapshot = { ...flags };
+export function fixedFeatureFlagReader(flags: Readonly<Record<string, boolean>>, defaultEnabled = false, diagnostics?: PlatformOperationalDiagnosticOptions): FeatureFlagReader {
+  const snapshotObservation = new PlatformOperationalObservation("fixed-feature-flags", "reader-not-produced", diagnostics);
+  const snapshot = snapshotObservation.run(() => ({ ...flags }));
 
   return {
-    isEnabled: (name) => snapshot[name] ?? defaultEnabled,
+    isEnabled: (name) => {
+      const observation = new PlatformOperationalObservation("fixed-feature-flags", "value-not-produced", diagnostics);
+      observation.location("read", "value");
+      return observation.run(() => snapshot[name] ?? defaultEnabled);
+    },
   };
 }

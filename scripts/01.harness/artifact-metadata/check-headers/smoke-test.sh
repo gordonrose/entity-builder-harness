@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-11-05"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -42,6 +42,7 @@ import copy
 import datetime as dt
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -50,6 +51,7 @@ import tempfile
 import yaml
 
 CHECKER = str(Path(sys.argv[1]).resolve())
+ORIGINAL_CHECKER = CHECKER
 TODAY = dt.datetime.now(dt.timezone.utc).date()
 YESTERDAY = (TODAY - dt.timedelta(days=1)).isoformat()
 TODAY = TODAY.isoformat()
@@ -578,6 +580,53 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-check-") as temp:
     write(root, legacy_path, fixed)
     git(root, "add", "--", legacy_path)
     check(root, "--staged", error="NUL bytes")
+
+with tempfile.TemporaryDirectory(prefix="artifact-observation-check-") as temp:
+    CHECKER = ORIGINAL_CHECKER
+    root = Path(temp)
+    git(root, "init", "--quiet")
+    git(root, "config", "user.name", "Metadata Fixture")
+    git(root, "config", "user.email", "metadata-fixture@example.invalid")
+    source = ".agentic/source.md"
+    write(root, source, payload())
+    git(root, "add", ".")
+    # An actually unborn HEAD is supported, not a failed observation.
+    check(root, "--staged")
+    git(root, "commit", "-qm", "baseline")
+    write(root, source, payload(), body="Changed content.\n")
+    git(root, "add", ".")
+    bindir = root / "bin"
+    bindir.mkdir()
+    shim = bindir / "git"
+    shim.write_text("""#!/usr/bin/env bash
+case "$HEADER_FAULT:$*" in
+  head-tree:ls-tree*|head-content:show\\ HEAD:*|index-content:cat-file\\ blob*|head-reference:symbolic-ref*)
+    echo HEADER_NATIVE_CANARY >&2; exit 99 ;;
+esac
+exec "$HEADER_REAL_GIT" "$@"
+""")
+    shim.chmod(0o755)
+    for stage in ("head-tree", "head-content", "index-content", "head-reference"):
+        environment = dict(ENV, PATH=str(bindir) + os.pathsep + ENV["PATH"],
+                           HEADER_FAULT=stage, HEADER_REAL_GIT=shutil.which("git"))
+        result = subprocess.run(["bash", CHECKER, "--staged"], cwd=root, env=environment,
+                                capture_output=True, text=True)
+        output = result.stdout + result.stderr
+        assert result.returncode == 2 and "stage=" + stage in output, output
+        assert "HEADER_NATIVE_CANARY" not in output and "headers passed" not in output and "Traceback" not in output, output
+        COUNT += 1
+    for fields, reason in [
+        ({"disciplines": ["HEADER_VALUE_CANARY"]}, "invalid discipline"),
+        ({"kind": "script", "effects": ["HEADER_VALUE_CANARY"]}, "invalid effects"),
+        ({"schema": "HEADER_VALUE_CANARY"}, "unsupported artifact metadata schema"),
+        ({"used_by": [{"id": "test.target", "path": "docs/00.chat/HEADER_VALUE_CANARY.md"}]}, "missing used_by"),
+    ]:
+        output = check(root, "--proposed", proposed={source: text(payload(**fields))}, error=reason)
+        assert "HEADER_VALUE_CANARY" not in output, output
+    output = check(root, "--proposed",
+        proposed={source: "<!-- agentic-artifact:\nschema: [HEADER_VALUE_CANARY\n-->\n"},
+        error="invalid metadata YAML")
+    assert "HEADER_VALUE_CANARY" not in output, output
 
 print(f"Artifact metadata header checker smoke test passed ({COUNT} assertions).")
 PY

@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-05"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -191,6 +191,23 @@ with tempfile.TemporaryDirectory(prefix="observability-acceptance-receipt-") as 
         arguments = [name + "=" + str(path) for name, path in paths.items()]
         observed = collector.parse_observability_receipts(arguments, digest)
         assert set(observed) == set(paths)
+        notification_path = paths["readiness-alarm-notified"]
+        original_notification = notification_path.read_bytes()
+        equivalent = copy.deepcopy(notified)
+        alarm_instant = datetime.fromisoformat(equivalent["observation"]["alarm_state_updated_at"].replace("Z", "+00:00"))
+        equivalent["observation"]["alarm_state_updated_at"] = alarm_instant.astimezone(timezone(timedelta(hours=1))).isoformat()
+        equivalent["integrity"]["payload_sha256"] = observation_module.digest({key: value for key, value in equivalent.items() if key != "integrity"})
+        notification_path.write_text(json.dumps(equivalent))
+        assert set(collector.parse_observability_receipts(arguments, digest)) == set(paths)
+        wrong_episode = copy.deepcopy(notified)
+        wrong_episode["observation"]["alarm_state_updated_at"] = stamp(alarm_instant + timedelta(seconds=1))
+        wrong_episode["integrity"]["payload_sha256"] = observation_module.digest({key: value for key, value in wrong_episode.items() if key != "integrity"})
+        observation_module.validate(wrong_episode)
+        notification_path.write_text(json.dumps(wrong_episode))
+        try: collector.parse_observability_receipts(arguments, digest)
+        except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-alarm-episode-mismatch"
+        else: raise AssertionError("rehashing a different ALARM episode created false delivery proof")
+        notification_path.write_bytes(original_notification)
         try: collector.parse_observability_receipts(arguments, "sha256:" + "e" * 64)
         except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-source-invalid"
         else: raise AssertionError("wrong observability image passed")

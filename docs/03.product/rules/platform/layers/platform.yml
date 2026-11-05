@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.architecture.rules.layers.platform
-#   version: 9
+#   version: 10
 #   status: active
 #   created_on: "2026-06-22"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-27"
 #   layer: 03.product
 #   domain: architecture
 #   disciplines:
@@ -352,6 +352,7 @@ rules:
       - "Use target-profile CORS allowlists and rate-limit keying based on principal, token/session identity, trusted forwarded IP, or an approved fallback."
       - "Keep resource-specific business authorization inside the owning app after resource loading."
       - "Own structured log format, request logging, common telemetry hooks, and safe error mapping."
+      - "Capabilities and apps own executable diagnostic meaning; validate mounted catalogs and closed records before internal delivery, honor operational-log opt-outs, and exclude diagnostic detail from HTTP bodies and metric dimensions."
       - "Expose standard health endpoints such as /livez and /readyz, and aggregate app-provided readiness checks."
       - "Ensure health output and logs do not leak secrets."
     must_not:

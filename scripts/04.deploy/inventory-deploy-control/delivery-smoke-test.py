@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.delivery-inventory
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -24,15 +24,16 @@ import shutil
 import subprocess
 import unittest
 import copy
+from unittest.mock import patch
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-spec = importlib.util.spec_from_file_location('selector_fixture', ROOT / 'scripts/repo/check-selection/smoke-test.py')
+spec = importlib.util.spec_from_file_location('selector_fixture', ROOT / 'scripts/repo/check-selection/test_support.py')
 fixture = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixture)
 
 class DeliveryInventoryCLI(unittest.TestCase):
     def setUp(self):
-        self.fixture = fixture.SelectionTests('test_synthetic_scope_reuses_existing_generic_validators_and_accepts_valid_na')
+        self.fixture = fixture.FixtureSupport()
         self.fixture.setUp(); self.addCleanup(self.fixture.doCleanups)
         self.root = self.fixture.root
         self.bin = self.root / 'bin'; self.bin.mkdir()
@@ -52,6 +53,96 @@ class DeliveryInventoryCLI(unittest.TestCase):
         self.assertEqual(report['source_revision'], '0' * 39 + '1')
         self.assertEqual(report['routes'][0]['target'], 'synthetic')
         self.assertTrue(report['inputs']); self.assertTrue(report['routes'][0]['chain'])
+
+    def extracted_policy(self):
+        source = self.root / 'platform/workers/src/main.ts'
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_text('export const worker = true;\n')
+        self.fixture.check_script('local', ['read-only', 'writes-files'], 'exec bash scripts/repo/check-selection/script.sh --aggregate-members local\n')
+        self.fixture.check_script('middle', ['read-only', 'writes-files'], 'exec bash scripts/repo/check-selection/script.sh --aggregate-members middle\n')
+        self.fixture.check_script('policy', ['read-only', 'writes-files'], 'printf "%s\\n" platform/workers/src/main.ts\ntouch census-must-not-execute\n')
+        for identity in ('middle', 'policy'):
+            self.fixture.catalog['checks'][identity] = copy.deepcopy(self.fixture.catalog['checks']['local'])
+            self.fixture.catalog['checks'][identity].update(argv=['bash', 'scripts/' + identity + '.sh'], inputs=['scripts/' + identity + '.sh'])
+        self.fixture.catalog['checks']['local']['members'] = ['middle']
+        self.fixture.catalog['checks']['middle']['members'] = ['policy']
+        self.fixture.save()
+
+    def test_policy_extraction_preserves_full_census_through_reachable_nested_members(self):
+        source = self.root / 'platform/workers/src/main.ts'
+        source.parent.mkdir(parents=True, exist_ok=True); source.write_text('export const worker = true;\n')
+        self.fixture.check_script('local', ['read-only', 'writes-files'], 'printf "%s\\n" platform/workers/src/main.ts\n')
+        code, before = self.invoke()
+        self.assertEqual(code, 0, before['findings'])
+        self.extracted_policy()
+        code, report = self.invoke()
+        self.assertEqual(code, 0, report['findings'])
+        self.assertTrue({'scripts/middle.sh', 'scripts/policy.sh', 'platform/workers/src/main.ts'} <= set(report['routes'][0]['trace_inputs']))
+        self.assertFalse((self.root / 'census-must-not-execute').exists())
+
+    def test_unrelated_catalog_inputs_and_focused_prerequisites_do_not_bind_delivery(self):
+        self.extracted_policy()
+        source = self.root / 'platform/unrelated/src/main.ts'
+        source.parent.mkdir(parents=True); source.write_text('export const unrelated = true;\n')
+        self.fixture.check_script('unrelated', ['read-only', 'writes-files'], 'printf "%s\\n" platform/unrelated/src/main.ts\n')
+        self.fixture.catalog['checks']['unrelated'] = copy.deepcopy(self.fixture.catalog['checks']['policy'])
+        self.fixture.catalog['checks']['unrelated']['argv'] = ['bash', 'scripts/unrelated.sh']
+        self.fixture.catalog['checks']['local'].update(inputs=['platform'], focused_prerequisites=[{'inputs': ['platform'], 'checks': ['unrelated']}])
+        self.fixture.save()
+        code, report = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertIn(('delivery-consumer-unbound', 'platform/unrelated/src/main.ts'), {(item['code'], item['path']) for item in report['findings']})
+        self.assertNotIn('platform/unrelated/src/main.ts', report['routes'][0]['trace_inputs'])
+
+    def test_reachable_member_dag_rejects_malformed_unknown_cycles_and_boundary_laundering(self):
+        self.extracted_policy()
+        pristine = copy.deepcopy(self.fixture.catalog)
+        cases = [
+            ('string', 'local', 'members', 'policy', 'delivery-aggregate-members-invalid'),
+            ('empty', 'local', 'members', [], 'delivery-aggregate-members-invalid'),
+            ('duplicate', 'local', 'members', ['middle', 'middle'], 'delivery-aggregate-members-invalid'),
+            ('malformed', 'local', 'members', [{}], 'delivery-aggregate-members-invalid'),
+            ('empty-identity', 'local', 'members', [''], 'delivery-aggregate-members-invalid'),
+            ('unknown', 'local', 'members', ['unknown'], 'delivery-aggregate-member-unknown'),
+            ('cycle', 'policy', 'members', ['local'], 'delivery-aggregate-member-cycle'),
+            ('missing-command', 'policy', 'argv', ['bash', 'scripts/missing.sh'], 'delivery-proof-command-missing'),
+            ('malformed-command', 'policy', 'argv', ['bash', {}], 'delivery-proof-command-invalid'),
+            ('shell-command', 'policy', 'argv', ['bash', 'scripts/policy.sh', ';aws'], 'delivery-proof-command-invalid'),
+            ('later-stage', 'policy', 'stage', 'package', 'delivery-aggregate-member-boundary-invalid'),
+            ('provider-effects', 'policy', 'effects', ['aws-mutation'], 'delivery-aggregate-member-boundary-invalid'),
+            ('undeclared-write', 'middle', 'effects', ['read-only'], 'delivery-aggregate-member-boundary-invalid'),
+            ('dishonest-effects', 'policy', 'effects', ['read-only'], 'delivery-aggregate-member-boundary-invalid'),
+        ]
+        for name, identity, key, value, expected in cases:
+            with self.subTest(name=name):
+                self.fixture.catalog = copy.deepcopy(pristine)
+                self.fixture.catalog['checks'][identity][key] = value
+                self.fixture.save()
+                code, report = self.invoke()
+                self.assertEqual(code, 1, report['findings'])
+                self.assertIn(expected, {item['code'] for item in report['findings']})
+                self.assertFalse((self.root / 'census-must-not-execute').exists())
+
+    def test_catalog_member_edit_selects_independent_census_via_real_consumer_metadata(self):
+        compiler = self.root / 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py'
+        compiler.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / compiler.relative_to(self.root), compiler)
+        self.fixture.check_script('inventory-proof', ['read-only', 'writes-files'], 'printf fixture\n')
+        self.fixture.catalog['checks']['delivery-inventory-regression'] = copy.deepcopy(self.fixture.catalog['checks']['local'])
+        self.fixture.catalog['checks']['delivery-inventory-regression'].update(argv=['bash', 'scripts/inventory-proof.sh'], inputs=['scripts/04.deploy/inventory-deploy-control'])
+        self.fixture.catalog['repository_inputs'] = [{'inputs': ['scripts/04.deploy/inventory-deploy-control'], 'checks': ['delivery-inventory-regression']}]
+        self.fixture.save()
+        catalog = (ROOT / 'scripts/repo/check-selection/checks.yml').read_text()
+        header = catalog[:catalog.index('schema: repo/check-catalog/v1')]
+        original = self.fixture.catalog_path.read_text()
+        for present in (True, False):
+            with self.subTest(consumer_edge=present):
+                prefix = header if present else header.replace('#   - id: deploy.compiler.delivery-inventory\n#     path: scripts/04.deploy/inventory-deploy-control/delivery_inventory.py\n', '')
+                self.fixture.catalog_path.write_text(prefix + original)
+                with patch.object(fixture.selection, 'changed_catalog_checks', return_value=set()):
+                    report = self.fixture.run_plan(paths=['scripts/repo/check-selection/checks.yml'])
+                selected = {item['check_id'] for item in report['checks']}
+                self.assertEqual('delivery-inventory-regression' in selected, present, report['findings'])
 
     def test_catalogued_dormant_root_does_not_block_active_delivery_inventory(self):
         dormant = self.root / 'dormant-rag'
@@ -379,7 +470,7 @@ class DeliveryInventoryCLI(unittest.TestCase):
                     self.assertIn(('delivery-ci-enforcement-invalid', 'ci-pull-request-restrictions-unsupported'), {(f['code'], f.get('reference')) for f in report['findings']})
 
     def test_actual_builder_blocks_before_compilation_or_docker(self):
-        for path in ('scripts/04.deploy/inventory-deploy-control/script.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'):
+        for path in ('scripts/04.deploy/inventory-deploy-control/script.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/04.deploy/shared/safe-command-diagnostics.sh'):
             target = self.root / path; target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(ROOT / path, target)
         (self.root / 'package.json').write_text(json.dumps({'scripts': {'inventory': 'python3 scripts/04.deploy/inventory-deploy-control/script.py', 'coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         (self.fixture.target / 'scope-index.yml').unlink()

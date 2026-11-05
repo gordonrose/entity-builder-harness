@@ -1,0 +1,67 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "kanbien-platform.postgresql",
+    "definitions": [
+      {
+        "code": "kanbien-platform.postgresql.composition-boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "migration",
+                "compose",
+                "create"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "schema-predicate",
+                "configuration",
+                "writer-construction",
+                "input-projection",
+                "work-item-id",
+                "work-item-state",
+                "work-item-revision",
+                "work-item-accepted-at",
+                "statement-staging",
+                "staging-result"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "predicate-rejected",
+                "threw",
+                "returned-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "not-staged",
+                "unknown"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

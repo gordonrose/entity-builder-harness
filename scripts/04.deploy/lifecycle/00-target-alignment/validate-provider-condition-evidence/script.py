@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -60,6 +60,7 @@ def safe_string(value: Any) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate safe provider-condition evidence.")
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=PROVIDER_CONDITION_ARGUMENTS_INVALID\n")
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--required-status", action="append", default=[])
     parser.add_argument("--at")
@@ -81,9 +82,9 @@ def main() -> int:
         codes.append("provider-condition-evidence-unreadable")
     if not REQUIRED.issubset(evidence) or evidence.get("schema") != "deploy/provider-condition-evidence/v1":
         codes.append("provider-condition-evidence-invalid")
-    if evidence.get("status") not in STATUSES:
+    if not isinstance(evidence.get("status"), str) or evidence.get("status") not in STATUSES:
         codes.append("provider-condition-status-invalid")
-    if args.required_status and evidence.get("status") not in set(args.required_status):
+    if args.required_status and (not isinstance(evidence.get("status"), str) or evidence.get("status") not in set(args.required_status)):
         codes.append("provider-condition-status-not-accepted")
     checked_at = evidence.get("checked_at")
     validity_boundary = evidence.get("next_check_after")
@@ -112,7 +113,7 @@ def main() -> int:
             codes.append("provider-condition-waiver-expired")
     report = {
         "schema": "deploy/provider-condition-evidence-report/v1",
-        "condition_id": evidence.get("condition_id") if isinstance(evidence.get("condition_id"), str) else None,
+        "condition_id": evidence.get("condition_id") if safe_string(evidence.get("condition_id")) else None,
         "verdict": "passed" if not codes else "failed",
         "findings": [{"code": code} for code in dict.fromkeys(codes)],
     }

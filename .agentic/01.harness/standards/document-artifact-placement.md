@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standards.document-artifact-placement
-version: 2
+version: 3
 status: active
 created_on: "2026-08-31"
-updated_on: "2026-10-20"
+updated_on: "2026-11-04"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -79,14 +79,20 @@ workflow, standard, migration plan, or ADR.
 | Implementation plan that governs future product, harness, or deploy work | `.agentic/<owner-layer>/plans/implementation/` |
 | ADR | `docs/<owner-layer>/adrs/` when it is corpus history; `.agentic/<owner-layer>/adrs/` only when a workflow explicitly owns agentic process decisions there |
 | Source material | `docs/<owner-layer>/source-material/` |
-| Structured ruleset | `docs/<owner-layer>/rules/` |
-| Rule pack | `docs/<owner-layer>/rule-packs/` |
+| Durable requirements and quality expectations | An existing `standard` under `.agentic/<owner-layer>/standards/`. |
+| Ordered task procedure combining requirements | An existing workflow under `.agentic/<owner-layer>/workflows/`, referencing the standards. |
 | Runbook or guide | `docs/<owner-layer>/` for human/corpus docs; `.agentic/<owner-layer>/guides/` for agent-facing harness operation |
 | Compatibility pointer | The retired source path or approved legacy root, with a link to the canonical target and migration plan |
 
 Use `.agentic/01.harness/standards/agentic-artifact-standards.md` to decide
 which artifact type should own the rule or procedure. Use this standard to
 decide the path once the artifact type and owner are known.
+
+Authoritative requirements are not a separate `rule` document type. Human
+guides explain and link to their owning standards; they do not own a second
+requirements body. Legacy rulesets and rule packs remain migration debt, not
+permission to add new governance under `docs/`. This does not automatically
+authorize migrating all existing documents.
 
 ## Migration-Period Rules
 
@@ -97,9 +103,9 @@ not be recreated for ordinary content.
   runbooks, or corpus docs under retired prototype paths;
 - add or edit only migration-plan updates or reference-preserving edits named by
   a governed artifact path migration;
-- route new product source material, product rules, and product rule packs to
-  the product layer or stop and create the required `docs/03.product/` root
-  through the migration plan first;
+- route authoritative product requirements and ordered procedures to existing
+  harness artifact types in `.agentic/03.product/`; explanatory product source
+  material belongs under `docs/03.product/`;
 - route new RAG/rulebook machinery docs to `docs/02.rag-rulebook/` or
   `.agentic/02.rag-rulebook/`, not to retired prototype paths;
 - classify ADRs by the layer that owns the decision before choosing a target
@@ -113,15 +119,16 @@ same slice.
 ## Required Checks
 
 Before completing a document-placement change, run the checks named by the
-owning workflow. For harness or corpus-facing document additions, include:
+owning workflow. For a bounded harness-document change, validate the affected
+metadata, links and whitespace with scoped paths:
 
 ```bash
-bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
-bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
-git diff --check
+bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths <changed-artifact-paths>
+git diff --check -- <changed-paths>
 ```
 
-Also run source-projection, source-material coverage, rulebook index, chunk,
-and retrieval checks when the change affects corpus roots, rules, rule packs,
-or source material.
+Path moves also follow the existing migration workflow. Run corpus recognition,
+source-projection, coverage, index, chunk or retrieval checks only when an
+explicitly authorised active corpus task requires them. A harness standard or
+legacy pointer does not reactivate dormant RAG machinery or require a corpus
+rebuild. Structural/location proof does not establish runtime compliance.

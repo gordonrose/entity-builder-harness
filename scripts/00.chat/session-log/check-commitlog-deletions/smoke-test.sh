@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -122,4 +122,27 @@ if ! grep -q "Commit log deletion gate passed" "$TMP_ROOT/empty-only.out"; then
   fail "empty-only deletion did not pass"
 fi
 
+REAL_GIT="$(command -v git)"
+export REAL_GIT
+mkdir -p "$TMP_ROOT/bin"
+cat > "$TMP_ROOT/bin/git" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "$FAIL_GIT_OPERATION" ]]; then
+  echo PRIVATE_DELETION_CANARY >&2
+  exit 70
+fi
+exec "$REAL_GIT" "$@"
+EOF
+chmod +x "$TMP_ROOT/bin/git"
+for operation in diff show; do
+  if (cd "$REPO" && FAIL_GIT_OPERATION="$operation" PATH="$TMP_ROOT/bin:$PATH" bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh) > "$TMP_ROOT/failed-$operation.out" 2> "$TMP_ROOT/failed-$operation.err"; then
+    fail "failed $operation observation was accepted"
+  fi
+  reason=index
+  [ "$operation" != show ] || reason=content
+  grep -q "^ERROR: commit-log-deletion-$reason-read-failed" "$TMP_ROOT/failed-$operation.err" || fail "lost $operation reason"
+  if grep -qE 'PRIVATE_DELETION_CANARY|gate passed' "$TMP_ROOT/failed-$operation.out" "$TMP_ROOT/failed-$operation.err"; then
+    fail "failed $operation leaked values or claimed success"
+  fi
+done
 echo "commitlog deletion smoke test passed."

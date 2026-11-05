@@ -5,6 +5,16 @@ that the platform contracts, server shell, worker shell, health checks, config,
 authentication, and lifecycle can work together. It is not a template for a
 future product app's internal architecture.
 
+The app owns the logical `app-name` configuration diagnostic and accepted-job
+`payload.outboxEntryId` validation diagnostic. Generic schema position and Core
+reader evidence are retained separately. Existing validators still decide
+acceptance, including inherited data fields and nonempty whitespace strings.
+Diagnostic projection never invokes the payload getter again: accessors,
+uninspectable objects and a bounded prototype walk report `not-assessed`, not a
+guessed invalid value. No supplied payload, app name or environment value enters
+these closed records. Server/worker mounts explicitly select this app catalog;
+public response/error and metric projections remain unchanged.
+
 ## Boundary
 
 Consumers import `@kanbien/app-platform-smoke` through its public package
@@ -57,6 +67,19 @@ with only that opaque identifier and the `accepted` status. Retrying a request
 with the same ID reaches the create-once rule rather than creating a new work
 item. The route intentionally does not expose table names, outbox IDs, queue
 payloads, provider errors, tenants, or business data.
+
+Acceptance forwards selected Core/Persistence source diagnostics through the
+request's profile-governed `onDiagnostic` callback, independently of its existing
+business failure record. Each invocation tracks actual attempts, retaining a
+returned primary plus eight companions without replaying already attempted
+copies. Selection alone is not delivery. Observer failures never alter the
+500 invalid-generated-ID, 409 duplicate, 503 other-error or native-throw paths.
+An opted-out/non-log profile supplies `{}` to silence writer defaults. No
+observer/options state is shared across concurrent requests. Hosts can add
+`diagnosticDefinitions` to `createPlatformSmokeApp` for source selection, but
+must separately register the corresponding reporter catalogs in composition.
+Only validated own-data copies are compared; submitted values/native messages
+are never diagnostic detail or deduplication input.
 
 ## Durable delivery boundary
 

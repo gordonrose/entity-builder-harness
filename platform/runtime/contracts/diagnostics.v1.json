@@ -1,0 +1,159 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "platform-runtime",
+    "definitions": [
+      {
+        "code": "platform-runtime.state-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "start",
+                "begin-drain",
+                "shutdown"
+              ]
+            },
+            "state": {
+              "type": "enum",
+              "values": [
+                "created",
+                "starting",
+                "ready",
+                "stopping",
+                "stopped",
+                "failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "state-unchanged"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-runtime.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "construct-lifecycle",
+                "mount",
+                "start",
+                "shutdown",
+                "events",
+                "context-deps",
+                "request-context",
+                "job-context"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "resources-snapshot",
+                "telemetry-snapshot",
+                "apps-snapshot",
+                "clock-selection",
+                "app.beforeStart",
+                "resource.start",
+                "app.afterStart",
+                "app.beforeStop",
+                "resource.drain",
+                "resource.close",
+                "telemetry.flush",
+                "app.afterStop",
+                "events-projection",
+                "registry-construction",
+                "app-iteration",
+                "app-identity",
+                "app-uniqueness",
+                "app-mount",
+                "mount-error-projection",
+                "registry-validation",
+                "mount-projection",
+                "dependency-selection",
+                "timestamp-selection",
+                "clock-read",
+                "timestamp-normalization",
+                "context-projection"
+              ]
+            },
+            "subject": {
+              "type": "enum",
+              "values": [
+                "runtime",
+                "app",
+                "resource",
+                "telemetry",
+                "context"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "selection",
+                "iteration",
+                "invocation",
+                "completion",
+                "event-selection",
+                "event-clock",
+                "event-normalization",
+                "event-append",
+                "projection"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "step-not-invoked",
+                "step-completion-unobserved",
+                "step-completed-event-unrecorded",
+                "step-completed-event-outcome-unknown",
+                "boundary-outcome-unknown",
+                "context-not-returned",
+                "cleanup-completed-result-not-returned",
+                "mount-completed-result-not-returned"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal"
+          ]
+        }
+      }
+    ]
+  }
+}

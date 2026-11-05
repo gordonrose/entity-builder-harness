@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: command
 #   disciplines:
@@ -41,10 +41,13 @@ Commands:
 EOF
 
   if [ -d "$COMMAND_DIR" ]; then
-    find "$COMMAND_DIR" -mindepth 2 -maxdepth 2 -type f -path '*/script.sh' \
+    if ! { find "$COMMAND_DIR" -mindepth 2 -maxdepth 2 -type f -path '*/script.sh' \
       ! -path "$COMMAND_DIR/dispatcher/script.sh" \
       | sed -E 's#^scripts/00\.chat/command/([^/]+)/script\.sh$#  \1#' \
-      | sort
+      | sort; } 2>/dev/null; then
+      echo "ERROR: chat-command-inventory-failed" >&2
+      return 1
+    fi
   fi
 }
 
@@ -79,7 +82,7 @@ fi
 
 case "$COMMAND_NAME" in
   *[!a-zA-Z0-9_-]*|'')
-    echo "ERROR: invalid chat command name: $COMMAND_NAME" >&2
+    echo "ERROR: invalid chat command name." >&2
     echo "Use letters, numbers, underscores, or hyphens." >&2
     exit 2
     ;;
@@ -88,13 +91,13 @@ esac
 COMMAND_SCRIPT="${COMMAND_DIR}/${COMMAND_NAME}/script.sh"
 
 if [ "$COMMAND_NAME" = "dispatcher" ]; then
-  echo "ERROR: unknown chat command: $COMMAND_NAME" >&2
+  echo "ERROR: unknown chat command." >&2
   usage >&2
   exit 2
 fi
 
 if [ ! -f "$COMMAND_SCRIPT" ]; then
-  echo "ERROR: unknown chat command: $COMMAND_NAME" >&2
+  echo "ERROR: unknown chat command." >&2
   usage >&2
   exit 2
 fi

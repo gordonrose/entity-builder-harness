@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-30"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -268,4 +268,40 @@ if bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_R
   fail "validator accepted arbitrary nested image paths"
 fi
 grep -q "outside the governed infra image boundary" "$TMP_ROOT/capability-bad.json" || fail "nested boundary failure has wrong reason"
+python3 - "$TMP_ROOT" "$ROOT" <<'PY'
+import json,os,subprocess,sys
+from pathlib import Path
+temporary,repo=map(Path,sys.argv[1:])
+script=repo/'scripts/04.deploy/validate-container-boundaries/script.sh'
+ignore=temporary/'valid/infra/04.deploy/02.rag-rulebook/image/.dockerignore'
+ignore.write_bytes(b'\xffcredential-canary-value')
+result=subprocess.run(['bash',str(script),'--root',str(temporary/'valid'),'--json'],capture_output=True,text=True)
+assert result.returncode==1,(result.stdout,result.stderr)
+assert 'Ignore file could not be read as UTF-8.' in result.stdout
+assert 'credential-canary-value' not in result.stdout+result.stderr and 'Traceback' not in result.stderr
+result=subprocess.run(['bash',str(script),'--credential-canary-value'],capture_output=True,text=True)
+assert result.returncode==2 and 'DIAGNOSTIC_CODE=CONTAINER_BOUNDARY_ARGUMENTS_INVALID' in result.stderr
+assert 'credential-canary-value' not in result.stdout+result.stderr
+# A controlled Path.read_text failure proves both actual reads, including a
+# failure of the second read after the first succeeds; no chmod/root assumptions.
+hooks=temporary/'hooks';hooks.mkdir()
+(hooks/'sitecustomize.py').write_text('''import os
+from pathlib import Path
+original=Path.read_text
+visits=0
+def read(self,*args,**kwargs):
+ global visits
+ if self.name=='.dockerignore':
+  visits+=1
+  if visits==int(os.environ['IGNORE_FAIL_AT']):raise OSError('credential-canary-value')
+ return original(self,*args,**kwargs)
+Path.read_text=read
+''')
+ignore.write_text((temporary/'root-context/infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore').read_text())
+for ordinal in ('1','2'):
+ result=subprocess.run(['bash',str(script),'--root',str(temporary/'valid'),'--json'],env={**os.environ,'PYTHONPATH':str(hooks),'IGNORE_FAIL_AT':ordinal},capture_output=True,text=True)
+ assert result.returncode==1,(ordinal,result.stdout,result.stderr)
+ assert 'Ignore file could not be read as UTF-8.' in result.stdout and 'credential-canary-value' not in result.stdout+result.stderr
+ assert 'Traceback' not in result.stderr
+PY
 echo "Container boundary validator smoke test passed."

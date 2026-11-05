@@ -11,7 +11,7 @@ turn a completed observation into a reason to repeat an IAM revocation.
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -42,6 +42,8 @@ ROOT = Path(__file__).resolve().parents[8]
 PROFILE, REGION = "kanbien-dev", "eu-west-1"
 EVIDENCE_ROOT = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence"
 PROOF_ROOT = EVIDENCE_ROOT / "proof-receipts"
+CHILD_CHECKPOINT: dict[str, Any] | None = None
+_AWS_RESPONSE = None
 
 
 class RehearsalFailure(ValueError):
@@ -90,9 +92,16 @@ def aws(*parts: str) -> dict[str, Any]:
         )
     except subprocess.TimeoutExpired as error:
         raise RehearsalFailure("observability-rehearsal-provider-observation-timeout") from error
+    except OSError as error:
+        raise RehearsalFailure("observability-rehearsal-provider-command-unavailable") from error
+    except UnicodeError as error:
+        raise RehearsalFailure("observability-rehearsal-provider-response-invalid") from error
     if completed.returncode:
-        detail = completed.stderr.lower()
-        raise RehearsalFailure("observability-rehearsal-provider-access-denied" if "accessdenied" in detail or "not authorized" in detail else "observability-rehearsal-provider-observation-failed")
+        global _AWS_RESPONSE
+        if _AWS_RESPONSE is None:
+            _AWS_RESPONSE = load("scripts/04.deploy/shared/provider-adapters/aws/response.py", "observability_aws_response")
+        classified = _AWS_RESPONSE.classify_error(parts[0], parts[1], completed.stderr)
+        raise RehearsalFailure("observability-rehearsal-provider-access-denied" if classified == "aws-access-denied" else "observability-rehearsal-provider-observation-failed")
     try:
         value = json.loads(completed.stdout or "{}")
     except json.JSONDecodeError as error:
@@ -102,25 +111,43 @@ def aws(*parts: str) -> dict[str, Any]:
     return value
 
 
-def last_report(text: str) -> dict[str, Any] | None:
+def last_report(text: str, command: str | None = None) -> dict[str, Any] | None:
     for line in reversed(text.splitlines()):
         try:
             value = json.loads(line)
         except json.JSONDecodeError:
             continue
         if isinstance(value, dict) and isinstance(value.get("verdict"), str):
-            return value
+            if command is None:
+                return value
+            try:
+                contract = load("scripts/04.deploy/shared/deployment-operation-diagnostics.py", "observability_checkpoint_diagnostics")
+                selected = contract.validate_persistence_controller_checkpoint(value, command)
+            except Exception:
+                continue
+            if selected is not None:
+                return selected
     return None
 
 
 def lifecycle(receipt: Path, operation: str) -> dict[str, Any]:
-    command = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh"
+    global CHILD_CHECKPOINT
+    CHILD_CHECKPOINT = None
+    relative = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh"
+    command = ROOT / relative
     try:
         completed = subprocess.run(["bash", str(command), "--receipt", str(receipt), "--operation", operation, "--json"], cwd=ROOT, capture_output=True, text=True, timeout=420, check=False)
     except subprocess.TimeoutExpired as error:
+        stdout = error.stdout.decode("utf-8", errors="replace") if isinstance(error.stdout, bytes) else error.stdout or ""
+        stderr = error.stderr.decode("utf-8", errors="replace") if isinstance(error.stderr, bytes) else error.stderr or ""
+        selected = last_report(stdout, relative) or last_report(stderr, relative)
+        if selected is not None:
+            CHILD_CHECKPOINT = {"command": relative, **selected}
         raise RehearsalFailure("observability-rehearsal-lifecycle-outcome-uncertain") from error
-    report = last_report(completed.stdout) or last_report(completed.stderr)
+    report = last_report(completed.stdout, relative) or last_report(completed.stderr, relative)
     if completed.returncode or not isinstance(report, dict):
+        if report is not None:
+            CHILD_CHECKPOINT = {"command": relative, **report}
         raise RehearsalFailure("observability-rehearsal-lifecycle-not-complete")
     return report
 
@@ -233,16 +260,26 @@ def persist(receipt_type: str, source: dict[str, str], observation: dict[str, An
     return module.persist(value)
 
 
-def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> int:
+def report(verdict: str, *codes: str, facts: dict[str, Any] | None = None) -> int:
     body: dict[str, Any] = {"schema": "deploy/persistence-observability-rehearsal-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
+    if verdict == "blocked" and CHILD_CHECKPOINT is not None:
+        facts = {**(facts or {}), "child_checkpoint": CHILD_CHECKPOINT}
     if facts:
         body["facts"] = facts
     print(json.dumps(body, sort_keys=True))
     return 0 if verdict in {"prepared", "recorded"} else 1
 
 
+class RehearsalArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        report("blocked", "observability-rehearsal-arguments-invalid")
+        self.exit(2)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False)
+    global CHILD_CHECKPOINT
+    CHILD_CHECKPOINT = None
+    parser = RehearsalArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--operation", choices=("prepare-failure", "record-notification", "recover"))
     parser.add_argument("--failure-receipt")
@@ -281,6 +318,8 @@ def main() -> int:
             if not confirmed_subscription():
                 raise RehearsalFailure("observability-rehearsal-notification-subscription-pending")
             observed_alarm = alarm("ALARM")
+            if not receipts().same_alarm_episode(failure["observation"], observed_alarm):
+                raise RehearsalFailure("observability-rehearsal-alarm-episode-mismatch")
             if datetime.fromisoformat(delivery.replace("Z", "+00:00")) < datetime.fromisoformat(observed_alarm["alarm_state_updated_at"].replace("Z", "+00:00")):
                 raise RehearsalFailure("observability-rehearsal-delivery-before-alarm")
             path = persist("readiness-alarm-notified", failure["source_proof"], {**observed_alarm, "subscription_confirmed_at": subscription, "operator_delivery_confirmed_at": delivery})
@@ -291,6 +330,8 @@ def main() -> int:
         notification = receipt_argument(args.notification_receipt, "readiness-alarm-notified", image_digest)
         if failure["source_proof"] != notification["source_proof"]:
             raise RehearsalFailure("observability-rehearsal-notification-source-mismatch")
+        if not receipts().same_alarm_episode(failure["observation"], notification["observation"]):
+            raise RehearsalFailure("observability-rehearsal-alarm-episode-mismatch")
         delivered_after = datetime.fromisoformat(notification["observation"]["operator_delivery_confirmed_at"].replace("Z", "+00:00")).astimezone(timezone.utc)
         source = retained_source("KANBIEN_CORE_PERSISTENCE_HEALTHY", image_digest, not_before=delivered_after)
         if source is None:

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -139,6 +139,56 @@ fi
 git -C "$REPO" merge --abort
 git -C "$REPO" checkout -q main
 
+METADATA_FILE="docs/04.deploy/metadata-only-conflict.md"
+mkdir -p "$REPO/$(dirname "$METADATA_FILE")"
+cat > "$REPO/$METADATA_FILE" <<'EOF'
+<!-- agentic-artifact:
+  schema: agentic-artifact/v3
+  id: deploy.metadata-only-conflict
+  version: 1
+  created_on: "2026-01-01"
+  updated_on: "2026-01-01"
+-->
+# Metadata-only fixture
+EOF
+for line in $(seq 1 6000); do
+  printf 'metadata-only classifier fixture content %s\n' "$line" >> "$REPO/$METADATA_FILE"
+done
+git -C "$REPO" add "$METADATA_FILE"
+git -C "$REPO" commit -q -m "add metadata conflict fixture"
+
+git -C "$REPO" checkout -q -b chat/metadata-only
+sed -i 's/updated_on: "2026-01-01"/updated_on: "2026-01-02"/' "$REPO/$METADATA_FILE"
+git -C "$REPO" add "$METADATA_FILE"
+git -C "$REPO" commit -q -m "chat lifecycle date"
+
+git -C "$REPO" checkout -q main
+sed -i 's/updated_on: "2026-01-01"/updated_on: "2026-01-03"/' "$REPO/$METADATA_FILE"
+git -C "$REPO" add "$METADATA_FILE"
+git -C "$REPO" commit -q -m "main lifecycle date"
+
+git -C "$REPO" checkout -q chat/metadata-only
+set +e
+git -C "$REPO" merge main >/dev/null 2>&1
+MERGE_STATUS="$?"
+set -e
+
+if [ "$MERGE_STATUS" -eq 0 ]; then
+  fail "expected metadata-only conflict"
+fi
+
+OUTPUT="$(
+  cd "$REPO"
+  bash scripts/00.chat/main-refresh/classify-conflict/script.sh "$METADATA_FILE"
+)"
+
+if ! printf '%s\n' "$OUTPUT" | grep -q '^type=artifact-metadata-date-conflict$'; then
+  fail "metadata-only lifecycle conflict was not classified"
+fi
+
+git -C "$REPO" merge --abort
+git -C "$REPO" checkout -q main
+
 PLAN_INDEX="docs/04.deploy/plans/README.md"
 mkdir -p "$REPO/$(dirname "$PLAN_INDEX")"
 cat > "$REPO/$PLAN_INDEX" <<'EOF'
@@ -184,4 +234,29 @@ if ! printf '%s\n' "$OUTPUT" | grep -q '^type=append-only-plan-index-conflict$';
   fail "append-only plan index conflict was not classified"
 fi
 
+REAL_GIT="$(command -v git)"
+export REAL_GIT
+mkdir -p "$TMP_ROOT/bin"
+cat > "$TMP_ROOT/bin/git" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == ls-files && "${FAIL_READ:-}" == index ]]; then
+  echo PRIVATE_GIT_CANARY >&2
+  exit 71
+fi
+if [[ "$1" == show && "$2" == ":${FAIL_READ:-}:"* ]]; then
+  echo PRIVATE_GIT_CANARY >&2
+  exit 72
+fi
+exec "$REAL_GIT" "$@"
+EOF
+chmod +x "$TMP_ROOT/bin/git"
+for stage in index 1 2 3; do
+  if (cd "$REPO" && PATH="$TMP_ROOT/bin:$PATH" FAIL_READ="$stage" bash scripts/00.chat/main-refresh/classify-conflict/script.sh "$PLAN_INDEX") >"$TMP_ROOT/read.out" 2>"$TMP_ROOT/read.err"; then
+    fail "failed conflict read became successful classification"
+  fi
+  test ! -s "$TMP_ROOT/read.out" || fail "failed read emitted a classification"
+  if [[ "$stage" == index ]]; then expected='ERROR: conflict-index-read-failed';
+  else expected="ERROR: conflict-stage-read-failed stage=$stage"; fi
+  test "$(cat "$TMP_ROOT/read.err")" = "$expected" || fail "failed read lost safe stage attribution"
+done
 echo "main refresh conflict classifier smoke test passed."

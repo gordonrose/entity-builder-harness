@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 20
+#   version: 21
 #   status: active
 #   created_on: "2026-06-22"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-27"
 #   layer: 03.product
 #   domain: architecture
 #   disciplines:
@@ -415,6 +415,8 @@ rules:
       - Support the self-healing loop as vocabulary: detect, classify, correlate, decide, act, verify, and escalate.
       - Let CoreError carry optional diagnostic descriptors when a failure needs structured recovery metadata.
       - Preserve diagnostic descriptors through module-specific error helper functions when callers provide them.
+      - Own executable closed diagnostic definitions and record constructors/parsers in core; preserve separately validated diagnosticRecord detail without broadening primitive descriptor facts.
+      - Follow .agentic/shared/workflows/verify-diagnostic-coverage.md for changed and new configuration, validation, call, connection and lifecycle boundaries.
       - Reject contradictory diagnostic descriptors such as automation_retryable recovery with retryable false or user_correctable recovery with userCorrectable false.
       - Use diagnostic facts to distinguish user/input errors, validation failures, provider/runtime failures, data-integrity problems, and genuine bugs without parsing free-text logs.
       - Keep diagnostic facts primitive, bounded, finite-number safe, and suitable for correlation across logs, monitoring, queues, events, audit, and incident workflows.

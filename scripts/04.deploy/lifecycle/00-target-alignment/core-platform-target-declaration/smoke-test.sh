@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 7
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -21,6 +21,7 @@ set -euo pipefail
 #     targets: []
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.command.core-platform-target-declaration
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
@@ -334,4 +335,22 @@ path.write_text(text[:start] + section + text[end:], encoding="utf-8")
 PY
 expect_failure "persistence-restoration-identity-binding-invalid" "$restore_source_identity"
 
+python3 -B - "$ROOT" <<'PY'
+import contextlib, importlib.util, io, json, sys
+from pathlib import Path
+from unittest.mock import patch
+spec=importlib.util.spec_from_file_location('b10_declaration',Path(sys.argv[1])/'scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py'); module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+canary='https://private.invalid/declaration-canary'
+for error,code in [(OSError(canary),'declaration-observation-unavailable'),(TypeError(canary),'declaration-shape-invalid')]:
+    output=io.StringIO()
+    with patch.object(sys,'argv',['script.py']), patch.object(module,'check_profile',side_effect=error), patch.object(module,'check_foundation') as later, contextlib.redirect_stdout(output):
+        assert module.main()==1 and later.call_count==0
+    assert json.loads(output.getvalue())['findings']==[{'code':code}] and canary not in output.getvalue()
+profile=module.mapping(Path(sys.argv[1])/'infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml','fixture-invalid')
+for status in [[],{}]:
+    profile['e0_required_facts'][0]['status']=status
+    try: module.check_profile(profile)
+    except module.DeclarationFailure as error: assert error.codes==('e0-fact-status-invalid',)
+    else: raise AssertionError('malformed status accepted')
+PY
 echo "Core-platform target declaration tests passed."

@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-18"
-  updated_on: "2026-10-20"
+  updated_on: "2026-11-05"
   layer: 00.chat
   domain: main-refresh
   disciplines:
@@ -140,6 +140,7 @@ Do not ask for a second approval when none of those stop conditions apply.
 | `retired-artifact-policy-script-conflict` | One side adds classifier or workflow behavior for a retired tracked artifact while the other side retires that artifact | Preserve retired-artifact policy; remove recoverability paths for the retired tracked artifact |
 | `script-add-add-conflict` | Both sides add the same script path independently | Compare behavior, tests, and call sites; if both implement the same governed capability, merge behavior and tests; otherwise stop |
 | `append-only-plan-index-conflict` | Both sides preserve an indexed-plan README and add only unique table rows | Preserve every existing and unique added row, then increment the metadata version once from the highest incoming version |
+| `artifact-metadata-date-conflict` | All three v3 artifact versions differ only in their lifecycle `updated_on` date | Preserve all non-date content and set `updated_on` to the UTC date when the merged artifact is prepared |
 | `normal-repo-conflict` | Conflict changes authored code/prose without a matching governed type | Stop for approval before resolving |
 | `unsupported-conflict` | No existing type fits or classification is ambiguous | Stop with missing-governance response and propose a new or expanded type |
 
@@ -339,6 +340,45 @@ Stop if:
 - A pre-existing row is removed or altered.
 - Non-index prose or metadata other than the version line changes.
 - A row is duplicated, malformed, or the table structure differs.
+
+### artifact-metadata-date-conflict
+
+Detect:
+
+- Base, chat and incoming versions are v3 `agentic-artifact` files.
+- Each version contains exactly one valid `updated_on` date.
+- Removing that line makes all three file contents byte-identical.
+
+Deterministic action:
+
+- Preserve `created_on` and all non-date content exactly.
+- Set `updated_on` to the UTC date on which the merged artifact is prepared.
+- Do not use this type when any behaviour, prose, metadata field, file mode or
+  generated output also differs.
+
+Required checks:
+
+- Run `classify-conflict` and confirm this exact type.
+- Run the artifact-metadata header check for the resolved path.
+- Run `git diff --check`.
+
+Session log entry:
+
+- Record the path, preserved `created_on`, resulting `updated_on`, and checks.
+
+Stop if:
+
+- Any stage lacks a valid v3 header or has more than one `updated_on` line.
+- Any content other than `updated_on` differs after normalization.
+
+### normal-repo-conflict
+
+For a reviewed conflict where each side adds an independently established safety
+or compatibility guarantee, manual resolution must name both guarantees and
+preserve both unless their contracts actually contradict. Reconcile the real
+owner and its callers, then run the exact regression assertions that reject
+loss of either guarantee. This is a review protocol, not an automatic merge
+rule; unknown or conflicting semantics remain a stop condition.
 
 ### script-add-add-conflict
 

@@ -27,6 +27,7 @@ async function walk(dir) {
 const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
 assert.equal(packageJson.name, "@kanbien/platform-adapter-aws-runtime-ecs-fargate");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-server"], "0.0.0");
+assert.deepEqual(Object.keys(packageJson.dependencies), ["@kanbien/platform-server"], "Safe records must reuse the existing Server owner without adding an adapter dependency.");
 
 const sourceFiles = (await walk(srcRoot)).filter((file) => file.endsWith(".ts"));
 assert.ok(sourceFiles.length > 0, "ECS Fargate adapter should expose source files");

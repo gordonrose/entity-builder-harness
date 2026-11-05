@@ -1,5 +1,15 @@
 # Platform Worker Source Map
 
+Configuration and registration failures emit selected internal records before
+polling. Schema position is reported separately from Core/app primary and
+companions; closed durable-lease and queue configuration fields never include
+supplied values. The [retry configuration module](configuration/README.md)
+adds checked retry instructions; retry and lease values are read once and
+retained. Other existing startup precedence and failure codes remain.
+Injected diagnostic reporters take precedence; optional reporter
+throws/rejections do not change startup. An invalid default catalog selection is
+reported through the fixed contract catalog rather than that invalid selection.
+
 This directory implements `@kanbien/platform-workers`. Consumers import the
 package root; `index.ts` is a deliberate public barrel rather than the place
 where worker mechanics accumulate.
@@ -7,6 +17,7 @@ where worker mechanics accumulate.
 | File | Owns | Why it remains separate |
 | --- | --- | --- |
 | `errors.ts` | Worker error codes and safe local error construction. | Queue and execution paths can return one stable error shape without coupling to one another's control flow. |
+| `diagnostics.ts` | Closed Worker meanings and shared Core-based evidence selection. | Worker boundary location remains independent of a retained source primary and eight companions; optional delivery never becomes queue policy. |
 | `types.ts` | Public worker shell, in-memory queue, idempotency, durable-outbox processing, delivery, and result contracts. | The package boundary remains visible without mixing it with execution logic. |
 | `queue.ts` | Deterministic in-memory queue state and idempotency store. | Local test mechanics stay separate from a future provider adapter and from business job execution. |
 | `worker.ts` | App mounting, job resolution, validation, lifecycle, retry/dead-letter decisions, context creation, logs, metrics, and spans. | It is the only place that adapts a delivered queue message into an app job. |
@@ -66,3 +77,28 @@ outbox ID, tenant, fence, attempt, payload, receipt handle, or provider
 response. `platform/observability` turns those facts into profile-governed
 signals when target composition supplies its observer; the worker retains no
 cloud telemetry implementation.
+
+## Boundary evidence, not delivery-policy changes
+
+`worker.ts` forwards Runtime mount/lifecycle observations with their original
+context. Its lazy startup reporter can select catalogs registered before an app
+throws; explicit target catalogs and Runtime are also selected. Error constructors
+validate data-only records through Core rather than trusting a cast upstream field.
+The same lazy definition selection is threaded through existing payload/idempotency/
+durable error wrappers solely to retain their prior registered app evidence.
+
+Job context location is captured separately from source evidence and from the
+existing handlerStarted/timer mechanics. Operational-log profile selection gates
+both context and source output, including opt-outs and metrics-only profiles.
+Argument projection before entering the Runtime factory is a Worker boundary,
+not an invented Runtime call. The earlier delivery-clock throw retains its raw
+rejection and observes handler-not-invoked without settlement or retry. Queue-close observes the original zero-argument
+method expression and rethrows the original value without beginning lifecycle
+shutdown on failure.
+
+`main.ts` observes previously unobserved logger property/call failures and signal
+registration failures at their expressions. Its normal process-close wrapper stays
+unchanged: lower queue/lifecycle observations already own those failures, including
+an unsuccessful shutdown Result historically ignored by the Promise<void> wrapper.
+There is no replay registry, per-error decoration, new shutdown result, additional
+cleanup attempt, SQL policy, or queue delivery migration here.

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -31,12 +31,16 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 python3 - "$repo_root/scripts/01.harness/artifact-metadata/update-lifecycle/script.sh" <<'PY'
 import datetime as dt
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
+from unittest.mock import patch
 
 UPDATER = Path(sys.argv[1]).resolve()
 TODAY = dt.datetime.now(dt.timezone.utc).date().isoformat()
@@ -133,6 +137,9 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary
     mtime = source.stat().st_mtime_ns
     assert not update(repo, [".agentic/original.md"], "--apply")["plans"][0]["changed"]
     assert source.stat().st_mtime_ns == mtime, "repeat apply must not rewrite unchanged files"
+    duplicate_report=update(repo,['.agentic/original.md','.agentic/original.md'],'--apply',succeeds=False)
+    assert duplicate_report['errors'][0]['code']=='lifecycle-path-duplicate' and duplicate_report['errors'][0]['ordinal']==2
+    assert source.read_bytes()==migrated
 
     # Task preparation discovers changed lifecycle artifacts without touching
     # ordinary source, and a second unchanged preparation is a true no-op.
@@ -280,11 +287,32 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary
 
     # Replacement IDs must agree with referenced headers.
     mismatched = source.read_bytes().replace(
-        b"  - id: test.artifact.replacement", b"  - id: test.artifact.wrong"
+        b"  - id: test.artifact.replacement", b"  - id: private.reference.canary"
     )
     source.write_bytes(mismatched)
-    update(repo, [".agentic/renamed.md"], "--apply", succeeds=False)
+    rejected = update(repo, [".agentic/renamed.md"], "--apply", succeeds=False)
     assert source.read_bytes() == mismatched
+    assert rejected['errors'][0]['code']=='lifecycle-replacement-id-mismatch'
+    assert rejected['errors'][0]['stage']=='references' and rejected['errors'][0]['ordinal']==1
+    assert rejected['plans'][0]['before']['superseded_by'] is None
+    assert rejected['plans'][0]['after']['superseded_by'] is None
+    assert 'private.reference.canary' not in json.dumps(rejected)
+    # Repairing an ignored old reference retains original write/admission,
+    # while the unvalidated before-value never becomes diagnostic evidence.
+    repaired=update(repo,['.agentic/renamed.md'],'--replacement','.agentic/replacement.md','--apply')
+    assert repaired['applied'] and repaired['plans'][0]['before']['superseded_by'] is None
+    expected_refs=[{'id':'test.artifact.replacement','path':'.agentic/replacement.md'}]
+    assert repaired['plans'][0]['after']['superseded_by']==expected_refs
+    assert 'private.reference.canary' not in json.dumps(repaired)
+    valid_superseded=source.read_bytes()
+    rejected_path=valid_superseded.replace(b'path: ".agentic/replacement.md"',b'path: ".agentic/private-reference-path-canary.md"')
+    source.write_bytes(rejected_path)
+    rejected=update(repo,['.agentic/renamed.md'],'--apply',succeeds=False)
+    assert source.read_bytes()==rejected_path and 'private-reference-path-canary' not in json.dumps(rejected)
+    assert rejected['plans'][0]['before']['superseded_by'] is None and rejected['plans'][0]['after']['superseded_by'] is None
+    source.write_bytes(valid_superseded)
+    unchanged=update(repo,['.agentic/renamed.md'])
+    assert unchanged['plans'][0]['before']['superseded_by']==unchanged['plans'][0]['after']['superseded_by']==expected_refs
 
     # YAML/script comment headers retain unrelated bytes and indentation.
     comment = repo / "scripts/comment.sh"
@@ -355,12 +383,14 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary
         assert target.read_bytes() == before, "embedded examples and output scaffolds must never be edited"
 
     duplicate = artifact(repo, ".agentic/duplicate.md", "test.artifact.duplicate")
-    duplicate.write_text(duplicate.read_text().replace("version: 7", "version: 7\nversion: 8"))
-    update(repo, [".agentic/duplicate.md"], "--apply", succeeds=False)
+    duplicate.write_text(duplicate.read_text().replace("version: 7", "version: 7\nversion: private-yaml-canary"))
+    duplicate_report=update(repo, [".agentic/duplicate.md"], "--apply", succeeds=False)
+    assert 'private-yaml-canary' not in json.dumps(duplicate_report)
     alias = repo / ".agentic/alias.md"
     alias.symlink_to(replacement)
     update(repo, [".agentic/alias.md"], "--apply", succeeds=False)
-    update(repo, [str(Path(temporary) / "outside.md")], "--apply", succeeds=False)
+    outside_report=update(repo, [str(Path(temporary) / "private-path-canary.md")], "--apply", succeeds=False)
+    assert 'private-path-canary' not in json.dumps(outside_report)
 
     # An unstaged v2 move must not silently become a newly created artifact.
     move_source = artifact(repo, ".agentic/move-source.md", "test.artifact.move")
@@ -489,5 +519,155 @@ with tempfile.TemporaryDirectory(prefix="lifecycle-rollover-") as temporary:
     assert ('updated_on: "' + TODAY + '"').encode() in source.read_bytes()
     assert b'created_on: "2025-01-03"' in source.read_bytes()
 
-print("Lifecycle updater smoke tests passed (including unchanged preparation across UTC rollover).")
+# Native seams execute the actual embedded command, with only its external
+# observations controlled. No Git mutation or checker implementation is added.
+code=UPDATER.read_text().split("<<'PY'\n",1)[1].rsplit('\nPY',1)[0]
+with tempfile.TemporaryDirectory(prefix='lifecycle-diagnostic-boundaries-') as temporary:
+    root=Path(temporary);one=root/'one.md';two=root/'two.md'
+    original={one:b'one original\n',two:b'two original\n'}
+    for path,raw in original.items():path.write_bytes(raw)
+    class BrokenStream(io.StringIO):
+        def write(self,value):raise OSError('private-emission-canary')
+    def load_owner(error=None, clock=False, emission=None, broken_fallback=False):
+        owner={'__name__':'lifecycle_diagnostic_fixture'};out=BrokenStream() if emission=='stdout' else io.StringIO();err=BrokenStream() if broken_fallback else io.StringIO()
+        class BrokenClock:
+            @classmethod
+            def now(cls,*args):raise ValueError('private-clock-canary')
+        native=patch.object(subprocess,'run',side_effect=error) if error else patch.object(subprocess,'run',return_value=SimpleNamespace(stdout=os.fsencode(root),returncode=0))
+        with native,patch.object(sys,'argv',['fixture',str(UPDATER)]),contextlib.redirect_stdout(out),contextlib.redirect_stderr(err), (patch.object(dt,'datetime',BrokenClock) if clock else contextlib.nullcontext()), (patch.object(json,'dumps',side_effect=ValueError('private-serialization-canary')) if emission=='serialization' else contextlib.nullcontext()):
+            try:exec(compile(code,str(UPDATER),'exec'),owner)
+            except SystemExit as stopped:return owner,stopped.code,out.getvalue(),err.getvalue()
+        owner['LocalCache']=None
+        return owner,0,out.getvalue(),err.getvalue()
+    for error,clock,stage in [(OSError('private-root-canary'),False,'repository'),(UnicodeDecodeError('utf8',b'\xff',0,1,'private-root-canary'),False,'repository'),(None,True,'clock')]:
+        owner,status,out,err=load_owner(error,clock)
+        assert status==1 and json.loads(out)['errors'][0]['stage']==stage
+        assert 'canary' not in out+err
+    for clock,emission,broken_fallback in [(False,'serialization',False),(False,'stdout',False),(True,'serialization',False),(False,'stdout',True)]:
+        with patch.object(Path,'write_bytes',side_effect=AssertionError('pre-main failure must not write')):
+            _,status,out,err=load_owner(None if clock else OSError('private-root-canary'),clock,emission,broken_fallback)
+        assert status==1 and out=='' and err==('' if broken_fallback else 'ERROR: lifecycle-reporting-failed\n')
+    owner,status,_,_=load_owner();assert status==0
+    out=io.StringIO();err=io.StringIO()
+    with patch.object(sys,'argv',['fixture',str(UPDATER),'--paths','one.md','--status','private-cli-canary']),contextlib.redirect_stdout(out),contextlib.redirect_stderr(err):
+        try:owner['main']()
+        except SystemExit as stopped:assert stopped.code==2
+        else:raise AssertionError('invalid CLI choice admitted')
+    assert out.getvalue()=='' and err.getvalue()=='ERROR: lifecycle-arguments-invalid\n'
+    def prepared(path,args):
+        raw=path.read_bytes();identity='test.lifecycle.'+path.stem
+        return {'original':raw,'rendered':raw+b'prepared\n','header':SimpleNamespace(data={'id':identity,'status':'active'}),'report':{'path':path.relative_to(root).as_posix(),'before':{'superseded_by':None},'after':{'superseded_by':None}}}
+    def invoke(*flags, replacements=None, child=None, child_error=None):
+        out=io.StringIO();err=io.StringIO()
+        child_call=patch.object(subprocess,'run',side_effect=child_error) if child_error else patch.object(subprocess,'run',return_value=child or SimpleNamespace(returncode=0,stdout='private-checker-canary',stderr='private-checker-canary'))
+        with patch.dict(owner,{'prepare':prepared,**(replacements or {})}),patch.object(sys,'argv',['fixture',str(UPDATER),*flags]),child_call as command,contextlib.redirect_stdout(out),contextlib.redirect_stderr(err):
+            status=owner['main']()
+        assert 'canary' not in out.getvalue()+err.getvalue()
+        return status,json.loads(out.getvalue()),command
+    for error,expected in [(owner['PlanError']('date-calendar','updated_on'),'lifecycle-date-calendar'),(OSError('private-native-canary'),'lifecycle-planning-failed'),(ValueError('private-native-canary'),'lifecycle-planning-failed'),(TypeError('private-native-canary'),'lifecycle-planning-failed')]:
+        calls=[]
+        def rejected(path,args):calls.append(path);raise error
+        status,report,command=invoke('--paths','one.md','two.md','--apply',replacements={'prepare':rejected})
+        assert status==1 and not report['applied'] and report['errors'][0]['code']==expected
+        assert report['errors'][0]['ordinal']==1 and command.call_count==0
+        assert len(calls)==(1 if isinstance(error,TypeError) else 2)
+        assert all(path.read_bytes()==raw for path,raw in original.items())
+    status,report,command=invoke('--changed',replacements={'changed_paths':lambda:(_ for _ in ()).throw(ValueError('private-selection-canary'))})
+    assert status==1 and report['errors'][0]['stage']=='selection' and command.call_count==0
+    for error in [OSError('private-checker-canary'),UnicodeDecodeError('utf8',b'\xff',0,1,'private-checker-canary'),subprocess.TimeoutExpired(['private-checker-canary'],1)]:
+        status,report,command=invoke('--paths','one.md','--apply',child_error=error)
+        assert status==1 and report['errors'][0]['code']=='lifecycle-proposed-check-failed' and command.call_count==1
+    prepared_paths=[]
+    def stopped_prepare(path,args):
+        prepared_paths.append(path)
+        if path==two:raise TypeError('private-native-canary')
+        return prepared(path,args)
+    def forbidden_references(*args,**kwargs):raise AssertionError('native planning abort must not trigger later reference reads')
+    status,report,command=invoke('--paths','one.md','two.md','--apply',replacements={'prepare':stopped_prepare,'check_references':forbidden_references})
+    assert status==1 and prepared_paths==[one,two] and command.call_count==0 and report['errors'][0]['ordinal']==2
+    class NoChildTail:
+        returncode=17
+        @property
+        def stdout(self):raise AssertionError('checker output must not be inspected')
+        @property
+        def stderr(self):raise AssertionError('checker output must not be inspected')
+    status,report,command=invoke('--paths','one.md','--apply',child=NoChildTail())
+    assert status==1 and report['errors'][0]['code']=='lifecycle-proposed-check-rejected'
+    assert command.call_count==1 and command.call_args.args==(['bash',str(owner['CHECKER']),'--proposed'],)
+    assert command.call_args.kwargs['input']==json.dumps({'one.md':(original[one]+b'prepared\n').decode()})
+    # Traversal retains the original getter order and reads each target once;
+    # report projection does not replay it or carry ignored reference fields.
+    target=root/'target.md';target.write_text(HEADER.format(id='test.target',status='active'))
+    visits=[];actual_read=Path.read_bytes
+    class Reference(dict):
+        def __getitem__(self,key):visits.append(key);return super().__getitem__(key)
+    ref=Reference(id='test.target',path='target.md',ignored='private-reference-canary')
+    validated=[];reads=[]
+    def read(path):reads.append(path);return actual_read(path)
+    with patch.object(Path,'read_bytes',read):owner['check_references']({'id':'test.source','status':'superseded','superseded_by':[ref]}, {}, validated=validated)
+    assert visits==['id','id','path','path','path','id'] and reads==[target],(visits,reads)
+    report={'plans':[{'before':{'superseded_by':[ref]},'after':{'superseded_by':[ref]}}]}
+    owner['project_reference_reports'](report,validated)
+    assert report['plans'][0]['before']['superseded_by'] is None and 'private-reference-canary' not in json.dumps(report)
+    with patch.object(Path,'read_bytes',read):
+        safe=[{'id':'test.target','path':'target.md'}];report={'plans':[{'before':{'superseded_by':safe},'after':{'superseded_by':safe}}]};owner['project_reference_reports'](report,validated)
+    assert reads==[target] and report['plans'][0]['after']['superseded_by']==safe
+    assert visits==['id','id','path','path','path','id']
+    # The full preflight still precedes every write; a changed source prevents
+    # all writes, including ones visited before that source's recheck.
+    reads=[]
+    def changed(path):
+        reads.append(path);value=actual_read(path)
+        return value+b'concurrent\n' if path==two and reads.count(path)==2 else value
+    with patch.object(Path,'read_bytes',changed),patch.object(Path,'write_bytes',side_effect=AssertionError('preflight must finish first')):
+        status,report,command=invoke('--paths','one.md','two.md','--apply')
+    assert status==1 and report['errors'][0]['code']=='lifecycle-concurrent-change' and reads==[one,two,one,two]
+    actual_write=Path.write_bytes;writes=[]
+    def partial_write(path,value):
+        writes.append(path)
+        if path==two:actual_write(path,b'partial\n');raise OSError('private-write-canary')
+        return actual_write(path,value)
+    with patch.object(Path,'write_bytes',partial_write):status,report,command=invoke('--paths','one.md','two.md','--apply')
+    assert status==1 and not report['applied'] and writes==[one,two]
+    assert report['errors'][0]['stage']=='write' and report['errors'][0]['completed_returned_writes']==1 and report['errors'][0]['current_write']=='unknown'
+    assert one.read_bytes()==original[one]+b'prepared\n' and two.read_bytes()==b'partial\n'
+    for path,raw in original.items():path.write_bytes(raw)
+    class ReceiptFailure:
+        def __init__(self,selected):assert selected==root
+        def record_artifacts(self,artifacts):
+            assert list(artifacts)==['one.md','two.md']
+            raise OSError('private-receipt-canary')
+    status,report,command=invoke('--paths','one.md','two.md','--apply',replacements={'LocalCache':ReceiptFailure})
+    assert status==1 and not report['applied'] and report['errors'][0]['stage']=='preparation-receipt' and report['errors'][0]['completed_returned_writes']==2
+    assert all(path.read_bytes()==raw+b'prepared\n' for path,raw in original.items())
+    actual_dumps=json.dumps
+    for phase,emission,broken_fallback in [('selection','serialization',False),('selection','stdout',False),('selection','serialization',True),('final','serialization',False),('final','stdout',False),('final','stdout',True)]:
+        for path,raw in original.items():path.write_bytes(raw)
+        writes.clear();observed=[]
+        out=BrokenStream() if emission=='stdout' else io.StringIO();err=BrokenStream() if broken_fallback else io.StringIO()
+        def dumps(value,*args,**kwargs):
+            if isinstance(value,dict) and 'plans' in value:
+                observed.append(value)
+                assert kwargs.get('indent')==2
+                if emission=='serialization':raise ValueError('private-secondary-canary')
+            return actual_dumps(value,*args,**kwargs)
+        overrides={'prepare':prepared,'LocalCache':None}
+        if phase=='selection':overrides['changed_paths']=lambda:(_ for _ in ()).throw(ValueError('private-selection-canary'))
+        args=['--changed','--apply'] if phase=='selection' else ['--paths','one.md','two.md','--apply']
+        with patch.dict(owner,overrides),patch.object(sys,'argv',['fixture',str(UPDATER),*args]),patch.object(subprocess,'run',return_value=SimpleNamespace(returncode=0)) as checker,patch.object(json,'dumps',side_effect=dumps),contextlib.redirect_stdout(out),contextlib.redirect_stderr(err),patch.object(Path,'write_bytes',partial_write):
+            status=owner['main']()
+        assert status==1 and len(observed)==1 and out.getvalue()==''
+        assert err.getvalue()==('' if broken_fallback else 'ERROR: lifecycle-reporting-failed\n')
+        assert 'canary' not in out.getvalue()+err.getvalue() and 'Traceback' not in out.getvalue()+err.getvalue()
+        if phase=='selection':
+            assert writes==[] and checker.call_count==0
+            assert observed[0]['errors'][0]['stage']=='selection' and not observed[0]['applied']
+            assert all(path.read_bytes()==raw for path,raw in original.items())
+        else:
+            assert writes==[one,two] and checker.call_count==1
+            assert observed[0]['errors'][0]['stage']=='write'
+            assert observed[0]['errors'][0]['completed_returned_writes']==1 and observed[0]['errors'][0]['current_write']=='unknown'
+            assert one.read_bytes()==original[one]+b'prepared\n' and two.read_bytes()==b'partial\n'
+
+print("Lifecycle updater smoke tests passed (including unchanged preparation across UTC rollover and safe failed-stage/effect reporting).")
 PY

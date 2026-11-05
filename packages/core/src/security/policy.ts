@@ -8,6 +8,8 @@ import {
   type MessageKey,
   type MessageParams,
 } from "../shared/index";
+import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { coreSecurityPrimitiveRecord } from "./diagnostics";
 
 export type SecurityPolicyId = Brand<string, "SecurityPolicyId">;
 
@@ -110,14 +112,13 @@ function copySecurityPolicyEvidence<TValue extends SecurityPolicyEvidence>(value
 
 function assertNonEmpty(label: string, value: string): void {
   if (value.length === 0) {
-    throw new TypeError(`${label} must be non-empty.`);
+    throw attachCoreDiagnosticRecord(new TypeError(`${label} must be non-empty.`), coreSecurityPrimitiveRecord("security-policy-id", "empty"));
   }
 }
 
 function assertToken(label: string, value: string): void {
   assertNonEmpty(label, value);
 
-  if (value.trim() !== value || /\s/.test(value)) {
-    throw new TypeError(`${label} must not contain whitespace.`);
-  }
+  if (value.trim() !== value) throw attachCoreDiagnosticRecord(new TypeError(`${label} must not contain whitespace.`), coreSecurityPrimitiveRecord("security-policy-id", "surrounding-whitespace"));
+  if (/\s/.test(value)) throw attachCoreDiagnosticRecord(new TypeError(`${label} must not contain whitespace.`), coreSecurityPrimitiveRecord("security-policy-id", "whitespace"));
 }

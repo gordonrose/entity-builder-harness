@@ -14,6 +14,8 @@ implementation.
 | `errors.ts` | Stable error codes and constructors. | Declaration and validation failures need one consistent vocabulary. |
 | `identifiers.ts` | Branded app, route, job, health, and API-version names. | Name construction is a foundational check shared by later declarations. |
 | `flags.ts` | Feature-flag name, context, reader, and fixed reader. | Flag evaluation is a context concern, not an app-mount or route concern. |
+| `operational-events.ts` | Closed readiness-observation event validation. | Event admission is distinct from emitting or delivering telemetry. |
+| `operational-observations.ts` | Optional, independent contract-boundary and selected source reporting. | Shared delivery isolation does not belong in event or flag policy. |
 | `contexts.ts` | Runtime, request, and job context shapes. | Apps receive shared runtime facts without being given platform internals. |
 | `routes.ts` | HTTP route declarations and their auth, tenant, and resource-policy inputs. | It describes what a route may request; it does not execute a route. |
 | `jobs.ts` | Background-job declarations. | Jobs have a queue-shaped contract distinct from HTTP routes. |
@@ -110,6 +112,13 @@ job-specific facts to form `PlatformRequestContext` and `PlatformJobContext`.
 The platform creates these contexts; route and job handlers consume them.
 They carry facts such as correlation ID, tenant, principal, locale, logger,
 metrics, config, feature flags, clock, queue message, and cancellation.
+
+Request contexts may additionally supply `onDiagnostic(record)`. It delivers a
+closed, selected-catalog record through the request's actual operational-log
+profile and existing reporter; it is absent for opted-out or metric-only routes.
+This internal observation does not change the HTTP response or imply that an
+operation failed: reconciliation may succeed after a call failure was observed.
+Producers never supply raw exceptions and do not await diagnostic delivery.
 
 The context is intentionally **not** a service locator. It does not hand an
 app every repository, billing service, provider client, or database connection.
@@ -319,3 +328,43 @@ const attemptedRouteName = platformRouteName("billing.invoice.list"); // Consume
 void validatePlatformRouteRegistration; // Show that validators are also deliberately exported through the same doorway.
 void attemptedRouteName; // Mark the illustrative constructor result as used.
 ```
+
+### Registration diagnostics
+
+`platformContractDiagnosticCatalog` owns `platform-contracts.registration-rejected`
+version 1. Validators retain their first failure and original error code, message
+and details while adding a separate closed `diagnosticRecord`. Its registration,
+field, observed condition, inspection phase and rejected effect contain no supplied
+names, paths, permission lists, justification or exception text. Catalog inspection
+throws report only the observed phase; they do not infer which property was wrong.
+Registry duplicates identify the first identity dimension actually compared as
+equal. Existing predicate order, getter reads, reserved paths, public-route controls,
+array-like object acceptance and validate-plus-explain validator policy remain intact.
+
+`PlatformContractError` may also carry related records selected by its consumer.
+These internal records are separate from public error projections and metric labels.
+
+### Operational event and fixed-flag diagnostics
+
+`platformReadinessObservationEvent(value, diagnostics?)` retains its original
+validation order, accepted event shape and `PLATFORM_OPERATIONAL_EVENT_INVALID`
+failure. The additional `platform-contracts.operational-event-rejected` record
+identifies the first predicate that actually failed: a logical field and a
+closed condition, never the supplied value or unknown key. An ordinal refers
+only to an actual key traversal. It does not claim to enumerate every defect.
+
+`platform-contracts.operational-boundary-failed` identifies an observed throw
+while checking an event, copying fixed flags, or reading a fixed flag. It records
+the actual phase and which result was not produced; it does not infer a root
+cause from exception text. `fixedFeatureFlagReader(flags, defaultEnabled,
+diagnostics?)` still performs one snapshot spread and the original nullish
+fallback. It adds no flag-value validation, context inspection or remote lookup.
+
+Both optional diagnostic arguments accept `onDiagnostic` and explicitly selected
+`diagnosticDefinitions`. An independent owned observation and a validated source
+primary with up to eight companions are delivered separately. Callback throws or
+rejections cannot replace the original result or thrown value. Callers must bind
+the observer to their selected, profile-governed internal reporter: the helper
+does not create a logger or put diagnostics into public responses. The readiness
+consumer supplies that binding; there is no production fixed-flag evaluation
+consumer to invent. Historical registration definitions remain readable.

@@ -14,8 +14,13 @@ external promise.
 | `normalization.ts` | Safe JSON-shaped fields, redaction, size/depth bounds, circular-value handling, and bounded error facts. | Logging and tracing need the same safety rule without either becoming a provider implementation. |
 | `logging.ts` | Safe Core-logger adaptation and structured runtime log writes. | It sends already-normalised facts to an injected logger; it does not select or configure a sink. |
 | `metrics.ts` | Metric recording plus request, job, health, and elapsed-time helpers. | Metric identity and low-cardinality labels stay separate from log-value normalisation and trace attributes. |
+| `metric-diagnostics.ts` | Closed preparation, rejection, instrument-creation and invocation records, port-bound observation provenance and bounded independent reporting bindings. | Local recording evidence cannot imply export or backend delivery. |
+| `metric-lifecycle-diagnostics.ts` | Separate collection issues/failure, export failure and flush/shutdown failure definitions and constructors. | Returned results, rejection, timeout and actual boundary retain different meanings without exposing metric or SDK values. |
+| `boundary-definitions.ts`, `boundary-observation.ts` | Closed wrapper-failure/control definitions and optional independently selected own/source reporting. | A local observation cannot displace source primary/eight or imply remote delivery; reporting does not recursively use a failed logger. |
 | `tracing.ts` | Safe trace attributes plus safe start/end wrappers around the Core tracer port. | Runtime callers can create a provider-neutral span without an unavailable tracer breaking a request. |
 | `index.ts` | Approved public exports only. | Callers keep one stable import while internal source responsibilities remain easy to find. |
+| `configuration.ts` | Versioned configuration/construction records and readiness configuration predicates. | Provider-neutral failures stay independent of SDK exceptions and environment variable names. |
+| `metric-series-configuration.ts` | Shared metric-series policy with indexed, bounded failures. | Adapters reuse the same label, cardinality and bucket rules rather than redefining them. |
 
 ## Detailed guide to the files
 
@@ -60,6 +65,65 @@ injected provider write are deliberately best effort, so an unavailable metric
 sink cannot fail work. This file does not create a metrics exporter or a tenant
 analytics store.
 
+The optional fourth helper argument supplies a stable diagnostic binding plus a
+closed caller-operation identity. Name/unit/label failures come from the actual
+Core predicate callback, not parsed native messages. Clock/timestamp and
+unclassified preparation failures are separate; recording is not attempted
+after preparation failure. A returned promise rejection is observed without
+awaiting or replaying work. Adapter companions count as evidence only on the
+original thrown object from the same metrics port; copied, accessor or arbitrary
+schema-valid companions cannot claim a known rejection or creation phase.
+Instrument creation failure means recording was not attempted; a recording
+invocation failure leaves its effect unknown. Returning normally is not proof
+of SDK retention, collector delivery or backend acceptance.
+
+Failed input or recorder access retains its exact known location (`name`,
+`kind`, `value`, `unit`, `label` or `recorder`) with `access-failed`; it does
+not become a known validation reason or wrong-type claim before a raw value
+was actually read. Original recorder-first argument ordering, two conditional
+label reads and receiver binding remain. Public record lookup reads only own
+data descriptors before strict parsing; rejected accessors cannot run or spend
+the diagnostic budget.
+
+Native returned promises are observed through the captured standard `then`
+intrinsic, so an own shadowed `then` accessor cannot leave their rejection
+unhandled. Non-native thenables retain standard assimilation. Neither path
+awaits business work, replays recording or changes the helper's void return.
+Portable observation still depends on usable native constructor/species hooks;
+throwing hooks and arbitrary detached errors from malicious implementations
+are outside this guarantee. The helper does not mutate returned promises or
+install global runtime hooks. The selected synchronous adapter does not use
+this asynchronous boundary.
+
+Each shell/observer owns one `createPlatformMetricDiagnosticBinding`, independent
+of the metrics port. It attempts only the first observation per closed predicate,
+caller operation and approved index location, with a hard 128-attempt lifetime
+limit and synchronous re-entry protection. The final attempt is reserved for a
+closed suppression control after127 substantive observations when another distinct
+valid observation arrives. The state is finite and scoped to
+that binding; creating a fresh fourth-argument options literal does not reset it.
+Distinct indexed locations can exceed the limit: subsequent evidence is
+suppressed, not certified complete or delivered. Failed/unavailable reports also
+consume the attempt; there is no retry or recursive fallback. A restart/new
+shell creates a new budget. Capability metric permission does not imply
+operational-log permission; an opted-out log path has no diagnostic binding.
+
+### Metric lifecycle — evidence, not a delivery guarantee
+
+The lifecycle catalog distinguishes collection results with errors from rejected
+collection. Issues include a count, not raw errors or a claim of nonempty/complete
+measurements. Export failure means a failed exporter callback or thrown invocation;
+flush may still resolve after a callback failure. Lifecycle failures identify the
+exporter versus runtime boundary, preserve unknown effect and never authorize
+replay. Only a positively observed SDK timeout gets the timeout reason.
+
+`createPlatformMetricLifecycleDiagnosticBinding` shares bounded delivery mechanics
+with recording bindings but not their accepted definitions or exception-provenance
+registry. Its process-owned operations are collection/export/flush/shutdown; stage
+is `runtime` except shutdown. Normal operations are quiet. Binding lifetime and
+unavailable-delivery suppression remain finite and are not coverage assurance.
+Target selection is distinct from a route's operational-log profile opt-out.
+
 ### `tracing.ts` — safe trace mechanics, not an exporter
 
 The Core monitoring package now supplies a provider-neutral `Tracer` port,
@@ -83,6 +147,13 @@ sampling policy, exporter, or storage provider; those need a later adapter,
 target configuration, and operating model.
 
 ### `index.ts` — the one public doorway
+
+`readiness-diagnostics.ts` owns the additive closed probe observations;
+`readiness-observation.ts` applies them at the single invocation, completion or
+deadline boundary and preserves selected upstream records. Generic fallback
+codes never infer a dependency cause from timeout or missing detail. The
+independent reporting helper in `diagnostics.ts` isolates synchronous and
+asynchronous delivery failures without changing calls or waiting for a sink.
 
 `index.ts` is the package barrel: the deliberate list of supported types and
 functions imported through `@kanbien/platform-observability`. The barrel keeps

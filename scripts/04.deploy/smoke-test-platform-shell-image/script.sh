@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -29,6 +29,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 
 if [ -z "${DOCKER_CONFIG:-}" ]; then
   export DOCKER_CONFIG="$ROOT/.cache/04.deploy/docker-config"
@@ -88,7 +89,7 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo 'DIAGNOSTIC_CODE=SHELL_QUALIFICATION_ARGUMENTS_INVALID' >&2
       usage >&2
       exit 2
       ;;
@@ -140,8 +141,8 @@ trap finish EXIT
 if [[ -n "$IMAGE_REFERENCE" ]]; then
   TAG="$IMAGE_REFERENCE"
 else
-  bash scripts/04.deploy/build-platform-shell-image/script.sh \
-    --tag "$TAG" >/dev/null
+  safe_command_diagnostic SHELL_QUALIFICATION_BUILD_FAILED package 'Local shell image build failed.' 'Inspect the shell image builder fixture.' -- bash scripts/04.deploy/build-platform-shell-image/script.sh \
+    --tag "$TAG"
 fi
 
 qualify_relational_entrypoint() {
@@ -166,7 +167,7 @@ for relational_entrypoint in \
   qualify_relational_entrypoint "$relational_entrypoint"
 done
 
-"$ENGINE" run \
+safe_command_diagnostic SHELL_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- "$ENGINE" run \
   --detach \
   --rm \
   --name "$CONTAINER_NAME" \
@@ -178,9 +179,9 @@ done
   --env HOST=0.0.0.0 \
   --env PORT=3000 \
   --env PLATFORM_SMOKE_APP_NAME="Platform Shell Image Smoke" \
-  "$TAG" >/dev/null
+  "$TAG"
 
-node - "$PORT" <<'NODE'
+safe_command_diagnostic SHELL_QUALIFICATION_HTTP_OBSERVATION_FAILED package 'Packaged HTTP observation failed.' 'Inspect the local HTTP qualification fixture.' -- node - "$PORT" <<'NODE'
 const [port] = process.argv.slice(2);
 const base = `http://127.0.0.1:${port}`;
 
@@ -216,20 +217,21 @@ NODE
 # Qualify enabled composition through a real exported health measurement.
 python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py" --container "$CONTAINER_NAME"
 metrics_series='[{"sourceName":"platform.health.state","sourceKind":"counter","sourceUnit":"count","instrumentName":"package.shell.health","description":"Package health","allowedLabelNames":["health_state"],"cardinalityLimit":4}]'
-"$ENGINE" run --detach --rm --name "$CONTAINER_NAME" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges --env HOST=0.0.0.0 --env PORT=3000 --env PLATFORM_SMOKE_APP_NAME=Package --env PLATFORM_SOURCE_COMMIT_SHA=package-qualification --env PLATFORM_OBSERVABILITY_METRICS_PROVIDER=cloudwatch-otel --env PLATFORM_OBSERVABILITY_METRICS_ENDPOINT=http://127.0.0.1:4318/v1/metrics --env PLATFORM_OBSERVABILITY_METRICS_REGION=eu-west-1 --env PLATFORM_OBSERVABILITY_SERVICE_NAME=platform-shell --env PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT=package-qualification --env PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS=1000 --env PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS=500 --env "PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON=$metrics_series" "$TAG" >/dev/null
-"$ENGINE" exec --detach "$CONTAINER_NAME" /nodejs/bin/node -e 'const fs=require("fs");require("http").createServer((req,res)=>{const chunks=[];req.on("data",b=>chunks.push(b));req.on("end",()=>{const b=Buffer.concat(chunks);if(req.url==="/v1/metrics"&&b.includes(Buffer.from("package.shell.health"))&&b.includes(Buffer.from("health_state"))&&b.includes(Buffer.from("ready")))fs.writeFileSync("/tmp/package-health-exported","observed");res.end();});}).listen(4318,"127.0.0.1");'
-node - "$PORT" <<'NODE'
+safe_command_diagnostic SHELL_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- "$ENGINE" run --detach --rm --name "$CONTAINER_NAME" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges --env HOST=0.0.0.0 --env PORT=3000 --env PLATFORM_SMOKE_APP_NAME=Package --env PLATFORM_SOURCE_COMMIT_SHA=package-qualification --env PLATFORM_OBSERVABILITY_METRICS_PROVIDER=cloudwatch-otel --env PLATFORM_OBSERVABILITY_METRICS_ENDPOINT=http://127.0.0.1:4318/v1/metrics --env PLATFORM_OBSERVABILITY_METRICS_REGION=eu-west-1 --env PLATFORM_OBSERVABILITY_SERVICE_NAME=platform-shell --env PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT=package-qualification --env PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS=1000 --env PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS=500 --env "PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON=$metrics_series" "$TAG"
+safe_command_diagnostic SHELL_QUALIFICATION_METRIC_RECEIVER_START_FAILED package 'Disposable metric receiver start failed.' 'Inspect the metric receiver fixture.' -- "$ENGINE" exec --detach "$CONTAINER_NAME" /nodejs/bin/node -e 'const fs=require("fs");require("http").createServer((req,res)=>{const chunks=[];req.on("data",b=>chunks.push(b));req.on("end",()=>{const b=Buffer.concat(chunks);if(req.url==="/v1/metrics"&&b.includes(Buffer.from("package.shell.health"))&&b.includes(Buffer.from("health_state"))&&b.includes(Buffer.from("ready")))fs.writeFileSync("/tmp/package-health-exported","observed");res.end();});}).listen(4318,"127.0.0.1");'
+safe_command_diagnostic SHELL_QUALIFICATION_HTTP_OBSERVATION_FAILED package 'Packaged HTTP observation failed.' 'Inspect the local HTTP qualification fixture.' -- node - "$PORT" <<'NODE'
 const base=`http://127.0.0.1:${process.argv[2]}`;
 (async()=>{for(let attempt=0;attempt<40;attempt++){try{if((await fetch(base+"/readyz")).status===200)return;}catch{}await new Promise(r=>setTimeout(r,250));}throw Error("enabled-shell-not-ready");})().catch(e=>{console.error(e.message);process.exit(1)});
 NODE
 metric_observed=false
 for attempt in $(seq 1 30); do
-  if "$ENGINE" exec "$CONTAINER_NAME" /nodejs/bin/node -e 'process.exit(require("fs").existsSync("/tmp/package-health-exported")?0:1)'; then metric_observed=true; break; fi
+  if "$ENGINE" exec "$CONTAINER_NAME" /nodejs/bin/node -e 'process.exit(require("fs").existsSync("/tmp/package-health-exported")?0:1)' 2>/dev/null; then metric_observed=true; break; fi
   sleep 1
 done
 if [[ "$metric_observed" != true ]]; then echo 'ERROR: enabled shell metric was not exported.' >&2; exit 1; fi
 
-python3 -B scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py --image "$("$ENGINE" image inspect "$TAG" --format '{{.Id}}')"
+qualify_relational_package() { python3 -B scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py --image "$("$ENGINE" image inspect "$TAG" --format '{{.Id}}')"; }
+safe_command_diagnostic SHELL_QUALIFICATION_RELATIONAL_PACKAGE_FAILED package 'Relational package observation failed.' 'Inspect the relational package fixture.' -- qualify_relational_package
 
 cleanup
 trap - EXIT

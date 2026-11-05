@@ -13,6 +13,7 @@ public import paths.
 | --- | --- | --- |
 | `concurrency.ts` | `ConcurrencyToken` and its branded constructor. | Stale-write protection is a distinct contract from background-work fencing. |
 | `errors.ts` | Stable persistence error codes and `persistenceError`. | Apps should handle portable meanings, not provider exception shapes. |
+| `diagnostics.ts` | Closed validation and in-memory boundary observations. | Safe predicates and local effects remain separate from legacy params and arbitrary callback errors. |
 | `pagination.ts` | Page requests, optional totals, page construction, and validation. | List/cursor semantics are separate from saving one record. |
 | `repository.ts` | The small `Repository` port, expected-version save option, and optional transaction handle. | Product repositories may add their own queries outside Core. |
 | `transactions.ts` | Explicit transaction and post-commit contracts. | It establishes atomicity without selecting a transaction manager. |
@@ -21,6 +22,31 @@ public import paths.
 | `outbox.ts` | Versioned durable-delivery identity, subject reference, and routing facts. | It deliberately contains no raw message payload or mutable relay state. |
 | `lineage.ts` | Safe record-revision/change envelopes and allowlisted field names. | It records references and changed field names, never full before/after records or free-form metadata. |
 | `index.ts` | Deliberate public exports. | Existing imports remain compatible while the module stays scanable. |
+
+Core persistence definitions are included in `coreDiagnosticCatalog`. Validation
+records identify the existing operation, fixed field and observed predicate;
+they retain neither the rejected value nor record, actor, owner, cursor or token
+identifiers. Existing codes, params, messages, accepted grammar and pure purge
+eligibility dispositions remain compatible.
+
+`InMemoryRepositoryOptions` and optional `inMemoryUnitOfWork(options)` accept
+`onDiagnostic(record)` and explicitly selected `diagnosticDefinitions`. Selection
+includes the full Core catalog by default. A failure reports its local boundary
+and validated source primary/eight companions separately; no source observation
+is displaced to fit the local record. The callback is optional and its synchronous
+throws or asynchronous rejection cannot change the operation. Raw repository
+throws retain their identity. Best-effort attachment preserves existing primaries;
+primitive or frozen throws rely on the optional observer for the local evidence.
+
+In-memory effects describe the helper's statements, not arbitrary callback side
+effects. A failed response clone follows the completed map write. An operation
+failure and an afterCommit action failure retain the historical transaction-failed
+wrapper and cause, but identify their distinct stages. Completed earlier actions
+are not replayed; the helper establishes no durable commit or rollback. Closed
+afterCommit registration retains its TypeError and rejects the new registration.
+`persistenceError` preserves its existing primary record contract, including app
+records supplied without definitions; newly supplied companions require explicit
+`relatedDiagnosticDefinitions` and pass the existing bounded validation.
 
 ### What belongs elsewhere
 

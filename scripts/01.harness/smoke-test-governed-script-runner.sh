@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 01.harness
 #   domain: validation
 #   disciplines:
@@ -246,5 +246,47 @@ case "$LIST" in
     fail "--list output included never-persistent destructive helper"
     ;;
 esac
+
+export REAL_GIT="$(command -v git)" REAL_SED="$(command -v sed)" REAL_GREP="$(command -v grep)"
+mkdir "$TMP_ROOT/fault-bin"
+for command in git sed grep; do
+  printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
+  cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
+fault=no
+case "$FAULT:$command:${1:-}" in
+  root:git:rev-parse|inventory:git:ls-files|match:grep:-Eq)
+    fault=yes ;;
+esac
+case "$FAULT:$command:${2:-}" in
+  header:sed:1,80p|effects:sed:1,140p) fault=yes ;;
+esac
+if [ "$fault" = yes ]; then
+  if [ "$command" = sed ]; then "$REAL_SED" "$@"; fi
+  echo private-governance-canary@example.invalid >&2
+  exit 77
+fi
+case "$command" in
+  git) exec "$REAL_GIT" "$@" ;;
+  sed) exec "$REAL_SED" "$@" ;;
+  grep) exec "$REAL_GREP" "$@" ;;
+esac
+EOF
+  chmod +x "$TMP_ROOT/fault-bin/$command"
+done
+for mode in run list; do
+  for stage in root inventory header effects match; do
+    [ "$mode:$stage" != run:inventory ] || continue
+    args=(scripts/00.chat/worktree/check-write-location/script.sh)
+    [ "$mode" != list ] || args=(--list)
+    if failure="$(PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" bash scripts/01.harness/run-governed-script.sh "${args[@]}" 2>&1)"; then
+      fail "$mode accepted failed $stage observation"
+    else
+      [ "$?" -eq 2 ] || fail "$mode $stage read failure became policy rejection"
+    fi
+    expected="$stage"
+    [ "$stage" != match ] || expected=effects
+    [[ "$failure" == *"governed-$expected-read-failed"* && "$failure" != *private-governance-canary* && "$failure" != *canonical-check:* ]] || fail "$mode lost exact read reason or executed child"
+  done
+done
 
 echo "governed script runner smoke test passed"

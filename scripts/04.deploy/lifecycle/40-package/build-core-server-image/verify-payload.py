@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.build-core-server-image.verify-payload
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -61,12 +62,21 @@ class PayloadFailure(Exception):
         self.codes = tuple(sorted(set(codes)))
 
 
+class PayloadArgumentFailure(PayloadFailure):
+    pass
+
+
+class PayloadArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise PayloadArgumentFailure("payload-check-argument-invalid")
+
+
 def load_document(path: Path, missing_code: str, invalid_code: str) -> dict:
     try:
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
     except OSError:
         raise PayloadFailure(missing_code) from None
-    except yaml.YAMLError:
+    except (yaml.YAMLError, UnicodeError):
         raise PayloadFailure(invalid_code) from None
     if not isinstance(document, dict):
         raise PayloadFailure(invalid_code)
@@ -101,6 +111,8 @@ def validate_source_contracts() -> dict:
         build_script = BUILD_SCRIPT.read_text(encoding="utf-8")
     except OSError:
         raise PayloadFailure("image-build-script-missing") from None
+    except UnicodeError:
+        raise PayloadFailure("image-build-script-unreadable") from None
     if f"RUNTIME_NODE_IMAGE={base['reference']}" not in build_script:
         raise PayloadFailure("image-build-runtime-base-mismatch")
     programs = program.get("runnable_programs")
@@ -115,6 +127,8 @@ def validate_docker_boundary(image: dict) -> None:
         dockerignore = DOCKERIGNORE.read_text(encoding="utf-8")
     except OSError:
         raise PayloadFailure("image-source-missing") from None
+    except UnicodeError:
+        raise PayloadFailure("image-source-unreadable") from None
     required = (
         f"ARG RUNTIME_NODE_IMAGE={image['runtime_base']['reference']}",
         "FROM ${RUNTIME_NODE_IMAGE}",
@@ -139,7 +153,7 @@ def validate_payload(compiled_root: Path, image: dict) -> None:
         raise PayloadFailure("compiled-payload-missing")
     try:
         content = "\n".join(file.read_text(encoding="utf-8") for file in files)
-    except OSError:
+    except (OSError, UnicodeError):
         raise PayloadFailure("compiled-payload-unreadable") from None
     if any(FORBIDDEN_MARKERS[item] in content for item in forbidden if item in FORBIDDEN_MARKERS):
         raise PayloadFailure("compiled-payload-forbidden-dependency")
@@ -149,26 +163,48 @@ def validate_payload(compiled_root: Path, image: dict) -> None:
     shims = {f"@kanbien/{path.name}" for path in package_root.iterdir() if path.is_dir()} if package_root.is_dir() else set()
     if shims != EXPECTED_SHIMS:
         raise PayloadFailure("compiled-payload-shims-invalid")
+    # Derive consumed core subpaths from the compiled code rather than freezing
+    # another manual module list. A package's presence alone does not establish
+    # that its transitive public exports can resolve in the actual image.
+    try:
+        core_manifest = json.loads((package_root / "core" / "package.json").read_text(encoding="utf-8"))
+        core_exports = core_manifest["exports"]
+        core_dependencies = set(re.findall(r'''\brequire\(["']@kanbien/core/([a-z][a-z0-9-]*)["']\)''', content))
+        for module in core_dependencies:
+            exported = core_exports.get(f"./{module}")
+            if not isinstance(exported, str) or not exported.startswith("./") or ".." in Path(exported).parts:
+                raise PayloadFailure("compiled-payload-core-export-unavailable")
+            if not (package_root / "core" / exported).is_file():
+                raise PayloadFailure("compiled-payload-core-export-unavailable")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        raise PayloadFailure("compiled-payload-core-export-unavailable") from None
     roots = {path.name for path in compiled_root.iterdir() if path.is_dir()}
     if not roots.issubset({"infra", "node_modules", "packages", "platform"}):
         raise PayloadFailure("compiled-payload-unapproved-root")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False)
+    parser = PayloadArgumentParser(add_help=False)
     parser.add_argument("--compiled-root", required=True)
     parser.add_argument("--json", action="store_true")
-    args, unknown = parser.parse_known_args()
+    phase = "arguments"
     try:
+        args, unknown = parser.parse_known_args()
         if unknown:
             raise PayloadFailure("payload-check-argument-invalid")
+        phase = "source-contracts"
         image = validate_source_contracts()
+        phase = "docker-boundary"
         validate_docker_boundary(image)
+        phase = "compiled-payload"
         validate_payload(Path(args.compiled_root), image)
         report = {"scope": "core-server-image-payload", "verdict": "passed", "diagnostics": []}
         status = 0
     except PayloadFailure as failure:
         report = {"scope": "core-server-image-payload", "verdict": "failed", "diagnostics": [{"code": code} for code in failure.codes]}
+        status = 2 if isinstance(failure, PayloadArgumentFailure) else 1
+    except (OSError, UnicodeError, TypeError, AttributeError, KeyError, ValueError):
+        report = {"scope": "core-server-image-payload", "verdict": "failed", "diagnostics": [{"code": "payload-check-boundary-failed", "phase": phase}]}
         status = 1
     print(json.dumps(report, sort_keys=True))
     return status

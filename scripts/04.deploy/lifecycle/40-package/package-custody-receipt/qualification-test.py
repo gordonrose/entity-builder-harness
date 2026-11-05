@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -23,6 +23,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 import yaml
@@ -31,6 +32,214 @@ ROOT=Path(__file__).resolve().parents[5]
 HELPER=ROOT/'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py'
 
 class QualificationTests(unittest.TestCase):
+    def test_shell_later_container_and_node_boundaries(self):
+        fake=r'''import json,os,sys
+from pathlib import Path
+name=Path(sys.argv[0]).name;args=sys.argv[1:];stage=name
+state_path=Path(os.environ['FIXTURE_COUNTS']);state=json.loads(state_path.read_text()) if state_path.exists() else {}
+def ordinal(key):
+ state[key]=state.get(key,0)+1;state_path.write_text(json.dumps(state));return state[key]
+if name=='git':print(os.environ['FIXTURE_ROOT']);sys.exit()
+if name=='node':stage='http-'+str(ordinal('http'))
+if name=='python3':
+ if any(x.endswith('relational-package-test.py') for x in args):stage='relational'
+ else:os.execv(os.environ['REAL_PYTHON'],[os.environ['REAL_PYTHON'],*args])
+if name=='docker':
+ if args[:2]==['container','inspect']:print('Error response from daemon: No such container: '+args[-1],file=sys.stderr);sys.exit(1)
+ if args[0]=='info':stage='info'
+ elif args[0]=='run':
+  if any('entrypoints/kanbien-platform-postgresql-' in x for x in args):print('{"outcome":"failed"}');sys.exit(1)
+  stage='server-'+str(ordinal('server'))
+ elif args[0]=='exec':stage='receiver' if '--detach' in args else 'probe'
+ elif args[:2]==['image','inspect']:stage='image-observation'
+with open(os.environ['FIXTURE_CALLS'],'a') as stream:stream.write(stage+'\n')
+if stage==os.environ['FAIL_STAGE']:print('credential-canary-value',file=sys.stderr);sys.exit(59 if name=='node' else 67 if name=='python3' else 41)
+if stage=='image-observation':print('sha256:'+'a'*64)
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);calls=root/'calls';counts=root/'counts'
+            for name in ['git','docker','node','python3']:
+                binary=root/name;binary.write_text('#!'+sys.executable+'\n'+fake);binary.chmod(0o755)
+            env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'DOCKER_CONFIG':str(root/'docker-config'),'REAL_PYTHON':sys.executable,'FIXTURE_ROOT':str(ROOT),'FIXTURE_CALLS':str(calls),'FIXTURE_COUNTS':str(counts)}
+            for stage,status,code in [('',0,None),('server-1',41,'CONTAINER_START_FAILED'),('http-1',59,'HTTP_OBSERVATION_FAILED'),('server-2',41,'CONTAINER_START_FAILED'),('receiver',41,'METRIC_RECEIVER_START_FAILED'),('http-2',59,'HTTP_OBSERVATION_FAILED'),('relational',67,'RELATIONAL_PACKAGE_FAILED')]:
+                calls.write_text('');counts.unlink(missing_ok=True)
+                result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/smoke-test-platform-shell-image/script.sh'),'--image','sha256:'+'a'*64],cwd=ROOT,env={**env,'FAIL_STAGE':stage},capture_output=True,text=True,timeout=15)
+                self.assertEqual(result.returncode,status,(stage,result.stdout,result.stderr));self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+                if code:self.assertIn('DIAGNOSTIC_CODE=SHELL_QUALIFICATION_'+code,result.stderr);self.assertIn('LIFECYCLE_STAGE=package',result.stderr)
+                seen=calls.read_text().splitlines()
+                if stage:self.assertEqual(seen[-1],stage)
+                else:self.assertIn('Platform shell image smoke test passed.',result.stdout)
+
+    def test_persistence_and_retained_later_boundary_matrix(self):
+        fake=r'''import json,os,sys
+from pathlib import Path
+args=sys.argv[1:];name=Path(sys.argv[0]).name;stage=name
+counts=Path(os.environ['FIXTURE_COUNTS'])
+state=json.loads(counts.read_text()) if counts.exists() else {}
+def ordinal(key):
+ state[key]=state.get(key,0)+1;counts.write_text(json.dumps(state));return state[key]
+if name=='git':print(os.environ['FIXTURE_ROOT']);sys.exit()
+if name=='python3':os.execv(os.environ['REAL_PYTHON'],[os.environ['REAL_PYTHON'],*args])
+if name=='sleep':sys.exit()
+if name=='openssl':stage='tls-'+str(ordinal('tls'))
+if name=='node':stage='http-'+str(ordinal('http')) if args[0]=='-' else 'digest' if args[:1]==['-e'] and 'repeat(64)' in args[1] else 'json'
+if name=='docker':
+ if args[:2] in (['container','inspect'],['network','inspect'],['volume','inspect']):
+  kind,value=args[0],args[-1];messages={'container':'No such container: '+value,'network':'network '+value+' not found','volume':'get '+value+': no such volume'}
+  print('Error response from daemon: '+messages[kind],file=sys.stderr);sys.exit(1)
+ if args[0]=='info':stage='info'
+ elif args[:2]==['network','create']:stage='network'
+ elif args[:2]==['volume','create']:stage='volume'
+ elif args[0]=='rm':stage='remove-'+str(ordinal('remove'))
+ elif args[0]=='logs':stage='logs'
+ elif args[0]=='exec':
+  stage='receiver' if '--detach' in args else 'password' if any(x.startswith('\\password ') for x in args) else 'roles' if '-i' in args else 'probe'
+ elif args[0]=='run':
+  operation=next((x.split('=',1)[1] for x in args if x.startswith('PERSISTENCE_ADMINISTRATION_OPERATION=')),None)
+  if operation:stage=operation
+  elif '--user' in args:stage='certificate-install'
+  elif 'postgres:16-bookworm' in args:stage='database'
+  elif '--detach' in args:stage='server-'+str(ordinal('server'))
+  elif any('LEGACY_PASSWORD=' in x for x in args):stage='legacy'
+  elif any(x.endswith('persistence-migration.main.js') for x in args):stage='migration'
+  elif any(x.endswith('persistence-restore-verifier.main.js') for x in args):stage='restore-read'
+  elif any(x.endswith('persistence-verifier.main.js') for x in args):stage='read'
+  else:stage='support'
+with open(os.environ['FIXTURE_CALLS'],'a') as stream:stream.write(stage+'\n')
+if stage==os.environ['FAIL_STAGE']:
+ print('credential-canary-value',file=sys.stderr);sys.exit(31 if name=='openssl' else 59 if name=='node' else 41)
+if name=='node':
+ if stage=='digest':print('f'*64,end='')
+ elif stage=='json':sys.stdin.read()
+if name=='docker' and args[0]=='run':
+ codes={'bootstrap-identities':'PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED','observe-migration-state':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','confirm-runtime-iam-access':'PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED','migration':'PERSISTENCE_MIGRATION_APPLIED','grant-runtime-application-access':'PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED','read':'KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED','restore-read':'KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED','revoke-runtime':'PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED','restore-runtime':'PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED'}
+ codes['prove-effective-privilege']='PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN'
+ if stage=='observe-migration-state' and ordinal('observation')>1:codes[stage]='PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED'
+ if any('core_rejected_administrator' in x for x in args):print('{"code":"PERSISTENCE_ADMINISTRATION_ACCESS_DENIED"}');sys.exit(1)
+ if 'PERSISTENCE_RESTORE_DIAGNOSTIC_MODE=connection' in args:
+  if any('synthetic-rejected-admin-canary-3' in x for x in args):print('{}');sys.exit(1)
+  print('{}')
+ elif stage in codes:print(json.dumps({'code':codes[stage]},separators=(',',':')))
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);calls=root/'calls';counts=root/'counts'
+            for name in ['git','docker','openssl','node','python3','sleep']:
+                binary=root/name;binary.write_text('#!'+sys.executable+'\n'+fake);binary.chmod(0o755)
+            env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'REAL_PYTHON':sys.executable,'FIXTURE_ROOT':str(ROOT),'FIXTURE_CALLS':str(calls),'FIXTURE_COUNTS':str(counts)}
+            common=[('tls-1',31,'CA_CREATION_FAILED'),('tls-2',31,'CERTIFICATE_REQUEST_FAILED'),('tls-3',31,'CERTIFICATE_SIGNING_FAILED'),('network',41,'NETWORK_CREATION_FAILED'),('volume',41,'VOLUME_CREATION_FAILED'),('certificate-install',41,'CERTIFICATE_INSTALL_FAILED'),('database',41,'CONTAINER_START_FAILED'),('roles',41,'ROLE_SETUP_FAILED'),('password',41,'CREDENTIAL_SETUP_FAILED'),('server-1',41,'CONTAINER_START_FAILED'),('http-1',59,'HTTP_OBSERVATION_FAILED'),('remove-1',41,'SERVER_REMOVAL_FAILED'),('http-2',59,'HTTP_OBSERVATION_FAILED')]
+            for owner,prefix,arguments,extra in [
+                ('smoke-test-core-server-persistence-image','PERSISTENCE_QUALIFICATION',[],[('digest',59,'DIGEST_PREPARATION_FAILED'),('legacy',1,'LEGACY_CONNECTION_FAILED'),('receiver',41,'METRIC_RECEIVER_START_FAILED'),('server-2',41,'CONTAINER_START_FAILED'),('remove-2',41,'SERVER_REMOVAL_FAILED'),('server-3',41,'CONTAINER_START_FAILED'),('http-3',59,'HTTP_OBSERVATION_FAILED')]),
+                ('qualify-retained-persistence-rollback-image','RETAINED_QUALIFICATION',['--retained-image','fixture:retained','--support-image','fixture:support'],[('bootstrap-identities',1,'BOOTSTRAP_RESULT_FAILED'),('confirm-runtime-iam-access',1,'IAM_CONFIRMATION_RESULT_FAILED'),('migration',1,'MIGRATION_RESULT_FAILED'),('grant-runtime-application-access',1,'APPLICATION_GRANT_RESULT_FAILED'),('read',1,'READ_RESULT_FAILED'),('restore-read',1,'RESTORE_READ_RESULT_FAILED'),('revoke-runtime',1,'REVOCATION_RESULT_FAILED'),('restore-runtime',1,'IAM_RESTORATION_RESULT_FAILED'),('server-2',41,'CONTAINER_START_FAILED'),('http-3',59,'HTTP_OBSERVATION_FAILED')]),
+            ]:
+                for stage,status,code in [('',0,None),*common,*extra]:
+                    calls.write_text('');counts.unlink(missing_ok=True)
+                    result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/lifecycle/40-package'/owner/'script.sh'),*arguments],cwd=ROOT,env={**env,'FAIL_STAGE':stage},capture_output=True,text=True,timeout=15)
+                    self.assertEqual(result.returncode,status,(owner,stage,result.stdout,result.stderr));self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+                    if code:self.assertIn('DIAGNOSTIC_CODE='+prefix+'_'+code,result.stderr);self.assertIn('LIFECYCLE_STAGE=package',result.stderr)
+                    seen=calls.read_text().splitlines()
+                    if stage:self.assertIn(stage,seen);self.assertEqual(seen[-1],stage)
+                    else:self.assertIn('compatibility qualification passed.' if prefix=='RETAINED_QUALIFICATION' else 'package smoke test passed.',result.stdout)
+
+    def test_build_and_shell_smoke_children_are_bounded_and_fail_stop(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);binary=root/'bin';binary.mkdir();calls=root/'calls'
+            for relative in ['scripts/04.deploy/shared/safe-command-diagnostics.sh','scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py','infra/04.deploy/03.product/image/Dockerfile.dockerignore']:
+                local=root/relative;local.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,local)
+            commands={
+                'git':'#!/bin/sh\nif [ "$2" = HEAD ]; then printf "%040d\\n" 0; else printf "%s\\n" "$FIXTURE_ROOT"; fi\n',
+                'bash':'#!/bin/sh\nprintf "%s\\n" "$1" >> "$FIXTURE_CALLS"\nif [ "$1" = "$FAIL_COMMAND" ]; then printf "credential-canary-value\\n" >&2; exit 23; fi\n',
+                'python3':'#!/bin/sh\nprintf "%s\\n" "$1" >> "$FIXTURE_CALLS"\n',
+                'node':'#!/bin/sh\nprintf "%s\\n" "$1" >> "$FIXTURE_CALLS"\nif [ "$1" = "$FAIL_COMMAND" ]; then printf "credential-canary-value\\n" >&2; exit 43; fi\n',
+                'docker':'''#!/bin/sh
+printf "docker:%s\\n" "$1" >> "$FIXTURE_CALLS"
+if [ "$1" = build ]; then printf "credential-canary-value\\n" >&2; exit "$BUILD_EXIT"; fi
+'''}
+            for name,text in commands.items():
+                path=binary/name;path.write_text(text);path.chmod(0o755)
+            env={**os.environ,'PATH':str(binary)+os.pathsep+os.environ['PATH'],'FIXTURE_ROOT':str(root),'FIXTURE_CALLS':str(calls)}
+            for owner,prefix,rejected in [
+                ('lifecycle/40-package/build-core-server-image','CORE_IMAGE',[('scripts/04.deploy/validate-container-boundaries/script.sh',23,'CONTAINER_BOUNDARY_FAILED'),('scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',23,'PROGRAM_CONTRACT_FAILED'),('scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh',23,'DEPENDENCY_BOUNDARY_FAILED'),('scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/build.sh',23,'COMPILATION_FAILED'),('scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs',43,'RUNTIME_PREPARATION_FAILED')]),
+                ('lifecycle/40-package/build-core-server-persistence-image','PERSISTENCE_IMAGE',[('scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',23,'PROGRAM_CONTRACT_FAILED')]),
+                ('build-platform-shell-image','SHELL_IMAGE',[('scripts/04.deploy/validate-container-boundaries/script.sh',23,'CONTAINER_BOUNDARY_FAILED')]),
+            ]:
+                for failed,status,code in [*rejected,('',47,'BUILD_FAILED'),('',0,None)]:
+                    calls.write_text('')
+                    result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy'/owner/'script.sh')],cwd=root,env={**env,'FAIL_COMMAND':failed,'BUILD_EXIT':str(status if not failed else 0)},capture_output=True,text=True)
+                    self.assertEqual(result.returncode,status,result.stdout+result.stderr);self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+                    seen=calls.read_text().splitlines()
+                    if code:self.assertIn('DIAGNOSTIC_CODE='+prefix+'_'+code,result.stderr);self.assertIn('LIFECYCLE_STAGE=package',result.stderr)
+                    if failed:self.assertEqual(seen.count(failed),1);self.assertNotIn('docker:build',seen);self.assertEqual(seen[-1],failed)
+                    else:self.assertEqual(seen.count('docker:build'),1)
+            # Actual smoke wrapper: the builder is a controlled failed child;
+            # the existing cleanup remains separate and must preserve status23.
+            cleanup=root/'scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py'
+            cleanup.write_text('')  # python3 substitute records but does not execute it.
+            calls.write_text('')
+            result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/smoke-test-platform-shell-image/script.sh')],cwd=root,env={**env,'FAIL_COMMAND':'scripts/04.deploy/build-platform-shell-image/script.sh','BUILD_EXIT':'0'},capture_output=True,text=True)
+            self.assertEqual(result.returncode,23,result.stdout+result.stderr);self.assertIn('DIAGNOSTIC_CODE=SHELL_QUALIFICATION_BUILD_FAILED',result.stderr);self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+            self.assertEqual(calls.read_text().splitlines().count('scripts/04.deploy/build-platform-shell-image/script.sh'),1)
+
+    def test_capture_native_faults_and_arguments_are_bounded(self):
+        capture=ROOT/'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py'
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);sbom=root/'credential-canary-value.json';receipt=root/'receipt.json'
+            keys=['QUALIFICATION_OUTCOME','ACCESS_OUTCOME','PUBLICATION_OUTCOME','SCAN_OUTCOME','SBOM_OUTCOME','PROVENANCE_OUTCOME','SBOM_ATTESTATION_OUTCOME']
+            env={**os.environ,**{key:'success' for key in keys},'GITHUB_SHA':'a'*40,'GITHUB_RUN_ID':'123','IMAGE_DIGEST':'sha256:'+'b'*64}
+            argv=['python3','-B',str(capture),'--target','catalog-target','--environment-class','private-fixture','--provider-region-alias','provider-local-fixture','--candidate','catalog-candidate','--package-contract','catalog-image','--program','catalog-worker','--scan-check','vulnerability_scan','--sbom',str(sbom),'--output',str(receipt)]
+            for payload,code in [(b'credential-canary-value','custody-evidence-invalid'),(b'\xffcredential-canary-value','custody-evidence-invalid'),(b'{}','custody-sbom-invalid')]:
+                sbom.write_bytes(payload)
+                result=subprocess.run(argv,env=env,capture_output=True,text=True)
+                self.assertEqual(result.returncode,1);self.assertEqual(json.loads(result.stdout),{'verdict':'failed','code':code});self.assertFalse(receipt.exists());self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+            sbom.write_text('{"spdxVersion":"SPDX-2.3"}')
+            for modified,environment,code in [(argv,{**env,'ACCESS_OUTCOME':'skipped'},'custody-prerequisite-not-successful'),([*argv[:argv.index('vulnerability_scan')],'credential-canary-value',*argv[argv.index('vulnerability_scan')+1:]],env,'custody-scan-kind-invalid'),([*argv[:-1],str(root/'missing'/'credential-canary-value')],env,'custody-evidence-invalid')]:
+                result=subprocess.run(modified,env=environment,capture_output=True,text=True)
+                self.assertEqual(result.returncode,1);self.assertEqual(json.loads(result.stdout)['code'],code);self.assertFalse(receipt.exists());self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+            result=subprocess.run([*argv,'--credential-canary-value'],env=env,capture_output=True,text=True)
+            self.assertEqual(result.returncode,2);self.assertEqual(json.loads(result.stderr),{'verdict':'failed','code':'custody-evidence-invalid'});self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+
+    def test_receipt_and_workflow_unicode_reads_are_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);receipt=root/'credential-canary-value.json';receipt.write_bytes(b'\xffcredential-canary-value')
+            validator=ROOT/'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py'
+            argv=['python3','-B',str(validator),'--receipt',str(receipt),'--expected-target','catalog-target','--expected-candidate','catalog-candidate','--expected-package-contract','catalog-image','--expected-program','catalog-worker','--json']
+            result=subprocess.run(argv,capture_output=True,text=True)
+            self.assertEqual(result.returncode,1);self.assertEqual(json.loads(result.stdout)['findings'],[{'code':'receipt-unreadable'}]);self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+            result=subprocess.run(['python3','-B',str(validator),'--receipt'],capture_output=True,text=True)
+            self.assertEqual(result.returncode,2);self.assertEqual(json.loads(result.stderr)['findings'],[{'code':'arguments-invalid'}])
+            for kind,filename,code in [('core-server','publish-kanbien-core-platform-core-server.yml','workflow-missing'),('core-server-persistence','publish-kanbien-core-platform-core-server-persistence.yml','workflow-missing'),('core-server-persistence-observability-collector','publish-kanbien-core-platform-observability-collector.yml','collector-custody-artifact-unreadable')]:
+                local=root/'.github/workflows'/filename;local.parent.mkdir(parents=True,exist_ok=True);local.write_bytes(b'\xffcredential-canary-value')
+                guard=ROOT/'scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform'/(kind+'-package-custody')/'verify-workflow.py'
+                argv=['python3','-B',str(guard),'--json']
+                if kind.endswith('collector'):argv+=['--workflow',str(local)]
+                result=subprocess.run(argv,cwd=root,capture_output=True,text=True)
+                self.assertEqual(result.returncode,1,result.stderr);self.assertIn(code,{item['code'] for item in json.loads(result.stdout)['findings']});self.assertNotIn('Traceback',result.stderr);self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
+
+    def test_tls_and_password_setup_preserve_status_without_native_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);events=root/'calls'
+            docker=root/'docker';docker.write_text('''#!/usr/bin/env python3
+import json,os,sys
+args=sys.argv[1:]
+with open(os.environ['FIXTURE_CALLS'],'a') as stream:stream.write(json.dumps(args)+'\\n')
+if args[:2] in (['container','inspect'],['network','inspect'],['volume','inspect']):
+ kind,name=args[0],args[-1];messages={'container':'No such container: '+name,'network':'network '+name+' not found','volume':'get '+name+': no such volume'}
+ print('Error response from daemon: '+messages[kind],file=sys.stderr);sys.exit(1)
+if args[0]=='exec' and any(value.startswith('\\\\password ') for value in args):print('credential-canary-value',file=sys.stderr);sys.exit(39)
+sys.exit(0)
+''');docker.chmod(0o755)
+            openssl=root/'openssl';openssl.write_text('#!/bin/sh\nprintf "credential-canary-value\\n" >&2\nexit "$OPENSSL_EXIT"\n');openssl.chmod(0o755)
+            git=root/'git';git.write_text('#!/bin/sh\nprintf "%s\\n" "$FIXTURE_ROOT"\n');git.chmod(0o755)
+            env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'FIXTURE_ROOT':str(ROOT),'FIXTURE_CALLS':str(events)}
+            for owner,prefix,arguments in [('smoke-test-core-server-persistence-image','PERSISTENCE_QUALIFICATION',[]),('qualify-retained-persistence-rollback-image','RETAINED_QUALIFICATION',['--retained-image','fixture:retained','--support-image','fixture:support'])]:
+                script=ROOT/'scripts/04.deploy/lifecycle/40-package'/owner/'script.sh'
+                for status,expected,code in [('31',31,'CA_CREATION_FAILED'),('0',39,'CREDENTIAL_SETUP_FAILED')]:
+                    events.write_text('')
+                    result=subprocess.run(['/bin/bash',str(script),*arguments],cwd=ROOT,env={**env,'OPENSSL_EXIT':status},capture_output=True,text=True,timeout=15)
+                    self.assertEqual(result.returncode,expected,result.stdout+result.stderr);self.assertIn('DIAGNOSTIC_CODE='+prefix+'_'+code,result.stderr);self.assertNotIn('credential-canary-value',result.stdout+result.stderr);self.assertEqual(json.loads(result.stdout.splitlines()[-1])['verdict'],'passed')
+                    calls=[json.loads(line) for line in events.read_text().splitlines()]
+                    if status=='31':self.assertFalse(any(item[:2]==['network','create'] for item in calls))
+                    else:self.assertEqual(sum(item[0]=='exec' and any(value.startswith('\\password ') for value in item) for item in calls),1)
+
     def test_exact_artifact_config_reuse_and_invalidation_cli(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);binary=root/'docker'

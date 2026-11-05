@@ -1,4 +1,5 @@
 import type { Principal } from "@kanbien/core/authn";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { ConfigSource } from "@kanbien/core/config";
 import type { LocaleTag } from "@kanbien/core/i18n";
 import type { Logger } from "@kanbien/core/logging";
@@ -25,6 +26,11 @@ export interface PlatformRuntimeContext {
 }
 
 export interface PlatformRequestContext extends PlatformRuntimeContext {
+  /** Internal observation through the selected route profile and catalog.
+   * Absent when operational logging is opted out. Never includes raw errors or
+   * changes the response; producers must not wait for diagnostic delivery.
+   */
+  readonly onDiagnostic?: (record: DiagnosticRecord) => unknown;
   readonly requestId: CorrelationId;
   readonly method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   readonly path: string;

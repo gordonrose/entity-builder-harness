@@ -23,6 +23,7 @@ import {
   type MetricLabelValue,
   type MetricLabels,
   type MetricName,
+  type MetricValidationObservation,
   type MetricPoint,
   type Metrics,
   type MetricUnit,
@@ -39,7 +40,17 @@ import {
   type TraceContext,
   type TraceSpanOutcome,
   type Tracer,
+  type CoreMonitoringDiagnosticOptions,
+  type CoreMonitoringBoundaryDetail,
 } from "../src/monitoring/index";
+
+const observeMetric = (value: MetricValidationObservation): void => { const reason = value.reason; void reason; };
+metricName("fixture.metric", observeMetric);
+metricUnit("count", observeMetric);
+metricLabels({ safe: true }, {}, observeMetric);
+// @ts-expect-error metric predicate reasons are a closed Core contract.
+const invalidMetricReason: MetricValidationObservation = { field: "name", reason: "provider-message" };
+void invalidMetricReason;
 
 const checkedAt = isoDateTimeFromDate(new Date("2026-07-07T10:00:00Z"));
 const componentType: MonitoringComponentType = "api";
@@ -58,6 +69,16 @@ const health: HealthCheckResult = healthCheckResult({
   metadata,
 });
 const check: HealthCheck = fixedHealthCheck(health);
+const diagnostics: CoreMonitoringDiagnosticOptions = { onDiagnostic(_record, context) { const operation: CoreMonitoringBoundaryDetail["operation"] = context.operation; void operation; return Promise.resolve(); } };
+healthCheckName("api.readiness", diagnostics);
+monitoringComponent({ type: "api", name: "api" }, diagnostics);
+healthCheckResult(health, diagnostics);
+fixedHealthCheck(health, diagnostics);
+metricLabels({}, {}, observeMetric, diagnostics);
+createInMemoryTracer(diagnostics);
+// @ts-expect-error locations are finite logical fields, not submitted keys.
+const invalidMonitoringLocation: CoreMonitoringBoundaryDetail["field"] = "password";
+void invalidMonitoringLocation;
 
 const labelValue: MetricLabelValue = "api";
 const labels: MetricLabels = metricLabels({

@@ -12,6 +12,13 @@ const TSV_MANIFEST_PATH = path.join(WORKBENCH_DIR, 'install-manifest.tsv');
 const BLOCK_START = '<!-- llm-workbench:start -->';
 const BLOCK_END = '<!-- llm-workbench:end -->';
 
+class OwnershipFailure extends Error {
+  constructor(condition, message) {
+    super(message);
+    this.condition = condition;
+  }
+}
+
 function packageRoot() {
   return path.resolve(__dirname, '..');
 }
@@ -86,7 +93,7 @@ function findManagedBlock(contents) {
 function replaceManagedBlock(contents, replacement) {
   const block = findManagedBlock(contents);
   if (!block) {
-    throw new Error('managed llm-workbench block not found');
+    throw new OwnershipFailure('managed-block-not-found', 'managed llm-workbench block not found');
   }
   return `${contents.slice(0, block.start)}${replacement.trim()}${contents.slice(block.end)}`;
 }
@@ -411,7 +418,7 @@ function planAdopt(root, targetRepo) {
 function planUpdate(root, targetRepo) {
   const manifest = readTargetManifest(targetRepo);
   if (!manifest) {
-    throw new Error(`llm-workbench manifest not found: ${MANIFEST_PATH}`);
+    throw new OwnershipFailure('manifest-not-found', `llm-workbench manifest not found: ${MANIFEST_PATH}`);
   }
 
   const actions = [];
@@ -478,7 +485,7 @@ function actionBlocksApply(actions) {
 
 function ensureCleanPlan(actions) {
   if (actionBlocksApply(actions)) {
-    throw new Error('plan has conflicts or missing managed material; apply refused');
+    throw new OwnershipFailure('plan-blocked', 'plan has conflicts or missing managed material; apply refused');
   }
 }
 
@@ -597,27 +604,27 @@ function parseCommonArgs(args) {
     switch (arg) {
       case '--target':
         if (index + 1 >= args.length) {
-          throw new Error('--target requires a repo path');
+          throw new OwnershipFailure('target-required', '--target requires a repo path');
         }
         target = args[index + 1];
         index += 1;
         break;
       case '--dry-run':
         if (sawMode) {
-          throw new Error('choose only one mode');
+          throw new OwnershipFailure('mode-conflict', 'choose only one mode');
         }
         mode = 'dry-run';
         sawMode = true;
         break;
       case '--apply':
         if (sawMode) {
-          throw new Error('choose only one mode');
+          throw new OwnershipFailure('mode-conflict', 'choose only one mode');
         }
         mode = 'apply';
         sawMode = true;
         break;
       default:
-        throw new Error(`unknown argument: ${arg}`);
+        throw new OwnershipFailure('argument-unknown', `unknown argument: ${arg}`);
     }
   }
 
@@ -629,9 +636,13 @@ function parseCommonArgs(args) {
 
 function main(argv) {
   const [command, ...args] = argv;
+  let phase = 'arguments';
+  let effect = 'not-assessed';
   try {
     if (command === 'write-install-state') {
       const [root, targetRepo, fileActionsPath, packageOutputPath] = args.map((value) => path.resolve(value));
+      phase = 'install-state';
+      effect = 'unknown';
       const manifest = writeInstallState(root, targetRepo, fileActionsPath, packageOutputPath);
       console.log(`Wrote llm-workbench lock: ${LOCK_PATH}`);
       console.log(`Wrote llm-workbench manifest: ${MANIFEST_PATH}`);
@@ -643,9 +654,13 @@ function main(argv) {
 
     if (command === 'adopt') {
       const { targetRepo, mode } = parseCommonArgs(args);
+      phase = 'adoption-plan';
       const actions = planAdopt(packageRoot(), targetRepo);
+      phase = 'plan-report';
       printPlan('adopt', mode, targetRepo, actions);
       if (mode === 'apply') {
+        phase = 'adoption-apply';
+        effect = 'unknown';
         applyAdopt(packageRoot(), targetRepo, actions);
         console.log('');
         console.log('Adopt apply completed.');
@@ -658,9 +673,13 @@ function main(argv) {
 
     if (command === 'update') {
       const { targetRepo, mode } = parseCommonArgs(args);
+      phase = 'update-plan';
       const actions = planUpdate(packageRoot(), targetRepo);
+      phase = 'plan-report';
       printPlan('update', mode, targetRepo, actions);
       if (mode === 'apply') {
+        phase = 'update-apply';
+        effect = 'unknown';
         applyUpdate(packageRoot(), targetRepo, actions);
         console.log('');
         console.log('Update apply completed.');
@@ -671,9 +690,10 @@ function main(argv) {
       return;
     }
 
-    throw new Error(`unknown ownership command: ${command || '<none>'}`);
+    throw new OwnershipFailure('command-unknown', `unknown ownership command: ${command || '<none>'}`);
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    const condition = error instanceof OwnershipFailure ? error.condition : 'native-boundary-threw';
+    console.error(`ERROR: ownership boundary failed: phase=${phase}; condition=${condition}; effect=${effect}`);
     process.exit(1);
   }
 }

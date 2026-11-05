@@ -6,7 +6,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -82,7 +82,7 @@ def check(root: Path) -> None:
     if observation.get("workload") != "core-server" or observation.get("dependency") != "postgresql" or observation.get("producer") != "core-server-process-independent-of-request-traffic" or observation.get("cadence_seconds") != 30 or observation.get("timeout_seconds") != 5 or observation.get("stale_after_seconds") != 180:
         raise Failure("observability-readiness-observation-invalid")
     codes = observation.get("not_ready_codes")
-    if not isinstance(codes, list) or set(codes) != {"persistence.transport-unavailable", "persistence.credential-rejected", "persistence.trust-validation-failed", "persistence.schema-incompatible", "persistence.unclassified-failure"}:
+    if not isinstance(codes, list) or not all(isinstance(code, str) for code in codes) or set(codes) != {"persistence.transport-unavailable", "persistence.credential-rejected", "persistence.trust-validation-failed", "persistence.schema-incompatible", "persistence.unclassified-failure"}:
         raise Failure("observability-readiness-code-policy-invalid")
     catalogue = mapping(observability.get("metric_catalogue"), "observability-metric-catalogue-invalid")
     application = named(catalogue.get("application"), "observability-metric-catalogue-invalid")
@@ -139,7 +139,10 @@ def check(root: Path) -> None:
         or mapping(collector_contract.get("runtime"), "observability-collector-package-contract-invalid").get("receiver") != "otlp-http-private-service-4318"
     ):
         raise Failure("observability-collector-package-contract-invalid")
-    template = (root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml").read_text(encoding="utf-8")
+    try:
+        template = (root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml").read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        raise Failure("observability-provider-realization-unreadable") from None
     # Observability is an independently activated target concern.  Its
     # implementation must remain complete and conditionally composed, but a
     # database-permission transition must not claim notification delivery or
@@ -156,6 +159,7 @@ def check(root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=OBSERVABILITY_DECLARATION_ARGUMENTS_INVALID\n")
     parser.add_argument("--target-root", type=Path, default=ROOT / "infra/04.deploy/03.product/targets" / TARGET)
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()

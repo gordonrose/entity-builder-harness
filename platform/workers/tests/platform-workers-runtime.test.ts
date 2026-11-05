@@ -1,5 +1,6 @@
 import { deepEqual, equal } from "node:assert/strict";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
+import { defineDiagnostic, createDiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { Logger } from "@kanbien/core/logging";
 import { createInMemoryTracer, spanId, traceContext, traceId, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { outboxEntryId } from "@kanbien/core/persistence";
@@ -51,6 +52,12 @@ async function main(): Promise<void> {
   const metrics = createPlatformTestMetrics();
   const deps = createPlatformTestMountDeps({ logger, metrics });
   const testObservability = { kind: "profile", profile: profileName.value } as const;
+  const attributeDiagnostic = defineDiagnostic({ code: "smoke.attribute-invalid", version: 1,
+    classification: { failureKind: "validation", failureSource: "app", severity: "warning", recovery: "manual_investigation" },
+    detail: { type: "object", properties: { field: { type: "enum", values: ["payload.rebuild"] }, reason: { type: "enum", values: ["wrong-type"] } } },
+  } as const);
+  const attributeRecord = createDiagnosticRecord(attributeDiagnostic, { field: "payload.rebuild", reason: "wrong-type" });
+  if (!attributeRecord.ok) throw new Error("fixture-invalid");
   const testProfile = {
     name: profileName.value,
     capability: capabilityName.value,
@@ -65,16 +72,17 @@ async function main(): Promise<void> {
     id: appId.value,
     name: "Smoke",
     mount(registry) {
+      registry.registerDiagnosticCatalog({ owner: "smoke", definitions: [attributeDiagnostic] });
       registry.registerObservabilityProfile(testProfile);
       registry.registerJob({
         name: jobName.value,
         messageType: "smoke.rebuild" as QueueMessageType,
         observability: testObservability,
-        validator: validatorForTest((value): value is { readonly rebuild: boolean } =>
+        validator: { ...validatorForTest((value): value is { readonly rebuild: boolean } =>
           typeof value === "object"
           && value !== null
           && "rebuild" in value
-          && typeof (value as { readonly rebuild?: unknown }).rebuild === "boolean"),
+          && typeof (value as { readonly rebuild?: unknown }).rebuild === "boolean"), diagnose: () => attributeRecord.value },
         handler: {
           handle: (_message, context) => {
             handled += 1;
@@ -187,6 +195,15 @@ async function main(): Promise<void> {
     throw new Error("Expected invalid payload to dead-letter.");
   }
   equal(invalid.value.error.code, "PLATFORM_WORKER_INVALID_PAYLOAD");
+  deepEqual(invalid.value.error.diagnosticRecord, attributeRecord.value);
+  deepEqual(logger.records().filter((record) => record.message === "platform.diagnostic.observed").map((record) => record.fields?.["diagnostic"]), [
+    { schema: "core/diagnostic-record/v1", code: "platform-worker.coordination-observed", definitionVersion: 1, detail: { condition: "idempotency-duplicate", effect: "handler-not-invoked" } },
+    { schema: "core/diagnostic-record/v1", code: "platform-worker.delivery-rejected", definitionVersion: 1, detail: { operation: "job-delivery", field: "payload", condition: "validator-rejected", effect: "handler-not-invoked" } }, attributeRecord.value,
+  ]);
+  equal(handled, 1, "diagnosed validation failure must not invoke the handler");
+  equal(logger.records().filter((record) => record.message === "platform.worker.job.delivery").at(-1)?.fields?.["error_class"], "PLATFORM_WORKER_INVALID_PAYLOAD");
+  equal(metrics.points().filter((point) => point.name === "platform.worker.job.delivery").at(-1)?.labels?.["error_class"], "PLATFORM_WORKER_INVALID_PAYLOAD");
+  equal(tracer.spans().at(-1)?.end?.attributes?.["error_class"], "PLATFORM_WORKER_INVALID_PAYLOAD");
 
   equal(shell.value.enqueue(createPlatformTestQueueMessage({
     id: "failing-1",

@@ -12,7 +12,7 @@ new task.
 #   version: 1
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -48,20 +48,36 @@ def module(path: Path, name: str):
     return value
 
 def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) -> int:
-    if verdict == "blocked" and CHILD_CHECKPOINT is not None and CHILD_CHECKPOINT.get("verdict") in {"pending", "failed", "uncertain"}:
-        verdict = CHILD_CHECKPOINT["verdict"]
+    if verdict == "blocked" and CHILD_CHECKPOINT is not None:
         facts = {**(facts or {}), "child_checkpoint": CHILD_CHECKPOINT}
+        if CHILD_CHECKPOINT.get("verdict") in {"pending", "failed", "uncertain"}:
+            verdict = CHILD_CHECKPOINT["verdict"]
     body: dict[str, object] = {"schema": "deploy/persistence-runtime-identity-lifecycle-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if VERIFIER_OPERATIONS: facts = {**(facts or {}), "verifier_operations": dict(VERIFIER_OPERATIONS)}
     if facts: body["facts"] = facts
     print(json.dumps(body, sort_keys=True))
     return 0 if verdict in {"accepted", "prepared"} else 1
 
-def last_report(stdout: str) -> dict[str, Any] | None:
+class LifecycleArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        report("blocked", "persistence-runtime-identity-lifecycle-arguments-invalid")
+        self.exit(2)
+
+
+def last_report(stdout: str, command: str | None = None) -> dict[str, Any] | None:
     for line in reversed(stdout.splitlines()):
         try: value = json.loads(line)
         except json.JSONDecodeError: continue
-        if isinstance(value, dict) and isinstance(value.get("verdict"), str): return value
+        if isinstance(value, dict) and isinstance(value.get("verdict"), str):
+            if command is None:
+                return value
+            try:
+                contract = module(ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py", "lifecycle_checkpoint_diagnostics")
+                selected = contract.validate_persistence_controller_checkpoint(value, command)
+            except Exception:
+                continue
+            if selected is not None:
+                return selected
     return None
 
 def child(path: str, *args: str) -> dict[str, Any] | None:
@@ -70,20 +86,33 @@ def child(path: str, *args: str) -> dict[str, Any] | None:
     LAST_SUCCESS = None
     try:
         completed = subprocess.run(["bash", str(ROOT / path), *args], cwd=ROOT, capture_output=True, text=True, timeout=180)
-        body = last_report(completed.stdout)
-        fallback = last_report(completed.stderr)
+        body = last_report(completed.stdout, path)
+        fallback = last_report(completed.stderr, path)
         succeeded = completed.returncode == 0
     except subprocess.TimeoutExpired as error:
         # Preserve only a parsed safe controller receipt, never raw child output.
         stdout = error.stdout.decode("utf-8", errors="replace") if isinstance(error.stdout, bytes) else error.stdout or ""
         stderr = error.stderr.decode("utf-8", errors="replace") if isinstance(error.stderr, bytes) else error.stderr or ""
-        body, fallback, succeeded = last_report(stdout), last_report(stderr), False
+        body, fallback, succeeded = last_report(stdout, path), last_report(stderr, path), False
+    except (OSError, UnicodeError):
+        return None
     observed = body or fallback
+    if body is not None and fallback is not None:
+        observed = {**body, "facts": {**fallback["facts"], **body["facts"]}}
+        if "task_failure" in fallback["facts"] and "task_failure" in body["facts"]:
+            try:
+                contract = module(ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py", "lifecycle_checkpoint_merge")
+                frames = [fallback["facts"]["task_failure"], body["facts"]["task_failure"]]
+                failure, observation = contract.collect_persistence_task_failure({"events": [{"message": json.dumps(item)} for item in frames]}, frames[0]["task"])
+                if failure is not None:
+                    observed["facts"]["task_failure"] = failure
+                observed["facts"]["task_log_observation"] = observation
+            except Exception:
+                observed["facts"]["task_log_observation"] = "failed"
     if not succeeded:
         observed = observed if isinstance(observed, dict) else {}
-        raw = observed.get("facts") if isinstance(observed.get("facts"), dict) else {}
-        safe = {key: value for key, value in raw.items() if key in {"operation", "operation_id", "evidence_reuse", "administration_task", "verifier_task", "original_task", "recovery_boundary"} and isinstance(value, str)}
-        CHILD_CHECKPOINT = {"command": path, "verdict": observed.get("verdict") if observed.get("verdict") in {"pending", "failed", "uncertain"} else "uncertain", "facts": safe}
+        if observed:
+            CHILD_CHECKPOINT = {"command": path, **observed}
     if succeeded and isinstance(body, dict):
         # A parent rehearsal may retain only these controller-produced receipt
         # references.  It must never infer a completed task from console text.
@@ -141,7 +170,9 @@ def recover(receipt: Path) -> tuple[str, str | None]:
     return "ok", ready_receipt
 
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False)
+    global CHILD_CHECKPOINT
+    CHILD_CHECKPOINT = None
+    parser = LifecycleArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path); parser.add_argument("--operation", choices=("revoke-and-recover", "revoke-await-observability", "recover-after-revocation")); parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()

@@ -1,0 +1,101 @@
+{
+  "schema": "repo/module-index-legacy/v1",
+  "recorded_on": "2026-11-02",
+  "legacy": [
+    {
+      "path": "packages/core/src/audit/index.ts",
+      "sha256": "9e86dd5bce302564a94e790d01534e094ad915ddee5e3af736483e14f4d191cc",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/authn/index.ts",
+      "sha256": "f6d8be3acdfda93764aecc9020afd2051d30f765ca97b442811379313b2c0e84",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/authz/index.ts",
+      "sha256": "8701286d3c8ea644557288e86c5e32e7cdb4891c98f67f3cbb1e02d66db237e9",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/diagnostics/index.ts",
+      "sha256": "88859b9863a6fa0db876d0e1579a3e16a2ddb56656313f6f1a3c5863aea8aa45",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/events/index.ts",
+      "sha256": "01d80292939d6e4c3b7bab8875efb469ff42224815013620ce67af61fa8e37da",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/files/index.ts",
+      "sha256": "40b533acc35c9d09128f237ad5462ffd406f9600f271efa8de3a33fbc6d40484",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/i18n/index.ts",
+      "sha256": "35a2a925c5c6b38fa5101b4a3e9ca021e648179e9cf651f6256a504471b304b9",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/localization/index.ts",
+      "sha256": "27d66e989a7a9a1b1dad9eaae6d693abf236b086104a83466877dfeb6fe24569",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/logging/index.ts",
+      "sha256": "b6900badbd48532b8053dda04ec9befbfc9d5660a70e4f724556b98989db8c5a",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/queues/index.ts",
+      "sha256": "a42f903989b1605b9ef45a4eee7325dba49d4d1e927722eac330fac65742099b",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/shared/index.ts",
+      "sha256": "980971bc5365beacc12f3dbdb6acad0d6d98200c5e6f2b832e82ecd645dc280f",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/tenancy/index.ts",
+      "sha256": "d8a81c18af5f6aa38c626597499a70e757aecc7a7d953f8677b00aba632c6d94",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "packages/core/src/validation/index.ts",
+      "sha256": "763514aad047bf375e9a1c57e052ff275b0895d23d31cd7c846dfb4fecbea9df",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "platform/adapters/aws/observability/cloudwatch/src/index.ts",
+      "sha256": "281d729983d32fdcb8604a74ac31f310be4027229daafb4c4acc9e150d5d5364",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "platform/adapters/aws/persistence/dynamodb/src/index.ts",
+      "sha256": "e9063dc843ec204fbdd28f188704027e394b91aba84e5716bc59cd03048d2748",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "platform/adapters/aws/runtime/ecs-fargate/src/index.ts",
+      "sha256": "d7adc6be3252f97109ccf12dadf1038ac9992cfdde3e73cfc01b3a9b29a1385d",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "platform/health/src/index.ts",
+      "sha256": "4a74252d2695ecf5d3c34edb5cafc6f47966f55ba45f6f29c2aec9a19f15b8d7",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "platform/server/src/index.ts",
+      "sha256": "2936c22d96173abc9d3dc379e034e3da631007037d7db435e92c21ec052956ab",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    },
+    {
+      "path": "platform/testing/src/index.ts",
+      "sha256": "54c9e054452c68d4c4a3d79e6cc3a62765948aa29ef6bb8ed0e8f3b7a5ec193a",
+      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
+    }
+  ]
+}

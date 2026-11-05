@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.rename-current-chat-log-folder
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -51,17 +51,24 @@ if [ -z "${SUMMARY// }" ]; then
   exit 2
 fi
 
-BRANCH="$(git branch --show-current)"
+read_failed() { echo "ERROR: log-rename-observation-unavailable; stage=$1; effect=none." >&2; exit 2; }
+apply_command() {
+  local stage="$1" status; shift
+  if "$@" 2>/dev/null; then return 0; else status=$?; fi
+  echo "ERROR: log-rename-operation-failed; stage=$stage; effect=unknown; inspect before retry." >&2
+  exit "$status"
+}
+BRANCH="$(git branch --show-current 2>/dev/null)" || read_failed branch
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  echo "ERROR: current branch is not a chat branch." >&2
   exit 1
 fi
 
 LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE" >&2
+  echo "ERROR: missing chat log." >&2
   exit 1
 fi
 
@@ -88,26 +95,26 @@ if [ "$CURRENT_DIR" = "$TARGET_DIR" ]; then
 fi
 
 if [ -e "$TARGET_DIR" ]; then
-  echo "ERROR: target commit log folder already exists: $TARGET_DIR" >&2
+  echo "ERROR: target commit log folder already exists." >&2
   exit 1
 fi
 
-if git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
-  && git ls-files --error-unmatch "$LOG_FILE" >/dev/null 2>&1; then
-  git mv "$CURRENT_DIR" "$TARGET_DIR"
+TRACKED_LOG="$(git ls-files -- "$LOG_FILE" 2>/dev/null)" || read_failed tracked-log
+if [ -n "$TRACKED_LOG" ]; then
+  apply_command tracked-move git mv "$CURRENT_DIR" "$TARGET_DIR"
 else
-  mv "$CURRENT_DIR" "$TARGET_DIR"
+  apply_command untracked-move mv "$CURRENT_DIR" "$TARGET_DIR"
 fi
 
 tmp="$(mktemp)"
-awk -v stamp="$STAMP" -v slug="$SLUG" '
+apply_command title-update awk -v stamp="$STAMP" -v slug="$SLUG" '
   NR == 1 && /^# Chat Session:/ {
     print "# Chat Session: " stamp " " slug
     next
   }
   { print }
 ' "$TARGET_FILE" > "$tmp"
-mv "$tmp" "$TARGET_FILE"
+apply_command title-replacement mv "$tmp" "$TARGET_FILE"
 
 echo "Renamed chat log folder:"
 echo "  from: $CURRENT_DIR"

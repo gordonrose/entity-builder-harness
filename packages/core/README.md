@@ -19,6 +19,16 @@ pulling in runtime providers.
 This initial slice establishes the package surface and core capability modules.
 Provider implementations and app runtimes are intentionally out of scope.
 
+For a plain-language guide to the configuration files and the exports in
+`issues.ts`, see the [configuration module README](src/config/README.md).
+
+`@kanbien/core/config` includes `createConfigIssueCollector` for pure validation
+that needs multiple indexed failures. Issues contain logical setting/reason tokens
+and optional zero-based positions only. Snapshots are immutable; 32 issues are
+retained in observation order and `truncated` explicitly signals overflow.
+Each capability owns the closed vocabulary and diagnostic definition that
+accepts those issues; Core does not define provider/application settings.
+
 ## Changing Core Contracts Safely
 
 Core is a shared contract layer, so exported names and meanings should be
@@ -83,6 +93,10 @@ what happened:
 - `DiagnosticDescriptor`, `diagnosticDescriptor`,
   `isRetryableDiagnostic`, and `isUserCorrectableDiagnostic` give apps and
   platform code a common way to attach recovery meaning to failures.
+- `DiagnosticRecord` carries versioned detail checked against its owner's closed
+  definition. `parseRelatedDiagnosticRecords` validates a dense, bounded list of
+  companion records against explicitly selected definitions. Errors can retain
+  these in `relatedDiagnosticRecords` without storing recursive raw causes.
 
 Diagnostics is the vocabulary for self-healing, not the self-healing engine.
 The intended loop is: detect, classify, correlate, decide, act, verify, then
@@ -90,8 +104,184 @@ escalate if automation is unsafe or exhausted. Core names those facts;
 platform/runtime workflows perform retries, repairs, log lookups, runbook
 actions, and escalation when a product has allowed that behavior.
 
+### Passing a diagnostic to its receiver
+
+Suppose reading a queue address fails. The queue configuration code explains that
+failure using its own approved diagnostic definition. It can then ask Core to
+pass the checked report to a supplied function, such as one connected to logging.
+That function is the **receiver**; Core does not choose or create a logger.
+
+[record.ts](src/diagnostics/record.ts) owns `parseDiagnosticRecord` (checks a
+record against a definition) and `selectDiagnosticEvidence` (keeps approved
+records from an error). [delivery.ts](src/diagnostics/reporting/delivery.ts)
+owns two separate delivery functions, exposed by the diagnostics index:
+
+- `deliverDiagnosticRecord(record, receive)` attempts one call and returns the
+  receiver's original result, or `undefined` if calling/observing it throws. A
+  returned promise retains its identity; returning it is not confirmation of
+  delivery. Failures reported later by that promise are handled without escaping.
+- `deliverDiagnosticRecords(records, receive)` attempts each record once, in
+  order, and returns `undefined`. A receiver failure does not prevent later
+  attempts. It does not wait for earlier promises, so completion order can differ.
+
+Illustrative code outside Core, after its owner has checked `record`:
+
+```typescript
+import { deliverDiagnosticRecords } from "@kanbien/core/diagnostics";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+
+const received: DiagnosticRecord[] = [];
+deliverDiagnosticRecords([record, record], item => {
+  received.push(item);
+  if (received.length === 1) throw new Error("Synthetic receiver failure");
+});
+// received contains both records: the second call still ran.
+```
+
+The list and receiver are supplied by trusted composition code. These functions
+do not check diagnostic contents, remove secrets, invent a cause or decide
+whether startup stops. They only contain optional reporting failures. Existing
+SQS/configuration/persistence/reporting wrappers are examples, not exclusive
+users. A receiver closure such as `item => reporter.report(item, context)` keeps
+the caller's context and the reporter's method receiver intact.
+
+The [safe-diagnostic standard](../../.agentic/shared/standards/require-safe-diagnostic-record.md#reuse-optional-delivery-mechanics)
+governs reuse and its limits. The
+[delivery tests](tests/diagnostic-delivery-runtime.test.ts) cover order, identity,
+rejected results and continued delivery. Status-bearing log-write observation
+remains with Platform. Core queues also uses these shared delivery helpers.
+This section explains the delivery exports, not every
+historical diagnostics export.
+
+### When the report itself cannot be produced
+
+Suppose a queue operation has already failed. The queue code knows the reason,
+but the function it calls to build a diagnostic unexpectedly throws. These are
+two different failures: the queue operation failed, and its explanation could
+not be built. Reporting the second must not replace the first with a different
+queue error, retry the operation, or reveal the thrown exception's text.
+
+[processing.ts](src/diagnostics/reporting/processing.ts) supplies shared tools
+for that reporting problem. They are available through `@kanbien/core/diagnostics`:
+
+- `captureDiagnosticRecord(build)` calls the supplied report-building function
+  once. If it throws or returns no record, this helper returns a fixed
+  `core.diagnostics.processing-failed` record instead. It does **not** check the
+  operation or validate a returned record's contents.
+- `requireDiagnosticRecord(definitions, record)` checks a required report
+  against the definitions its owner accepts. If it cannot keep that report, it
+  returns a processing-failure record. Existing capability wrappers combine
+  this check with `captureDiagnosticRecord`; future callers can do the same.
+- `diagnosticProcessingRecord(reason)` returns one of the prepared, fixed
+  reports; `DiagnosticProcessingReason` is the TypeScript list of permitted
+  reason names. `diagnosticProcessingDefinition()` supplies their definition
+  for a reader that needs to recognise this code. The Core catalogue includes it.
+- `selectDiagnosticEvidenceWithReport(definitions, error, report)` keeps valid
+  reports from an error and separately calls `report` for rejected or inaccessible
+  evidence. An unknown external definition remains excluded, without a notice:
+  excluding another owner's unselected records can be intentional.
+
+For example, this invented caller simulates a broken report-building function:
+
+```typescript
+import { captureDiagnosticRecord } from "@kanbien/core/diagnostics";
+
+const report = captureDiagnosticRecord(() => undefined);
+// report is:
+// { schema: "core/diagnostic-record/v1",
+//   code: "core.diagnostics.processing-failed", definitionVersion: 1,
+//   detail: { reason: "construction-rejected" } }
+```
+
+This does not say why the queue failed. The caller still owns the queue result
+and supplies the known operation/location when passing the report to a receiver.
+It preserves any independently valid original reports as well.
+
+[record.ts](src/diagnostics/record.ts) also exports `inspectDiagnosticEvidence`.
+Unlike the older `selectDiagnosticEvidence`, it tells the caller whether the
+main record was absent, accepted, rejected, from an unselected definition, or
+inaccessible. It checks the accompanying records separately, up to the existing
+limit of eight. `DiagnosticEvidence` describes retained records;
+`DiagnosticSelectionStatus` names those outcomes; `DiagnosticEvidenceInspection`
+describes the result containing both. Rejected values and exception text are
+not returned. The older selector still returns only retained records for callers
+that need its existing interface.
+
+Separately, `inspectCoreDiagnosticAttachment` in
+[shared/diagnostics.ts](src/shared/diagnostics.ts) reports whether adding a record
+to an error was accepted, blocked, or unnecessary because a field already exists.
+It never replaces the error. A successful property write does not prove that a
+logger received anything. Delivery confirmation remains separate work (DIAG-013).
+
+The [supported-reason standard](../../.agentic/shared/standards/require-safe-diagnostic-record.md#supported-reason-preservation)
+requires the real operation's reason to survive; a processing-failure fallback
+is not proof of that. [Record tests](tests/diagnostic-record-runtime.test.ts)
+and [Events tests](tests/events-runtime.test.ts) exercise these distinct cases.
+DIAG-012's [implementation plan](../../.agentic/shared/plans/implementation/governed-diagnostic-coverage.md)
+records which actual consumers have been reviewed; these helpers do not
+automatically migrate every caller.
+
 Do not put secrets, tokens, raw request bodies, provider objects, class
 instances, or rich runtime values into diagnostic facts.
+
+The package root exports `coreDiagnosticCatalog` (`owner: "core"`) for explicit
+registration by platform/target composition. Config, shared, security, authz and persistence
+own their definitions and export them through their existing module barrels;
+the diagnostics framework does not import those capabilities. Primitive guards
+produce `core.config.*`, `core.shared.*`, `core.security.*`, `core.authz.*` and `core.persistence.*`
+records. They retain existing result codes, validation issues, TypeError and
+RangeError messages, native date normalization and accepted primitive grammar.
+`ConfigError` and `configError` accept optional `diagnosticRecord` and
+`relatedDiagnosticRecords`; the helper preserves supplied record identities.
+Legacy validation params/details are separate and are never diagnostic input.
+
+Audit, Events and Files also own closed predicate and local-boundary records.
+Their optional capability-local observers receive an independent location and
+selected source primary/eight without changing the existing port interfaces.
+In-memory event dispatch can have handler effects before history append; file
+put can store a map entry before history or result copying fails. These records
+describe those local statements, never durable commits, rollback or safe retry.
+No event payloads, actor/tenant/file IDs, metadata keys, filenames, bodies or
+native exception text belong in detail. Existing scan/retention/expiry fields
+are copied facts here, not newly enforced policies. No deployed implementation
+of these three optional capabilities is selected by this package.
+
+I18n and localization diagnostics distinguish existing syntax/parameter/fraction
+predicates, source selection and raw helper failures without copying locale,
+template, parameter names, rendered text or numeric values. Source selection is
+not successful rendering; an observed fraction predicate need not be the error
+ultimately returned. Optional per-invocation observers override bound defaults
+without changing existing request/config shapes. These helpers still do not
+load catalogs remotely, invoke Intl or implement a formatting provider.
+
+Arbitrary source/date-normalization invocation throws have unknown cause, not
+an inferred configuration or value defect. A custom array traversal can supply
+unproved callback positions: JSON diagnostics retain only a proven prefix and
+mark `locationUnavailable`/`pathTruncated`; they do not invoke payload getters or
+change the copier's custom-map return/error policy. Custom declaration `some`
+methods retain their original truthy/false result and callback semantics; a
+truthy unclassified outcome has no fabricated field or index. Optional record
+construction must never replace the existing validation exception.
+
+JSON-copy failures report zero-based positional `path`, `depth` and
+`pathTruncated`. Each array step is its array index; each object step is its
+position in the existing `Object.entries` traversal. Paths start at the value
+passed to `copyJsonValue`, which may be a single claim/fact/evidence member.
+Only the first 16 positions are retained; `pathTruncated` identifies an
+incomplete location. No keys, labels or values enter the record. The traversal
+keeps its existing getter reads, first failure, copy and input acceptance rules;
+these observations introduce no cycle/depth or additional JSON policy.
+
+Source-read and date-normalization throws record only the observed invocation
+phase, with no guessed cause or message parsing. Best-effort attachment retains
+the thrown identity and any existing primary record. Primitive, frozen or host
+errors can have no attached record; consumers must observe their own call
+boundary when evidence is unavailable. A Core record neither assesses a remote
+operation effect nor authorizes retry. Pure brands/fixed authn/authz/tenancy
+ports have no added failure policy; validator diagnostic projection stays
+optional. A missing projection or a projection deliberately returning no detail
+still returns `undefined`; a projection that throws now returns a safe
+processing-failure record instead. The validation decision is unchanged.
 
 ## Translation-Ready Meaning
 
@@ -185,6 +375,19 @@ settings without binding core to a provider:
   reads for common primitive settings.
 - `ConfigError` reports missing or invalid config through validation issues, so
   config failures stay translation-ready.
+- `validateConfigSettings` checks declared logical fields in declaration order.
+  Its optional third argument declares at most 32 `ConfigSettingRelationship`
+  checks. The initial `must-differ` rule compares two independently valid parsed
+  settings; an invalid participant is not compared, but an unrelated field
+  failure does not suppress other comparisons. Relationship-enabled failures
+  add `relationshipIssues` containing only a declared relationship identifier,
+  rule and logical left/right references. Existing two-argument callers retain
+  their exact failure shape. No failure contains supplied values. Declaration
+  errors throw before reading configuration; target policy and provider syntax
+  stay outside Core.
+- `configSourceReadFailureReasons` distinguishes observed source-access failures
+  from validation of the source setting and parsing of its contents. It does not
+  read files or establish why an access operation failed.
 
 Core does not read `process.env`, AWS SSM, Secrets Manager, files, databases,
 or feature flag providers. Platform adapters can translate those
@@ -194,6 +397,13 @@ environment-aware runtime contracts.
 ## Logging Contracts
 
 `logging` defines operational log contracts without choosing a log sink:
+
+Its helpers accept separate optional `CoreLoggingDiagnosticOptions`, emitting
+value-free `core.logging.boundary-failed/v1` locations for existing raw copy,
+redaction and wrapped-write failures. Raw throws and receivers are preserved;
+returned logger rejections are observed without awaiting or changing `write`'s
+void result. Own context and selected source primary/eight remain independent,
+and callback failure cannot replace work. No raw logger is wrapped automatically.
 
 - `LogRecord` captures level, message, correlation id, and diagnostic fields.
 - `logRecord` creates a shallow-copied record so callers can pass fields safely.
@@ -278,6 +488,11 @@ security provider:
   `securityPolicyDenied`, `SecurityPolicyEvaluator`, and
   `fixedSecurityPolicyEvaluator` define provider-neutral policy-result
   contracts and test helpers.
+- `securityTrustMaterialFailureReasons`, `securityCertificateBlockFailureReasons`,
+  `securityPeerIdentityFailureReasons` and `securityPeerTrustFailureReasons` define immutable, provider-neutral
+  security observations with distinct phase/detail types. Platform owns their
+  executable diagnostic definitions and runtime parsing; Core does not read
+  certificates, perform TLS or classify provider exceptions.
 
 Core security names the shared contract for sensitive values, hashes,
 classification, and policy outcomes. It does not define product password
@@ -288,8 +503,9 @@ runtime policy, and infra provisions cloud security resources.
 
 Within the module, `classification.ts` owns data sensitivities and
 sensitive-value kinds, `secrets.ts` owns `SecretString`, `hashing.ts` owns
-hash contracts and the `Hasher` port, and `policy.ts` owns policy evaluators,
-decisions, violations, and policy ids. `residency.ts` is the reserved home for
+hash contracts and the `Hasher` port, `policy.ts` owns policy evaluators,
+decisions, violations, and policy ids, and `diagnostics.ts` owns certificate-content
+and peer-verification observation contracts. `residency.ts` is the reserved home for
 the first real data-residency contract rather than an empty placeholder. The
 module's `index.ts` is the intentional public entry point; consumers should
 continue to import from `@kanbien/core/security`, not internal file paths.

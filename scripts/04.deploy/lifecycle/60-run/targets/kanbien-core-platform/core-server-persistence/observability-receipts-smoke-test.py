@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -44,6 +44,9 @@ failure = module.make(receipt_type="readiness-failure-observed", source_proof=so
 assert module.validate(failure) == failure
 notification = module.make(receipt_type="readiness-alarm-notified", source_proof=source, observation_value={"alarm_name": module.ALARM, "alarm_state": "ALARM", "alarm_state_updated_at": "2026-10-26T12:00:00Z", "subscription_confirmed_at": "2026-10-26T11:50:00Z", "operator_delivery_confirmed_at": "2026-10-26T12:01:00Z"}, collected_at="2026-10-26T12:01:01Z")
 assert module.validate(notification) == notification
+assert module.same_alarm_episode(failure["observation"], notification["observation"])
+assert module.same_alarm_episode(failure["observation"], {**notification["observation"], "alarm_state_updated_at": "2026-10-26T13:00:00+01:00"})
+assert not module.same_alarm_episode(failure["observation"], {**notification["observation"], "alarm_state_updated_at": "2026-10-26T12:00:01Z"})
 recovery_source = {**source, "result_code": "KANBIEN_CORE_PERSISTENCE_HEALTHY"}
 recovery = module.make(receipt_type="readiness-recovery-observed", source_proof=recovery_source, observation_value={"alarm_name": module.ALARM, "alarm_state": "OK", "alarm_state_updated_at": "2026-10-26T12:03:00Z", "metric_name": module.METRIC, "dimensions": module.DIMENSIONS, "metric_value": 1, "metric_observed_at": "2026-10-26T12:02:00Z"}, collected_at="2026-10-26T12:03:01Z")
 assert module.validate(recovery) == recovery

@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -42,6 +42,7 @@ CORE_BUILD=Path('scripts/04.deploy/lifecycle/40-package/build-core-server-image/
 CORE_SMOKE=Path('scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh')
 CORE_DOCKERFILE=Path('infra/04.deploy/03.product/image/core-server/Dockerfile')
 CORE_CONTRACT=CORE_DOCKERFILE.with_name('image-contract.yml')
+SAFE_COMMAND=Path('scripts/04.deploy/shared/safe-command-diagnostics.sh')
 COUNT=0
 FAKE_DOCKER='''import json,os,sys
 from pathlib import Path
@@ -87,7 +88,7 @@ def run_case(name,*,package="persistence",environment=None,arguments=None,mutate
  global COUNT
  with tempfile.TemporaryDirectory(prefix='public-recovery-test-') as directory:
   fixture=Path(directory);binaries=fixture/'bin';binaries.mkdir();events=fixture/'events';events.touch()
-  selected=(CORE_BUILD,CORE_SMOKE,CORE_DOCKERFILE,CORE_CONTRACT) if package=='core' else (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER)
+  selected=((CORE_BUILD,CORE_SMOKE,CORE_DOCKERFILE,CORE_CONTRACT) if package=='core' else (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER))+(SAFE_COMMAND,)
   tag='kanbien-core-server:test' if package=='core' else 'kanbien-core-server-persistence:test'
   for relative in selected:
    path=fixture/relative;path.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,path)
@@ -151,6 +152,7 @@ for name,mutate in (
  ('private-nested-postgres',replace(INTEGRATION_RUNNER,'postgres:17.11-bookworm','private.invalid/postgres:17.11-bookworm')),
  ('changed-nested-integration-check',lambda root:(root/INTEGRATION_CHECK).write_text((root/INTEGRATION_CHECK).read_text()+'\n# unreviewed owner edit\n')),
  ('changed-nested-diagnostic-check',lambda root:(root/DIAGNOSTIC_CHECK).write_text((root/DIAGNOSTIC_CHECK).read_text()+'\n# unreviewed owner edit\n')),
+ ('changed-safe-command-helper',lambda root:(root/SAFE_COMMAND).write_text((root/SAFE_COMMAND).read_text()+'\n# unreviewed helper edit\n')),
  ('private-node',replace(DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
  ('private-frontend',replace(DOCKERFILE,'docker/dockerfile:1.7','private.invalid/frontend:1.7')),
  ('private-postgres',replace(SMOKE,'postgres:16-bookworm','private.invalid/postgres:16-bookworm')),
@@ -174,5 +176,6 @@ for name,mutate in (
  ('private-node',replace(CORE_DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
  ('builder-private-override',replace(CORE_BUILD,'BUILD_NODE_IMAGE=node:22-bookworm-slim','BUILD_NODE_IMAGE=private.invalid/image')),
  ('malformed-contract',lambda root:(root/CORE_CONTRACT).write_text('runtime_base: []\n')),
+ ('changed-safe-command-helper',lambda root:(root/SAFE_COMMAND).write_text((root/SAFE_COMMAND).read_text()+'\n# unreviewed helper edit\n')),
 ):run_case('owner-core-'+name,package='core',mutate=mutate,expected=1,code='local-public-recovery-owner-review-required')
 print(json.dumps({'schema':'deploy/local-public-recovery-test-report/v1','verdict':'passed','cases':COUNT,'evidence_class':'local-runtime-controlled','real_docker_calls':0,'stored_configuration':'unchanged','temporary_configuration_cleanup':'passed'}))

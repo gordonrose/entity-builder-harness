@@ -22,6 +22,11 @@ const RECORD_CHAT_COMMIT_SCRIPT = path.join('scripts', '00.chat', 'session-log',
 const CHECKPOINT_CHAT_SESSION_LOG_SCRIPT = path.join('scripts', '00.chat', 'session-log', 'checkpoint-chat-session-log', 'script.sh');
 const VERIFY_MERGE_READY_SCRIPT = path.join('scripts', '00.chat', 'local-merge', 'verify-chat-ready-to-merge-local-main', 'script.sh');
 const LIST_ACTIVE_CHAT_BRANCHES_SCRIPT = path.join('scripts', '00.chat', 'local-merge', 'list-active-chat-branches', 'script.sh');
+let phase = 'arguments';
+
+function boundaryFailure(condition) {
+  fail(`workbench boundary failed: phase=${phase}; condition=${condition}; effect=unknown`);
+}
 
 function printHelp(stream = process.stdout) {
   stream.write(`llm-wb
@@ -96,6 +101,7 @@ function relativeMissing(paths) {
 }
 
 function run(command, args, options = {}) {
+  phase = options.phase || phase;
   const result = spawnSync(command, args, {
     cwd: options.cwd || process.cwd(),
     env: options.env || process.env,
@@ -103,17 +109,21 @@ function run(command, args, options = {}) {
   });
 
   if (result.error) {
-    fail(`failed to run ${command}: ${result.error.message}`);
+    boundaryFailure('invocation-unavailable');
   }
 
   if (result.signal) {
-    fail(`${command} exited after signal ${result.signal}`);
+    boundaryFailure('signal-observed');
   }
 
+  if (result.status !== 0) {
+    console.error(`ERROR: workbench child failed: phase=${phase}; effect=unknown`);
+  }
   process.exit(result.status === null ? 1 : result.status);
 }
 
 function runChecked(command, args, options = {}) {
+  phase = options.phase || phase;
   const result = spawnSync(command, args, {
     cwd: options.cwd || process.cwd(),
     env: options.env || process.env,
@@ -122,14 +132,15 @@ function runChecked(command, args, options = {}) {
   });
 
   if (result.error) {
-    fail(`failed to run ${command}: ${result.error.message}`);
+    boundaryFailure('invocation-unavailable');
   }
 
   if (result.signal) {
-    fail(`${command} exited after signal ${result.signal}`);
+    boundaryFailure('signal-observed');
   }
 
   if (result.status !== 0) {
+    console.error(`ERROR: workbench child failed: phase=${phase}; effect=unknown`);
     process.exit(result.status === null ? 1 : result.status);
   }
 
@@ -137,6 +148,7 @@ function runChecked(command, args, options = {}) {
 }
 
 function capture(command, args, options = {}) {
+  phase = options.phase || 'git-observation';
   const result = spawnSync(command, args, {
     cwd: options.cwd || process.cwd(),
     env: options.env || process.env,
@@ -145,18 +157,18 @@ function capture(command, args, options = {}) {
   });
 
   if (result.error) {
-    fail(`failed to run ${command}: ${result.error.message}`);
+    boundaryFailure('invocation-unavailable');
   }
 
   if (result.status !== 0) {
-    const detail = (result.stderr || result.stdout || '').trim();
-    fail(detail || `${command} exited with status ${result.status}`);
+    boundaryFailure(result.signal ? 'signal-observed' : 'captured-command-failed');
   }
 
   return result.stdout.trim();
 }
 
 function gitRoot(startPath) {
+  phase = 'git-root-observation';
   const result = spawnSync('git', ['-C', startPath, 'rev-parse', '--show-toplevel'], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -172,7 +184,7 @@ function gitRoot(startPath) {
 function requireGitRepo(targetPath) {
   const root = gitRoot(targetPath);
   if (!root) {
-    fail(`target repo is not a git repo: ${targetPath}`);
+    fail('target Git root could not be confirmed');
   }
   return root;
 }
@@ -190,7 +202,7 @@ function requireInstalledWorkbench(repoRoot) {
     !fs.existsSync(path.join(repoRoot, INSTALLED_MANIFEST))
     && !fs.existsSync(path.join(repoRoot, INSTALLED_JSON_MANIFEST))
   ) {
-    fail(`llm-workbench install has not been run in this repo: ${repoRoot}\nRun: llm-wb init`);
+    fail('llm-workbench installation was not observed. Run: llm-wb init');
   }
 }
 
@@ -205,13 +217,13 @@ function requireTargetScripts(repoRoot, relativePaths) {
 }
 
 function currentBranch(repoRoot) {
-  return capture('git', ['-C', repoRoot, 'branch', '--show-current']);
+  return capture('git', ['-C', repoRoot, 'branch', '--show-current'], { phase: 'branch-observation' });
 }
 
 function requireChatBranch(repoRoot) {
   const branch = currentBranch(repoRoot);
   if (!branch.startsWith('chat/')) {
-    fail(`current branch is not a chat branch: ${branch || '<detached>'}`);
+    fail('current branch is not a chat branch');
   }
   return branch;
 }
@@ -252,6 +264,7 @@ function metadataValue(contents, key) {
 }
 
 function findSessionLog(repoRoot, sessionId, branch) {
+  phase = 'session-log-discovery';
   const year = sessionId.slice(0, 4);
   const month = sessionId.slice(5, 7);
   const day = sessionId.slice(8, 10);
@@ -270,7 +283,7 @@ function findSessionLog(repoRoot, sessionId, branch) {
   }
 
   if (!year || !monthSlug || !day) {
-    fail(`could not derive session log path from branch: ${branch}`);
+    fail('could not derive session log path from branch');
   }
 
   const parent = path.join(repoRoot, 'commitLogs', year, monthSlug, day);
@@ -293,11 +306,11 @@ function findSessionLog(repoRoot, sessionId, branch) {
     }
   }
 
-  fail(`missing chat log for ${branch}`);
+  fail('matching chat log was not observed');
 }
 
 function primaryWorktree(repoRoot) {
-  const output = capture('git', ['-C', repoRoot, 'worktree', 'list', '--porcelain']);
+  const output = capture('git', ['-C', repoRoot, 'worktree', 'list', '--porcelain'], { phase: 'worktree-observation' });
   const first = output.split('\n').find((line) => line.startsWith('worktree '));
   if (!first) {
     fail('could not resolve root integration worktree');
@@ -306,7 +319,7 @@ function primaryWorktree(repoRoot) {
 }
 
 function worktreeForBranch(repoRoot, branch) {
-  const output = capture('git', ['-C', repoRoot, 'worktree', 'list', '--porcelain']);
+  const output = capture('git', ['-C', repoRoot, 'worktree', 'list', '--porcelain'], { phase: 'worktree-observation' });
   let currentPath = '';
 
   for (const line of output.split('\n')) {
@@ -370,7 +383,7 @@ function parseCommitArgs(args) {
         break;
       default:
         if (arg.startsWith('-')) {
-          fail(`unknown commit option: ${arg}`, 2);
+          fail('unknown commit option', 2);
         }
         positional.push(arg);
     }
@@ -413,36 +426,40 @@ function commandCommit(args) {
   const logFile = findSessionLog(repoRoot, sessionId, branch);
   const commandEnv = envWithWorktreeRoot(repoRoot);
 
-  runChecked('bash', [path.join(repoRoot, CHECK_WRITE_LOCATION_SCRIPT)], { cwd: repoRoot, env: commandEnv });
-  runChecked('bash', [path.join(repoRoot, CHECK_COMMIT_PREREQUISITES_SCRIPT)], { cwd: repoRoot, env: commandEnv });
+  runChecked('bash', [path.join(repoRoot, CHECK_WRITE_LOCATION_SCRIPT)], { cwd: repoRoot, env: commandEnv, phase: 'write-location-check' });
+  runChecked('bash', [path.join(repoRoot, CHECK_COMMIT_PREREQUISITES_SCRIPT)], { cwd: repoRoot, env: commandEnv, phase: 'commit-prerequisites' });
 
-  runChecked('git', ['-C', repoRoot, 'add', '-A'], { cwd: repoRoot, env: commandEnv });
-  runChecked('git', ['-C', repoRoot, 'reset', '--', logFile], { cwd: repoRoot, env: commandEnv, stdio: 'ignore' });
+  runChecked('git', ['-C', repoRoot, 'add', '-A'], { cwd: repoRoot, env: commandEnv, phase: 'task-staging' });
+  runChecked('git', ['-C', repoRoot, 'reset', '--', logFile], { cwd: repoRoot, env: commandEnv, stdio: 'ignore', phase: 'session-unstaging' });
 
+  phase = 'staged-observation';
   const stagedResult = spawnSync('git', ['-C', repoRoot, 'diff', '--cached', '--quiet'], {
     env: commandEnv,
     stdio: 'ignore',
   });
 
   if (stagedResult.status === 0) {
-    fail(`no task changes to commit after excluding the session log: ${logFile}`);
+    fail('no task changes to commit after excluding the session log');
+  }
+  if (stagedResult.error || stagedResult.signal || stagedResult.status === null || stagedResult.status > 1) {
+    console.error('ERROR: staged-observation-unavailable; effect=unknown');
   }
 
-  runChecked('bash', [path.join(repoRoot, PREPARE_COMMIT_SCRIPT)], { cwd: repoRoot, env: commandEnv });
-  runChecked('git', ['-C', repoRoot, 'commit', '-m', message], { cwd: repoRoot, env: commandEnv });
+  runChecked('bash', [path.join(repoRoot, PREPARE_COMMIT_SCRIPT)], { cwd: repoRoot, env: commandEnv, phase: 'commit-preparation' });
+  runChecked('git', ['-C', repoRoot, 'commit', '-m', message], { cwd: repoRoot, env: commandEnv, phase: 'task-commit' });
 
-  const commitSha = capture('git', ['-C', repoRoot, 'rev-parse', 'HEAD'], { env: commandEnv });
+  const commitSha = capture('git', ['-C', repoRoot, 'rev-parse', 'HEAD'], { env: commandEnv, phase: 'commit-identity' });
   const recordArgs = [path.join(repoRoot, RECORD_CHAT_COMMIT_SCRIPT), commitSha, message, summary];
   if (adrImpact) {
     recordArgs.push(adrImpact);
   }
-  runChecked('bash', recordArgs, { cwd: repoRoot, env: commandEnv });
+  runChecked('bash', recordArgs, { cwd: repoRoot, env: commandEnv, phase: 'commit-recording' });
 
   if (checkpoint) {
     runChecked('bash', [
       path.join(repoRoot, CHECKPOINT_CHAT_SESSION_LOG_SCRIPT),
       `chore(session): checkpoint ${commitSha.slice(0, 7)}`,
-    ], { cwd: repoRoot, env: commandEnv });
+    ], { cwd: repoRoot, env: commandEnv, phase: 'session-checkpoint' });
   }
 
   console.log(`Committed chat task work: ${commitSha}`);
@@ -470,7 +487,7 @@ function parseMergeMainArgs(args) {
         break;
       default:
         if (arg.startsWith('-')) {
-          fail(`unknown merge-main option: ${arg}`, 2);
+          fail('unknown merge-main option', 2);
         }
         if (branch) {
           fail('merge-main accepts at most one chat branch', 2);
@@ -503,9 +520,9 @@ function parseSessionsListArgs(args) {
         break;
       default:
         if (arg.startsWith('-')) {
-          fail(`unknown sessions list option: ${arg}`, 2);
+          fail('unknown sessions list option', 2);
         }
-        fail(`unexpected sessions list argument: ${arg}`, 2);
+        fail('unexpected sessions list argument', 2);
     }
   }
 
@@ -521,7 +538,7 @@ function commandSessions(args) {
   }
 
   if (subcommand !== 'list') {
-    fail(`unknown sessions command: ${subcommand}`, 2);
+    fail('unknown sessions command', 2);
   }
 
   const { base } = parseSessionsListArgs(subcommandArgs);
@@ -529,7 +546,7 @@ function commandSessions(args) {
   requireInstalledWorkbench(repoRoot);
   requireTargetScripts(repoRoot, [LIST_ACTIVE_CHAT_BRANCHES_SCRIPT]);
 
-  run('bash', [path.join(repoRoot, LIST_ACTIVE_CHAT_BRANCHES_SCRIPT), base], { cwd: repoRoot });
+  run('bash', [path.join(repoRoot, LIST_ACTIVE_CHAT_BRANCHES_SCRIPT), base], { cwd: repoRoot, phase: 'session-list' });
 }
 
 function commandMergeMain(args) {
@@ -543,7 +560,7 @@ function commandMergeMain(args) {
   }
 
   if (!targetBranch.startsWith('chat/')) {
-    fail(`merge-main target is not a chat branch: ${targetBranch}`, 2);
+    fail('merge-main target is not a chat branch', 2);
   }
 
   const rootWorktree = primaryWorktree(currentRepoRoot);
@@ -560,11 +577,12 @@ function commandMergeMain(args) {
     '--base',
     base,
     targetBranch,
-  ], { cwd: rootWorktree, env: commandEnv });
+  ], { cwd: rootWorktree, env: commandEnv, phase: 'merge-readiness' });
 
   runChecked('git', ['-C', rootWorktree, 'merge', '--no-ff', '--no-edit', targetBranch], {
     cwd: rootWorktree,
     env: commandEnv,
+    phase: 'local-merge',
   });
 
   console.log(`Merged ${targetBranch} into local ${base}.`);
@@ -606,9 +624,9 @@ function parseInitArgs(args) {
         break;
       default:
         if (arg.startsWith('-')) {
-          fail(`unknown init option: ${arg}`, 2);
+          fail('unknown init option', 2);
         }
-        fail(`unexpected init argument: ${arg}`, 2);
+        fail('unexpected init argument', 2);
     }
   }
 
@@ -622,7 +640,7 @@ function commandInit(args) {
 
   // The npm package invokes its own bundled installer, while the installer
   // writes into the caller's Git repository.
-  run('bash', [installScript, mode, ...installArgs, repoRoot], { cwd: PACKAGE_ROOT });
+  run('bash', [installScript, mode, ...installArgs, repoRoot], { cwd: PACKAGE_ROOT, phase: 'install-dispatch' });
 }
 
 function parseOwnershipArgs(args) {
@@ -656,9 +674,9 @@ function parseOwnershipArgs(args) {
         break;
       default:
         if (arg.startsWith('-')) {
-          fail(`unknown ownership option: ${arg}`, 2);
+          fail('unknown ownership option', 2);
         }
-        fail(`unexpected ownership argument: ${arg}`, 2);
+        fail('unexpected ownership argument', 2);
     }
   }
 
@@ -670,7 +688,7 @@ function commandOwnership(command, args) {
   const repoRoot = requireGitRepo(path.resolve(target));
   const ownershipScript = requirePackageScript(path.relative(PACKAGE_ROOT, OWNERSHIP_SCRIPT));
 
-  run('node', [ownershipScript, command, mode, '--target', repoRoot], { cwd: PACKAGE_ROOT });
+  run('node', [ownershipScript, command, mode, '--target', repoRoot], { cwd: PACKAGE_ROOT, phase: 'ownership-dispatch' });
 }
 
 function commandList(args) {
@@ -682,7 +700,7 @@ function commandList(args) {
   requireInstalledWorkbench(repoRoot);
   requireTargetScripts(repoRoot, [DISPATCHER_SCRIPT]);
 
-  run('bash', [path.join(repoRoot, DISPATCHER_SCRIPT), 'list'], { cwd: repoRoot });
+  run('bash', [path.join(repoRoot, DISPATCHER_SCRIPT), 'list'], { cwd: repoRoot, phase: 'command-list' });
 }
 
 function commandNew(args) {
@@ -695,7 +713,7 @@ function commandNew(args) {
     START_CHAT_SESSION_SCRIPT,
   ]);
 
-  run('bash', [path.join(repoRoot, DISPATCHER_SCRIPT), 'new', ...args], { cwd: repoRoot });
+  run('bash', [path.join(repoRoot, DISPATCHER_SCRIPT), 'new', ...args], { cwd: repoRoot, phase: 'new-dispatch' });
 }
 
 function main(argv) {
@@ -732,8 +750,12 @@ function main(argv) {
       commandMergeMain(args);
       break;
     default:
-      fail(`unknown command: ${command}`, 2, true);
+      fail('unknown command', 2, true);
   }
 }
 
-main(process.argv.slice(2));
+try {
+  main(process.argv.slice(2));
+} catch {
+  boundaryFailure('native-boundary-threw');
+}

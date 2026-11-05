@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.command.build-core-server-image.prepare-runtime
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-19"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-31"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines:
@@ -26,10 +26,15 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path, { join, relative } from "node:path";
 
-const compiledRoot = parseCompiledRoot(process.argv.slice(2));
+let compiledRoot;
+let preparationPhase = "arguments";
+let preparationLocation = {};
+let writesStarted = false;
+try {
+compiledRoot = parseCompiledRoot(process.argv.slice(2));
 const coreModules = [
   "audit", "authn", "authz", "config", "diagnostics", "events", "i18n",
-  "logging", "monitoring", "queues", "shared", "tenancy", "validation",
+  "logging", "monitoring", "queues", "security", "shared", "tenancy", "validation",
 ];
 const packages = {
   "@kanbien/core": {
@@ -51,6 +56,8 @@ const packages = {
 for (const [packageName, exportsMap] of Object.entries(packages)) {
   writePackageShim(packageName, exportsMap);
 }
+preparationPhase = "wrapper-write";
+preparationLocation = { entrypoint: "kanbien-core-server.main.js" };
 writeFileSync(
   join(compiledRoot, "kanbien-core-server.main.js"),
   [
@@ -61,6 +68,10 @@ writeFileSync(
     "",
   ].join("\n"),
 );
+} catch {
+  console.error(JSON.stringify({ scope: "core-server-runtime-preparation", verdict: "failed", code: "runtime-preparation-boundary-failed", phase: preparationPhase, ...preparationLocation, effect: writesStarted ? "earlier-writes-possible" : "writes-not-started" }));
+  process.exitCode = 1;
+}
 
 function parseCompiledRoot(args) {
   if (args.length !== 2 || args[0] !== "--compiled-root" || args[1].length === 0) {
@@ -70,16 +81,23 @@ function parseCompiledRoot(args) {
 }
 
 function writePackageShim(packageName, exportsMap) {
+  preparationLocation = { package: packageName };
   const packageRoot = join(compiledRoot, "node_modules", ...packageName.split("/"));
   const packageExports = {};
   for (const [exportName, targetPath] of Object.entries(exportsMap)) {
+    preparationLocation = { package: packageName, export: exportName };
     const shimPath = exportName === "." ? join(packageRoot, "index.js") : join(packageRoot, exportName.slice(2), "index.js");
+    preparationPhase = "shim-directory";
+    writesStarted = true;
     mkdirSync(path.dirname(shimPath), { recursive: true });
     const target = join(compiledRoot, targetPath);
     const targetFromShim = relative(path.dirname(shimPath), target).replaceAll(path.sep, "/");
     const requirePath = targetFromShim.startsWith(".") ? targetFromShim : `./${targetFromShim}`;
+    preparationPhase = "shim-write";
     writeFileSync(shimPath, `module.exports = require(${JSON.stringify(requirePath)});\n`);
     packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
   }
+  preparationPhase = "manifest-write";
+  preparationLocation = { package: packageName };
   writeFileSync(join(packageRoot, "package.json"), `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`);
 }

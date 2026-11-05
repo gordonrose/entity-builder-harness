@@ -7,6 +7,9 @@ const testDirectory = join(runtimeRoot, "platform/adapters/aws/queue/sqs/tests")
 
 writePackageShim("@kanbien/core", {
   ".": join(runtimeRoot, "packages/core/src/index.js"),
+  "./config": join(runtimeRoot, "packages/core/src/config/index.js"),
+  "./diagnostics": join(runtimeRoot, "packages/core/src/diagnostics/index.js"),
+  "./shared": join(runtimeRoot, "packages/core/src/shared/index.js"),
 });
 
 const testFiles = readdirSync(testDirectory)

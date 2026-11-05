@@ -4,6 +4,8 @@ import path, { join } from "node:path";
 
 const runtimeRoot = ".cache/platform-adapter-aws-persistence-dynamodb-runtime";
 const coreModules = [
+  "config",
+  "logging",
   "diagnostics",
   "monitoring",
   "persistence",
@@ -19,6 +21,8 @@ writePackageShim("@kanbien/core", {
 writePackageShim("@kanbien/platform-persistence", {
   ".": join(runtimeRoot, "platform/persistence/src/index.js"),
 });
+writePackageShim("@kanbien/platform-contracts", { ".": join(runtimeRoot, "platform/contracts/src/index.js") });
+writePackageShim("@kanbien/platform-observability", { ".": join(runtimeRoot, "platform/observability/src/index.js") });
 
 const result = spawnSync(
   process.execPath,

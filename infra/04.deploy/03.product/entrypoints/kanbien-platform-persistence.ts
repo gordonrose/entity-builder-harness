@@ -4,7 +4,7 @@
 //   version: 3
 //   status: active
 //   created_on: "2026-09-24"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: persistence
 //   disciplines:
@@ -27,12 +27,15 @@ import type {
 } from "@kanbien/app-platform-smoke";
 import type { TransactWriteItem } from "@aws-sdk/client-dynamodb";
 import { type Logger, type LogRecord } from "@kanbien/core/logging";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { createPlatformDiagnosticReporter, reportPlatformDiagnostic } from "@kanbien/platform-observability";
 import { type Metrics } from "@kanbien/core/monitoring";
 import type { Queue } from "@kanbien/core/queues";
 import type { Clock } from "@kanbien/core/shared";
 import { ok, systemClock } from "@kanbien/core/shared";
 import type { PlatformExecutionContext } from "@kanbien/platform-contracts";
-import { createPlatformPersistenceTransitionObserver } from "@kanbien/platform-persistence";
+import { createPlatformPersistenceTransitionObserver, platformPersistenceDiagnosticCatalog, type PlatformPersistenceDiagnosticOptions } from "@kanbien/platform-persistence";
 import {
   createDynamoDbPlatformPersistenceAtomicWriter,
   createDynamoDbPlatformOutboxStore,
@@ -58,7 +61,7 @@ export interface KanbienPlatformSmokePersistence {
   readonly repository: PlatformSmokeWorkItemRepository;
 }
 
-export interface KanbienPlatformSmokePersistenceOptions {
+export interface KanbienPlatformSmokePersistenceOptions extends PlatformPersistenceDiagnosticOptions {
   readonly client: DynamoDbPersistenceCommandClient;
   readonly configuration: DynamoDbPersistenceConfiguration;
 }
@@ -135,6 +138,7 @@ export function createKanbienPlatformOutboxRelay(
     outbox: createDynamoDbPlatformOutboxStore({
       client: options.client,
       configuration: options.configuration,
+      onDiagnostic: (record) => options.observer?.onDiagnostic?.(record),
     }),
     queue: options.queue,
     owner: options.owner,
@@ -159,11 +163,24 @@ export function createKanbienPlatformDurableWorkerProcessing(input: {
     processingStore: createDynamoDbPlatformProcessingStore({
       client: input.client,
       configuration: input.configuration,
+      onDiagnostic: (record) => input.observer?.onDiagnostic?.(record),
     }),
     owner: input.owner,
     leaseDurationMs: input.leaseDurationMs,
     ...(input.observer === undefined ? {} : { observer: input.observer }),
   };
+}
+
+/** Constructor evidence is startup evidence, not a connection or a transition. */
+export function reportKanbienPlatformPersistenceStartupDiagnostic(record: DiagnosticRecord): void {
+  try {
+    const reporter = createPlatformDiagnosticReporter({
+      catalogs: [coreDiagnosticCatalog, platformPersistenceDiagnosticCatalog],
+      logger: kanbienPlatformPersistenceConsoleLogger,
+      clock: systemClock,
+    });
+    reportPlatformDiagnostic(reporter, record, { capability: "persistence", operation: "client-initialization", stage: "startup" });
+  } catch { /* Retain the original constructor throw and process outcome. */ }
 }
 
 /** Reconstruct only non-secret DynamoDB adapter configuration from a target task environment. */

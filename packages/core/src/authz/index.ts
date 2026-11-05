@@ -1,6 +1,9 @@
 import type { Principal } from "../authn/index";
 import { copyJsonValue, type JsonValue, type MessageDescriptor } from "../shared/index";
 import type { TenantId } from "../tenancy/index";
+import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { corePermissionRecord } from "./diagnostics";
+export * from "./diagnostics";
 
 export type Permission = `${string}:${string}`;
 export type AuthorizationValue = JsonValue;
@@ -156,9 +159,13 @@ function copyAuthorizationAttributes(attributes: AuthorizationAttributes): Autho
 }
 
 function assertPermissionPart(name: "resource" | "action", value: string): void {
-  if (value.length === 0 || value.trim() !== value || value.includes(":") || /\s/.test(value)) {
-    throw new TypeError(`Permission ${name} must be a non-empty string without whitespace or colon separators.`);
-  }
+  const reject = (reason: Parameters<typeof corePermissionRecord>[1]): never => {
+    throw attachCoreDiagnosticRecord(new TypeError(`Permission ${name} must be a non-empty string without whitespace or colon separators.`), corePermissionRecord(name, reason));
+  };
+  if (value.length === 0) reject("empty");
+  if (value.trim() !== value) reject("surrounding-whitespace");
+  if (value.includes(":")) reject("colon-separator");
+  if (/\s/.test(value)) reject("whitespace");
 }
 
 function copyAuthorizationFacts<TFacts extends AuthorizationFacts | AuthorizationEvidence>(facts: TFacts): TFacts {

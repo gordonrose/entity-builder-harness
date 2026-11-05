@@ -1,5 +1,10 @@
 import { copyJsonValue, entityId, type EntityId, type JsonValue } from "../shared/index";
 import type { TenantId } from "../tenancy/index";
+import { PrincipalObservation } from "./observations";
+import type { CoreAuthnDiagnosticOptions } from "./diagnostics";
+export { coreAuthnBoundaryDiagnostic, coreAuthnBoundaryDiagnosticRecord, coreAuthnDiagnosticDefinitions } from "./diagnostics";
+export type { CoreAuthnBoundaryDetail, CoreAuthnDiagnosticContext, CoreAuthnDiagnosticOptions } from "./diagnostics";
+export { observeCoreAuthnDiagnostic } from "./observations";
 
 export type PrincipalId = EntityId<"PrincipalId">;
 export type PrincipalType = "user" | "service";
@@ -31,15 +36,16 @@ export function principal(input: {
   readonly currentTenantId?: TenantId;
   readonly claims?: PrincipalClaims;
   readonly scopes?: readonly string[];
-}): Principal {
-  return {
-    id: input.id,
-    type: input.type,
-    subject: input.subject,
-    ...(input.currentTenantId === undefined ? {} : { currentTenantId: input.currentTenantId }),
-    claims: copyPrincipalClaims(input.claims ?? {}),
-    ...(input.scopes === undefined ? {} : { scopes: [...input.scopes] }),
-  };
+}, diagnostics?: CoreAuthnDiagnosticOptions): Principal {
+  const observation = new PrincipalObservation(diagnostics);
+  return observation.run(() => ({
+    id: observation.at("input-projection", "id", () => input.id),
+    type: observation.at("input-projection", "type", () => input.type),
+    subject: observation.at("input-projection", "subject", () => input.subject),
+    ...(observation.at("input-projection", "current-tenant-id", () => input.currentTenantId) === undefined ? {} : { currentTenantId: observation.at("input-projection", "current-tenant-id", () => input.currentTenantId)! }),
+    claims: copyPrincipalClaims(observation.at("input-projection", "claims", () => input.claims) ?? {}, observation),
+    ...(observation.at("input-projection", "scopes", () => input.scopes) === undefined ? {} : { scopes: observation.at("scopes-copy", "scopes", () => [...input.scopes!]) }),
+  }));
 }
 
 export function fixedAuthenticator<TCredential>(result: AuthenticationResult): Authenticator<TCredential> {
@@ -48,10 +54,11 @@ export function fixedAuthenticator<TCredential>(result: AuthenticationResult): A
   };
 }
 
-function copyPrincipalClaims(claims: PrincipalClaims): PrincipalClaims {
-  return Object.fromEntries(
-    Object.entries(claims).map(([key, value]) => [key, copyPrincipalClaimValue(value)]),
-  );
+function copyPrincipalClaims(claims: PrincipalClaims, observation: PrincipalObservation): PrincipalClaims {
+  return observation.at("result-projection", "claims", () => Object.fromEntries(
+    observation.at("claims-copy", "claims", () => observation.at("claims-enumeration", "claims", () => Object.entries(claims))
+      .map(([key, value]) => [key, copyPrincipalClaimValue(value)])),
+  ));
 }
 
 function copyPrincipalClaimValue(value: PrincipalClaimValue): PrincipalClaimValue {

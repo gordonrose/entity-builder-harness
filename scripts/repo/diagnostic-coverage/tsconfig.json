@@ -1,0 +1,45 @@
+{
+  "extends": "../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../../..",
+    "rootDir": "../../..",
+    "outDir": "../../../.cache/diagnostic-catalog-export",
+    "paths": {
+      "@kanbien/core": ["packages/core/src/index.ts"],
+      "@kanbien/core/*": ["packages/core/src/*/index.ts"],
+      "@kanbien/app-platform-smoke": ["apps/platform-smoke/src/index.ts"],
+      "@kanbien/product-kanbien-platform": ["products/kanbien-platform/src/index.ts"],
+      "@kanbien/platform-contracts": ["platform/contracts/src/index.ts"],
+      "@kanbien/platform-adapter-aws-persistence-postgresql": ["platform/adapters/aws/persistence/postgresql/src/index.ts"],
+      "@kanbien/platform-adapter-aws-observability-cloudwatch": ["platform/adapters/aws/observability/cloudwatch/src/index.ts"],
+      "@kanbien/platform-config": ["platform/config/src/index.ts"],
+      "@kanbien/platform-health": ["platform/health/src/index.ts"],
+      "@kanbien/platform-observability": ["platform/observability/src/index.ts"],
+      "@kanbien/platform-persistence": ["platform/persistence/src/index.ts"],
+      "@kanbien/platform-runtime": ["platform/runtime/src/index.ts"],
+      "@kanbien/platform-security": ["platform/security/src/index.ts"],
+      "@kanbien/platform-server": ["platform/server/src/index.ts"],
+      "@kanbien/platform-server/main": ["platform/server/src/main.ts"],
+      "@kanbien/platform-workers": ["platform/workers/src/index.ts"]
+    }
+  },
+  "include": [
+    "../../../packages/core/src/**/*.ts",
+    "../../../platform/config/src/diagnostics.ts",
+    "../../../platform/contracts/src/registration-diagnostics.ts",
+    "../../../platform/security/src/diagnostics.ts",
+    "../../../platform/health/src/diagnostics.ts",
+    "../../../platform/runtime/src/diagnostics.ts",
+    "../../../platform/server/src/diagnostics.ts",
+    "../../../platform/workers/src/diagnostics.ts",
+    "../../../apps/platform-smoke/src/diagnostics.ts",
+    "../../../platform/persistence/src/diagnostics.ts",
+    "../../../platform/adapters/aws/queue/sqs/src/index.ts",
+    "../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
+    "../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts",
+    "../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.ts",
+    "../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts",
+    "../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-configuration-diagnostics.ts",
+    "../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-delivery-diagnostics.ts"
+  ]
+}

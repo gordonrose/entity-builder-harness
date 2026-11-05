@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -42,19 +42,73 @@ from typing import Any
 
 # Resolve support code from this capability, never an overridden source root.
 sys.dont_write_bytecode = True
-sys.path.insert(0, str(Path(sys.argv[1]).resolve().parents[1]))
 try:
+    sys.path.insert(0, str(Path(sys.argv[1]).resolve().parents[1]))
     from header_discovery import (
         HeaderError, has_declared_header, is_excluded, parse_header_text,
         requires_header, repository_paths,
     )
-except ImportError as exc:  # pragma: no cover - environment gate
-    print(f"ERROR: artifact metadata discovery support is required: {exc}", file=sys.stderr)
+except ImportError:  # pragma: no cover - environment gate
+    print("ERROR: artifact metadata discovery support is required", file=sys.stderr)
     sys.exit(2)
+except (OSError, RuntimeError):
+    print("ERROR: artifact metadata support setup failed [ARTIFACT_INDEX_SUPPORT_FAILED]", file=sys.stderr)
+    sys.exit(1)
 
 
 class IndexErrorInfo(Exception):
-    pass
+    def __init__(self, condition: str, field: str | None = None):
+        self.condition = condition
+        self.field = field
+        super().__init__(checked_concern(self))
+
+
+# Only exact owning conditions and logical fields may enter diagnostics.
+CONCERNS = {
+    ("root-mismatch", "source-root"): "artifact discovery requires the exact Git root",
+    ("closing-marker-inline", "header"): "metadata closing marker must occupy its own line",
+    ("header-unterminated", "header"): "unterminated metadata header",
+    ("key-duplicate", "mapping-key"): "duplicate metadata key",
+    ("key-nonscalar", "mapping-key"): "metadata mapping keys must be scalar values",
+    ("nul-byte", "header"): "declared metadata must not contain NUL bytes",
+    ("yaml-invalid", "header"): "invalid metadata YAML",
+    ("shape-invalid", "header"): "invalid metadata header shape",
+    ("encoding-invalid", "header"): "metadata header is not valid UTF-8",
+    ("header-missing", "header"): "missing metadata header",
+    ("payload-missing", "header"): "missing recognized metadata payload",
+    ("schema-unsupported", "schema"): "unsupported metadata schema",
+    ("symlink", "path"): "symlink paths are not supported",
+    ("path-outside", "path"): "path must stay inside source root",
+    ("git-metadata", "path"): "Git metadata is not an artifact path",
+    ("git-root-unconfirmed", "source-commit"): "RAG_SOURCE_COMMIT_SHA is required when source Git root cannot be confirmed",
+    ("head-observation-failed", "source-commit"): "source commit observation failed; provide RAG_SOURCE_COMMIT_SHA",
+    **{("date-unquoted", field): f"{field} must be a quoted YYYY-MM-DD date"
+       for field in ("created_on", "updated_on", "deprecated_on", "superseded_on")},
+    **{("date-invalid", field): f"{field} must be a valid calendar date"
+       for field in ("created_on", "updated_on", "deprecated_on", "superseded_on")},
+}
+
+
+def checked_concern(error: Exception) -> str:
+    if type(error) in {IndexErrorInfo, HeaderError}:
+        fields = vars(error)
+        condition, field = fields.get("condition"), fields.get("field")
+        if type(condition) is str and type(field) is str:
+            return CONCERNS.get((condition, field), "metadata observation failed")
+    return "metadata observation failed"
+
+
+PHASE = "root"
+NATIVE_FAILURES = {
+    "root": "source-root setup failed [ARTIFACT_INDEX_ROOT_FAILED]",
+    "arguments": "index argument handling failed [ARTIFACT_INDEX_ARGUMENT_FAILED]",
+    "collection": "artifact collection failed [ARTIFACT_INDEX_COLLECTION_FAILED]",
+    "provenance": "source provenance observation failed [ARTIFACT_INDEX_PROVENANCE_FAILED]",
+    "discovery": "artifact declaration observation failed [ARTIFACT_INDEX_DISCOVERY_FAILED]",
+    "normalization": "artifact normalization failed [ARTIFACT_INDEX_NORMALIZATION_FAILED]",
+    "coverage": "artifact coverage observation failed [ARTIFACT_INDEX_COVERAGE_FAILED]",
+    "output": "artifact index output failed [ARTIFACT_INDEX_OUTPUT_FAILED]",
+}
 
 
 def repo_root() -> Path:
@@ -66,11 +120,9 @@ def repo_root() -> Path:
         check=True,
         text=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     return Path(result.stdout.strip())
-
-
-ROOT = repo_root()
 
 
 def is_git_root() -> bool:
@@ -84,21 +136,18 @@ def is_git_root() -> bool:
     return result.returncode == 0 and Path(result.stdout.strip()).resolve() == ROOT
 
 
-GIT_ROOT = is_git_root()
-
-
 def source_commit() -> str:
     override = os.environ.get("RAG_SOURCE_COMMIT_SHA", "").strip()
     if override:
         return override
     if not GIT_ROOT:
-        raise IndexErrorInfo("RAG_SOURCE_COMMIT_SHA is required for a source archive without Git metadata")
+        raise IndexErrorInfo("git-root-unconfirmed", "source-commit")
     result = subprocess.run(
         ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
         text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
     if result.returncode:
-        raise IndexErrorInfo("source repository has no HEAD; provide RAG_SOURCE_COMMIT_SHA")
+        raise IndexErrorInfo("head-observation-failed", "source-commit")
     return result.stdout.strip()
 
 
@@ -121,7 +170,13 @@ dependency directories, and require RAG_SOURCE_COMMIT_SHA for provenance.
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(add_help=False)
+    class IndexArgumentParser(argparse.ArgumentParser):
+        def error(self, message: str) -> None:
+            print("ERROR: index arguments rejected [ARTIFACT_INDEX_ARGUMENT_REJECTED]", file=sys.stderr)
+            print(usage(), end="", file=sys.stderr)
+            sys.exit(2)
+
+    parser = IndexArgumentParser(add_help=False)
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--paths", nargs="*")
     parser.add_argument("--pretty", action="store_true")
@@ -151,13 +206,13 @@ def normalize_path(path: Path | str) -> str:
     path_obj = Path(path)
     absolute = path_obj if path_obj.is_absolute() else ROOT / path_obj
     if any(item.is_symlink() for item in (absolute, *absolute.parents)):
-        raise IndexErrorInfo(f"symlink paths are not supported: {path}")
+        raise IndexErrorInfo("symlink", "path")
     try:
         relative = absolute.resolve().relative_to(ROOT)
     except ValueError as exc:
-        raise IndexErrorInfo(f"path must stay inside source root: {path}") from exc
+        raise IndexErrorInfo("path-outside", "path") from exc
     if ".git" in relative.parts:
-        raise IndexErrorInfo(f"Git metadata is not an artifact path: {path}")
+        raise IndexErrorInfo("git-metadata", "path")
     return relative.as_posix()
 
 
@@ -189,7 +244,7 @@ def collect_paths_from_args(paths: list[str]) -> list[str]:
         elif absolute.is_file():
             collected.append(relative)
         else:
-            print(f"WARN: path does not exist, skipping: {raw_path}", file=sys.stderr)
+            print("WARN: requested path does not exist, skipping [ARTIFACT_INDEX_PATH_MISSING]", file=sys.stderr)
     return sorted(set(collected))
 
 
@@ -213,10 +268,13 @@ def declares_header(path: str) -> bool:
 def parse_header(path: str) -> dict[str, Any]:
     try:
         parsed = parse_header_text((ROOT / path).read_text(encoding="utf-8"))
-    except (HeaderError, UnicodeError) as exc:
-        raise IndexErrorInfo(str(exc)) from exc
+    except HeaderError as exc:
+        fields = vars(exc) if type(exc) is HeaderError else {}
+        raise IndexErrorInfo(fields.get("condition"), fields.get("field")) from exc
+    except UnicodeError as exc:
+        raise IndexErrorInfo("encoding-invalid", "header") from exc
     if not parsed:
-        raise IndexErrorInfo("missing metadata header")
+        raise IndexErrorInfo("header-missing", "header")
     return parsed
 
 
@@ -251,11 +309,11 @@ def normalize_versioned(path: str, metadata: dict[str, Any]) -> dict[str, Any]:
             continue
         value = metadata.get(field)
         if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
-            raise IndexErrorInfo(f"{field} must be a quoted YYYY-MM-DD date")
+            raise IndexErrorInfo("date-unquoted", field)
         try:
             dt.date.fromisoformat(value)
         except ValueError as exc:
-            raise IndexErrorInfo(f"{field} must be a valid calendar date") from exc
+            raise IndexErrorInfo("date-invalid", field) from exc
     artifact = {
         "path": path,
         "metadata_schema": metadata.get("schema"),
@@ -337,19 +395,25 @@ def normalize_artifact(path: str) -> dict[str, Any]:
         if schema in {"agentic-artifact/v2", "agentic-artifact/v3"}:
             return normalize_versioned(path, artifact)
         if "schema" in artifact and schema != "agentic-artifact/v1":
-            raise IndexErrorInfo(f"unsupported metadata schema: {schema}")
+            raise IndexErrorInfo("schema-unsupported", "schema")
         return normalize_v1_artifact(path, artifact)
     if isinstance(script, dict):
         schema = script.get("schema")
         if "schema" in script and schema != "agentic-script/v1":
-            raise IndexErrorInfo(f"unsupported metadata schema: {schema}")
+            raise IndexErrorInfo("schema-unsupported", "schema")
         return normalize_v1_script(path, script)
-    raise IndexErrorInfo("missing recognized metadata payload")
+    raise IndexErrorInfo("payload-missing", "header")
 
 
 def main(argv: list[str]) -> int:
+    global ROOT, GIT_ROOT, PHASE
+    ROOT = repo_root()
+    GIT_ROOT = is_git_root()
+    PHASE = "arguments"
     args = parse_args(argv)
+    PHASE = "collection"
     paths = collect_all_paths() if args.all else collect_paths_from_args(args.paths or [])
+    PHASE = "provenance"
     commit = source_commit()
 
     artifacts: list[dict[str, Any]] = []
@@ -358,14 +422,16 @@ def main(argv: list[str]) -> int:
     duplicate_ids: list[dict[str, str]] = []
 
     for path in paths:
+        PHASE = "discovery"
         if not readable_path(path):
             continue
         if not requires_header(path) and not declares_header(path):
             continue
         try:
+            PHASE = "normalization"
             artifact = normalize_artifact(path)
         except IndexErrorInfo as exc:
-            skipped.append({"path": path, "reason": str(exc)})
+            skipped.append({"path": path, "reason": checked_concern(exc)})
             continue
         artifact_id = artifact.get("id")
         if isinstance(artifact_id, str) and artifact_id:
@@ -378,6 +444,7 @@ def main(argv: list[str]) -> int:
     coverage = None
     missing = []
     if args.check_coverage:
+        PHASE = "coverage"
         # Independently rescan the complete declaration scope, so a future
         # collector/filter regression cannot silently shrink index coverage.
         if GIT_ROOT:
@@ -400,12 +467,13 @@ def main(argv: list[str]) -> int:
             "missing_paths": missing,
         }
 
+    PHASE = "output"
     if (args.strict and (skipped or duplicate_ids)) or missing:
         for entry in skipped:
             print(f"ERROR: skipped {entry['path']}: {entry['reason']}", file=sys.stderr)
         for entry in duplicate_ids:
             print(
-                f"ERROR: duplicate id {entry['id']}: {entry['first_path']} and {entry['path']}",
+                f"ERROR: duplicate id: {entry['first_path']} and {entry['path']}",
                 file=sys.stderr,
             )
         for path in missing:
@@ -438,7 +506,10 @@ def main(argv: list[str]) -> int:
 if __name__ == "__main__":
     try:
         sys.exit(main(sys.argv[2:]))
-    except (IndexErrorInfo, HeaderError, OSError, subprocess.CalledProcessError) as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
+    except (IndexErrorInfo, HeaderError) as exc:
+        print(f"ERROR: {checked_concern(exc)}", file=sys.stderr)
+        sys.exit(1)
+    except Exception:
+        print(f"ERROR: {NATIVE_FAILURES[PHASE]}", file=sys.stderr)
         sys.exit(1)
 PY

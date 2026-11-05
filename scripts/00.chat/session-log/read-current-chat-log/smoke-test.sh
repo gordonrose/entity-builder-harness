@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-23"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -126,4 +126,25 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
 grep -q '^latest_commit_sha: abc1234$' "$TMP_ROOT/recorded-allowed.out" \
   || fail "approved recorded session metadata was not printed"
 
+# Force metadata lookup rather than the exact historical path.
+mv "$REPO/commitLogs/2026/jun/23/2026-06-23-18-05-recorded-session" "$REPO/commitLogs/2026/jun/23/renamed"
+mkdir -p "$TMP_ROOT/bin"
+for command in find awk; do
+  printf '#!/usr/bin/env bash\necho PRIVATE_LOOKUP_CANARY >&2\nexit 70\n' > "$TMP_ROOT/bin/$command"
+  chmod +x "$TMP_ROOT/bin/$command"
+  if (cd "$REPO" && PATH="$TMP_ROOT/bin:$PATH" bash scripts/00.chat/session-log/read-current-chat-log/script.sh --allow-recorded-session) > "$TMP_ROOT/lookup-failure.out" 2>&1; then
+    fail "failed lookup was accepted"
+  fi
+  expected='ERROR: session-directory-read-failed'
+  [ "$command" != awk ] || expected='ERROR: session-metadata-read-failed'
+  test "$(cat "$TMP_ROOT/lookup-failure.out")" = "$expected" || fail "lookup failed without precise safe outcome"
+  rm "$TMP_ROOT/bin/$command"
+done
+(cd "$REPO" && bash scripts/00.chat/session-log/read-current-chat-log/script.sh --allow-recorded-session) > "$TMP_ROOT/renamed.out"
+grep -q '^latest_commit_sha: abc1234$' "$TMP_ROOT/renamed.out" || fail "renamed lookup regressed"
+cp -R "$REPO/commitLogs/2026/jun/23/renamed" "$REPO/commitLogs/2026/jun/23/duplicate"
+if (cd "$REPO" && bash scripts/00.chat/session-log/read-current-chat-log/script.sh --allow-recorded-session) > "$TMP_ROOT/ambiguous.out" 2>&1; then
+  fail "ambiguous lookup was accepted"
+fi
+test "$(cat "$TMP_ROOT/ambiguous.out")" = 'ERROR: session-log-ambiguous' || fail "ambiguous lookup became absence"
 echo "read-current-chat-log smoke test passed."

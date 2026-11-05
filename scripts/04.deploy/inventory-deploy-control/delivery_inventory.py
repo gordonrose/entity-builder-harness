@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-28"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -251,6 +251,55 @@ def package_execution(root, package_path, command, packages, bodies, seen=()):
     return refs, sorted(set(unknown)), external
 
 
+def route_proof_members(checks, roots, bodies):
+    """Trace only declared proof roots and reachable catalog member commands.
+
+    Inputs and focused prerequisites are not unconditional delivery lineage.
+    This validates source relationships; it never invokes a check or a shell.
+    """
+    stages = {'local': 0, 'package': 1, 'deploy': 2, 'acceptance': 3}
+    found, visiting, finished, findings = {}, set(), set(), []
+    stack = [(identity, None, False) for identity in reversed(sorted(set(roots)))]
+    def fail(code, identity):
+        item = {'code': code}
+        if isinstance(identity, str) and re.fullmatch(r'[a-z][a-z0-9-]{0,127}', identity): item['check_id'] = identity
+        if item not in findings: findings.append(item)
+    while stack:
+        identity, parent, leaving = stack.pop()
+        if leaving:
+            visiting.discard(identity); finished.add(identity); continue
+        if not isinstance(identity, str) or not re.fullmatch(r'[a-z][a-z0-9-]{0,127}', identity) or not isinstance(checks.get(identity), dict):
+            fail('delivery-aggregate-member-unknown', identity); continue
+        if identity in visiting:
+            fail('delivery-aggregate-member-cycle', identity); continue
+        check = checks[identity]
+        argv, declared_effects, stage = check.get('argv'), check.get('effects'), check.get('stage')
+        if not isinstance(argv, list) or len(argv) < 2 or argv[0] != 'bash' or any(not isinstance(arg, str) or not arg or any(token in arg for token in '\n\r\0;|&`$') for arg in argv):
+            fail('delivery-proof-command-invalid', identity); continue
+        if argv[1] not in bodies:
+            fail('delivery-proof-command-missing', identity); continue
+        if not isinstance(stage, str) or stage not in stages or not isinstance(declared_effects, list) or not declared_effects or any(not isinstance(effect, str) or not re.fullmatch(r'[a-z][a-z-]*', effect) for effect in declared_effects) or len(set(declared_effects)) != len(declared_effects):
+            fail('delivery-aggregate-member-contract-invalid', identity); continue
+        if stage == 'local' and not set(declared_effects) <= {'read-only', 'writes-files'}:
+            fail('delivery-aggregate-member-boundary-invalid', identity); continue
+        if parent is not None:
+            owner = checks[parent]
+            if stages[stage] > stages[owner['stage']] or not (set(declared_effects) - {'read-only'}) <= set(owner['effects']):
+                fail('delivery-aggregate-member-boundary-invalid', identity); continue
+        actual_effects = effects(bodies[argv[1]])
+        if not actual_effects or any(not isinstance(effect, str) for effect in actual_effects) or set(actual_effects) != set(declared_effects):
+            fail('delivery-aggregate-member-boundary-invalid', identity); continue
+        members = check.get('members', [])
+        if not isinstance(members, list) or ('members' in check and not members) or any(not isinstance(member, str) or not re.fullmatch(r'[a-z][a-z0-9-]{0,127}', member) for member in members) or len(set(members)) != len(members):
+            fail('delivery-aggregate-members-invalid', identity); continue
+        if identity in finished: continue
+        found[identity] = argv
+        visiting.add(identity)
+        stack.append((identity, parent, True))
+        stack.extend((member, identity, False) for member in reversed(members))
+    return found, findings
+
+
 def report(root, source_revision=None, *, routes_only=False):
     root = root.resolve()
     catalog_path = root / 'scripts/repo/check-selection/checks.yml'
@@ -393,6 +442,10 @@ def report(root, source_revision=None, *, routes_only=False):
     for route in routes:
         reached = set(route['references']) | {route['declaration'], route['binding']}
         reached.update(arg for requirement in route['chain'] for argv in requirement['commands'].values() for arg in argv if arg in bodies)
+        proof_roots = {identity for requirement in route['chain'] for identities in requirement['proofs'].values() for identity in identities if isinstance(identity, str)}
+        member_commands, member_findings = route_proof_members(checks, proof_roots, bodies)
+        for issue in member_findings: gap(issue['code'], route['declaration'], **{key: value for key, value in issue.items() if key != 'code'})
+        reached.update(arg for argv in member_commands.values() for arg in argv if arg in bodies)
         if '/20-scopes/' in route['declaration']:
             target_prefix = route['declaration'].split('/20-scopes/', 1)[0] + '/'
             reached.update(path for path in bodies if path.startswith(target_prefix + '00-target/') or path.startswith(target_prefix + '40-package-custody/') or path == target_prefix + '10-foundation/foundation-index.yml')

@@ -1,4 +1,10 @@
 import { stringConfigValue, type ConfigSchema } from "@kanbien/core/config";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { platformPersistenceDiagnosticCatalog, type PlatformPersistenceDiagnosticOptions } from "@kanbien/platform-persistence";
+import { platformPersistenceErrorClasses } from "@kanbien/platform-persistence";
+import { persistenceErrorCodes } from "@kanbien/core/persistence";
+import { platformSmokeAcceptanceFailure, platformSmokeAttributeFailure, platformSmokeDiagnosticCatalog, platformSmokeConfigurationFailure, platformSmokeAcceptedPayloadFailure } from "./diagnostics";
 import {
   healthCheckName,
   healthCheckResult,
@@ -50,6 +56,8 @@ export interface PlatformSmokeWorkItemAcceptedPayload extends Readonly<Record<st
  */
 export interface PlatformSmokeAppOptions {
   readonly workItemAcceptance?: PlatformSmokeAcceptWorkItemDependencies;
+  /** Source definitions are selected here; the host still registers their reporter catalogs. */
+  readonly diagnosticDefinitions?: readonly DiagnosticDefinition[];
 }
 
 export const platformSmokeAppId = unwrapPlatformName(platformAppId(platformSmokeAppManifest.appId));
@@ -100,6 +108,7 @@ export const platformSmokeWorkItemDeliveryObservabilityProfile: PlatformCapabili
   name: platformSmokeWorkItemDeliveryObservabilityProfileName,
   capability: unwrapPlatformName(platformCapabilityName("platform-smoke.persistence.work-item.delivery")),
   action: "execute",
+  errorClasses: platformPersistenceErrorClasses,
   signals: ["operational_log", "metric", "trace"],
   logFieldNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"],
   metricDimensionFieldNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"],
@@ -111,6 +120,7 @@ export const platformSmokeWorkItemAcceptanceObservabilityProfile: PlatformCapabi
   name: platformSmokeWorkItemAcceptanceObservabilityProfileName,
   capability: unwrapPlatformName(platformCapabilityName("platform-smoke.persistence.work-item")),
   action: "create",
+  errorClasses: [...platformPersistenceErrorClasses, ...persistenceErrorCodes],
   signals: ["operational_log", "metric", "trace"],
   logFieldNames: ["capability", "action", "execution_context", "outcome", "error_class"],
   metricDimensionFieldNames: ["capability", "action", "execution_context", "outcome", "error_class"],
@@ -134,7 +144,8 @@ export const platformSmokeConfigSchema: ConfigSchema<PlatformSmokeConfig> = {
   parse(source) {
     const appName = stringConfigValue(source, "PLATFORM_SMOKE_APP_NAME");
     if (!appName.ok) {
-      return { ok: false, error: appName.error };
+      return { ok: false, error: { ...appName.error, diagnosticRecord: platformSmokeConfigurationFailure(appName.error.code === "CONFIG_MISSING" ? "missing" : "wrong-type"),
+        ...(appName.error.diagnosticRecord === undefined ? {} : { relatedDiagnosticRecords: [appName.error.diagnosticRecord] }) } };
     }
 
     return ok({ appName: appName.value });
@@ -143,6 +154,11 @@ export const platformSmokeConfigSchema: ConfigSchema<PlatformSmokeConfig> = {
 
 export const platformSmokeRebuildValidator: Validator<PlatformSmokeRebuildPayload> = {
   validate: isPlatformSmokeRebuildPayload,
+  diagnose: (value) => {
+    if (isPlatformSmokeRebuildPayload(value)) return undefined;
+    const present = typeof value === "object" && value !== null && Object.hasOwn(value, "rebuild");
+    return platformSmokeAttributeFailure("payload.rebuild", present ? "wrong-type" : "missing");
+  },
   explain: (value) => isPlatformSmokeRebuildPayload(value)
     ? validResult
     : invalidResult(validationIssue({
@@ -154,6 +170,7 @@ export const platformSmokeRebuildValidator: Validator<PlatformSmokeRebuildPayloa
 
 export const platformSmokeWorkItemAcceptedValidator: Validator<PlatformSmokeWorkItemAcceptedPayload> = {
   validate: isPlatformSmokeWorkItemAcceptedPayload,
+  diagnose: platformSmokeAcceptedPayloadFailure,
   explain: (value) => isPlatformSmokeWorkItemAcceptedPayload(value)
     ? validResult
     : invalidResult(validationIssue({
@@ -166,6 +183,7 @@ export const platformSmokeWorkItemAcceptedValidator: Validator<PlatformSmokeWork
 /** A persistence acceptance contains no caller-supplied business payload. */
 export const platformSmokeWorkItemAcceptanceValidator: Validator<undefined> = {
   validate: (value): value is undefined => value === undefined,
+  diagnose: (value) => value === undefined ? undefined : platformSmokeAttributeFailure("payload", "unexpected-body"),
   explain: (value) => value === undefined
     ? validResult
     : invalidResult(validationIssue({
@@ -187,6 +205,7 @@ export function createPlatformSmokeApp(options: PlatformSmokeAppOptions = {}) {
       afterStop: () => undefined,
     },
     mount(registry, deps) {
+      registry.registerDiagnosticCatalog(platformSmokeDiagnosticCatalog);
       registry.registerConfigSchema(platformSmokeConfigSchema);
       registry.registerObservabilityProfile(platformSmokeEchoObservabilityProfile);
       registry.registerObservabilityProfile(platformSmokeRebuildObservabilityProfile);
@@ -214,7 +233,7 @@ export function createPlatformSmokeApp(options: PlatformSmokeAppOptions = {}) {
         },
       });
       if (options.workItemAcceptance !== undefined) {
-        registerPlatformSmokeWorkItemAcceptance(registry, options.workItemAcceptance);
+        registerPlatformSmokeWorkItemAcceptance(registry, options.workItemAcceptance, options);
       }
       registry.registerJob({
         name: platformSmokeJobName,
@@ -277,6 +296,7 @@ export const platformSmokeApp = createPlatformSmokeApp();
 function registerPlatformSmokeWorkItemAcceptance(
   registry: Parameters<ReturnType<typeof definePlatformApp>["mount"]>[0],
   dependencies: PlatformSmokeAcceptWorkItemDependencies,
+  options: Pick<PlatformSmokeAppOptions, "diagnosticDefinitions">,
 ): void {
   registry.registerObservabilityProfile(platformSmokeWorkItemAcceptanceObservabilityProfile);
   registry.registerObservabilityProfile(platformSmokeWorkItemAdmissionObservabilityProfile);
@@ -304,8 +324,10 @@ function registerPlatformSmokeWorkItemAcceptance(
     validator: platformSmokeWorkItemAcceptanceValidator,
     handler: {
       async handle(_request, context) {
+        const diagnostics = workItemInvocationDiagnostics(context, options);
         const id = platformSmokeWorkItemId(String(context.requestId));
         if (!id.ok) {
+          diagnostics.returned(id.error);
           return { status: 500, body: { status: "not-accepted" as const } };
         }
         const accepted = await acceptPlatformSmokeWorkItem({
@@ -313,12 +335,13 @@ function registerPlatformSmokeWorkItemAcceptance(
           acceptedAt: context.now,
           causationId: causationId(String(context.requestId)),
           correlationId: context.correlationId,
-        }, dependencies);
+        }, dependencies, diagnostics.invocation);
         if (!accepted.ok) {
+          diagnostics.returned(accepted.error);
           return {
             status: accepted.error.code === "PERSISTENCE_DUPLICATE" ? 409 : 503,
             body: { status: "not-accepted" as const },
-            observability: { errorClass: accepted.error.code },
+            observability: { errorClass: accepted.error.code, diagnosticRecord: platformSmokeAcceptanceFailure(accepted.error.code) },
           };
         }
         return {
@@ -331,6 +354,49 @@ function registerPlatformSmokeWorkItemAcceptance(
       },
     },
   });
+}
+
+const intrinsicPromiseThen = Promise.prototype.then;
+/** Only validated copies are compared; finding a source record is not a delivery attempt. */
+function workItemInvocationDiagnostics(context: { readonly onDiagnostic?: (record: DiagnosticRecord) => unknown },
+  options: Pick<PlatformSmokeAppOptions, "diagnosticDefinitions">) {
+  const builtinDefinitions: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions,
+    ...platformPersistenceDiagnosticCatalog.definitions, ...platformSmokeDiagnosticCatalog.definitions];
+  let definitions = builtinDefinitions;
+  try { definitions = [...builtinDefinitions, ...(options.diagnosticDefinitions ?? [])]; } catch { /* Optional selection cannot replace application behavior. */ }
+  let sink: ((record: DiagnosticRecord) => unknown) | undefined;
+  try { const candidate = context.onDiagnostic; if (typeof candidate === "function") sink = candidate; } catch { /* An unavailable observer stays unavailable. */ }
+  const attempted = new Map<string, number>();
+  const selected = (record: DiagnosticRecord) => selectDiagnosticEvidence(definitions, { diagnosticRecord: record }).diagnosticRecord;
+  const observe = (record: DiagnosticRecord): void => {
+    const checked = selected(record);
+    if (checked === undefined || sink === undefined) return;
+    // selectDiagnosticEvidence produces owned, plain, frozen data without toJSON/accessors.
+    const key = JSON.stringify(checked);
+    attempted.set(key, (attempted.get(key) ?? 0) + 1);
+    try {
+      const pending = sink.call(context, checked);
+      if (pending === undefined) return;
+      const ignore = (): void => undefined;
+      try { Reflect.apply(intrinsicPromiseThen, pending, [undefined, ignore]); }
+      catch { Reflect.apply(intrinsicPromiseThen, Promise.resolve(pending), [undefined, ignore]); }
+    } catch { /* The attempted observation must not replace application results or throws. */ }
+  };
+  return {
+    // Supplying {} deliberately overrides any writer-level diagnostic default on an opted-out route.
+    invocation: sink === undefined ? {} : { diagnosticDefinitions: definitions, onDiagnostic: observe } satisfies PlatformPersistenceDiagnosticOptions,
+    returned(error: unknown): void {
+      const evidence = selectDiagnosticEvidence(definitions, error);
+      const remaining = new Map(attempted);
+      for (const record of [evidence.diagnosticRecord, ...(evidence.relatedDiagnosticRecords ?? [])]) {
+        if (record === undefined) continue;
+        const key = JSON.stringify(record);
+        const previous = remaining.get(key) ?? 0;
+        if (previous > 0) remaining.set(key, previous - 1);
+        else observe(record);
+      }
+    },
+  };
 }
 
 function isPlatformSmokeRebuildPayload(value: unknown): value is PlatformSmokeRebuildPayload {

@@ -63,6 +63,10 @@ def aws_in_region(region: str, *parts: str) -> tuple[bool, Any, str]:
         # A lost provider response is never permission to repeat an operation.
         # Callers must reconcile the named target state before another mutation.
         return False, None, "aws-command-timeout"
+    except OSError:
+        return False, None, "aws-command-unavailable"
+    except UnicodeError:
+        return False, None, "aws-response-invalid"
     if result.returncode:
         return False, None, aws_response().classify_error(parts[0], parts[1], result.stderr)
     try:
@@ -99,7 +103,8 @@ def validate_receipt(path: Path) -> dict[str, Any] | None:
         "--expected-candidate", EXPECTED["candidate"], "--expected-package-contract", EXPECTED["package"],
         "--expected-program", EXPECTED["program"], "--json",
     ]
-    result = subprocess.run(command, capture_output=True, text=True)
+    try: result = subprocess.run(command, capture_output=True, text=True)
+    except (OSError, UnicodeError): return None
     if result.returncode:
         return None
     try:
@@ -116,7 +121,7 @@ def declaration_covered() -> bool:
     try:
         checked = subprocess.run([sys.executable, "-B", str(checker), "--scope-contract", str(contract), "--root", str(ROOT), "--json"], capture_output=True, text=True, timeout=30)
         value = json.loads(checked.stdout)
-    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+    except (OSError, UnicodeError, subprocess.TimeoutExpired, json.JSONDecodeError):
         return False
     return checked.returncode == 0 and isinstance(value, dict) and value.get("verdict") == "covered" and value.get("findings") == []
 
@@ -126,11 +131,13 @@ def foundation_outputs() -> tuple[dict[str, str] | None, str]:
     stacks = data.get("Stacks") if ok and isinstance(data, dict) else None
     if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
         return None, code if not ok else "foundation-outputs-unavailable"
-    outputs = {
-        item.get("OutputKey"): item.get("OutputValue")
-        for item in stacks[0].get("Outputs", [])
-        if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)
-    }
+    try:
+        outputs = {
+            item.get("OutputKey"): item.get("OutputValue")
+            for item in stacks[0].get("Outputs", [])
+            if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)
+        }
+    except TypeError: return None, "foundation-outputs-unavailable"
     if not REQUIRED_FOUNDATION <= outputs.keys() or any(not outputs[name] for name in REQUIRED_FOUNDATION):
         return None, "foundation-outputs-unavailable"
     return outputs, "ok"
@@ -143,27 +150,32 @@ def infrastructure_parameters(outputs: dict[str, str]) -> tuple[dict[str, str] |
     if not isinstance(cidr, str):
         return None, code if not ok else "persistence-vpc-cidr-unavailable"
     ok, service, code = aws("servicediscovery", "get-service", "--id", outputs.get("ServiceDiscoveryArn", "").rsplit("/", 1)[-1])
-    namespace = service.get("Service", {}).get("DnsConfig", {}).get("NamespaceId") if ok and isinstance(service, dict) else None
+    try: namespace = service.get("Service", {}).get("DnsConfig", {}).get("NamespaceId") if ok and isinstance(service, dict) else None
+    except AttributeError: return None, "persistence-namespace-observation-invalid"
     if not isinstance(namespace, str) or not namespace.startswith("ns-"):
         return None, code if not ok else "persistence-namespace-unavailable"
     ok, endpoints, code = aws("ec2", "describe-vpc-endpoints", "--filters", f"Name=vpc-id,Values={outputs['VpcId']}")
     endpoint_items = endpoints.get("VpcEndpoints") if ok and isinstance(endpoints, dict) else None
-    selected = [
-        endpoint for endpoint in endpoint_items or []
-        if isinstance(endpoint, dict) and endpoint.get("ServiceName") in INTERFACE_SERVICES and endpoint.get("State") == "available"
-    ]
+    try:
+        selected = [
+            endpoint for endpoint in endpoint_items or []
+            if isinstance(endpoint, dict) and endpoint.get("ServiceName") in INTERFACE_SERVICES and endpoint.get("State") == "available"
+        ]
+    except TypeError: return None, "persistence-endpoint-observation-invalid"
     if len(selected) != 3 or {item.get("ServiceName") for item in selected} != INTERFACE_SERVICES:
         return None, "persistence-private-startup-endpoints-unavailable"
     if any(item.get("VpcId") != outputs["VpcId"] or item.get("VpcEndpointType") != "Interface" or item.get("PrivateDnsEnabled") is not True for item in selected):
         return None, "persistence-private-startup-endpoint-posture-invalid"
     if any(not isinstance(item.get("Groups"), list) or len(item["Groups"]) != 1 or not isinstance(item["Groups"][0], dict) for item in selected):
         return None, "persistence-endpoint-security-group-unavailable"
-    group_sets = {(item["Groups"][0].get("GroupId"),) for item in selected}
+    try: group_sets = {(item["Groups"][0].get("GroupId"),) for item in selected}
+    except TypeError: return None, "persistence-endpoint-security-group-observation-invalid"
     if len(group_sets) != 1 or len(next(iter(group_sets))) != 1 or not next(iter(group_sets))[0]:
         return None, "persistence-endpoint-security-group-unavailable"
     ok, prefix_lists, code = aws("ec2", "describe-managed-prefix-lists", "--filters", f"Name=prefix-list-name,Values=com.amazonaws.{REGION}.s3")
     lists = prefix_lists.get("PrefixLists") if ok and isinstance(prefix_lists, dict) else None
-    prefix_ids = [item.get("PrefixListId") for item in lists or [] if isinstance(item, dict) and isinstance(item.get("PrefixListId"), str)]
+    try: prefix_ids = [item.get("PrefixListId") for item in lists or [] if isinstance(item, dict) and isinstance(item.get("PrefixListId"), str)]
+    except TypeError: return None, "persistence-artifact-object-store-observation-invalid"
     if len(prefix_ids) != 1:
         return None, code if not ok else "persistence-artifact-object-store-route-unavailable"
     return {
@@ -191,11 +203,14 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
             return "uncertain", "persistence-update-stack-observation-uncertain" if stack_ok else stack_code
         stack = stacks[0]
-        params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+        try: params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+        except (AttributeError, TypeError): return "uncertain", "persistence-update-stack-parameters-unobservable"
         if any(params.get(key) != value for key, value in expected_parameters.items()):
             return "uncertain", "persistence-update-missing-change-set-identity-unproven"
         status = stack.get("StackStatus")
-        if status in {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"}:
+        try: pending = status in {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"}
+        except TypeError: return "uncertain", "persistence-update-stack-status-unobservable"
+        if pending:
             return "pending", "persistence-update-executed-stack-pending"
         if status == "UPDATE_COMPLETE":
             return "complete", "persistence-update-operation-complete"
@@ -207,7 +222,9 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         return "uncertain", code if not ok else "persistence-update-observation-invalid"
     if not change_name_matches(change.get("ChangeSetName"), name):
         return "blocked", "persistence-update-change-set-identity-invalid"
-    if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}:
+    try: pending = change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}
+    except TypeError: return "uncertain", "persistence-update-review-status-unobservable"
+    if pending:
         return "pending", "persistence-update-review-pending"
     # A controller may resume after an acknowledged update completed and its
     # executed change set has disappeared.  CloudFormation then permits a new
@@ -232,12 +249,18 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         if stack.get("StackStatus") == "UPDATE_COMPLETE" and all(params.get(key) == value for key, value in expected_parameters.items()):
             return "complete", "persistence-update-noop-candidate-already-applied"
         return "failed", "persistence-update-change-set-failed"
-    if change.get("Status") in {"FAILED", "DELETE_COMPLETE", "DELETE_FAILED"}:
+    try: failed = change.get("Status") in {"FAILED", "DELETE_COMPLETE", "DELETE_FAILED"}
+    except TypeError: return "uncertain", "persistence-update-review-status-unobservable"
+    if failed:
         return "failed", "persistence-update-change-set-failed"
-    if not review(change):
+    try: reviewed = review(change)
+    except (AttributeError, TypeError, KeyError, IndexError, ValueError): return "uncertain", "persistence-update-review-unobservable"
+    if not reviewed:
         return "blocked", "persistence-update-change-set-review-invalid"
     execution = change.get("ExecutionStatus")
-    if execution in {"AVAILABLE", "EXECUTE_IN_PROGRESS"}:
+    try: pending = execution in {"AVAILABLE", "EXECUTE_IN_PROGRESS"}
+    except TypeError: return "uncertain", "persistence-update-execution-status-unobservable"
+    if pending:
         return "pending", "persistence-update-execution-pending"
     if execution != "EXECUTE_COMPLETE":
         return "uncertain", "persistence-update-execution-state-unknown"
@@ -247,11 +270,14 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         return "uncertain", "persistence-update-stack-observation-uncertain"
     stack = stacks[0]
     status = stack.get("StackStatus")
-    if status in {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS", "UPDATE_ROLLBACK_IN_PROGRESS", "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"}:
+    try: pending = status in {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS", "UPDATE_ROLLBACK_IN_PROGRESS", "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"}
+    except TypeError: return "uncertain", "persistence-update-stack-status-unobservable"
+    if pending:
         return "pending", "persistence-update-stack-pending"
     if status in {"UPDATE_FAILED", "UPDATE_ROLLBACK_FAILED", "UPDATE_ROLLBACK_COMPLETE", "DELETE_COMPLETE"}:
         return "failed", "persistence-update-stack-failed"
-    params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+    try: params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+    except (AttributeError, TypeError): return "uncertain", "persistence-update-stack-parameters-unobservable"
     if status != "UPDATE_COMPLETE" or any(params.get(key) != value for key, value in expected_parameters.items()):
         return "uncertain", "persistence-update-completion-identity-unproven"
     return "complete", "persistence-update-operation-complete"
@@ -315,8 +341,10 @@ def candidate_image(receipt: dict[str, Any]) -> tuple[bool, str]:
     if digest is None:
         return False, code
     ok, scan, code = aws("ecr", "describe-image-scan-findings", "--repository-name", REPOSITORY, "--image-id", f"imageDigest={digest}", "--max-results", "1")
-    status = scan.get("imageScanStatus", {}).get("status") if ok and isinstance(scan, dict) else None
-    findings = scan.get("imageScanFindings", {}).get("findingSeverityCounts", {}) if ok and isinstance(scan, dict) else None
+    try:
+        status = scan.get("imageScanStatus", {}).get("status") if ok and isinstance(scan, dict) else None
+        findings = scan.get("imageScanFindings", {}).get("findingSeverityCounts", {}) if ok and isinstance(scan, dict) else None
+    except (AttributeError, TypeError): return False, "persistence-candidate-image-scan-observation-invalid"
     if status != "COMPLETE" or not isinstance(findings, dict):
         return False, code if not ok else "persistence-candidate-image-scan-unavailable"
     if findings.get("CRITICAL", 0) or findings.get("HIGH", 0):
@@ -334,7 +362,8 @@ def live_budget() -> tuple[bool, str]:
         amount = Decimal(str(limit.get("Amount"))) if isinstance(limit, dict) else None
     except (InvalidOperation, ValueError):
         amount = None
-    valid_amount = amount == Decimal("100") and isinstance(limit, dict) and limit.get("Unit") == "USD"
+    try: valid_amount = amount == Decimal("100") and isinstance(limit, dict) and limit.get("Unit") == "USD"
+    except InvalidOperation: return False, "target-budget-amount-observation-invalid"
     valid_filter = isinstance(target, list) and target == ["user:Target$kanbien-core-platform"]
     return (True, "ok") if valid_amount and valid_filter else (False, code if not ok else "target-budget-live-configuration-invalid")
 
@@ -355,7 +384,7 @@ def retained_release(receipt: dict[str, Any]) -> bool:
     for path in paths:
         if not path.exists():continue
         try:record=yaml.safe_load(path.read_text())
-        except (OSError,yaml.YAMLError):return True
+        except (OSError,UnicodeError,yaml.YAMLError):return True
         if not isinstance(record,dict):return True
         acceptance=record.get("acceptance")
         identities=[record.get("release"),acceptance.get("rollback_release") if isinstance(acceptance,dict) else None]

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.readme
-version: 3
+version: 9
 status: active
 created_on: "2026-08-30"
-updated_on: "2026-10-20"
+updated_on: "2026-11-04"
 layer: 03.product
 domain: governance
 disciplines:
@@ -36,13 +36,30 @@ planning and AWS mutation remain governed by `04.deploy`.
 - Product migration plans: `.agentic/03.product/plans/migration/`
 - Product implementation plans: `.agentic/03.product/plans/implementation/`
 - Product standards: `.agentic/03.product/standards/`
+- [Configuration and runtime settings](standards/config-runtime-settings.md):
+  authoritative configuration requirements, formerly held in a legacy docs ruleset.
+- [Public module structure](standards/public-module-structure.md): export-only
+  public indexes, named implementation files and bounded legacy/refactoring rules.
+- [Core module architecture: config proof](plans/implementation/core-module-architecture-config-proof.md):
+  complete responsibility map, approved contract/capability layout and bounded
+  consumer-context proof, with implementation and verification evidence.
+- [Configuration ownership and loading](plans/implementation/configuration-ownership-and-loading.md):
+  planned Core/Platform/adapter responsibilities, staged reference migration and
+  evidence gates; implementation has not started.
 - Product harness foundation plan:
   `.agentic/03.product/plans/implementation/product-harness-foundation.md`
 - Persistence foundation v1 plan:
   `.agentic/03.product/plans/implementation/persistence-foundation-v1.md`
 - Initial identity-security baseline:
   `.agentic/03.product/standards/identity-security-baseline.v1.md`
+- [Deferred security capability work](plans/implementation/security-capabilities-follow-on.md):
+  sessions, cookies, CSRF, secret lifecycle, tenant isolation and future integrations;
+  separate from the current diagnostics and observability work.
 - Runtime contracts: `platform/contracts/`
+- [Deferred telemetry implementation and assurance](plans/implementation/telemetry-implementation-follow-on.md):
+  recording contracts, validation/privacy, delivery guarantees, readiness,
+  collector qualification, signal coverage and notification assurance;
+  revisit after the diagnostics project, with separately approved slices.
 - Product composition: `products/`
 - Application source: `apps/`
 

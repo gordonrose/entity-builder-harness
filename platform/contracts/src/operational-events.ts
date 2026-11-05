@@ -1,4 +1,7 @@
 import type { Result } from "@kanbien/core/shared";
+import { captureDiagnosticRecord, requireDiagnosticRecord, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { platformOperationalEventDiagnosticDefinition, platformOperationalEventDiagnosticRecord, type PlatformOperationalEventDiagnosticDetail } from "./registration-diagnostics";
+import { observePlatformOperationalDiagnostic, PlatformOperationalObservation, type PlatformOperationalDiagnosticOptions } from "./operational-observations";
 
 /**
  * A deliberately small event vocabulary for operational observations.  This
@@ -28,6 +31,7 @@ export interface PlatformReadinessObservationEvent {
 export interface PlatformOperationalEventError {
   readonly code: "PLATFORM_OPERATIONAL_EVENT_INVALID";
   readonly defaultMessage: string;
+  readonly diagnosticRecord?: DiagnosticRecord;
 }
 
 /**
@@ -37,54 +41,95 @@ export interface PlatformOperationalEventError {
  */
 export function platformReadinessObservationEvent(
   value: unknown,
+  diagnostics?: PlatformOperationalDiagnosticOptions,
 ): Result<PlatformReadinessObservationEvent, PlatformOperationalEventError> {
-  if (!isRecord(value) || !hasExactKeys(value)) return invalid();
-  if (value["type"] !== "dependency.readiness-observed") return invalid();
-  if (!boundedName(value["target"]) || !boundedName(value["scope"]) || !boundedName(value["workload"]) || !boundedName(value["dependency"])) return invalid();
-  if (!isReadinessState(value["readiness"]) || !validIsoTime(value["observedAt"])) return invalid();
-  if (value["readiness"] === "ready" && value["diagnosticCode"] !== undefined) return invalid();
-  if (value["readiness"] === "not-ready" && !isReadinessDiagnosticCode(value["diagnosticCode"])) return invalid();
+  const observation = new PlatformOperationalObservation("readiness-event", "event-not-produced", diagnostics);
+  let issue: EventIssue = { field: "event", condition: "predicate-rejected" };
+  const failed = (detail: EventIssue): void => { issue = detail; };
+  const reject = (field: EventIssue["field"], condition: EventIssue["condition"]): true => { failed({ field, condition }); return true; };
+  const read = <T>(field: EventIssue["field"], action: () => T): T => observation.at("field-projection", field, action);
+  return observation.run(() => {
+  if (!isRecord(value, observation, failed) || !hasExactKeys(value, observation, failed)) return invalid(issue, diagnostics);
+  if (read("type", () => value["type"]) !== "dependency.readiness-observed" && reject("type", "unsupported")) return invalid(issue, diagnostics);
+  if (!boundedName(read("target", () => value["target"]), "target", observation, failed) || !boundedName(read("scope", () => value["scope"]), "scope", observation, failed) || !boundedName(read("workload", () => value["workload"]), "workload", observation, failed) || !boundedName(read("dependency", () => value["dependency"]), "dependency", observation, failed)) return invalid(issue, diagnostics);
+  if (!isReadinessState(read("readiness", () => value["readiness"]), observation, failed) || !validIsoTime(read("observed-at", () => value["observedAt"]), observation, failed)) return invalid(issue, diagnostics);
+  if (read("readiness", () => value["readiness"]) === "ready" && read("diagnostic-code", () => value["diagnosticCode"]) !== undefined && reject("diagnostic-code", "unexpected-present")) return invalid(issue, diagnostics);
+  if (read("readiness", () => value["readiness"]) === "not-ready" && !isReadinessDiagnosticCode(read("diagnostic-code", () => value["diagnosticCode"]), observation, failed)) return invalid(issue, diagnostics);
   return {
     ok: true,
     value: {
       type: "dependency.readiness-observed",
-      target: value["target"],
-      scope: value["scope"],
-      workload: value["workload"],
-      dependency: value["dependency"],
-      readiness: value["readiness"],
-      observedAt: value["observedAt"],
-      ...(value["diagnosticCode"] === undefined ? {} : { diagnosticCode: value["diagnosticCode"] as string }),
+      target: observation.at("result-projection", "target", () => value["target"]) as string,
+      scope: observation.at("result-projection", "scope", () => value["scope"]) as string,
+      workload: observation.at("result-projection", "workload", () => value["workload"]) as string,
+      dependency: observation.at("result-projection", "dependency", () => value["dependency"]) as string,
+      readiness: observation.at("result-projection", "readiness", () => value["readiness"]) as PlatformReadinessState,
+      observedAt: observation.at("result-projection", "observed-at", () => value["observedAt"]) as string,
+      ...(observation.at("result-projection", "diagnostic-code", () => value["diagnosticCode"]) === undefined ? {} : { diagnosticCode: observation.at("result-projection", "diagnostic-code", () => value["diagnosticCode"]) as string }),
     },
   };
+  });
 }
 
-function isReadinessState(value: unknown): value is PlatformReadinessState {
-  return typeof value === "string" && (platformReadinessStates as readonly string[]).includes(value);
+type EventIssue = Omit<PlatformOperationalEventDiagnosticDetail, "operation" | "phase" | "effect">;
+type ObserveIssue = (issue: EventIssue) => void;
+function isReadinessState(value: unknown, observation: PlatformOperationalObservation, failed: ObserveIssue): value is PlatformReadinessState {
+  let condition: EventIssue["condition"] = "string-required";
+  const valid = typeof value === "string" && (condition = "unsupported", observation.at("field-predicate", "readiness", () => (platformReadinessStates as readonly string[]).includes(value)));
+  if (!valid) failed({ field: "readiness", condition });
+  return valid;
 }
 
-function isReadinessDiagnosticCode(value: unknown): value is string {
-  return typeof value === "string" && /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*){1,5}$/.test(value);
+function isReadinessDiagnosticCode(value: unknown, observation: PlatformOperationalObservation, failed: ObserveIssue): value is string {
+  let condition: EventIssue["condition"] = "string-required";
+  const valid = typeof value === "string" && (condition = "invalid-format", observation.at("field-predicate", "diagnostic-code", () => /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*){1,5}$/.test(value)));
+  if (!valid) failed({ field: "diagnostic-code", condition });
+  return valid;
 }
 
-function validIsoTime(value: unknown): value is string {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value) && !Number.isNaN(Date.parse(value));
+function validIsoTime(value: unknown, observation: PlatformOperationalObservation, failed: ObserveIssue): value is string {
+  let condition: EventIssue["condition"] = "string-required";
+  const valid = typeof value === "string" && (condition = "invalid-format", observation.at("field-predicate", "observed-at", () => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value))) && (condition = "date-parse-rejected", observation.at("time-parsing", "observed-at", () => !Number.isNaN(Date.parse(value))));
+  if (!valid) failed({ field: "observed-at", condition });
+  return valid;
 }
 
-function boundedName(value: unknown): value is string {
-  return typeof value === "string" && /^[a-z][a-z0-9-]{1,63}$/.test(value);
+function boundedName(value: unknown, field: EventIssue["field"], observation: PlatformOperationalObservation, failed: ObserveIssue): value is string {
+  let condition: EventIssue["condition"] = "string-required";
+  const valid = typeof value === "string" && (condition = "invalid-format", observation.at("field-predicate", field, () => /^[a-z][a-z0-9-]{1,63}$/.test(value)));
+  if (!valid) failed({ field, condition });
+  return valid;
 }
 
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function isRecord(value: unknown, observation: PlatformOperationalObservation, failed: ObserveIssue): value is Readonly<Record<string, unknown>> {
+  let condition: EventIssue["condition"] = "object-required";
+  const valid = typeof value === "object" && (condition = "null-rejected", value !== null) && (condition = "array-rejected", observation.at("structure", "event", () => !Array.isArray(value)));
+  if (!valid) failed({ field: "event", condition });
+  return valid;
 }
 
-function hasExactKeys(value: Readonly<Record<string, unknown>>): boolean {
+function hasExactKeys(value: Readonly<Record<string, unknown>>, observation: PlatformOperationalObservation, failed: ObserveIssue): boolean {
+  observation.location("key-enumeration", "keys");
   const allowed = new Set(["type", "target", "scope", "workload", "dependency", "readiness", "observedAt", "diagnosticCode"]);
-  return Object.keys(value).every((key) => allowed.has(key));
+  let first: EventIssue | undefined, visits = 0;
+  const valid = keyTraversalSelection(Object.keys(value), observation).every((observation.location("key-traversal", "keys"), (key: string) => {
+    const ordinal = visits++;
+    const accepted = allowed.has(key);
+    if (!accepted && first === undefined) first = { field: "keys", condition: "unknown-field", ...(ordinal <= 9007199254740991 ? { ordinal } : {}) };
+    return accepted;
+  }));
+  if (!valid) failed(first ?? { field: "keys", condition: "predicate-rejected" });
+  return valid;
 }
 
-function invalid(): Result<never, PlatformOperationalEventError> {
-  return { ok: false, error: { code: "PLATFORM_OPERATIONAL_EVENT_INVALID", defaultMessage: "Operational event does not match the closed readiness observation envelope." } };
+function keyTraversalSelection(keys: string[], observation: PlatformOperationalObservation): string[] {
+  observation.location("key-traversal-selection", "keys");
+  return keys;
+}
+
+function invalid(issue: EventIssue, diagnostics?: PlatformOperationalDiagnosticOptions): Result<never, PlatformOperationalEventError> {
+  const diagnosticRecord = requireDiagnosticRecord([platformOperationalEventDiagnosticDefinition], captureDiagnosticRecord(() => platformOperationalEventDiagnosticRecord(issue)));
+  observePlatformOperationalDiagnostic(diagnostics, diagnosticRecord, undefined, { operation: "readiness-event", phase: "validation" });
+  return { ok: false, error: { code: "PLATFORM_OPERATIONAL_EVENT_INVALID", defaultMessage: "Operational event does not match the closed readiness observation envelope.", diagnosticRecord } };
 }
 

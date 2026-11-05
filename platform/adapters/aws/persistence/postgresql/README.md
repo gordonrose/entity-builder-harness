@@ -12,7 +12,8 @@ repository query, tenant policy, generic ORM, or arbitrary SQL interface.
 
 | File | Responsibility |
 | --- | --- |
-| `src/config.ts` | Validates injected, non-secret connection settings: a reviewed host/database/schema, bounded timeouts/pool, explicit secret reference, and strict TLS policy. |
+| [src/configuration/](src/configuration/README.md) | Owns reusable requirements, direct validation and assembly of checked values plus target-selected policy. |
+| [src/metadata.ts](src/metadata.ts) | Owns the existing adapter identity exported by the root index. |
 | `src/connection.ts` | Creates the `pg` connection pool only from validated settings plus separately supplied credentials and CA material. |
 | `src/errors.ts` | Reduces driver outcomes to finite, provider-neutral failure categories; raw PostgreSQL errors never leave the adapter. |
 | `src/transactions.ts` | Owns `BEGIN`/`COMMIT`/`ROLLBACK` and the provider-local atomic seam for one product DML statement plus platform lineage/outbox facts. |
@@ -23,6 +24,14 @@ repository query, tenant policy, generic ORM, or arbitrary SQL interface.
 | `src/records.ts` | Keeps PostgreSQL column layout, safe conversion, parameterised statement creation, and reviewed relation identifiers private to this package. |
 | `src/telemetry.ts` | Emits only operation/outcome/duration/error-class/bounded-pool observations; it never emits SQL, values, rows, credentials, endpoints, or raw errors. |
 | `src/index.ts` | Deliberate public composition exports only. |
+
+## Configuration ownership
+
+The [configuration guide](src/configuration/README.md) explains each new file and
+export. The target selects this implementation and supplies concrete source
+bindings. Platform config coordinates reading/checking; Core supplies reusable
+checks. Neither the target nor a build script owns a copy of PostgreSQL rules.
+Selection does not establish another database implementation is interchangeable.
 
 ## How the atomic seam is used
 
@@ -82,6 +91,34 @@ stages. A separate probe has its own connection. Unknown errors remain unknown
 and do not grant retries. PostgreSQL `57014` reports `query_canceled`, since its
 code alone cannot distinguish an explicit cancellation from a statement timeout.
 The older provider failure class retains its broad timeout bucket for compatibility.
+
+Transaction/store options and the optional final connection-constructor argument
+accept `PlatformPersistenceDiagnosticOptions`. Its optional observer receives
+validated records, never raw driver errors. Core/Persistence definitions and
+explicitly supplied companion definitions select upstream evidence. A new
+boundary record is emitted independently of an upstream primary plus eight
+companions; observer failures cannot change database work or cause replay.
+
+Independent records describe acquisition, transaction stages, rollback/release,
+idle-pool events, pool end, local migration/statement/state guards and bounded
+stored-row reductions. Native query/authentication phases keep their original
+meaning. Row findings are coalesced into at most sixteen field/reason groups
+with counts and explicit truncation. Existing malformed-row null/filter/duplicate
+reductions and successful reconciliation dispositions remain unchanged. A later
+SELECT describes the state observed then; it does not establish why an earlier
+UPDATE missed or who performed a write. Write effects remain unknown where the
+adapter cannot prove them, including failed commit/rollback calls. Migration
+preflight rejection precedes SQL; later checksum/schema observations do not
+claim that earlier statements never ran.
+
+Arbitrary getter, date-conversion or decoder throws are unknown decoding
+boundaries; a thrown value alone does not prove corrupt stored data. The legacy
+lease-expired fallback result also remains unchanged, but its observation only
+states that reconciliation found a lease with the matching fence: that branch
+does not compare expiry. Custom migration `every` return truthiness is preserved;
+a false aggregate without a rejecting callback carries only a generic predicate
+location. Positively generated TLS peer records are delivered independently of
+a full source envelope, with identical already-retained peers emitted once.
 
 ## Tests and evidence
 

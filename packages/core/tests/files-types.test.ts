@@ -19,6 +19,12 @@ import {
   type PutFileInput,
 } from "../src/files/index";
 import { isOk, type ISODateTime } from "../src/shared/index";
+import {
+  fileError, inMemoryFileStorage, coreFileDiagnosticDefinitions,
+  coreFileBoundaryDiagnosticRecord, coreFileValidationDiagnosticRecord,
+  coreFileOperationDiagnosticRecord, observeCoreFileDiagnostic,
+  type CoreFileDiagnosticOptions, type CoreFileDiagnosticEvidence,
+} from "../src/files/index";
 
 const nameResult = fileName("contacts.csv");
 const typeResult = fileContentType("text/csv");
@@ -118,4 +124,48 @@ fileObject({
   sizeBytes: sizeResult.value,
   storage: fileStorageRef({ key: keyResult.value }),
   createdAt,
+});
+
+const fileDiagnosticOptions: CoreFileDiagnosticOptions = {
+  diagnosticDefinitions: coreFileDiagnosticDefinitions,
+  onDiagnostic(record, context) {
+    const code: string = record.code;
+    const operation: string = context.operation;
+    void code; void operation;
+  },
+};
+const fileDiagnosticEvidence: CoreFileDiagnosticEvidence = {
+  relatedDiagnosticDefinitions: coreFileDiagnosticDefinitions,
+  relatedDiagnosticRecords: [coreFileOperationDiagnosticRecord({
+    operation: "get", field: "id", reason: "file-absent", effect: "rejected-before-write",
+  })],
+};
+void fileName("", fileDiagnosticOptions);
+void fileChecksum({ algorithm: "", value: "" }, fileDiagnosticOptions);
+void fileMetadata({}, fileDiagnosticOptions);
+void fileScanResult({ status: "failed" }, fileDiagnosticOptions);
+void fileStorageRef({ key: keyResult.value }, fileDiagnosticOptions);
+void fileError({ code: "FILE_NOT_FOUND", defaultMessage: "Missing" }, fileDiagnosticEvidence, fileDiagnosticOptions);
+void inMemoryFileStorage({ now: createdAt }, fileDiagnosticOptions);
+observeCoreFileDiagnostic(fileDiagnosticOptions, coreFileBoundaryDiagnosticRecord({
+  operation: "put", phase: "history-copy", field: "body", reason: "threw", effect: "map-written-history-not-appended",
+}));
+coreFileValidationDiagnosticRecord({
+  operation: "storage-key", field: "storage-key", reason: "predicate-rejected", effect: "rejected",
+});
+coreFileOperationDiagnosticRecord({
+  operation: "get", field: "tenant-id",
+  // @ts-expect-error Files does not invent expiry enforcement or permission attribution.
+  reason: "expired",
+  effect: "rejected-before-write",
+});
+coreFileBoundaryDiagnosticRecord({
+  operation: "put", phase: "history-append", reason: "threw",
+  // @ts-expect-error A failed history append cannot claim rollback.
+  effect: "rolled-back",
+});
+coreFileValidationDiagnosticRecord({
+  operation: "name", field: "name", reason: "empty", effect: "rejected",
+  // @ts-expect-error Private file names are not diagnostic details.
+  fileName: "private",
 });

@@ -25,6 +25,11 @@ import {
   type TimeZoneId,
 } from "../src/localization/index";
 import { isOk, isoDateTime, type Result } from "../src/shared/index";
+import {
+  coreLocalizationDiagnosticDefinitions, coreLocalizationBoundaryDiagnosticRecord,
+  coreLocalizationValidationDiagnosticRecord, coreLocalizationUnsupportedDiagnosticRecord,
+  observeCoreLocalizationDiagnostic, type CoreLocalizationDiagnosticOptions,
+} from "../src/localization/index";
 
 const localeResult = localeTag("en-GB");
 if (!isOk(localeResult)) {
@@ -118,3 +123,51 @@ localizableCurrency({ amount: 19.99, currency: "GBP" });
 
 // @ts-expect-error localization error codes are constrained.
 localizationError({ code: "LOCALIZATION_BROKEN", defaultMessage: "Broken." });
+
+const localizationDiagnostics: CoreLocalizationDiagnosticOptions = {
+  diagnosticDefinitions: coreLocalizationDiagnosticDefinitions,
+  onDiagnostic(record, context) {
+    const code: string = record.code;
+    const operation: string = context.operation;
+    void code; void operation;
+  },
+};
+void currencyCode("GBP", localizationDiagnostics);
+void regionCode("GB", localizationDiagnostics);
+void timeZoneId("UTC", localizationDiagnostics);
+void localizableDateTime({ value: nowResult.value }, localizationDiagnostics);
+void localizableNumber({ value: 42 }, localizationDiagnostics);
+void localizableCurrency({ amount: 19, currency }, localizationDiagnostics);
+void localizableRegion(region, localizationDiagnostics);
+const boundLocalizer: Localizer = fixedLocalizer("Fixed", localizationDiagnostics);
+void boundLocalizer.format(request, {});
+void boundLocalizer.format(request, localizationDiagnostics);
+void unsupportedLocalizer({}, localizationDiagnostics).format(request, undefined);
+// Existing single-argument implementations still satisfy the public port.
+const legacyLocalizer: Localizer = {
+  format: (incoming) => ({ ok: true, value: { locale: incoming.locale, kind: incoming.value.kind, text: "Legacy" } }),
+};
+void legacyLocalizer;
+void localizationError({ code: "LOCALIZATION_INVALID_NUMBER", defaultMessage: "Legacy" }, localizationDiagnostics);
+observeCoreLocalizationDiagnostic(localizationDiagnostics, coreLocalizationBoundaryDiagnosticRecord({
+  operation: "number", phase: "parameter-formatting", field: "value", reason: "threw", effect: "value-not-produced",
+}));
+coreLocalizationValidationDiagnosticRecord({
+  operation: "time-zone-id", field: "time-zone", reason: "parent-sequence-rejected", effect: "predicate-rejected",
+});
+coreLocalizationUnsupportedDiagnosticRecord({
+  operation: "format", phase: "implementation-selection", reason: "unsupported-implementation", effect: "format-not-performed",
+});
+coreLocalizationValidationDiagnosticRecord({
+  operation: "currency", field: "amount",
+  // @ts-expect-error Validation does not claim this is the ultimately returned failure.
+  effect: "returned-error",
+  reason: "not-finite",
+});
+coreLocalizationBoundaryDiagnosticRecord({
+  operation: "format", phase: "reason-projection", reason: "threw", effect: "value-not-produced",
+  // @ts-expect-error Raw formatted values cannot enter diagnostic detail.
+  text: "Private",
+});
+// @ts-expect-error Diagnostic options are separate arguments, not a new legacy input field.
+localizableNumber({ value: 42, onDiagnostic() {} });
