@@ -1,0 +1,362 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "platform-contracts",
+    "definitions": [
+      {
+        "code": "platform-contracts.registration-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "registration": {
+              "type": "enum",
+              "values": [
+                "app",
+                "route",
+                "permission",
+                "job",
+                "health",
+                "config",
+                "observability-profile",
+                "diagnostic-catalog",
+                "identifier"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "validator.validate",
+                "validator.explain",
+                "resourceAuthorization.permission",
+                "resourceAuthorization.resolve",
+                "handler.handle",
+                "auth.kind",
+                "auth.permissions",
+                "observability.kind",
+                "observability.profile",
+                "observability.reason",
+                "observability.justification",
+                "nfrObjectives.nfrClass",
+                "nfrObjectives.measurement",
+                "declaration",
+                "name",
+                "permission",
+                "method",
+                "path",
+                "auth",
+                "observability",
+                "tenant",
+                "resourceAuthorization",
+                "validator",
+                "handler",
+                "messageType",
+                "capability",
+                "action",
+                "signals",
+                "logFieldNames",
+                "metricDimensionFieldNames",
+                "traceAttributeNames",
+                "nfrObjectives",
+                "owner",
+                "definitions",
+                "identity"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "path-not-absolute",
+                "path-whitespace",
+                "path-url-scheme",
+                "object-required",
+                "string-required",
+                "invalid-format",
+                "unsupported",
+                "reserved-path",
+                "public-controls",
+                "public-permissions",
+                "permissions-array-required",
+                "function-required",
+                "profile-name-invalid",
+                "opt-out-reason-invalid",
+                "justification-string-required",
+                "justification-empty",
+                "justification-too-long",
+                "array-required",
+                "array-empty",
+                "member-invalid",
+                "duplicate-member",
+                "nfr-class-invalid",
+                "measurement-invalid",
+                "measurement-incompatible",
+                "signal-required",
+                "namespace-mismatch",
+                "duplicate-name",
+                "duplicate-route-key",
+                "duplicate-message-type",
+                "duplicate-permission",
+                "duplicate-owner",
+                "duplicate-identity",
+                "undeclared-permission",
+                "undeclared-profile",
+                "plain-object-required",
+                "exact-fields-required",
+                "data-fields-required",
+                "owner-too-long",
+                "definitions-too-many",
+                "plain-array-required",
+                "dense-array-required",
+                "definition-invalid",
+                "ownership-mismatch",
+                "inspection-threw",
+                "declaration-rejected"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "validation",
+                "registration",
+                "resolution",
+                "structure",
+                "definitions",
+                "conflicts",
+                "snapshot"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "platform-contracts.registration-rejected",
+        "version": 2,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "registration": {
+              "type": "enum",
+              "values": [
+                "observability-profile"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "errorClasses"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "array-required",
+                "plain-array-required",
+                "dense-array-required",
+                "data-fields-required",
+                "too-many-members",
+                "member-invalid",
+                "member-too-long",
+                "member-invalid-format",
+                "duplicate-member",
+                "inspection-threw"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "validation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "rejected"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 63
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "platform-contracts.operational-event-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "readiness-event"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "event",
+                "keys",
+                "type",
+                "target",
+                "scope",
+                "workload",
+                "dependency",
+                "readiness",
+                "observed-at",
+                "diagnostic-code"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "object-required",
+                "null-rejected",
+                "array-rejected",
+                "unknown-field",
+                "predicate-rejected",
+                "string-required",
+                "unsupported",
+                "invalid-format",
+                "date-parse-rejected",
+                "unexpected-present"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "validation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "predicate-rejected"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "platform-contracts.operational-boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "readiness-event",
+                "fixed-feature-flags"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "structure",
+                "key-enumeration",
+                "key-traversal-selection",
+                "key-traversal",
+                "field-projection",
+                "field-predicate",
+                "time-parsing",
+                "result-projection",
+                "snapshot",
+                "read"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "event",
+                "keys",
+                "type",
+                "target",
+                "scope",
+                "workload",
+                "dependency",
+                "readiness",
+                "observed-at",
+                "diagnostic-code",
+                "flags",
+                "name",
+                "value"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "event-not-produced",
+                "reader-not-produced",
+                "value-not-produced"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

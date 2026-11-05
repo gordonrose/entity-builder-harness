@@ -5,7 +5,7 @@
 //   version: 1
 //   status: active
 //   created_on: "2026-07-03"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-31"
 //   layer: 00.chat
 //   domain: export
 //   disciplines:
@@ -30,6 +30,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
+let phase = 'arguments';
+let archiveWrite = 'not-reached';
 
 const MONTHS = new Map([
   ['01', 'jan'],
@@ -63,16 +65,16 @@ function fail(message) {
 }
 
 function runGit(cwd, args, options = {}) {
+  phase = args[0] === 'branch' ? 'branch-observation'
+    : args[0] === 'rev-parse' ? 'revision-observation'
+      : args[0] === 'diff' ? 'diff-observation' : 'file-list-observation';
   const result = spawnSync('git', ['-C', cwd, ...args], {
     encoding: options.buffer ? undefined : 'utf8',
     stdout: 'pipe',
     stderr: 'pipe',
   });
   if (result.status !== 0) {
-    const stderr = Buffer.isBuffer(result.stderr)
-      ? result.stderr.toString('utf8')
-      : result.stderr;
-    fail(`git ${args.join(' ')} failed in ${cwd}: ${stderr.trim()}`);
+    fail(`worktree export Git observation failed: phase=${phase}; archive-write=${archiveWrite}`);
   }
   return result.stdout;
 }
@@ -119,7 +121,7 @@ function parseArgs(argv) {
         break;
       default:
         if (arg.startsWith('-')) {
-          console.error(`ERROR: unknown argument: ${arg}`);
+          console.error('ERROR: unknown argument.');
           usage(2);
         }
         if (parsed.target) {
@@ -148,13 +150,14 @@ function parseArgs(argv) {
 }
 
 function findRepoRoot(start) {
+  phase = 'git-root-observation';
   const result = spawnSync('git', ['-C', start, 'rev-parse', '--show-toplevel'], {
     encoding: 'utf8',
     stdout: 'pipe',
     stderr: 'pipe',
   });
   if (result.status !== 0) {
-    fail(`not inside a Git worktree: ${start}`);
+    fail('source Git worktree could not be confirmed');
   }
   return result.stdout.trim();
 }
@@ -168,6 +171,7 @@ function monthName(month) {
 }
 
 function metadataValue(logFile, key) {
+  phase = 'session-metadata-read';
   if (!fs.existsSync(logFile)) {
     return '';
   }
@@ -198,6 +202,7 @@ function flatLogPath(repoRoot, sessionId) {
 }
 
 function findSessionLog(repoRoot, sessionId) {
+  phase = 'session-log-discovery';
   const grouped = groupedLogPath(repoRoot, sessionId);
   if (grouped && fs.existsSync(grouped)) {
     return grouped;
@@ -234,12 +239,13 @@ function findSessionLog(repoRoot, sessionId) {
 }
 
 function resolveTarget(target) {
+  phase = 'target-resolution';
   if (target) {
     const candidate = path.resolve(target);
     if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
       const worktree = metadataValue(candidate, 'worktree');
       if (!worktree) {
-        fail(`session log is missing worktree metadata: ${candidate}`);
+        fail('session log is missing worktree metadata');
       }
       return {
         worktree: path.resolve(worktree),
@@ -256,17 +262,17 @@ function resolveTarget(target) {
   const branch = gitText(currentRoot, ['branch', '--show-current']);
   const sessionId = sessionIdFromBranch(branch);
   if (!sessionId) {
-    fail(`current branch is not a chat branch: ${branch}. Pass a chat worktree path or session log path.`);
+    fail('current branch is not a chat branch. Pass a chat worktree path or session log path.');
   }
 
   const logFile = findSessionLog(currentRoot, sessionId);
   if (!fs.existsSync(logFile)) {
-    fail(`missing chat log: ${path.relative(currentRoot, logFile)}`);
+    fail('matching chat log was not observed');
   }
 
   const worktree = metadataValue(logFile, 'worktree');
   if (!worktree) {
-    fail(`session log is missing worktree metadata: ${path.relative(currentRoot, logFile)}`);
+    fail('session log is missing worktree metadata');
   }
 
   return {
@@ -462,6 +468,7 @@ function uint32(value) {
 }
 
 function createZip(entries, outputPath) {
+  phase = 'archive-construction';
   const fileParts = [];
   const centralParts = [];
   let offset = 0;
@@ -529,11 +536,18 @@ function createZip(entries, outputPath) {
     uint16(0),
   ]);
 
+  phase = 'output-directory';
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, Buffer.concat([...fileParts, centralDirectory, endRecord]));
+  phase = 'output-payload';
+  const payload = Buffer.concat([...fileParts, centralDirectory, endRecord]);
+  phase = 'output-write';
+  archiveWrite = 'unknown';
+  fs.writeFileSync(outputPath, payload);
+  archiveWrite = 'completed';
 }
 
 function fileEntry(repoRoot, relativePath, zipName) {
+  phase = 'file-entry-read';
   const absolute = path.join(repoRoot, relativePath);
   if (!isInside(repoRoot, absolute) || !fs.existsSync(absolute)) {
     return null;
@@ -560,8 +574,9 @@ function fileEntry(repoRoot, relativePath, zipName) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const target = resolveTarget(args.target);
+  phase = 'worktree-confirmation';
   if (!fs.existsSync(target.worktree) || !fs.statSync(target.worktree).isDirectory()) {
-    fail(`chat worktree path does not exist: ${target.worktree}`);
+    fail('selected chat worktree directory was not observed');
   }
 
   const repoRoot = findRepoRoot(target.worktree);
@@ -630,6 +645,7 @@ function main() {
 
   createZip(entries, outputPath);
 
+  phase = 'success-report';
   console.log(`Export kind: ${args.mode}`);
   console.log(`Branch: ${branch}`);
   if (args.mode === 'worktree-diff') {
@@ -639,4 +655,8 @@ function main() {
   console.log(`Output: ${outputPath}`);
 }
 
-main();
+try {
+  main();
+} catch {
+  fail(`worktree export boundary failed: phase=${phase}; archive-write=${archiveWrite}`);
+}

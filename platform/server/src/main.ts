@@ -1,11 +1,17 @@
 import { recordConfigSource } from "@kanbien/core/config";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import { platformRuntimeDiagnosticCatalog } from "@kanbien/platform-runtime";
+import { selectDiagnosticEvidenceWithReport, diagnosticProcessingRecord, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { Logger, LogRecord } from "@kanbien/core/logging";
 import { noopMetrics, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { systemClock, type Result } from "@kanbien/core/shared";
+import { createPlatformDiagnosticReporter } from "@kanbien/platform-observability";
+import { reportPlatformDiagnostic } from "@kanbien/platform-observability";
 import {
   fixedFeatureFlagReader,
   type PlatformApp,
   type PlatformMountDeps,
+  type PlatformDiagnosticCatalog,
 } from "@kanbien/platform-contracts";
 import {
   type PlatformAuthenticationHook,
@@ -19,10 +25,13 @@ import {
   type PlatformServerShell,
   type PlatformServerTransportOptions,
 } from "./index";
-import { resolvePlatformServerRuntimeConfiguration } from "./configuration";
+import { resolvePlatformServerRuntimeConfigurationWithDiagnostics } from "./configuration";
+import { serverDiagnosticRecord, serverProcessBoundaryRecord, platformServerDiagnosticCatalog } from "./diagnostics";
 import type { PlatformReleaseIdentity } from "./verification";
 
 export interface PlatformServerProcessOptions {
+  readonly securityDecisionDiagnostics?: boolean;
+  readonly diagnosticCatalogs?: readonly PlatformDiagnosticCatalog[];
   readonly apps?: readonly PlatformApp[];
   readonly configKeys?: readonly string[];
   readonly env?: NodeJS.ProcessEnv;
@@ -54,13 +63,22 @@ export async function startPlatformServerProcess(
 ): Promise<Result<PlatformServerProcess, PlatformServerError>> {
   const env = options.env ?? process.env;
   const logger = options.logger ?? consoleJsonLogger;
-  const runtimeConfiguration = resolvePlatformServerRuntimeConfiguration({
+  const observation = resolvePlatformServerRuntimeConfigurationWithDiagnostics({
     env,
     ...(options.configKeys === undefined ? {} : { extraConfigKeys: options.configKeys }),
     hasAuthentication: options.auth !== undefined,
+    ...(options.host === undefined ? {} : { host: options.host }),
+    ...(options.port === undefined ? {} : { port: options.port }),
   });
+  const runtimeConfiguration = observation.configuration;
+  const diagnostics = createPlatformDiagnosticReporter({ catalogs: [platformServerDiagnosticCatalog], logger, clock: systemClock });
+  for (const record of observation.diagnosticRecords) {
+    diagnostics.report(record, { capability: "platform-server", operation: "configure", stage: "configuration" });
+  }
   const deps = createServerProcessMountDeps(runtimeConfiguration.config, logger, options.metrics ?? noopMetrics);
   const shell = await createPlatformServerShell({
+    ...(options.diagnosticCatalogs === undefined ? {} : { diagnosticCatalogs: options.diagnosticCatalogs }),
+    ...(options.securityDecisionDiagnostics === undefined ? {} : { securityDecisionDiagnostics: options.securityDecisionDiagnostics }),
     apps: options.apps ?? [],
     deps,
     ...(options.auth === undefined ? {} : { auth: options.auth }),
@@ -84,6 +102,8 @@ export async function startPlatformServerProcess(
       error: {
         code: "PLATFORM_SERVER_START_FAILED",
         defaultMessage: "Platform server lifecycle failed to start.",
+        diagnosticRecord: started.error.diagnosticRecord ?? serverDiagnosticRecord("PLATFORM_SERVER_START_FAILED", "lifecycle"),
+        ...(started.error.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: started.error.relatedDiagnosticRecords }),
         status: 500,
         details: { runtimeCode: started.error.code },
       },
@@ -93,17 +113,33 @@ export async function startPlatformServerProcess(
   let handle: PlatformServerHandle;
   try {
     handle = await shell.value.listen({
-      port: options.port ?? runtimeConfiguration.port,
-      host: options.host ?? runtimeConfiguration.host,
+      port: runtimeConfiguration.port,
+      host: runtimeConfiguration.host,
     });
-  } catch {
+  } catch (error) {
     await shell.value.lifecycle.shutdown();
+    const notices: DiagnosticRecord[] = [];
+    let definitions: readonly DiagnosticDefinition[] = [
+      ...coreDiagnosticCatalog.definitions,
+      ...platformRuntimeDiagnosticCatalog.definitions,
+      ...platformServerDiagnosticCatalog.definitions,
+    ];
+    // Each optional catalogue source is independent of the built-in selection.
+    try { definitions = [...definitions, ...shell.value.mounted.diagnosticCatalogs.flatMap((catalog) => catalog.definitions)]; }
+    catch { notices.push(diagnosticProcessingRecord("definition-selection-failed")); }
+    try { definitions = [...definitions, ...(options.diagnosticCatalogs ?? []).flatMap((catalog) => catalog.definitions)]; }
+    catch { notices.push(diagnosticProcessingRecord("definition-selection-failed")); }
+    const evidence = selectDiagnosticEvidenceWithReport(definitions, error, record => notices.push(record));
+    for (const record of notices) reportPlatformDiagnostic(diagnostics, record,
+      { capability: "platform-server", operation: "listen", stage: "startup" });
     return {
       ok: false,
       error: {
         code: "PLATFORM_SERVER_START_FAILED",
         defaultMessage: "Platform server failed to listen.",
+        diagnosticRecord: serverDiagnosticRecord("PLATFORM_SERVER_START_FAILED"),
         status: 500,
+        ...evidence,
       },
     };
   }
@@ -114,7 +150,11 @@ export async function startPlatformServerProcess(
     close: async () => {
       const draining = shell.value.lifecycle.beginDrain();
       if (!draining.ok) {
-        logger.write({ level: "warn", message: "platform.server.drain_failed", fields: { code: draining.error.code } });
+        try { logger.write({ level: "warn", message: "platform.server.drain_failed", fields: { code: draining.error.code } }); }
+        catch (error) {
+          reportPlatformDiagnostic(diagnostics, serverProcessBoundaryRecord("shutdown-log", "shutdown-not-completed"), { capability: "platform-server", operation: "shutdown", stage: "shutdown" });
+          throw error;
+        }
       }
       try {
         await handle.close();
@@ -125,20 +165,26 @@ export async function startPlatformServerProcess(
   };
 
   if (options.installSignalHandlers ?? true) {
-    installShutdownHandlers(processHandle, logger);
+    try { installShutdownHandlers(processHandle, logger, diagnostics); }
+    catch (error) {
+      reportPlatformDiagnostic(diagnostics, serverProcessBoundaryRecord("signal-registration", "process-not-returned"), { capability: "platform-server", operation: "start", stage: "startup" });
+      throw error;
+    }
   }
 
-  logger.write({
+  try { logger.write({
     level: "info",
     message: "platform.server.started",
     fields: {
       port: handle.port,
-      host: handle.host ?? "0.0.0.0",
       ...(runtimeConfiguration.releaseIdentity.sourceCommitSha === undefined
         ? {}
         : { sourceCommitSha: runtimeConfiguration.releaseIdentity.sourceCommitSha }),
     },
-  });
+  }); } catch (error) {
+    reportPlatformDiagnostic(diagnostics, serverProcessBoundaryRecord("startup-log", "process-not-returned"), { capability: "platform-server", operation: "start", stage: "startup" });
+    throw error;
+  }
 
   return { ok: true, value: processHandle };
 }
@@ -178,14 +224,18 @@ function createServerProcessMountDeps(
 }
 
 
-function installShutdownHandlers(processHandle: PlatformServerProcess, logger: Logger): void {
+function installShutdownHandlers(processHandle: PlatformServerProcess, logger: Logger, diagnostics: import("@kanbien/platform-contracts").PlatformDiagnosticReporter): void {
   let shuttingDown = false;
   const shutdown = async (signal: NodeJS.Signals) => {
     if (shuttingDown) {
       return;
     }
     shuttingDown = true;
-    logger.write({ level: "info", message: "platform.server.shutdown", fields: { signal } });
+    try { logger.write({ level: "info", message: "platform.server.shutdown", fields: { signal } }); }
+    catch (error) {
+      reportPlatformDiagnostic(diagnostics, serverProcessBoundaryRecord("shutdown-log", "shutdown-not-completed"), { capability: "platform-server", operation: "shutdown", stage: "shutdown" });
+      throw error;
+    }
     await processHandle.close();
   };
 

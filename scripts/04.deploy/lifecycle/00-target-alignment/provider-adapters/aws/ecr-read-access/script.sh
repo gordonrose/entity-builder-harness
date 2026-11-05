@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.adapter.aws.ecr-read-access
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -47,7 +47,13 @@ command -v aws >/dev/null 2>&1 || fail DELIVERY_ACCESS_AWS_CLI_UNAVAILABLE
 
 probe_not_denied() {
   local operation="$1"; shift
-  local output status
+  local output status provider_operation missing_codes
+  case "$operation" in
+    GET_AUTHORIZATION_TOKEN) provider_operation=GetAuthorizationToken; missing_codes="" ;;
+    DESCRIBE_IMAGES) provider_operation=DescribeImages; missing_codes=ImageNotFoundException ;;
+    DESCRIBE_SCAN_FINDINGS) provider_operation=DescribeImageScanFindings; missing_codes='ImageNotFoundException|ScanNotFoundException' ;;
+    *) fail DELIVERY_ACCESS_ARGUMENTS_INVALID ;;
+  esac
   output="$(mktemp)"
   if "$@" >"$output" 2>&1; then
     rm -f "$output"
@@ -55,11 +61,11 @@ probe_not_denied() {
   else
     status=$?
   fi
-  if grep -Eq 'AccessDenied|Unauthorized|not authorized' "$output"; then
+  if grep -Eq "^An error occurred \\((AccessDenied|AccessDeniedException|UnauthorizedOperation|UnrecognizedClientException|InvalidClientTokenId|ExpiredToken|ExpiredTokenException)\\) when calling the ${provider_operation} operation:" "$output"; then
     rm -f "$output"
     fail "DELIVERY_ACCESS_${operation}_DENIED"
   fi
-  if grep -Eq 'ImageNotFound|ScanNotFound' "$output"; then
+  if [ -n "$missing_codes" ] && grep -Eq "^An error occurred \\((${missing_codes})\\) when calling the ${provider_operation} operation:" "$output"; then
     rm -f "$output"
     return 0
   fi

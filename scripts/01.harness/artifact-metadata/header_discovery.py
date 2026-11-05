@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -29,13 +29,22 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 
 
 class HeaderError(ValueError):
     """A declared file header cannot be read safely."""
+
+    def __init__(self, *args: object,
+                 condition: Literal["root-mismatch", "closing-marker-inline", "header-unterminated",
+                                    "key-duplicate", "key-nonscalar", "nul-byte", "yaml-invalid",
+                                    "shape-invalid"] | None = None,
+                 field: Literal["source-root", "header", "mapping-key"] | None = None):
+        super().__init__(*args)
+        self.condition = condition
+        self.field = field
 
 
 @dataclass(frozen=True)
@@ -92,13 +101,14 @@ def requires_header(path: str) -> bool:
 def _repository_paths(root: Path | str, include_untracked: bool) -> list[str]:
     root = Path(root).resolve()
     actual = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
-                            check=True, stdout=subprocess.PIPE, text=True).stdout.strip()
+                            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.strip()
     if Path(actual).resolve() != root:
-        raise HeaderError(f"artifact discovery requires the exact Git root: {root}")
+        raise HeaderError(f"artifact discovery requires the exact Git root: {root}",
+                          condition="root-mismatch", field="source-root")
     command = ["git", "-C", str(root), "ls-files", "--cached", "-z"]
     if include_untracked:
         command += ["--others", "--exclude-standard"]
-    result = subprocess.run(command, check=True, stdout=subprocess.PIPE)
+    result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return sorted(set(part.decode("utf-8", "surrogateescape")
                       for part in result.stdout.split(b"\0") if part))
 
@@ -185,10 +195,11 @@ def header_span(text: str) -> HeaderSpan | None:
         while end < len(lines):
             if "-->" in lines[end]:
                 if lines[end].strip() != "-->":
-                    raise HeaderError("metadata closing marker must occupy its own line")
+                    raise HeaderError("metadata closing marker must occupy its own line",
+                                      condition="closing-marker-inline", field="header")
                 return HeaderSpan(start, end + 1, "html", marker, comment)
             end += 1
-        raise HeaderError("unterminated metadata header")
+        raise HeaderError("unterminated metadata header", condition="header-unterminated", field="header")
     while end < len(lines) and lines[end].lstrip().startswith(comment):
         end += 1
     return HeaderSpan(start, end, "line", marker, comment)
@@ -204,10 +215,11 @@ def _unique_mapping(loader: _UniqueLoader, node: yaml.MappingNode, deep: bool = 
         key = loader.construct_object(key_node, deep=deep)
         try:
             if key in result:
-                raise HeaderError(f"duplicate metadata key: {key}")
+                raise HeaderError(f"duplicate metadata key: {key}", condition="key-duplicate", field="mapping-key")
             result[key] = loader.construct_object(value_node, deep=deep)
         except TypeError as exc:
-            raise HeaderError("metadata mapping keys must be scalar values") from exc
+            raise HeaderError("metadata mapping keys must be scalar values",
+                              condition="key-nonscalar", field="mapping-key") from exc
     return result
 
 
@@ -219,7 +231,7 @@ def parse_header_text(text: str) -> dict[str, Any]:
     if span is None:
         return {}
     if "\0" in text:
-        raise HeaderError("declared metadata must not contain NUL bytes")
+        raise HeaderError("declared metadata must not contain NUL bytes", condition="nul-byte", field="header")
     lines = text.splitlines()
     first = lines[span.start].removeprefix("\ufeff")
     if span.style == "html":
@@ -231,9 +243,9 @@ def parse_header_text(text: str) -> dict[str, Any]:
     try:
         parsed = yaml.load("\n".join([marker_line, *body]), Loader=_UniqueLoader)
     except yaml.YAMLError as exc:
-        raise HeaderError(f"invalid metadata YAML: {exc}") from exc
+        raise HeaderError(f"invalid metadata YAML: {exc}", condition="yaml-invalid", field="header") from exc
     if not isinstance(parsed, dict) or set(parsed) != {span.marker} or not isinstance(parsed[span.marker], dict):
-        raise HeaderError("invalid metadata header shape")
+        raise HeaderError("invalid metadata header shape", condition="shape-invalid", field="header")
     return parsed
 
 def recover_legacy_baseline(text: str) -> dict[str, Any]:

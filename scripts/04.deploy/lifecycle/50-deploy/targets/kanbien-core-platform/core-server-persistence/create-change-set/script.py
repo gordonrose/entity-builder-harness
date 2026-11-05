@@ -98,7 +98,8 @@ def package_gates(receipt: Path, *, coverage_checked: bool = False) -> bool:
         # This aggregate validates health, secret dependencies and persistence diagnostics for every indexed scope.
         ["bash", str(ROOT / "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh"), "--target-root", str(ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes"), "--json"],
     ]
-    return all(subprocess.run(command, capture_output=True, text=True).returncode == 0 for command in checks)
+    try: return all(subprocess.run(command, capture_output=True, text=True).returncode == 0 for command in checks)
+    except (OSError, UnicodeError): return False
 
 
 def main() -> int:
@@ -139,22 +140,30 @@ def main() -> int:
         return report("blocked", "target-budget-live-configuration-invalid")
     ok, stack, code = module.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
     if ok:
-        status = stack.get("Stacks", [{}])[0].get("StackStatus") if isinstance(stack, dict) else None
+        try: status = stack.get("Stacks", [{}])[0].get("StackStatus") if isinstance(stack, dict) else None
+        except (AttributeError, TypeError, KeyError, IndexError): return report("uncertain", "persistence-candidate-stack-state-unknown")
         return report("blocked", "persistence-candidate-stack-already-exists" if status else "persistence-candidate-stack-state-unknown")
     if code != "aws-resource-missing":
         return report("blocked", code)
     digest, revision = receipt["image_digest"], receipt["source_revision"]
     name = f"kanbien-core-platform-persistence-create-{digest[7:19]}"
     parameters = [{"ParameterKey": key, "ParameterValue": value} for key, value in module.candidate_parameters(outputs, infrastructure, receipt).items()]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as parameter_file:
-        json.dump(parameters, parameter_file)
-        parameter_file.flush()
-        ok, _, code = module.aws(
-            "cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name,
-            "--change-set-type", "CREATE", "--template-body", f"file://{TEMPLATE}",
-            "--parameters", f"file://{parameter_file.name}", "--capabilities", "CAPABILITY_NAMED_IAM",
-            "--tags", "Key=Target,Value=kanbien-core-platform",
-        )
+    submitted = False
+    returned = False
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as parameter_file:
+            json.dump(parameters, parameter_file)
+            parameter_file.flush()
+            submitted = True
+            ok, _, code = module.aws(
+                "cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name,
+                "--change-set-type", "CREATE", "--template-body", f"file://{TEMPLATE}",
+                "--parameters", f"file://{parameter_file.name}", "--capabilities", "CAPABILITY_NAMED_IAM",
+                "--tags", "Key=Target,Value=kanbien-core-platform",
+            )
+            returned = True
+    except (OSError, UnicodeError, TypeError, ValueError):
+        return report("uncertain" if submitted else "blocked", *([code] if returned and not ok else []), "persistence-submission-or-parameter-cleanup-unavailable" if submitted else "persistence-parameter-file-unavailable", facts={"change_set": name})
     if not ok:
         finding = retain_diagnostic(module, name=name, receipt=receipt, path=diagnostic_path,
                                     original_code="persistence-change-set-submission-uncertain",
@@ -174,14 +183,19 @@ def reconcile(module, name: str, receipt: dict, diagnostic_path: Path | None = N
         return report("uncertain", "persistence-change-set-observation-uncertain", *(finding,) if finding else (), facts=facts)
     if not module.change_name_matches(change.get("ChangeSetName"), name):
         return report("blocked", "persistence-change-set-identity-invalid", facts=facts)
-    if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}:
+    try: pending = change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}
+    except TypeError: return report("uncertain", "persistence-change-set-status-unobservable", facts=facts)
+    if pending:
         return report("pending", "persistence-change-set-creation-pending", facts=facts)
-    if change.get("Status") in {"FAILED", "DELETE_FAILED", "DELETE_COMPLETE"}:
+    try: failed = change.get("Status") in {"FAILED", "DELETE_FAILED", "DELETE_COMPLETE"}
+    except TypeError: return report("uncertain", "persistence-change-set-status-unobservable", facts=facts)
+    if failed:
         finding = retain_diagnostic(module, name=name, receipt=receipt, path=diagnostic_path,
                                     original_code="persistence-change-set-creation-failed",
                                     outcome="rejected", fallback_code="aws-command-failed")
         return report("failed", "persistence-change-set-creation-failed", *(finding,) if finding else (), facts=facts)
-    parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
+    try: parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
+    except (AttributeError, TypeError): return report("uncertain", "persistence-change-set-parameters-unobservable", facts=facts)
     expected = {"ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
     if change.get("Status") != "CREATE_COMPLETE" or change.get("ExecutionStatus") != "AVAILABLE" or any(parameters.get(key) != value for key, value in expected.items()):
         return report("uncertain", "persistence-change-set-review-identity-unproven", facts=facts)

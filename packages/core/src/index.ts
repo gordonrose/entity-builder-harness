@@ -3,6 +3,7 @@ export * from "./authn/index";
 export * from "./authz/index";
 export * from "./config/index";
 export * from "./diagnostics/index";
+export { coreDiagnosticCatalog } from "./diagnostic-catalog";
 export * from "./events/index";
 export * from "./files/index";
 export * from "./i18n/index";

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./main": "./src/main.ts"
+    "./main": "./src/main.ts",
+    "./configuration/diagnostics.v1.json": "./src/configuration/contract/reporting/diagnostics.v1.json"
   },
   "files": [
     "src"

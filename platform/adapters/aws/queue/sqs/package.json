@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./configuration/diagnostics.v1.json": "./src/configuration/contract/reporting/diagnostics.v1.json"
   },
   "types": "./src/index.ts",
   "files": [

@@ -1,5 +1,7 @@
 import { brand, type Brand } from "../shared/index";
 import type { SecretString } from "./secrets";
+import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { coreSecurityPrimitiveRecord } from "./diagnostics";
 
 export type HashAlgorithm = Brand<string, "HashAlgorithm">;
 export type HashValue = Brand<string, "HashValue">;
@@ -31,16 +33,16 @@ export function hash(input: { readonly algorithm: string | HashAlgorithm; readon
   };
 }
 
-function assertNonEmpty(label: string, value: string): void {
+function assertNonEmpty(label: "hash algorithm" | "hash value", value: string): void {
   if (value.length === 0) {
-    throw new TypeError(`${label} must be non-empty.`);
+    throw attachCoreDiagnosticRecord(new TypeError(`${label} must be non-empty.`), coreSecurityPrimitiveRecord(label === "hash algorithm" ? "hash-algorithm" : "hash-value", "empty"));
   }
 }
 
-function assertToken(label: string, value: string): void {
+function assertToken(label: "hash algorithm" | "hash value", value: string): void {
   assertNonEmpty(label, value);
 
-  if (value.trim() !== value || /\s/.test(value)) {
-    throw new TypeError(`${label} must not contain whitespace.`);
-  }
+  const field = label === "hash algorithm" ? "hash-algorithm" : "hash-value";
+  if (value.trim() !== value) throw attachCoreDiagnosticRecord(new TypeError(`${label} must not contain whitespace.`), coreSecurityPrimitiveRecord(field, "surrounding-whitespace"));
+  if (/\s/.test(value)) throw attachCoreDiagnosticRecord(new TypeError(`${label} must not contain whitespace.`), coreSecurityPrimitiveRecord(field, "whitespace"));
 }

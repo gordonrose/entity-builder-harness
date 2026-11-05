@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines: [security, sre]
@@ -40,13 +40,19 @@ template = _TEMPLATES.template
 templates_equal = _TEMPLATES.templates_equal
 
 
+class ShellControlError(ValueError):
+    """A code-owned shell predicate or provider classification."""
+
+
 def require(ok,reason):
-    if not ok:raise ValueError(reason)
+    if not ok:raise ShellControlError(reason)
 
 
 def unique(items,key,value):
     require(isinstance(items,list) and all(isinstance(i,dict) and key in i and value in i for i in items),'shell-provider-map-invalid')
-    result={i[key]:i[value] for i in items};require(len(result)==len(items),'shell-provider-map-duplicate');return result
+    try:result={i[key]:i[value] for i in items}
+    except TypeError:raise ShellControlError('shell-provider-map-observation-unavailable') from None
+    require(len(result)==len(items),'shell-provider-map-duplicate');return result
 
 
 class Control:
@@ -57,8 +63,10 @@ class Control:
         self.manifest=yaml.safe_load(Path(args.deployment_manifest).read_text())
         self.evidence_class='simulated' if args.rehearsal_root else 'live'
         if args.rehearsal_root:require(Path(args.rehearsal_root).resolve()==self.root.resolve() and self.root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()),'shell-rehearsal-root-invalid')
-        self.source,self.digest=self.evidence.identity(self.manifest)
-        self.evidence.validate_candidate(self.manifest,root=self.root,evidence_class=self.evidence_class)
+        try:
+            self.source,self.digest=self.evidence.identity(self.manifest)
+            self.evidence.validate_candidate(self.manifest,root=self.root,evidence_class=self.evidence_class)
+        except self.evidence.ReleaseEvidenceError as error:raise ShellControlError(str(error)) from None
         image=self.manifest['artifacts']['image'];self.image=image['repository_uri']+'@'+self.digest
         require(image.get('deploy_uri',self.image)==self.image,'shell-release-image-reference-mismatch')
         self.profile=owner.load_yaml(Path(args.target_profile))
@@ -68,14 +76,14 @@ class Control:
         invocation=[self.args.aws_cli,*command,'--region',self.policy['region'],'--output','json']
         if self.args.aws_credential_source=='target-profile':invocation+=['--profile',self.policy['aws_profile']]
         try:result=subprocess.run(invocation,text=True,capture_output=True,timeout=self.args.timeout_seconds)
-        except (OSError,subprocess.SubprocessError):raise ValueError('shell-operation-uncertain' if mutation else 'shell-observation-unavailable') from None
+        except (OSError,UnicodeError,subprocess.SubprocessError):raise ShellControlError('shell-operation-uncertain' if mutation else 'shell-observation-unavailable') from None
         if result.returncode:
             outcome=self.response.classify_error(command[0],command[1],result.stderr)
             if absent and outcome=='aws-resource-missing':return None
-            raise ValueError('shell-operation-uncertain' if mutation else 'shell-observation-'+outcome)
+            raise ShellControlError('shell-operation-uncertain' if mutation else 'shell-observation-'+outcome)
         if mutation:return {}
         try:return json.loads(result.stdout)
-        except json.JSONDecodeError:raise ValueError('shell-observation-malformed') from None
+        except json.JSONDecodeError:raise ShellControlError('shell-observation-malformed') from None
 
     def stack(self,name,*,fresh=True):
         if name not in self.stack_cache:
@@ -86,10 +94,15 @@ class Control:
         require(value.get('StackStatus') in {'CREATE_COMPLETE','UPDATE_COMPLETE'},'shell-stack-not-stable')
         if fresh:
             drift=value.get('DriftInformation',{});require(drift.get('StackDriftStatus')=='IN_SYNC','shell-stack-drift-unproven')
-            checked=datetime.fromisoformat(drift['LastCheckTimestamp'].replace('Z','+00:00'))
-            age=(datetime.now(timezone.utc)-checked).total_seconds();require(-60<=age<=900,'shell-stack-drift-stale')
+            try:
+                checked=datetime.fromisoformat(drift['LastCheckTimestamp'].replace('Z','+00:00'))
+                age=(datetime.now(timezone.utc)-checked).total_seconds()
+            except (AttributeError,KeyError,TypeError,ValueError):raise ShellControlError('shell-stack-drift-time-unavailable') from None
+            require(-60<=age<=900,'shell-stack-drift-stale')
             modified=value.get('LastUpdatedTime',value.get('CreationTime'))
-            require(isinstance(modified,str) and checked>=datetime.fromisoformat(modified.replace('Z','+00:00')),'shell-stack-drift-precedes-change')
+            try:ordered=isinstance(modified,str) and checked>=datetime.fromisoformat(modified.replace('Z','+00:00'))
+            except (TypeError,ValueError):raise ShellControlError('shell-stack-change-time-unavailable') from None
+            require(ordered,'shell-stack-drift-precedes-change')
         return value
 
     def sources(self):
@@ -156,7 +169,7 @@ class Control:
                 if kind=='AWS::SSM::Parameter':return base.format(service='ssm')+'parameter/'+physical.lstrip('/')
                 if kind=='AWS::SQS::Queue':return base.format(service='sqs')+physical.rsplit('/',1)[-1]
                 if kind=='AWS::IAM::Role':return 'arn:aws:iam::'+self.policy['account_id']+':role/'+physical
-            raise ValueError('shell-template-attribute-unsupported')
+            raise ShellControlError('shell-template-attribute-unsupported')
         require(not any(key.startswith('Fn::') for key in value),'shell-template-intrinsic-unsupported')
         return {key:self.resolve(item,name) for key,item in value.items()}
 
@@ -226,14 +239,14 @@ class Control:
                 if field not in desired:require(not live.get(field[0].lower()+field[1:]),'shell-task-configuration-addition')
 
     def predecessor(self):
-        evidence=self.evidence.within(self.root,self.manifest['acceptance']['evidence_root']);succession=self.evidence.succession(self.root,self.evidence_class);state=succession.current(evidence)
+        evidence=self.evidence.within(self.root,self.manifest['acceptance']['evidence_root']);succession=self.evidence.succession(self.root,self.evidence_class);state=self.evidence.succession_call(succession,succession.current,evidence)
         actual=state['release_id'] if state else 'none';require(actual==self.args.expected_predecessor,'shell-release-predecessor-changed')
         if actual!='none':
             require(self.args.current_deployment_manifest is not None,'shell-current-manifest-required')
             previous=yaml.safe_load(Path(self.args.current_deployment_manifest).read_text())
             require(self.evidence.validate_ready(previous,root=self.root,evidence_class=self.evidence_class)==actual,'shell-current-release-not-ready')
         if self.args.mode=='service-rollback':
-            record,bound=succession.compatibility_record(evidence,self.args.rollback_compatibility_id);identity=bound['identity']
+            record,bound=self.evidence.succession_call(succession,succession.compatibility_record,evidence,self.args.rollback_compatibility_id);identity=bound['identity']
             require(identity['source_revision']==self.source and identity['image_digest']==self.digest and identity['workloads']==['platform-shell'],'shell-rollback-compatibility-mismatch')
             proof=record.get('proof_set',{}).get('runtime-alignment');require(isinstance(proof,dict),'shell-rollback-runtime-proof-missing')
             observed=self.evidence.observation(evidence/proof['path'],source=self.source,image=self.digest,publication=self.manifest['source'],root=self.root,evidence_class=self.evidence_class,fresh=False)
@@ -243,10 +256,10 @@ class Control:
             require(observed.get('permission_state_sha256')==current_observation.get('permission_state_sha256'),'shell-rollback-permission-identity-changed')
             require(identity['configuration_contract']['path']==self.evidence.CONFIGURATION.as_posix() and identity['permission_contract']['path']==self.evidence.PERMISSIONS.as_posix(),'shell-rollback-contract-mismatch')
         elif actual!='none':
-            history,_=succession.history_record_for_id(evidence,actual)
+            history,_=self.evidence.succession_call(succession,succession.history_record_for_id,evidence,actual)
             while history:
                 require(history['release']['image_digest']!=self.digest,'shell-retained-image-requires-rollback')
-                prior=history.get('predecessor');history=succession.history_record_for_id(evidence,prior)[0] if prior else None
+                prior=history.get('predecessor');history=self.evidence.succession_call(succession,succession.history_record_for_id,evidence,prior)[0] if prior else None
 
     def operation(self):
         change=self.aws('cloudformation','describe-change-set','--stack-name',self.policy['service_stack'],'--change-set-name',self.args.service_change_set,absent=True)
@@ -266,7 +279,7 @@ class Control:
         self.predecessor()
         preflight=module(self.root/'scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py','shell_candidate_preflight')
         try:qualified=preflight.realization_preflight(self.args.realization_facts,self.args.realization_change_summary)
-        except preflight.CandidatePreflightError as error:raise ValueError(str(error)) from None
+        except preflight.CandidatePreflightError as error:raise ShellControlError(str(error)) from None
         require(qualified==self.digest,'shell-candidate-preflight-artifact-mismatch')
         self.source_alignment(service=False)
         current=self.aws('cloudformation','describe-stacks','--stack-name',self.policy['service_stack'],absent=True)
@@ -318,15 +331,22 @@ class Control:
 
 
 def run(owner,args,policy):
+    stage='shell-release-input-observation-unavailable'
+    evidence_errors=()
     try:
-        control=Control(owner,args,policy);owner.check_identity(args,policy)
+        control=Control(owner,args,policy);evidence_errors=(control.evidence.ReleaseEvidenceError,);owner.check_identity(args,policy)
         if args.mode=='runtime-alignment':
+            stage='shell-runtime-observation-unavailable'
             observed=control.runtime();path=control.evidence.within(control.root,control.manifest['acceptance']['current_observation']);path.parent.mkdir(parents=True,exist_ok=True)
+            stage='shell-runtime-observation-write-unavailable'
             path.write_text(json.dumps(observed,sort_keys=True)+'\n')
+            stage='shell-candidate-evidence-write-unavailable'
             candidate=control.evidence.write_candidate(control.manifest,path,control.evidence.within(control.root,control.manifest['acceptance']['evidence_root']),root=control.root,evidence_class=control.evidence_class)
             report={'verdict':'passed','reason':'shell-runtime-aligned',**candidate}
-        else:report=control.operation()
+        else:
+            stage='shell-operation-observation-unavailable'
+            report=control.operation()
         report.update({'schema':owner.SAFE_SCHEMA,'target':'kanbien/staging','mode':args.mode});print(json.dumps(report,sort_keys=True));return 0 if report['verdict']=='passed' else 1
-    except (ValueError,KeyError,TypeError,OSError,yaml.YAMLError,owner.ReconciliationError) as error:
-        reason=str(error) if isinstance(error,(ValueError,owner.ReconciliationError)) and re.fullmatch(r'[a-z][a-z0-9-]+',str(error)) else 'shell-release-input-invalid'
+    except (ValueError,KeyError,TypeError,AttributeError,IndexError,OSError,subprocess.SubprocessError,yaml.YAMLError,owner.ReconciliationError) as error:
+        reason=str(error) if isinstance(error,(ShellControlError,owner.ReconciliationError,*evidence_errors)) else stage
         print(json.dumps({'schema':owner.SAFE_SCHEMA,'target':'kanbien/staging','mode':args.mode,'verdict':'uncertain' if 'uncertain' in reason or 'unavailable' in reason else 'blocked','reason':reason},sort_keys=True));return 1

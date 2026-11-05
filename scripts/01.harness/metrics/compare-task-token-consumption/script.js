@@ -5,7 +5,7 @@
 //   version: 1
 //   status: active
 //   created_on: "2026-07-02"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-31"
 //   layer: 01.harness
 //   domain: governance.agents
 //   disciplines:
@@ -138,7 +138,10 @@ function walkReadmes(dir) {
     return [];
   }
 
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+  catch { fail('Comparison session discovery failed [HARNESS_METRIC_DISCOVERY_FAILED]'); }
+  return entries.flatMap((entry) => {
     const entryPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       return walkReadmes(entryPath);
@@ -375,7 +378,9 @@ function sessionDate(meta, filePath) {
 
 function readSessions(root, queryProfile, minScore) {
   return walkReadmes(root).map((filePath) => {
-    const content = fs.readFileSync(filePath, 'utf8');
+    let content;
+    try { content = fs.readFileSync(filePath, 'utf8'); }
+    catch { fail('Comparison session input could not be read [HARNESS_METRIC_INPUT_READ_FAILED]'); }
     const meta = parseMetadata(content);
     const task = meta.task || '';
     const tokens = parseTokenCount(meta.estimated_chat_tokens);

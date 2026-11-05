@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.workflow.platform-runtime-implementation
-version: 4
+version: 10
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-10-25"
+updated_on: "2026-11-02"
 layer: 03.product
 domain: platform-runtime
 disciplines:
@@ -25,6 +25,27 @@ used_by:
 # Platform Runtime Implementation Workflow
 
 Follow the [shared change-completion principles](../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
+
+Follow [diagnostic coverage](../../shared/workflows/verify-diagnostic-coverage.md)
+for configuration, validation, calls, connections, request/job and lifecycle work.
+Definitions and permitted values belong in runtime packages, not this workflow.
+
+Apply the [public module structure standard](../standards/public-module-structure.md)
+when creating modules, changing public surfaces or refactoring. Record the
+applicability, named implementation owners and compatibility proof in the existing
+slice inventory; use the standard's explicit treatment of legacy indexes.
+For new substantial modules and structural refactors, include the responsibility
+groups, their owning files, public exports and direct/private consumers before
+editing. Explain why the grouping fits the work and name the compatibility and
+boundary fixtures. The config reference uses nested reading, validation and
+reporting groups; copying those names is not evidence another module is well
+organised. Preserve small-module and unrelated-fix limits from the standard.
+
+For configuration reads, startup validation, secret references, feature flags
+or environment-dependent behaviour, apply the
+[configuration standard](../standards/config-runtime-settings.md). Record its
+applicability in the existing task inventory; code and tests still establish
+actual compliance.
 
 ## Use When
 
@@ -64,7 +85,8 @@ Before editing runtime code:
 
 1. Read `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
 2. Read ADR 0025 (`docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md`), ADR 0026 (`docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md`), ADR 0027 (`docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md`), and ADR 0028 (`docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md`).
-3. Read the relevant platform, shared, and deployment rules under
+3. Read the applicable configuration standard linked above. Other legacy
+   platform, shared, and deployment requirements currently remain under
    `docs/03.product/rules/`, `docs/06.shared/rules/`, and
    `docs/04.deploy/rules/`.
 4. State the implementation milestone and bounded file scope.
@@ -117,6 +139,22 @@ Before editing runtime code:
 - Product composition manifests must not contain AWS account, region, DNS,
   auth provider secrets, image digests, or other environment-specific deploy
   values.
+
+For rate-limit numeric configuration, reuse Platform security's public
+assertPlatformRateLimitPositiveInteger or securityRateLimitPositiveIntegerFailureRecord
+as appropriate to the caller's throwing/returned-error contract. Their owner is
+platform/security/src/rate-limit-configuration.ts. Keep source names, text-to-number
+conversion, defaults and limiting/provider policy with their existing consumers.
+Apply the linked configuration standard's reuse review and actual-caller proof;
+do not copy these checks into an adapter or move security meanings into Core.
+
+For dependency configuration and implementation selection, use the configuration
+standard's [ownership and composition requirements](../standards/config-runtime-settings.md#dependency-requirements-implementation-selection-and-composition).
+Inventory the required operation contract, source-independent requirements, selected
+implementation, target wiring and actual caller proof before editing. Reuse
+loadPlatformConfiguration for the agreed loading path; its caller still owns
+selection, defaults and client construction. Existing registered schemas retain
+their supported route. Do not add a second provider merely to demonstrate selection.
 
 ## Required Checks
 

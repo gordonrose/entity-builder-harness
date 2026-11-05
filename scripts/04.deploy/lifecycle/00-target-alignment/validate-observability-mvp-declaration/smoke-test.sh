@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -88,5 +88,15 @@ p=Path(sys.argv[1]); text=p.read_text(); p.write_text(text.replace("TreatMissing
 PY
 fail observability-provider-realization-invalid "$bad_provider"
 
+malformed_codes="$(fixture malformed-codes)"
+python3 - "$malformed_codes/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml" <<'PY'
+from pathlib import Path
+import sys, yaml
+p=Path(sys.argv[1]); d=yaml.safe_load(p.read_text()); d['observability_mvp']['readiness_observation']['not_ready_codes']=[{}]; p.write_text(yaml.safe_dump(d,sort_keys=False))
+PY
+fail observability-readiness-code-policy-invalid "$malformed_codes"
+unreadable_template="$(fixture unreadable-template)"
+printf '\377' > "$unreadable_template/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+fail observability-provider-realization-unreadable "$unreadable_template"
 echo "Core-server persistence observability MVP declaration tests passed."
 

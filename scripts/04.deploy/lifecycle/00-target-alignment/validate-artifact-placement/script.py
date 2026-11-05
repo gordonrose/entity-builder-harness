@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -62,6 +62,7 @@ def verdict(path: str, kind: str) -> tuple[bool, str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=ARTIFACT_PLACEMENT_ARGUMENTS_INVALID\n")
     parser.add_argument("--kind", choices=sorted(KIND_PATTERNS), required=True)
     parser.add_argument("--path", required=True)
     parser.add_argument("--json", action="store_true")

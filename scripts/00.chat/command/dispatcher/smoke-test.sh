@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -209,5 +209,59 @@ grep -q 'record-sub-agent-activity/script.sh' "$TMP_ROOT/close.out" \
   || fail "close command did not name the sub-agent activity recorder"
 grep -q 'Return a summary covering delegation mode, fallback use, files changed, checks run, git actions, blockers, and next step.' "$TMP_ROOT/close.out" \
   || fail "close command did not require a delegation summary"
+
+for argument in 'private-command-canary@example.invalid' 'private-command-canary'; do
+  if output="$(cd "$REPO" && bash scripts/00.chat/command/dispatcher/script.sh "$argument" 2>&1)"; then
+    fail "invalid/unknown command accepted"
+  else
+    [ "$?" -eq 2 ] || fail "invalid command status changed"
+  fi
+  [[ "$output" != *private-command-canary* ]] || fail "rejected argument leaked"
+done
+cat > "$FAKE_BIN/find" <<'EOF'
+#!/usr/bin/env bash
+echo 'private-command-scan-canary@example.invalid' >&2
+exit 1
+EOF
+chmod +x "$FAKE_BIN/find"
+if output="$(cd "$REPO" && PATH="$FAKE_BIN:$PATH" bash scripts/00.chat/command/dispatcher/script.sh list 2>&1)"; then
+  fail "failed command inventory reported success"
+fi
+[[ "$output" == *chat-command-inventory-failed* ]] || fail "inventory failure missing"
+[[ "$output" != *private-command-scan-canary* ]] || fail "native inventory error leaked"
+
+# Thin gateways intentionally need no new implementation: prove exit and reason passthrough.
+status=0
+(cd "$worktree_path"; CHAT_COPY_PROMPT=CLOSEOUT_REJECTED_CANARY \
+  bash scripts/00.chat/closeout/build-closeout-prompt/script.sh) > "$TMP_ROOT/close-invalid.out" 2>&1 || status=$?
+[ "$status" -eq 2 ] || fail "invalid closeout option status"
+grep -q 'invalid CHAT_COPY_PROMPT' "$TMP_ROOT/close-invalid.out" || fail "closeout option reason missing"
+if grep -q CLOSEOUT_REJECTED_CANARY "$TMP_ROOT/close-invalid.out"; then fail "closeout leaked rejected option"; fi
+export CLOSE_REAL_GIT="$(command -v git)"
+cat > "$FAKE_BIN/git" <<'SH'
+#!/usr/bin/env bash
+if [ "$1 $2" = 'branch --show-current' ]; then echo CLOSEOUT_NATIVE_CANARY >&2; exit 99; fi
+exec "$CLOSE_REAL_GIT" "$@"
+SH
+chmod +x "$FAKE_BIN/git"
+status=0
+(cd "$worktree_path"; PATH="$FAKE_BIN:$PATH" CHAT_COPY_PROMPT=skip \
+  bash scripts/00.chat/closeout/build-closeout-prompt/script.sh) > "$TMP_ROOT/close-read.out" 2>&1 || status=$?
+[ "$status" -eq 2 ] || fail "failed closeout branch status"
+grep -q 'closeout-branch-read-failed' "$TMP_ROOT/close-read.out" || fail "closeout branch reason missing"
+if grep -q CLOSEOUT_NATIVE_CANARY "$TMP_ROOT/close-read.out"; then fail "closeout native read leaked"; fi
+
+for target in closeout/build-closeout-prompt startup/start-new-chat worktree/open-window export/worktree export/worktree-diff; do
+  printf '%s\n' '#!/usr/bin/env bash' 'echo "ERROR: fixture-child-failed" >&2' 'exit 23' \
+    > "$REPO/scripts/00.chat/$target/script.sh"
+done
+for command in close new open-window download-repo download-repo-diff; do
+  if output="$(cd "$REPO" && bash scripts/00.chat/command/dispatcher/script.sh "$command" 2>&1)"; then
+    fail "gateway accepted a failed child"
+  else
+    [ "$?" -eq 23 ] || fail "gateway changed child exit status"
+  fi
+  [ "$output" = "ERROR: fixture-child-failed" ] || fail "gateway lost child reason"
+done
 
 echo "chat command smoke test passed."

@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-platform-observability
-//   version: 1
+//   version: 2
 //   status: active
 //   created_on: "2026-09-21"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: infra.observability
 //   disciplines:
@@ -21,267 +21,156 @@
 //   - id: infra.04-deploy.03-product.entrypoint.kanbien-platform-server
 //     path: infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
 
-import { // Keep the AWS provider construction at the target composition boundary.
-  createCloudWatchOtelMetricsRuntime, // Construct the reviewed Core-to-OTel metrics adapter.
-  type CloudWatchOtelMetricSeries, // Describe the target-approved Core metric catalogue.
-  type CloudWatchOtelMetricsRuntime, // Return lifecycle ownership to the target process.
-} from "@kanbien/platform-adapter-aws-observability-cloudwatch"; // Do not expose this AWS adapter to generic platform modules.
-import type { PlatformReadinessObserverIdentity } from "@kanbien/platform-observability";
+import { createCloudWatchOtelMetricsRuntime, validateCloudWatchOtelMetricsConfiguration,
+  type CloudWatchOtelMetricsOptions, type CloudWatchOtelMetricsRuntime } from "@kanbien/platform-adapter-aws-observability-cloudwatch";
+import { createConfigIssueCollector } from "@kanbien/core/config";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { createPlatformDiagnosticReporter, createPlatformSafeLogger, createPlatformMetricLifecycleDiagnosticBinding, reportPlatformErrorDiagnostic,
+  mergeObservabilityConfigurationFailures, observabilityConfigurationField, observabilityConfigurationRecord, observabilityConstructionRecord,
+  observabilityTextIssue, platformObservabilityDiagnosticCatalog, validatePlatformReadinessConfiguration,
+  reportPlatformObservationBoundary,
+  type ObservabilityConfigurationFailure, type ObservabilityConfigurationReason, type PlatformReadinessConfiguration,
+  type PlatformMetricLifecycleDiagnosticBinding, type PlatformObservationDiagnostics } from "@kanbien/platform-observability";
 
-export interface TargetObservabilityConfigurationError { // Return a safe startup error without echoing values from the process environment.
-  readonly code: "KANBIEN_PLATFORM_TARGET_OBSERVABILITY_CONFIG_INVALID"; // Give operators one stable error category for target telemetry configuration.
-  readonly defaultMessage: string; // Supply a non-sensitive human-readable summary.
-  readonly details: Readonly<{ // Retain the configuration key and a safe validation reason for local diagnostics.
-    readonly path: string; // Identify the reviewed target configuration field that needs correction.
-    readonly reason: string; // Explain the expected shape without including its raw value.
-  }>;
+export interface TargetObservabilityConfigurationError {
+  readonly code: "KANBIEN_PLATFORM_TARGET_OBSERVABILITY_CONFIG_INVALID";
+  readonly defaultMessage: string;
+  readonly details: Readonly<{ readonly path: string; readonly reason: string }>;
+  readonly diagnosticRecord: DiagnosticRecord;
+}
+export type TargetReadinessObservationConfiguration = PlatformReadinessConfiguration;
+export const targetObservabilityBindings = {
+  "metrics.provider": "PLATFORM_OBSERVABILITY_METRICS_PROVIDER", "metrics.endpoint": "PLATFORM_OBSERVABILITY_METRICS_ENDPOINT",
+  "metrics.delivery-boundary": "PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY", "metrics.region": "PLATFORM_OBSERVABILITY_METRICS_REGION",
+  "metrics.service-name": "PLATFORM_OBSERVABILITY_SERVICE_NAME", "metrics.service-version": "PLATFORM_SOURCE_COMMIT_SHA",
+  "metrics.deployment-environment": "PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT", "metrics.export-interval": "PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS",
+  "metrics.export-timeout": "PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS", "metrics.series": "PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON",
+  "readiness.target": "PLATFORM_OBSERVABILITY_TARGET", "readiness.scope": "PLATFORM_OBSERVABILITY_SCOPE",
+  "readiness.workload": "PLATFORM_OBSERVABILITY_WORKLOAD", "readiness.dependency": "PLATFORM_OBSERVABILITY_DEPENDENCY",
+  "readiness.cadence": "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "readiness.timeout": "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS",
+  "readiness.stale-after": "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS",
+} as const;
+type Checked<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError };
+const emptyFailure: ObservabilityConfigurationFailure = { issues: [], truncated: false };
+const read = (env: NodeJS.ProcessEnv, setting: keyof typeof targetObservabilityBindings): unknown =>
+  observabilityConfigurationField(env, targetObservabilityBindings[setting]);
+/** Retain historical Number(...) acceptance (including whitespace, exponents and hexadecimal). */
+const numberSource = (value: unknown): unknown => typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+
+function providerSelection(env: NodeJS.ProcessEnv): Checked<"disabled" | "enabled"> {
+  const provider = read(env, "metrics.provider");
+  if (provider === undefined || provider === "" || provider === "none") return { ok: true, value: "disabled" };
+  if (provider === "cloudwatch-otel") return { ok: true, value: "enabled" };
+  return configurationFailure({ issues: [{ setting: "metrics.provider", reason: typeof provider !== "string" ? "wrong-type" : provider.trim() === "" ? "blank" : "unsupported" }], truncated: false });
 }
 
-/** Deployment-owned schedule for a dependency readiness observation. */
-export interface TargetReadinessObservationConfiguration {
-  readonly identity: PlatformReadinessObserverIdentity;
-  readonly cadenceMs: number;
-  readonly timeoutMs: number;
-  readonly staleAfterMs: number;
-}
-
-export function observabilityFromTargetEnvironment( // Construct optional target metrics only when this target selects a supported provider.
-  env: NodeJS.ProcessEnv, // Read the task's deployment-owned environment, never app-controlled request data.
-): { readonly ok: true; readonly value: CloudWatchOtelMetricsRuntime | undefined } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  const provider = env["PLATFORM_OBSERVABILITY_METRICS_PROVIDER"]; // Read the target's reviewed metrics provider selection.
-  if (provider === undefined || provider.length === 0 || provider === "none") { // Permit local/private targets that deliberately do not select metric delivery.
-    return { ok: true, value: undefined }; // Keep metric delivery optional outside the staging target that explicitly enables it.
-  }
-  if (provider !== "cloudwatch-otel") { // Reject a provider that this target composition has not implemented.
-    return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_METRICS_PROVIDER", "Unsupported metrics provider."); // Fail before the server accepts traffic.
-  }
-
-  const endpoint = requiredString(env, "PLATFORM_OBSERVABILITY_METRICS_ENDPOINT"); // Require the adapter's reviewed task-local collector endpoint.
-  if (!endpoint.ok) return endpoint; // Preserve the safe missing-value error.
-  const deliveryBoundary = observabilityDeliveryBoundary(env, endpoint.value); // Ensure this target has declared the route class used by the exporter.
-  if (!deliveryBoundary.ok) return deliveryBoundary; // Do not let a deployment switch from local to remote telemetry by changing only a URL.
-  const region = requiredString(env, "PLATFORM_OBSERVABILITY_METRICS_REGION"); // Require the selected AWS region.
-  if (!region.ok) return region; // Preserve the safe missing-value error.
-  const serviceName = requiredString(env, "PLATFORM_OBSERVABILITY_SERVICE_NAME"); // Require a stable OTel resource service identity.
-  if (!serviceName.ok) return serviceName; // Preserve the safe missing-value error.
-  const serviceVersion = requiredString(env, "PLATFORM_SOURCE_COMMIT_SHA"); // Require the immutable build revision supplied by the image build.
-  if (!serviceVersion.ok) return serviceVersion; // Preserve the safe missing-value error.
-  const deploymentEnvironment = requiredString(env, "PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT"); // Require a bounded target environment resource attribute.
-  if (!deploymentEnvironment.ok) return deploymentEnvironment; // Preserve the safe missing-value error.
-  const exportIntervalMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS"); // Parse the target's controlled batching cadence.
-  if (!exportIntervalMs.ok) return exportIntervalMs; // Preserve the safe numeric configuration error.
-  const exportTimeoutMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS"); // Parse the target's controlled exporter deadline.
-  if (!exportTimeoutMs.ok) return exportTimeoutMs; // Preserve the safe numeric configuration error.
-  const series = metricSeriesFromEnvironment(env); // Parse the mechanical target-policy projection used by the adapter.
-  if (!series.ok) return series; // Fail closed when the metric catalogue cannot be safely reconstructed.
-
-  try { // Let the adapter enforce endpoint, region, label, cardinality, and histogram semantics in one place.
-    return { // Return the provider runtime only after its complete target configuration has passed validation.
-      ok: true, // Mark the result ready for target process composition.
-      value: createCloudWatchOtelMetricsRuntime({ // Construct the AWS adapter without changing generic platform code.
-        endpoint: endpoint.value, // Pass the reviewed local collector endpoint.
-        region: region.value, // Pass the target-selected AWS region as a resource attribute.
-        serviceName: serviceName.value, // Pass the stable service resource identity.
-        serviceVersion: serviceVersion.value, // Pass the immutable build revision as a resource attribute.
-        deploymentEnvironment: deploymentEnvironment.value, // Pass the bounded deployment environment as a resource attribute.
-        exportIntervalMs: exportIntervalMs.value, // Pass the reviewed periodic export interval.
-        exportTimeoutMs: exportTimeoutMs.value, // Pass the reviewed maximum export duration.
-        series: series.value, // Pass only the catalogue mechanically projected from the target policy.
-      }), // Keep OTel construction outside server routes, jobs, and Core.
-    }; // Return the completed target metrics runtime.
-  } catch (error) { // Convert adapter configuration failures into a safe startup result.
-    return targetObservabilityConfigurationError( // Avoid exposing endpoints or raw environment values in the returned error.
-      "PLATFORM_OBSERVABILITY_METRICS_*", // Point operators at the reviewed metrics configuration group.
-      error instanceof Error ? error.message : "Metrics adapter configuration is invalid.", // Retain only the adapter's safe validation message.
-    ); // Ensure the process remains fail-closed for a configured-but-invalid target metrics path.
-  }
-}
-
-function observabilityDeliveryBoundary(
-  env: NodeJS.ProcessEnv,
-  endpoint: string,
-): { readonly ok: true } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  const boundary = env["PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY"] ?? "task-local";
-  if (boundary === "task-local" && endpoint === "http://127.0.0.1:4318/v1/metrics") return { ok: true };
-  if (boundary === "private-collector-service") {
-    try {
-      const route = new URL(endpoint);
-      if (route.protocol === "http:" && route.port === "4318" && route.pathname === "/v1/metrics" && route.username === "" && route.password === "" && route.search === "" && route.hash === "" && /^[a-z][a-z0-9-]{1,63}(?:\.[a-z][a-z0-9-]{1,63})+\.internal$/.test(route.hostname)) return { ok: true };
-    } catch {
-      // Return the same safe configuration result below.
-    }
-  }
-  return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY", "A reviewed task-local or private collector delivery boundary is required.");
-}
-
-/**
- * Read the target-owned readiness observation schedule.  This is intentionally
- * independent of HTTP traffic and of the metric exporter interval.  A target
- * with no enabled metrics has no required observation path yet, preserving
- * local/package proof without pretending it has production telemetry.
- */
-export function readinessObservationFromTargetEnvironment(
-  env: NodeJS.ProcessEnv,
-): { readonly ok: true; readonly value: TargetReadinessObservationConfiguration | undefined } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  const provider = env["PLATFORM_OBSERVABILITY_METRICS_PROVIDER"];
-  if (provider === undefined || provider.length === 0 || provider === "none") return { ok: true, value: undefined };
-  const target = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_TARGET");
-  const scope = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_SCOPE");
-  const workload = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_WORKLOAD");
-  const dependency = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_DEPENDENCY");
-  const cadenceMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS");
-  const timeoutMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS");
-  const staleAfterMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS");
-  if (!target.ok) return target;
-  if (!scope.ok) return scope;
-  if (!workload.ok) return workload;
-  if (!dependency.ok) return dependency;
-  if (!cadenceMs.ok) return cadenceMs;
-  if (!timeoutMs.ok) return timeoutMs;
-  if (!staleAfterMs.ok) return staleAfterMs;
-  if (timeoutMs.value >= cadenceMs.value || staleAfterMs.value < cadenceMs.value + timeoutMs.value) {
-    return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_READINESS_*", "Readiness timeout must be shorter than cadence and stale deadline must cover a completed observation.");
-  }
-  return {
-    ok: true,
-    value: {
-      identity: { target: target.value, scope: scope.value, workload: workload.value, dependency: dependency.value },
-      cadenceMs: cadenceMs.value,
-      timeoutMs: timeoutMs.value,
-      staleAfterMs: staleAfterMs.value,
-    },
+/** Pure target composition, including independent series and optional readiness checks. */
+export function observabilityConfigurationFromTargetEnvironment(env: NodeJS.ProcessEnv, includeReadiness = false):
+  Checked<{ readonly options: CloudWatchOtelMetricsOptions | undefined; readonly readiness: PlatformReadinessConfiguration | undefined }> {
+  const selection = providerSelection(env);
+  if (!selection.ok) return selection;
+  if (selection.value === "disabled") return { ok: true, value: { options: undefined, readiness: undefined } };
+  const collector = createConfigIssueCollector<ObservabilityConfigurationReason>();
+  const rawSeries = read(env, "metrics.series");
+  let series: unknown;
+  const seriesReason = observabilityTextIssue(rawSeries);
+  if (seriesReason) collector.add({ setting: "metrics.series", reason: seriesReason });
+  else try { series = JSON.parse(rawSeries as string); }
+  catch { collector.add({ setting: "metrics.series", reason: "invalid-json" }); }
+  const options = {
+    endpoint: read(env, "metrics.endpoint"), region: read(env, "metrics.region"), serviceName: read(env, "metrics.service-name"),
+    serviceVersion: read(env, "metrics.service-version"), deploymentEnvironment: read(env, "metrics.deployment-environment"),
+    exportIntervalMs: numberSource(read(env, "metrics.export-interval")), exportTimeoutMs: numberSource(read(env, "metrics.export-timeout")), series,
   };
-}
-
-function requiredString( // Read one mandatory non-empty target configuration string.
-  env: NodeJS.ProcessEnv, // Receive the task environment selected by CloudFormation.
-  key: string, // Name the exact reviewed environment key.
-): { readonly ok: true; readonly value: string } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  const value = env[key]; // Read the configuration value once.
-  if (value === undefined || value.trim().length === 0) { // Reject absent and whitespace-only values before adapter construction.
-    return targetObservabilityConfigurationError(key, "A non-empty value is required when cloudwatch-otel metrics are enabled."); // Avoid ambiguous default behaviour for a configured provider.
-  }
-  return { ok: true, value }; // Return the reviewed raw string only to the local composition function.
-}
-
-function requiredBoundedName(
-  env: NodeJS.ProcessEnv,
-  key: string,
-): { readonly ok: true; readonly value: string } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  const value = env[key];
-  if (typeof value !== "string" || !/^[a-z][a-z0-9-]{1,63}$/.test(value)) {
-    return targetObservabilityConfigurationError(key, "A bounded lowercase target identity is required when cloudwatch-otel metrics are enabled.");
-  }
-  return { ok: true, value };
-}
-
-function positiveInteger( // Parse one mandatory positive integer target configuration value.
-  env: NodeJS.ProcessEnv, // Receive the task environment selected by CloudFormation.
-  key: string, // Name the exact reviewed numeric environment key.
-): { readonly ok: true; readonly value: number } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  const raw = env[key]; // Read the string representation supplied by ECS.
-  const value = raw === undefined ? Number.NaN : Number(raw); // Convert it once while preserving missing-value failure semantics.
-  if (!Number.isInteger(value) || value <= 0) { // Reject fractions, zero, negatives, and non-numeric values.
-    return targetObservabilityConfigurationError(key, "A positive integer is required when cloudwatch-otel metrics are enabled."); // Keep batch scheduling and deadlines bounded.
-  }
-  return { ok: true, value }; // Return the parsed integer to the adapter constructor.
-}
-
-function metricSeriesFromEnvironment( // Parse the reviewed target catalogue projection supplied by ECS task configuration.
-  env: NodeJS.ProcessEnv, // Receive the task environment selected by CloudFormation.
-): { readonly ok: true; readonly value: readonly CloudWatchOtelMetricSeries[] } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  const raw = env["PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON"]; // Read the one JSON representation of the reviewed series catalogue.
-  if (raw === undefined || raw.length === 0) { // Reject an enabled metrics path with no declared series.
-    return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", "A non-empty metric-series catalogue is required when cloudwatch-otel metrics are enabled."); // Prevent silent metric loss.
-  }
-  try { // Parse before structural validation so malformed JSON never reaches the adapter.
-    const parsed: unknown = JSON.parse(raw); // Treat environment JSON as untrusted deployment input until checked.
-    if (!Array.isArray(parsed)) { // Require an explicit ordered array of metric mappings.
-      return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", "Expected a JSON array of metric-series definitions."); // Keep the target catalogue scanable and deterministic.
+  const metrics = validateCloudWatchOtelMetricsConfiguration(options);
+  // The JSON boundary already explains missing/syntax failures; do not duplicate its derived missing-series issue.
+  const metricFailure = metrics.ok ? emptyFailure : { ...metrics.error,
+    issues: series === undefined ? metrics.error.issues.filter((issue) => issue.setting !== "metrics.series") : metrics.error.issues };
+  const boundary = read(env, "metrics.delivery-boundary") ?? "task-local";
+  if (typeof boundary !== "string") collector.add({ setting: "metrics.delivery-boundary", reason: "wrong-type" });
+  else if (boundary !== "task-local" && boundary !== "private-collector-service") collector.add({ setting: "metrics.delivery-boundary", reason: boundary.trim() === "" ? "blank" : "unsupported" });
+  else if (!observabilityTextIssue(options.endpoint)) {
+    // Preserve the stricter target task-local spelling and private-service selection policy.
+    if (boundary === "task-local" && options.endpoint !== "http://127.0.0.1:4318/v1/metrics") collector.add({ setting: "metrics.delivery-boundary", reason: "boundary-mismatch" });
+    if (boundary === "private-collector-service") {
+      try { if (new URL(options.endpoint as string).hostname === "127.0.0.1") collector.add({ setting: "metrics.delivery-boundary", reason: "boundary-mismatch" }); }
+      catch { /* The provider validator retains the malformed URL predicate. */ }
     }
-    const series: CloudWatchOtelMetricSeries[] = []; // Accumulate only structurally valid mappings for the adapter.
-    for (const [index, item] of parsed.entries()) { // Validate each JSON item while preserving its safe array position.
-      const definition = metricSeriesDefinition(item, index); // Check the untyped mapping before using it as an adapter contract.
-      if (!definition.ok) return definition; // Stop at the first safe configuration error without creating a partial runtime.
-      series.push(definition.value); // Retain the structurally valid mapping in the reviewed catalogue order.
-    }
-    return { ok: true, value: series }; // Return only structurally valid target series to the adapter.
-  } catch { // Treat parsing failures as ordinary target configuration errors.
-    return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", "Expected valid JSON metric-series definitions."); // Do not echo raw JSON into process logs.
   }
+  const readiness = includeReadiness ? readinessConfiguration(env) : { ok: true as const, value: undefined };
+  const failure = mergeObservabilityConfigurationFailures(collector.finish(), metricFailure, readiness.ok ? emptyFailure : readiness.error);
+  if (failure.issues.length) return configurationFailure(failure);
+  if (!metrics.ok) throw new TypeError("TARGET_OBSERVABILITY_VALIDATION_INVARIANT");
+  return { ok: true, value: { options: metrics.value, readiness: readiness.ok ? readiness.value : undefined } };
 }
 
-function metricSeriesDefinition( // Validate one JSON metric-series mapping before the adapter checks deeper semantic rules.
-  value: unknown, // Receive one untyped JSON array item.
-  index: number, // Retain the item index for a safe configuration-path diagnostic.
-): { readonly ok: true; readonly value: CloudWatchOtelMetricSeries } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  if (!isRecord(value)) { // Require every metric series to be a JSON object.
-    return targetObservabilityConfigurationError(`PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON[${index}]`, "Each metric-series definition must be an object."); // Avoid property access on malformed deployment input.
+export function readinessObservationFromTargetEnvironment(env: NodeJS.ProcessEnv): Checked<PlatformReadinessConfiguration | undefined> {
+  const selection = providerSelection(env);
+  if (!selection.ok) return selection;
+  if (selection.value === "disabled") return { ok: true, value: undefined };
+  const checked = readinessConfiguration(env);
+  return checked.ok ? checked : configurationFailure(checked.error);
+}
+function readinessConfiguration(env: NodeJS.ProcessEnv) {
+  return validatePlatformReadinessConfiguration({ target: read(env, "readiness.target"), scope: read(env, "readiness.scope"),
+    workload: read(env, "readiness.workload"), dependency: read(env, "readiness.dependency"),
+    cadenceMs: numberSource(read(env, "readiness.cadence")), timeoutMs: numberSource(read(env, "readiness.timeout")), staleAfterMs: numberSource(read(env, "readiness.stale-after")) });
+}
+
+/** Runtime construction is a separate boundary; an exception message is not configuration evidence. */
+export function createTargetObservabilityRuntime(options: CloudWatchOtelMetricsOptions | undefined,
+  construct: typeof createCloudWatchOtelMetricsRuntime = createCloudWatchOtelMetricsRuntime,
+  diagnostics?: PlatformMetricLifecycleDiagnosticBinding | false,
+  observations?: PlatformObservationDiagnostics | false): Checked<CloudWatchOtelMetricsRuntime | undefined> {
+  if (options === undefined) return { ok: true, value: undefined };
+  let observationBinding: PlatformObservationDiagnostics | undefined;
+  try {
+    // Process-owned lifecycle evidence is independent of any route signal profile.
+    // Disabled metrics never construct a reporter; explicit false disables this binding.
+    const defaults = diagnostics === undefined || (observations === undefined && diagnostics !== false) ? targetMetricDiagnosticBindings() : undefined;
+    const binding = diagnostics === false ? undefined : diagnostics ?? defaults?.lifecycle;
+    observationBinding = observations === false ? undefined : observations ?? (diagnostics === false ? undefined : defaults?.observations);
+    return { ok: true, value: observationBinding === undefined ? construct(options, binding) : construct(options, binding, observationBinding) };
   }
-  const sourceName = stringField(value, "sourceName"); // Read the Core metric identity.
-  const sourceKind = stringField(value, "sourceKind"); // Read the Core metric kind.
-  const sourceUnit = stringField(value, "sourceUnit"); // Read the Core metric unit.
-  const instrumentName = stringField(value, "instrumentName"); // Read the exported OTel instrument identity.
-  const description = stringField(value, "description"); // Read the operator-facing series meaning.
-  const allowedLabelNames = stringArrayField(value, "allowedLabelNames"); // Read the reviewed label allowlist.
-  const cardinalityLimit = numberField(value, "cardinalityLimit"); // Read the in-process combination cap.
-  const histogramBucketBoundaries = optionalNumberArrayField(value, "histogramBucketBoundaries"); // Read optional distribution boundaries.
-  if (sourceName === undefined || sourceKind === undefined || sourceUnit === undefined || instrumentName === undefined || description === undefined || allowedLabelNames === undefined || cardinalityLimit === undefined || histogramBucketBoundaries === "invalid") { // Reject incomplete or wrongly typed mappings.
-    return targetObservabilityConfigurationError(`PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON[${index}]`, "Each metric-series definition must use the reviewed adapter field types."); // Leave deeper policy semantics to the adapter.
-  }
-  if (sourceKind !== "counter" && sourceKind !== "gauge" && sourceKind !== "histogram" && sourceKind !== "timer") { // Restrict the untyped JSON string to the Core metric-kind vocabulary.
-    return targetObservabilityConfigurationError(`PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON[${index}].sourceKind`, "Expected a Core metric kind."); // Prevent unsafe type assertion at the adapter boundary.
-  }
-  return { // Reconstruct the adapter's typed mapping from validated JSON fields.
-    ok: true, // Mark this individual series structurally valid.
-    value: { // Return the target-approved Core-to-OTel mapping.
-      sourceName, // Preserve the Core metric identity.
-      sourceKind, // Preserve the validated Core metric kind.
-      sourceUnit, // Preserve the Core metric unit.
-      instrumentName, // Preserve the OTel instrument identity.
-      description, // Preserve the operator-facing meaning.
-      allowedLabelNames, // Preserve the reviewed target label allowlist.
-      cardinalityLimit, // Preserve the reviewed target series cap.
-      ...(histogramBucketBoundaries === undefined ? {} : { histogramBucketBoundaries }), // Include buckets only for an explicitly supplied distribution policy.
-    }, // Finish the typed metric-series mapping.
-  }; // Return the validated mapping.
+  catch (error) {
+    reportPlatformObservationBoundary(observationBinding, { operation: "metric-runtime-construction", phase: "runtime-construction", reason: "threw", effect: "unknown" }, error);
+    return { ok: false, error: {
+    code: "KANBIEN_PLATFORM_TARGET_OBSERVABILITY_CONFIG_INVALID", defaultMessage: "Kanbien platform target observability configuration is invalid.",
+    details: { path: "PLATFORM_OBSERVABILITY_METRICS_*", reason: "Runtime construction did not complete; its cause is unclassified." },
+    diagnosticRecord: observabilityConstructionRecord(),
+  } }; }
+}
+export function observabilityFromTargetEnvironment(env: NodeJS.ProcessEnv,
+  construct: typeof createCloudWatchOtelMetricsRuntime = createCloudWatchOtelMetricsRuntime,
+  diagnostics?: PlatformMetricLifecycleDiagnosticBinding | false,
+  observations?: PlatformObservationDiagnostics | false): Checked<CloudWatchOtelMetricsRuntime | undefined> {
+  const checked = observabilityConfigurationFromTargetEnvironment(env);
+  return checked.ok ? createTargetObservabilityRuntime(checked.value.options, construct, diagnostics, observations) : checked;
 }
 
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> { // Narrow untyped JSON safely to an object with string keys.
-  return typeof value === "object" && value !== null && !Array.isArray(value); // Exclude null and arrays before property inspection.
+function targetMetricDiagnosticBindings(): { readonly lifecycle: PlatformMetricLifecycleDiagnosticBinding; readonly observations: PlatformObservationDiagnostics } | undefined {
+  try {
+    const reporter = createPlatformDiagnosticReporter({ catalogs: [coreDiagnosticCatalog, platformObservabilityDiagnosticCatalog], clock: { now: () => new Date() },
+      logger: createPlatformSafeLogger({ write(record) { console.error(JSON.stringify(record)); } }) });
+    return { lifecycle: createPlatformMetricLifecycleDiagnosticBinding(reporter, { capability: "observability" }),
+      observations: { reporter, context: { capability: "observability", operation: "metrics", stage: "startup" } } };
+  } catch { return undefined; } // Optional diagnostic setup cannot prevent the selected metrics runtime.
 }
 
-function stringField(value: Readonly<Record<string, unknown>>, key: string): string | undefined { // Read one required non-empty JSON string field.
-  const field = value[key]; // Look up the field once.
-  return typeof field === "string" && field.trim().length > 0 ? field : undefined; // Reject empty or non-string deployment values.
+function configurationFailure(failure: ObservabilityConfigurationFailure): { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
+  const first = failure.issues[0];
+  const binding = first === undefined ? undefined : targetObservabilityBindings[first.setting as keyof typeof targetObservabilityBindings];
+  return { ok: false, error: {
+    code: "KANBIEN_PLATFORM_TARGET_OBSERVABILITY_CONFIG_INVALID", defaultMessage: "Kanbien platform target observability configuration is invalid.",
+    details: { path: binding ?? "PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", reason: first?.reason ?? "configuration-rejected" },
+    diagnosticRecord: observabilityConfigurationRecord(failure),
+  } };
 }
 
-function numberField(value: Readonly<Record<string, unknown>>, key: string): number | undefined { // Read one required finite JSON number field.
-  const field = value[key]; // Look up the field once.
-  return typeof field === "number" && Number.isFinite(field) ? field : undefined; // Reject strings, NaN, infinity, and absent values.
-}
-
-function stringArrayField(value: Readonly<Record<string, unknown>>, key: string): readonly string[] | undefined { // Read one required string-array JSON field.
-  const field = value[key]; // Look up the field once.
-  return Array.isArray(field) && field.every((item) => typeof item === "string") ? field : undefined; // Reject mixed arrays before adapter validation.
-}
-
-function optionalNumberArrayField(value: Readonly<Record<string, unknown>>, key: string): readonly number[] | undefined | "invalid" { // Read one optional finite-number-array field.
-  const field = value[key]; // Look up the optional field once.
-  if (field === undefined) return undefined; // Preserve the difference between absent optional buckets and malformed buckets.
-  return Array.isArray(field) && field.every((item) => typeof item === "number" && Number.isFinite(item)) ? field : "invalid"; // Reject non-numeric bucket values.
-}
-
-function targetObservabilityConfigurationError( // Construct one stable safe target-observability startup error.
-  path: string, // Name the target-owned key or JSON position needing correction.
-  reason: string, // Explain the expected safe shape.
-): { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
-  return { // Keep the result shape consistent with the target entrypoint's other configuration parsers.
-    ok: false, // Mark target metrics construction as unavailable.
-    error: { // Return only safe operational diagnostic data.
-      code: "KANBIEN_PLATFORM_TARGET_OBSERVABILITY_CONFIG_INVALID", // Give logs and runbooks a stable error code.
-      defaultMessage: "Kanbien platform target observability configuration is invalid.", // Avoid logging environment values.
-      details: { path, reason }, // Record the reviewed field name and safe reason.
-    }, // Finish the error record.
-  }; // Return the failed result.
+/** Startup delivery uses the same validated internal reporter as other configuration boundaries. */
+export function reportTargetObservabilityConfiguration(error: TargetObservabilityConfigurationError): void {
+  const reporter = createPlatformDiagnosticReporter({ catalogs: [platformObservabilityDiagnosticCatalog], clock: { now: () => new Date() },
+    logger: createPlatformSafeLogger({ write(record) { console.error(JSON.stringify(record)); } }) });
+  reportPlatformErrorDiagnostic(reporter, error, { capability: "observability", operation: "configure", stage: "configuration" });
 }

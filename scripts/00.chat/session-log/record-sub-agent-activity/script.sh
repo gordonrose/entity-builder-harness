@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.record-sub-agent-activity
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-07-09"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -61,6 +61,10 @@ NEXT_STEP="none"
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --mode|--status|--agent|--scope|--summary|--files|--checks|--git-actions|--blockers|--next-step)
+      [ $# -ge 2 ] || { echo "ERROR: option requires a value." >&2; exit 2; } ;;
+  esac
+  case "$1" in
     --mode)
       MODE="${2:-}"
       shift 2
@@ -106,7 +110,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument." >&2
       usage >&2
       exit 2
       ;;
@@ -125,7 +129,7 @@ case "$MODE" in
   sub-agent|direct-fallback)
     ;;
   *)
-    echo "ERROR: invalid mode: $MODE" >&2
+    echo "ERROR: invalid mode." >&2
     echo "Expected sub-agent or direct-fallback." >&2
     exit 2
     ;;
@@ -135,23 +139,29 @@ case "$STATUS" in
   completed|blocked|failed|partial)
     ;;
   *)
-    echo "ERROR: invalid status: $STATUS" >&2
+    echo "ERROR: invalid status." >&2
     echo "Expected completed, blocked, failed, or partial." >&2
     exit 2
     ;;
 esac
 
-BRANCH="$(git branch --show-current)"
+log_operation_failed() {
+  echo "ERROR: session-log-operation-failed; stage=$1; effect=unknown; inspect before retry." >&2
+  exit "$2"
+}
+BRANCH="$(git branch --show-current 2>/dev/null)" || {
+  echo "ERROR: session-log-branch-read-failed; effect=none." >&2; exit 2;
+}
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  echo "ERROR: current branch is not a chat branch." >&2
   exit 1
 fi
 
 LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE" >&2
+  echo "ERROR: missing chat log." >&2
   exit 1
 fi
 
@@ -178,9 +188,10 @@ insert_section_entry() {
       inserted = 0
       found = 0
       entry = ""
-      while ((getline line < entry_path) > 0) {
+      while ((entry_status = getline line < entry_path) > 0) {
         entry = entry (entry == "" ? "" : "\n") line
       }
+      if (entry_status < 0) exit 2
       close(entry_path)
     }
     $0 == section {
@@ -213,12 +224,13 @@ insert_section_entry() {
         print entry
       }
     }
-  ' "$LOG_FILE" > "$tmp"; then
-    mv "$tmp" "$LOG_FILE"
+  ' "$LOG_FILE" > "$tmp" 2>/dev/null; then
+    mv "$tmp" "$LOG_FILE" 2>/dev/null || log_operation_failed replacement "$?"
   else
+    local status=$?
     rm -f "$tmp"
     rm -f "$entry_tmp"
-    return 1
+    log_operation_failed entry-construction "$status"
   fi
 
   rm -f "$entry_tmp"

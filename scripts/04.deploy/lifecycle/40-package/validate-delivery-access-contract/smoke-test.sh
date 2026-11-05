@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.delivery-access
 #   disciplines:
@@ -19,6 +19,7 @@ set -euo pipefail
 #     - entity-builder
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.command.validate-delivery-access-contract.wrapper
 #     path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.sh
@@ -76,4 +77,30 @@ if output="$(bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/missing-step.yml" -
   exit 1
 fi
 [[ "$output" == *'delivery-access-workflow-step-missing'* ]]
+python3 - "$ROOT" "$TEMPORARY_DIRECTORY" "$CONTRACT" "$WORKFLOW" "$coverage" <<'PY'
+import json,os,subprocess,sys
+from pathlib import Path
+repo,temp,contract,workflow,coverage=map(Path,sys.argv[1:])
+command=repo/'scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py'
+bad=temp/'credential-canary-value';bad.write_bytes(b'\xffcredential-canary-value')
+args=['python3','-B',str(command),'--contract',str(contract),'--workflow',str(bad),'--provider-policy-coverage',str(coverage),'--json']
+result=subprocess.run(args,capture_output=True,text=True)
+assert result.returncode==1 and 'delivery-workflow-unreadable' in result.stdout,(result.stdout,result.stderr)
+assert 'credential-canary-value' not in result.stdout+result.stderr and 'Traceback' not in result.stderr
+result=subprocess.run(['python3','-B',str(command),'--contract'],capture_output=True,text=True)
+assert result.returncode==2 and json.loads(result.stderr)['findings']==[{'code':'delivery-access-arguments-invalid'}]
+adapter=repo/'scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py'
+result=subprocess.run(['python3','-B',str(adapter),'--contract',str(contract),'--template',str(bad),'--role-logical-id','DeliveryRole','--provider-policy-source','fixture-policy','--output',str(temp)],capture_output=True,text=True)
+assert result.returncode==1 and result.stderr=='DIAGNOSTIC_CODE=DELIVERY_POLICY_COVERAGE_OUTPUT_UNAVAILABLE\n',(result.stdout,result.stderr)
+assert 'credential-canary-value' not in result.stdout+result.stderr
+binary=temp/'bin';binary.mkdir()
+(binary/'git').write_text('#!/bin/sh\nprintf "%s\\n" "$FIXTURE_ROOT"\n')
+(binary/'python3').write_text('#!/bin/sh\nprintf "credential-canary-value\\n" >&2\nexit 23\n')
+for child in binary.iterdir():child.chmod(0o755)
+for owner in ('core-server','core-server-persistence'):
+ wrapper=repo/'scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform'/(owner+'-package-custody')/'validate-delivery-access/script.sh'
+ result=subprocess.run(['/bin/bash',str(wrapper),'--json'],env={**os.environ,'PATH':str(binary)+os.pathsep+os.environ['PATH'],'FIXTURE_ROOT':str(repo)},capture_output=True,text=True)
+ assert result.returncode==23 and 'DIAGNOSTIC_CODE=DELIVERY_POLICY_COVERAGE_FAILED' in result.stderr,(result.stdout,result.stderr)
+ assert 'credential-canary-value' not in result.stdout+result.stderr and 'LIFECYCLE_STAGE=package' in result.stderr
+PY
 echo 'Delivery access contract smoke test passed.'

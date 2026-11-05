@@ -13,6 +13,7 @@ import {
   type Result,
 } from "../shared/index";
 import { persistenceError, type PersistenceError } from "./errors";
+import { corePersistenceValidationRecord } from "./diagnostics";
 
 export type OutboxEntryId = EntityId<"OutboxEntryId">;
 export type OutboxMessageType = Brand<string, "OutboxMessageType">;
@@ -45,6 +46,7 @@ export function outboxMessageType(value: string): Result<OutboxMessageType, Pers
         defaultMessage: "Outbox message type must use dot-separated lowercase segments.",
         messageKey: "persistence.outbox.message_type.invalid",
         params: { messageType: value },
+        diagnosticRecord: corePersistenceValidationRecord({ operation: "outbox-type", field: "message-type", reason: "invalid-format" }),
       }),
     );
   }
@@ -53,13 +55,15 @@ export function outboxMessageType(value: string): Result<OutboxMessageType, Pers
 }
 
 export function outboxMessageVersion(value: number): Result<OutboxMessageVersion, PersistenceError> {
-  if (!Number.isInteger(value) || value <= 0) {
+  const integer = Number.isInteger(value);
+  if (!integer || value <= 0) {
     return err(
       persistenceError({
         code: "PERSISTENCE_INVALID_OUTBOX_MESSAGE_VERSION",
         defaultMessage: "Outbox message version must be a positive integer.",
         messageKey: "persistence.outbox.message_version.invalid",
         params: { version: String(value) },
+        diagnosticRecord: corePersistenceValidationRecord({ operation: "outbox-version", field: "message-version", reason: integer ? "not-positive" : "not-integer" }),
       }),
     );
   }
@@ -75,6 +79,7 @@ export function outboxDeliveryPolicy(value: string): Result<OutboxDeliveryPolicy
         defaultMessage: "Outbox delivery policy must use dot-separated lowercase segments.",
         messageKey: "persistence.outbox.delivery_policy.invalid",
         params: { deliveryPolicy: value },
+        diagnosticRecord: corePersistenceValidationRecord({ operation: "outbox-policy", field: "delivery-policy", reason: "invalid-format" }),
       }),
     );
   }

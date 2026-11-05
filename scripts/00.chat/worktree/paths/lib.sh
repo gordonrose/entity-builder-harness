@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: worktree
 #   disciplines:
@@ -27,15 +27,24 @@
 #   effects:
 #   - read-only
 chat_worktree_primary_path() {
-  local repo_path="${1:-.}" primary_path
+  local repo_path="${1:-.}" primary_path="" registrations line
 
-  primary_path="$(git -C "$repo_path" worktree list --porcelain | sed -n '1s/^worktree //p')"
+  if ! registrations="$(git -C "$repo_path" worktree list --porcelain 2>/dev/null)"; then
+    echo "ERROR: worktree-registration-read-failed" >&2
+    return 2
+  fi
+  while IFS= read -r line; do
+    case "$line" in worktree\ *) primary_path="${line#worktree }"; break ;; esac
+  done <<< "$registrations"
   if [ -z "${primary_path// }" ]; then
-    echo "ERROR: could not determine the primary worktree for: $repo_path" >&2
-    return 1
+    echo "ERROR: worktree-primary-unavailable" >&2
+    return 2
   fi
 
-  cd "$primary_path" && pwd -P
+  if ! (cd "$primary_path" && pwd -P) 2>/dev/null; then
+    echo "ERROR: worktree-primary-inaccessible" >&2
+    return 2
+  fi
 }
 
 chat_worktree_repo_root() {
@@ -124,35 +133,44 @@ chat_worktree_path_for_branch() {
 chat_worktree_registered_path_for_branch() {
   local repo_root="$1"
   local branch="$2"
-  local path found_path="" found_count=0
+  local path found_path="" found_count=0 registrations matches
+
+  if ! registrations="$(git -C "$repo_root" worktree list --porcelain 2>/dev/null)"; then
+    echo "ERROR: worktree-registration-read-failed" >&2
+    return 2
+  fi
+  if ! matches="$(awk -v branch="refs/heads/${branch}" '
+      /^worktree / { path = substr($0, 10) }
+      /^branch / && substr($0, 8) == branch { print path }
+    ' <<< "$registrations" 2>/dev/null)"; then
+    echo "ERROR: worktree-registration-selection-failed" >&2
+    return 2
+  fi
 
   while IFS= read -r path; do
     [ -z "${path// }" ] && continue
     found_path="$path"
     found_count=$((found_count + 1))
-  done < <(
-    git -C "$repo_root" worktree list --porcelain \
-      | awk -v branch="refs/heads/${branch}" '
-          /^worktree / { path = substr($0, 10) }
-          /^branch / && substr($0, 8) == branch { print path }
-        '
-  )
+  done <<< "$matches"
 
   if [ "$found_count" -eq 0 ]; then
     return 1
   fi
 
   if [ "$found_count" -ne 1 ]; then
-    echo "ERROR: ambiguous registered worktrees for chat branch '$branch' in $repo_root." >&2
+    echo "ERROR: worktree-registration-ambiguous" >&2
     return 2
   fi
 
   if [ ! -d "$found_path" ]; then
-    echo "ERROR: registered chat worktree is unavailable: $found_path" >&2
+    echo "ERROR: worktree-registration-unavailable" >&2
     return 2
   fi
 
-  cd "$found_path" && pwd -P
+  if ! (cd "$found_path" && pwd -P) 2>/dev/null; then
+    echo "ERROR: worktree-registration-inaccessible" >&2
+    return 2
+  fi
 }
 
 chat_worktree_path_for_existing_or_new_branch() {
@@ -177,5 +195,14 @@ chat_worktree_metadata_value() {
   local log_file="$1"
   local key="$2"
 
-  sed -n "/<!-- agentic-session/,/-->/s/^${key}: //p" "$log_file" | head -n 1
+  if ! awk -v key="$key" '
+    /<!-- agentic-session/ { inside = 1; next }
+    inside && /-->/ { inside = 0 }
+    inside && !found && index($0, key ": ") == 1 {
+      print substr($0, length(key) + 3); found = 1
+    }
+  ' "$log_file" 2>/dev/null; then
+    echo "ERROR: worktree-session-metadata-read-failed" >&2
+    return 2
+  fi
 }

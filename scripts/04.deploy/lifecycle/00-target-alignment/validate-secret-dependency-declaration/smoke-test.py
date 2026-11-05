@@ -5,7 +5,7 @@
 #   version: 4
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -388,6 +388,10 @@ def main() -> int:
             malformed_access_class["configuration"]["secret_dependencies"][0]["access_class"] = access_class
             expect_failure(malformed_access_class, "secret-dependency-access-class-invalid", directory)
         malformed_names = copy.deepcopy(runtime_task)
+        for persistence in [[{}], [[]]]:
+            malformed_persistence = copy.deepcopy(runtime_task)
+            malformed_persistence['dependencies']['persistence'] = persistence
+            expect_failure(malformed_persistence, 'secret-dependency-persistence-classification-invalid', directory)
         malformed_names["configuration"]["secret_names"] = [{"name": "NOT_A_NAME"}]
         expect_failure(malformed_names, "secret-dependency-names-invalid", directory)
         malformed_workloads = copy.deepcopy(runtime_task)

@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.closeout.build-closeout-prompt
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: closeout
 #   disciplines:
@@ -41,7 +41,7 @@ copy_prompt_with_retry() {
 
   local attempt=1
   while [ "$attempt" -le 2 ]; do
-    if printf '%s' "$CLOSE_PROMPT" | "$@"; then
+    if printf '%s' "$CLOSE_PROMPT" | "$@" 2>/dev/null; then
       echo "Copied closeout prompt to clipboard."
       return 0
     fi
@@ -58,17 +58,19 @@ copy_prompt_with_retry() {
   return 1
 }
 
-BRANCH="$(git branch --show-current)"
+BRANCH="$(git branch --show-current 2>/dev/null)" || {
+  echo "ERROR: closeout-branch-read-failed." >&2; exit 2;
+}
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  echo "ERROR: current branch is not a chat branch." >&2
   exit 1
 fi
 
 LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE" >&2
+  echo "ERROR: missing chat log." >&2
   exit 1
 fi
 
@@ -127,7 +129,7 @@ case "${CHAT_COPY_PROMPT:-copy}" in
     fi
     ;;
   *)
-    echo "ERROR: invalid CHAT_COPY_PROMPT value: ${CHAT_COPY_PROMPT}" >&2
+    echo "ERROR: invalid CHAT_COPY_PROMPT value." >&2
     echo "Use copy or skip." >&2
     exit 2
     ;;

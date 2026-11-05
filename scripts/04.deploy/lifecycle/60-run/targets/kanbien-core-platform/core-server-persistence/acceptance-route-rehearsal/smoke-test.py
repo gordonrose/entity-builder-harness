@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-05"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -229,7 +229,7 @@ def full_route():
         def run(argv,*args,**kwargs):
             if argv[0]=='aws':
                 assert argv[1:3]==['rds','describe-db-instances'] and '-restore-' in argv[4],argv
-                return subprocess.CompletedProcess(argv,1 if state['cleanup'] else 0,'{}','DBInstanceNotFound' if state['cleanup'] else '')
+                return subprocess.CompletedProcess(argv,1 if state['cleanup'] else 0,'{}','An error occurred (DBInstanceNotFound) when calling the DescribeDBInstances operation: synthetic missing' if state['cleanup'] else '')
             return real_run(argv,*args,**kwargs)
         with patch.object(collector,'aws',aws),patch.object(collector,'live_budget',lambda:None),patch('subprocess.run',run):
             parsed_observability = collector.parse_observability_receipts([name+'='+path for name,path in observability_receipts.items()], facts['candidate_digest'])
@@ -341,7 +341,7 @@ def full_route():
         # Incomplete inputs and old raw task forms fail safely without provider access.
         with patch.object(collector,'aws',side_effect=AssertionError('malformed input queried provider')):
             code,report=capture(collector,['--receipt']);assert code and report['findings'],report
-            code,report=capture(collector,['--receipt',values['candidate_receipt'],'--rollback-receipt',values['rollback_receipt'],'--server-replacement-original',facts['original_task'],'--server-replacement-successor',facts['successor_task'],'--recovery-snapshot',facts['recovery_snapshot'],'--record-proof-receipt',facts['record_proof_receipt'],'--current-health-task',health,'--proof','server-replacement='+facts['original_task']]);assert code and report['findings']==[{'code':'acceptance-evidence-retained-proof-receipts-required'}],report
+            code,report=capture(collector,['--receipt',values['candidate_receipt'],'--rollback-receipt',values['rollback_receipt'],'--restoration-verifier-receipt',values['restoration_verifier_receipt'],'--server-replacement-original',facts['original_task'],'--server-replacement-successor',facts['successor_task'],'--recovery-snapshot',facts['recovery_snapshot'],'--record-proof-receipt',facts['record_proof_receipt'],'--current-health-task',health,'--proof','server-replacement='+facts['original_task']]);assert code and report['findings']==[{'code':'acceptance-evidence-retained-proof-receipts-required'}],report
             broken=yaml.safe_load(manifest.read_text());del broken['values']['proof_receipts']['migration-applied-state'];manifest.write_text(yaml.safe_dump(broken));code,report=capture(collector,['--inputs',str(manifest),'--json']);assert code and report['findings'],report
         passed('missing argument and incomplete retained proof set return structured pre-observation failures')
     assert hashes()==initial,'genuine accepted evidence changed'

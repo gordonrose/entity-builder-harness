@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -132,4 +132,22 @@ if [ "$branch_count_after" != "$branch_count_before" ]; then
   fail "resolver created another chat branch despite existing metadata"
 fi
 
+# A failed observation must not masquerade as a missing session and create one.
+REAL_GIT="$(command -v git)"
+export REAL_GIT
+mkdir -p "$TMP_ROOT/bin"
+cat > "$TMP_ROOT/bin/git" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1 $2" == 'branch --show-current' ]]; then
+  echo 'PRIVATE_GIT_CANARY ERROR: missing chat log: spoofed' >&2
+  exit 70
+fi
+exec "$REAL_GIT" "$@"
+EOF
+chmod +x "$TMP_ROOT/bin/git"
+if (cd "$worktree_path" && PATH="$TMP_ROOT/bin:$PATH" bash scripts/00.chat/startup/resolve-current-chat-session/script.sh "must not start") >"$TMP_ROOT/read-failure.out" 2>&1; then
+  fail "failed branch observation became successful startup"
+fi
+test "$(cat "$TMP_ROOT/read-failure.out")" = 'ERROR: session-branch-read-failed' || fail "branch read failure did not remain safe and precise"
+test "$(git -C "$REPO" branch --format='%(refname:short)' | grep -c '^chat/')" = "$branch_count_after" || fail "branch read failure created a session"
 echo "resolve current chat session smoke test passed."

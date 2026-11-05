@@ -1,5 +1,10 @@
 # Platform Server
 
+Profile/clock/elapsed and log/metric/trace projection failures retain their
+actual observation boundary and selected source primary/eight independently.
+Existing request catches, response mapping, clock reads and signal counts are
+unchanged; operational-log opt-outs also govern this optional evidence.
+
 `@kanbien/platform-server` is the provider-neutral HTTP process layer. It
 turns a product-composed list of public `PlatformApp` contributions into a
 safe HTTP server: it validates the mounted registry, applies the shared request
@@ -10,6 +15,23 @@ Apps do not import this package to open sockets or install middleware. They
 declare routes through `@kanbien/platform-contracts`; a product composition
 root chooses which public app modules belong in one process; a target-specific
 entrypoint supplies selected authentication and other provider adapters.
+
+The shell and process accept optional target-owned `diagnosticCatalogs` beside
+built-in and app catalogs. Existing catalog conflict validation and an injected
+reporter's precedence remain. `/readyz` forwards the selected internal reporter
+to health aggregation; exact dependency and generic health records stay out of
+the HTTP summary and metric labels. Health is generic platform telemetry and
+does not inherit a matched app route's signal policy.
+
+Runtime lifecycle, mount and request-context failures retain their upstream
+primary and up to eight companions. The Runtime-owned location is reported
+separately, so it does not displace a source record. Listener/parser/admission,
+response-writer and process boundaries use the Server catalog. Deadline records
+say the handler is still pending, not that it stopped or rolled back.
+Known request paths retain their profile opt-outs even for unsupported methods
+and secondary response failures. Client-address fallback observations require
+the existing explicit `securityDecisionDiagnostics` opt-in (also available on
+the process API); addresses and forwarded headers never enter those records.
 
 ## Public boundary
 

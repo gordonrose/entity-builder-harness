@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.check-commit-prerequisites
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -29,11 +29,12 @@ set -euo pipefail
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"
 
-BRANCH="$(git branch --show-current)"
+read_failed() { echo "ERROR: prerequisite-$1-read-failed" >&2; exit 2; }
+BRANCH="$(git branch --show-current 2>/dev/null)" || read_failed branch
 CHECKLIST=".agentic/00.chat/checklists/before-commit.md"
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  echo "ERROR: current branch is not a chat branch" >&2
   exit 1
 fi
 
@@ -51,7 +52,7 @@ ok() {
 
 metadata_value() {
   local key="$1"
-  sed -n "/<!-- agentic-session/,/-->/s/^${key}: //p" "$LOG_FILE" | head -n 1
+  chat_log_metadata_value "$LOG_FILE" "$key"
 }
 
 check_file() {
@@ -61,7 +62,7 @@ check_file() {
   if [ -f "$path" ]; then
     ok "$description exists: $path"
   else
-    fail "$description is missing: $path"
+    fail "$description is missing"
   fi
 }
 
@@ -72,7 +73,13 @@ collect_script_refs() {
     return
   fi
 
-  grep -Eo "scripts/[^ \`\"']+\.sh" "$file" || true
+  local status
+  if grep -Eo "scripts/[^ \`\"']+\.sh" "$file" 2>/dev/null; then
+    return 0
+  else
+    status=$?
+    [ "$status" -eq 1 ] || read_failed script-references
+  fi
 }
 
 is_optional_script_ref() {
@@ -89,7 +96,7 @@ is_optional_script_ref() {
 }
 
 if [ ! -f "$LOG_FILE" ]; then
-  fail "missing chat log: $LOG_FILE"
+  fail "missing chat log"
 else
   ok "chat log exists: $LOG_FILE"
 fi
@@ -121,6 +128,7 @@ if [ -f "$CHECKLIST" ]; then
 $(collect_script_refs "$CHECKLIST")"
 fi
 
+sorted_refs="$(printf '%s\n' "$SCRIPT_REFS" | sort -u 2>/dev/null)" || read_failed reference-sort
 while IFS= read -r script_path; do
   if [ -z "${script_path// }" ]; then
     continue
@@ -130,7 +138,7 @@ while IFS= read -r script_path; do
     continue
   fi
   check_file "$script_path" "referenced gate script"
-done < <(printf '%s\n' "$SCRIPT_REFS" | sort -u)
+done <<< "$sorted_refs"
 
 if [ "$FAILURES" -gt 0 ]; then
   echo "Commit prerequisites are missing. Repair branch state before committing." >&2

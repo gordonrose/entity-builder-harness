@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-image-payload-fixture
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-05"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -31,12 +31,45 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const [compiled, root] = process.argv.slice(2);
 const validator = path.join(root, 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs');
-function rejects(mutate, undo, nodePath = path.join(root, 'node_modules')) {
+const entrypointDirectory = 'infra/04.deploy/03.product/entrypoints';
+const dockerfile = fs.readFileSync(path.join(root, 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile'), 'utf8');
+function missingCopiedEntrypointImports(dockerfileSource) {
+  // Check the actual literal source/destination copies, not module-name text.
+  const copied = new Set([...dockerfileSource.matchAll(/^COPY (infra\/04\.deploy\/03\.product\/entrypoints\/\S+\.ts) \.\/\1$/gm)].map((match) => match[1]));
+  assert(copied.size > 0, 'the persistence Dockerfile must copy its entrypoint roots');
+  const visited = new Set();
+  const missing = new Set();
+  function visit(source) {
+    if (visited.has(source)) return;
+    visited.add(source);
+    const text = fs.readFileSync(path.join(root, source), 'utf8');
+    for (const match of text.matchAll(/\b(?:from\s+|import\s*(?:\(\s*)?|require\s*\(\s*)["'](\.[^"']+)["']/g)) {
+      const stem = path.posix.normalize(path.posix.join(path.posix.dirname(source), match[1]));
+      const dependency = [stem, `${stem}.ts`, path.posix.join(stem, 'index.ts')].find((candidate) => candidate.endsWith('.ts') && fs.existsSync(path.join(root, candidate)) && fs.statSync(path.join(root, candidate)).isFile());
+      assert(dependency, 'each actual relative TypeScript dependency must resolve');
+      if (!copied.has(dependency)) missing.add(dependency);
+      visit(dependency);
+    }
+  }
+  for (const source of copied) visit(source);
+  return [...missing].sort();
+}
+assert.deepEqual(missingCopiedEntrypointImports(dockerfile), [], 'actual relative entrypoint dependencies must be copied into the image build');
+const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'kanbien-core-server-persistence-operation-diagnostics', 'kanbien-core-server-persistence-composition'];
+for (const module of requiredEntrypointModules) {
+  const source = `${entrypointDirectory}/${module}.ts`;
+  const copy = `COPY ${source} ./${source}`;
+  const omitted = dockerfile.split('\n').filter((line) => line !== copy).join('\n');
+  assert.deepEqual(missingCopiedEntrypointImports(omitted), [source], 'omitting a required entrypoint dependency must fail copy-closure proof');
+}
+function rejects(mutate, undo, nodePath = path.join(root, 'node_modules'), expectedCode) {
   mutate();
   try {
     const result = spawnSync(process.execPath, [validator, '--compiled-root', compiled], {encoding:'utf8', env: {...process.env, NODE_PATH:nodePath}});
     assert.equal(result.status, 1, 'broken payload must fail before image construction');
-    assert.equal(JSON.parse(result.stderr).verdict, 'failed');
+    const report = JSON.parse(result.stderr);
+    assert.equal(report.verdict, 'failed');
+    if (expectedCode !== undefined) assert.equal(report.code, expectedCode);
   } finally { undo(); }
 }
 const wrapper = path.join(compiled, 'kanbien-core-server-persistence.main.js');
@@ -46,14 +79,20 @@ rejects(() => fs.writeFileSync(wrapper, "// " + wrapperContent.toString().replac
 const manifest = path.join(compiled, 'node_modules/@kanbien/core/package.json');
 const manifestContent = fs.readFileSync(manifest);
 rejects(() => { const m=JSON.parse(manifestContent); delete m.exports['./diagnostics']; fs.writeFileSync(manifest, JSON.stringify(m)); }, () => fs.writeFileSync(manifest, manifestContent));
+rejects(() => { const m=JSON.parse(manifestContent); delete m.exports['./security']; fs.writeFileSync(manifest, JSON.stringify(m)); }, () => fs.writeFileSync(manifest, manifestContent));
 rejects(() => {}, () => {}, path.join(compiled, 'absent-external-dependencies'));
 const entry = path.join(compiled, 'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.js');
 const entryContent = fs.readFileSync(entry);
 rejects(() => fs.writeFileSync(entry, 'module.exports = {};'), () => fs.writeFileSync(entry, entryContent));
+for (const module of requiredEntrypointModules) {
+  const diagnostic = path.join(compiled, entrypointDirectory, `${module}.js`);
+  const content = fs.readFileSync(diagnostic);
+  rejects(() => fs.unlinkSync(diagnostic), () => fs.writeFileSync(diagnostic, content), path.join(root, 'node_modules'), 'payload-import-unresolved');
+}
 fs.unlinkSync(path.join(compiled, 'packages/core/src/diagnostics/index.js'));
 const prepared = spawnSync(process.execPath, [path.join(root, 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs'), '--compiled-root', compiled], {encoding:'utf8'});
 assert.equal(prepared.status, 1, 'missing compiled export must fail preparation');
-console.log('Persistence payload regression passed (6 broken-payload cases; no container or target access).');
+console.log('Persistence payload regression passed (10 broken-payload cases and 3 omitted-source cases; no container or target access).');
 NODE
 python3 - "$ROOT" "$TEMPORARY_DIRECTORY" <<'PY'
 import json, os, shutil, subprocess, sys
@@ -64,6 +103,9 @@ coverage = Path('scripts/04.deploy/lifecycle/00-target-alignment/declaration-cov
 (fixture / coverage).mkdir(parents=True)
 for name in ('script.sh', 'script.py'):
     shutil.copyfile(root / coverage / name, fixture / coverage / name)
+helper = Path('scripts/04.deploy/shared/safe-command-diagnostics.sh')
+(fixture / helper).parent.mkdir(parents=True, exist_ok=True)
+shutil.copyfile(root / helper, fixture / helper)
 contract = fixture / 'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml'
 contract.parent.mkdir(parents=True)
 contract.write_text('schema: deploy/target-scope-contract/v1\nscope: core-server-persistence\n')
@@ -106,6 +148,9 @@ for capability in capabilities:
     for name in ('script.sh', 'script.py'):
         source = root / capability / name
         if source.is_file(): shutil.copy2(source, destination / name)
+for relative in ('scripts/repo/diagnostic-coverage/runtime_contract.py', 'platform/persistence/contracts/diagnostics.v1.json'):
+    destination = fixture / relative; destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(root / relative, destination)
 scopes = Path('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes')
 shutil.copytree(root / scopes, fixture / scopes, dirs_exist_ok=True)
 # Active and historical scopes retain their real acceptance routes. Include

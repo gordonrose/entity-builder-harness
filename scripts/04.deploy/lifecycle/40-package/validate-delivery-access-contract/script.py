@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.delivery-access
 #   disciplines:
@@ -41,6 +41,7 @@ REQUIRED_COVERAGE_FIELDS = {"schema", "contract", "provider_policy_source", "gra
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate a delivery access contract using normalized provider-policy coverage.")
+    parser.error = lambda _message: parser.exit(2, json.dumps({"schema":"deploy/delivery-access-coverage/v1","pipeline":None,"verdict":"failed","findings":[{"code":"delivery-access-arguments-invalid"}]}) + "\n")
     parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--workflow", type=Path, required=True)
     parser.add_argument("--provider-policy-coverage", type=Path, required=True)
@@ -67,7 +68,7 @@ def main() -> int:
     codes: list[str] = []
     try:
         contract = load_mapping(args.contract, "contract-unreadable")
-    except (OSError, yaml.YAMLError, ValueError):
+    except (OSError, UnicodeError, yaml.YAMLError, ValueError):
         contract = {}
         codes.append("delivery-access-contract-unreadable")
 
@@ -128,7 +129,7 @@ def main() -> int:
                 codes.append("delivery-action-provider-policy-missing")
             if granted_actions - required_actions:
                 codes.append("delivery-role-action-unjustified")
-    except (OSError, yaml.YAMLError, ValueError):
+    except (OSError, UnicodeError, yaml.YAMLError, ValueError):
         codes.append("provider-policy-coverage-unreadable")
 
     try:
@@ -142,7 +143,7 @@ def main() -> int:
             codes.append("delivery-access-workflow-source-mismatch")
         if not workflow_steps.issubset(declared_steps):
             codes.append("delivery-access-workflow-step-missing")
-    except OSError:
+    except (OSError, UnicodeError):
         codes.append("delivery-workflow-unreadable")
 
     deduplicated = list(dict.fromkeys(codes))

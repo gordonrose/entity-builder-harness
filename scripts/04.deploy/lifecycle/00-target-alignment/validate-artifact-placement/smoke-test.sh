@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -43,3 +43,8 @@ expect_pass aws-standard .agentic/aws/standards/operational-realization-applicab
 expect_fail cross-phase-standard .agentic/01.harness/standards/operational-realization-gate.md
 expect_fail cross-phase-workflow .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
 expect_fail aws-standard .agentic/04.deploy/standards/operational-realization-applicability.md
+set +e
+rejected="$($CHECK --kind 'https://private.invalid/argument-canary' --path ignored 2>&1)"
+status=$?
+set -e
+[[ "$status" -eq 2 && "$rejected" == 'DIAGNOSTIC_CODE=ARTIFACT_PLACEMENT_ARGUMENTS_INVALID' ]]

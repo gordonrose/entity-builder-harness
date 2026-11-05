@@ -13,9 +13,10 @@ import {
   cognitoIssuer,
   cognitoJwksUri,
   createCognitoJwtBearerAuthenticationHookFromEnv,
+  createCognitoAccessTokenVerifier,
   type CognitoAccessTokenVerifierOptions,
 } from "../src/index";
-import type { PlatformJsonWebKey } from "@kanbien/platform-security";
+import { isJwtConfigurationError, securityFailureDiagnosticRecord, type PlatformJsonWebKey } from "@kanbien/platform-security";
 
 async function main(): Promise<void> {
   const fixture = createCognitoFixture();
@@ -46,7 +47,70 @@ async function main(): Promise<void> {
   equal(missingConfiguration.ok, false);
   if (!missingConfiguration.ok) {
     equal(missingConfiguration.error.code, "PLATFORM_ADAPTER_AWS_COGNITO_CONFIG_INVALID");
+    deepEqual(missingConfiguration.error.diagnosticRecord?.detail, { phase: "adapter-configuration", reason: "missing", effect: "not-assessed", reference: "region" });
   }
+  const validEnv = { PLATFORM_AUTH_COGNITO_REGION: "r", PLATFORM_AUTH_COGNITO_USER_POOL_ID: "pool", PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: "client" };
+  for (const skew of [NaN, Infinity, -1, null] as const) {
+    const result = createCognitoJwtBearerAuthenticationHookFromEnv(validEnv, { clockSkewSeconds: skew as number, fetchJwks });
+    equal(result.ok, false);
+    if (!result.ok) {
+      equal(result.error.code, "PLATFORM_ADAPTER_AWS_COGNITO_CONFIG_INVALID");
+      deepEqual(result.error.details, { path: "verifier", reason: "Verifier configuration was rejected." });
+      deepEqual(result.error.diagnosticRecord?.detail, { phase: "verifier-construction", effect: "verifier-not-created",
+        issues: [{ setting: "clock-tolerance", reason: skew === null ? "wrong-type" : skew === -1 ? "negative" : "not-finite" }], truncated: false });
+      equal(JSON.stringify(result.error.diagnosticRecord).includes("private-canary"), false);
+    }
+  }
+  let directRejected = false;
+  try { createCognitoAccessTokenVerifier({ region: "r", userPoolId: "pool", appClientId: "client", clockSkewSeconds: NaN }); }
+  catch (error) { directRejected = true; equal(isJwtConfigurationError(error), true); equal(securityFailureDiagnosticRecord(error)?.code, "security.jwt-configuration-invalid"); }
+  equal(directRejected, true);
+  const sourceError = Object.freeze(new TypeError("PLATFORM_SECURITY_JWT_CONFIGURATION_INVALID"));
+  let propagated = false;
+  try { createCognitoJwtBearerAuthenticationHookFromEnv(validEnv, { get clockSkewSeconds(): never { throw sourceError; } }); }
+  catch (error) { propagated = true; equal(error, sourceError); }
+  equal(propagated, true, "matching an exception message cannot spoof an owned configuration failure");
+  equal(createCognitoJwtBearerAuthenticationHookFromEnv({}, { clockSkewSeconds: NaN }).ok, false);
+  for (const [key, reference] of [["PLATFORM_AUTH_COGNITO_REGION", "region"], ["PLATFORM_AUTH_COGNITO_USER_POOL_ID", "identity-pool"], ["PLATFORM_AUTH_COGNITO_APP_CLIENT_ID", "client"]] as const) for (const value of [undefined, ""]) {
+    const result = createCognitoJwtBearerAuthenticationHookFromEnv({ ...validEnv, [key]: value });
+    equal(result.ok, false); if (!result.ok) deepEqual(result.error.diagnosticRecord?.detail, { phase: "adapter-configuration", reason: value === undefined ? "missing" : "empty", effect: "not-assessed", reference });
+  }
+  for (const [key, value, reference, reason] of [
+    ["PLATFORM_AUTH_COGNITO_USER_POOL_ID", "", "identity-pool", "empty"],
+    ["PLATFORM_AUTH_COGNITO_APP_CLIENT_ID", "", "client", "empty"],
+    ["PLATFORM_AUTHZ_GROUP_PERMISSIONS", "private-canary", "group-mapping", "invalid-json"],
+    ["PLATFORM_AUTHZ_SCOPE_PERMISSIONS", "[]", "scope-mapping", "wrong-shape"],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", "{}", "claim-mapping", "wrong-shape"],
+    ["PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS", '["x","x"]', "additional-clients", "duplicate-item"],
+    ["PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS", '["client"]', "additional-clients", "duplicate-item"],
+  ] as const) {
+    const result = createCognitoJwtBearerAuthenticationHookFromEnv({ ...validEnv, [key]: value });
+    equal(result.ok, false); if (!result.ok) {
+      deepEqual(result.error.diagnosticRecord?.detail, { phase: "adapter-configuration", reason, effect: "not-assessed", reference, ...(reason === "duplicate-item" ? { referenceIndex: value === '["x","x"]' ? 1 : 0 } : {}) });
+      equal(JSON.stringify(result.error.diagnosticRecord).includes("private-canary"), false);
+    }
+  }
+  for (const [key, value, reference, reason, location] of [
+    ["PLATFORM_AUTHZ_GROUP_PERMISSIONS", '{"private-canary":1}', "group-mapping", "attribute-wrong-type", { attribute: "permissions" }],
+    ["PLATFORM_AUTHZ_GROUP_PERMISSIONS", '{"private-canary":[1]}', "group-mapping", "attribute-invalid", { attribute: "permissions", itemIndex: 0 }],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[null]', "claim-mapping", "entry-wrong-type", {}],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[{}]', "claim-mapping", "attribute-missing", { attribute: "claim" }],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[{"claim":1}]', "claim-mapping", "attribute-wrong-type", { attribute: "claim" }],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[{"claim":"role"}]', "claim-mapping", "attribute-missing", { attribute: "equals" }],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[{"claim":"role","equals":null}]', "claim-mapping", "attribute-wrong-type", { attribute: "equals" }],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[{"claim":"role","equals":true}]', "claim-mapping", "attribute-missing", { attribute: "permissions" }],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[{"claim":"role","equals":true,"permissions":1}]', "claim-mapping", "attribute-wrong-type", { attribute: "permissions" }],
+    ["PLATFORM_AUTHZ_CLAIM_PERMISSIONS", '[{"claim":"role","equals":true,"permissions":["invalid"]}]', "claim-mapping", "attribute-invalid", { attribute: "permissions", itemIndex: 0 }],
+    ["PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS", '[1]', "additional-clients", "entry-wrong-type", {}],
+    ["PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS", '[""]', "additional-clients", "entry-empty", {}],
+  ] as const) {
+    const result = createCognitoJwtBearerAuthenticationHookFromEnv({ ...validEnv, [key]: value });
+    equal(result.ok, false); if (!result.ok) {
+      deepEqual(result.error.diagnosticRecord?.detail, { phase: "adapter-configuration", reason, effect: "not-assessed", reference, referenceIndex: 0, ...location });
+      equal(JSON.stringify(result.error.diagnosticRecord).includes("private-canary"), false);
+    }
+  }
+  equal(createCognitoJwtBearerAuthenticationHookFromEnv({ ...validEnv, PLATFORM_AUTHZ_CLAIM_PERMISSIONS: '[{"claim":"","equals":"","permissions":[]}]' }).ok, true, "existing empty claim/equals acceptance remains unchanged");
 
   const permission = "adapter-smoke.smoke:read" as Permission;
   const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Authentication adapter fixture only." } as const;
@@ -70,6 +134,13 @@ async function main(): Promise<void> {
       });
     },
   });
+  let startedAfterRejectedConfiguration = 0;
+  const rejectedConfiguration = createCognitoJwtBearerAuthenticationHookFromEnv(validEnv, { clockSkewSeconds: -1 });
+  if (rejectedConfiguration.ok) {
+    startedAfterRejectedConfiguration++;
+    await createPlatformServerShell({ apps: [app], deps: createPlatformTestMountDeps(), auth: rejectedConfiguration.value });
+  }
+  equal(startedAfterRejectedConfiguration, 0, "the local composition caller handles configuration failure before server assembly");
   const shell = await createPlatformServerShell({
     apps: [app],
     deps: createPlatformTestMountDeps(),

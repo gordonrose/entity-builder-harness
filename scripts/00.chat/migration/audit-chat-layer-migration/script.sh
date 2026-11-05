@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.migration.audit-chat-layer-migration
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: migration
 #   disciplines:
@@ -52,6 +52,14 @@ retired_paths=(
 
 failures=0
 
+optional_matches() {
+  local status
+  if grep "$@" 2>/dev/null; then return 0; else status=$?; fi
+  [ "$status" -eq 1 ] && return 0
+  echo "ERROR: chat-migration-observation-unavailable; stage=reference-scan." >&2
+  exit 2
+}
+
 check_file() {
   local path="$1"
   local label="$2"
@@ -90,11 +98,10 @@ done
 echo
 echo "Retired compatibility references"
 retired_matches="$(
-  grep -RIlE \
+  optional_matches -RIlE \
     '\.agentic/shared/workflows/(chat-start-interview|main-updated|local-convergence|default)\.md|\.agentic/shared/checklists/before-commit\.md|\.agentic/01.harness/workflows/default\.md' \
-    .agentic scripts docs 2>/dev/null \
-    | grep -v -E '^\.agentic/00\.chat/migration-plan\.md$|^scripts/00\.chat/migration/audit-chat-layer-migration/script\.sh$' \
-    || true
+    .agentic scripts docs \
+    | optional_matches -v -E '^\.agentic/00\.chat/migration-plan\.md$|^scripts/00\.chat/migration/audit-chat-layer-migration/script\.sh$'
 )"
 
 if [ -z "$retired_matches" ]; then
@@ -108,9 +115,8 @@ fi
 echo
 echo "Retired aggregate summary policy references"
 summary_matches="$(
-  grep -RIl 'commitLogs/README.md' .agentic scripts docs 2>/dev/null \
-    | grep -v -E '^\.agentic/00\.chat/migration-plan\.md$|^scripts/00\.chat/migration/audit-chat-layer-migration/script\.sh$' \
-    || true
+  optional_matches -RIl 'commitLogs/README.md' .agentic scripts docs \
+    | optional_matches -v -E '^\.agentic/00\.chat/migration-plan\.md$|^scripts/00\.chat/migration/audit-chat-layer-migration/script\.sh$'
 )"
 
 if [ -z "$summary_matches" ]; then

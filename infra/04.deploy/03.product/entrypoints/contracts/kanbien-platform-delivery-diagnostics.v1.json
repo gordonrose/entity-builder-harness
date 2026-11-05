@@ -1,0 +1,107 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "kanbien-platform.delivery",
+    "definitions": [
+      {
+        "code": "kanbien-platform.delivery.boundary-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "workload": {
+              "type": "enum",
+              "values": [
+                "worker",
+                "relay",
+                "relational-worker",
+                "relational-relay"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "receive",
+                "delivery-selection",
+                "enqueue",
+                "run-next",
+                "acknowledge",
+                "release",
+                "flush",
+                "summary",
+                "run-once",
+                "acceptance",
+                "identity-check",
+                "owner-validation",
+                "claim",
+                "claim-result",
+                "complete",
+                "completion-result"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "returned-failure",
+                "unexpected-disposition",
+                "missing-lease",
+                "payload-not-record",
+                "payload-null",
+                "payload-array",
+                "payload-id-missing",
+                "payload-id-wrong-type",
+                "payload-id-mismatch",
+                "not-delivery",
+                "invalid-owner"
+              ]
+            },
+            "disposition": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "invalid",
+                "delivery",
+                "claimed",
+                "already-completed",
+                "lease-active",
+                "completed",
+                "released",
+                "already-published",
+                "idle",
+                "contended",
+                "published",
+                "queue-send-failed",
+                "publish-marker-failed",
+                "unrecognized"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "work-not-invoked",
+                "work-outcome-unknown",
+                "work-success-acknowledgement-unknown",
+                "work-success-acknowledgement-returned"
+              ]
+            }
+          },
+          "optional": [
+            "disposition"
+          ]
+        }
+      }
+    ]
+  }
+}

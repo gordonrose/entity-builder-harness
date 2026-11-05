@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -19,6 +19,7 @@ set -euo pipefail
 #     - entity-builder
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.command.validate-provider-condition-evidence.wrapper
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh
@@ -108,4 +109,17 @@ if output="$(bash "$SCRIPT" --evidence "$TEMPORARY_DIRECTORY/valid-waiver.yml" -
   exit 1
 fi
 [[ "$output" == *'provider-condition-waiver-expired'* ]]
+python3 -B - "$SCRIPT" "$FIXTURE" "$TEMPORARY_DIRECTORY" <<'PY'
+import json, subprocess, sys, yaml
+from pathlib import Path
+source=yaml.safe_load(Path(sys.argv[2]).read_text()); path=Path(sys.argv[3])/'malformed.yml'; canary='https://private.invalid/condition-canary'
+for status in [[], {}]:
+    data={**source,'status':status,'condition_id':canary}; path.write_text(yaml.safe_dump(data))
+    result=subprocess.run(['bash',sys.argv[1],'--evidence',str(path),'--required-status','verified','--json'],capture_output=True,text=True)
+    report=json.loads(result.stdout); assert result.returncode==1 and report['condition_id'] is None
+    assert {'provider-condition-status-invalid','provider-condition-status-not-accepted'} <= {item['code'] for item in report['findings']}
+    assert canary not in result.stdout+result.stderr and 'Traceback' not in result.stderr
+result=subprocess.run(['bash',sys.argv[1],'--'+canary],capture_output=True,text=True)
+assert result.returncode==2 and canary not in result.stdout+result.stderr
+PY
 echo 'Provider-condition evidence smoke test passed.'

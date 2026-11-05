@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.manifest
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-22"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-04"
 #   layer: 01.harness
 #   domain: governance
 #   disciplines:
@@ -47,7 +47,8 @@ canonical_paths:
   harness_templates: .agentic/01.harness/templates
   harness_validators: scripts/01.harness
   product_source_guides: docs/03.product/source-material/guides/markdown
-  product_rules: docs/03.product/rules
+  product_standards: .agentic/03.product/standards
+  product_rules: docs/03.product/rules # Legacy, not the destination for new requirements.
   product_rule_packs: docs/03.product/rule-packs
   harness_rules: docs/01.harness/rules
   rag_rulebook_rules: docs/02.rag-rulebook/rules
@@ -62,7 +63,7 @@ guardrails:
   - Create executable harness validators, gates, metrics, or eval runners only when a workflow or standard identifies deterministic behavior they own.
   - Do not modify production repo code.
   - Do not edit the source markdown guides.
-  - Do not create architecture rules or rule packs unless that artifact is the requested task, the architecture workflow applies, and document placement routes it to the owner-aligned corpus.
+  - Put new authoritative requirements in existing owning harness standards and ordered procedures in workflows; legacy docs rulesets are migration debt, not a new artifact type.
   - Review agents may not edit files during review mode.
   - Implementation-agent mode requires an explicit workflow, bounded artifact scope, and normal chat lifecycle write permission.
   - Work one artifact at a time.
@@ -84,6 +85,7 @@ current_known_artifacts:
     - scripts/01.harness/agents/validate-harness-agents/fixtures/negative-review-fixtures.yml
     - scripts/01.harness/metrics/compare-task-token-consumption/script.sh
   standards:
+    - .agentic/03.product/standards/config-runtime-settings.md
     - .agentic/01.harness/standards/agent-contracts.md
     - .agentic/01.harness/standards/professional-review-agent-quality.md
     - .agentic/01.harness/standards/evaluation-fixtures.md
@@ -96,7 +98,6 @@ current_known_artifacts:
     - docs/03.product/rules/platform/layers/platform.yml
     - docs/01.harness/rules/layers/scripts-command-surface.yml
   concern_rulesets:
-    - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
     - docs/06.shared/rules/concerns/dependency-direction.yml
     - docs/03.product/rules/design-system/concerns/design-label-theming.yml
     - docs/03.product/rules/platform/concerns/events-messaging-async.yml

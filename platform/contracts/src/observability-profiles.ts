@@ -1,3 +1,6 @@
+import { withPlatformContractDiagnostic, type PlatformContractDiagnosticField, type PlatformContractDiagnosticCondition, type PlatformContractObserver } from "./registration-diagnostics";
+import { platformContractClassificationDiagnosticRecord } from "./registration-diagnostics";
+import { inspectPlatformErrorClassDeclaration, platformOptionalErrorClassification, type PlatformErrorClassificationOptions } from "./observability";
 import type { MetricLabelValue } from "@kanbien/core/monitoring"; // Reuse the Core scalar metric-label type without choosing a metrics provider.
 import type { Brand, Result } from "@kanbien/core/shared"; // Reuse the shared branded-name and explicit-result primitives.
 import { // Import only contract-level errors because this declaration must not choose a runtime provider.
@@ -76,7 +79,7 @@ export interface PlatformNfrObjectiveReference { // Reference one central NFR cl
   readonly measurement: PlatformLatencyMeasurement; // Name the start and finish points that future telemetry must use.
 }
 
-export interface PlatformCapabilityObservabilityProfile { // Declare the provider-neutral operational evidence permitted for one app-owned capability.
+export interface PlatformCapabilityObservabilityProfile extends PlatformErrorClassificationOptions { // Declare the provider-neutral operational evidence permitted for one app-owned capability.
   readonly name: PlatformObservabilityProfileName; // Give the profile a stable app-namespaced registry identity.
   readonly capability: PlatformCapabilityName; // Identify the business capability rather than a transport route or provider operation.
   readonly action: PlatformCapabilityAction; // Identify the controlled business action performed by that capability.
@@ -118,71 +121,78 @@ export function platformObservabilityProfileName(value: string): Result<Platform
 export function validatePlatformCapabilityObservabilityProfile( // Validate untrusted or dynamically assembled profile declarations before registry acceptance.
   profile: PlatformCapabilityObservabilityProfile, // Accept the declared profile whose safe operational surface must be checked.
 ): Result<void, PlatformContractError> { // Return an explicit contract result rather than throwing during mounting.
+  let field: PlatformContractDiagnosticField = "declaration";
+  let condition: PlatformContractDiagnosticCondition = "object-required";
+  const select = (location: PlatformContractDiagnosticField, fallback: PlatformContractDiagnosticCondition): void => { field = location; condition = fallback; };
+  const failure = (reason: string): Result<void, PlatformContractError> => ({ ok: false, error: withPlatformContractDiagnostic(malformedPlatformObservabilityProfile(reason), "observability-profile", field, condition) });
   if (!isRecord(profile)) { // Reject absent, primitive, or malformed profile declarations.
-    return profileFailure("Observability profiles must be objects."); // Explain the first structural defect without exposing data.
+    return failure("Observability profiles must be objects."); // Explain the first structural defect without exposing data.
   }
 
-  if (!isPlatformContractName(profile.name)) { // Require a checked dotted profile name at runtime as well as compile time.
-    return profileFailure("Observability profile names must use dot-separated lowercase segments."); // Keep registry keys semantically scanable.
+  if (!(select("name", "invalid-format"), isPlatformContractName(profile.name, (value) => { condition = value; }))) { // Require a checked dotted profile name at runtime as well as compile time.
+    return failure("Observability profile names must use dot-separated lowercase segments."); // Keep registry keys semantically scanable.
   }
 
-  if (!isPlatformContractName(profile.capability)) { // Require a stable checked capability identity rather than a free-form label.
-    return profileFailure("Observability profile capabilities must use dot-separated lowercase segments."); // Keep capability grouping stable across signals.
+  if (!(select("capability", "invalid-format"), isPlatformContractName(profile.capability, (value) => { condition = value; }))) { // Require a stable checked capability identity rather than a free-form label.
+    return failure("Observability profile capabilities must use dot-separated lowercase segments."); // Keep capability grouping stable across signals.
   }
 
-  if (!isPlatformCapabilityAction(profile.action)) { // Reject an unreviewed verb such as an ad-hoc synonym.
-    return profileFailure("Observability profiles must use a controlled capability action."); // Preserve the shared action vocabulary.
+  if (!(select("action", "unsupported"), isPlatformCapabilityAction(profile.action))) { // Reject an unreviewed verb such as an ad-hoc synonym.
+    return failure("Observability profiles must use a controlled capability action."); // Preserve the shared action vocabulary.
   }
 
-  if (!isNonEmptyUniqueArray(profile.signals, isPlatformObservabilitySignalKind)) { // Require at least one distinct signal family.
-    return profileFailure("Observability profiles must declare one or more distinct signal kinds."); // Prevent a meaningless empty profile or duplicate declarations.
+  if (!(select("signals", "declaration-rejected"), isNonEmptyUniqueArray(profile.signals, isPlatformObservabilitySignalKind, (value) => { condition = value.condition; }))) { // Require at least one distinct signal family.
+    return failure("Observability profiles must declare one or more distinct signal kinds."); // Prevent a meaningless empty profile or duplicate declarations.
   }
 
-  if (!validateFieldNames(profile.logFieldNames, isPlatformOperationalFieldName)) { // Check optional log allowlists against the canonical operational field vocabulary.
-    return profileFailure("Observability profile log fields must be distinct canonical operational field names."); // Prevent arbitrary log-field declarations.
+  if (!(select("logFieldNames", "declaration-rejected"), validateFieldNames(profile.logFieldNames, isPlatformOperationalFieldName, (value) => { condition = value.condition; }))) { // Check optional log allowlists against the canonical operational field vocabulary.
+    return failure("Observability profile log fields must be distinct canonical operational field names."); // Prevent arbitrary log-field declarations.
   }
 
-  if (!validateFieldNames(profile.metricDimensionFieldNames, isPlatformMetricDimensionFieldName)) { // Check optional metric dimensions against the stricter low-cardinality allowlist.
-    return profileFailure("Observability profile metric dimensions must be distinct approved metric field names."); // Prevent tenant, user, raw path, and other unsafe dimensions.
+  if (!(select("metricDimensionFieldNames", "declaration-rejected"), validateFieldNames(profile.metricDimensionFieldNames, isPlatformMetricDimensionFieldName, (value) => { condition = value.condition; }))) { // Check optional metric dimensions against the stricter low-cardinality allowlist.
+    return failure("Observability profile metric dimensions must be distinct approved metric field names."); // Prevent tenant, user, raw path, and other unsafe dimensions.
   }
 
-  if (!validateFieldNames(profile.traceAttributeNames, isPlatformOperationalFieldName)) { // Check optional trace attribute allowlists against the canonical operational field vocabulary.
-    return profileFailure("Observability profile trace attributes must be distinct canonical operational field names."); // Prevent arbitrary trace payload declarations.
+  if (!(select("traceAttributeNames", "declaration-rejected"), validateFieldNames(profile.traceAttributeNames, isPlatformOperationalFieldName, (value) => { condition = value.condition; }))) { // Check optional trace attribute allowlists against the canonical operational field vocabulary.
+    return failure("Observability profile trace attributes must be distinct canonical operational field names."); // Prevent arbitrary trace payload declarations.
   }
 
-  if (!validateNfrObjectives(profile.nfrObjectives)) { // Check every declared NFR class and latency interval together.
-    return profileFailure("Observability profile NFR objectives must use distinct compatible central classes and latency measurements."); // Prevent an app from declaring an incoherent target reference.
+  if (!(select("nfrObjectives", "declaration-rejected"), validateNfrObjectives(profile.nfrObjectives, (value) => { field = value.field; condition = value.condition; }))) { // Check every declared NFR class and latency interval together.
+    return failure("Observability profile NFR objectives must use distinct compatible central classes and latency measurements."); // Prevent an app from declaring an incoherent target reference.
   }
 
   if ((profile.metricDimensionFieldNames !== undefined || profile.nfrObjectives !== undefined) && !profile.signals.includes("metric")) { // Require metric intent before declaring metric dimensions or latency objectives.
-    return profileFailure("Metric dimensions and NFR objectives require the metric signal kind."); // Keep declared measurement intent internally coherent.
+    field = "signals"; condition = "signal-required";
+    return failure("Metric dimensions and NFR objectives require the metric signal kind."); // Keep declared measurement intent internally coherent.
   }
 
   if (profile.logFieldNames !== undefined && !profile.signals.includes("operational_log")) { // Require log intent before declaring log fields.
-    return profileFailure("Log fields require the operational_log signal kind."); // Keep declared log intent internally coherent.
+    field = "logFieldNames"; condition = "signal-required";
+    return failure("Log fields require the operational_log signal kind."); // Keep declared log intent internally coherent.
   }
 
   if (profile.traceAttributeNames !== undefined && !profile.signals.includes("trace")) { // Require trace intent before declaring trace fields.
-    return profileFailure("Trace attributes require the trace signal kind."); // Keep declared trace intent internally coherent.
+    field = "traceAttributeNames"; condition = "signal-required";
+    return failure("Trace attributes require the trace signal kind."); // Keep declared trace intent internally coherent.
   }
 
+  const classesIssue = inspectPlatformErrorClassDeclaration(profile).issue;
+  if (classesIssue !== undefined) return { ok: false, error: { ...malformedPlatformObservabilityProfile("Observability profile error classes must be distinct bounded data declarations."),
+    diagnosticRecord: platformContractClassificationDiagnosticRecord(classesIssue) } };
   return { ok: true, value: undefined }; // Accept the fully coherent provider-neutral declaration.
 }
 
-export function isPlatformObservabilityRequirement(value: unknown): value is PlatformObservabilityRequirement { // Validate a route or job's profile reference or explicit opt-out.
-  if (!isRecord(value)) { // Reject missing or primitive requirements.
-    return false; // Report invalid shape to the route or job validator.
+export function isPlatformObservabilityRequirement(value: unknown, observer?: PlatformContractObserver): value is PlatformObservabilityRequirement {
+  if (!isRecord(value)) return rejected(observer, "observability", "object-required");
+  if (value.kind === "profile") {
+    return isPlatformContractName(value.profile) || rejected(observer, "observability.profile", "profile-name-invalid");
   }
-
-  if (value.kind === "profile") { // Validate the ordinary profile-reference form.
-    return isPlatformContractName(value.profile); // Require a checked-looking profile identity before complete-registry resolution.
-  }
-
-  return value.kind === "opt_out" // Accept only the explicit opt-out form.
-    && isPlatformObservabilityOptOutReason(value.reason) // Require a controlled exception reason.
-    && typeof value.justification === "string" // Require a human-reviewable justification.
-    && value.justification.trim().length > 0 // Reject empty or whitespace-only explanations.
-    && value.justification.length <= 280; // Bound the declaration so it cannot become a hidden payload channel.
+  if (value.kind !== "opt_out") return rejected(observer, "observability.kind", "unsupported");
+  if (!isPlatformObservabilityOptOutReason(value.reason)) return rejected(observer, "observability.reason", "opt-out-reason-invalid");
+  if (typeof value.justification !== "string") return rejected(observer, "observability.justification", "justification-string-required");
+  if (!(value.justification.trim().length > 0)) return rejected(observer, "observability.justification", "justification-empty");
+  if (!(value.justification.length <= 280)) return rejected(observer, "observability.justification", "justification-too-long");
+  return true;
 }
 
 export function isPlatformObservabilitySignalKind(value: unknown): value is PlatformObservabilitySignalKind { // Check an untyped signal-family value against the controlled vocabulary.
@@ -223,46 +233,45 @@ export function platformProfileLogFields( // Project capability facts through th
   profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
   nomenclature: PlatformOperationalNomenclature, // Receive only typed provider-neutral capability facts.
 ): PlatformProfileObservationFields { // Return only the canonical facts this profile approved for operational logs.
-  return selectProfileFields(profile.logFieldNames, nomenclature); // Omit every fact not explicitly allowlisted for logs.
+  return selectProfileFields(profile.logFieldNames, nomenclature, profile); // Omit every fact not explicitly allowlisted for logs.
 }
 
 export function platformProfileMetricLabels( // Project capability facts through the stricter metric-dimension allowlist.
   profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
   nomenclature: PlatformOperationalNomenclature, // Receive only typed provider-neutral capability facts.
 ): Readonly<Record<string, MetricLabelValue>> { // Return only bounded scalar labels accepted by Core metrics.
-  return Object.fromEntries(Object.entries(selectProfileFields(profile.metricDimensionFieldNames, nomenclature))) as Readonly<Record<string, MetricLabelValue>>; // Widen the completed scalar projection to Core's metric-label map shape.
+  return Object.fromEntries(Object.entries(selectProfileFields(profile.metricDimensionFieldNames, nomenclature, profile))) as Readonly<Record<string, MetricLabelValue>>; // Widen the completed scalar projection to Core's metric-label map shape.
 }
 
 export function platformProfileTraceFields( // Project capability facts through the trace-attribute allowlist.
   profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
   nomenclature: PlatformOperationalNomenclature, // Receive only typed provider-neutral capability facts.
 ): PlatformProfileObservationFields { // Return only canonical facts this profile approved for diagnostic spans.
-  return selectProfileFields(profile.traceAttributeNames, nomenclature); // Keep trace attributes from becoming a logging-policy bypass.
+  return selectProfileFields(profile.traceAttributeNames, nomenclature, profile); // Keep trace attributes from becoming a logging-policy bypass.
 }
 
-function validateNfrObjectives(value: unknown): value is readonly PlatformNfrObjectiveReference[] | undefined { // Validate optional NFR objective references and their class-to-measurement compatibility.
+function validateNfrObjectives(value: unknown, observer?: PlatformContractObserver): value is readonly PlatformNfrObjectiveReference[] | undefined { // Validate optional NFR objective references and their class-to-measurement compatibility.
   if (value === undefined) { // Allow capabilities with useful telemetry but no latency objective.
     return true; // Accept the absent optional declaration.
   }
 
-  if (!Array.isArray(value) || value.length === 0) { // Reject an empty array because absence expresses “none” more clearly.
-    return false; // Require each present declaration to mean something.
-  }
+  if (!Array.isArray(value)) return rejected(observer, "nfrObjectives", "array-required");
+  if (value.length === 0) return rejected(observer, "nfrObjectives", "array-empty");
 
   const seenObjectives = new Set<string>(); // Track pairs so a profile cannot declare the same objective twice.
   for (const objective of value) { // Inspect every declared class and interval pair.
-    if (!isRecord(objective) || !isPlatformNfrClass(objective.nfrClass) || !isPlatformLatencyMeasurement(objective.measurement)) { // Reject malformed or unreviewed pairs.
-      return false; // Stop at the first invalid objective.
-    }
+    if (!isRecord(objective)) return rejected(observer, "nfrObjectives", "object-required");
+    if (!isPlatformNfrClass(objective.nfrClass)) return rejected(observer, "nfrObjectives.nfrClass", "nfr-class-invalid");
+    if (!isPlatformLatencyMeasurement(objective.measurement)) return rejected(observer, "nfrObjectives.measurement", "measurement-invalid");
 
     const compatibleMeasurements: readonly PlatformLatencyMeasurement[] = platformNfrClassMeasurements[objective.nfrClass]; // Widen one class-specific tuple to the common measurement union for safe membership checking.
     if (!compatibleMeasurements.includes(objective.measurement)) { // Reject a class paired with a nonsensical interval.
-      return false; // Keep acceptance, completion, queue, and health timing distinct.
+      return rejected(observer, "nfrObjectives.measurement", "measurement-incompatible"); // Keep acceptance, completion, queue, and health timing distinct.
     }
 
     const objectiveKey = `${objective.nfrClass}:${objective.measurement}`; // Form a stable duplicate-detection key from two bounded values.
     if (seenObjectives.has(objectiveKey)) { // Reject duplicate declarations that add no semantic information.
-      return false; // Keep the profile easy to review.
+      return rejected(observer, "nfrObjectives", "duplicate-member"); // Keep the profile easy to review.
     }
 
     seenObjectives.add(objectiveKey); // Remember the accepted pair before checking the next one.
@@ -271,19 +280,19 @@ function validateNfrObjectives(value: unknown): value is readonly PlatformNfrObj
   return true; // Accept the complete unique compatible objective list.
 }
 
-function validateFieldNames<TFieldName extends string>(value: unknown, isFieldName: (candidate: unknown) => candidate is TFieldName): value is readonly TFieldName[] | undefined { // Validate an optional non-empty unique allowlist against a supplied field guard.
+function validateFieldNames<TFieldName extends string>(value: unknown, isFieldName: (candidate: unknown) => candidate is TFieldName, observer?: PlatformContractObserver): value is readonly TFieldName[] | undefined { // Validate an optional non-empty unique allowlist against a supplied field guard.
   if (value === undefined) { // Allow a signal family to use no optional canonical fields.
     return true; // Treat absence as a valid minimal declaration.
   }
 
-  return isNonEmptyUniqueArray(value, isFieldName); // Require a present allowlist to contain distinct reviewed fields.
+  return isNonEmptyUniqueArray(value, isFieldName, observer); // Require a present allowlist to contain distinct reviewed fields.
 }
 
-function isNonEmptyUniqueArray<TValue extends string>(value: unknown, isValue: (candidate: unknown) => candidate is TValue): value is readonly TValue[] { // Check a literal array for non-emptiness, membership, and duplicates.
-  return Array.isArray(value) // Require an actual array.
-    && value.length > 0 // Reject meaningless empty declarations.
-    && value.every(isValue) // Require each item to be in the caller's controlled vocabulary.
-    && new Set(value).size === value.length; // Reject duplicate items that make review harder.
+function isNonEmptyUniqueArray<TValue extends string>(value: unknown, isValue: (candidate: unknown) => candidate is TValue, observer?: PlatformContractObserver): value is readonly TValue[] { // Check a literal array for non-emptiness, membership, and duplicates.
+  if (!Array.isArray(value)) return rejected(observer, "signals", "array-required");
+  if (!(value.length > 0)) return rejected(observer, "signals", "array-empty");
+  if (!value.every(isValue)) return rejected(observer, "signals", "member-invalid");
+  return new Set(value).size === value.length || rejected(observer, "signals", "duplicate-member"); // Reject duplicate items that make review harder.
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> { // Narrow an unknown runtime value to a non-null object record.
@@ -297,6 +306,7 @@ function isOneOf<TValue extends string>(value: unknown, values: readonly TValue[
 function selectProfileFields( // Apply one optional profile allowlist to the complete controlled nomenclature object.
   allowedFields: readonly PlatformOperationalFieldName[] | readonly PlatformMetricDimensionFieldName[] | undefined, // Accept the profile's relevant reviewed field list.
   nomenclature: PlatformOperationalNomenclature, // Read the complete typed operational facts supplied by the platform runtime.
+  profile: PlatformErrorClassificationOptions,
 ): PlatformProfileObservationFields { // Return a newly projected minimal set of safe canonical fields.
   if (allowedFields === undefined) { // Treat an omitted optional allowlist as approval for no optional facts.
     return {}; // A signal can still be emitted with its fixed name and no facts.
@@ -312,7 +322,7 @@ function selectProfileFields( // Apply one optional profile allowlist to the com
     http_status_code: nomenclature.httpStatusCode, // Preserve a numeric response result only for server work that supplies it.
     job_delivery_disposition: nomenclature.jobDeliveryDisposition, // Preserve the controlled worker delivery decision only when supplied.
     outcome: nomenclature.outcome, // Preserve the shared logical capability outcome.
-    error_class: nomenclature.errorClass, // Preserve only a bounded classification, never an error message or object.
+    error_class: platformOptionalErrorClassification(nomenclature.errorClass, profile), // Exact declaration membership, one original property read.
   } satisfies Readonly<Record<PlatformOperationalFieldName, string | number | undefined>>; // Prove the mapping remains complete whenever canonical field names change.
   const selected: Record<PlatformOperationalFieldName, string | number | undefined> = {} as Record<PlatformOperationalFieldName, string | number | undefined>; // Build a fresh complete map so unapproved facts cannot leak through object spreading.
 
@@ -326,8 +336,8 @@ function selectProfileFields( // Apply one optional profile allowlist to the com
   return selected as PlatformProfileObservationFields; // Return the narrow field projection after the checked loop excluded every absent or unapproved fact.
 }
 
-function profileFailure(reason: string): Result<void, PlatformContractError> { // Construct one stable profile-validation failure result.
-  return { ok: false, error: malformedPlatformObservabilityProfile(reason) }; // Preserve the contract error rather than exposing implementation details.
+function rejected(observer: PlatformContractObserver | undefined, field: PlatformContractDiagnosticField, condition: PlatformContractDiagnosticCondition): false {
+  try { observer?.({ field, condition }); } catch { /* Optional observation only. */ } return false;
 }
 
 const platformNfrClassMeasurements = { // Map each NFR class to the latency intervals that have truthful start and finish points for it.

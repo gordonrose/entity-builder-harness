@@ -6,6 +6,8 @@ import {
 } from "../shared/index";
 import type { HealthCheckName, MonitoringComponentRef } from "./identifiers";
 import { assertKnownValue, assertNonNegativeFiniteNumber } from "./validation";
+import type { CoreMonitoringDiagnosticOptions } from "./boundary-diagnostics";
+import { MonitoringObservation } from "./observations";
 
 export const healthCheckTypes = ["liveness", "readiness", "dependency", "capability"] as const;
 export type HealthCheckType = (typeof healthCheckTypes)[number];
@@ -31,8 +33,9 @@ export interface HealthCheck<TResult extends HealthCheckResult = HealthCheckResu
   check(): Promise<TResult> | TResult;
 }
 
-export function monitoringMetadata<TValue extends MonitoringMetadata>(value: TValue): TValue {
-  return copyMonitoringMetadata(value);
+export function monitoringMetadata<TValue extends MonitoringMetadata>(value: TValue, diagnostics?: CoreMonitoringDiagnosticOptions): TValue {
+  const observation = new MonitoringObservation("metadata", diagnostics);
+  return observation.run(() => copyMonitoringMetadata(value, observation));
 }
 
 export function healthCheckResult(input: {
@@ -44,34 +47,41 @@ export function healthCheckResult(input: {
   readonly durationMs?: number;
   readonly message?: MessageDescriptor;
   readonly metadata?: MonitoringMetadata;
-}): HealthCheckResult {
-  assertKnownValue("health check type", input.type, healthCheckTypes);
-  assertKnownValue("health status", input.status, healthStatuses);
+}, diagnostics?: CoreMonitoringDiagnosticOptions): HealthCheckResult {
+  const observation = new MonitoringObservation("health-result", diagnostics);
+  return observation.run(() => {
+    const type = observation.at("input-projection", "health-type", () => input.type);
+    observation.at("predicate-invocation", "health-type", () => assertKnownValue("health check type", type, healthCheckTypes, (message, reason) => observation.reject(message, "health-type", reason)));
+    const status = observation.at("input-projection", "health-status", () => input.status);
+    observation.at("predicate-invocation", "health-status", () => assertKnownValue("health status", status, healthStatuses, (message, reason) => observation.reject(message, "health-status", reason)));
+    if (observation.at("input-projection", "duration", () => input.durationMs) !== undefined) {
+      const duration = observation.at("input-projection", "duration", () => input.durationMs);
+      observation.at("predicate-invocation", "duration", () => assertNonNegativeFiniteNumber("health check durationMs", duration!, (message, reason) => observation.reject(message, "duration", reason)));
+    }
+    return {
+      name: observation.at("result-copy", "name", () => input.name),
+      type: observation.at("result-copy", "health-type", () => input.type),
+      component: observation.at("component-copy", "component", () => ({ ...input.component })),
+      status: observation.at("result-copy", "health-status", () => input.status),
+      checkedAt: observation.at("result-copy", "checked-at", () => input.checkedAt),
+      ...(observation.at("input-projection", "duration", () => input.durationMs) === undefined ? {} : { durationMs: observation.at("result-copy", "duration", () => input.durationMs) }),
+      ...(observation.at("input-projection", "message", () => input.message) === undefined ? {} : { message: observation.at("result-copy", "message", () => input.message) }),
+      ...(observation.at("input-projection", "metadata", () => input.metadata) === undefined ? {} : { metadata: copyMonitoringMetadata(observation.at("input-projection", "metadata", () => input.metadata)!, observation) }),
+    };
+  });
+}
 
-  if (input.durationMs !== undefined) {
-    assertNonNegativeFiniteNumber("health check durationMs", input.durationMs);
-  }
-
+export function fixedHealthCheck<TResult extends HealthCheckResult>(result: TResult, diagnostics?: CoreMonitoringDiagnosticOptions): HealthCheck<TResult> {
   return {
-    name: input.name,
-    type: input.type,
-    component: { ...input.component },
-    status: input.status,
-    checkedAt: input.checkedAt,
-    ...(input.durationMs === undefined ? {} : { durationMs: input.durationMs }),
-    ...(input.message === undefined ? {} : { message: input.message }),
-    ...(input.metadata === undefined ? {} : { metadata: copyMonitoringMetadata(input.metadata) }),
+    check: () => healthCheckResult(result, diagnostics) as TResult,
   };
 }
 
-export function fixedHealthCheck<TResult extends HealthCheckResult>(result: TResult): HealthCheck<TResult> {
-  return {
-    check: () => healthCheckResult(result) as TResult,
-  };
-}
-
-function copyMonitoringMetadata<TValue extends MonitoringMetadata>(value: TValue): TValue {
-  return Object.fromEntries(
-    Object.entries(value).map(([key, nestedValue]) => [key, copyJsonValue(nestedValue, "monitoring metadata")]),
-  ) as TValue;
+function copyMonitoringMetadata<TValue extends MonitoringMetadata>(value: TValue, observation: MonitoringObservation): TValue {
+  return observation.at("metadata-enumeration", "metadata", () => Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => {
+      const copied = [key, observation.at("metadata-copy", "metadata", () => copyJsonValue(nestedValue, "monitoring metadata"))];
+      return observation.at("metadata-enumeration", "metadata", () => copied);
+    }),
+  )) as TValue;
 }

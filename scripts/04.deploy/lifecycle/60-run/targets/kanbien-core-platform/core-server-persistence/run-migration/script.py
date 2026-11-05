@@ -24,6 +24,7 @@ LOG_GROUP = "/aws/ecs/kanbien-core-platform"
 AWS_CONNECT_TIMEOUT_SECONDS = 5
 AWS_READ_TIMEOUT_SECONDS = 20
 AWS_PROCESS_TIMEOUT_SECONDS = 30
+_AWS_RESPONSE = None
 
 
 def aws(*parts: str):
@@ -34,11 +35,18 @@ def aws(*parts: str):
         )
     except subprocess.TimeoutExpired:
         return False, None, "aws-command-timeout"
+    except OSError:
+        return False, None, "aws-command-unavailable"
+    except UnicodeError:
+        return False, None, "aws-response-invalid"
     if result.returncode:
-        lowered = result.stderr.lower()
-        if "accessdenied" in lowered or "not authorized" in lowered:
-            return False, None, "aws-access-denied"
-        return False, None, "aws-command-failed"
+        global _AWS_RESPONSE
+        if _AWS_RESPONSE is None:
+            spec = importlib.util.spec_from_file_location("aws_response", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
+            _AWS_RESPONSE = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(_AWS_RESPONSE)
+        return False, None, _AWS_RESPONSE.classify_error(parts[0], parts[1], result.stderr)
     try:
         return True, json.loads(result.stdout or "{}"), "ok"
     except json.JSONDecodeError:
@@ -155,7 +163,7 @@ def accepted_message(message: object, expected: str) -> bool:
     return isinstance(value, dict) and value.get("verdict") == "accepted" and value.get("code") == expected
 
 
-def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, str] | None, str]:
+def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, object] | None, str]:
     """Extract only a closed safe rejection record from an unsuccessful task.
 
     Task logs are untrusted provider evidence.  This deliberately parses their
@@ -179,7 +187,7 @@ def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, str] | N
             value = json.loads(message) if isinstance(message, str) else None
         except (json.JSONDecodeError, TypeError):
             continue
-        if not isinstance(value, dict) or set(value) - {"verdict", "code", "stage", "provider_failure_class"}:
+        if not isinstance(value, dict) or set(value) - {"verdict", "code", "stage", "provider_failure_class", "diagnostic", "related_diagnostics"}:
             continue
         code_value, stage, failure_class = value.get("code"), value.get("stage"), value.get("provider_failure_class")
         if (
@@ -190,7 +198,26 @@ def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, str] | N
             or (failure_class is not None and (not isinstance(failure_class, str) or failure_class not in FAILURE_CLASSES))
         ):
             continue
-        result = {"safe_result_code": code_value}
+        result: dict[str, object] = {"safe_result_code": code_value}
+        if "diagnostic" in value:
+            if code_value not in {"PERSISTENCE_MIGRATION_CONFIGURATION_INVALID", "PERSISTENCE_MIGRATION_NOT_CONFIRMED"}:
+                continue
+            try:
+                path = ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py"
+                spec = importlib.util.spec_from_file_location("migration_safe_diagnostics", path)
+                contract = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(contract)
+                result["diagnostic"] = contract.validate_runtime_diagnostic(value["diagnostic"], "migration" if code_value == "PERSISTENCE_MIGRATION_NOT_CONFIRMED" else None, allow_core_source=True)
+                if code_value == "PERSISTENCE_MIGRATION_NOT_CONFIRMED" and not (result["diagnostic"]["code"].startswith("core.") or (result["diagnostic"]["code"].startswith("persistence.") and result["diagnostic"]["detail"].get("operation") == "migration")):
+                    continue
+                if "related_diagnostics" in value:
+                    if code_value != "PERSISTENCE_MIGRATION_NOT_CONFIRMED":
+                        continue
+                    result["related_diagnostics"] = contract.validate_related_diagnostics(value["related_diagnostics"], result["diagnostic"])
+            except Exception:
+                continue
+        elif "related_diagnostics" in value:
+            continue
         if isinstance(failure_class, str):
             result["safe_provider_failure_class"] = failure_class
         return result, "ok"

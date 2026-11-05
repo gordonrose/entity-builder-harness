@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -22,6 +22,7 @@
 from pathlib import Path
 import importlib.util, signal, time, unittest
 import contextlib,io,json,os,shutil,subprocess,sys,tempfile,yaml
+from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[8]
 OWNER=Path('scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate')
 FAKE=r'''#!/usr/bin/env python3
@@ -53,11 +54,13 @@ with p.with_suffix('.lock').open('a') as lock:
   mode=next(v['value'] for v in state['tasks'][-1]['overrides']['containerOverrides'][0]['environment'] if v['name']=='PERSISTENCE_VERIFIER_MODE')
   code={'create':'KANBIEN_CORE_PERSISTENCE_RECORD_ACCEPTED','read':'KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED','cleanup':'KANBIEN_CORE_PERSISTENCE_RECORD_CLEANED_UP','health-ready':'KANBIEN_CORE_PERSISTENCE_HEALTHY','health-unready':'KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY'}[mode]
   result={'events':[{'message':json.dumps({'verdict':'accepted','code':code})}]}
+  if 'failure_log_messages' in state:result={'events':[{'message':message} for message in state['failure_log_messages']]}
  else:raise AssertionError((service,op))
  p.write_text(json.dumps(state))
 if op=='run-task' and state.get('submission') in {'pause','hold'}:time.sleep(1 if state['submission']=='pause' else 600)
-if op in {'list-tasks','describe-tasks','get-log-events'} and state.get('observation')=='denied':print('AccessDenied',file=sys.stderr);sys.exit(254)
+if op in {'list-tasks','describe-tasks','get-log-events'} and state.get('observation')=='denied':print('An error occurred (AccessDeniedException) when calling the '+{'list-tasks':'ListTasks','describe-tasks':'DescribeTasks','get-log-events':'GetLogEvents'}[op]+' operation: PRIVATE_VERIFIER_LOG_CANARY',file=sys.stderr);sys.exit(254)
 if op=='get-log-events' and state.get('logs')=='expired':result={'events':[]}
+if op=='get-log-events' and state.get('logs')=='denied':print('An error occurred (AccessDeniedException) when calling the GetLogEvents operation: PRIVATE_VERIFIER_LOG_CANARY',file=sys.stderr);sys.exit(254)
 if op=='run-task' and state.get('submission')=='lost':print('lost provider response');sys.exit(0)
 print(json.dumps(result))
 '''
@@ -65,7 +68,13 @@ class Fixture:
  def __init__(self):
   self.tmp=tempfile.TemporaryDirectory(prefix='verifier-operation-cli-');self.root=Path(self.tmp.name)
   subprocess.run(['git','init','--quiet',str(self.root)],check=True)
-  for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py']:
+  for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py',
+               Path('scripts/04.deploy/shared/deployment-operation-diagnostics.py'),Path('scripts/repo/diagnostic-coverage/runtime_contract.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
+               Path('packages/core/contracts/diagnostics.v1.json'),Path('platform/persistence/contracts/diagnostics.v1.json'),
+               Path('platform/security/contracts/diagnostics.v1.json'),Path('platform/observability/contracts/diagnostics.v1.json'),
+               Path('infra/04.deploy/03.product/entrypoints/contracts/diagnostics.v1.json'),
+               Path('infra/04.deploy/03.product/entrypoints/contracts/kanbien-core-server-persistence-operation-diagnostics.v1.json')]:
    out=self.root/path;out.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/path,out)
   proof=self.root/OWNER.parent/'proof-receipts.py';proof.write_text(proof.read_text().replace('EVIDENCE_CLASS = "live"','EVIDENCE_CLASS = "simulated"'))
   contract=self.root/'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml';contract.parent.mkdir(parents=True)
@@ -87,6 +96,25 @@ class Fixture:
 
 
 class OperationTests(unittest.TestCase):
+ def test_aws_native_failures_and_anchored_denial_preserve_one_call(self):
+  spec=importlib.util.spec_from_file_location('verifier_native_boundary',ROOT/OWNER/'script.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+  expected=['aws','ecs','describe-tasks','--cli-connect-timeout','5','--cli-read-timeout','20','--profile','kanbien-dev','--region','eu-west-1','--output','json']
+  faults=[(OSError('PRIVATE_NATIVE_CANARY'),'aws-command-unavailable'),(UnicodeDecodeError('utf8',b'\xff',0,1,'PRIVATE_NATIVE_CANARY'),'aws-response-invalid'),(subprocess.TimeoutExpired(['PRIVATE_NATIVE_CANARY'],30),'aws-command-timeout')]
+  results=[(0,'','',(True,{},'ok')),(0,'{"tasks":[]}','',(True,{'tasks':[]},'ok')),(0,'{PRIVATE_NATIVE_CANARY','',(False,None,'aws-response-invalid')),(254,'','An error occurred (AccessDeniedException) when calling the DescribeTasks operation: PRIVATE_NATIVE_CANARY',(False,None,'aws-access-denied')),(254,'','PRIVATE_NATIVE_CANARY accessdenied not authorized',(False,None,'aws-command-failed'))]
+  for fault,code in faults:
+   with self.subTest(code=code),patch.object(module.subprocess,'run',side_effect=fault) as call:
+    output=io.StringIO();errors=io.StringIO()
+    with contextlib.redirect_stdout(output),contextlib.redirect_stderr(errors):observed=module.aws('ecs','describe-tasks')
+    self.assertEqual(observed,(False,None,code));self.assertEqual(call.call_count,1)
+    self.assertEqual(call.call_args.args,(expected,));self.assertEqual(call.call_args.kwargs,{'capture_output':True,'text':True,'timeout':30,'env':{**os.environ,'AWS_PAGER':''}})
+    self.assertEqual(output.getvalue()+errors.getvalue(),'');self.assertNotIn('PRIVATE_NATIVE_CANARY',repr(observed))
+  for status,stdout,stderr,expected_result in results:
+   with self.subTest(expected=expected_result),patch.object(module.subprocess,'run',return_value=subprocess.CompletedProcess([],status,stdout,stderr)) as call:
+    output=io.StringIO();errors=io.StringIO()
+    with contextlib.redirect_stdout(output),contextlib.redirect_stderr(errors):observed=module.aws('ecs','describe-tasks')
+    self.assertEqual(observed,expected_result);self.assertEqual(call.call_count,1)
+    self.assertEqual(call.call_args.args,(expected,));self.assertEqual(call.call_args.kwargs,{'capture_output':True,'text':True,'timeout':30,'env':{**os.environ,'AWS_PAGER':''}})
+    self.assertEqual(output.getvalue()+errors.getvalue(),'');self.assertNotIn('PRIVATE_NATIVE_CANARY',repr(observed))
  def fixture(self):
   value=Fixture();self.addCleanup(value.close);return value
  def invoke(self,f,*args,verdict=None):
@@ -175,6 +203,29 @@ class OperationTests(unittest.TestCase):
     f=self.fixture();f.update(submission='normal',status='STOPPED',**changes);first=self.invoke(f,verdict='failed');operation=first['facts']['operation_id']
     again=self.invoke(f,verdict='failed');self.assertEqual(again['findings'][0]['code'],code);self.assertEqual(len(f.runs()),1)
     self.invoke(f,'--new-operation','--expected-operation',operation,verdict='failed');self.assertEqual(len(f.runs()),2)
+ def test_failed_task_one_bounded_read_retains_source_nine_and_late_frame(self):
+  f=self.fixture()
+  sources=[{'schema':'core/diagnostic-record/v1','code':'core.persistence.in-memory-boundary-failed','definitionVersion':1,'detail':{'operation':'initialize','phase':'get-id','reason':'boundary-threw','effect':'write-not-reached','ordinal':index}} for index in range(10)]
+  own={'schema':'core/diagnostic-record/v1','code':'kanbien-core-server.operations.verification-boundary-failed','definitionVersion':1,'detail':{'task':'verification','operation':'verification','phase':'fetch','condition':'rejected','effect':'unknown'}}
+  failure={'schema':'deploy/persistence-task-failure/v1','task':'verification','verdict':'rejected','code':'KANBIEN_CORE_PERSISTENCE_VERIFICATION_UNAVAILABLE','diagnostic':sources[0],'related_diagnostics':sources[1:9],'observations':[own]}
+  late={**failure,'diagnostic':sources[9]}
+  f.update(submission='normal',status='STOPPED',exit_code=3,failure_log_messages=['PRIVATE_VERIFIER_LOG_CANARY',json.dumps(failure),json.dumps(late)])
+  completed,value=f.call();self.assertEqual(completed.returncode,1);self.assertEqual(value['verdict'],'failed')
+  self.assertEqual(value['findings'][0]['code'],'private-persistence-verifier-unsuccessful-completion')
+  observed=value['facts']['task_failure'];self.assertEqual(observed['diagnostic'],sources[0]);self.assertEqual(observed['related_diagnostics'],sources[1:9]);self.assertEqual(observed['observations'],[own,own])
+  self.assertEqual(observed['source_bundles'],[{'diagnostic':sources[9],'related_diagnostics':sources[1:9]}]);self.assertEqual(value['facts']['task_log_observation'],'malformed')
+  self.assertNotIn('PRIVATE_VERIFIER_LOG_CANARY',completed.stdout+completed.stderr)
+  reads=[call for call in f.data()['calls'] if call[:2]==['logs','get-log-events']];self.assertEqual(len(reads),1)
+  self.assertEqual(reads[0][reads[0].index('--limit')+1],'100');self.assertEqual(reads[0][reads[0].index('--log-stream-name')+1],'persistence-verifier/private-persistence-verifier/'+f.data()['tasks'][0]['taskArn'].rsplit('/',1)[-1])
+  again=self.invoke(f,verdict='failed');self.assertEqual(again['facts']['task_failure'],observed);self.assertEqual(len(f.runs()),1)
+  self.assertEqual(len([call for call in f.data()['calls'] if call[:2]==['logs','get-log-events']]),2)
+ def test_failed_task_log_denial_does_not_replace_original_failure_or_identity(self):
+  f=self.fixture();f.update(submission='normal',status='STOPPED',exit_code=3,logs='denied')
+  completed,value=f.call();self.assertEqual(completed.returncode,1);self.assertEqual(value['verdict'],'failed')
+  self.assertEqual(value['findings'][0]['code'],'private-persistence-verifier-unsuccessful-completion')
+  self.assertEqual(value['facts']['task_log_observation'],'failed');self.assertNotIn('task_failure',value['facts'])
+  self.assertEqual(value['facts']['verifier_task'],f.data()['tasks'][0]['taskArn']);self.assertNotIn('PRIVATE_VERIFIER_LOG_CANARY',completed.stdout+completed.stderr)
+  self.assertEqual(len([call for call in f.data()['calls'] if call[:2]==['logs','get-log-events']]),1)
  def test_missing_terminal_proof_or_expired_logs_never_authorize_new_operation(self):
   f=self.fixture();f.update(submission='normal',status='STOPPED');first=self.invoke(f,verdict='accepted');(f.root/first['facts']['proof_receipt']).unlink()
   self.invoke(f,verdict='blocked');self.invoke(f,'--new-operation','--expected-operation',first['facts']['operation_id'],verdict='blocked');self.assertEqual(len(f.runs()),1)

@@ -1,40 +1,52 @@
-export function assertDottedName(label: string, value: string, requireDot: boolean): void {
-  assertNonEmpty(label, value);
+import { metricValidationError, type MetricValidationField, type MetricValidationObserver } from "./diagnostics";
+import type { CoreMonitoringValidationDetail } from "./boundary-diagnostics";
+export type MonitoringReject = (message: string, reason: CoreMonitoringValidationDetail["reason"]) => TypeError;
+
+export function assertDottedName(label: string, value: string, requireDot: boolean, metricField?: MetricValidationField, observer?: MetricValidationObserver, reject?: MonitoringReject): void {
+  assertNonEmpty(label, value, metricField, observer, reject);
 
   const pattern = requireDot
     ? /^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+$/
     : /^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)*$/;
 
   if (!pattern.test(value)) {
-    throw new TypeError(`${label} must use lowercase dot-separated segments.`);
+    throw validationError(`${label} must use lowercase dot-separated segments.`, metricField, "invalid-format", observer, reject);
   }
 }
 
-export function assertToken(label: string, value: string): void {
-  assertNonEmpty(label, value);
+export function assertToken(label: string, value: string, metricField?: MetricValidationField, observer?: MetricValidationObserver): void {
+  assertNonEmpty(label, value, metricField, observer);
 
   if (!/^[a-z][a-z0-9_-]*$/.test(value)) {
-    throw new TypeError(`${label} must use lowercase token characters.`);
+    throw validationError(`${label} must use lowercase token characters.`, metricField, "invalid-format", observer);
   }
 }
 
-export function assertNonEmpty(label: string, value: string): void {
-  if (value.length === 0 || value.trim() !== value) {
-    throw new TypeError(`${label} must be non-empty and trimmed.`);
+export function assertNonEmpty(label: string, value: string, metricField?: MetricValidationField, observer?: MetricValidationObserver, reject?: MonitoringReject): void {
+  if (value.length === 0) {
+    throw validationError(`${label} must be non-empty and trimmed.`, metricField, "empty", observer, reject);
+  }
+  if (value.trim() !== value) {
+    throw validationError(`${label} must be non-empty and trimmed.`, metricField, "untrimmed", observer, reject);
   }
 }
 
-export function assertFiniteNumber(label: string, value: number): void {
+function validationError(message: string, field: MetricValidationField | undefined,
+  reason: "empty" | "untrimmed" | "invalid-format", observer?: MetricValidationObserver, reject?: MonitoringReject): TypeError {
+  return field === undefined ? (reject?.(message, reason) ?? new TypeError(message)) : metricValidationError(message, field, reason, undefined, observer);
+}
+
+export function assertFiniteNumber(label: string, value: number, reject?: MonitoringReject): void {
   if (!Number.isFinite(value)) {
-    throw new TypeError(`${label} must be a finite number.`);
+    throw reject?.(`${label} must be a finite number.`, "not-finite") ?? new TypeError(`${label} must be a finite number.`);
   }
 }
 
-export function assertNonNegativeFiniteNumber(label: string, value: number): void {
-  assertFiniteNumber(label, value);
+export function assertNonNegativeFiniteNumber(label: string, value: number, reject?: MonitoringReject): void {
+  assertFiniteNumber(label, value, reject);
 
   if (value < 0) {
-    throw new TypeError(`${label} must be non-negative.`);
+    throw reject?.(`${label} must be non-negative.`, "negative") ?? new TypeError(`${label} must be non-negative.`);
   }
 }
 
@@ -42,9 +54,11 @@ export function assertKnownValue<TValue extends string>(
   label: string,
   value: string,
   allowedValues: readonly TValue[],
+  reject?: MonitoringReject,
 ): asserts value is TValue {
   if (!allowedValues.includes(value as TValue)) {
-    throw new TypeError(`${label} must be one of: ${allowedValues.join(", ")}.`);
+    const message = `${label} must be one of: ${allowedValues.join(", ")}.`;
+    throw reject?.(message, "closed-value-rejected") ?? new TypeError(message);
   }
 }
 

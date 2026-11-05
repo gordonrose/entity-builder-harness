@@ -21,6 +21,7 @@ import {
   type AuditRecordErrorCode,
   type AuditRecorder,
   type AuditTarget,
+  type CoreAuditDiagnosticOptions,
 } from "../src/audit/index";
 import { correlationId, isOk, isoDateTime, type Result } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
@@ -71,6 +72,18 @@ const event: AuditEvent<AuditMetadata> = auditEvent({
 });
 const recorder: AuditRecorder = inMemoryAuditRecorder();
 const noop: AuditRecorder = noopAuditRecorder;
+const diagnosticOptions: CoreAuditDiagnosticOptions = { diagnosticDefinitions: [], onDiagnostic(record, context) {
+  const code: string = record.code; const operation: string = context.operation; void code; void operation; return Promise.resolve();
+} };
+auditEventType("deal.deleted", diagnosticOptions);
+auditEventVersion(1, diagnosticOptions);
+auditActor(actor, diagnosticOptions);
+auditTarget({ type: "deal", id: "deal" }, diagnosticOptions);
+auditEvent(event, diagnosticOptions);
+inMemoryAuditRecorder(diagnosticOptions);
+auditRecordError({ code: "AUDIT_RECORD_FAILED", defaultMessage: "Fixed." }, { relatedDiagnosticDefinitions: [], relatedDiagnosticRecords: [] });
+// @ts-expect-error new companion evidence requires explicitly selected definitions.
+auditRecordError({ code: "AUDIT_RECORD_FAILED", defaultMessage: "Fixed." }, { relatedDiagnosticRecords: [] });
 
 void acceptedError;
 void systemActor;

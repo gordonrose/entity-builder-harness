@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./maintenance/diagnostics.v1.json": "./src/maintenance/contract/reporting/diagnostics.v1.json",
+    "./leasing/diagnostics.v1.json": "./src/leasing/contract/reporting/diagnostics.v1.json"
   },
   "files": [
     "src"

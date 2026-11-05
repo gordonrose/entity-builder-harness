@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.worktree.check-write-location
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: worktree
 #   disciplines:
@@ -55,8 +55,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-CALLER_ROOT="$(git rev-parse --show-toplevel)"
-CALLER_ROOT="$(cd "$CALLER_ROOT" && pwd -P)"
+failed() { echo "ERROR: $1" >&2; exit 2; }
+CALLER_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || failed "worktree-root-read-failed"
+CALLER_ROOT="$(cd "$CALLER_ROOT" && pwd -P)" || failed "worktree-root-inaccessible"
 
 # shellcheck source=../paths/lib.sh
 source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
@@ -65,7 +66,7 @@ source "$CALLER_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 
 PRIMARY_PATH="$(chat_worktree_primary_path "$CALLER_ROOT")"
 chat_worktree_load_config "$PRIMARY_PATH"
-BRANCH="$(git -C "$CALLER_ROOT" branch --show-current)"
+BRANCH="$(git -C "$CALLER_ROOT" branch --show-current 2>/dev/null)" || failed "worktree-branch-read-failed"
 
 if [ "$CALLER_ROOT" = "$PRIMARY_PATH" ]; then
   if [ "${AGENTIC_ALLOW_ROOT_WRITE:-}" = "1" ] || [ "$ALLOW_ROOT_MAINTENANCE" = "yes" ]; then
@@ -73,7 +74,7 @@ if [ "$CALLER_ROOT" = "$PRIMARY_PATH" ]; then
     exit 0
   fi
 
-  echo "ERROR: refusing task write in root integration worktree: $CALLER_ROOT" >&2
+  echo "ERROR: refusing task write in root integration worktree" >&2
   echo "Use the chat-owned worktree for chat work." >&2
   exit 1
 fi
@@ -81,7 +82,7 @@ fi
 case "$BRANCH" in
   chat/*) ;;
   *)
-    echo "ERROR: current worktree is not on a chat branch: $BRANCH" >&2
+    echo "ERROR: current worktree is not on a chat branch" >&2
     exit 1
     ;;
 esac
@@ -91,7 +92,7 @@ EXPECTED_PATH="$(chat_worktree_registered_path_for_branch "$PRIMARY_PATH" "$BRAN
 registered_status=$?
 set -e
 if [ "$registered_status" -eq 1 ]; then
-  echo "ERROR: no registered chat worktree exists for branch '$BRANCH'." >&2
+  echo "ERROR: no registered chat worktree exists for the branch." >&2
   exit 1
 elif [ "$registered_status" -ne 0 ]; then
   exit "$registered_status"
@@ -99,24 +100,24 @@ fi
 
 if [ "$CALLER_ROOT" != "$EXPECTED_PATH" ]; then
   echo "ERROR: current chat branch is not in its registered chat worktree." >&2
-  echo "Current:  $CALLER_ROOT" >&2
-  echo "Expected: $EXPECTED_PATH" >&2
   exit 1
 fi
 
 SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"
-SESSION_LOG="$CALLER_ROOT/$(chat_log_file_for_session "$SESSION_ID")"
+LOG_PATH="$(chat_log_file_for_session "$SESSION_ID")" || exit "$?"
+SESSION_LOG="$CALLER_ROOT/$LOG_PATH"
 if [ ! -f "$SESSION_LOG" ]; then
-  echo "ERROR: missing session log for current chat branch: $SESSION_LOG" >&2
+  echo "ERROR: missing session log for current chat branch" >&2
   exit 1
 fi
-if [ "$(chat_worktree_metadata_value "$SESSION_LOG" "branch")" != "$BRANCH" ]; then
-  echo "ERROR: session log branch metadata does not match current branch: $SESSION_LOG" >&2
+RECORDED_BRANCH="$(chat_worktree_metadata_value "$SESSION_LOG" "branch")" || exit "$?"
+if [ "$RECORDED_BRANCH" != "$BRANCH" ]; then
+  echo "ERROR: session log branch metadata does not match current branch" >&2
   exit 1
 fi
 RECORDED_WORKTREE="$(chat_worktree_metadata_value "$SESSION_LOG" "worktree")"
 if ! RECORDED_WORKTREE="$(cd "$RECORDED_WORKTREE" 2>/dev/null && pwd -P)"; then
-  echo "ERROR: session log records an unavailable worktree: $RECORDED_WORKTREE" >&2
+  echo "ERROR: session log records an unavailable worktree" >&2
   exit 1
 fi
 if [ "$RECORDED_WORKTREE" != "$CALLER_ROOT" ]; then

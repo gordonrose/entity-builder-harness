@@ -4,7 +4,7 @@
 //   version: 2
 //   status: active
 //   created_on: "2026-09-24"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-30"
 //   layer: 04.deploy
 //   domain: persistence
 //   disciplines:
@@ -28,10 +28,14 @@ import { systemClock } from "@kanbien/core/shared";
 import {
   createKanbienPlatformOutboxRelay,
   createKanbienPlatformPersistenceTransitionObserver,
+  reportKanbienPlatformPersistenceStartupDiagnostic,
   dynamoDbPersistenceConfigurationFromTargetEnvironment,
 } from "./kanbien-platform-persistence";
 import { observabilityFromTargetEnvironment } from "./kanbien-platform-observability";
 import { targetTaskLeaseOwnerFromEnvironment } from "./kanbien-platform-task-lease-owner";
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { reportTargetConfigurationError, selectTargetConfigurationEvidence, targetEnvironmentConfigurationRecord } from "./kanbien-platform-configuration-diagnostics";
+import { reportKanbienPlatformDeliveryFailure, reportKanbienPlatformQueueDiagnostic } from "./kanbien-platform-delivery-diagnostics";
 
 const safeDynamoDbOperations = new Set([
   "create_outbox",
@@ -64,6 +68,8 @@ interface TargetRelayConfiguration {
 }
 
 interface TargetRelayConfigurationError {
+  readonly diagnosticRecord?: DiagnosticRecord;
+  readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
   readonly code: "KANBIEN_PLATFORM_TARGET_RELAY_CONFIG_INVALID";
   readonly defaultMessage: string;
   readonly details: Readonly<{ readonly path: string; readonly reason: string }>;
@@ -108,7 +114,7 @@ export async function runKanbienPlatformRelayMain(): Promise<void> {
   try {
     const outcome = await configuration.value.relay.runOnce();
     if (!outcome.ok) {
-      writeStartupFailure("kanbien-platform.relay.run_failed", outcome.error);
+      writeStartupFailure("kanbien-platform.relay.run_failed", outcome.error, false);
       process.exitCode = 1;
       return;
     }
@@ -123,6 +129,9 @@ export async function runKanbienPlatformRelayMain(): Promise<void> {
     if (failed) {
       process.exitCode = 1;
     }
+  } catch (error) {
+    reportKanbienPlatformDeliveryFailure({ workload: "relay", boundary: "run-once", condition: "threw", effect: "work-outcome-unknown" }, error);
+    throw error;
   } finally {
     await flushAndShutdownObservability(observability.value);
   }
@@ -132,15 +141,17 @@ async function relayConfigurationFromTargetEnvironment(
   env: NodeJS.ProcessEnv,
   observer: import("@kanbien/platform-persistence").PlatformPersistenceObserver,
 ): Promise<{ readonly ok: true; readonly value: TargetRelayConfiguration } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
-  if (env["PLATFORM_PERSISTENCE_PROVIDER"] !== "dynamodb") {
-    return relayConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "The staging relay requires the selected DynamoDB persistence provider.");
+  const persistenceProvider = env["PLATFORM_PERSISTENCE_PROVIDER"];
+  if (persistenceProvider !== "dynamodb") {
+    return relayConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "The staging relay requires the selected DynamoDB persistence provider.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_PERSISTENCE_PROVIDER", persistenceProvider === undefined ? "missing" : persistenceProvider.length === 0 ? "empty" : "unsupported") });
   }
-  if (env["PLATFORM_RELAY_QUEUE_PROVIDER"] !== "sqs") {
-    return relayConfigurationError("PLATFORM_RELAY_QUEUE_PROVIDER", "The staging relay requires the selected SQS queue provider.");
+  const queueProvider = env["PLATFORM_RELAY_QUEUE_PROVIDER"];
+  if (queueProvider !== "sqs") {
+    return relayConfigurationError("PLATFORM_RELAY_QUEUE_PROVIDER", "The staging relay requires the selected SQS queue provider.", { diagnosticRecord: targetEnvironmentConfigurationRecord("PLATFORM_RELAY_QUEUE_PROVIDER", queueProvider === undefined ? "missing" : queueProvider.length === 0 ? "empty" : "unsupported") });
   }
   const persistence = dynamoDbPersistenceConfigurationFromTargetEnvironment(env);
   if (!persistence.ok) {
-    return relayConfigurationError(persistence.error.details.path, persistence.error.details.reason);
+    return relayConfigurationError(persistence.error.details.path, persistence.error.details.reason, persistence.error);
   }
   const queueUrl = requiredString(env, "PLATFORM_RELAY_SQS_QUEUE_URL");
   if (!queueUrl.ok) return queueUrl;
@@ -155,9 +166,10 @@ async function relayConfigurationFromTargetEnvironment(
     ok: true,
     value: {
       relay: createKanbienPlatformOutboxRelay({
-        client: createAwsSdkDynamoDbPersistenceCommandClient(persistence.value),
+        client: createAwsSdkDynamoDbPersistenceCommandClient(persistence.value, { onDiagnostic: reportKanbienPlatformPersistenceStartupDiagnostic }),
         configuration: persistence.value,
-        queue: createAwsSdkPlatformSqsQueue({ queueUrl: queueUrl.value, region: queueRegion.value }),
+        queue: createAwsSdkPlatformSqsQueue({ queueUrl: queueUrl.value, region: queueRegion.value,
+          onDiagnostic: (record, context) => reportKanbienPlatformQueueDiagnostic("relay", record, context) }),
         owner: owner.value,
         leaseDurationMs: leaseDurationMs.value,
         clock: systemClock,
@@ -194,29 +206,31 @@ async function relayLeaseOwnerFromTargetEnvironment(
   env: NodeJS.ProcessEnv,
 ): Promise<{ readonly ok: true; readonly value: import("@kanbien/platform-persistence").PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
   const owner = await targetTaskLeaseOwnerFromEnvironment(env, "kanbien.relay.instance-");
-  if (!owner.ok) return relayConfigurationError(owner.error.path, owner.error.reason);
+  if (!owner.ok) return relayConfigurationError(owner.error.path, owner.error.reason, owner.error);
   return owner;
 }
 
 function requiredString(
   env: NodeJS.ProcessEnv,
-  path: string,
+  path: "PLATFORM_RELAY_SQS_QUEUE_URL" | "PLATFORM_RELAY_SQS_REGION",
 ): { readonly ok: true; readonly value: string } | { readonly ok: false; readonly error: TargetRelayConfigurationError } {
   const value = env[path];
   if (value === undefined || value.trim().length === 0) {
-    return relayConfigurationError(path, "A non-empty value is required.");
+    return relayConfigurationError(path, "A non-empty value is required.", { diagnosticRecord: targetEnvironmentConfigurationRecord(path, value === undefined ? "missing" : "blank") });
   }
   return { ok: true, value };
 }
 
 function boundedPositiveInteger(
   env: NodeJS.ProcessEnv,
-  path: string,
+  path: "PLATFORM_RELAY_LEASE_DURATION_MS",
   maximum: number,
 ): { readonly ok: true; readonly value: number } | { readonly ok: false; readonly error: TargetRelayConfigurationError } {
-  const value = Number(env[path]);
-  if (!Number.isInteger(value) || value <= 0 || value > maximum) {
-    return relayConfigurationError(path, `A positive integer no greater than ${maximum} is required.`);
+  const raw = env[path];
+  const value = Number(raw);
+  const integer = Number.isInteger(value);
+  if (!integer || value <= 0 || value > maximum) {
+    return relayConfigurationError(path, `A positive integer no greater than ${maximum} is required.`, { diagnosticRecord: targetEnvironmentConfigurationRecord(path, raw === undefined ? "missing" : raw.length === 0 ? "empty" : !integer ? "invalid-integer" : value <= 0 ? "not-positive" : "above-maximum") });
   }
   return { ok: true, value };
 }
@@ -224,6 +238,7 @@ function boundedPositiveInteger(
 function relayConfigurationError(
   path: string,
   reason: string,
+  evidence?: unknown,
 ): { readonly ok: false; readonly error: TargetRelayConfigurationError } {
   return {
     ok: false,
@@ -231,6 +246,7 @@ function relayConfigurationError(
       code: "KANBIEN_PLATFORM_TARGET_RELAY_CONFIG_INVALID",
       defaultMessage: "Kanbien platform target relay configuration is invalid.",
       details: { path, reason },
+      ...selectTargetConfigurationEvidence(evidence),
     },
   };
 }
@@ -238,7 +254,9 @@ function relayConfigurationError(
 function writeStartupFailure(
   message: string,
   error: { readonly code: string; readonly defaultMessage: string; readonly details?: Readonly<Record<string, unknown>>; readonly params?: Readonly<Record<string, unknown>> },
+  reportConfiguration: boolean = true,
 ): void {
+  if (reportConfiguration) reportTargetConfigurationError(error);
   const path = error.details?.["path"];
   const operation = error.params?.["operation"];
   const providerFailureClass = error.params?.["provider_failure_class"];

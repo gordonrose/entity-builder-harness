@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.check-governed-script-command-drift
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 01.harness
 #   domain: governance
 #   disciplines:
@@ -37,6 +37,7 @@ EOF
 }
 
 PATH_ARGS=()
+read_failed() { echo "ERROR: command-drift-$1-read-failed" >&2; return 2; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -56,7 +57,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument" >&2
       usage >&2
       exit 2
       ;;
@@ -69,18 +70,18 @@ collect_default_paths() {
       printf '%s\n' AGENTS.md
     fi
     if [ -d .agentic ]; then
-      find .agentic -type f
+      find .agentic -type f 2>/dev/null || { read_failed scan; return 2; }
     fi
     if [ -d docs/01.harness ]; then
-      find docs/01.harness -type f
+      find docs/01.harness -type f 2>/dev/null || { read_failed scan; return 2; }
     fi
     if [ -d docs/03.product ]; then
-      find docs/03.product -type f
+      find docs/03.product -type f 2>/dev/null || { read_failed scan; return 2; }
     fi
     if [ -d docs/06.shared ]; then
-      find docs/06.shared -type f
+      find docs/06.shared -type f 2>/dev/null || { read_failed scan; return 2; }
     fi
-  } | sort -u
+  } | sort -u 2>/dev/null
 }
 
 collect_paths_from_args() {
@@ -88,13 +89,13 @@ collect_paths_from_args() {
 
   for path in "${PATH_ARGS[@]}"; do
     if [ -d "$path" ]; then
-      find "$path" -type f
+      find "$path" -type f 2>/dev/null || { read_failed scan; return 2; }
     elif [ -f "$path" ]; then
       printf '%s\n' "$path"
     else
-      echo "WARN: path does not exist, skipping: $path" >&2
+      echo "WARN: requested path does not exist, skipping" >&2
     fi
-  done | sort -u
+  done | sort -u 2>/dev/null
 }
 
 is_scannable_path() {
@@ -111,7 +112,7 @@ is_scannable_path() {
 }
 
 APPROVED_SCRIPTS="$(bash scripts/01.harness/run-governed-script.sh --list \
-  | awk '$1 == "approved" { print $2 }')"
+  | awk '$1 == "approved" { print $2 }' 2>/dev/null)" || { read_failed classification; exit 2; }
 
 if [ -z "${APPROVED_SCRIPTS// }" ]; then
   echo "ERROR: governed runner returned no approved scripts." >&2
@@ -119,9 +120,9 @@ if [ -z "${APPROVED_SCRIPTS// }" ]; then
 fi
 
 if [ "${#PATH_ARGS[@]}" -gt 0 ]; then
-  PATHS="$(collect_paths_from_args)"
+  PATHS="$(collect_paths_from_args)" || { read_failed paths; exit 2; }
 else
-  PATHS="$(collect_default_paths)"
+  PATHS="$(collect_default_paths)" || { read_failed paths; exit 2; }
 fi
 
 FINDINGS=0
@@ -132,9 +133,16 @@ scan_file() {
   local line_no
   local text
   local previous_text=""
+  local lines status
 
   is_scannable_path "$path" || return 0
 
+  if lines="$(grep -n 'scripts/' "$path" 2>/dev/null)"; then
+    :
+  else
+    status=$?
+    [ "$status" -eq 1 ] || { read_failed content; return 2; }
+  fi
   while IFS=: read -r line_no text; do
     [ -n "$line_no" ] || continue
     for script in $APPROVED_SCRIPTS; do
@@ -173,7 +181,7 @@ scan_file() {
       esac
     done
     previous_text="$text"
-  done < <(grep -n 'scripts/' "$path" || true)
+  done <<< "$lines"
 }
 
 while IFS= read -r path; do

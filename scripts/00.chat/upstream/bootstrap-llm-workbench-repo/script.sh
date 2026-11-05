@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.bootstrap-llm-workbench-repo
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: upstream
 #   disciplines:
@@ -72,7 +72,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument." >&2
       usage >&2
       exit 2
       ;;
@@ -85,11 +85,30 @@ if [ -z "$TARGET_REPO" ] || [ -z "$MODE" ]; then
 fi
 
 if [ ! -d "$TARGET_REPO/.git" ]; then
-  echo "ERROR: target is not a Git repo: $TARGET_REPO" >&2
+  echo "ERROR: target is not a Git repo." >&2
   exit 1
 fi
 
-SOURCE_REPO="$(git rev-parse --show-toplevel)"
+read_failed() {
+  echo "ERROR: bootstrap-observation-unavailable; stage=$1; target effect=none." >&2
+  exit 2
+}
+
+observe() {
+  local stage="$1"
+  shift
+  "$@" 2>/dev/null || read_failed "$stage"
+}
+
+apply_command() {
+  local stage="$1" status
+  shift
+  if "$@" 2>/dev/null; then return 0; else status=$?; fi
+  echo "ERROR: bootstrap-apply-failed; stage=$stage; effect=unknown; inspect before retry." >&2
+  exit "$status"
+}
+
+SOURCE_REPO="$(observe source-root git rev-parse --show-toplevel)"
 TEMPLATE_ROOT="$SOURCE_REPO/docs/00.chat/bootstrap/llm-workbench-template/root"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-bootstrap-plan.XXXXXX")"
 PLAN_PATHS="$TMP_DIR/planned-paths.txt"
@@ -114,8 +133,19 @@ print_header() {
   local head
   local branch
 
-  head="$(git -C "$TARGET_REPO" rev-parse --verify HEAD 2>/dev/null || true)"
-  branch="$(git -C "$TARGET_REPO" branch --show-current 2>/dev/null || true)"
+  local status
+  branch="$(observe target-branch git -C "$TARGET_REPO" branch --show-current)"
+  head=""
+  if [ -n "$branch" ]; then
+    if git -C "$TARGET_REPO" show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null; then
+      head="$(observe target-head git -C "$TARGET_REPO" rev-parse --verify HEAD)"
+    else
+      status=$?
+      [ "$status" -eq 1 ] || read_failed target-reference
+    fi
+  else
+    head="$(observe target-head git -C "$TARGET_REPO" rev-parse --verify HEAD)"
+  fi
 
   echo "llm-workbench bootstrap ${MODE}"
   echo
@@ -129,16 +159,18 @@ print_header() {
 plan_file() {
   local source="$1"
   local relative_path="$2"
-  local target="$TARGET_REPO/$relative_path"
+  local target="$TARGET_REPO/$relative_path" status
 
   printf '%s\n' "$relative_path" >> "$PLAN_PATHS"
 
   if [ -e "$target" ]; then
-    if cmp -s "$source" "$target"; then
+    if cmp -s "$source" "$target" 2>/dev/null; then
       echo "SAME $relative_path"
       printf 'SAME\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
       SAME_COUNT=$((SAME_COUNT + 1))
     else
+      status=$?
+      [ "$status" -eq 1 ] || read_failed file-comparison
       echo "CONFLICT $relative_path"
       printf 'CONFLICT\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
       CONFLICT_COUNT=$((CONFLICT_COUNT + 1))
@@ -154,10 +186,13 @@ plan_tree() {
   local tree="$1"
   local file
   local relative_path
+  local files
 
   [ -d "$SOURCE_REPO/$tree" ] || return 0
 
+  files="$(observe source-tree find "$SOURCE_REPO/$tree" -type f | observe source-sort sort)"
   while IFS= read -r file; do
+    [ -n "$file" ] || continue
     relative_path="${file#$SOURCE_REPO/}"
     case "$relative_path" in
       scripts/00.chat/classification/*)
@@ -174,7 +209,7 @@ plan_tree() {
         ;;
     esac
     plan_file "$file" "$relative_path"
-  done < <(find "$SOURCE_REPO/$tree" -type f | sort)
+  done <<< "$files"
 }
 
 plan_selected_file() {
@@ -198,8 +233,11 @@ plan_templates() {
   local relative_template
   local relative_path
   local rendered_template
+  local files
 
+  files="$(observe template-tree find "$TEMPLATE_ROOT" -type f -name '*.template' | observe template-sort sort)"
   while IFS= read -r file; do
+    [ -n "$file" ] || continue
     relative_template="${file#$TEMPLATE_ROOT/}"
     relative_path="${relative_template%.template}"
 
@@ -211,7 +249,7 @@ plan_templates() {
     mkdir -p "$(dirname "$rendered_template")"
     render_template "$file" "$TARGET_REPO/$relative_path" "$rendered_template"
     plan_file "$rendered_template" "$relative_path"
-  done < <(find "$TEMPLATE_ROOT" -type f -name '*.template' | sort)
+  done <<< "$files"
 }
 
 render_template() {
@@ -222,10 +260,16 @@ render_template() {
   node - "$source" "$target" "$rendered" <<'NODE'
 const fs = require('fs');
 const [source, target, rendered] = process.argv.slice(2);
+let stage = 'template-read';
+process.on('uncaughtException', () => {
+  console.error(`ERROR: bootstrap-observation-unavailable; stage=${stage}; target effect=none.`);
+  process.exit(2);
+});
 const template = fs.readFileSync(source, 'utf8');
 const createdToken = '{{ARTIFACT_CREATED_ON}}';
 const updatedToken = '{{ARTIFACT_UPDATED_ON}}';
 function writeRendered(content) {
+  stage = 'template-render';
   fs.writeFileSync(rendered, content);
   fs.chmodSync(rendered, fs.statSync(source).mode & 0o777);
 }
@@ -234,7 +278,8 @@ if (!template.includes(createdToken) && !template.includes(updatedToken)) {
   process.exit(0);
 }
 if (!template.includes(createdToken) || !template.includes(updatedToken)) {
-  throw new Error(`incomplete artifact lifecycle placeholders in ${source}`);
+  console.error('ERROR: bootstrap-template-lifecycle-incomplete; target effect=none.');
+  process.exit(1);
 }
 const today = new Date().toISOString().slice(0, 10);
 function header(text) {
@@ -256,6 +301,7 @@ function validDate(value) {
   return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === date && date <= today
     ? date : null;
 }
+stage = 'existing-template-read';
 let created = today;
 let updated = today;
 const existing = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : null;
@@ -290,27 +336,31 @@ plan_package_json() {
 
   printf 'MERGE_PACKAGE\t%s\tpackage.json\n' "$template_package" >> "$FILE_ACTIONS"
 
-  if ! node - "$target_package" "$template_package" > "$PACKAGE_OUTPUT" <<'NODE'
+  local status
+  if node - "$target_package" "$template_package" > "$PACKAGE_OUTPUT" <<'NODE'
 const fs = require('fs');
 const targetPath = process.argv[2];
 const templatePath = process.argv[3];
 
-let target;
-let template;
-
-try {
-  target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
-} catch (error) {
-  console.log(`CONFLICT package.json invalid-json ${error.message}`);
-  process.exit(1);
+process.on('uncaughtException', () => {
+  console.error('ERROR: bootstrap-package-inspection-failed; target effect=none.');
+  process.exit(2);
+});
+function readPackage(file, owner) {
+  let text;
+  try { text = fs.readFileSync(file, 'utf8'); } catch {
+    console.error(`ERROR: bootstrap-observation-unavailable; stage=${owner}-package-read; target effect=none.`);
+    process.exit(2);
+  }
+  let value;
+  try { value = JSON.parse(text); } catch {
+    console.log(`CONFLICT package.json ${owner === 'target' ? 'invalid-json' : 'template-invalid-json'}`);
+    process.exit(1);
+  }
+  return value;
 }
-
-try {
-  template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
-} catch (error) {
-  console.log(`CONFLICT package.json template-invalid-json ${error.message}`);
-  process.exit(1);
-}
+const target = readPackage(targetPath, 'target');
+const template = readPackage(templatePath, 'template');
 
 const actualScripts = target.scripts || {};
 const expectedScripts = template.scripts || {};
@@ -323,7 +373,7 @@ for (const [name, expected] of Object.entries(expectedScripts)) {
   } else if (actual === expected) {
     console.log(`PACKAGE_SAME_SCRIPT ${name}`);
   } else {
-    console.log(`PACKAGE_CONFLICT_SCRIPT ${name} actual=${actual} expected=${expected}`);
+    console.log(`PACKAGE_CONFLICT_SCRIPT ${name} definition-mismatch`);
     conflicts += 1;
   }
 }
@@ -337,6 +387,10 @@ for (const name of Object.keys(actualScripts).sort()) {
 process.exit(conflicts > 0 ? 1 : 0);
 NODE
   then
+    :
+  else
+    status=$?
+    [ "$status" -eq 1 ] || exit "$status"
     PACKAGE_CONFLICTS="yes"
     CONFLICT_COUNT=$((CONFLICT_COUNT + 1))
   fi
@@ -348,18 +402,25 @@ plan_preserved_target_owned_files() {
   local target_subtree
   local file
   local relative_path
+  local files status
 
   for target_subtree in ".agentic/shared" "scripts/shared"; do
     [ -d "$TARGET_REPO/$target_subtree" ] || continue
 
+    files="$(observe preserved-tree find "$TARGET_REPO/$target_subtree" -type f | observe preserved-sort sort)"
     while IFS= read -r file; do
+      [ -n "$file" ] || continue
       relative_path="${file#$TARGET_REPO/}"
-      if ! grep -Fxq "$relative_path" "$PLAN_PATHS"; then
+      if grep -Fxq -- "$relative_path" "$PLAN_PATHS" 2>/dev/null; then
+        :
+      else
+        status=$?
+        [ "$status" -eq 1 ] || read_failed preserved-match
         echo "PRESERVE $relative_path"
         printf 'PRESERVE\t%s\t%s\n' "$file" "$relative_path" >> "$FILE_ACTIONS"
         PRESERVE_COUNT=$((PRESERVE_COUNT + 1))
       fi
-    done < <(find "$TARGET_REPO/$target_subtree" -type f | sort)
+    done <<< "$files"
   done
 }
 
@@ -410,9 +471,15 @@ const fs = require('fs');
 const targetPath = process.argv[2];
 const templatePath = process.argv[3];
 
+let stage = 'package-read';
+process.on('uncaughtException', () => {
+  console.error(`ERROR: bootstrap-apply-failed; stage=${stage}; effect=unknown; inspect before retry.`);
+  process.exit(2);
+});
 const target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
 const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
 
+stage = 'package-merge';
 target.scripts = target.scripts || {};
 for (const [name, expected] of Object.entries(template.scripts || {})) {
   if (target.scripts[name] === undefined || target.scripts[name] === expected) {
@@ -422,6 +489,7 @@ for (const [name, expected] of Object.entries(template.scripts || {})) {
   }
 }
 
+stage = 'package-write';
 fs.writeFileSync(targetPath, `${JSON.stringify(target, null, 2)}\n`);
 NODE
 }
@@ -431,8 +499,8 @@ copy_file() {
   local relative_path="$2"
   local target="$TARGET_REPO/$relative_path"
 
-  mkdir -p "$(dirname "$target")"
-  cp "$source" "$target"
+  apply_command directory-create mkdir -p "$(dirname "$target")"
+  apply_command file-copy cp "$source" "$target"
 }
 
 sanitize_missing_used_by_paths() {
@@ -440,6 +508,10 @@ sanitize_missing_used_by_paths() {
 const fs = require('fs');
 const path = require('path');
 
+process.on('uncaughtException', () => {
+  console.error('ERROR: bootstrap-apply-failed; stage=metadata-sanitization; effect=unknown; inspect before retry.');
+  process.exit(2);
+});
 const root = process.argv[2];
 const roots = [
   '.agentic',
@@ -561,16 +633,16 @@ apply_plan() {
         :
         ;;
       *)
-        echo "ERROR: unexpected action in clean plan: $action" >&2
+        echo "ERROR: unexpected action in clean plan; effect=unknown." >&2
         exit 1
         ;;
     esac
   done < "$FILE_ACTIONS"
 
-  echo "Apply completed."
 }
 
 if [ "$MODE" = "apply" ]; then
   apply_plan
   sanitize_missing_used_by_paths
+  echo "Apply completed."
 fi

@@ -4,7 +4,7 @@ id: deploy.scripts.readme
 version: 16
 status: active
 created_on: "2026-06-26"
-updated_on: "2026-10-20"
+updated_on: "2026-10-28"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -40,6 +40,13 @@ canonical until individually migrated through the artifact-path migration
 workflow; this index does not authorize a bulk rename.
 
 Current commands:
+
+- `verify-platform-shell-infrastructure/`: catalog-owned aggregate of the
+  unchanged static policy in `policy.sh` and its seventeen existing child
+  verifier/smoke boundaries. Child identity and stage rules govern reuse.
+- `lifecycle/20-build/core-server-persistence-composition/`: compile-once local
+  fixtures use independent copied payloads; fast isolation tests cover ordering,
+  repetition and failure cleanup without repeating unrelated TLS proofs.
 
 - `lifecycle/00-target-alignment/core-platform-target-declaration/`:
   report-only static coverage check for the planned `kanbien-core-platform`

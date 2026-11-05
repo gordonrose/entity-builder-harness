@@ -11,3 +11,9 @@ digest, select a route, or accept a deployment.
 
 A later target verifier must join this response with independent workload and
 package-custody evidence before treating a release as verified.
+
+`resolvePlatformReleaseIdentity` accepts an optional diagnostic callback.
+Only an existing omission produces a value-free Server-owned record: missing,
+empty or format-rejected. The original regular expression, coercion, returned
+identity and thrown values are unchanged. Callback throws/rejections cannot
+alter release selection; this is not evidence that a deployed release matches.

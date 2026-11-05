@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -123,5 +123,37 @@ grep -q 'optional referenced gate script is absent: scripts/repo/commit-gates/sc
 if grep -q 'scripts/00.chat/ is missing' "$TMP_ROOT/out"; then
   fail "directory prose reference was treated as a missing script"
 fi
+
+export REAL_GIT="$(command -v git)" REAL_AWK="$(command -v awk)" REAL_GREP="$(command -v grep)" REAL_SORT="$(command -v sort)"
+mkdir "$TMP_ROOT/fault-bin"
+for command in git awk grep sort; do
+  printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
+  cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
+if [ "$FAULT" = "$command" ]; then
+  echo private-prerequisite-canary@example.invalid >&2
+  exit 75
+fi
+if [ "$FAULT" = no-refs ] && [ "$command" = grep ]; then exit 1; fi
+case "$command" in
+  git) exec "$REAL_GIT" "$@" ;;
+  awk) exec "$REAL_AWK" "$@" ;;
+  grep) exec "$REAL_GREP" "$@" ;;
+  sort) exec "$REAL_SORT" "$@" ;;
+esac
+EOF
+  chmod +x "$TMP_ROOT/fault-bin/$command"
+done
+for stage in git awk grep sort; do
+  if failure="$(cd "$REPO" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" \
+    bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh 2>&1)"; then
+    fail "$stage failed observation accepted"
+  else
+    [ "$?" -eq 2 ] || fail "$stage unavailable status lost"
+  fi
+  [[ "$failure" == *read-failed* && "$failure" != *private-prerequisite-canary* && "$failure" != *prerequisites\ are\ present* ]] || fail "$stage safe reason lost"
+done
+empty="$(cd "$REPO" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT=no-refs \
+  bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh)"
+[[ "$empty" == *prerequisites\ are\ present* ]] || fail "genuine empty reference scan rejected"
 
 echo "commit prerequisites smoke test passed."

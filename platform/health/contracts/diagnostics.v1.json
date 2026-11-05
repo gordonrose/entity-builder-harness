@@ -1,0 +1,183 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "health",
+    "definitions": [
+      {
+        "code": "health.check-not-ready",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "status": {
+              "type": "enum",
+              "values": [
+                "degraded",
+                "unhealthy"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "result"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "returned-not-ready"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "health.check-threw",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "invocation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "health.check-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "completion"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "health.check-projection-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "projection"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "output-unhealthy"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "health.lifecycle-not-ready",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "aggregation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "output-not-ready"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

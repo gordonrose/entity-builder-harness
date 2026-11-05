@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: recovery
 #   disciplines:
@@ -113,6 +113,54 @@ printf 'changed in active\n' > "$REPO/docs/kept.txt"
 rm "$REPO/docs/remove-me.txt"
 mkdir -p "$REPO/docs/new-dir"
 printf 'new file\n' > "$REPO/docs/new-dir/new.txt"
+
+export REAL_GIT="$(command -v git)" REAL_MKDIR="$(command -v mkdir)" REAL_RM="$(command -v rm)" REAL_CP="$(command -v cp)"
+export FAULT_MARKER="$TMP_ROOT/fault-attempts"
+mkdir "$TMP_ROOT/fault-bin"
+for command in git mkdir rm cp; do
+  printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
+  cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
+args=("$@")
+if [ "$command" = git ] && [ "${1:-}" = -C ]; then shift 2; fi
+case "$FAULT:$command:${1:-}" in
+  status:git:status|branch:git:branch|stage:git:add|delete:git:rm|prepare:mkdir:*|remove:rm:*|copy:cp:*)
+    echo attempted >> "$FAULT_MARKER"
+    echo private-recovery-canary@example.invalid >&2
+    exit 71 ;;
+esac
+case "$command" in
+  git) exec "$REAL_GIT" "${args[@]}" ;;
+  mkdir) exec "$REAL_MKDIR" "${args[@]}" ;;
+  rm) exec "$REAL_RM" "${args[@]}" ;;
+  cp) exec "$REAL_CP" "${args[@]}" ;;
+esac
+EOF
+  chmod +x "$TMP_ROOT/fault-bin/$command"
+done
+for stage in status branch prepare remove copy stage delete; do
+  printf '' > "$FAULT_MARKER"
+  selected=docs/kept.txt
+  [ "$stage" != delete ] || selected=docs/remove-me.txt
+  expected_status=71
+  case "$stage" in status|branch) expected_status=2 ;; esac
+  if failure="$(cd "$REPO" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" \
+    bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
+    --session-log "$SESSION_LOG" --source-worktree "$REPO" -- "$selected" 2>&1)"; then
+    fail "$stage failure reported successful recovery"
+  else
+    [ "$?" -eq "$expected_status" ] || fail "$stage lost failure status"
+  fi
+  [[ "$failure" == *recovery-*-failed* && "$failure" != *private-recovery-canary* && "$failure" != *Imported* ]] || fail "$stage safe reason lost"
+  [ "$(wc -l < "$FAULT_MARKER")" -eq 1 ] || fail "failed operation replayed"
+  case "$stage" in
+    status|branch) assert_file_equals "$WORKTREE_PATH/docs/kept.txt" base ;;
+    *) [[ "$failure" == *effect=unknown* ]] || fail "mutation effect was guessed" ;;
+  esac
+  # Restore only this disposable fixture's known original content after a
+  # deliberately failed copy/stage; the real worktree is never involved.
+  printf 'base\n' > "$WORKTREE_PATH/docs/kept.txt"
+  [ -z "$(git -C "$WORKTREE_PATH" status --porcelain)" ] || fail "fixture restoration incomplete"
+done
 
 (
   cd "$REPO"

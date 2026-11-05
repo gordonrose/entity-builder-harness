@@ -4,7 +4,7 @@ id: deploy.script.inventory-deploy-control.readme
 version: 1
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-26"
+updated_on: "2026-10-28"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -59,6 +59,17 @@ from an adjacent command. Dynamic, cyclic
 or unsupported delivery wrappers fail with an explicit relationship finding.
 This bounded tracing does not execute or interpret arbitrary shell programs.
 Genuine local fixtures retain their non-operational classification.
+
+For each declared route, proof IDs also trace their reachable catalog `members`
+recursively. The census validates exact member command-file existence, unique
+nonempty member lists, unknown references, cycles, command-header effect
+agreement and parent/member stage/effect
+boundaries. It then follows those command bodies, including extracted policies.
+It does not traverse the entire catalog, directory inputs or conditional focused
+prerequisites as delivery lineage, and does not execute any proof command.
+Catalog membership changes select the owning inventory regression through the
+catalog's declared census consumer. The real-repository smoke check requires
+full `covered` status with no findings, not merely a correctly shaped report.
 
 The delivery-coverage workflow requires unrestricted `pull_request` coverage.
 An empty/null event configuration is supported; path, branch and event-type

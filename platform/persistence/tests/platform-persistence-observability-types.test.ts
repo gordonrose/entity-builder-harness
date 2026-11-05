@@ -5,6 +5,7 @@ import { platformCapabilityName, platformObservabilityProfileName } from "@kanbi
 import {
   createPlatformPersistenceTransitionObserver,
   platformPersistenceTransitionProfile,
+  persistenceBoundaryDiagnosticRecord,
 } from "../src/index";
 
 const profileName = platformObservabilityProfileName("platform.persistence.outbox.relay");
@@ -27,6 +28,11 @@ if (!observer.ok) {
   throw new Error("Expected a valid persistence transition observer.");
 }
 observer.value.record({ transition: "outbox.claimed", outcome: "succeeded" });
+observer.value.record({ transition: "processing.completion_failed", outcome: "failed", diagnosticRecord: persistenceBoundaryDiagnosticRecord({ operation: "transaction", phase: "completion", boundary: "commit", condition: "threw", effect: "unknown" }) });
+observer.value.onDiagnostic?.(persistenceBoundaryDiagnosticRecord({ operation: "read_outbox", phase: "invocation", boundary: "decode", condition: "threw", effect: "not-assessed" }));
+observer.value.onDiagnostic?.(persistenceBoundaryDiagnosticRecord({ operation: "read_outbox", phase: "invocation", boundary: "decode", condition: "threw", effect: "not-assessed" }), "relay");
+// @ts-expect-error only approved persistence observation operations are accepted.
+observer.value.onDiagnostic?.(persistenceBoundaryDiagnosticRecord({ operation: "read_outbox", phase: "invocation", boundary: "decode", condition: "threw", effect: "not-assessed" }), "send-to-provider");
 
 // @ts-expect-error persistence transition names remain a closed reviewed vocabulary.
 observer.value.record({ transition: "outbox.unreviewed", outcome: "succeeded" });

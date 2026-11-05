@@ -11,7 +11,7 @@ state, the exact task definition/image and the safe application result.
 #   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -160,11 +160,16 @@ def make(*, proof_type: str, operation: str, task: dict[str, object], image_dige
             "terminal_status": task.get("lastStatus"),
             "exit_code": container.get("exitCode") if container else None,
             "result_code": result_code,
-            "stopped_reason": task.get("stoppedReason", ""),
         },
         "context": context,
         "provenance": {"controller": controller, "collection_method": "ecs-terminal-task+task-definition+safe-log", "collected_at": collected_at, "evidence_class": EVIDENCE_CLASS},
     }
+    if proof_type == "server-replacement":
+        if task.get("stoppedReason") != "governed core-server-persistence replacement rehearsal":
+            raise ReceiptError("persistence-proof-receipt-terminal-invalid")
+        if not isinstance(context, dict) or context.get("original_stopped_reason") != "governed core-server-persistence replacement rehearsal":
+            raise ReceiptError("persistence-proof-receipt-context-invalid")
+        body["task"]["stopped_reason"] = "governed core-server-persistence replacement rehearsal"
     body["integrity"] = {"algorithm": "sha256", "payload_sha256": digest(body)}
     return validate(body)
 
@@ -183,7 +188,10 @@ def persist(receipt: dict[str, Any]) -> Path:
         # Re-observing the same completed proof must preserve the first receipt.
         # Collection time is provenance, not a new execution or proof identity.
         def substantive(value):
-            return {**{key: item for key, item in value.items() if key not in {"integrity", "provenance"}},
+            task = value["task"]
+            if value["proof_type"] != "server-replacement":
+                task = {key: item for key, item in task.items() if key != "stopped_reason"}
+            return {**{key: item for key, item in value.items() if key not in {"integrity", "provenance"}}, "task": task,
                     "provenance": {**{key: item for key, item in value["provenance"].items() if key != "collected_at"}, "evidence_class": value["provenance"].get("evidence_class", "live")}}
         if substantive(existing) != substantive(validated):
             raise ReceiptError("persistence-proof-receipt-conflict")

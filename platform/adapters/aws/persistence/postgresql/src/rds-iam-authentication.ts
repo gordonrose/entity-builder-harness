@@ -1,4 +1,12 @@
 import { Signer } from "@aws-sdk/rds-signer";
+import type { ConfigSettingRule } from "@kanbien/core/config";
+import { postgreSqlLoginNameRule } from "./configuration/index";
+
+/** Lexical acceptance rules, not evidence that an identity or region exists. */
+export const rdsIamAuthenticationTextRules = {
+  username: postgreSqlLoginNameRule,
+  region: { kind: "text", pattern: /^[a-z]{2}-[a-z]+-\d$/ },
+} as const satisfies Readonly<Record<"username" | "region", ConfigSettingRule>>;
 
 export interface RdsIamAuthenticationTokenOptions {
   readonly region: string;

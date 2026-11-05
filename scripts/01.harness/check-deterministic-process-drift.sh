@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.check-deterministic-process-drift
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 01.harness
 #   domain: governance
 #   disciplines:
@@ -92,7 +92,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument." >&2
       usage >&2
       exit 2
       ;;
@@ -117,14 +117,23 @@ is_scannable_path() {
   esac
 }
 
+read_failed() {
+  echo "ERROR: deterministic-process-observation-unavailable; stage=$1." >&2
+  exit 2
+}
+
+observe() {
+  local stage="$1"; shift
+  "$@" 2>/dev/null || read_failed "$stage"
+}
+
 collect_all_paths() {
   {
     [ -f AGENTS.md ] && printf '%s\n' AGENTS.md
-    [ -d .agentic ] && find .agentic -type f
-    [ -d docs/01.harness ] && find docs/01.harness -type f
-    [ -d docs/03.product ] && find docs/03.product -type f
-    [ -d docs/06.shared ] && find docs/06.shared -type f
-  } | sort -u
+    for tree in .agentic docs/01.harness docs/03.product docs/06.shared; do
+      if [ -d "$tree" ]; then observe tree-read find "$tree" -type f; fi
+    done
+  } | observe path-sort sort -u
 }
 
 collect_paths_from_args() {
@@ -132,13 +141,13 @@ collect_paths_from_args() {
 
   for path in "${PATH_ARGS[@]}"; do
     if [ -d "$path" ]; then
-      find "$path" -type f
+      observe tree-read find "$path" -type f
     elif [ -f "$path" ]; then
       printf '%s\n' "$path"
     else
-      echo "WARN: path does not exist, skipping: $path" >&2
+      echo "WARN: requested path does not exist, skipping." >&2
     fi
-  done | sort -u
+  done | observe path-sort sort -u
 }
 
 scan_file_content() {
@@ -210,7 +219,7 @@ scan_file_content() {
     END {
       exit findings > 0 ? 1 : 0
     }
-  ' "$content_file"
+  ' "$content_file" 2>/dev/null
 }
 
 scan_worktree_file() {
@@ -240,7 +249,7 @@ scan_git_blob() {
   tmp="$(mktemp)"
   if ! git show "${ref}:${path}" > "$tmp" 2>/dev/null; then
     rm -f "$tmp"
-    return 0
+    read_failed blob-read
   fi
 
   set +e
@@ -343,20 +352,22 @@ scan_diff_added_lines() {
     END {
       exit findings > 0 ? 1 : 0
     }
-  ' "$diff_file"
+  ' "$diff_file" 2>/dev/null
 }
 
 TOTAL_FINDINGS=0
 
 scan_path_list() {
-  local path
+  local path status
 
   while IFS= read -r path; do
     if [ -z "${path// }" ]; then
       continue
     fi
 
-    if ! scan_worktree_file "$path"; then
+    if scan_worktree_file "$path"; then :; else
+      status=$?
+      [ "$status" -eq 1 ] || read_failed content-read
       TOTAL_FINDINGS=$((TOTAL_FINDINGS + 1))
     fi
   done
@@ -364,43 +375,51 @@ scan_path_list() {
 
 case "$MODE" in
   staged)
+    paths="$(observe staged-paths git diff --cached --name-only --diff-filter=ACMR)"
     while IFS= read -r path; do
       if [ -z "${path// }" ]; then
         continue
       fi
 
       tmp="$(mktemp)"
-      git diff --cached -U0 --no-ext-diff -- "$path" > "$tmp"
-      if ! scan_diff_added_lines "$path" "$tmp"; then
+      observe staged-diff git diff --cached -U0 --no-ext-diff -- "$path" > "$tmp"
+      if scan_diff_added_lines "$path" "$tmp"; then :; else
+        status=$?
+        [ "$status" -eq 1 ] || read_failed diff-content
         TOTAL_FINDINGS=$((TOTAL_FINDINGS + 1))
       fi
       rm -f "$tmp"
-    done < <(git diff --cached --name-only --diff-filter=ACMR)
+    done <<< "$paths"
     ;;
   commit)
-    if ! git rev-parse --verify --quiet "$COMMIT_SHA" >/dev/null; then
-      echo "ERROR: commit does not exist: $COMMIT_SHA" >&2
+    if ! git rev-parse --verify --quiet "$COMMIT_SHA" >/dev/null 2>&1; then
+      echo "ERROR: requested commit could not be resolved." >&2
       exit 2
     fi
 
+    paths="$(observe commit-paths git diff-tree --no-commit-id --name-only -r "$COMMIT_SHA")"
     while IFS= read -r path; do
       if [ -z "${path// }" ]; then
         continue
       fi
 
       tmp="$(mktemp)"
-      git show --format= --unified=0 --no-ext-diff "$COMMIT_SHA" -- "$path" > "$tmp"
-      if ! scan_diff_added_lines "$path" "$tmp"; then
+      observe commit-diff git show --format= --unified=0 --no-ext-diff "$COMMIT_SHA" -- "$path" > "$tmp"
+      if scan_diff_added_lines "$path" "$tmp"; then :; else
+        status=$?
+        [ "$status" -eq 1 ] || read_failed diff-content
         TOTAL_FINDINGS=$((TOTAL_FINDINGS + 1))
       fi
       rm -f "$tmp"
-    done < <(git diff-tree --no-commit-id --name-only -r "$COMMIT_SHA")
+    done <<< "$paths"
     ;;
   paths)
-    scan_path_list < <(collect_paths_from_args)
+    paths="$(collect_paths_from_args)" || exit $?
+    scan_path_list <<< "$paths"
     ;;
   all)
-    scan_path_list < <(collect_all_paths)
+    paths="$(collect_all_paths)" || exit $?
+    scan_path_list <<< "$paths"
     ;;
   *)
     echo "ERROR: unsupported mode: $MODE" >&2

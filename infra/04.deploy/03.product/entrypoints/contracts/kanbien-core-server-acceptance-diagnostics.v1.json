@@ -1,0 +1,67 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "kanbien-core-server.acceptance",
+    "definitions": [
+      {
+        "code": "kanbien-core-server.acceptance.request-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "app",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "source": {
+              "type": "enum",
+              "values": [
+                "body",
+                "query"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "body",
+                "record_id",
+                "fact_digest"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "null",
+                "array",
+                "wrong-type",
+                "invalid-format"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "persistence-not-invoked"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

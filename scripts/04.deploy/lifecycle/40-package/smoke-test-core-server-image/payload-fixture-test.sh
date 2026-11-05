@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-image-payload-fixture
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -30,6 +30,7 @@ cd "$ROOT"
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 
+python3 -B scripts/04.deploy/lifecycle/40-package/build-core-server-image/runtime-preparation-diagnostic-test.py
 bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/build.sh --out-dir "$TEMPORARY_DIRECTORY/artifacts"
 node scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs \
   --compiled-root "$TEMPORARY_DIRECTORY/artifacts"
@@ -37,6 +38,24 @@ python3 scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-pa
   --compiled-root "$TEMPORARY_DIRECTORY/artifacts" --json | grep -F '"verdict": "passed"' >/dev/null
 node scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/runtime-command-test.mjs \
   "$TEMPORARY_DIRECTORY/artifacts"
+
+python3 - "$ROOT" "$TEMPORARY_DIRECTORY/artifacts" <<'PY'
+import json, subprocess, sys
+from pathlib import Path
+root, compiled = map(Path, sys.argv[1:])
+manifest = compiled / 'node_modules/@kanbien/core/package.json'
+original = manifest.read_bytes()
+try:
+    broken = json.loads(original)
+    del broken['exports']['./security']
+    manifest.write_text(json.dumps(broken))
+    checked = subprocess.run(['python3', str(root / 'scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py'), '--compiled-root', str(compiled), '--json'], capture_output=True, text=True)
+    assert checked.returncode == 1, 'missing transitive security export must fail before image construction'
+    assert json.loads(checked.stdout)['diagnostics'] == [{'code': 'compiled-payload-core-export-unavailable'}]
+finally:
+    manifest.write_bytes(original)
+print('Core-server transitive core-security export regression passed.')
+PY
 
 printf '%s\n' 'require("@kanbien/platform-persistence");' >> "$TEMPORARY_DIRECTORY/artifacts/kanbien-core-server.main.js"
 if output="$(python3 scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py --compiled-root "$TEMPORARY_DIRECTORY/artifacts" --json 2>&1)"; then

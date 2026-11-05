@@ -29,6 +29,8 @@ const app: PlatformApp = definePlatformApp({
 });
 
 const queue: PlatformWorkerQueue = createInMemoryPlatformWorkerQueue();
+const observedQueue: PlatformWorkerQueue = createInMemoryPlatformWorkerQueue({ diagnosticDefinitions: [], onDiagnostic(record) { return Promise.resolve(record.code); } });
+void observedQueue;
 const durableOwner = platformPersistenceLeaseOwner("worker.durable-a");
 if (!durableOwner.ok) {
   throw new Error("Expected valid durable worker owner.");

@@ -1,7 +1,10 @@
 import { isIP } from "node:net";
-import type {
-  PlatformClientAddressResolver,
-  PlatformClientAddressResolverInput,
+import {
+  observeServerDiagnostic,
+  serverClientAddressFallbackRecord,
+  serverClientAddressTrustConfigurationRecord,
+  type PlatformClientAddressResolver,
+  type PlatformClientAddressResolverInput,
 } from "@kanbien/platform-server";
 
 export interface AlbTrustedClientAddressResolverOptions {
@@ -19,22 +22,39 @@ export function createAlbTrustedClientAddressResolver(
   options: AlbTrustedClientAddressResolverOptions,
 ): PlatformClientAddressResolver {
   if (options.ingressMode !== "alb-security-group-only") {
-    throw new RangeError("ECS Fargate client-address trust requires ALB-only task ingress.");
+    throw Object.assign(new RangeError("ECS Fargate client-address trust requires ALB-only task ingress."), {
+      diagnosticRecord: serverClientAddressTrustConfigurationRecord(),
+    });
   }
 
   return {
-    resolve: (input) => finalValidForwardedAddress(input) ?? input.socketPeerAddress,
+    resolve: (input) => {
+      const forwarded = finalValidForwardedAddress(input);
+      if (forwarded.address !== undefined) return forwarded.address;
+      const fallback = input.socketPeerAddress;
+      // Resolve the original fallback before optional observation. Never read
+      // the peer twice or let an observer affect the selected address.
+      try {
+        const observer = Object.getOwnPropertyDescriptor(input, "onDiagnostic");
+        if (observer && "value" in observer && typeof observer.value === "function") {
+          observeServerDiagnostic(observer.value, serverClientAddressFallbackRecord(forwarded.reason, fallback === undefined ? "unavailable" : "socket-peer"));
+        }
+      } catch { /* Optional evidence cannot change trust selection. */ }
+      return fallback;
+    },
   };
 }
 
-function finalValidForwardedAddress(input: PlatformClientAddressResolverInput): string | undefined {
+function finalValidForwardedAddress(input: PlatformClientAddressResolverInput):
+  | { readonly address: string }
+  | { readonly address?: undefined; readonly reason: "forwarded-header-missing" | "forwarded-final-address-invalid" } {
   const forwarded = firstHeaderValue(input.headers, "x-forwarded-for");
   if (forwarded === undefined) {
-    return undefined;
+    return { reason: "forwarded-header-missing" };
   }
 
   const finalAddress = forwarded.split(",").map((value) => value.trim()).at(-1);
-  return finalAddress !== undefined && isIP(finalAddress) !== 0 ? finalAddress : undefined;
+  return finalAddress !== undefined && isIP(finalAddress) !== 0 ? { address: finalAddress } : { reason: "forwarded-final-address-invalid" };
 }
 
 function firstHeaderValue(

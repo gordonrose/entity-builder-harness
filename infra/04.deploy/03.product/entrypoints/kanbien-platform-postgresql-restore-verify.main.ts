@@ -1,9 +1,10 @@
 // Verify the one fixed harmless smoke record on an isolated restored database.
 // The host is supplied only by the governed recovery runner and is restricted
 // to the reviewed staging RDS recovery-name pattern before a TLS connection.
+import { reportTargetConfigurationError, targetEnvironmentConfigurationRecord } from "./kanbien-platform-configuration-diagnostics";
 
 import { outboxEntryId } from "@kanbien/core/persistence";
-import { postgreSqlPersistenceFoundationMigration } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { postgreSqlFailureDiagnostic, postgreSqlPersistenceFoundationMigration } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import {
   type RestoreVerificationFailureCategory,
   type RestoreVerificationFailureDetails,
@@ -17,6 +18,7 @@ import {
   writeRestoreVerificationFailure,
 } from "./kanbien-platform-postgresql-task";
 import { kanbienPlatformSmokePostgreSqlMigration } from "./kanbien-platform-postgresql-persistence";
+import { reportKanbienPlatformPostgreSqlDiagnostic } from "./kanbien-platform-postgresql-operation-diagnostics";
 
 const fixedWorkItem = "postgresql-stage6-smoke-20260926-a";
 
@@ -38,7 +40,7 @@ async function main(): Promise<void> {
     await pool.query({ text: "SELECT 1" });
     phase = "migration-checksum-verification";
     const foundationMigration = postgreSqlPersistenceFoundationMigration(configuration.schema);
-    const smokeMigration = kanbienPlatformSmokePostgreSqlMigration(configuration.schema);
+    const smokeMigration = kanbienPlatformSmokePostgreSqlMigration(configuration.schema, { onDiagnostic: reportKanbienPlatformPostgreSqlDiagnostic });
     const migrationHistory = await pool.query<{ readonly count: string }>({
       text: 'SELECT COUNT(*)::text AS count FROM "platform_smoke"."platform_migration_history" WHERE (migration_id = $1 AND checksum = $2) OR (migration_id = $3 AND checksum = $4)',
       values: [foundationMigration.id, foundationMigration.checksum, smokeMigration.id, smokeMigration.checksum],
@@ -67,6 +69,7 @@ async function main(): Promise<void> {
     }
     writeOutcome("restore_verified", "succeeded");
   } catch (error) {
+    reportTargetConfigurationError(error);
     writeRestoreVerificationFailure(restoreVerificationFailureDetails(error, phase, observed));
     process.exitCode = 1;
   } finally {
@@ -109,7 +112,8 @@ function errorProperty(error: unknown, property: "code" | "message"): string | u
 }
 
 function databaseErrorCode(value: string | undefined): string | undefined {
-  return value !== undefined && /^[0-9A-Z]{5}$/.test(value) ? value : undefined;
+  return value !== undefined && /^[0-9A-Z]{5}$/.test(value)
+    && postgreSqlFailureDiagnostic({ code: value }).facts.code_status === "recognized" ? value : undefined;
 }
 
 function countBucket(value: string | undefined): RestoreVerificationObserved {
@@ -122,7 +126,7 @@ function countBucket(value: string | undefined): RestoreVerificationObserved {
 function restoreHostFromEnvironment(): string {
   const candidate = process.env["RELATIONAL_RESTORE_HOST"];
   if (candidate === undefined || !/^kanbien-staging-platform-relational-restore-proof-[a-z0-9-]+\.[a-z0-9-]+\.eu-west-1\.rds\.amazonaws\.com$/.test(candidate)) {
-    throw new Error("RELATIONAL_RESTORE_HOST_INVALID");
+    throw Object.assign(new Error("RELATIONAL_RESTORE_HOST_INVALID"), { diagnosticRecord: targetEnvironmentConfigurationRecord("RELATIONAL_RESTORE_HOST", candidate === undefined ? "missing" : "invalid-format") });
   }
   return candidate;
 }

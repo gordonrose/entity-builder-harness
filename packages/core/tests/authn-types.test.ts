@@ -9,6 +9,7 @@ import {
   type PrincipalClaimValue,
   type PrincipalId,
   type PrincipalType,
+  type CoreAuthnDiagnosticOptions,
 } from "../src/authn/index";
 import { tenantId } from "../src/tenancy/index";
 
@@ -72,3 +73,6 @@ void invalidResult;
 // @ts-expect-error principal claims must stay provider-neutral and serializable.
 const invalidClaimValue: PrincipalClaimValue = new Date();
 void invalidClaimValue;
+
+const diagnostics: CoreAuthnDiagnosticOptions = { onDiagnostic(_record, context) { const operation: "principal" = context.operation; void operation; } };
+principal({ id: actorId, type: "user", subject: "subject" }, diagnostics);

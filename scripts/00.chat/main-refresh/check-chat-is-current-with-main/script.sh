@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -68,8 +68,15 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+failed() {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
 if [ -z "$TARGET_BRANCH" ]; then
-  TARGET_BRANCH="$(git branch --show-current)"
+  if ! TARGET_BRANCH="$(git branch --show-current 2>/dev/null)"; then
+    failed "freshness-branch-read-failed"
+  fi
 fi
 
 if [ -z "$TARGET_BRANCH" ]; then
@@ -80,23 +87,32 @@ fi
 case "$TARGET_BRANCH" in
   chat/*) ;;
   *)
-    echo "ERROR: target branch is not a chat branch: $TARGET_BRANCH" >&2
+    echo "ERROR: target branch is not a chat branch." >&2
     exit 1
     ;;
 esac
 
-if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
-  echo "ERROR: base branch does not exist: $BASE_BRANCH" >&2
-  exit 1
-fi
+check_ref() {
+  local ref="$1" subject="$2" status
+  if git show-ref --verify --quiet "$ref" 2>/dev/null; then
+    return
+  else
+    status=$?
+    if [ "$status" -eq 1 ]; then
+      failed "freshness-${subject}-missing"
+    fi
+    failed "freshness-${subject}-read-failed"
+  fi
+}
+check_ref "refs/heads/${BASE_BRANCH}" "base"
+check_ref "refs/heads/${TARGET_BRANCH}" "target"
 
-if ! git show-ref --verify --quiet "refs/heads/${TARGET_BRANCH}"; then
-  echo "ERROR: target branch does not exist: $TARGET_BRANCH" >&2
-  exit 1
+if ! ahead="$(git rev-list --count "${BASE_BRANCH}..${TARGET_BRANCH}" 2>/dev/null)"; then
+  failed "freshness-ahead-read-failed"
 fi
-
-ahead="$(git rev-list --count "${BASE_BRANCH}..${TARGET_BRANCH}")"
-behind="$(git rev-list --count "${TARGET_BRANCH}..${BASE_BRANCH}")"
+if ! behind="$(git rev-list --count "${TARGET_BRANCH}..${BASE_BRANCH}" 2>/dev/null)"; then
+  failed "freshness-behind-read-failed"
+fi
 
 echo "Base branch: $BASE_BRANCH"
 echo "Chat branch: $TARGET_BRANCH"

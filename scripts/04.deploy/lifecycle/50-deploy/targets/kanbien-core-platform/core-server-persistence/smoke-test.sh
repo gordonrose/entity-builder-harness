@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 4
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -44,7 +44,7 @@ expect_failure persistence-release-transition-arguments-invalid "$TRANSITION" --
 expect_failure persistence-observability-mvp-arguments-invalid bash "$OBSERVABILITY" --json
 expect_failure persistence-rds-log-export-arguments-invalid bash "$RDS_LOG_EXPORTS" --target staging --json
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.py" <<'PY'
-import importlib.util, sys
+import contextlib, importlib.util, io, json, sys
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("rds_log_exports", sys.argv[1])
@@ -70,6 +70,20 @@ def complete(*parts):
 with patch.object(module, "aws", side_effect=complete):
     assert module.main([]) == 0
 assert all(parts[1] != "modify-db-instance" for parts in calls)
+
+calls = []
+def unknown_report_values(*parts):
+    calls.append(parts)
+    return True, instance(status="PRIVATE_RDS_CANARY", exports=("postgresql", "iam-db-auth-error", "PRIVATE_RDS_CANARY")), "ok"
+output = io.StringIO()
+with patch.object(module, "aws", side_effect=unknown_report_values), contextlib.redirect_stdout(output):
+    assert module.main([]) == 0
+observed = json.loads(output.getvalue())
+assert observed["verdict"] == "reconciled"
+assert observed["facts"]["status"] == "unrecognized"
+assert observed["facts"]["enabled_exports"] == ["iam-db-auth-error", "postgresql"]
+assert "PRIVATE_RDS_CANARY" not in output.getvalue()
+assert len(calls) == 1 and calls[0][1] == "describe-db-instances"
 
 calls = []
 def missing(*parts):
@@ -357,6 +371,75 @@ for group in ("ServerSecurityGroup", "MigrationSecurityGroup"):
     expected = f"GroupId: !Ref {group}, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId"
     assert expected in template, f"{group} must permit private ECR artifact-layer retrieval"
 assert "GroupId: !Ref VerifierSecurityGroupId, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup" in template, "the private verifier must have explicit egress to the candidate server"
+PY
+python3 -B - "$ROOT" <<'PY'
+import contextlib, importlib.util, io, json, os, subprocess, sys
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+root=Path(sys.argv[1]);base=root/'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence'
+def load(name):
+    spec=importlib.util.spec_from_file_location('boundary_'+name,base/name/'script.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
+prepare=load('prepare-candidate');retire=load('retire-failed-candidate')
+prepare._AWS_RESPONSE=SimpleNamespace(inventory_covered=lambda _root:True)
+for module in [prepare,retire]:
+    for error,code in [(OSError('private-native-canary'),'aws-command-unavailable'),(UnicodeDecodeError('utf8',b'\xff',0,1,'private-native-canary'),'aws-response-invalid'),(subprocess.TimeoutExpired(['private-native-canary'],1),'aws-command-timeout')]:
+        with patch.object(module.subprocess,'run',side_effect=error) as call:
+            assert module.aws('cloudformation','execute-change-set')==(False,None,code)
+            assert call.call_count==1
+    with patch.object(module.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout='')):
+        assert module.aws('cloudformation','execute-change-set')==(True,{},'ok')
+for service,operation,text,code in [
+    ('ecs','describe-services','private-canary not found','aws-command-failed'),
+    ('ecs','describe-services','An error occurred (ResourceNotFoundException) when calling the DescribeServices operation: private-canary','aws-command-failed'),
+    ('cloudformation','describe-stacks','An error occurred (ValidationError) when calling the DescribeStacks operation: Stack with id retained-stack does not exist','aws-resource-missing'),
+    ('cloudformation','describe-stacks','An error occurred (ValidationError) when calling the DescribeStacks operation: private-canary not found','aws-parameter-invalid'),
+]:
+    with patch.object(retire.subprocess,'run',return_value=SimpleNamespace(returncode=1,stdout='',stderr=text)) as call:
+        assert retire.aws(service,operation)==(False,None,code)
+        assert call.call_count==1
+with patch.object(prepare,'aws',return_value=(True,{'Stacks':[{'Outputs':None}]},'ok')) as call:
+    assert prepare.foundation_outputs()==(None,'foundation-outputs-unavailable')
+    assert call.call_count==1
+with patch.object(prepare,'aws',side_effect=[(True,{'Vpcs':[{'CidrBlock':'10.0.0.0/16'}]},'ok'),(True,{'Service':None},'ok')]) as call:
+    assert prepare.infrastructure_parameters({'VpcId':'vpc','ServiceDiscoveryArn':'arn/service'})==(None,'persistence-namespace-observation-invalid')
+    assert call.call_count==2
+for payload in ['{private-json-canary', '[]']:
+    with patch.object(prepare.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=payload)):
+        assert prepare.validate_receipt(Path('private-path-canary')) is None
+create=load('create-change-set')
+with patch.object(create,'controls',return_value=SimpleNamespace(declaration_covered=lambda:True)),patch.object(create.subprocess,'run',side_effect=OSError('private-native-canary')) as call:
+    assert create.package_gates(Path('private-path-canary')) is False
+    assert call.call_count==1
+# The actual administration consumer delegates provider calls through migration.
+# Both entry paths keep the original one-call argument/timeout/environment contract.
+run_base=root/'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence'
+def run_module(name):
+    spec=importlib.util.spec_from_file_location('migration_boundary_'+name,run_base/name/'script.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
+migration=run_module('run-migration');administration=run_module('run-administration')
+for module in [migration,administration.MIGRATION]:
+    parts=('cloudformation','execute-change-set','--stack-name','retained-operation')
+    expected=['aws',*parts,'--cli-connect-timeout','5','--cli-read-timeout','20','--profile',module.PROFILE,'--region',module.REGION,'--output','json']
+    errors=[(OSError('private-native-canary'),'aws-command-unavailable'),(UnicodeDecodeError('utf8',b'\xff',0,1,'private-native-canary'),'aws-response-invalid'),(subprocess.TimeoutExpired(['private-native-canary'],1),'aws-command-timeout')]
+    results=[(SimpleNamespace(returncode=0,stdout='',stderr=''),(True,{},'ok')),
+             (SimpleNamespace(returncode=0,stdout='{"observed":true}',stderr=''),(True,{'observed':True},'ok')),
+             (SimpleNamespace(returncode=0,stdout='{private-json-canary',stderr=''),(False,None,'aws-response-invalid')),
+             (SimpleNamespace(returncode=1,stdout='',stderr='An error occurred (AccessDenied) when calling the ExecuteChangeSet operation: private-provider-canary'),(False,None,'aws-access-denied')),
+             (SimpleNamespace(returncode=1,stdout='',stderr='private-provider-canary accessdenied and not authorized'),(False,None,'aws-command-failed'))]
+    for error,code in errors:
+        output=io.StringIO()
+        with patch.object(module.subprocess,'run',side_effect=error) as child,contextlib.redirect_stdout(output),contextlib.redirect_stderr(output):
+            assert module.aws(*parts)==(False,None,code)
+        assert output.getvalue()=='' and child.call_count==1
+        assert child.call_args.args==(expected,)
+        assert child.call_args.kwargs=={'capture_output':True,'text':True,'timeout':30,'env':{**os.environ,'AWS_PAGER':''}}
+    for child_result,expected_result in results:
+        output=io.StringIO()
+        with patch.object(module.subprocess,'run',return_value=child_result) as child,contextlib.redirect_stdout(output),contextlib.redirect_stderr(output):
+            assert module.aws(*parts)==expected_result
+        assert output.getvalue()=='' and child.call_count==1
+        assert child.call_args.args==(expected,)
+        assert child.call_args.kwargs=={'capture_output':True,'text':True,'timeout':30,'env':{**os.environ,'AWS_PAGER':''}}
 PY
 python3 -B "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py"
 python3 -B "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py"

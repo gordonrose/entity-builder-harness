@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -20,6 +20,7 @@
 from __future__ import annotations
 import copy
 import importlib.util
+import json
 import tempfile
 from pathlib import Path
 
@@ -38,6 +39,10 @@ task = {
 }
 valid = module.make(proof_type="verifier", operation="read", task=task, image_digest="sha256:" + "b" * 64, result_code="KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", context={"record_id": "core-persistence-acceptance-v1", "completion_deadline_seconds": 120, "completion_duration_seconds": 23}, controller="verify-candidate", collected_at="2026-10-24T15:00:24Z")
 assert module.validate(valid) == valid
+assert "stopped_reason" not in valid["task"]
+private_task = {**task, "stoppedReason": "PRIVATE_RECEIPT_CANARY"}
+private = module.make(proof_type="verifier", operation="read", task=private_task, image_digest="sha256:" + "b" * 64, result_code="KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", context=valid["context"], controller="verify-candidate", collected_at="2026-10-24T15:00:24Z")
+assert "PRIVATE_RECEIPT_CANARY" not in json.dumps(private) and "stopped_reason" not in private["task"]
 administration_task = {**task, "taskDefinitionArn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:15"}
 administration = module.make(proof_type="administration", operation="prove-effective-privilege", task=administration_task, image_digest="sha256:" + "d" * 64, result_code="PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", context={"completion_deadline_seconds": 300, "completion_duration_seconds": 23}, controller="run-administration", collected_at="2026-10-24T15:00:24Z")
 assert module.validate(administration) == administration
@@ -70,4 +75,28 @@ with tempfile.TemporaryDirectory() as directory:
         assert str(error) == "persistence-proof-receipt-conflict"
     else:
         raise AssertionError("conflicting receipt unexpectedly passed")
+with tempfile.TemporaryDirectory() as directory:
+    module.RECEIPTS = Path(directory)
+    historical = copy.deepcopy(valid)
+    historical["task"]["stopped_reason"] = "PRIVATE_HISTORICAL_REASON"
+    historical["integrity"]["payload_sha256"] = module.digest({key: value for key, value in historical.items() if key != "integrity"})
+    assert module.validate(historical) is historical
+    stored = module.persist(historical)
+    before = stored.read_bytes()
+    assert module.persist(valid) == stored and stored.read_bytes() == before
+    broken = copy.deepcopy(historical); broken["task"]["stopped_reason"] = "changed-without-rehash"
+    stored.write_text(json.dumps(broken))
+    try: module.persist(valid)
+    except module.ReceiptError as error: assert str(error) == "persistence-proof-receipt-existing-invalid"
+    else: raise AssertionError("semantic reuse bypassed historical integrity")
+replacement_task = {**task, "stoppedReason": "governed core-server-persistence replacement rehearsal"}
+replacement_context = {"original_stopped_reason": replacement_task["stoppedReason"], "successor_task_arn": module.TASK_ARN_PREFIX + "c" * 32, "successor_started_at": "2026-10-24T15:00:24Z", "runtime_task_definition": task["taskDefinitionArn"], "recovery_boundary": "2026-10-24T15:00:12Z"}
+replacement = module.make(proof_type="server-replacement", operation="controlled-replacement", task=replacement_task, image_digest="sha256:" + "b" * 64, result_code="PERSISTENCE_SERVER_REPLACED", context=replacement_context, controller="rehearse-server-replacement", collected_at="2026-10-24T15:00:25Z")
+assert replacement["task"]["stopped_reason"] == "governed core-server-persistence replacement rehearsal"
+try: module.make(proof_type="server-replacement", operation="controlled-replacement", task=private_task, image_digest="sha256:" + "b" * 64, result_code="PERSISTENCE_SERVER_REPLACED", context=replacement_context, controller="rehearse-server-replacement", collected_at="2026-10-24T15:00:25Z")
+except module.ReceiptError as error: assert str(error) == "persistence-proof-receipt-terminal-invalid"
+else: raise AssertionError("unowned replacement reason retained")
+try: module.make(proof_type="server-replacement", operation="controlled-replacement", task=replacement_task, image_digest="sha256:" + "b" * 64, result_code="PERSISTENCE_SERVER_REPLACED", context={**replacement_context, "original_stopped_reason": "PRIVATE_RECEIPT_CANARY"}, controller="rehearse-server-replacement", collected_at="2026-10-24T15:00:25Z")
+except module.ReceiptError as error: assert str(error) == "persistence-proof-receipt-context-invalid"
+else: raise AssertionError("unowned replacement context reason retained")
 print("durable persistence proof receipt checks passed")

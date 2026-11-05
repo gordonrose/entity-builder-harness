@@ -1,8 +1,13 @@
 export { concurrencyToken } from "./concurrency";
 export type { ConcurrencyToken } from "./concurrency";
 
-export { persistenceError } from "./errors";
+export { persistenceError, persistenceErrorCodes } from "./errors";
 export type { PersistenceError, PersistenceErrorCode, PersistenceErrorInput } from "./errors";
+
+export { corePersistenceDiagnosticDefinitions, corePersistenceValidationDiagnostic, corePersistenceInMemoryBoundaryDiagnostic,
+  corePersistenceValidationRecord, corePersistenceInMemoryBoundaryRecord } from "./diagnostics";
+export type { CorePersistenceValidationDetail, CorePersistenceInMemoryBoundaryDetail,
+  CorePersistenceDiagnosticObserver, InMemoryPersistenceDiagnosticOptions } from "./diagnostics";
 
 export { page, pageRequest, pageTotal, pageTotals } from "./pagination";
 export type { Page, PageRequest, PageTotal, PageTotals } from "./pagination";

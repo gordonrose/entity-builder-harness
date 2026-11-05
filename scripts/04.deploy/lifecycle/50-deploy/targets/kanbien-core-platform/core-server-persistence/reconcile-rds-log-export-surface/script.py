@@ -109,7 +109,9 @@ def main(argv: list[str] | None = None) -> int:
         return report("uncertain", code)
     status = state["status"]
     exports = frozenset(state["exports"])
-    facts = {"database": DATABASE, "status": status, "enabled_exports": sorted(exports)}
+    facts = {"database": DATABASE,
+             "status": status if status == "available" or status in TRANSITIONAL_STATUSES else "unrecognized",
+             "enabled_exports": sorted(exports & REQUIRED_EXPORTS)}
     # RDS can report the eventual export list while it remains in a transient
     # configuration state.  The values alone are not completion evidence.
     if status in TRANSITIONAL_STATUSES:

@@ -5,6 +5,7 @@ import {
   isInvalid,
   isValid,
   validationIssue,
+  validationDiagnostic,
   validResult,
   withValidationPathPrefix,
 } from "../src/validation/index";
@@ -49,3 +50,12 @@ equal(combinedInvalid.issues[0].defaultMessage, "Name is required.");
 equal(combinedInvalid.issues[0].messageKey, "validation.required");
 
 console.log("packages/core validation runtime test passed.");
+
+const validator = { validate: (_value: unknown): _value is string => false, explain: () => failed };
+equal(validationDiagnostic(validator, "private-input"), undefined);
+equal(validationDiagnostic({ ...validator, diagnose: () => undefined }, "private-input"), undefined);
+let projectionCalls = 0;
+deepEqual(validationDiagnostic({ ...validator, diagnose() { projectionCalls++; throw new Error("private-projection-error"); } }, "private-input"), {
+  schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "construction-threw" },
+});
+equal(projectionCalls, 1);

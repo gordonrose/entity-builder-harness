@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: git
 #   disciplines:
@@ -106,6 +106,64 @@ EOF
 git -C "$REPO" add "$COMMITTED_LOG" "$EMPTY_LOG"
 git -C "$REPO" commit -q -m "add chat logs"
 
+export REAL_GIT="$(command -v git)" REAL_AWK="$(command -v awk)" REAL_SED="$(command -v sed)" REAL_GREP="$(command -v grep)"
+mkdir "$TMP_ROOT/fault-bin"
+for command in git awk sed grep; do
+  printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
+  cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
+case "$FAULT:$command:${1:-}" in
+  branch:git:branch|reference:git:show-ref|base-resolution:git:rev-parse|worktrees:git:worktree|comparison:git:rev-list|metadata:sed:*|match:grep:*)
+    echo private-cleanup-canary@example.invalid >&2
+    exit 74 ;;
+esac
+if [ "$FAULT" = enumeration ] && [ "$command" = git ] && [ "${1:-}" = branch ] && [ "${2:-}" != --show-current ]; then
+  echo private-cleanup-canary@example.invalid >&2
+  exit 74
+fi
+if [ "$FAULT" = retention ] && [ "$command" = grep ] && [ "${1:-}" = -Eiq ]; then
+  echo private-cleanup-canary@example.invalid >&2
+  exit 74
+fi
+if [ "$FAULT" = commit ] && [ "$command" = sed ] && [[ "${2:-}" == *latest_commit_sha* ]]; then
+  echo private-cleanup-canary@example.invalid >&2
+  exit 74
+fi
+if [ "$FAULT" = delete ] && [ "$command" = git ] && [ "${1:-}" = branch ] && [ "${2:-}" = -D ]; then
+  echo private-cleanup-canary@example.invalid >&2
+  exit 74
+fi
+case "$command" in
+  git) exec "$REAL_GIT" "$@" ;;
+  awk) exec "$REAL_AWK" "$@" ;;
+  sed) exec "$REAL_SED" "$@" ;;
+  grep) exec "$REAL_GREP" "$@" ;;
+esac
+EOF
+  chmod +x "$TMP_ROOT/fault-bin/$command"
+done
+for stage in branch reference worktrees comparison metadata match enumeration retention commit delete; do
+  mode=--dry-run
+  expected=2
+  if [ "$stage" = delete ]; then mode=--apply; expected=74; fi
+  if failure="$(cd "$REPO" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" \
+    bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh "$mode" 2>&1)"; then
+    fail "$stage failure was accepted as complete cleanup"
+  else
+    [ "$?" -eq "$expected" ] || fail "$stage failure status lost: $failure"
+  fi
+  [[ "$failure" == *cleanup-*-failed* && "$failure" != *private-cleanup-canary* && "$failure" != *Empty\ chat\ branches\ found* ]] || fail "$stage safe failure lost"
+  git -C "$REPO" show-ref --verify --quiet "refs/heads/$COMMITTED_BRANCH" || fail "failed observation/mutation removed branch"
+  [ -f "$COMMITTED_LOG" ] && [ -f "$EMPTY_LOG" ] || fail "failed observation removed a log"
+done
+
+status=0
+( cd "$REPO"; PATH="$TMP_ROOT/fault-bin:$PATH" FAULT=base-resolution \
+  bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --dry-run ) > "$TMP_ROOT/base-resolution.out" 2>&1 || status=$?
+[ "$status" -eq 1 ] || fail "base resolution lost refusal status"
+grep -Fxq 'ERROR: base branch could not be resolved' "$TMP_ROOT/base-resolution.out" || fail "base resolution reason missing"
+if grep -Eq 'private-cleanup-canary|Empty chat branches found' "$TMP_ROOT/base-resolution.out"; then
+  fail "base resolution leaked or claimed success"
+fi
 (
   cd "$REPO"
   bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --apply

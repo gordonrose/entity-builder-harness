@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -17,6 +17,8 @@
 #   - id: deploy.test.kanbien-core-platform.target-controls
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh
 import copy
+import contextlib
+import io
 import importlib.util
 import json
 import os
@@ -26,6 +28,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[7]
 DEPLOY=Path('scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py')
@@ -45,6 +49,7 @@ if op=='describe-change-set':
  if case=='missing':print('An error occurred (ChangeSetNotFoundException) when calling the DescribeChangeSet operation: synthetic-only',file=sys.stderr);sys.exit(1)
  changes=[{'ResourceChange':{'LogicalResourceId':'BootstrapRuntimeTaskDefinition','ResourceType':'AWS::ECS::TaskDefinition','Action':'Modify','Replacement':'True'}},{'ResourceChange':{'LogicalResourceId':'BootstrapRuntimeService','ResourceType':'AWS::ECS::Service','Action':'Modify','Replacement':'False'}}]
  if case=='removed':changes[0]['ResourceChange']['Action']='Remove'
+ if case=='resource-logical-shape':changes[0]['ResourceChange']['LogicalResourceId']=[]
  if case=='wrong-role':parameter(selected,'TaskExecutionRoleArn')['ParameterValue']='unreviewed-role'
  if case in {'use-previous','conflicting-previous','unavailable-previous','ambiguous-previous'}:
   entry=parameter(selected,'TaskExecutionRoleArn');entry.pop('ParameterValue');entry['UsePreviousValue']=True
@@ -62,6 +67,7 @@ if op=='describe-change-set':
  print(json.dumps(value));sys.exit(0)
 if op=='describe-stacks':
  status='UPDATE_IN_PROGRESS' if case=='pending-stack' else 'UPDATE_ROLLBACK_COMPLETE' if case=='failed' else 'UPDATE_COMPLETE'
+ if case=='stack-status-shape':status=[]
  if case=='wrong-completion':parameter(current,'ImageDigest')['ParameterValue']='sha256:'+'c'*64
  if case=='complete':current=selected.copy()
  if case=='unavailable-previous':current=[i for i in current if i['ParameterKey']!='TaskExecutionRoleArn']
@@ -95,6 +101,69 @@ def loaded(path):
 
 
 class DeploymentCli(unittest.TestCase):
+    def test_reconciliation_native_shapes_keep_named_operation_and_call_order(self):
+        module=loaded(ROOT/DEPLOY);receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40};name='retained-operation'
+        params=[{'ParameterKey':'ImageDigest','ParameterValue':receipt['image_digest']},{'ParameterKey':'SourceRevision','ParameterValue':receipt['source_revision']}]
+        for field,value,code in [('Status',[],'runtime-change-set-status-unobservable'),('Parameters',[{'ParameterKey':[],'ParameterValue':'private-native-canary'}],'runtime-change-set-parameters-unobservable'),('ExecutionStatus',{},'runtime-change-set-execution-status-unobservable')]:
+            out=io.StringIO();change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','Parameters':params,field:value}
+            with patch.object(module,'aws',return_value=(True,change,'ok')) as provider,contextlib.redirect_stdout(out):status=module.reconcile(name,receipt)
+            report=json.loads(out.getvalue());self.assertEqual(status,1);self.assertEqual(report['verdict'],'uncertain');self.assertEqual(report['findings'],[{'code':code}]);self.assertEqual(provider.call_count,1);self.assertNotIn('private-native-canary',out.getvalue())
+        out=io.StringIO()
+        with patch.object(module,'aws',side_effect=[(True,{'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','Parameters':params},'ok'),(True,{'Stacks':[{'StackStatus':[]}]},'ok')]) as provider,contextlib.redirect_stdout(out):
+            self.assertEqual(module.reconcile(name,receipt),1)
+        self.assertEqual(json.loads(out.getvalue())['findings'],[{'code':'runtime-stack-status-unobservable'}]);self.assertEqual(provider.call_count,2)
+        class ChangingStatus(dict):
+            reads=0
+            def get(self,key,*args):
+                if key=='Status':
+                    self.reads+=1;return 'CREATE_COMPLETE' if self.reads==1 else []
+                return super().get(key,*args)
+        changing=ChangingStatus(ChangeSetName=name)
+        out=io.StringIO()
+        with patch.object(module,'aws',return_value=(True,changing,'ok')) as provider,contextlib.redirect_stdout(out):self.assertEqual(module.reconcile(name,receipt),1)
+        self.assertEqual(changing.reads,2);self.assertEqual(provider.call_count,1)
+        self.assertEqual(json.loads(out.getvalue())['findings'],[{'code':'runtime-change-set-status-unobservable'}])
+
+    def test_parameter_file_failure_before_and_after_create(self):
+        module=loaded(ROOT/DEPLOY.parents[1]/'create-change-set/script.py')
+        class CleanupFailure(io.StringIO):
+            name='fixture-only.json'
+            def __exit__(self,*args):super().__exit__(*args);raise OSError('private-native-canary')
+        for cleanup in (False,True):
+            calls=[]
+            def aws(*parts):
+                calls.append(parts[1])
+                if parts[1]=='describe-stacks':return True,{'Stacks':[{'Outputs':[{'OutputKey':key,'OutputValue':'fixture'} for key in module.REQUIRED]}]},'ok'
+                return (False,None,'aws-resource-missing') if parts[1]=='describe-change-set' else (True,{},'ok')
+            temporary=patch.object(module.tempfile,'NamedTemporaryFile',return_value=CleanupFailure()) if cleanup else patch.object(module.tempfile,'NamedTemporaryFile',side_effect=OSError('private-native-canary'))
+            out=io.StringIO()
+            with temporary,patch.object(module,'receipt',return_value=('sha256:'+'a'*64,'a'*40)),patch.object(module,'baseline',return_value=('sha256:'+'b'*64,'b'*40)),patch.object(module.subprocess,'run',return_value=SimpleNamespace(returncode=0)),patch.object(module,'aws',side_effect=aws),patch.object(sys,'argv',['fixture','--receipt','fixture','--operation','update']),contextlib.redirect_stdout(out):
+                self.assertEqual(module.main(),1)
+            report=json.loads(out.getvalue());self.assertEqual(report['verdict'],'uncertain' if cleanup else 'blocked');self.assertEqual(calls,['describe-stacks','describe-change-set','create-change-set'] if cleanup else ['describe-stacks','describe-change-set']);self.assertNotIn('private-native-canary',out.getvalue())
+
+    def test_native_boundaries_are_fixed_and_do_not_retry(self):
+        module=loaded(ROOT/DEPLOY)
+        module._AWS_RESPONSE=SimpleNamespace(inventory_covered=lambda _root:True)
+        for error,code in [(OSError('private-native-canary'),'aws-command-unavailable'),(UnicodeDecodeError('utf8',b'\xff',0,1,'private-native-canary'),'aws-response-invalid'),(subprocess.TimeoutExpired(['private-argv-canary'],1),'aws-command-timeout')]:
+            with self.subTest(code=code),patch.object(module.subprocess,'run',side_effect=error) as call:
+                self.assertEqual(module.aws('cloudformation','execute-change-set'),(False,None,code))
+                self.assertEqual(call.call_count,1)
+        for response in [SimpleNamespace(returncode=0,stdout='{private-json-canary'),SimpleNamespace(returncode=1,stdout='private-native-canary')]:
+            with patch.object(module.subprocess,'run',return_value=response) as call:
+                self.assertIsNone(module.candidate(Path('private-path-canary')))
+                self.assertEqual(call.call_count,1)
+        create=loaded(ROOT/DEPLOY.parents[1]/'create-change-set/script.py')
+        for text in ['{private-json-canary','[]','{}']:
+            with patch.object(create.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=text)):
+                self.assertIsNone(create.receipt(Path('private-path-canary')))
+
+    def test_rejected_cli_choice_never_echoes_input(self):
+        for relative,code in [(DEPLOY,'runtime-deployment-arguments-invalid'),(DEPLOY.parents[1]/'create-change-set/script.py','runtime-change-set-arguments-invalid')]:
+            result=subprocess.run([sys.executable,'-B',str(ROOT/relative),'--receipt','private-path-canary','--operation','private-argument-canary\nsecond-line'],capture_output=True,text=True,timeout=10)
+            self.assertEqual(result.returncode,2)
+            self.assertEqual(result.stdout,'')
+            self.assertEqual(result.stderr,'ERROR: '+code+'\n')
+
     def setUp(self):
         self.temporary=tempfile.TemporaryDirectory(prefix='delivery-bootstrap-cli-');self.root=Path(self.temporary.name);root=self.root
         for relative in [DEPLOY,DEPLOY.with_name('script.sh'),PARSER,Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),TEMPLATE]:
@@ -142,6 +211,8 @@ class DeploymentCli(unittest.TestCase):
         cases=[('release-gap',False,'blocked','release-contract-not-proven'),('alignment-gap',False,'blocked','runtime-update-alignment-not-proven'),('cost-gap',False,'blocked','cost-condition-not-proven'),('inventory-gap',False,'blocked','delivery-inventory-not-covered'),('wrong-role',False,'blocked','change-set-candidate-mismatch'),('removed',False,'blocked','change-set-resource-boundary-violated'),('lost-submit',False,'uncertain','aws-command-failed'),('pending-review',True,'pending','runtime-change-set-review-pending'),('pending-execution',True,'pending','runtime-change-set-execution-pending'),('missing',True,'uncertain','aws-resource-missing'),('failed',True,'failed','runtime-stack-update-failed'),('pending-stack',True,'pending','runtime-stack-update-pending'),('wrong-completion',True,'uncertain','runtime-stack-completion-identity-unproven'),('complete',True,'deployed-awaiting-private-verification','runtime-change-set-executed')]
         for case,reconcile,verdict,code in cases:
             with self.subTest(case=case):self.command(case,reconcile=reconcile,verdict=verdict,code=code,execute=1 if case=='lost-submit' else 0)
+        for case,code in [('resource-logical-shape','runtime-resource-observation-invalid'),('stack-status-shape','runtime-change-set-observation-invalid')]:
+            with self.subTest(case=case):self.command(case,verdict='uncertain',code=code)
 
     def test_proposed_configuration_blocks_before_execute(self):
         variants={}

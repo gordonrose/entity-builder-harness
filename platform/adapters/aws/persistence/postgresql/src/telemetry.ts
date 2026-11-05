@@ -1,4 +1,10 @@
-import type { PlatformPersistenceObserver } from "@kanbien/platform-persistence";
+import {
+  observePlatformPersistenceDiagnostic,
+  persistenceCommandDiagnosticRecord,
+  selectPlatformPersistenceDiagnosticEvidence,
+  type PlatformPersistenceDiagnosticOptions,
+  type PlatformPersistenceObserver,
+} from "@kanbien/platform-persistence";
 import { postgreSqlPersistenceProviderFailureClass, type PostgreSqlPersistenceOperation } from "./errors";
 
 export type PostgreSqlPersistenceTelemetryOutcome = "succeeded" | "failed" | "rolled_back";
@@ -22,34 +28,77 @@ export function recordPostgreSqlPersistenceTelemetry(
     readonly error?: unknown;
     readonly poolInUse?: number;
   },
+  diagnostics?: PlatformPersistenceDiagnosticOptions,
 ): void {
   if (sink === undefined) return;
+  let operation: PostgreSqlPersistenceOperation | undefined;
+  let boundary: "encoding" | "callback" = "encoding";
   try {
-    sink({
-      operation: input.operation,
+    const observation = {
+      operation: operation = input.operation,
       outcome: input.outcome,
       durationBucket: durationBucket(input.durationMs),
       ...(input.error === undefined ? {} : { errorClass: postgreSqlPersistenceProviderFailureClass(input.error) }),
       ...(input.poolInUse === undefined ? {} : { poolInUseBucket: poolBucket(input.poolInUse) }),
-    });
-  } catch {
+    };
+    boundary = "callback";
+    const pending: unknown = sink(observation);
+    consumeRejection(pending, (cause) => observeTelemetryFailure(diagnostics, operation, "callback", cause));
+  } catch (cause) {
+    observeTelemetryFailure(diagnostics, operation, boundary, cause);
     // Telemetry never changes database transaction semantics.
   }
 }
 
 export function postgreSqlPlatformPersistenceObserver(
   sink: PostgreSqlPersistenceTelemetrySink | undefined,
+  diagnostics?: PlatformPersistenceDiagnosticOptions,
 ): PlatformPersistenceObserver {
   return {
     record: (observation) => {
-      recordPostgreSqlPersistenceTelemetry(sink, {
-        operation: "transaction",
-        outcome: observation.outcome === "succeeded" ? "succeeded" : "failed",
-        durationMs: 0,
-        ...(observation.error === undefined ? {} : { error: observation.error }),
-      });
+      try {
+        recordPostgreSqlPersistenceTelemetry(sink, {
+          operation: "transaction",
+          outcome: observation.outcome === "succeeded" ? "succeeded" : "failed",
+          durationMs: 0,
+          ...(observation.error === undefined ? {} : { error: observation.error }),
+        }, diagnostics);
+      } catch (cause) {
+        observeTelemetryFailure(diagnostics, "transaction", "encoding", cause);
+        throw cause;
+      }
     },
   };
+}
+
+const intrinsicPromiseThen = Promise.prototype.then;
+function consumeRejection(pending: unknown, rejected: (cause: unknown) => void): void {
+  if (pending === undefined) return;
+  try { Reflect.apply(intrinsicPromiseThen, pending, [undefined, rejected]); }
+  catch {
+    try { Reflect.apply(intrinsicPromiseThen, Promise.resolve(pending), [undefined, rejected]); }
+    catch (cause) { rejected(cause); }
+  }
+}
+
+function observeTelemetryFailure(diagnostics: PlatformPersistenceDiagnosticOptions | undefined,
+  operation: PostgreSqlPersistenceOperation | undefined, boundary: "encoding" | "callback", cause: unknown): void {
+  try {
+    if (operation !== undefined) {
+      // Encoding here means the local observation projection, never SQL encoding.
+      observePlatformPersistenceDiagnostic(diagnostics, persistenceCommandDiagnosticRecord({
+        operation, boundary, role: "primary", condition: "unclassified", codeStatus: "not-inspected", effect: "not-assessed",
+      }), cause);
+      return;
+    }
+    // A failed operation getter establishes no operation to put in an own record.
+    const source = selectPlatformPersistenceDiagnosticEvidence(diagnostics ?? {}, cause);
+    for (const record of [source.diagnosticRecord, ...(source.relatedDiagnosticRecords ?? [])]) {
+      if (record === undefined) continue;
+      try { consumeRejection(diagnostics?.onDiagnostic?.(record), () => undefined); }
+      catch { /* Optional observer failures cannot change telemetry or database work. */ }
+    }
+  } catch { /* Diagnostic selection/construction cannot change the legacy outcome. */ }
 }
 
 function durationBucket(durationMs: number): PostgreSqlPersistenceTelemetry["durationBucket"] {

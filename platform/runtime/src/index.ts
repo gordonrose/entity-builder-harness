@@ -1,4 +1,10 @@
 export {
+  platformRuntimeDiagnosticCatalog,
+  platformRuntimeStateDiagnostic,
+  platformRuntimeBoundaryDiagnostic,
+} from "./diagnostics";
+export type { PlatformRuntimeDiagnosticOptions, PlatformRuntimeDiagnosticObserver } from "./diagnostics";
+export {
   createPlatformRuntimeContextDeps,
   createPlatformRuntimeJobContext,
   createPlatformRuntimeRequestContext,

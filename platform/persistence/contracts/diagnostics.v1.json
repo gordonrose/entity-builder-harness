@@ -1,0 +1,4116 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "persistence",
+    "definitions": [
+      {
+        "code": "persistence.relay-configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "configure-relay"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "setting": {
+              "type": "enum",
+              "values": [
+                "lease-duration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "not-finite",
+                "invalid-integer",
+                "not-positive"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "relay-not-created"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.migration-instructions-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "migration.operation"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "wrong-type",
+                      "blank",
+                      "surrounding-whitespace",
+                      "unsupported-value"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.verification-instructions-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "verification.mode",
+                      "verification.expected-record-id",
+                      "verification.expected-fingerprint"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "wrong-type",
+                      "blank",
+                      "surrounding-whitespace",
+                      "invalid-format",
+                      "unsupported-value"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.transport-unavailable",
+        "version": 1,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.trust-validation-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.credential-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.runtime-permission-denied",
+        "version": 1,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.capacity-exhausted",
+        "version": 1,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.schema-incompatible",
+        "version": 1,
+        "classification": {
+          "failureKind": "data_integrity",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.operation-timed-out",
+        "version": 1,
+        "classification": {
+          "failureKind": "timeout",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.outcome-uncertain",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.unclassified-failure",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.transport-unavailable",
+        "version": 2,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.trust-validation-failed",
+        "version": 2,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.credential-rejected",
+        "version": 2,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.runtime-permission-denied",
+        "version": 2,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.capacity-exhausted",
+        "version": 2,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.schema-incompatible",
+        "version": 2,
+        "classification": {
+          "failureKind": "data_integrity",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.operation-timed-out",
+        "version": 2,
+        "classification": {
+          "failureKind": "timeout",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.outcome-uncertain",
+        "version": 2,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.unclassified-failure",
+        "version": 2,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.transport-unavailable",
+        "version": 3,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.trust-validation-failed",
+        "version": 3,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.credential-rejected",
+        "version": 3,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.runtime-permission-denied",
+        "version": 3,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.capacity-exhausted",
+        "version": 3,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.schema-incompatible",
+        "version": 3,
+        "classification": {
+          "failureKind": "data_integrity",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.operation-timed-out",
+        "version": 3,
+        "classification": {
+          "failureKind": "timeout",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.outcome-uncertain",
+        "version": 3,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.unclassified-failure",
+        "version": 3,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "pool_connect",
+                "pool_query",
+                "query",
+                "authentication_value",
+                "tcp_probe",
+                "tls_probe",
+                "unknown"
+              ]
+            },
+            "classification": {
+              "type": "enum",
+              "values": [
+                "authentication_rejected",
+                "authentication_material_invalid",
+                "permission_denied",
+                "content_unavailable",
+                "tls_trust_invalid",
+                "transport_unavailable",
+                "timeout",
+                "conflict",
+                "constraint",
+                "transaction_rolled_back",
+                "validation",
+                "query_canceled",
+                "unknown"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "recognized",
+                "unrecognized",
+                "absent"
+              ]
+            },
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "delete"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "region",
+                "store",
+                "outbox-index",
+                "lineage-index",
+                "configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "blank",
+                "too-long"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.local-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "validate-mutation",
+                "validate-lease",
+                "stage-statement",
+                "validate-identifier"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "subject-kind",
+                "subject-id",
+                "causation",
+                "tenant",
+                "correlation",
+                "owner",
+                "fence",
+                "attempt",
+                "duration",
+                "expiry",
+                "sequence",
+                "limit",
+                "record",
+                "state",
+                "lease",
+                "tool-version",
+                "schema",
+                "schema-preprovisioned",
+                "migration-id",
+                "checksum",
+                "statements",
+                "statement",
+                "transaction",
+                "participant",
+                "mutation",
+                "after-commit",
+                "identifier",
+                "manifest"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "mismatch",
+                "left-absent",
+                "right-absent",
+                "pattern",
+                "not-integer",
+                "not-positive",
+                "negative",
+                "not-after-acquisition",
+                "cannot-advance",
+                "not-found",
+                "wrong-state",
+                "absent",
+                "stale",
+                "expired",
+                "duplicate",
+                "too-large",
+                "wrong-type",
+                "empty",
+                "out-of-order",
+                "blank",
+                "nul",
+                "untrimmed",
+                "too-long",
+                "semicolon",
+                "unsupported-verb",
+                "closed",
+                "unsupported",
+                "missing",
+                "checksum-mismatch",
+                "predicate-rejected"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "validation",
+                "preflight",
+                "state-check",
+                "statement-selection",
+                "transaction-body",
+                "after-statements"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "local-state-unchanged",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "ordinal"
+          ]
+        }
+      },
+      {
+        "code": "persistence.stored-record-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "data_integrity",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "reduction": {
+              "type": "enum",
+              "values": [
+                "null",
+                "filtered",
+                "duplicate",
+                "returned",
+                "thrown",
+                "reconciled-state"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed",
+                "unknown"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "enum",
+                    "values": [
+                      "row",
+                      "id",
+                      "subject-kind",
+                      "subject-id",
+                      "message-type",
+                      "message-version",
+                      "delivery-policy",
+                      "attempt",
+                      "lease",
+                      "owner",
+                      "fence",
+                      "expiry",
+                      "completion",
+                      "record-kind",
+                      "record-id",
+                      "revision",
+                      "actor",
+                      "changed-fields",
+                      "record-change",
+                      "identifier"
+                    ]
+                  },
+                  "condition": {
+                    "type": "enum",
+                    "values": [
+                      "absent",
+                      "invalid",
+                      "partial",
+                      "all-null",
+                      "required",
+                      "nullness-mismatch",
+                      "not-integer",
+                      "not-positive",
+                      "negative",
+                      "pattern",
+                      "empty",
+                      "untrimmed",
+                      "duplicate",
+                      "too-many",
+                      "not-after-acquisition"
+                    ]
+                  },
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "optional": [
+                  "ordinal",
+                  "count"
+                ]
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.boundary-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "connection-pool",
+                "transaction-client"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "invocation",
+                "completion",
+                "event",
+                "returned-result"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "acquire",
+                "begin",
+                "body",
+                "commit",
+                "rollback",
+                "recovery-rollback",
+                "release",
+                "idle-pool",
+                "end",
+                "after-commit",
+                "expiry-normalization",
+                "decode",
+                "reconciliation"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "rejected",
+                "returned-failure",
+                "unsupported"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "unknown",
+                "not-assessed",
+                "transaction-open",
+                "rollback-completed",
+                "commit-completed"
+              ]
+            },
+            "reconciliation": {
+              "type": "enum",
+              "values": [
+                "lease-present-fence-matched"
+              ]
+            }
+          },
+          "optional": [
+            "reconciliation"
+          ]
+        }
+      },
+      {
+        "code": "persistence.reconciliation-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create"
+              ]
+            },
+            "primaryOutcome": {
+              "type": "enum",
+              "values": [
+                "no-row-returned",
+                "call-threw"
+              ]
+            },
+            "observed": {
+              "type": "enum",
+              "values": [
+                "matching",
+                "different",
+                "absent",
+                "unavailable"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "read-result-observed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.credential-rejected",
+        "version": 4,
+        "classification": {
+          "failureKind": "authentication",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "client-initialization"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "client-construction",
+                "selection",
+                "encoding",
+                "invocation",
+                "response",
+                "decoding",
+                "callback"
+              ]
+            },
+            "role": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "access-rejected",
+                "identity-unrecognized",
+                "credential-expired",
+                "condition-rejected",
+                "transaction-canceled",
+                "resource-unavailable",
+                "input-rejected",
+                "throughput-exceeded",
+                "request-limit-exceeded",
+                "throttled",
+                "timeout",
+                "network-failure",
+                "unclassified"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "not-inspected",
+                "absent",
+                "wrong-type",
+                "unavailable",
+                "recognized",
+                "unrecognized"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "cancellation": {
+              "type": "object",
+              "properties": {
+                "availability": {
+                  "type": "enum",
+                  "values": [
+                    "absent",
+                    "wrong-type",
+                    "unavailable",
+                    "available"
+                  ]
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "reasons": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ordinal": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "codeStatus": {
+                        "type": "enum",
+                        "values": [
+                          "not-inspected",
+                          "absent",
+                          "wrong-type",
+                          "unavailable",
+                          "recognized",
+                          "unrecognized"
+                        ]
+                      },
+                      "condition": {
+                        "type": "enum",
+                        "values": [
+                          "access-rejected",
+                          "identity-unrecognized",
+                          "credential-expired",
+                          "condition-rejected",
+                          "transaction-canceled",
+                          "resource-unavailable",
+                          "input-rejected",
+                          "throughput-exceeded",
+                          "request-limit-exceeded",
+                          "throttled",
+                          "timeout",
+                          "network-failure",
+                          "unclassified"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "optional": [
+            "cancellation"
+          ]
+        }
+      },
+      {
+        "code": "persistence.runtime-permission-denied",
+        "version": 4,
+        "classification": {
+          "failureKind": "authorization",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "client-initialization"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "client-construction",
+                "selection",
+                "encoding",
+                "invocation",
+                "response",
+                "decoding",
+                "callback"
+              ]
+            },
+            "role": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "access-rejected",
+                "identity-unrecognized",
+                "credential-expired",
+                "condition-rejected",
+                "transaction-canceled",
+                "resource-unavailable",
+                "input-rejected",
+                "throughput-exceeded",
+                "request-limit-exceeded",
+                "throttled",
+                "timeout",
+                "network-failure",
+                "unclassified"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "not-inspected",
+                "absent",
+                "wrong-type",
+                "unavailable",
+                "recognized",
+                "unrecognized"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "cancellation": {
+              "type": "object",
+              "properties": {
+                "availability": {
+                  "type": "enum",
+                  "values": [
+                    "absent",
+                    "wrong-type",
+                    "unavailable",
+                    "available"
+                  ]
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "reasons": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ordinal": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "codeStatus": {
+                        "type": "enum",
+                        "values": [
+                          "not-inspected",
+                          "absent",
+                          "wrong-type",
+                          "unavailable",
+                          "recognized",
+                          "unrecognized"
+                        ]
+                      },
+                      "condition": {
+                        "type": "enum",
+                        "values": [
+                          "access-rejected",
+                          "identity-unrecognized",
+                          "credential-expired",
+                          "condition-rejected",
+                          "transaction-canceled",
+                          "resource-unavailable",
+                          "input-rejected",
+                          "throughput-exceeded",
+                          "request-limit-exceeded",
+                          "throttled",
+                          "timeout",
+                          "network-failure",
+                          "unclassified"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "optional": [
+            "cancellation"
+          ]
+        }
+      },
+      {
+        "code": "persistence.transport-unavailable",
+        "version": 4,
+        "classification": {
+          "failureKind": "dependency_unavailable",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "client-initialization"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "client-construction",
+                "selection",
+                "encoding",
+                "invocation",
+                "response",
+                "decoding",
+                "callback"
+              ]
+            },
+            "role": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "access-rejected",
+                "identity-unrecognized",
+                "credential-expired",
+                "condition-rejected",
+                "transaction-canceled",
+                "resource-unavailable",
+                "input-rejected",
+                "throughput-exceeded",
+                "request-limit-exceeded",
+                "throttled",
+                "timeout",
+                "network-failure",
+                "unclassified"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "not-inspected",
+                "absent",
+                "wrong-type",
+                "unavailable",
+                "recognized",
+                "unrecognized"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "cancellation": {
+              "type": "object",
+              "properties": {
+                "availability": {
+                  "type": "enum",
+                  "values": [
+                    "absent",
+                    "wrong-type",
+                    "unavailable",
+                    "available"
+                  ]
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "reasons": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ordinal": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "codeStatus": {
+                        "type": "enum",
+                        "values": [
+                          "not-inspected",
+                          "absent",
+                          "wrong-type",
+                          "unavailable",
+                          "recognized",
+                          "unrecognized"
+                        ]
+                      },
+                      "condition": {
+                        "type": "enum",
+                        "values": [
+                          "access-rejected",
+                          "identity-unrecognized",
+                          "credential-expired",
+                          "condition-rejected",
+                          "transaction-canceled",
+                          "resource-unavailable",
+                          "input-rejected",
+                          "throughput-exceeded",
+                          "request-limit-exceeded",
+                          "throttled",
+                          "timeout",
+                          "network-failure",
+                          "unclassified"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "optional": [
+            "cancellation"
+          ]
+        }
+      },
+      {
+        "code": "persistence.operation-timed-out",
+        "version": 4,
+        "classification": {
+          "failureKind": "timeout",
+          "failureSource": "provider",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "client-initialization"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "client-construction",
+                "selection",
+                "encoding",
+                "invocation",
+                "response",
+                "decoding",
+                "callback"
+              ]
+            },
+            "role": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "access-rejected",
+                "identity-unrecognized",
+                "credential-expired",
+                "condition-rejected",
+                "transaction-canceled",
+                "resource-unavailable",
+                "input-rejected",
+                "throughput-exceeded",
+                "request-limit-exceeded",
+                "throttled",
+                "timeout",
+                "network-failure",
+                "unclassified"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "not-inspected",
+                "absent",
+                "wrong-type",
+                "unavailable",
+                "recognized",
+                "unrecognized"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "cancellation": {
+              "type": "object",
+              "properties": {
+                "availability": {
+                  "type": "enum",
+                  "values": [
+                    "absent",
+                    "wrong-type",
+                    "unavailable",
+                    "available"
+                  ]
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "reasons": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ordinal": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "codeStatus": {
+                        "type": "enum",
+                        "values": [
+                          "not-inspected",
+                          "absent",
+                          "wrong-type",
+                          "unavailable",
+                          "recognized",
+                          "unrecognized"
+                        ]
+                      },
+                      "condition": {
+                        "type": "enum",
+                        "values": [
+                          "access-rejected",
+                          "identity-unrecognized",
+                          "credential-expired",
+                          "condition-rejected",
+                          "transaction-canceled",
+                          "resource-unavailable",
+                          "input-rejected",
+                          "throughput-exceeded",
+                          "request-limit-exceeded",
+                          "throttled",
+                          "timeout",
+                          "network-failure",
+                          "unclassified"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "optional": [
+            "cancellation"
+          ]
+        }
+      },
+      {
+        "code": "persistence.unclassified-failure",
+        "version": 4,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "client-initialization"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "client-construction",
+                "selection",
+                "encoding",
+                "invocation",
+                "response",
+                "decoding",
+                "callback"
+              ]
+            },
+            "role": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "access-rejected",
+                "identity-unrecognized",
+                "credential-expired",
+                "condition-rejected",
+                "transaction-canceled",
+                "resource-unavailable",
+                "input-rejected",
+                "throughput-exceeded",
+                "request-limit-exceeded",
+                "throttled",
+                "timeout",
+                "network-failure",
+                "unclassified"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "not-inspected",
+                "absent",
+                "wrong-type",
+                "unavailable",
+                "recognized",
+                "unrecognized"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "cancellation": {
+              "type": "object",
+              "properties": {
+                "availability": {
+                  "type": "enum",
+                  "values": [
+                    "absent",
+                    "wrong-type",
+                    "unavailable",
+                    "available"
+                  ]
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "reasons": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ordinal": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "codeStatus": {
+                        "type": "enum",
+                        "values": [
+                          "not-inspected",
+                          "absent",
+                          "wrong-type",
+                          "unavailable",
+                          "recognized",
+                          "unrecognized"
+                        ]
+                      },
+                      "condition": {
+                        "type": "enum",
+                        "values": [
+                          "access-rejected",
+                          "identity-unrecognized",
+                          "credential-expired",
+                          "condition-rejected",
+                          "transaction-canceled",
+                          "resource-unavailable",
+                          "input-rejected",
+                          "throughput-exceeded",
+                          "request-limit-exceeded",
+                          "throttled",
+                          "timeout",
+                          "network-failure",
+                          "unclassified"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "optional": [
+            "cancellation"
+          ]
+        }
+      },
+      {
+        "code": "persistence.command-condition-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification",
+                "client-initialization"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "client-construction",
+                "selection",
+                "encoding",
+                "invocation",
+                "response",
+                "decoding",
+                "callback"
+              ]
+            },
+            "role": {
+              "type": "enum",
+              "values": [
+                "primary",
+                "reconciliation"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "access-rejected",
+                "identity-unrecognized",
+                "credential-expired",
+                "condition-rejected",
+                "transaction-canceled",
+                "resource-unavailable",
+                "input-rejected",
+                "throughput-exceeded",
+                "request-limit-exceeded",
+                "throttled",
+                "timeout",
+                "network-failure",
+                "unclassified"
+              ]
+            },
+            "codeStatus": {
+              "type": "enum",
+              "values": [
+                "not-inspected",
+                "absent",
+                "wrong-type",
+                "unavailable",
+                "recognized",
+                "unrecognized"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-invoked",
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "cancellation": {
+              "type": "object",
+              "properties": {
+                "availability": {
+                  "type": "enum",
+                  "values": [
+                    "absent",
+                    "wrong-type",
+                    "unavailable",
+                    "available"
+                  ]
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "reasons": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 64,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ordinal": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "codeStatus": {
+                        "type": "enum",
+                        "values": [
+                          "not-inspected",
+                          "absent",
+                          "wrong-type",
+                          "unavailable",
+                          "recognized",
+                          "unrecognized"
+                        ]
+                      },
+                      "condition": {
+                        "type": "enum",
+                        "values": [
+                          "access-rejected",
+                          "identity-unrecognized",
+                          "credential-expired",
+                          "condition-rejected",
+                          "transaction-canceled",
+                          "resource-unavailable",
+                          "input-rejected",
+                          "throughput-exceeded",
+                          "request-limit-exceeded",
+                          "throttled",
+                          "timeout",
+                          "network-failure",
+                          "unclassified"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "optional": [
+            "cancellation"
+          ]
+        }
+      },
+      {
+        "code": "persistence.stored-attribute-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "data_integrity",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "connect",
+                "readiness",
+                "transaction",
+                "migration",
+                "create_outbox",
+                "write_facts",
+                "write_atomic",
+                "read_outbox",
+                "list_outbox",
+                "claim_outbox",
+                "publish_outbox",
+                "read_processing",
+                "claim_processing",
+                "complete_processing",
+                "release_processing",
+                "append_lineage",
+                "read_lineage",
+                "administration",
+                "restore_verification"
+              ]
+            },
+            "reduction": {
+              "type": "enum",
+              "values": [
+                "null",
+                "empty-list",
+                "filtered",
+                "thrown",
+                "returned"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown",
+                "not-assessed"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "enum",
+                    "values": [
+                      "response",
+                      "item",
+                      "items",
+                      "attribute",
+                      "outboxEntryId",
+                      "subjectKind",
+                      "subjectId",
+                      "messageType",
+                      "messageVersion",
+                      "deliveryPolicy",
+                      "createdAt",
+                      "tenantId",
+                      "correlationId",
+                      "causationId",
+                      "state",
+                      "attempt",
+                      "leaseOwner",
+                      "leaseFence",
+                      "leaseAcquiredAt",
+                      "leaseExpiresAt",
+                      "publishedAt",
+                      "releasedAt",
+                      "completionOutcome",
+                      "completedAt",
+                      "recordChangeId",
+                      "recordKind",
+                      "recordId",
+                      "revision",
+                      "action",
+                      "occurredAt",
+                      "actorKind",
+                      "actorId",
+                      "actor",
+                      "changedFields",
+                      "lease",
+                      "completion"
+                    ]
+                  },
+                  "condition": {
+                    "type": "enum",
+                    "values": [
+                      "absent",
+                      "null",
+                      "not-object",
+                      "not-array",
+                      "string-component-absent",
+                      "number-component-absent",
+                      "not-safe-integer",
+                      "invalid-format",
+                      "closed-value-rejected",
+                      "incomplete",
+                      "contract-rejected",
+                      "too-many",
+                      "duplicate",
+                      "empty",
+                      "untrimmed",
+                      "not-positive",
+                      "negative",
+                      "not-integer",
+                      "not-after-acquisition",
+                      "predicate-rejected"
+                    ]
+                  },
+                  "rowOrdinal": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "attributeOrdinal": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "optional": [
+                  "rowOrdinal",
+                  "attributeOrdinal",
+                  "count"
+                ]
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.reconciliation-observed",
+        "version": 2,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "info",
+          "recovery": "not_recoverable",
+          "retryable": false,
+          "userCorrectable": false,
+          "action": "none"
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "claim_outbox",
+                "publish_outbox",
+                "claim_processing",
+                "complete_processing",
+                "release_processing"
+              ]
+            },
+            "primaryOutcome": {
+              "type": "enum",
+              "values": [
+                "condition-rejected"
+              ]
+            },
+            "observed": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "already-published",
+                "lease-active",
+                "already-completed",
+                "valid-current-state",
+                "unresolved",
+                "unavailable"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "read-result-observed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.relay-boundary-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "run-once",
+                "queue-message"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "claim-clock",
+                "claim-time-normalization",
+                "list-deliverable",
+                "candidate-selection",
+                "claim",
+                "envelope-construction",
+                "queue-send",
+                "publication-clock",
+                "publication-time-normalization",
+                "publish-marker",
+                "result-projection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "returned-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "relay-send-not-invoked",
+                "send-outcome-unknown",
+                "send-success-marker-not-invoked",
+                "send-success-marker-outcome-unknown",
+                "marker-success-returned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "persistence.configuration-input-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "region",
+                "store",
+                "outbox-index",
+                "lineage-index",
+                "configuration"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "wrong-shape"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

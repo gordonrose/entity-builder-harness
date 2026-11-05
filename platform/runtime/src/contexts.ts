@@ -1,3 +1,4 @@
+import { runtimeBoundaryEvidence, type PlatformRuntimeDiagnosticOptions, type RuntimeBoundaryDetail } from "./diagnostics";
 import { recordConfigSource, type ConfigSource } from "@kanbien/core/config";
 import type { Principal } from "@kanbien/core/authn";
 import { noopLogger, type Logger } from "@kanbien/core/logging";
@@ -28,7 +29,7 @@ export interface PlatformRuntimeContextDeps {
   readonly clock: Clock;
 }
 
-export interface PlatformRuntimeContextDepsInput {
+export interface PlatformRuntimeContextDepsInput extends PlatformRuntimeDiagnosticOptions {
   readonly logger?: Logger;
   readonly metrics?: Metrics;
   readonly config?: ConfigSource;
@@ -58,6 +59,13 @@ export interface PlatformRuntimeJobContextInput extends PlatformRuntimeContextDe
 }
 
 export function createPlatformRuntimeContextDeps(input: PlatformRuntimeContextDepsInput = {}): PlatformRuntimeContextDeps {
+  try { return contextDeps(input); }
+  catch (error) {
+    runtimeBoundaryEvidence(input, { operation: "context-deps", phase: "dependency-selection", subject: "context", boundary: "selection", effect: "context-not-returned" }, error, undefined, false);
+    throw error;
+  }
+}
+function contextDeps(input: PlatformRuntimeContextDepsInput): PlatformRuntimeContextDeps {
   return {
     logger: input.logger ?? noopLogger,
     metrics: input.metrics ?? noopMetrics,
@@ -68,8 +76,13 @@ export function createPlatformRuntimeContextDeps(input: PlatformRuntimeContextDe
 }
 
 export function createPlatformRuntimeRequestContext(input: PlatformRuntimeRequestContextInput): PlatformRequestContext {
-  const deps = createPlatformRuntimeContextDeps(input);
-  const now = input.now ?? isoDateTimeFromDate(deps.clock.now());
+  let phase: RuntimeBoundaryDetail["phase"] = "dependency-selection";
+  try {
+  const deps = contextDeps(input);
+  phase = "timestamp-selection";
+  let date: Date;
+  const now = input.now ?? (phase = "clock-read", date = deps.clock.now(), phase = "timestamp-normalization", isoDateTimeFromDate(date));
+  phase = "context-projection";
   const correlationId = input.correlationId ?? input.requestId;
 
   return {
@@ -87,11 +100,22 @@ export function createPlatformRuntimeRequestContext(input: PlatformRuntimeReques
     path: input.path,
     ...(input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal }),
   };
+  } catch (error) {
+    runtimeBoundaryEvidence(input, { operation: "request-context", phase, subject: "context",
+      boundary: phase === "clock-read" || phase === "timestamp-normalization" ? "invocation" : phase === "context-projection" ? "projection" : "selection",
+      effect: "context-not-returned" }, error, undefined, false);
+    throw error;
+  }
 }
 
 export function createPlatformRuntimeJobContext(input: PlatformRuntimeJobContextInput): PlatformJobContext {
-  const deps = createPlatformRuntimeContextDeps(input);
-  const now = input.now ?? isoDateTimeFromDate(deps.clock.now());
+  let phase: RuntimeBoundaryDetail["phase"] = "dependency-selection";
+  try {
+  const deps = contextDeps(input);
+  phase = "timestamp-selection";
+  let date: Date;
+  const now = input.now ?? (phase = "clock-read", date = deps.clock.now(), phase = "timestamp-normalization", isoDateTimeFromDate(date));
+  phase = "context-projection";
 
   return {
     jobName: input.jobName,
@@ -107,6 +131,12 @@ export function createPlatformRuntimeJobContext(input: PlatformRuntimeJobContext
     ...(input.tenant === undefined ? {} : { tenant: input.tenant }),
     ...(input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal }),
   };
+  } catch (error) {
+    runtimeBoundaryEvidence(input, { operation: "job-context", phase, subject: "context",
+      boundary: phase === "clock-read" || phase === "timestamp-normalization" ? "invocation" : phase === "context-projection" ? "projection" : "selection",
+      effect: "context-not-returned" }, error, undefined, false);
+    throw error;
+  }
 }
 
 const defaultPlatformRuntimeDateTime = "2026-07-10T00:00:00.000Z";

@@ -1,0 +1,926 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "observability",
+    "definitions": [
+      {
+        "code": "observability.configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration-validation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "setting": {
+                    "type": "enum",
+                    "values": [
+                      "metrics.configuration",
+                      "metrics.provider",
+                      "metrics.endpoint",
+                      "metrics.delivery-boundary",
+                      "metrics.region",
+                      "metrics.service-name",
+                      "metrics.service-version",
+                      "metrics.deployment-environment",
+                      "metrics.export-interval",
+                      "metrics.export-timeout",
+                      "metrics.series",
+                      "series.source-name",
+                      "series.source-kind",
+                      "series.source-unit",
+                      "series.instrument-name",
+                      "series.description",
+                      "series.allowed-labels",
+                      "series.cardinality",
+                      "series.buckets",
+                      "readiness.configuration",
+                      "readiness.target",
+                      "readiness.scope",
+                      "readiness.workload",
+                      "readiness.dependency",
+                      "readiness.cadence",
+                      "readiness.timeout",
+                      "readiness.stale-after"
+                    ]
+                  },
+                  "reason": {
+                    "type": "enum",
+                    "values": [
+                      "missing",
+                      "wrong-type",
+                      "blank",
+                      "empty",
+                      "invalid-json",
+                      "wrong-shape",
+                      "invalid-format",
+                      "unsupported",
+                      "invalid-integer",
+                      "not-finite",
+                      "not-positive",
+                      "out-of-range",
+                      "duplicate",
+                      "required-for-kind",
+                      "forbidden-for-kind",
+                      "not-strictly-increasing",
+                      "malformed-url",
+                      "protocol-not-allowed",
+                      "port-not-allowed",
+                      "path-not-allowed",
+                      "credentials-not-allowed",
+                      "query-not-allowed",
+                      "fragment-not-allowed",
+                      "host-not-allowed",
+                      "boundary-mismatch",
+                      "interval-too-short",
+                      "timeout-exceeds-interval",
+                      "timeout-not-shorter-than-cadence",
+                      "stale-deadline-too-short"
+                    ]
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "attributeIndex": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "relatedIndex": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "optional": [
+                  "index",
+                  "attributeIndex",
+                  "relatedIndex"
+                ]
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.runtime-construction-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "runtime-construction"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unclassified-construction-failure"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-assessed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.metric-preparation-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "name",
+                "kind",
+                "value",
+                "unit",
+                "label",
+                "clock",
+                "timestamp",
+                "recorder"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "empty",
+                "untrimmed",
+                "invalid-format",
+                "unsafe-name",
+                "not-finite",
+                "too-long",
+                "wrong-type",
+                "access-failed",
+                "clock-threw",
+                "invalid-date",
+                "unclassified-preparation-failure"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "point-preparation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "recording-not-attempted"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "observability.metric-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "undeclared-metric",
+                "kind-mismatch",
+                "unit-mismatch",
+                "not-finite",
+                "negative-counter",
+                "negative-distribution",
+                "unapproved-label"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "point-validation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "recording-not-attempted"
+              ]
+            },
+            "seriesIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "seriesIndex",
+            "index"
+          ]
+        }
+      },
+      {
+        "code": "observability.metric-instrument-creation-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unclassified-creation-failure"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "instrument-creation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "recording-not-attempted"
+              ]
+            },
+            "seriesIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.metric-recording-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "unclassified-invocation-failure"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "record-invocation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            },
+            "seriesIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "optional": [
+            "seriesIndex"
+          ]
+        }
+      },
+      {
+        "code": "observability.metric-collection-issues",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "collection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "errors-returned"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "collection-result-returned-completeness-unknown"
+              ]
+            },
+            "errorCount": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.metric-collection-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "collection"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "rejected",
+                "sdk-timeout"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.metric-export-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "export"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "callback-failed",
+                "invocation-threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.metric-flush-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "flush"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "exporter",
+                "runtime"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "rejected",
+                "sdk-timeout",
+                "invocation-threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.metric-shutdown-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "shutdown"
+              ]
+            },
+            "boundary": {
+              "type": "enum",
+              "values": [
+                "exporter",
+                "runtime"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "rejected",
+                "sdk-timeout",
+                "invocation-threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.readiness-configuration-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "configuration",
+          "failureSource": "platform",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "timeout"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "wrong-type",
+                "not-finite",
+                "not-integer",
+                "not-positive"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "configuration"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "probe-not-invoked"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.readiness-probe-not-ready",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "result"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "returned-not-ready"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.readiness-probe-threw",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "invocation"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.readiness-probe-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "completion"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.readiness-probe-deadline-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "enum",
+              "values": [
+                "deadline"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "observability.boundary-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "log-write",
+                "trace-start",
+                "trace-end",
+                "trace-fields",
+                "request-metric",
+                "job-metric",
+                "health-metric",
+                "request-observation",
+                "job-observation",
+                "persistence-observation",
+                "readiness-observation",
+                "metric-runtime-construction",
+                "metric-instrument-creation",
+                "metric-recording",
+                "metric-collection",
+                "metric-export",
+                "metric-flush",
+                "metric-shutdown"
+              ]
+            },
+            "phase": {
+              "type": "enum",
+              "values": [
+                "input-projection",
+                "field-normalization",
+                "error-class",
+                "sink-selection",
+                "sink-invocation",
+                "sink-completion",
+                "span-invocation",
+                "span-validation",
+                "span-end",
+                "span-completion",
+                "fallback",
+                "clock",
+                "elapsed-computation",
+                "profile-projection",
+                "metric-projection",
+                "trace-projection",
+                "log-projection",
+                "result-projection",
+                "identity-projection",
+                "policy-selection",
+                "event-validation",
+                "event-output",
+                "exporter-construction",
+                "reader-construction",
+                "provider-construction",
+                "meter-selection",
+                "port-construction",
+                "runtime-construction",
+                "instrument-creation",
+                "instrument-recording",
+                "collection",
+                "export",
+                "flush",
+                "shutdown"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "threw",
+                "rejected",
+                "invalid-span",
+                "invalid-event"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-attempted",
+                "unknown",
+                "no-op-returned",
+                "fallback-threw",
+                "observation-incomplete",
+                "event-not-returned",
+                "event-not-written",
+                "input-rejected"
+              ]
+            },
+            "field": {
+              "type": "enum",
+              "values": [
+                "level",
+                "message",
+                "correlation-id",
+                "fields",
+                "error",
+                "normalization-options",
+                "name",
+                "parent",
+                "attributes",
+                "outcome",
+                "method",
+                "route",
+                "job",
+                "status",
+                "latency",
+                "retry-count",
+                "health-state",
+                "error-class",
+                "profile",
+                "clock",
+                "timestamp",
+                "identity",
+                "result",
+                "policy",
+                "event",
+                "reporter",
+                "logger",
+                "record",
+                "provider",
+                "meter",
+                "series",
+                "endpoint",
+                "aggregation-selector",
+                "temporality-selector",
+                "service-name",
+                "service-version",
+                "environment",
+                "region",
+                "export-interval",
+                "export-timeout"
+              ]
+            }
+          },
+          "optional": [
+            "field"
+          ]
+        }
+      },
+      {
+        "code": "observability.diagnostic-reporting-suppressed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "attempt-limit"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 128,
+              "maximum": 128
+            },
+            "attempted": {
+              "type": "integer",
+              "minimum": 127,
+              "maximum": 127
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "further-observations-not-attempted"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

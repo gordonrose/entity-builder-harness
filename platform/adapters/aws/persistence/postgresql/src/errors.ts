@@ -1,8 +1,13 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { diagnosticDescriptor, type DiagnosticDescriptor } from "@kanbien/core/diagnostics";
-import { platformPersistenceError, type PlatformPersistenceError } from "@kanbien/platform-persistence";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import { diagnosticDescriptor, diagnosticRelatedRecordLimit, type DiagnosticDescriptor, type DiagnosticDefinition } from "@kanbien/core/diagnostics";
+import { securityPeerIdentityDiagnosticRecord, securityPeerTrustDiagnosticRecord, platformSecurityDiagnosticCatalog } from "@kanbien/platform-security";
+import { capturePlatformPersistenceDiagnostic, persistenceFailureClassifications, persistenceObservedPhases, persistenceObservedDiagnosticRecord, persistenceBoundaryDiagnosticRecord, platformPersistenceError, observePlatformPersistenceDiagnostic, selectPlatformPersistenceDiagnosticEvidence, platformPersistenceDiagnosticCatalog, type PlatformPersistenceDiagnosticOptions, type PlatformPersistenceError } from "@kanbien/platform-persistence";
 
 export type PostgreSqlPersistenceOperation =
+  | "administration"
+  | "restore_verification"
+  | "readiness"
   | "connect"
   | "transaction"
   | "migration"
@@ -37,14 +42,50 @@ export type PostgreSqlPersistenceProviderFailureClass = (typeof postgreSqlPersis
 export function postgreSqlPersistenceOperationError(
   operation: PostgreSqlPersistenceOperation,
   cause?: unknown,
+  options?: PlatformPersistenceDiagnosticOptions,
+  localRecord?: import("@kanbien/core/diagnostics").DiagnosticRecord,
+  delivery: "all" | "native-only" = "all",
 ): PlatformPersistenceError {
+  const diagnostic = postgreSqlFailureDiagnostic(cause);
+  const local = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, { diagnosticRecord: localRecord }).diagnosticRecord;
+  const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause);
+  const peers = diagnostic.facts.classification === "tls_trust_invalid" ? postgreSqlSecurityDiagnosticRecords(cause) : [];
+  const hasNativeFacts = diagnostic.facts.classification !== "unknown" || diagnostic.facts.phase !== "unknown" || diagnostic.facts.code_status !== "absent";
+  const native = capturePlatformPersistenceDiagnostic(() => persistenceObservedDiagnosticRecord(diagnostic.facts, operation));
+  const own = local ?? (delivery === "all" && !hasNativeFacts ? capturePlatformPersistenceDiagnostic(() => persistenceBoundaryDiagnosticRecord({ operation, phase: "invocation", boundary: "body", condition: "threw",
+    effect: ["readiness", "restore_verification", "read_outbox", "list_outbox", "read_processing", "read_lineage"].includes(operation) ? "not-assessed" : "unknown" })) : native);
+  // Selecting a source does not deliver it. A direct catch always reports its
+  // observed location; the transaction caller explicitly reports its own first.
+  if (delivery === "all") observePlatformPersistenceDiagnostic(options, own, cause);
+  else if (hasNativeFacts) observePlatformPersistenceDiagnostic(options, native);
+  // These are positively generated adapter-owned security meanings, separate
+  // from a source envelope that may already contain its full eight companions.
+  const retained = [...(selected.diagnosticRecord === undefined ? [] : [selected.diagnosticRecord]), ...(selected.relatedDiagnosticRecords ?? [])];
+  const related = [...(selected.relatedDiagnosticRecords ?? [])];
+  for (const record of peers) {
+    if (retained.some((source) => source.code === record.code && source.definitionVersion === record.definitionVersion && JSON.stringify(source.detail) === JSON.stringify(record.detail))) continue;
+    if (related.length < diagnosticRelatedRecordLimit) related.push(record);
+    observePlatformPersistenceDiagnostic({
+      diagnosticDefinitions: [...platformSecurityDiagnosticCatalog.definitions, ...explicitDefinitions(options)],
+      onDiagnostic: (observed) => options?.onDiagnostic?.(observed),
+    }, record);
+  }
   return platformPersistenceError({
     code: "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED",
     defaultMessage: "The persistence store operation could not complete.",
     messageKey: "platform.persistence.store.operation_failed",
     params: { operation, provider_failure_class: postgreSqlPersistenceProviderFailureClass(cause) },
-    details: { diagnostic: postgreSqlFailureDiagnostic(cause) },
+    details: { diagnostic },
+    diagnostic,
+    diagnosticRecord: selected.diagnosticRecord ?? own,
+    relatedDiagnosticRecords: related,
+    relatedDiagnosticDefinitions: [...coreDiagnosticCatalog.definitions, ...platformSecurityDiagnosticCatalog.definitions, ...platformPersistenceDiagnosticCatalog.definitions, ...explicitDefinitions(options)],
   });
+}
+
+function explicitDefinitions(options: PlatformPersistenceDiagnosticOptions | undefined): readonly DiagnosticDefinition[] {
+  try { const definitions = options?.diagnosticDefinitions; return Array.isArray(definitions) ? [...definitions] : []; }
+  catch { return []; }
 }
 
 export function postgreSqlPersistenceProviderFailureClass(cause: unknown): PostgreSqlPersistenceProviderFailureClass {
@@ -59,13 +100,9 @@ export function postgreSqlPersistenceProviderFailureClass(cause: unknown): Postg
   return classification;
 }
 
-export const postgreSqlFailureClassifications = [
-  "authentication_rejected", "authentication_material_invalid", "permission_denied", "content_unavailable",
-  "tls_trust_invalid", "transport_unavailable", "timeout", "conflict",
-  "constraint", "transaction_rolled_back", "validation", "query_canceled", "unknown",
-] as const;
+export const postgreSqlFailureClassifications = persistenceFailureClassifications;
 export type PostgreSqlFailureClassification = (typeof postgreSqlFailureClassifications)[number];
-export type PostgreSqlObservedPhase = "pool_connect" | "pool_query" | "query" | "authentication_value" | "tcp_probe" | "tls_probe" | "unknown";
+export type PostgreSqlObservedPhase = (typeof persistenceObservedPhases)[number];
 export interface PostgreSqlFailureFacts {
   readonly classification: PostgreSqlFailureClassification;
   readonly code_status: "recognized" | "unrecognized" | "absent";
@@ -108,7 +145,7 @@ export function postgreSqlFailureDiagnostic(cause: unknown): PostgreSqlFailureDi
   const codeClassification = codes.map(classifyCode).find((value) => value !== "unknown") ?? "unknown";
   const classified = codeClassification !== "unknown" ? codeClassification
     : hasInvalidAuthenticationMaterial(cause) ? "authentication_material_invalid" : "unknown";
-  const observation = typeof cause === "object" && cause !== null ? observations.get(cause) : undefined;
+  const observation = observedCause(cause);
   const facts: PostgreSqlFailureDiagnostic["facts"] = {
     classification: classified,
     code_status: codes.length === 0 ? "absent" : codeClassification === "unknown" ? "unrecognized" : "recognized",
@@ -125,7 +162,45 @@ export function postgreSqlFailureDiagnostic(cause: unknown): PostgreSqlFailureDi
     : classified === "unknown" || classified === "query_canceled" ? "unknown" : "dependency_unavailable";
   // Retryability is an owning workload/controller decision, never inferred
   // from a transient-looking provider code or an interrupted operation.
-  return { ...diagnosticDescriptor({ failureKind, failureSource: "provider", severity: "error", recovery: "manual_investigation", retryable: false, action: "escalate", facts }), facts };
+  return { ...diagnosticDescriptor({ failureKind, failureSource: classified === "tls_trust_invalid" ? "unknown" : "provider", severity: "error", recovery: "manual_investigation", retryable: false, action: "escalate", facts }), facts };
+}
+
+/** Wrappers may retain a private cause; recover only this adapter's own
+ * invocation observation, never a stage inferred from a successful probe. */
+function observedCause(cause: unknown): Observation | undefined {
+  const seen = new Set<object>();
+  function visit(value: unknown, depth: number): Observation | undefined {
+    if (depth > 3 || typeof value !== "object" || value === null || seen.has(value) || seen.size >= 32) return undefined;
+    seen.add(value);
+    const direct = observations.get(value);
+    if (direct !== undefined) return direct;
+    try {
+      const nested = Object.getOwnPropertyDescriptor(value, "cause");
+      const fromCause = nested && "value" in nested ? visit(nested.value, depth + 1) : undefined;
+      if (fromCause !== undefined) return fromCause;
+      const errors = Object.getOwnPropertyDescriptor(value, "errors");
+      if (errors && "value" in errors && Array.isArray(errors.value)) {
+        for (let index = 0; index < Math.min(errors.value.length, 32); index++) {
+          const child = Object.getOwnPropertyDescriptor(errors.value, String(index));
+          const result = child && "value" in child ? visit(child.value, depth + 1) : undefined;
+          if (result !== undefined) return result;
+        }
+      }
+    } catch { /* unreadable wrapper evidence remains unavailable */ }
+    return undefined;
+  }
+  return visit(cause, 0);
+}
+
+/** Only positive invocation evidence; no inference from preflight or transport. */
+export function postgreSqlSecurityDiagnosticRecords(cause: unknown) {
+  const observed = new Set(errorCodes(cause).filter((code): code is string => typeof code === "string"));
+  const records = [];
+  if (observed.has("ERR_TLS_CERT_ALTNAME_INVALID")) records.push(securityPeerIdentityDiagnosticRecord("hostname-mismatch"));
+  if (observed.has("CERT_HAS_EXPIRED")) records.push(securityPeerTrustDiagnosticRecord("expired"));
+  if (observed.has("CERT_NOT_YET_VALID")) records.push(securityPeerTrustDiagnosticRecord("not-yet-valid"));
+  if (["SELF_SIGNED_CERT_IN_CHAIN", "DEPTH_ZERO_SELF_SIGNED_CERT", "UNABLE_TO_VERIFY_LEAF_SIGNATURE", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"].some((code) => observed.has(code))) records.push(securityPeerTrustDiagnosticRecord("untrusted-chain"));
+  return Object.freeze(records);
 }
 
 function classifyCode(code: unknown): PostgreSqlFailureClassification {

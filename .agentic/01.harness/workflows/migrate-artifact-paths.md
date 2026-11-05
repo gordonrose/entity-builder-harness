@@ -4,7 +4,7 @@ id: harness.workflows.migrate-artifact-paths
 version: 1
 status: active
 created_on: "2026-06-20"
-updated_on: "2026-10-22"
+updated_on: "2026-11-04"
 layer: 01.harness
 domain: migration
 disciplines:
@@ -144,7 +144,7 @@ checks named by the migration plan.
 The migration helper smoke test is:
 
 ```bash
-bash scripts/01.harness/smoke-test-artifact-path-migration.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/smoke-test-artifact-path-migration.sh
 ```
 
 ## Step 7: Record Outcome

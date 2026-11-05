@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.recovery.import-active-paths-to-chat-worktree
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: recovery
 #   disciplines:
@@ -90,18 +90,31 @@ validate_path() {
 
   case "$path" in
     /*|../*|*/../*|*/..|.)
-      echo "ERROR: path must be a repository-relative path without '..': $path" >&2
+      echo "ERROR: path must be a repository-relative path without '..'." >&2
       exit 1
       ;;
   esac
+}
+
+read_failed() { echo "ERROR: recovery-$1-read-failed" >&2; exit 2; }
+perform_import() {
+  local stage="$1" output status
+  shift
+  if output="$("$@" 2>/dev/null)"; then
+    [ -z "$output" ] || printf '%s\n' "$output"
+  else
+    status=$?
+    echo "ERROR: recovery-$stage-failed; effect=unknown; inspect the target before retrying" >&2
+    exit "$status"
+  fi
 }
 
 for path in "$@"; do
   validate_path "$path"
 done
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || read_failed root
+REPO_ROOT="$(cd "$REPO_ROOT" 2>/dev/null && pwd -P)" || read_failed root
 
 # shellcheck source=../../worktree/paths/lib.sh
 source "$REPO_ROOT/scripts/00.chat/worktree/paths/lib.sh"
@@ -115,10 +128,10 @@ if [ -z "${SOURCE_WORKTREE// }" ]; then
   SOURCE_WORKTREE="$REPO_ROOT"
 fi
 
-SOURCE_WORKTREE="$(cd "$SOURCE_WORKTREE" && pwd -P)"
+SOURCE_WORKTREE="$(cd "$SOURCE_WORKTREE" 2>/dev/null && pwd -P)" || read_failed source-path
 
 if [ -z "${SESSION_LOG// }" ]; then
-  CURRENT_BRANCH="$(git -C "$SOURCE_WORKTREE" branch --show-current)"
+  CURRENT_BRANCH="$(git -C "$SOURCE_WORKTREE" branch --show-current 2>/dev/null)" || read_failed source-branch
   if ! SESSION_ID="$(chat_session_id_from_branch "$CURRENT_BRANCH")"; then
     echo "ERROR: --session-log is required when the source worktree is not on a chat branch." >&2
     exit 1
@@ -132,20 +145,20 @@ case "$SESSION_LOG" in
 esac
 
 if [ ! -f "$SESSION_LOG" ]; then
-  echo "ERROR: missing chat session log: $SESSION_LOG" >&2
+  echo "ERROR: missing chat session log" >&2
   exit 1
 fi
 
 TARGET_BRANCH="$(chat_worktree_metadata_value "$SESSION_LOG" "branch")"
 if [ -z "${TARGET_BRANCH// }" ]; then
-  echo "ERROR: session log is missing branch metadata: $SESSION_LOG" >&2
+  echo "ERROR: session log is missing branch metadata" >&2
   exit 1
 fi
 
 case "$TARGET_BRANCH" in
   chat/*) ;;
   *)
-    echo "ERROR: session branch is not a chat branch: $TARGET_BRANCH" >&2
+    echo "ERROR: session branch is not a chat branch" >&2
     exit 1
     ;;
 esac
@@ -161,12 +174,12 @@ case "$TARGET_WORKTREE" in
 esac
 
 if [ ! -d "$TARGET_WORKTREE" ]; then
-  echo "ERROR: chat-owned worktree is missing: $TARGET_WORKTREE" >&2
+  echo "ERROR: chat-owned worktree is missing" >&2
   echo "Run scripts/00.chat/worktree/ensure-chat-worktree/script.sh first." >&2
   exit 1
 fi
 
-TARGET_WORKTREE="$(cd "$TARGET_WORKTREE" && pwd -P)"
+TARGET_WORKTREE="$(cd "$TARGET_WORKTREE" 2>/dev/null && pwd -P)" || read_failed target-path
 
 if [ "$SOURCE_WORKTREE" = "$TARGET_WORKTREE" ]; then
   echo "ERROR: source worktree and chat-owned worktree are the same path." >&2
@@ -175,17 +188,17 @@ if [ "$SOURCE_WORKTREE" = "$TARGET_WORKTREE" ]; then
 fi
 
 if ! git -C "$TARGET_WORKTREE" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "ERROR: chat-owned worktree path is not a git worktree: $TARGET_WORKTREE" >&2
-  exit 1
+  read_failed target-verification
 fi
 
-TARGET_CURRENT_BRANCH="$(git -C "$TARGET_WORKTREE" branch --show-current)"
+TARGET_CURRENT_BRANCH="$(git -C "$TARGET_WORKTREE" branch --show-current 2>/dev/null)" || read_failed target-branch
 if [ "$TARGET_CURRENT_BRANCH" != "$TARGET_BRANCH" ]; then
-  echo "ERROR: chat-owned worktree is on '$TARGET_CURRENT_BRANCH', expected '$TARGET_BRANCH': $TARGET_WORKTREE" >&2
+  echo "ERROR: chat-owned worktree is not on the recorded branch" >&2
   exit 1
 fi
 
-if [ -n "$(git -C "$TARGET_WORKTREE" status --porcelain)" ]; then
+target_status="$(git -C "$TARGET_WORKTREE" status --porcelain 2>/dev/null)" || read_failed target-status
+if [ -n "$target_status" ]; then
   echo "ERROR: chat-owned worktree is dirty; refusing to import over existing work." >&2
   echo "Commit, checkpoint, or inspect the target worktree before recovery import." >&2
   exit 1
@@ -199,12 +212,12 @@ import_path() {
 
   if [ -e "$source_path" ] || [ -L "$source_path" ]; then
     target_parent="$(dirname "$target_path")"
-    mkdir -p "$target_parent"
-    rm -rf "$target_path"
-    cp -a "$source_path" "$target_path"
-    git -C "$TARGET_WORKTREE" add -A -- "$path"
+    perform_import prepare-target mkdir -p "$target_parent"
+    perform_import remove-target rm -rf "$target_path"
+    perform_import copy-target cp -a "$source_path" "$target_path"
+    perform_import stage-target git -C "$TARGET_WORKTREE" add -A -- "$path"
   else
-    git -C "$TARGET_WORKTREE" rm -r --ignore-unmatch -- "$path" >/dev/null 2>&1 || true
+    perform_import delete-target git -C "$TARGET_WORKTREE" rm -r --ignore-unmatch -- "$path" >/dev/null
   fi
 }
 

@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.ensure-llm-workbench-repo
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: upstream
 #   disciplines:
@@ -53,7 +53,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument." >&2
       usage >&2
       exit 2
       ;;
@@ -66,10 +66,19 @@ if [ -e "$TARGET_PATH" ]; then
     exit 1
   fi
 
-  ORIGIN_URL="$(git -C "$TARGET_PATH" config --get remote.origin.url || true)"
+  if ORIGIN_URL="$(git -C "$TARGET_PATH" config --get remote.origin.url 2>/dev/null)"; then
+    :
+  else
+    status=$?
+    if [ "$status" -eq 1 ]; then
+      echo "ERROR: target repo has no configured origin." >&2
+      exit 1
+    fi
+    echo "ERROR: upstream-origin-read-failed; effect=none." >&2
+    exit 2
+  fi
   if [ "$ORIGIN_URL" != "$REPO_URL" ]; then
-    echo "ERROR: target repo has unexpected origin: ${ORIGIN_URL:-<missing>}" >&2
-    echo "Expected: $REPO_URL" >&2
+    echo "ERROR: target repo has unexpected origin." >&2
     exit 1
   fi
 
@@ -82,6 +91,14 @@ if [ "$DRY_RUN" = "yes" ]; then
   exit 0
 fi
 
-mkdir -p "${TARGET_PATH%/*}"
-git clone "$REPO_URL" "$TARGET_PATH"
+if mkdir -p "${TARGET_PATH%/*}" 2>/dev/null; then :; else
+  status=$?
+  echo "ERROR: upstream-directory-creation-failed; effect=unknown; inspect before retry." >&2
+  exit "$status"
+fi
+if git clone "$REPO_URL" "$TARGET_PATH" 2>/dev/null; then :; else
+  status=$?
+  echo "ERROR: upstream-clone-failed; effect=unknown; inspect before retry." >&2
+  exit "$status"
+fi
 echo "Cloned llm-workbench: $TARGET_PATH"

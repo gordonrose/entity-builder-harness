@@ -17,20 +17,21 @@ import {
   type PlatformPersistenceError,
   type PlatformPersistenceFence,
   type PlatformPersistenceLeaseOwner,
+  type PlatformPersistenceDiagnosticOptions,
 } from "@kanbien/platform-persistence";
 import type { DynamoDbPersistenceCommandClient } from "./client";
-import type { DynamoDbPersistenceConfiguration } from "./configuration";
-import { dynamoDbPersistenceOperationError, isDynamoDbConditionalFailure } from "./errors";
+import type { DynamoDbPersistenceConfiguration } from "./configuration/index";
+import { isDynamoDbConditionalFailure } from "./errors";
 import {
   dueSort,
   itemToOutboxRecord,
   outboxDuePartition,
   outboxKey,
   outboxRecordToItem,
-  type DynamoDbPersistenceItem,
 } from "./records";
+import { dynamoDbObservation, attributeObservation, responseItem, responseItems, type DynamoDbObservation } from "./observations";
 
-export interface DynamoDbPlatformOutboxStoreOptions {
+export interface DynamoDbPlatformOutboxStoreOptions extends PlatformPersistenceDiagnosticOptions {
   readonly configuration: DynamoDbPersistenceConfiguration;
   readonly client: DynamoDbPersistenceCommandClient;
 }
@@ -40,9 +41,10 @@ export function createDynamoDbPlatformOutboxStore(
 ): PlatformOutboxStore {
   return {
     create: async (entry) => {
-      const record = platformOutboxRecord({ entry });
+      const observed = dynamoDbObservation(options, "create_outbox");
+      const record = observed.at("encoding", () => platformOutboxRecord({ entry }));
       try {
-        await options.client.send(new PutItemCommand({
+        await observed.send(options, () => new PutItemCommand({
           TableName: options.configuration.tableName,
           Item: outboxRecordToItem(record),
           ConditionExpression: "attribute_not_exists(#pk)",
@@ -55,24 +57,29 @@ export function createDynamoDbPlatformOutboxStore(
             "PLATFORM_PERSISTENCE_DUPLICATE_OUTBOX_ENTRY",
             "Outbox entry already exists.",
             "platform.persistence.outbox.duplicate",
+            observed.evidence(),
           );
         }
-        return { ok: false, error: dynamoDbPersistenceOperationError("create_outbox") };
+        return { ok: false, error: observed.error("create_outbox") };
       }
     },
 
     get: async (id) => readOutbox(options, id),
 
     listDeliverable: async (input) => {
-      if (!Number.isInteger(input.limit) || input.limit <= 0) {
+      const observed = dynamoDbObservation(options, "list_outbox");
+      let limitCondition: "not-integer" | "not-positive" = "not-integer";
+      if (observed.at("selection", () => !Number.isInteger(input.limit) || (limitCondition = "not-positive", input.limit <= 0))) {
         return failure(
           "PLATFORM_PERSISTENCE_INVALID_LIMIT",
           "Outbox delivery limit must be a positive integer.",
           "platform.persistence.outbox.limit.invalid",
+          observed.reject("limit", limitCondition, "validation", "not-started"),
         );
       }
+      const attributes = attributeObservation(options, "list_outbox", "returned");
       try {
-        const response = await options.client.send(new QueryCommand({
+        const response = await observed.send(options, () => new QueryCommand({
           TableName: options.configuration.tableName,
           IndexName: options.configuration.outboxDueIndexName,
           KeyConditionExpression: "#dueKey = :dueKey AND #dueSort <= :dueSort",
@@ -87,43 +94,47 @@ export function createDynamoDbPlatformOutboxStore(
           Limit: input.limit,
           ScanIndexForward: true,
         }));
-        return success(responseItems(response).map(itemToOutboxRecord));
+        const items = observed.at("response", () => responseItems(response, attributes));
+        return success(observed.decode(attributes, () => items.map((item, ordinal) => { attributes.row(ordinal); return itemToOutboxRecord(item, attributes); })));
       } catch (error) {
-        return { ok: false, error: dynamoDbPersistenceOperationError("list_outbox", error) };
-      }
+        return { ok: false, error: observed.error("list_outbox", error) };
+      } finally { attributes.flush(); }
     },
 
     claim: async (input) => {
+      const observed = dynamoDbObservation(options, "claim_outbox");
+      const reading = dynamoDbObservation(options, "read_outbox");
       let record: PlatformOutboxRecord | null;
       try {
-        record = await readOutbox(options, input.id);
+        record = await reading.at("selection", () => readOutbox(options, input.id, reading));
       } catch (error) {
-        return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox", error) };
+        return { ok: false, error: reading.error("read_outbox", error) };
       }
-      if (record === null) return outboxNotFound();
+      if (record === null) return outboxNotFound(observed);
       if (record.state === "published") return success({ disposition: "already-published", record });
       if (record.state === "leased" && record.lease === undefined) {
-        return { ok: false, error: dynamoDbPersistenceOperationError("claim_outbox") };
+        observed.reject("lease", "absent");
+        return { ok: false, error: observed.error("claim_outbox") };
       }
-      if (record.lease !== undefined && !platformLeaseExpired(record.lease, input.acquiredAt)) {
+      if (observed.at("selection", () => record.lease !== undefined && !platformLeaseExpired(record.lease, input.acquiredAt))) {
         return success({ disposition: "lease-active", record });
       }
-      const leaseResult = nextPlatformPersistenceLease({
+      const leaseResult = observed.at("encoding", () => nextPlatformPersistenceLease({
         owner: input.owner,
         ...(record.lease === undefined ? {} : { priorLease: record.lease }),
         priorAttempt: record.attempt,
         acquiredAt: input.acquiredAt,
         durationMs: input.leaseDurationMs,
-      });
-      if (!leaseResult.ok) return { ok: false, error: leaseResult.error };
-      const claimed = platformOutboxRecord({
+      }));
+      if (!leaseResult.ok) { const error = leaseResult.error; observed.source(error); return { ok: false, error }; }
+      const claimed = observed.at("encoding", () => platformOutboxRecord({
         entry: record.entry,
         state: "leased",
         attempt: leaseResult.value.attempt,
         lease: leaseResult.value,
-      });
+      }));
       try {
-        await options.client.send(new UpdateItemCommand({
+        await observed.send(options, () => new UpdateItemCommand({
           TableName: options.configuration.tableName,
           Key: outboxKey(input.id),
           UpdateExpression: "SET #state = :leased, #attempt = :attempt, #leaseOwner = :leaseOwner, #leaseFence = :leaseFence, #leaseAcquiredAt = :leaseAcquiredAt, #leaseExpiresAt = :leaseExpiresAt, #dueKey = :dueKey, #dueSort = :dueSort REMOVE #publishedAt",
@@ -150,31 +161,33 @@ export function createDynamoDbPlatformOutboxStore(
         return success({ disposition: "claimed", record: claimed });
       } catch (error) {
         if (!isDynamoDbConditionalFailure(error)) {
-          return { ok: false, error: dynamoDbPersistenceOperationError("claim_outbox", error) };
+          return { ok: false, error: observed.error("claim_outbox", error) };
         }
-        return resolveOutboxClaimRace(options, input.id, input.acquiredAt);
+        return observed.at("selection", () => resolveOutboxClaimRace(options, input.id, input.acquiredAt, observed));
       }
     },
 
     markPublished: async (input) => {
+      const observed = dynamoDbObservation(options, "publish_outbox");
+      const reading = dynamoDbObservation(options, "read_outbox");
       let record: PlatformOutboxRecord | null;
       try {
-        record = await readOutbox(options, input.id);
+        record = await reading.at("selection", () => readOutbox(options, input.id, reading));
       } catch (error) {
-        return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox", error) };
+        return { ok: false, error: reading.error("read_outbox", error) };
       }
-      if (record === null) return outboxNotFound();
+      if (record === null) return outboxNotFound(observed);
       if (record.state === "published") return success(record);
-      const valid = validatePublish(record, input.fence, input.publishedAt);
+      const valid = observed.at("selection", () => validatePublish(record, input.fence, input.publishedAt, observed));
       if (!valid.ok) return valid;
-      const published = platformOutboxRecord({
+      const published = observed.at("encoding", () => platformOutboxRecord({
         entry: record.entry,
         state: "published",
         attempt: record.attempt,
         publishedAt: input.publishedAt,
-      });
+      }));
       try {
-        await options.client.send(new UpdateItemCommand({
+        await observed.send(options, () => new UpdateItemCommand({
           TableName: options.configuration.tableName,
           Key: outboxKey(input.id),
           UpdateExpression: "SET #state = :published, #publishedAt = :publishedAt REMOVE #leaseOwner, #leaseFence, #leaseAcquiredAt, #leaseExpiresAt, #dueKey, #dueSort",
@@ -199,9 +212,9 @@ export function createDynamoDbPlatformOutboxStore(
         return success(published);
       } catch (error) {
         if (!isDynamoDbConditionalFailure(error)) {
-          return { ok: false, error: dynamoDbPersistenceOperationError("publish_outbox", error) };
+          return { ok: false, error: observed.error("publish_outbox", error) };
         }
-        return resolvePublishRace(options, input.id, input.fence, input.publishedAt);
+        return observed.at("selection", () => resolvePublishRace(options, input.id, input.fence, input.publishedAt, observed));
       }
     },
   };
@@ -210,32 +223,38 @@ export function createDynamoDbPlatformOutboxStore(
 async function readOutbox(
   options: DynamoDbPlatformOutboxStoreOptions,
   id: OutboxEntryId,
+  observed = dynamoDbObservation(options, "read_outbox"),
 ): Promise<PlatformOutboxRecord | null> {
-  const response = await options.client.send(new GetItemCommand({
-    TableName: options.configuration.tableName,
-    Key: outboxKey(id),
-    ConsistentRead: true,
-  }));
-  const item = responseItem(response);
-  return item === undefined ? null : itemToOutboxRecord(item);
+  const attributes = attributeObservation(options, "read_outbox", "returned");
+  try {
+    const response = await observed.send(options, () => new GetItemCommand({
+      TableName: options.configuration.tableName,
+      Key: outboxKey(id),
+      ConsistentRead: true,
+    }));
+    const item = observed.at("response", () => responseItem(response, attributes));
+    return item === undefined ? null : observed.decode(attributes, () => itemToOutboxRecord(item, attributes));
+  } finally { attributes.flush(); }
 }
 
 async function resolveOutboxClaimRace(
   options: DynamoDbPlatformOutboxStoreOptions,
   id: OutboxEntryId,
   asOf: ISODateTime,
+  observed: DynamoDbObservation,
 ): Promise<Result<PlatformOutboxClaimResult, PlatformPersistenceError>> {
+  const reading = dynamoDbObservation(options, "read_outbox", "reconciliation");
   try {
-    const record = await readOutbox(options, id);
-    if (record === null) return outboxNotFound();
-    if (record.state === "published") return success({ disposition: "already-published", record });
-    if (record.lease !== undefined && !platformLeaseExpired(record.lease, asOf)) {
-      return success({ disposition: "lease-active", record });
+    const record = await readOutbox(options, id, reading);
+    if (record === null) { observed.reconcile("missing"); return outboxNotFound(observed); }
+    if (record.state === "published") { observed.reconcile("already-published"); return success({ disposition: "already-published", record }); }
+    if (observed.at("selection", () => record.lease !== undefined && !platformLeaseExpired(record.lease, asOf))) {
+      observed.reconcile("lease-active"); return success({ disposition: "lease-active", record });
     }
   } catch {
-    return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox") };
+    observed.reconcile("unavailable"); return { ok: false, error: reading.error("read_outbox") };
   }
-  return { ok: false, error: dynamoDbPersistenceOperationError("claim_outbox") };
+  observed.reconcile("unresolved"); return { ok: false, error: observed.error("claim_outbox") };
 }
 
 async function resolvePublishRace(
@@ -243,14 +262,18 @@ async function resolvePublishRace(
   id: OutboxEntryId,
   fence: PlatformPersistenceFence,
   publishedAt: ISODateTime,
+  observed: DynamoDbObservation,
 ): Promise<Result<PlatformOutboxRecord, PlatformPersistenceError>> {
+  const reading = dynamoDbObservation(options, "read_outbox", "reconciliation");
   try {
-    const record = await readOutbox(options, id);
-    if (record === null) return outboxNotFound();
-    if (record.state === "published") return success(record);
-    return validatePublish(record, fence, publishedAt);
+    const record = await readOutbox(options, id, reading);
+    if (record === null) { observed.reconcile("missing"); return outboxNotFound(observed); }
+    if (record.state === "published") { observed.reconcile("already-published"); return success(record); }
+    const valid = observed.at("selection", () => validatePublish(record, fence, publishedAt, observed));
+    observed.reconcile(valid.ok ? "valid-current-state" : "unresolved");
+    return valid;
   } catch {
-    return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox") };
+    observed.reconcile("unavailable"); return { ok: false, error: reading.error("read_outbox") };
   }
 }
 
@@ -258,12 +281,15 @@ function validatePublish(
   record: PlatformOutboxRecord,
   fence: PlatformPersistenceFence,
   publishedAt: ISODateTime,
+  observed?: DynamoDbObservation,
 ): Result<PlatformOutboxRecord, PlatformPersistenceError> {
-  if (record.state !== "leased" || record.lease === undefined) {
+  let rejectedField: "state" | "lease" = "state";
+  if (record.state !== "leased" || (rejectedField = "lease", record.lease === undefined)) {
     return failure(
       "PLATFORM_PERSISTENCE_OUTBOX_NOT_LEASED",
       "Outbox entry must be leased before it can be published.",
       "platform.persistence.outbox.not_leased",
+      observed?.reject(rejectedField, rejectedField === "state" ? "wrong-state" : "absent"),
     );
   }
   if (record.lease.fence !== fence) {
@@ -271,6 +297,7 @@ function validatePublish(
       "PLATFORM_PERSISTENCE_STALE_FENCE",
       "Outbox publish used a stale fence.",
       "platform.persistence.outbox.stale_fence",
+      observed?.reject("fence", "stale"),
     );
   }
   if (platformLeaseExpired(record.lease, publishedAt)) {
@@ -278,6 +305,7 @@ function validatePublish(
       "PLATFORM_PERSISTENCE_LEASE_EXPIRED",
       "Outbox publish used an expired lease.",
       "platform.persistence.outbox.lease.expired",
+      observed?.reject("lease", "expired"),
     );
   }
   return success(record);
@@ -304,28 +332,13 @@ function claimAttributeNames(): Record<string, string> {
   };
 }
 
-function outboxNotFound(): Result<never, PlatformPersistenceError> {
+function outboxNotFound(observed?: DynamoDbObservation): Result<never, PlatformPersistenceError> {
   return failure(
     "PLATFORM_PERSISTENCE_OUTBOX_NOT_FOUND",
     "Outbox entry was not found.",
     "platform.persistence.outbox.not_found",
+    observed?.reject("record", "not-found"),
   );
-}
-
-function responseItem(response: unknown): DynamoDbPersistenceItem | undefined {
-  if (typeof response !== "object" || response === null || !("Item" in response)) return undefined;
-  const item = (response as { readonly Item?: unknown }).Item;
-  return isItem(item) ? item : undefined;
-}
-
-function responseItems(response: unknown): readonly DynamoDbPersistenceItem[] {
-  if (typeof response !== "object" || response === null || !("Items" in response)) return [];
-  const items = (response as { readonly Items?: unknown }).Items;
-  return Array.isArray(items) ? items.filter(isItem) : [];
-}
-
-function isItem(value: unknown): value is DynamoDbPersistenceItem {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function stringAttribute(value: string): { readonly S: string } {
@@ -344,6 +357,7 @@ function failure(
   code: PlatformPersistenceError["code"],
   defaultMessage: string,
   messageKey: string,
+  evidence: ReturnType<DynamoDbObservation["evidence"]> = {},
 ): Result<never, PlatformPersistenceError> {
-  return { ok: false, error: platformPersistenceError({ code, defaultMessage, messageKey }) };
+  return { ok: false, error: platformPersistenceError({ code, defaultMessage, messageKey, ...evidence }) };
 }

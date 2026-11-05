@@ -39,3 +39,10 @@ The identifiers derived here are stable logical identities, not telemetry
 fields. Observability must continue using the registered profile’s allowlisted
 facts and must not emit the work-item or outbox identifier as a metric label or
 trace attribute.
+
+`acceptPlatformSmokeWorkItem(input, dependencies, diagnostics?)` optionally
+forwards invocation-local `PlatformPersistenceDiagnosticOptions` to the writer.
+Omitting it retains the original one-argument writer call and writer defaults;
+supplying `{}` explicitly silences those defaults. The feature never replaces
+repository/staging errors or catches their native throws. Diagnostic observers
+do not change transaction results or create a second persistence policy.

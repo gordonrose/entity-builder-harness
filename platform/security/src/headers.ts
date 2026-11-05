@@ -1,3 +1,6 @@
+import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { securityOperationDiagnosticRecord } from "./diagnostics";
+
 export interface PlatformCorsPolicy {
   readonly allowedOrigin?: string;
   readonly allowedMethods?: readonly string[];
@@ -47,18 +50,25 @@ export function corsPolicyForRequestOrigin(input: {
   readonly allowedOrigins?: readonly string[];
   readonly allowCredentials?: boolean;
 }): PlatformCorsPolicy {
+  return observeCorsPolicyForRequestOrigin(input).policy;
+}
+
+/** Observation is available explicitly; normal missing/allowed origins are not logged by default.
+ * Omitting a browser permission header does not reject server-side execution.
+ */
+export function observeCorsPolicyForRequestOrigin(input: { readonly requestOrigin?: string; readonly allowedOrigins?: readonly string[]; readonly allowCredentials?: boolean }): { readonly policy: PlatformCorsPolicy; readonly diagnosticRecord: DiagnosticRecord } {
   const requestOrigin = input.requestOrigin;
   if (requestOrigin === undefined || requestOrigin.length === 0) {
-    return {};
+    return { policy: {}, diagnosticRecord: securityOperationDiagnosticRecord("cors", requestOrigin === undefined ? "origin-missing" : "origin-empty") };
   }
 
   const allowedOrigins = input.allowedOrigins ?? [];
   if (!allowedOrigins.includes(requestOrigin)) {
-    return {};
+    return { policy: {}, diagnosticRecord: securityOperationDiagnosticRecord("cors", "origin-not-allowlisted") };
   }
 
-  return {
+  return { diagnosticRecord: securityOperationDiagnosticRecord("cors", "origin-allowed"), policy: {
     ...corsPolicyForOrigin(requestOrigin),
     ...(input.allowCredentials === undefined ? {} : { allowCredentials: input.allowCredentials }),
-  };
+  } };
 }

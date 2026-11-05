@@ -15,8 +15,13 @@ import {
   type JsonValue,
   type QueueMessage,
   type QueuePayload,
+  type CoreQueueDiagnosticOptions,
+  type CoreQueueBoundaryDetail,
+  type DiagnosticRecord,
+  selectCoreQueueDiagnosticEvidence,
 } from "@kanbien/core";
 import { invalidMessage, type PlatformSqsWorkerQueueError } from "./errors";
+import { sqsObservation, type SqsObservation } from "./observations";
 
 /**
  * Encode the complete Core envelope so a provider delivery ID can never become
@@ -48,25 +53,49 @@ export function encodePlatformQueueMessage(message: QueueMessage): string {
 
 export function decodePlatformQueueMessage(
   body: string | undefined,
+  options?: CoreQueueDiagnosticOptions,
 ): { readonly ok: true; readonly value: QueueMessage } | { readonly ok: false; readonly error: PlatformSqsWorkerQueueError } {
-  if (body === undefined || body.length === 0) return invalidMessage("Body", "SQS delivery did not contain a message body.");
+  const observed = sqsObservation(options, "decode");
+  if (observed.at("selection", () => body === undefined || body.length === 0)) return invalidMessage("Body", "SQS delivery did not contain a message body.", observed.reject("body", body === undefined ? "missing" : "empty"));
+  let boundary: CoreQueueBoundaryDetail["boundary"] = "json-parse";
   try {
-    const parsed: unknown = JSON.parse(body);
-    if (!isRecord(parsed)) return invalidMessage("Body", "Expected a platform queue message object.");
-    const id = optionalString(parsed.id);
-    const type = optionalString(parsed.type);
-    const version = numberValue(parsed.version);
-    const enqueuedAt = optionalString(parsed.enqueuedAt);
-    const traceParent = parsed.traceParent === undefined ? { ok: true as const, value: undefined } : parseTraceParent(parsed.traceParent);
-    if (id === undefined || type === undefined || version === undefined || enqueuedAt === undefined || !isQueuePayload(parsed.payload) || !traceParent.ok) {
-      return invalidMessage("Body", "Expected a valid platform queue message envelope.");
+    const parsed: unknown = JSON.parse(body!);
+    boundary = "envelope";
+    if (!isRecord(parsed)) return invalidMessage("Body", "Expected a platform queue message object.", observed.reject("envelope", "not-record"));
+    const rawId = parsed.id;
+    const id = optionalString(rawId);
+    const rawType = parsed.type;
+    const type = optionalString(rawType);
+    const rawVersion = parsed.version;
+    const version = numberValue(rawVersion);
+    const rawEnqueuedAt = parsed.enqueuedAt;
+    const enqueuedAt = optionalString(rawEnqueuedAt);
+    boundary = "trace-parent";
+    const traceParent = parsed.traceParent === undefined ? { ok: true as const, value: undefined } : parseTraceParent(parsed.traceParent, observed);
+    boundary = "envelope";
+    let field: "id" | "message-type" | "message-version" | "enqueued-at" | "payload" | "trace-parent" = "id";
+    if (id === undefined || (field = "message-type", type === undefined) || (field = "message-version", version === undefined) || (field = "enqueued-at", enqueuedAt === undefined) || (field = "payload", !isQueuePayload(parsed.payload)) || (field = "trace-parent", !traceParent.ok)) {
+      if (field !== "trace-parent") {
+        const raw = field === "id" ? rawId : field === "message-type" ? rawType : field === "message-version" ? rawVersion : rawEnqueuedAt;
+        observed.reject(field, field === "payload" ? "predicate-rejected" : raw === undefined ? "missing" : field === "message-version" ? typeof raw === "number" ? "not-finite" : "wrong-type" : typeof raw === "string" ? "empty" : "wrong-type");
+      }
+      return invalidMessage("Body", "Expected a valid platform queue message envelope.", observed.evidence());
     }
     const queueType = queueMessageType(type);
     const queueVersion = queueMessageVersion(version);
     const queuedAt = isoDateTime(enqueuedAt);
     if (!queueType.ok || !queueVersion.ok || !queuedAt.ok) {
-      return invalidMessage("Body", "Expected a valid platform queue message envelope.");
+      const sources: DiagnosticRecord[] = [];
+      for (const result of [queueType, queueVersion, queuedAt]) {
+        const error = Object.getOwnPropertyDescriptor(result, "error");
+        const source = selectCoreQueueDiagnosticEvidence(options, error !== undefined && "value" in error ? error.value : undefined);
+        if (source.diagnosticRecord !== undefined) sources.push(source.diagnosticRecord);
+        sources.push(...(source.relatedDiagnosticRecords ?? []));
+      }
+      observed.reject("envelope", "predicate-rejected", { diagnosticRecord: sources[0], relatedDiagnosticRecords: sources.slice(1) });
+      return invalidMessage("Body", "Expected a valid platform queue message envelope.", observed.evidence());
     }
+    boundary = "payload-copy";
     return {
       ok: true,
       value: queueMessage({
@@ -83,19 +112,26 @@ export function decodePlatformQueueMessage(
         payload: parsed.payload,
       }),
     };
-  } catch {
-    return invalidMessage("Body", "Expected JSON for a platform queue message envelope.");
+  } catch (cause) {
+    observed.failure(boundary, cause);
+    return invalidMessage("Body", "Expected JSON for a platform queue message envelope.", observed.evidence());
   }
 }
 
 function parseTraceParent(
   value: unknown,
+  observed: SqsObservation,
 ): { readonly ok: true; readonly value: ReturnType<typeof traceContext> } | { readonly ok: false } {
-  if (!isRecord(value)) return { ok: false };
-  const receivedTraceId = optionalString(value.traceId);
-  const receivedSpanId = optionalString(value.spanId);
+  if (!isRecord(value)) { observed.reject("trace-parent", "not-record"); return { ok: false }; }
+  const rawTraceId = value.traceId;
+  const receivedTraceId = optionalString(rawTraceId);
+  const rawSpanId = value.spanId;
+  const receivedSpanId = optionalString(rawSpanId);
   const receivedParentSpanId = optionalString(value.parentSpanId);
-  if (receivedTraceId === undefined || receivedSpanId === undefined) return { ok: false };
+  if (receivedTraceId === undefined || receivedSpanId === undefined) {
+    const raw = receivedTraceId === undefined ? rawTraceId : rawSpanId;
+    observed.reject(receivedTraceId === undefined ? "trace-id" : "span-id", raw === undefined ? "missing" : typeof raw === "string" ? "empty" : "wrong-type"); return { ok: false };
+  }
   try {
     return {
       ok: true,
@@ -105,7 +141,8 @@ function parseTraceParent(
         ...(receivedParentSpanId === undefined ? {} : { parentSpanId: spanId(receivedParentSpanId) }),
       }),
     };
-  } catch {
+  } catch (cause) {
+    observed.failure("trace-parent", cause);
     return { ok: false };
   }
 }

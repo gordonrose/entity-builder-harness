@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -55,38 +55,50 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument" >&2
       usage >&2
       exit 2
       ;;
   esac
 done
 
-BRANCH="$(git branch --show-current)"
+if ! BRANCH="$(git branch --show-current 2>/dev/null)"; then
+  echo "ERROR: session-branch-read-failed" >&2
+  exit 1
+fi
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH"
+  echo "ERROR: current branch is not a chat branch"
   exit 1
 fi
 
-LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
+if ! LOG_FILE="$(chat_log_file_for_session "$SESSION_ID" 2>&1)"; then
+  case "$LOG_FILE" in
+    'ERROR: session-directory-read-failed'|'ERROR: session-metadata-read-failed'|'ERROR: session-date-invalid'|'ERROR: session-log-ambiguous') printf '%s\n' "$LOG_FILE" >&2 ;;
+    *) echo "ERROR: session-log-lookup-failed" >&2 ;;
+  esac
+  exit 1
+fi
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE"
+  echo "ERROR: missing chat log"
   exit 1
 fi
 
-METADATA="$(sed -n '/<!-- agentic-session/,/-->/p' "$LOG_FILE" \
-  | sed '/<!-- agentic-session/d;/-->/d')"
+if ! METADATA="$(sed -n '/<!-- agentic-session/,/-->/p' "$LOG_FILE" 2>/dev/null \
+  | sed '/<!-- agentic-session/d;/-->/d')"; then
+  echo "ERROR: session-metadata-read-failed" >&2
+  exit 1
+fi
+if [[ -z "$METADATA" ]]; then
+  echo "ERROR: session-metadata-absent" >&2
+  exit 1
+fi
 
 LATEST_COMMIT_SHA="$(printf '%s\n' "$METADATA" | sed -n 's/^latest_commit_sha: //p' | head -n 1)"
 
 if [ -n "${LATEST_COMMIT_SHA// }" ] && [ "$ALLOW_RECORDED_SESSION" != "yes" ]; then
   echo "ERROR: recorded-session-approval-required"
-  echo "Session: $SESSION_ID"
-  echo "Branch: $BRANCH"
-  echo "Log: $LOG_FILE"
-  echo "Latest commit: $LATEST_COMMIT_SHA"
   echo "Required action: Ask the user to approve continuing this existing chat/worktree, or start a new chat."
   exit 3
 fi

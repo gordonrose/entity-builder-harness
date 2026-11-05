@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.persistence-diagnostic-mapping.v1
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-27"
 #   layer: 04.deploy
 #   domain: deployment.persistence-diagnostics
 #   disciplines: [security, sre, agentic]
@@ -16,6 +16,11 @@
 #     path: scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/script.sh
 schema: deploy/persistence-diagnostic-mapping-schema/v1
 embedded_in: deploy/target-scope-contract/v1#persistence_diagnostics
+field_guide:
+  - path: declared.codes_source
+    what: Generated code-owned diagnostic identities for the persistence capability.
+    does: Gives policy mappings one authoritative runtime vocabulary without relocating recovery policy into code.
+    validation: Every required workload mapping covers the exported definitions; declaration coverage is not proof of observed provider causes.
 statuses: [not-applicable, declared]
 not_applicable:
   required_fields: [status, reason]
@@ -38,21 +43,12 @@ declared:
     retryability: [bounded-retry, target-correction-required, no-automatic-retry, stop-and-escalate]
     safe_summary: PERSISTENCE_DIAGNOSTIC_OBSERVED:<controlled-code>
     next_check: [inspect-declared-target-alignment-evidence, inspect-governed-scope-configuration, observe-persistence-state-before-replay, collect-governed-provider-observation]
-  codes:
-    - persistence.transport-unavailable
-    - persistence.trust-validation-failed
-    - persistence.credential-rejected
-    - persistence.runtime-permission-denied
-    - persistence.capacity-exhausted
-    - persistence.schema-incompatible
-    - persistence.operation-timed-out
-    - persistence.outcome-uncertain
-    - persistence.unclassified-failure
+  codes_source: platform/persistence/contracts/diagnostics.v1.json#catalog.definitions[].code
 workload_rules:
   long-running-server:
     persistence_writes: required-boolean
-    required_codes_when_writing: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.outcome-uncertain, persistence.unclassified-failure]
-    required_codes_when_read_only: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.unclassified-failure]
+    required_codes_when_writing: all-code-owned-persistence-definitions
+    required_codes_when_read_only: all-code-owned-persistence-definitions-except-persistence.outcome-uncertain
     allowed_effects: [startup-exit, not-ready, bounded-reconnect, request-uncertain-reconcile-before-retry, stop-and-escalate]
     prohibited_effects: [failed-completion, block-release-require-fresh-state-observation]
     required_mapping: dependency-outage-must-not-change-liveness-or-trigger-provider-replacement
@@ -60,10 +56,10 @@ workload_rules:
     trust_validation_failed: { effect: not-ready, retryability: target-correction-required }
     outcome_uncertain_when_writing: { effect: request-uncertain-reconcile-before-retry, retryability: no-automatic-retry }
   continuous-worker:
-    required_codes: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.outcome-uncertain, persistence.unclassified-failure]
+    required_codes: all-code-owned-persistence-definitions
     allowed_effects: [bounded-retry, stop-and-escalate, failed-completion]
   run-to-completion-task:
-    required_codes: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.outcome-uncertain, persistence.unclassified-failure]
+    required_codes: all-code-owned-persistence-definitions
     allowed_effects: [failed-completion, block-release-require-fresh-state-observation, stop-and-escalate]
     prohibited_effects: [not-ready, bounded-reconnect]
   migration_execution:

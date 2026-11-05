@@ -15,6 +15,7 @@ const coreModules = [
   "logging",
   "monitoring",
   "queues",
+  "security",
   "shared",
   "tenancy",
   "validation",

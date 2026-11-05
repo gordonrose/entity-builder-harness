@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -19,11 +19,12 @@ set -euo pipefail
 #     path: .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
 
 ROOT="$(git rev-parse --show-toplevel)"
+source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 TAG="kanbien-core-server-persistence:qualification"
 PORT="39455"
 if [[ $# -eq 4 && "$1" == "--tag" && "$3" == "--port" ]]; then TAG="$2"; PORT="$4"; elif [[ $# -ne 0 ]]; then echo 'Usage: script.sh [--tag <image> --port <port>]' >&2; exit 2; fi
 [[ "$PORT" =~ ^[0-9]+$ ]] || { echo 'ERROR: port-invalid' >&2; exit 2; }
-command -v docker >/dev/null && docker info >/dev/null || { echo 'ERROR: Docker is required for persistence image qualification.' >&2; exit 1; }
+command -v docker >/dev/null && docker info >/dev/null 2>&1 || { echo 'ERROR: Docker is required for persistence image qualification.' >&2; exit 1; }
 command -v openssl >/dev/null || { echo 'ERROR: openssl is required for disposable TLS qualification.' >&2; exit 1; }
 
 # Synthetic only. The test neither prints a captured program/log payload nor
@@ -58,13 +59,14 @@ finish() {
   exit "$cleanup_status"
 }
 trap finish EXIT
-openssl req -x509 -newkey rsa:2048 -nodes -keyout "$temporary/ca.key" -out "$temporary/ca.crt" -subj '/CN=kanbien-persistence-smoke-ca' -days 1 >/dev/null 2>&1
-openssl req -newkey rsa:2048 -nodes -keyout "$temporary/server.key" -out "$temporary/server.csr" -subj '/CN=postgres' >/dev/null 2>&1
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CA_CREATION_FAILED package 'Disposable TLS setup failed.' 'Inspect the local certificate setup fixture.' -- openssl req -x509 -newkey rsa:2048 -nodes -keyout "$temporary/ca.key" -out "$temporary/ca.crt" -subj '/CN=kanbien-persistence-smoke-ca' -days 1
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CERTIFICATE_REQUEST_FAILED package 'Disposable TLS setup failed.' 'Inspect the local certificate setup fixture.' -- openssl req -newkey rsa:2048 -nodes -keyout "$temporary/server.key" -out "$temporary/server.csr" -subj '/CN=postgres'
 printf 'subjectAltName=DNS:postgres\n' > "$temporary/server.ext"
-openssl x509 -req -in "$temporary/server.csr" -CA "$temporary/ca.crt" -CAkey "$temporary/ca.key" -CAcreateserial -out "$temporary/server.crt" -days 1 -extfile "$temporary/server.ext" >/dev/null 2>&1
-docker network create "$network" >/dev/null; docker volume create "$volume" >/dev/null
-docker run --rm --name "$task" --user root -v "$temporary:/source:ro" -v "$volume:/certs" postgres:16-bookworm bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt' >/dev/null
-docker run --detach --rm --name "$database" --network "$network" --network-alias postgres -e POSTGRES_DB=kanbienpersistence -e POSTGRES_USER=fixture_root -e POSTGRES_PASSWORD="$ADMIN_PASSWORD" -v "$volume:/certs:ro" postgres:16-bookworm postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key -c log_destination=stderr -c logging_collector=on -c log_directory=/var/lib/postgresql/data/log -c log_filename=postgresql.log -c log_min_error_statement=error >/dev/null
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CERTIFICATE_SIGNING_FAILED package 'Disposable TLS setup failed.' 'Inspect the local certificate setup fixture.' -- openssl x509 -req -in "$temporary/server.csr" -CA "$temporary/ca.crt" -CAkey "$temporary/ca.key" -CAcreateserial -out "$temporary/server.crt" -days 1 -extfile "$temporary/server.ext"
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_NETWORK_CREATION_FAILED package 'Disposable resource creation failed.' 'Inspect the disposable resource fixture.' -- docker network create "$network"
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_VOLUME_CREATION_FAILED package 'Disposable resource creation failed.' 'Inspect the disposable resource fixture.' -- docker volume create "$volume"
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CERTIFICATE_INSTALL_FAILED package 'Disposable certificate installation failed.' 'Inspect the disposable TLS setup fixture.' -- docker run --rm --name "$task" --user root -v "$temporary:/source:ro" -v "$volume:/certs" postgres:16-bookworm bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt'
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$database" --network "$network" --network-alias postgres -e POSTGRES_DB=kanbienpersistence -e POSTGRES_USER=fixture_root -e POSTGRES_PASSWORD="$ADMIN_PASSWORD" -v "$volume:/certs:ro" postgres:16-bookworm postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key -c log_destination=stderr -c logging_collector=on -c log_directory=/var/lib/postgresql/data/log -c log_filename=postgresql.log -c log_min_error_statement=error
 for attempt in $(seq 1 40); do docker exec -e PGPASSWORD="$ADMIN_PASSWORD" "$database" psql -X -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence -c 'SELECT 1' >/dev/null 2>&1 && break; [[ "$attempt" != 40 ]] || fail 'disposable-postgresql-unavailable'; sleep 1; done
 # fixture_root is used only to approximate managed-RDS bootstrap. Every actual
 # administration entrypoint invocation below uses core_administrator, a
@@ -74,7 +76,7 @@ for attempt in $(seq 1 40); do docker exec -e PGPASSWORD="$ADMIN_PASSWORD" "$dat
 # core_runtime session, but must not require superuser access.  This is a
 # narrow local approximation of the governed RDS administration boundary; it
 # does not prove RDS managed-role semantics or real IAM token validation.
-docker exec -i -e PGPASSWORD="$ADMIN_PASSWORD" "$database" psql -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence <<SQL >/dev/null
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_ROLE_SETUP_FAILED package 'Disposable role setup failed.' 'Inspect the restricted role setup fixture.' -- docker exec -i -e PGPASSWORD="$ADMIN_PASSWORD" "$database" psql -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence <<SQL
 CREATE ROLE rds_iam NOLOGIN;
 CREATE ROLE core_administrator LOGIN CREATEROLE INHERIT;
 CREATE ROLE core_rejected_administrator LOGIN CREATEROLE NOINHERIT;
@@ -90,7 +92,7 @@ SQL
 # canary in a SQL statement. PostgreSQL receives a verifier only; the server
 # log assertion below treats that verifier as sensitive too. These synthetic
 # fixture credentials are not part of any application administration path.
-set_fixture_credential() { local role="$1" value="$2"; printf '%s\n%s\n' "$value" "$value" | docker exec -i "$database" psql -X -U fixture_root -d kanbienpersistence -c "\\password $role" >/dev/null 2>&1; }
+set_fixture_credential() { local role="$1" value="$2"; printf '%s\n%s\n' "$value" "$value" | safe_command_diagnostic PERSISTENCE_QUALIFICATION_CREDENTIAL_SETUP_FAILED package 'Synthetic credential setup failed.' 'Inspect the disposable credential setup fixture.' -- docker exec -i "$database" psql -X -U fixture_root -d kanbienpersistence -c "\\password $role"; }
 set_fixture_credential core_administrator "$ADMIN_PASSWORD"
 set_fixture_credential core_rejected_administrator "$REJECTED_PASSWORD"
 set_fixture_credential core_schema_migration "$IAM_TOKEN"
@@ -111,15 +113,16 @@ expect_code PERSISTENCE_MIGRATION_APPLIED docker run --rm --name "$task" "${comm
 expect_code PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED run_administration observe-migration-state
 expect_code PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED run_administration grant-runtime-application-access
 expect_code PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN run_administration prove-effective-privilege
-docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-smoke "$TAG" >/dev/null
-node - "$PORT" <<'NODE'
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-smoke "$TAG"
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_HTTP_OBSERVATION_FAILED package 'Packaged HTTP observation failed.' 'Inspect the local HTTP qualification fixture.' -- node - "$PORT" <<'NODE'
 const base = `http://127.0.0.1:${process.argv[2]}`; const id = 'core-persistence-package-smoke-0001'; const fact = 'f'.repeat(64);
 async function wait(path, predicate) { let error; for (let attempt = 0; attempt < 80; attempt += 1) { try { const response = await fetch(`${base}${path}`); const body = await response.json(); if (predicate(response, body)) return; error = new Error('unexpected-safe-response'); } catch (caught) { error = caught; } await new Promise((resolve) => setTimeout(resolve, 250)); } throw error || new Error('response-timeout'); }
 await wait('/livez', (response, body) => response.status === 200 && body.status === 'live'); await wait('/readyz', (response, body) => response.status === 200 && body.status === 'ready');
 const created = await fetch(`${base}/internal/persistence-acceptance`, { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({record_id:id, fact_digest:fact}) }); if (created.status !== 201 || (await created.json()).outcome !== 'created') throw new Error('persistence-create-not-confirmed');
 const read = await fetch(`${base}/internal/persistence-acceptance?record_id=${id}`); const body = await read.json(); if (read.status !== 200 || body?.record?.id !== id || body?.record?.factDigest !== fact) throw new Error('persistence-read-not-confirmed');
 NODE
-restore_digest="$(node -e 'process.stdout.write("f".repeat(64))')"
+make_restore_digest() { restore_digest="$(node -e 'process.stdout.write("f".repeat(64))')"; }
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_DIGEST_PREPARATION_FAILED package 'Synthetic digest preparation failed.' 'Inspect the synthetic restore fixture.' -- make_restore_digest
 expect_code KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED docker run --rm --name "$task" "${common[@]}" -e PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_ACCEPTANCE_RECORD_ID=core-persistence-package-smoke-0001 -e "PERSISTENCE_ACCEPTANCE_FACT_DIGEST=$restore_digest" "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js
 # Connection investigation never emits the recovery success verdict/code.
 diagnostic_output="$(docker run --rm --name "$task" "${common[@]}" -e PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_RESTORE_DIAGNOSTIC_MODE=connection "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js 2>&1)" || fail 'connection-diagnostic-package-failed'
@@ -135,31 +138,31 @@ printf '%s' "$diagnostic_output" | node -e 'let s="";process.stdin.on("data",x=>
 # A synthetic legacy password is rejected on a new connection. It is only a
 # local canary; the governed live proof checks the already-exposed target
 # credential without putting its value in a report or shell output.
-docker run --rm --name "$task" --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e LEGACY_PASSWORD="$OLD_PASSWORD" "$TAG" -e 'const {Pool}=require("pg"),fs=require("fs");const p=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.LEGACY_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}});p.query("SELECT 1").then(()=>{process.exitCode=1}).catch((error)=>{if(error.code!=="28P01")process.exitCode=1}).finally(()=>p.end());' || fail 'legacy-password-new-connection-rejection-not-confirmed'
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_LEGACY_CONNECTION_FAILED package 'Legacy connection observation did not qualify.' 'Inspect the legacy connection fixture.' -- docker run --rm --name "$task" --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e LEGACY_PASSWORD="$OLD_PASSWORD" "$TAG" -e 'const {Pool}=require("pg"),fs=require("fs");const p=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.LEGACY_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}});p.query("SELECT 1").then(()=>{process.exitCode=1}).catch((error)=>{if(error.code!=="28P01")process.exitCode=1}).finally(()=>p.end());' || fail 'legacy-password-new-connection-rejection-not-confirmed'
 # Exercise the enabled capability in this finished image. The receiver is a
 # disposable task-local endpoint; no provider service or credential is used.
-docker rm -f "$server" >/dev/null
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_SERVER_REMOVAL_FAILED package 'Disposable server removal failed.' 'Inspect the disposable cleanup fixture.' -- docker rm -f "$server"
 metrics_series='[{"sourceName":"platform.dependency.readiness","sourceKind":"gauge","sourceUnit":"count","instrumentName":"kanbien.core_server.postgresql_readiness","description":"Package readiness","allowedLabelNames":["target","scope","workload","dependency","readiness"],"cardinalityLimit":16}]'
 telemetry_environment=(-e PLATFORM_OBSERVABILITY_METRICS_PROVIDER=cloudwatch-otel -e PLATFORM_OBSERVABILITY_METRICS_ENDPOINT=http://127.0.0.1:4318/v1/metrics -e PLATFORM_OBSERVABILITY_METRICS_REGION=eu-west-1 -e PLATFORM_OBSERVABILITY_SERVICE_NAME=kanbien-core-server-persistence -e PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT=package-qualification -e PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS=1000 -e PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS=500 -e PLATFORM_OBSERVABILITY_TARGET=package-qualification -e PLATFORM_OBSERVABILITY_SCOPE=core-server-persistence -e PLATFORM_OBSERVABILITY_WORKLOAD=core-server -e PLATFORM_OBSERVABILITY_DEPENDENCY=postgresql -e PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS=1000 -e PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS=500 -e PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS=5000 -e "PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON=$metrics_series")
-docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" "${telemetry_environment[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-observability "$TAG" >/dev/null
-docker exec --detach "$server" /nodejs/bin/node -e 'const fs=require("fs");require("http").createServer((req,res)=>{const chunks=[];req.on("data",b=>chunks.push(b));req.on("end",()=>{const b=Buffer.concat(chunks);if(req.url!=="/v1/metrics"||!b.includes(Buffer.from("kanbien.core_server.postgresql_readiness"))){res.statusCode=400;res.end();return;}if(b.includes(Buffer.from("package-qualification"))&&b.includes(Buffer.from("core-server"))&&b.includes(Buffer.from("postgresql"))){const state=b.includes(Buffer.from("not-ready"))?"not-ready":"ready";fs.writeFileSync("/tmp/package-metric-"+state,"observed");}res.end();});}).listen(4318,"127.0.0.1");'
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" "${telemetry_environment[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-observability "$TAG"
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_METRIC_RECEIVER_START_FAILED package 'Disposable metric receiver start failed.' 'Inspect the metric receiver fixture.' -- docker exec --detach "$server" /nodejs/bin/node -e 'const fs=require("fs");require("http").createServer((req,res)=>{const chunks=[];req.on("data",b=>chunks.push(b));req.on("end",()=>{const b=Buffer.concat(chunks);if(req.url!=="/v1/metrics"||!b.includes(Buffer.from("kanbien.core_server.postgresql_readiness"))){res.statusCode=400;res.end();return;}if(b.includes(Buffer.from("package-qualification"))&&b.includes(Buffer.from("core-server"))&&b.includes(Buffer.from("postgresql"))){const state=b.includes(Buffer.from("not-ready"))?"not-ready":"ready";fs.writeFileSync("/tmp/package-metric-"+state,"observed");}res.end();});}).listen(4318,"127.0.0.1");'
 observe_package_metric() {
   for attempt in $(seq 1 30); do
-    docker exec "$server" /nodejs/bin/node -e 'process.exit(require("fs").existsSync("/tmp/package-metric-"+process.argv[1])?0:1)' "$1" && return 0
+    docker exec "$server" /nodejs/bin/node -e 'process.exit(require("fs").existsSync("/tmp/package-metric-"+process.argv[1])?0:1)' "$1" 2>/dev/null && return 0
     sleep 1
   done
   fail "packaged-readiness-metric-$1-not-exported"
 }
 observe_package_metric ready
 expect_code PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED run_administration revoke-runtime
-node - "$PORT" <<'NODE'
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_HTTP_OBSERVATION_FAILED package 'Packaged HTTP observation failed.' 'Inspect the local HTTP qualification fixture.' -- node - "$PORT" <<'NODE'
 const base = `http://127.0.0.1:${process.argv[2]}`; let last = 'unreachable'; for (let attempt = 0; attempt < 80; attempt += 1) { const [live, ready] = await Promise.all([fetch(`${base}/livez`).catch(() => undefined), fetch(`${base}/readyz`).catch(() => undefined)]); last = `live-${live?.status ?? 'unreachable'}-ready-${ready?.status ?? 'unreachable'}`; if (live?.status === 200 && ready !== undefined && ready.status !== 200) process.exit(0); await new Promise((resolve) => setTimeout(resolve, 250)); } throw new Error(`revoked-server-did-not-remain-live-and-become-unready:${last}`);
 NODE
 observe_package_metric not-ready
 expect_code PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED run_administration restore-runtime
-docker rm -f "$server" >/dev/null
-docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-smoke-recovered "$TAG" >/dev/null
-node - "$PORT" <<'NODE'
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_SERVER_REMOVAL_FAILED package 'Disposable server removal failed.' 'Inspect the disposable cleanup fixture.' -- docker rm -f "$server"
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-smoke-recovered "$TAG"
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_HTTP_OBSERVATION_FAILED package 'Packaged HTTP observation failed.' 'Inspect the local HTTP qualification fixture.' -- node - "$PORT" <<'NODE'
 const base = `http://127.0.0.1:${process.argv[2]}`; const id = 'core-persistence-package-smoke-0001'; const fact = 'f'.repeat(64); for (let attempt = 0; attempt < 80; attempt += 1) { const response = await fetch(`${base}/internal/persistence-acceptance?record_id=${id}`).catch(() => undefined); const body = response === undefined ? undefined : await response.json().catch(() => undefined); if (response?.status === 200 && body?.record?.factDigest === fact) process.exit(0); await new Promise((resolve) => setTimeout(resolve, 250)); } throw new Error('recovered-server-could-not-read-original-record');
 NODE
 server_output="$(docker logs "$server" 2>&1 || true)"; assert_safe_output "$server_output"; assert_database_logs_safe

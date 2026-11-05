@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.reporting.report-chat-workspaces
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: reporting
 #   disciplines:
@@ -27,9 +27,11 @@ set -euo pipefail
 #   - read-only
 
 BASE_BRANCH="${1:-main}"
+read_failed() { echo "ERROR: workspace-report-$1-read-failed" >&2; exit 2; }
+observe() { local stage="$1"; shift; "$@" 2>/dev/null || read_failed "$stage"; }
 
-CALLER_ROOT="$(git rev-parse --show-toplevel)"
-CALLER_ROOT="$(cd "$CALLER_ROOT" && pwd -P)"
+CALLER_ROOT="$(observe root git rev-parse --show-toplevel)"
+CALLER_ROOT="$(cd "$CALLER_ROOT" 2>/dev/null && pwd -P)" || read_failed root
 
 # shellcheck source=../../worktree/paths/lib.sh
 source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
@@ -39,15 +41,20 @@ source "$CALLER_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 REPO_ROOT="$(chat_worktree_repo_root "$CALLER_ROOT")"
 chat_worktree_load_config "$REPO_ROOT"
 
-if ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
-  echo "ERROR: base branch does not exist: $BASE_BRANCH" >&2
+if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${BASE_BRANCH}" 2>/dev/null; then
+  :
+else
+  reference_status=$?
+  [ "$reference_status" -eq 1 ] || read_failed base-reference
+  echo "ERROR: base branch does not exist" >&2
   exit 1
 fi
 
 printf 'Base branch: %s\n' "$BASE_BRANCH"
 printf '%-64s %-8s %-8s %-8s %-10s %s\n' "branch" "ahead" "behind" "status" "log-head" "worktree"
 
-git -C "$REPO_ROOT" branch --format='%(refname:short)' | while IFS= read -r branch; do
+branches="$(observe branch-list git -C "$REPO_ROOT" branch --format='%(refname:short)')"
+while IFS= read -r branch; do
   case "$branch" in
     chat/*) ;;
     *) continue ;;
@@ -55,7 +62,7 @@ git -C "$REPO_ROOT" branch --format='%(refname:short)' | while IFS= read -r bran
 
   session_id="${branch#chat/}"
   log_file="$(chat_log_file_for_session "$session_id")"
-  branch_head="$(git -C "$REPO_ROOT" rev-parse --short "$branch")"
+  branch_head="$(observe branch-head git -C "$REPO_ROOT" rev-parse --short "$branch")"
   recorded_head=""
   log_head_state="missing"
 
@@ -70,13 +77,15 @@ git -C "$REPO_ROOT" branch --format='%(refname:short)' | while IFS= read -r bran
     fi
   fi
 
-  ahead="$(git -C "$REPO_ROOT" rev-list --count "${BASE_BRANCH}..${branch}")"
-  behind="$(git -C "$REPO_ROOT" rev-list --count "${branch}..${BASE_BRANCH}")"
+  ahead="$(observe comparison git -C "$REPO_ROOT" rev-list --count "${BASE_BRANCH}..${branch}")"
+  behind="$(observe comparison git -C "$REPO_ROOT" rev-list --count "${branch}..${BASE_BRANCH}")"
   worktree_path="$(chat_worktree_path_for_existing_or_new_branch "$REPO_ROOT" "$branch")"
   status="absent"
 
-  if [ -d "$worktree_path/.git" ] || git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    if [ -z "$(git -C "$worktree_path" status --porcelain)" ]; then
+  if [ -d "$worktree_path" ]; then
+    git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1 || read_failed worktree-verification
+    worktree_status="$(observe status git -C "$worktree_path" status --porcelain)"
+    if [ -z "$worktree_status" ]; then
       status="clean"
     else
       status="dirty"
@@ -84,4 +93,4 @@ git -C "$REPO_ROOT" branch --format='%(refname:short)' | while IFS= read -r bran
   fi
 
   printf '%-64s %-8s %-8s %-8s %-10s %s\n' "$branch" "$ahead" "$behind" "$status" "$log_head_state" "$worktree_path"
-done
+done <<< "$branches"

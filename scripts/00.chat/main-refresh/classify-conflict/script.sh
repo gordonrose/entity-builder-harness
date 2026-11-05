@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -52,10 +52,13 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-STAGES="$(git ls-files -u -- "$CONFLICT_PATH")"
+if ! STAGES="$(git ls-files -u -- "$CONFLICT_PATH" 2>/dev/null)"; then
+  echo "ERROR: conflict-index-read-failed" >&2
+  exit 1
+fi
 
 if [ -z "$STAGES" ]; then
-  echo "ERROR: path has no unresolved conflict stages: ${CONFLICT_PATH}" >&2
+  echo "ERROR: conflict-stages-absent" >&2
   exit 1
 fi
 
@@ -69,7 +72,10 @@ stage_content() {
   local stage="$1"
 
   if has_stage "$stage"; then
-    git show ":${stage}:${CONFLICT_PATH}" 2>/dev/null || true
+    if ! git show ":${stage}:${CONFLICT_PATH}" 2>/dev/null; then
+      printf 'ERROR: conflict-stage-read-failed stage=%s\n' "$stage" >&2
+      return 1
+    fi
   fi
 }
 
@@ -94,7 +100,7 @@ contains_any() {
   local pattern
 
   for pattern in "$@"; do
-    if printf '%s\n' "$text" | grep -Eq "$pattern"; then
+    if grep -Eq "$pattern" <<<"$text"; then
       return 0
     fi
   done
@@ -134,6 +140,24 @@ plan_index_rows_added_only() {
   return 0
 }
 
+artifact_metadata_updated_on_only() {
+  local base_count ours_count theirs_count base_without ours_without theirs_without
+
+  [ "$BASE_PRESENT" = "1" ] && [ "$OURS_PRESENT" = "1" ] && [ "$THEIRS_PRESENT" = "1" ] || return 1
+  contains_any "$ALL_CONTENT" 'agentic-artifact:' || return 1
+
+  base_count="$(printf '%s\n' "$BASE_CONTENT" | grep -Ec '^[#[:space:]]*updated_on:[[:space:]]*"[0-9]{4}-[0-9]{2}-[0-9]{2}"[[:space:]]*$' || true)"
+  ours_count="$(printf '%s\n' "$OURS_CONTENT" | grep -Ec '^[#[:space:]]*updated_on:[[:space:]]*"[0-9]{4}-[0-9]{2}-[0-9]{2}"[[:space:]]*$' || true)"
+  theirs_count="$(printf '%s\n' "$THEIRS_CONTENT" | grep -Ec '^[#[:space:]]*updated_on:[[:space:]]*"[0-9]{4}-[0-9]{2}-[0-9]{2}"[[:space:]]*$' || true)"
+  [ "$base_count" = 1 ] && [ "$ours_count" = 1 ] && [ "$theirs_count" = 1 ] || return 1
+
+  base_without="$(printf '%s\n' "$BASE_CONTENT" | sed -E '/^[#[:space:]]*updated_on:[[:space:]]*"[0-9]{4}-[0-9]{2}-[0-9]{2}"[[:space:]]*$/d')"
+  ours_without="$(printf '%s\n' "$OURS_CONTENT" | sed -E '/^[#[:space:]]*updated_on:[[:space:]]*"[0-9]{4}-[0-9]{2}-[0-9]{2}"[[:space:]]*$/d')"
+  theirs_without="$(printf '%s\n' "$THEIRS_CONTENT" | sed -E '/^[#[:space:]]*updated_on:[[:space:]]*"[0-9]{4}-[0-9]{2}-[0-9]{2}"[[:space:]]*$/d')"
+
+  [ "$base_without" = "$ours_without" ] && [ "$base_without" = "$theirs_without" ]
+}
+
 emit() {
   local type="$1"
   local reason="$2"
@@ -157,6 +181,11 @@ case "$CONFLICT_PATH" in
     exit 0
     ;;
 esac
+
+if artifact_metadata_updated_on_only; then
+  emit "artifact-metadata-date-conflict" "only the v3 artifact lifecycle updated_on value differs"
+  exit 0
+fi
 
 case "$CONFLICT_PATH" in
   docs/[0-9][0-9].*/plans/README.md)

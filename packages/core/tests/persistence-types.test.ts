@@ -13,6 +13,7 @@ import {
   pageTotal,
   pageTotals,
   persistenceError,
+  persistenceErrorCodes,
   recordChange,
   recordChangeId,
   recordId,
@@ -34,7 +35,13 @@ import {
   type SaveOptions,
   type Transaction,
   type UnitOfWork,
+  type InMemoryPersistenceDiagnosticOptions,
+  type CorePersistenceDiagnosticObserver,
+  type CorePersistenceValidationDetail,
+  type CorePersistenceInMemoryBoundaryDetail,
+  corePersistenceValidationRecord,
 } from "../src/persistence/index";
+import { defineDiagnostic } from "../src/diagnostics/index";
 import { entityId, isOk, isoDateTimeFromDate, type EntityId, type Result } from "../src/shared/index";
 
 type DealId = EntityId<"DealId">;
@@ -48,6 +55,13 @@ interface DealRecord {
 const dealId = entityId<"DealId">("deal-123");
 const version = concurrencyToken("deal-123:v1");
 const acceptedCode: PersistenceErrorCode = "PERSISTENCE_CONFLICT";
+type HistoricalPersistenceCode = "PERSISTENCE_CONFLICT" | "PERSISTENCE_DUPLICATE" | "PERSISTENCE_INVALID_LINEAGE"
+  | "PERSISTENCE_INVALID_OUTBOX_DELIVERY_POLICY" | "PERSISTENCE_INVALID_OUTBOX_MESSAGE_TYPE" | "PERSISTENCE_INVALID_OUTBOX_MESSAGE_VERSION"
+  | "PERSISTENCE_INVALID_RECORD_LIFECYCLE" | "PERSISTENCE_INVALID_PAGE" | "PERSISTENCE_INVALID_PAGE_REQUEST" | "PERSISTENCE_NOT_FOUND"
+  | "PERSISTENCE_RECORD_NOT_DELETED" | "PERSISTENCE_RESTORE_WINDOW_EXPIRED" | "PERSISTENCE_TIMEOUT"
+  | "PERSISTENCE_TRANSACTION_FAILED" | "PERSISTENCE_TRANSACTION_UNSUPPORTED" | "PERSISTENCE_UNAVAILABLE";
+const exactPersistenceCodes: [Exclude<HistoricalPersistenceCode, typeof persistenceErrorCodes[number]>, Exclude<typeof persistenceErrorCodes[number], HistoricalPersistenceCode>] extends [never, never] ? true : false = true;
+void exactPersistenceCodes;
 const lifecycleRetentionReference = recordRetentionPolicyReference("deal.retention.v1");
 if (!isOk(lifecycleRetentionReference)) {
   throw new Error("Expected a valid lifecycle retention-policy fixture.");
@@ -92,6 +106,22 @@ const repository: Repository<DealRecord, DealId> = inMemoryRepository({
   getConcurrencyToken: (deal) => deal.concurrencyToken,
 });
 const unitOfWork: UnitOfWork = inMemoryUnitOfWork();
+const observePersistence: CorePersistenceDiagnosticObserver = (record) => { const code: string = record.code; void code; return Promise.resolve(); };
+const persistenceDiagnosticOptions: InMemoryPersistenceDiagnosticOptions = { onDiagnostic: observePersistence, diagnosticDefinitions: [] };
+const observedUnitOfWork: UnitOfWork = inMemoryUnitOfWork(persistenceDiagnosticOptions);
+const observedRepository: Repository<DealRecord, DealId> = inMemoryRepository({ getId: (deal: DealRecord) => deal.id, ...persistenceDiagnosticOptions });
+const validationDetail: CorePersistenceValidationDetail = { operation: "page-request", field: "limit", reason: "not-positive", effect: "rejected" };
+const boundaryDetail: CorePersistenceInMemoryBoundaryDetail = { operation: "save", phase: "clone-after-write", reason: "boundary-threw", effect: "write-completed" };
+const companionDefinition = defineDiagnostic({ code: "fixture.persistence", version: 1,
+  classification: { failureKind: "unknown", failureSource: "unknown", severity: "error", recovery: "manual_investigation" },
+  detail: { type: "object", properties: { reason: { type: "enum", values: ["observed"] } } } } as const);
+const persistenceWithCompanions: PersistenceError = persistenceError({ code: "PERSISTENCE_TIMEOUT", defaultMessage: "Safe",
+  diagnosticRecord: corePersistenceValidationRecord({ operation: "page-request", field: "limit", reason: "not-positive" }),
+  relatedDiagnosticRecords: [], relatedDiagnosticDefinitions: [companionDefinition] });
+void observedUnitOfWork; void observedRepository; void validationDetail; void boundaryDetail; void persistenceWithCompanions;
+// @ts-expect-error submitted values are not a diagnostic field.
+const invalidDiagnosticField: CorePersistenceValidationDetail = { operation: "save", field: "submitted-record-id", reason: "empty", effect: "rejected" };
+void invalidDiagnosticField;
 const recordedAt = isoDateTimeFromDate(new Date("2026-09-23T12:00:00.000Z"));
 const messageTypeResult = outboxMessageType("platform-smoke.work.accepted");
 const deliveryPolicyResult = outboxDeliveryPolicy("platform-short-idempotent-work.v1");

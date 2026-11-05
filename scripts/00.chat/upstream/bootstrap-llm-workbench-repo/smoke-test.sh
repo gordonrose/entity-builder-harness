@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -208,5 +208,102 @@ if run_apply "$CONFLICT_REPO" "$TMP_ROOT/conflict-apply.out"; then
   fail "conflicting package script did not fail apply"
 fi
 test ! -e "$CONFLICT_REPO/AGENTS.md" || fail "conflicting apply wrote files before refusing"
+
+# Exercise the real planner on a small disposable source, never upstream.
+FAULT_SOURCE="$TMP_ROOT/fault-source"
+FAULT_TARGET="$TMP_ROOT/fault-target"
+make_repo "$FAULT_SOURCE"
+make_repo "$FAULT_TARGET"
+mkdir -p "$FAULT_SOURCE/docs/00.chat/bootstrap/llm-workbench-template/root" \
+  "$FAULT_SOURCE/.agentic/00.chat" "$FAULT_TARGET/scripts/shared"
+printf '{"scripts":{"chat":"node cli.js"}}\n' > "$FAULT_SOURCE/docs/00.chat/bootstrap/llm-workbench-template/root/package.json.template"
+printf 'template\n' > "$FAULT_SOURCE/docs/00.chat/bootstrap/llm-workbench-template/root/test.txt.template"
+printf 'source\n' > "$FAULT_SOURCE/.agentic/00.chat/test.md"
+printf '{"scripts":{"chat":"node cli.js"}}\n' > "$FAULT_TARGET/package.json"
+printf 'template\n' > "$FAULT_TARGET/test.txt"
+printf 'owned\n' > "$FAULT_TARGET/scripts/shared/owned.sh"
+FAULT_BIN="$TMP_ROOT/fault-bin"
+mkdir -p "$FAULT_BIN"
+export BOOT_REAL_GIT="$(command -v git)" BOOT_REAL_FIND="$(command -v find)"
+export BOOT_REAL_SORT="$(command -v sort)" BOOT_REAL_CMP="$(command -v cmp)"
+export BOOT_REAL_GREP="$(command -v grep)" BOOT_REAL_CP="$(command -v cp)"
+for tool in git find sort cmp grep cp; do
+  cat > "$FAULT_BIN/$tool" <<'SH'
+#!/usr/bin/env bash
+tool="$(basename "$0")"
+case "$BOOT_FAULT:$tool:$*" in
+  branch:git:*"branch --show-current"*|reference:git:*"show-ref --verify"*|\
+  tree:find:*"/.agentic/00.chat"*|templates:find:*"/root"*|\
+  sort:sort:*|compare:cmp:*|match:grep:*|copy:cp:*)
+    echo "BOOTSTRAP_NATIVE_CANARY" >&2; exit 77 ;;
+esac
+case "$tool" in
+  git) exec "$BOOT_REAL_GIT" "$@" ;;
+  find) exec "$BOOT_REAL_FIND" "$@" ;;
+  sort) exec "$BOOT_REAL_SORT" "$@" ;;
+  cmp) exec "$BOOT_REAL_CMP" "$@" ;;
+  grep) exec "$BOOT_REAL_GREP" "$@" ;;
+  cp) exec "$BOOT_REAL_CP" "$@" ;;
+esac
+SH
+  chmod +x "$FAULT_BIN/$tool"
+done
+for pair in branch:target-branch reference:target-reference tree:source-tree \
+  templates:template-tree sort:template-sort compare:file-comparison match:preserved-match copy:file-copy; do
+  fault="${pair%%:*}"; stage="${pair#*:}"
+  mode=--dry-run; expected_status=2
+  if [ "$fault" = copy ]; then mode=--apply; expected_status=77; fi
+  status=0
+  ( cd "$FAULT_SOURCE"; BOOT_FAULT="$fault" PATH="$FAULT_BIN:$PATH" bash "$SCRIPT" \
+    --target "$FAULT_TARGET" "$mode" ) > "$TMP_ROOT/fault.out" 2>&1 || status=$?
+  [ "$status" -eq "$expected_status" ] || fail "$fault returned $status"
+  grep -Fq "stage=$stage;" "$TMP_ROOT/fault.out" || fail "$fault lost stage"
+  if grep -q '^conflicts: 0$' "$TMP_ROOT/fault.out" && [ "$fault" != copy ]; then
+    fail "$fault certified a clean plan"
+  fi
+  if grep -Eq 'BOOTSTRAP_NATIVE_CANARY|Apply completed' "$TMP_ROOT/fault.out"; then
+    fail "$fault leaked or claimed completion"
+  fi
+done
+cat > "$TMP_ROOT/fail-package-read.cjs" <<'JS'
+const fs = require('fs');
+const original = fs.readFileSync;
+fs.readFileSync = function (name, ...args) {
+  if (name === process.env.BOOT_PACKAGE) throw new Error('BOOTSTRAP_PACKAGE_CANARY');
+  return original.call(this, name, ...args);
+};
+JS
+status=0
+( cd "$FAULT_SOURCE"; BOOT_PACKAGE="$FAULT_TARGET/package.json" \
+  NODE_OPTIONS="--require=$TMP_ROOT/fail-package-read.cjs" bash "$SCRIPT" \
+  --target "$FAULT_TARGET" --dry-run ) > "$TMP_ROOT/package-read.out" 2>&1 || status=$?
+[ "$status" -eq 2 ] || fail "package read failure became a conflict"
+grep -Fq 'stage=target-package-read;' "$TMP_ROOT/package-read.out" || fail "missing package read reason"
+if grep -Eq 'BOOTSTRAP_PACKAGE_CANARY|invalid-json|^conflicts:' "$TMP_ROOT/package-read.out"; then
+  fail "package read failure leaked or became invalid content"
+fi
+cat > "$TMP_ROOT/fail-sanitization.cjs" <<'JS'
+const fs = require('fs');
+const original = fs.readdirSync;
+fs.readdirSync = function (name, ...args) {
+  if (name === process.env.BOOT_SANITIZE) throw new Error('BOOTSTRAP_SANITIZATION_CANARY');
+  return original.call(this, name, ...args);
+};
+JS
+status=0
+( cd "$FAULT_SOURCE"; BOOT_SANITIZE="$FAULT_TARGET/.agentic" \
+  NODE_OPTIONS="--require=$TMP_ROOT/fail-sanitization.cjs" bash "$SCRIPT" \
+  --target "$FAULT_TARGET" --apply ) > "$TMP_ROOT/sanitization.out" 2>&1 || status=$?
+[ "$status" -eq 2 ] || fail "sanitization failure lost status"
+grep -Fq 'stage=metadata-sanitization; effect=unknown;' "$TMP_ROOT/sanitization.out" || fail "sanitization failure lost effect"
+if grep -Eq 'BOOTSTRAP_SANITIZATION_CANARY|Apply completed' "$TMP_ROOT/sanitization.out"; then
+  fail "sanitization failure leaked or claimed completion"
+fi
+printf '{"bad":BOOTSTRAP_INVALID_CANARY}\n' > "$FAULT_TARGET/package.json"
+status=0
+( cd "$FAULT_SOURCE"; run_plan "$FAULT_TARGET" "$TMP_ROOT/package-invalid.out" ) 2>&1 || status=$?
+[ "$status" -eq 1 ] || fail "invalid JSON did not retain conflict outcome"
+grep -Fxq 'CONFLICT package.json invalid-json' "$TMP_ROOT/package-invalid.out" || fail "invalid JSON reason missing"
+if grep -q 'BOOTSTRAP_INVALID_CANARY' "$TMP_ROOT/package-invalid.out"; then fail "invalid JSON leaked"; fi
 
 echo "llm-workbench bootstrap planner/apply smoke test passed."

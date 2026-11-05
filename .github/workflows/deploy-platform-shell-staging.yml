@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-07-14"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-28"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -104,6 +104,8 @@ jobs:
       - name: Run platform shell checks
         id: source-checks
         run: |
+          bash scripts/repo/check-selection/script.sh --checks shell-package-source shell-infrastructure shell-publication --task-paths scripts/04.deploy/build-platform-shell-image/check-source.sh scripts/04.deploy/verify-platform-shell-infrastructure/script.sh .github/workflows/deploy-platform-shell-staging.yml --record-preparation --json
+          bash scripts/repo/check-selection/script.sh --checks platform-shell-payload --execute-local --json
           npm run platform:server:check
           npm run platform:server:image-runtime-check
           npm run product:kanbien-platform:check

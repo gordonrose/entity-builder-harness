@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-10-31"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -63,6 +63,7 @@ class ContractFailure(Exception):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.error = lambda _message: parser.exit(2, "DIAGNOSTIC_CODE=RUNNABLE_PROGRAM_ARGUMENTS_INVALID\n")
     parser.add_argument("--contract")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
@@ -104,7 +105,7 @@ def report(contract_id: str | None, verdict: str, codes: tuple[str, ...]) -> dic
 def load_contract(path: str) -> dict[str, Any]:
     try:
         value = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
+    except (OSError, UnicodeError, yaml.YAMLError):
         raise ContractFailure("contract-unreadable") from None
     if not isinstance(value, dict):
         raise ContractFailure("contract-shape-invalid")
@@ -125,7 +126,7 @@ def validate_programs(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
         program_id = item["id"]
         if program_id in programs:
             raise ContractFailure("program-record-duplicate")
-        if item.get("runtime_executable") not in {"node", "python3", "ruby", "java"}:
+        if not isinstance(item.get("runtime_executable"), str) or item.get("runtime_executable") not in {"node", "python3", "ruby", "java"}:
             raise ContractFailure("program-runtime-unsupported")
         approved = item.get("approved_dependencies")
         observed = item.get("observed_dependencies")
@@ -176,7 +177,7 @@ def validate_candidates(document: dict[str, Any], images: dict[str, dict[str, An
         candidate_id = item["id"]
         if candidate_id in candidates:
             raise ContractFailure("package-candidate-duplicate")
-        if item.get("image_contract") not in images:
+        if not isinstance(item.get("image_contract"), str) or item.get("image_contract") not in images:
             raise ContractFailure("image-contract-missing")
         if item.get("immutable_identity_rule") != "runtime-bound-sha256":
             raise ContractFailure("candidate-identity-rule-invalid")
@@ -192,7 +193,7 @@ def validate_evidence(document: dict[str, Any], candidates: dict[str, dict[str, 
     verified: set[str] = set()
     for verification in verifications:
         candidate = verification.get("candidate")
-        if candidate not in candidates or candidate in verified:
+        if not isinstance(candidate, str) or candidate not in candidates or candidate in verified:
             raise ContractFailure("candidate-verification-invalid")
         verified.add(candidate)
         fields = verification.get("required_evidence_fields")

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -50,17 +50,29 @@ case "$BASE_BRANCH" in
     ;;
 esac
 
-if ! git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" >/dev/null; then
+blocked() {
   echo "classification=unsupported-dirty"
   echo "recoverability=blocked"
-  echo "reason=base ref does not resolve to a commit: ${BASE_BRANCH}"
+  echo "reason=$1"
   exit 1
+}
+
+if git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" >/dev/null 2>&1; then
+  :
+else
+  status=$?
+  if [ "$status" -eq 1 ]; then
+    blocked "refresh-base-unresolved"
+  fi
+  blocked "refresh-base-read-failed"
 fi
 
 # shellcheck source=../../session-log/paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"
 
-BRANCH="$(git branch --show-current)"
+if ! BRANCH="$(git branch --show-current 2>/dev/null)"; then
+  blocked "refresh-branch-read-failed"
+fi
 
 if [ -z "$BRANCH" ]; then
   echo "classification=unsupported-dirty"
@@ -73,22 +85,30 @@ SESSION_ID=""
 LOG_FILE=""
 
 if SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
+  if ! LOG_FILE="$(chat_log_file_for_session "$SESSION_ID" 2>/dev/null)"; then
+    blocked "refresh-session-lookup-failed"
+  fi
 fi
 
-STATUS_FILE="$(mktemp)"
-DIRTY_FILE="$(mktemp)"
-STAGED_FILE="$(mktemp)"
-INCOMING_FILE="$(mktemp)"
-OVERLAP_FILE="$(mktemp)"
+if ! OBSERVATION_DIR="$(mktemp -d 2>/dev/null)"; then
+  blocked "refresh-workspace-create-failed"
+fi
+STATUS_FILE="$OBSERVATION_DIR/status"
+DIRTY_FILE="$OBSERVATION_DIR/dirty"
+STAGED_FILE="$OBSERVATION_DIR/staged"
+INCOMING_FILE="$OBSERVATION_DIR/incoming"
+OVERLAP_FILE="$OBSERVATION_DIR/overlap"
 
 cleanup() {
   rm -f "$STATUS_FILE" "$DIRTY_FILE" "$STAGED_FILE" "$INCOMING_FILE" "$OVERLAP_FILE"
+  rmdir "$OBSERVATION_DIR"
 }
 
 trap cleanup EXIT
 
-git status --porcelain > "$STATUS_FILE"
+if ! { git status --porcelain > "$STATUS_FILE"; } 2>/dev/null; then
+  blocked "refresh-status-read-failed"
+fi
 
 if [ ! -s "$STATUS_FILE" ]; then
   echo "classification=clean"
@@ -97,11 +117,19 @@ if [ ! -s "$STATUS_FILE" ]; then
   exit 0
 fi
 
-awk '{ print substr($0, 4) }' "$STATUS_FILE" | sort -u > "$DIRTY_FILE"
-awk 'substr($0, 1, 1) != " " && substr($0, 1, 1) != "?" { print substr($0, 4) }' \
-  "$STATUS_FILE" | sort -u > "$STAGED_FILE"
-git diff --name-only "HEAD...${BASE_BRANCH}" | sort -u > "$INCOMING_FILE"
-comm -12 "$DIRTY_FILE" "$INCOMING_FILE" > "$OVERLAP_FILE"
+if ! { awk '{ print substr($0, 4) }' "$STATUS_FILE" | sort -u > "$DIRTY_FILE"; } 2>/dev/null; then
+  blocked "refresh-dirty-paths-read-failed"
+fi
+if ! { awk 'substr($0, 1, 1) != " " && substr($0, 1, 1) != "?" { print substr($0, 4) }' \
+  "$STATUS_FILE" | sort -u > "$STAGED_FILE"; } 2>/dev/null; then
+  blocked "refresh-staged-paths-read-failed"
+fi
+if ! { git diff --name-only "HEAD...${BASE_BRANCH}" | sort -u > "$INCOMING_FILE"; } 2>/dev/null; then
+  blocked "refresh-incoming-paths-read-failed"
+fi
+if ! { comm -12 "$DIRTY_FILE" "$INCOMING_FILE" > "$OVERLAP_FILE"; } 2>/dev/null; then
+  blocked "refresh-overlap-read-failed"
+fi
 
 emit_common() {
   echo "branch=${BRANCH}"

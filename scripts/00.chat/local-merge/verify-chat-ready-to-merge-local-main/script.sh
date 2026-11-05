@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.local-merge.verify-chat-ready-to-merge-local-main
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -86,8 +86,22 @@ if [ -z "$TARGET_BRANCH" ]; then
   exit 2
 fi
 
-CALLER_ROOT="$(git rev-parse --show-toplevel)"
-CALLER_ROOT="$(cd "$CALLER_ROOT" && pwd -P)"
+read_failed() {
+  echo "State: blocked-observation-unavailable" >&2
+  echo "Blocking condition: merge-$1-read-failed" >&2
+  echo "Required action: restore access to the evidence and rerun verification." >&2
+  exit 2
+}
+
+# Only code-owned stage names enter failures; partial stdout is never accepted.
+observe() {
+  local stage="$1"
+  shift
+  "$@" 2>/dev/null || read_failed "$stage"
+}
+
+CALLER_ROOT="$(observe root git rev-parse --show-toplevel)"
+CALLER_ROOT="$(cd "$CALLER_ROOT" 2>/dev/null && pwd -P)" || read_failed root
 
 # shellcheck source=../../worktree/paths/lib.sh
 source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
@@ -95,7 +109,7 @@ source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
 source "$CALLER_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 
 PRIMARY_PATH="$(chat_worktree_primary_path)"
-PRIMARY_PATH="$(cd "$PRIMARY_PATH" && pwd -P)"
+PRIMARY_PATH="$(cd "$PRIMARY_PATH" 2>/dev/null && pwd -P)" || read_failed primary-path
 chat_worktree_load_config "$PRIMARY_PATH"
 
 if [ -n "$REMOTE_NAME" ]; then
@@ -120,7 +134,7 @@ block() {
   local action="$3"
 
   echo "State: $state"
-  echo "Branch: $TARGET_BRANCH"
+  echo "Branch: [withheld on failure]"
   echo "Blocking condition: $condition"
   echo "Required action: $action"
   exit 1
@@ -132,40 +146,44 @@ info() {
 
 find_worktree_log_by_metadata() {
   local grouped_parent="$1"
-  local candidate
+  local candidate candidates recorded_id recorded_branch
 
   if [ ! -d "$REPO_ROOT/$grouped_parent" ]; then
     return 1
   fi
 
+  candidates="$(observe log-scan find "$REPO_ROOT/$grouped_parent" -mindepth 2 -maxdepth 2 -type f -name README.md \
+    | observe log-sort sort)" || return 2
   while IFS= read -r candidate; do
-    if [ "$(chat_log_metadata_value "$REPO_ROOT/$candidate" "id")" = "$SESSION_ID" ] \
-      || [ "$(chat_log_metadata_value "$REPO_ROOT/$candidate" "branch")" = "$TARGET_BRANCH" ]; then
-      printf '%s\n' "$candidate"
+    [ -n "$candidate" ] || continue
+    recorded_id="$(chat_log_metadata_value "$candidate" "id")" || return 2
+    recorded_branch="$(chat_log_metadata_value "$candidate" "branch")" || return 2
+    if [ "$recorded_id" = "$SESSION_ID" ] || [ "$recorded_branch" = "$TARGET_BRANCH" ]; then
+      printf '%s\n' "${candidate#"$REPO_ROOT/"}"
       return 0
     fi
-  done < <(find "$REPO_ROOT/$grouped_parent" -mindepth 2 -maxdepth 2 -type f -name README.md \
-    | sed "s#^$REPO_ROOT/##" \
-    | sort)
+  done <<< "$candidates"
 
   return 1
 }
 
 find_branch_log_by_metadata() {
   local grouped_parent="$1"
-  local candidate tmp_log
+  local candidate tmp_log candidates recorded_id recorded_branch
 
+  candidates="$(observe log-tree git -C "$REPO_ROOT" ls-tree -r --name-only "$TARGET_BRANCH" -- "$grouped_parent" \
+    | observe log-sort sort)" || return 2
   while IFS= read -r candidate; do
+    case "$candidate" in */README.md) ;; *) continue ;; esac
     tmp_log="${tmp_dir}/candidate-log.md"
-    git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${candidate}" > "$tmp_log"
-    if [ "$(chat_log_metadata_value "$tmp_log" "id")" = "$SESSION_ID" ] \
-      || [ "$(chat_log_metadata_value "$tmp_log" "branch")" = "$TARGET_BRANCH" ]; then
+    observe log-content git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${candidate}" > "$tmp_log" || return 2
+    recorded_id="$(chat_log_metadata_value "$tmp_log" "id")" || return 2
+    recorded_branch="$(chat_log_metadata_value "$tmp_log" "branch")" || return 2
+    if [ "$recorded_id" = "$SESSION_ID" ] || [ "$recorded_branch" = "$TARGET_BRANCH" ]; then
       printf '%s\n' "$candidate"
       return 0
     fi
-  done < <(git -C "$REPO_ROOT" ls-tree -r --name-only "$TARGET_BRANCH" -- "$grouped_parent" \
-    | awk '/\/README\.md$/ { print }' \
-    | sort)
+  done <<< "$candidates"
 
   return 1
 }
@@ -179,19 +197,27 @@ case "$TARGET_BRANCH" in
     ;;
 esac
 
-if ! git -C "$REPO_ROOT" show-ref --verify --quiet "$BASE_REF"; then
+if git -C "$REPO_ROOT" show-ref --verify --quiet "$BASE_REF" 2>/dev/null; then
+  :
+else
+  reference_status=$?
+  [ "$reference_status" -eq 1 ] || read_failed base-reference
   if [ -n "$REMOTE_NAME" ]; then
     block "blocked-missing-remote-base" \
-      "remote tracking reference does not exist: ${REMOTE_NAME}/${BASE_BRANCH}" \
+      "remote tracking reference does not exist" \
       "Fetch the named remote before remote promotion verification."
   fi
 
   block "blocked-missing-base" \
-    "base branch does not exist: $BASE_BRANCH" \
+    "base branch does not exist" \
     "Create or select the local base branch before convergence."
 fi
 
-if ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${TARGET_BRANCH}"; then
+if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${TARGET_BRANCH}" 2>/dev/null; then
+  :
+else
+  reference_status=$?
+  [ "$reference_status" -eq 1 ] || read_failed target-reference
   block "blocked-missing-branch" \
     "target branch does not exist locally" \
     "Create or fetch the chat branch before convergence."
@@ -204,14 +230,15 @@ if [ -z "$REMOTE_NAME" ] && [ "$REPO_ROOT" != "$PRIMARY_PATH" ]; then
 fi
 
 if [ -z "$REMOTE_NAME" ]; then
-  current_branch="$(git -C "$REPO_ROOT" branch --show-current)"
+  current_branch="$(observe branch git -C "$REPO_ROOT" branch --show-current)"
   if [ "$current_branch" != "$BASE_BRANCH" ]; then
     block "blocked-root-not-main" \
-      "root integration worktree is on '$current_branch', expected '$BASE_BRANCH'" \
-      "Switch the root integration worktree to $BASE_BRANCH before convergence."
+      "root integration worktree is not on the selected base branch" \
+      "Switch the root integration worktree to the selected base before convergence."
   fi
 
-  if [ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]; then
+  root_status="$(observe root-status git -C "$REPO_ROOT" status --porcelain)"
+  if [ -n "$root_status" ]; then
     block "blocked-dirty-root" \
       "root integration worktree is dirty" \
       "Clean or explicitly resolve root worktree changes before convergence."
@@ -228,33 +255,52 @@ LOG_SOURCE=""
 LOG_PATH=""
 metadata_log_path=""
 
-if git -C "$REPO_ROOT" cat-file -e "${TARGET_BRANCH}:${GROUPED_LOG}" 2>/dev/null; then
-  git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${GROUPED_LOG}" > "$LOG_FILE"
+# Git cat-file uses the same failure status for absence and unreadable objects.
+# Select paths from a successful inventory before attempting their contents.
+log_inventory="$(observe log-tree git -C "$REPO_ROOT" ls-tree -r --name-only "$TARGET_BRANCH" -- "$GROUPED_LOG" "$FLAT_LOG")"
+grouped_exists=no
+flat_exists=no
+while IFS= read -r candidate; do
+  [ "$candidate" != "$GROUPED_LOG" ] || grouped_exists=yes
+  [ "$candidate" != "$FLAT_LOG" ] || flat_exists=yes
+done <<< "$log_inventory"
+
+if [ "$grouped_exists" = yes ]; then
+  observe log-content git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${GROUPED_LOG}" > "$LOG_FILE"
   LOG_SOURCE="branch"
   LOG_PATH="$GROUPED_LOG"
-elif git -C "$REPO_ROOT" cat-file -e "${TARGET_BRANCH}:${FLAT_LOG}" 2>/dev/null; then
-  git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${FLAT_LOG}" > "$LOG_FILE"
+elif [ "$flat_exists" = yes ]; then
+  observe log-content git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${FLAT_LOG}" > "$LOG_FILE"
   LOG_SOURCE="branch"
   LOG_PATH="$FLAT_LOG"
-elif metadata_log_path="$(find_branch_log_by_metadata "$GROUPED_PARENT")"; then
-  git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${metadata_log_path}" > "$LOG_FILE"
-  LOG_SOURCE="branch"
-  LOG_PATH="$metadata_log_path"
-elif [ -f "$REPO_ROOT/$GROUPED_LOG" ]; then
-  cp "$REPO_ROOT/$GROUPED_LOG" "$LOG_FILE"
-  LOG_SOURCE="worktree"
-  LOG_PATH="$GROUPED_LOG"
-elif [ -f "$REPO_ROOT/$FLAT_LOG" ]; then
-  cp "$REPO_ROOT/$FLAT_LOG" "$LOG_FILE"
-  LOG_SOURCE="worktree"
-  LOG_PATH="$FLAT_LOG"
-elif metadata_log_path="$(find_worktree_log_by_metadata "$GROUPED_PARENT")"; then
-  cp "$REPO_ROOT/$metadata_log_path" "$LOG_FILE"
-  LOG_SOURCE="worktree"
-  LOG_PATH="$metadata_log_path"
 else
+  if metadata_log_path="$(find_branch_log_by_metadata "$GROUPED_PARENT")"; then
+    observe log-content git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${metadata_log_path}" > "$LOG_FILE"
+    LOG_SOURCE="branch"
+    LOG_PATH="$metadata_log_path"
+  else
+    lookup_status=$?
+    [ "$lookup_status" -eq 1 ] || exit "$lookup_status"
+    if [ -f "$REPO_ROOT/$GROUPED_LOG" ]; then
+      LOG_PATH="$GROUPED_LOG"
+    elif [ -f "$REPO_ROOT/$FLAT_LOG" ]; then
+      LOG_PATH="$FLAT_LOG"
+    elif metadata_log_path="$(find_worktree_log_by_metadata "$GROUPED_PARENT")"; then
+      LOG_PATH="$metadata_log_path"
+    else
+      lookup_status=$?
+      [ "$lookup_status" -eq 1 ] || exit "$lookup_status"
+    fi
+    if [ -n "$LOG_PATH" ]; then
+      observe log-content cp "$REPO_ROOT/$LOG_PATH" "$LOG_FILE"
+      LOG_SOURCE="worktree"
+    fi
+  fi
+fi
+
+if [ -z "$LOG_PATH" ]; then
   block "blocked-missing-log" \
-    "session log is missing from root $BASE_BRANCH and target branch" \
+    "session log is missing from the root base and target branch" \
     "Restore or create the chat session log before convergence."
 fi
 
@@ -264,7 +310,7 @@ metadata_latest_sha="$(chat_log_metadata_value "$LOG_FILE" "latest_commit_sha")"
 
 if [ "$metadata_branch" != "$TARGET_BRANCH" ]; then
   block "blocked-invalid-metadata" \
-    "session log branch metadata is '$metadata_branch', expected '$TARGET_BRANCH'" \
+    "session log branch metadata does not match the target branch" \
     "Fix the session log metadata before convergence."
 fi
 
@@ -281,13 +327,13 @@ fi
 
 if [ "$metadata_worktree" != "$WORKTREE_PATH" ]; then
   block "blocked-invalid-metadata" \
-    "session log worktree metadata is '$metadata_worktree', expected '$WORKTREE_PATH'" \
+    "session log worktree metadata does not match the registered worktree" \
     "Fix the session log worktree metadata before convergence."
 fi
 
 branch_worktrees="$(
-  git -C "$REPO_ROOT" worktree list --porcelain \
-    | awk -v branch="refs/heads/${TARGET_BRANCH}" '
+  observe worktree-list git -C "$REPO_ROOT" worktree list --porcelain \
+    | observe worktree-list awk -v branch="refs/heads/${TARGET_BRANCH}" '
       /^worktree / { path = substr($0, 10) }
       /^branch / && substr($0, 8) == branch { print path }
     '
@@ -299,16 +345,16 @@ while IFS= read -r branch_worktree; do
     continue
   fi
 
-  branch_worktree="$(cd "$branch_worktree" && pwd -P)"
+  branch_worktree="$(cd "$branch_worktree" 2>/dev/null && pwd -P)" || read_failed worktree-path
   if [ "$branch_worktree" = "$PRIMARY_PATH" ]; then
     block "blocked-branch-in-root-worktree" \
       "target chat branch is checked out in the root integration worktree" \
-      "Switch root back to $BASE_BRANCH before convergence."
+      "Switch root back to the selected base before convergence."
   fi
 
   if [ "$branch_worktree" != "$WORKTREE_PATH" ]; then
     block "blocked-wrong-worktree" \
-      "target chat branch is checked out in '$branch_worktree', expected '$WORKTREE_PATH'" \
+      "target chat branch is checked out in a different worktree" \
       "Move or recreate the chat-owned worktree before convergence."
   fi
 
@@ -322,42 +368,41 @@ if [ "$found_canonical_worktree" != "yes" ]; then
 fi
 
 if ! git -C "$WORKTREE_PATH" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  block "blocked-missing-worktree" \
-    "canonical chat-owned worktree path is not a git worktree" \
-    "Recreate the chat-owned worktree before convergence."
+  read_failed worktree-verification
 fi
 
-worktree_branch="$(git -C "$WORKTREE_PATH" branch --show-current)"
+worktree_branch="$(observe worktree-branch git -C "$WORKTREE_PATH" branch --show-current)"
 if [ "$worktree_branch" != "$TARGET_BRANCH" ]; then
   block "blocked-wrong-worktree" \
-    "chat worktree is on '$worktree_branch', expected '$TARGET_BRANCH'" \
+    "chat worktree is not on the target branch" \
     "Check out the target chat branch in its canonical worktree."
 fi
 
-if [ -n "$(git -C "$WORKTREE_PATH" status --porcelain)" ]; then
+chat_status="$(observe chat-status git -C "$WORKTREE_PATH" status --porcelain)"
+if [ -n "$chat_status" ]; then
   block "blocked-dirty-chat-worktree" \
     "chat-owned worktree is dirty" \
     "Commit, inspect, preserve, or explicitly discard chat work before convergence."
 fi
 
-ahead="$(git -C "$REPO_ROOT" rev-list --count "${BASE_REF}..${TARGET_BRANCH}")"
-behind="$(git -C "$REPO_ROOT" rev-list --count "${TARGET_BRANCH}..${BASE_REF}")"
+ahead="$(observe comparison git -C "$REPO_ROOT" rev-list --count "${BASE_REF}..${TARGET_BRANCH}")"
+behind="$(observe comparison git -C "$REPO_ROOT" rev-list --count "${TARGET_BRANCH}..${BASE_REF}")"
 
 if [ "$behind" != "0" ] && [ "$ahead" != "0" ]; then
   block "blocked-diverged" \
-    "chat branch and $BASE_BRANCH both have unique commits" \
+    "chat branch and base both have unique commits" \
     "Use the governed refresh path before convergence."
 fi
 
 if [ "$behind" != "0" ]; then
   block "blocked-behind" \
-    "chat branch is behind $BASE_BRANCH" \
-    "Merge $BASE_BRANCH into the chat branch from the chat-owned worktree before convergence."
+    "chat branch is behind the selected base" \
+    "Merge the selected base into the chat branch from the chat-owned worktree before convergence."
 fi
 
 if [ "$ahead" = "0" ]; then
   block "blocked-even" \
-    "chat branch has no commits beyond $BASE_BRANCH" \
+    "chat branch has no commits beyond the selected base" \
     "Do not merge; use cleanup or reporting flow instead."
 fi
 
@@ -369,11 +414,15 @@ fi
 
 if ! git -C "$REPO_ROOT" cat-file -e "${metadata_latest_sha}^{commit}" 2>/dev/null; then
   block "blocked-log-head-mismatch" \
-    "recorded latest_commit_sha does not resolve to a commit: $metadata_latest_sha" \
+    "recorded latest_commit_sha could not be resolved to a commit" \
     "Fix the session log commit evidence before convergence."
 fi
 
-if ! git -C "$REPO_ROOT" merge-base --is-ancestor "$metadata_latest_sha" "$TARGET_BRANCH"; then
+if git -C "$REPO_ROOT" merge-base --is-ancestor "$metadata_latest_sha" "$TARGET_BRANCH" 2>/dev/null; then
+  :
+else
+  ancestry_status=$?
+  [ "$ancestry_status" -eq 1 ] || read_failed ancestry
   block "blocked-log-head-mismatch" \
     "recorded latest_commit_sha is not contained in the chat branch" \
     "Record a commit that is present on the target chat branch before convergence."
@@ -383,8 +432,8 @@ if [ -f "$CALLER_ROOT/scripts/repo/check-selection/script.sh" ] || [ -f "$WORKTR
   if [ ! -f "$WORKTREE_PATH/scripts/repo/check-selection/script.sh" ]; then
     block "blocked-missing-integration-gate" "repository selector is missing from the target branch" "Restore the repository integration gate."
   fi
-  base_head="$(git -C "$REPO_ROOT" rev-parse "$BASE_REF")"
-  target_head="$(git -C "$REPO_ROOT" rev-parse "$TARGET_BRANCH")"
+  base_head="$(observe base-head git -C "$REPO_ROOT" rev-parse "$BASE_REF")"
+  target_head="$(observe target-head git -C "$REPO_ROOT" rev-parse "$TARGET_BRANCH")"
   # Source registration is independent of reusable behavioural receipts, as
   # it is in CI. Reconcile the current physical census before accepting reuse.
   delivery_gate="scripts/04.deploy/inventory-deploy-control/script.py"
@@ -402,9 +451,10 @@ if [ -f "$CALLER_ROOT/scripts/repo/check-selection/script.sh" ] || [ -f "$WORKTR
     bash scripts/repo/check-selection/script.sh --ci --boundary integration --execute-local --json); then
     block "blocked-integration-proof" "required affected integration checks failed or are missing" "Repair the reported checks in the chat worktree, then rerun promotion verification."
   fi
-  if [ "$(git -C "$REPO_ROOT" rev-parse "$BASE_REF")" != "$base_head" ] \
-    || [ "$(git -C "$REPO_ROOT" rev-parse "$TARGET_BRANCH")" != "$target_head" ] \
-    || [ -n "$(git -C "$WORKTREE_PATH" status --porcelain)" ]; then
+  verified_base="$(observe final-base-head git -C "$REPO_ROOT" rev-parse "$BASE_REF")"
+  verified_target="$(observe final-target-head git -C "$REPO_ROOT" rev-parse "$TARGET_BRANCH")"
+  verified_status="$(observe final-status git -C "$WORKTREE_PATH" status --porcelain)"
+  if [ "$verified_base" != "$base_head" ] || [ "$verified_target" != "$target_head" ] || [ -n "$verified_status" ]; then
     block "blocked-integration-input-drift" "branch or worktree changed during integration verification" "Stabilize the inputs and rerun promotion verification."
   fi
 fi

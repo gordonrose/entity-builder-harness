@@ -1,3 +1,8 @@
+export { metricValidationReasons } from "./diagnostics";
+export * from "./boundary-diagnostics";
+export { observeCoreMonitoringDiagnostic, selectCoreMonitoringDiagnosticEvidence } from "./observations";
+export type { MetricValidationObservation, MetricValidationField, MetricValidationReason, MetricValidationObserver } from "./diagnostics";
+
 export {
   healthCheckName,
   metricName,

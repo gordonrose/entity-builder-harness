@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.local-merge.list-active-chat-branches
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -26,20 +26,26 @@ set -euo pipefail
 #   effects:
 #   - read-only
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
+read_failed() { echo "ERROR: branch-report-$1-read-failed" >&2; exit 2; }
+observe() { local stage="$1"; shift; "$@" 2>/dev/null || read_failed "$stage"; }
+REPO_ROOT="$(observe root git rev-parse --show-toplevel)"
+REPO_ROOT="$(cd "$REPO_ROOT" 2>/dev/null && pwd -P)" || read_failed root
 
 # shellcheck source=../../session-log/paths/lib.sh
 source "$REPO_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 
 BASE_BRANCH="${1:-main}"
 
-if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
-  echo "ERROR: base branch does not exist: ${BASE_BRANCH}" >&2
+if git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}" 2>/dev/null; then
+  :
+else
+  reference_status=$?
+  [ "$reference_status" -eq 1 ] || read_failed base-reference
+  echo "ERROR: base branch does not exist" >&2
   exit 1
 fi
 
-current_branch="$(git branch --show-current)"
+current_branch="$(observe current-branch git branch --show-current)"
 tmp_dir="$(mktemp -d)"
 
 cleanup() {
@@ -56,7 +62,8 @@ fi
 printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
   "branch" "relation" "behind" "ahead" "layer" "mode" "status" "task"
 
-git branch --format='%(refname:short)' | while IFS= read -r branch; do
+branches="$(observe branch-list git branch --format='%(refname:short)')"
+while IFS= read -r branch; do
   case "$branch" in
     chat/*)
       ;;
@@ -74,20 +81,28 @@ git branch --format='%(refname:short)' | while IFS= read -r branch; do
     mode="$(chat_log_metadata_value "$log_file" "mode")"
     status="$(chat_log_metadata_value "$log_file" "status")"
     task="$(chat_log_metadata_value "$log_file" "task")"
-  elif git cat-file -e "${branch}:commitLogs/${session_id}/README.md" 2>/dev/null; then
-    git show "${branch}:commitLogs/${session_id}/README.md" > "$branch_log_file"
-    layer="$(chat_log_metadata_value "$branch_log_file" "layer")"
-    mode="$(chat_log_metadata_value "$branch_log_file" "mode")"
-    status="$(chat_log_metadata_value "$branch_log_file" "status")"
-    task="$(chat_log_metadata_value "$branch_log_file" "task")"
   else
-    layer="missing-log"
-    mode="missing-log"
-    status="missing-log"
-    task="missing session log: ${log_file}"
+    branch_log_path="commitLogs/${session_id}/README.md"
+    inventory="$(observe log-tree git ls-tree -r --name-only "$branch" -- "$branch_log_path")"
+    found=no
+    while IFS= read -r candidate; do
+      [ "$candidate" != "$branch_log_path" ] || found=yes
+    done <<< "$inventory"
+    if [ "$found" = yes ]; then
+      observe log-content git show "${branch}:${branch_log_path}" > "$branch_log_file"
+      layer="$(chat_log_metadata_value "$branch_log_file" "layer")"
+      mode="$(chat_log_metadata_value "$branch_log_file" "mode")"
+      status="$(chat_log_metadata_value "$branch_log_file" "status")"
+      task="$(chat_log_metadata_value "$branch_log_file" "task")"
+    else
+      layer="missing-log"
+      mode="missing-log"
+      status="missing-log"
+      task="missing session log: ${log_file}"
+    fi
   fi
 
-  counts="$(git rev-list --left-right --count "${BASE_BRANCH}...${branch}")"
+  counts="$(observe comparison git rev-list --left-right --count "${BASE_BRANCH}...${branch}")"
   behind="${counts%%	*}"
   ahead="${counts##*	}"
 
@@ -108,4 +123,4 @@ git branch --format='%(refname:short)' | while IFS= read -r branch; do
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
     "$branch" "$relation" "$behind" "$ahead" \
     "${layer:-unknown}" "${mode:-unknown}" "${status:-unknown}" "${task:-}"
-done
+done <<< "$branches"

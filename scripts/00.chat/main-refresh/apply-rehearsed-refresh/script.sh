@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.main-refresh.apply-rehearsed-refresh
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -47,40 +47,64 @@ fi
 
 PREFLIGHT_BRANCH="$1"
 
+read_failed() { echo "ERROR: refresh-$1-read-failed; applied=$APPLIED" >&2; exit 2; }
+APPLIED=no
+observe() {
+  local stage="$1"
+  shift
+  "$@" 2>/dev/null || read_failed "$stage"
+}
+perform_refresh() {
+  local stage="$1" output status
+  shift
+  if output="$("$@" 2>/dev/null)"; then
+    [ -z "$output" ] || printf '%s\n' "$output"
+  else
+    status=$?
+    echo "ERROR: refresh-$stage-failed; effect=unknown; inspect branch and worktree state before retrying" >&2
+    exit "$status"
+  fi
+}
+
 case "$PREFLIGHT_BRANCH" in
   agentic/preflight/*/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])
     ;;
   *)
-    echo "ERROR: refusing non-preflight branch: ${PREFLIGHT_BRANCH}" >&2
+    echo "ERROR: refusing non-preflight branch" >&2
     echo "Expected branch created by rehearse-refresh-from-main." >&2
     exit 1
     ;;
 esac
 
-if ! git show-ref --verify --quiet "refs/heads/${PREFLIGHT_BRANCH}"; then
-  echo "ERROR: preflight branch does not exist: ${PREFLIGHT_BRANCH}" >&2
+if git show-ref --verify --quiet "refs/heads/${PREFLIGHT_BRANCH}" 2>/dev/null; then
+  :
+else
+  reference_status=$?
+  [ "$reference_status" -eq 1 ] || read_failed reference
+  echo "ERROR: preflight branch does not exist" >&2
   exit 1
 fi
 
 preflight_worktrees_for_branch() {
   local branch="$1"
 
-  git worktree list --porcelain \
-    | awk -v branch="refs/heads/${branch}" '
+  observe worktree-list git worktree list --porcelain \
+    | observe worktree-list awk -v branch="refs/heads/${branch}" '
       /^worktree / { path = substr($0, 10) }
       /^branch / && substr($0, 8) == branch { print path }
     '
 }
 
 worktree_count() {
-  awk 'NF { count += 1 } END { print count + 0 }'
+  observe worktree-count awk 'NF { count += 1 } END { print count + 0 }'
 }
 
 cleanup_stale_preflight_siblings() {
   local promoted_branch="$1"
   local prefix="${promoted_branch%/*}/"
-  local sibling sibling_worktrees sibling_worktree_count sibling_worktree
+  local sibling sibling_worktrees sibling_worktree_count sibling_worktree siblings sibling_status ancestry_status
 
+  siblings="$(observe sibling-list git branch --format='%(refname:short)')"
   while IFS= read -r sibling; do
     if [ -z "$sibling" ] || [ "$sibling" = "$promoted_branch" ]; then
       continue
@@ -94,7 +118,11 @@ cleanup_stale_preflight_siblings() {
         ;;
     esac
 
-    if ! git merge-base --is-ancestor "$sibling" HEAD; then
+    if git merge-base --is-ancestor "$sibling" HEAD 2>/dev/null; then
+      :
+    else
+      ancestry_status=$?
+      [ "$ancestry_status" -eq 1 ] || read_failed sibling-ancestry
       echo "stale_preflight_skipped=${sibling} reason=unique-commits-not-in-promoted-head"
       continue
     fi
@@ -108,49 +136,54 @@ cleanup_stale_preflight_siblings() {
     fi
 
     if [ "$sibling_worktree_count" = "1" ]; then
-      sibling_worktree="$(printf '%s\n' "$sibling_worktrees" | awk 'NF { print; exit }')"
-      sibling_worktree="$(cd "$sibling_worktree" && pwd -P)"
+      sibling_worktree="$(printf '%s\n' "$sibling_worktrees" | observe sibling-path awk 'NF { print; exit }')"
+      sibling_worktree="$(cd "$sibling_worktree" 2>/dev/null && pwd -P)" || read_failed sibling-path
 
       if [ "$sibling_worktree" = "$CURRENT_WORKTREE" ]; then
         echo "stale_preflight_skipped=${sibling} reason=active-worktree"
         continue
       fi
 
-      if [ -n "$(git -C "$sibling_worktree" status --porcelain)" ]; then
+      sibling_status="$(observe sibling-status git -C "$sibling_worktree" status --porcelain)"
+      if [ -n "$sibling_status" ]; then
         echo "stale_preflight_skipped=${sibling} reason=dirty-worktree"
         continue
       fi
 
-      git worktree remove "$sibling_worktree"
+      perform_refresh remove-sibling-worktree git worktree remove "$sibling_worktree"
       echo "stale_preflight_removed=${sibling} worktree=${sibling_worktree}"
     else
       echo "stale_preflight_removed=${sibling} worktree="
     fi
 
-    git branch -d "$sibling" >/dev/null
-  done < <(git branch --format='%(refname:short)')
+    perform_refresh delete-sibling-branch git branch -d "$sibling" >/dev/null
+  done <<< "$siblings"
 }
 
-CURRENT_BRANCH="$(git branch --show-current)"
+CURRENT_BRANCH="$(observe branch git branch --show-current)"
 
 case "$CURRENT_BRANCH" in
   chat/*)
     ;;
   *)
-    echo "ERROR: current branch is not a chat branch: ${CURRENT_BRANCH}" >&2
+    echo "ERROR: current branch is not a chat branch" >&2
     exit 1
     ;;
 esac
 
-if [ -n "$(git status --porcelain)" ]; then
+current_status="$(observe current-status git status --porcelain)"
+if [ -n "$current_status" ]; then
   echo "ERROR: refusing to promote into a dirty chat worktree." >&2
-  git status --short >&2
   exit 1
 fi
 
-PREFLIGHT_HEAD="$(git rev-parse "$PREFLIGHT_BRANCH")"
+PREFLIGHT_HEAD="$(observe preflight-head git rev-parse "$PREFLIGHT_BRANCH")"
 
-if ! git merge-base --is-ancestor HEAD "$PREFLIGHT_BRANCH"; then
+if git merge-base --is-ancestor HEAD "$PREFLIGHT_BRANCH" 2>/dev/null; then
+  :
+else
+  ancestry_status=$?
+  [ "$ancestry_status" -eq 1 ] || read_failed ancestry
   echo "ERROR: preflight branch does not descend from current HEAD." >&2
   echo "Current branch may have moved since preflight." >&2
   exit 1
@@ -161,44 +194,46 @@ PREFLIGHT_WORKTREES="$(preflight_worktrees_for_branch "$PREFLIGHT_BRANCH")"
 PREFLIGHT_WORKTREE_COUNT="$(printf '%s\n' "$PREFLIGHT_WORKTREES" | worktree_count)"
 
 if [ "$PREFLIGHT_WORKTREE_COUNT" != "1" ]; then
-  echo "ERROR: expected exactly one preflight worktree for ${PREFLIGHT_BRANCH}; found ${PREFLIGHT_WORKTREE_COUNT}." >&2
+  echo "ERROR: expected exactly one preflight worktree." >&2
   exit 1
 fi
 
-PREFLIGHT_WORKTREE="$(printf '%s\n' "$PREFLIGHT_WORKTREES" | awk 'NF { print; exit }')"
+PREFLIGHT_WORKTREE="$(printf '%s\n' "$PREFLIGHT_WORKTREES" | observe preflight-path awk 'NF { print; exit }')"
 CURRENT_WORKTREE="$(pwd -P)"
-PREFLIGHT_WORKTREE="$(cd "$PREFLIGHT_WORKTREE" && pwd -P)"
+PREFLIGHT_WORKTREE="$(cd "$PREFLIGHT_WORKTREE" 2>/dev/null && pwd -P)" || read_failed preflight-path
 
 if [ "$PREFLIGHT_WORKTREE" = "$CURRENT_WORKTREE" ]; then
   echo "ERROR: refusing to remove the active chat worktree as preflight cleanup." >&2
   exit 1
 fi
 
-if [ -n "$(git -C "$PREFLIGHT_WORKTREE" status --porcelain)" ]; then
-  echo "ERROR: refusing to clean dirty preflight worktree: ${PREFLIGHT_WORKTREE}" >&2
-  git -C "$PREFLIGHT_WORKTREE" status --short >&2
+preflight_status="$(observe preflight-status git -C "$PREFLIGHT_WORKTREE" status --porcelain)"
+if [ -n "$preflight_status" ]; then
+  echo "ERROR: refusing to clean dirty preflight worktree" >&2
   exit 1
 fi
 
-git merge --ff-only "$PREFLIGHT_BRANCH"
+perform_refresh fast-forward git merge --ff-only "$PREFLIGHT_BRANCH"
+APPLIED=yes
 
-PROMOTED_COMMIT="$(git rev-parse HEAD)"
+PROMOTED_COMMIT="$(observe promoted-head git rev-parse HEAD)"
 
 if [ "$PROMOTED_COMMIT" != "$PREFLIGHT_HEAD" ]; then
-  echo "ERROR: apply ended at ${PROMOTED_COMMIT}, expected ${PREFLIGHT_HEAD}." >&2
+  echo "ERROR: promoted commit does not match the observed preflight head; applied=yes" >&2
   exit 1
 fi
 
 if [ -f scripts/repo/check-selection/script.sh ]; then
   # Revalidate matching preflight receipts in the promoted tree before their
   # worktree is removed. Changed inputs rerun only their affected local checks.
-  BASE_SHA="$(git rev-parse main)" HEAD_SHA="$PROMOTED_COMMIT" \
+  base_head="$(observe base-head git rev-parse main)"
+  BASE_SHA="$base_head" HEAD_SHA="$PROMOTED_COMMIT" \
     bash scripts/repo/check-selection/script.sh --ci --boundary integration \
     --execute-local --reuse-from-worktree "$PREFLIGHT_WORKTREE" --json
 fi
 
-git worktree remove "$PREFLIGHT_WORKTREE"
-git branch -d "$PREFLIGHT_BRANCH" >/dev/null
+perform_refresh remove-preflight-worktree git worktree remove "$PREFLIGHT_WORKTREE"
+perform_refresh delete-preflight-branch git branch -d "$PREFLIGHT_BRANCH" >/dev/null
 cleanup_stale_preflight_siblings "$PREFLIGHT_BRANCH"
 
 echo "Applied rehearsed refresh:"

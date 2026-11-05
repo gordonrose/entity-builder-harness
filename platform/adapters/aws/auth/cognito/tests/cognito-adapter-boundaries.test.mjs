@@ -47,6 +47,12 @@ for (const file of sourceFiles) {
     for (const match of text.matchAll(pattern)) {
       const specifier = match[1];
       assert.equal(/(?:^|\/)(?:apps|infra)(?:\/|$)/.test(specifier), false, `${relative} must not import app or infra layers`);
+      if (specifier.startsWith(".")) {
+        const target = path.relative(srcRoot, path.resolve(path.dirname(file), specifier));
+        assert.equal(target.startsWith("..") || path.isAbsolute(target), false, `${relative} relative import must stay inside this adapter`);
+        assert.equal((await stat(path.resolve(path.dirname(file), `${specifier}.ts`))).isFile(), true);
+        continue;
+      }
       assert.ok(allowedSourceImportPattern.test(specifier), `${relative} has disallowed import ${specifier}`);
     }
   }

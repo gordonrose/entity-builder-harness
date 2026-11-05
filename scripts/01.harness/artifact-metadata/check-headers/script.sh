@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.check-headers
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-05"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -100,17 +100,30 @@ class CheckError(Exception):
     pass
 
 
+class ObservationError(CheckError):
+    pass
+
+
+def git_observation(args: list[str], stage: str, *, allowed=(0,)) -> subprocess.CompletedProcess:
+    try:
+        result = subprocess.run(["git", *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError as exc:
+        raise ObservationError(f"metadata-observation-unavailable; stage={stage}") from exc
+    if result.returncode not in allowed:
+        raise ObservationError(f"metadata-observation-unavailable; stage={stage}")
+    return result
+
+
 def repo_root() -> Path:
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        check=True,
-        text=True,
-        stdout=subprocess.PIPE,
-    )
-    return Path(result.stdout.strip())
+    return Path(git_observation(["rev-parse", "--show-toplevel"], "repository-root").stdout.decode().strip())
 
 
-ROOT = repo_root()
+try:
+    ROOT = repo_root()
+except (ObservationError, UnicodeError):
+    print("ERROR: metadata-observation-unavailable; stage=repository-root", file=sys.stderr)
+    sys.exit(2)
+HEAD_PATHS: set[str] | None = None
 
 
 def lifecycle_prepared(path: str, text: str) -> bool:
@@ -225,8 +238,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def run_git(args: list[str]) -> str:
-    result = subprocess.run(["git", *args], check=True, text=True, stdout=subprocess.PIPE)
-    return result.stdout
+    return git_observation(args, "git-input").stdout.decode("utf-8")
 
 
 def normalize_path(path: Path | str) -> str:
@@ -296,18 +308,27 @@ def read_text(path: str) -> str:
                 if not is_regular_file(path):
                     raise CheckError(f"metadata requires a regular repository file: {path}")
                 CONTENT_CACHE[path] = (ROOT / path).read_text(encoding="utf-8")
-        except (OSError, UnicodeError, KeyError, subprocess.CalledProcessError) as exc:
-            raise CheckError(f"cannot read metadata file: {path}: {exc}") from exc
+        except UnicodeError as exc:
+            raise CheckError(f"declared metadata must be UTF-8 text: {path}") from exc
+        except (OSError, KeyError, subprocess.CalledProcessError) as exc:
+            raise ObservationError("metadata-observation-unavailable; stage=metadata-file") from exc
     return CONTENT_CACHE[path]
 
 
 def head_text(path: str) -> str | None:
-    result = subprocess.run(
-        ["git", "show", f"HEAD:{path}"],
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-    )
-    if result.returncode != 0:
+    global HEAD_PATHS
+    if HEAD_PATHS is None:
+        symbolic = git_observation(["symbolic-ref", "--quiet", "HEAD"], "head-reference", allowed=(0, 1))
+        unborn = False
+        if symbolic.returncode == 0:
+            reference = symbolic.stdout.decode("utf-8").strip()
+            present = git_observation(["show-ref", "--verify", "--quiet", reference], "head-reference", allowed=(0, 1))
+            unborn = present.returncode == 1
+        HEAD_PATHS = set() if unborn else set(git_observation(
+            ["ls-tree", "-r", "--name-only", "-z", "HEAD"], "head-tree").stdout.decode("utf-8", "surrogateescape").split("\0"))
+    if path not in HEAD_PATHS:
         return None
+    result = git_observation(["show", f"HEAD:{path}"], "head-content")
     try:
         return result.stdout.decode("utf-8")
     except UnicodeError:
@@ -316,11 +337,8 @@ def head_text(path: str) -> str | None:
 
 def recorded_addition_date(path: str) -> str | None:
     """Return the earliest tracked path history date for a v3 creation repair."""
-    result = subprocess.run(
-        ["git", "log", "--follow", "--format=%cI", "--reverse", "--", path],
-        check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    )
-    dates = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    result = git_observation(["log", "--follow", "--format=%cI", "--reverse", "--", path], "addition-history")
+    dates = [line.strip() for line in result.stdout.decode("utf-8").splitlines() if line.strip()]
     if not dates:
         return None
     try:
@@ -339,7 +357,7 @@ def collect_paths_from_args(paths: list[str]) -> list[str]:
         elif absolute.is_file():
             collected.append(normalize_path(absolute))
         else:
-            print(f"WARN: path does not exist, skipping: {raw_path}", file=sys.stderr)
+            print("WARN: requested path does not exist, skipping.", file=sys.stderr)
     return sorted(set(collected))
 
 
@@ -357,7 +375,16 @@ def parse_header_text(path: str, text: str) -> tuple[dict[str, Any], tuple[int, 
         parsed = shared_parse_header_text(text)
         span = header_span(text)
     except HeaderError as exc:
-        raise CheckError(f"{exc}: {path}") from exc
+        messages = {
+            "yaml-invalid": "invalid metadata YAML",
+            "key-duplicate": "duplicate metadata key",
+            "header-unterminated": "unterminated metadata header",
+            "nul-byte": "declared metadata must not contain NUL bytes",
+            "shape-invalid": "invalid metadata header shape",
+            "closing-marker-inline": "metadata closing marker must occupy its own line",
+            "key-nonscalar": "metadata mapping keys must be scalar values",
+        }
+        raise CheckError(messages.get(exc.condition, "invalid metadata header structure")) from exc
     return parsed, (span.start, span.end) if span else None
 
 
@@ -369,12 +396,11 @@ def discovery_text(path: str) -> str | None:
         if path in PROPOSED:
             raw = PROPOSED[path].encode("utf-8")
         elif STAGED:
-            raw = subprocess.run(["git", "cat-file", "blob", INDEX_ENTRIES[path][1]],
-                                 check=True, stdout=subprocess.PIPE).stdout
+            raw = git_observation(["cat-file", "blob", INDEX_ENTRIES[path][1]], "index-content").stdout
         else:
             raw = (ROOT / path).read_bytes()
     except (OSError, UnicodeError, subprocess.CalledProcessError) as exc:
-        raise CheckError(f"cannot read artifact candidate: {path}: {exc}") from exc
+        raise ObservationError("metadata-observation-unavailable; stage=artifact-content") from exc
     try:
         text = raw.decode("utf-8")
     except UnicodeError as exc:
@@ -418,7 +444,7 @@ def validate_used_by_path(path: str, ref: str) -> None:
     if not ref or not ref.startswith(PATH_PREFIXES):
         return
     if not path_exists(ref):
-        raise CheckError(f"{path} references missing used_by path: {ref}")
+        raise CheckError(f"references missing used_by path: {path}")
 
 
 def validate_v1_used_by_paths(path: str, used_by: Any) -> None:
@@ -498,7 +524,7 @@ def validate_versioned(path: str, metadata: dict[str, Any]) -> None:
         raise CheckError(f"disciplines must be a non-empty list in versioned metadata header: {path}")
     for discipline in disciplines:
         if not isinstance(discipline, str) or discipline not in DISCIPLINES:
-            raise CheckError(f"invalid discipline value in versioned metadata header: {path}: {discipline}")
+            raise CheckError(f"invalid discipline value in versioned metadata header: {path}")
 
     require_type(path, "kind", metadata["kind"], str, "a string")
     require_type(path, "purpose", metadata["purpose"], str, "a string")
@@ -544,7 +570,7 @@ def validate_versioned(path: str, metadata: dict[str, Any]) -> None:
             raise CheckError(f"effects must be a list in versioned metadata header: {path}")
         for effect in effects:
             if not isinstance(effect, str) or effect not in SCRIPT_EFFECTS:
-                raise CheckError(f"invalid effects value in versioned metadata header: {path}: {effect}")
+                raise CheckError(f"invalid effects value in versioned metadata header: {path}")
 
 
 def validate_lifecycle(path: str, metadata: dict[str, Any]) -> None:
@@ -587,7 +613,7 @@ def validate_lifecycle(path: str, metadata: dict[str, Any]) -> None:
 
 def validate_replacement_graph(path: str, metadata: dict[str, Any], ancestors: list[str]) -> None:
     if path in ancestors:
-        raise CheckError("supersession cycle: " + " -> ".join([*ancestors, path]))
+        raise CheckError("supersession cycle in reviewed replacement graph")
     if "superseded_by" not in metadata:
         return
     refs = metadata["superseded_by"]
@@ -605,21 +631,21 @@ def validate_replacement_graph(path: str, metadata: dict[str, Any], ancestors: l
             raise CheckError(f"superseded_by.path must be a non-empty repository-relative path: {path}")
         parts = PurePosixPath(ref_path)
         if parts.is_absolute() or ".." in parts.parts or "\\" in ref_path or parts.as_posix() != ref_path:
-            raise CheckError(f"superseded_by.path must stay inside the repository: {path}: {ref_path}")
+            raise CheckError(f"superseded_by.path must stay inside the repository: {path}")
         if not STAGED and not (ROOT / ref_path).resolve().is_relative_to(ROOT.resolve()):
-            raise CheckError(f"superseded_by.path must stay inside the repository: {path}: {ref_path}")
+            raise CheckError(f"superseded_by.path must stay inside the repository: {path}")
         if ref_path == path or ref_id == metadata.get("id"):
             raise CheckError(f"superseded_by must not reference itself: {path}")
         if ref_path in seen:
-            raise CheckError(f"duplicate superseded_by path: {path}: {ref_path}")
+            raise CheckError(f"duplicate superseded_by path: {path}")
         seen.add(ref_path)
         if not is_regular_file(ref_path):
-            raise CheckError(f"superseded_by references missing or non-regular file: {path}: {ref_path}")
+            raise CheckError(f"superseded_by references missing or non-regular file: {path}")
         target = parse_header(ref_path).get("agentic-artifact")
         if not isinstance(target, dict) or target.get("schema") not in ("agentic-artifact/v2", "agentic-artifact/v3"):
-            raise CheckError(f"superseded_by target needs a supported stable artifact ID: {path}: {ref_path}")
+            raise CheckError(f"superseded_by target needs a supported stable artifact ID: {path}")
         if target.get("id") != ref_id:
-            raise CheckError(f"superseded_by id/path mismatch: {path}: {ref_path}")
+            raise CheckError(f"superseded_by id/path mismatch: {path}")
         validate_replacement_graph(ref_path, target, [*ancestors, path])
 
 
@@ -628,14 +654,14 @@ def validate_path(path: str, parsed: dict[str, Any]) -> None:
     script = parsed.get("agentic-script")
     if isinstance(artifact, dict) and "schema" in artifact:
         if artifact["schema"] not in ("agentic-artifact/v1", "agentic-artifact/v2", "agentic-artifact/v3"):
-            raise CheckError(f"unsupported artifact metadata schema: {path}: {artifact['schema']}")
+            raise CheckError(f"unsupported artifact metadata schema: {path}")
         if artifact["schema"] in ("agentic-artifact/v2", "agentic-artifact/v3"):
             validate_versioned(path, artifact)
             if artifact["schema"] == "agentic-artifact/v3":
                 validate_lifecycle(path, artifact)
             return
     if isinstance(script, dict) and "schema" in script and script["schema"] != "agentic-script/v1":
-        raise CheckError(f"unsupported script metadata schema: {path}: {script['schema']}")
+        raise CheckError(f"unsupported script metadata schema: {path}")
     if is_script_artifact(path) or isinstance(script, dict):
         if isinstance(script, dict):
             validate_v1_script(path, script)
@@ -701,15 +727,15 @@ def load_proposed() -> None:
         with os.fdopen(3, "r", encoding="utf-8") as handle:
             proposed = json.load(handle)
     except (OSError, UnicodeError, ValueError) as exc:
-        raise CheckError(f"--proposed requires a JSON path-to-text object on stdin: {exc}") from exc
+        raise CheckError("--proposed requires a JSON path-to-text object on stdin") from exc
     if not isinstance(proposed, dict) or not proposed:
         raise CheckError("--proposed requires a non-empty JSON path-to-text object")
     for path, text in proposed.items():
         parts = PurePosixPath(path)
         if not path or parts.is_absolute() or ".." in parts.parts or "\\" in path or parts.as_posix() != path:
-            raise CheckError(f"unsafe proposed repository path: {path}")
+            raise CheckError("unsafe proposed repository path")
         if not (ROOT / path).resolve().is_relative_to(ROOT.resolve()):
-            raise CheckError(f"proposed path resolves outside the repository: {path}")
+            raise CheckError("proposed path resolves outside the repository")
         if not isinstance(text, str):
             raise CheckError(f"proposed file text must be a string: {path}")
         if is_excluded(path):
@@ -734,6 +760,8 @@ def main(argv: list[str]) -> int:
         DISCIPLINES = set(taxonomy.get("disciplines", []))
         PORTABILITY_CLASSES = set(taxonomy.get("portability_classes", []))
         SCRIPT_EFFECTS = set(taxonomy.get("script_effects", []))
+    except ObservationError:
+        raise
     except CheckError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
@@ -772,6 +800,8 @@ def main(argv: list[str]) -> int:
                 continue
             checked += 1
             validate_path(path, parsed)
+        except ObservationError:
+            raise
         except CheckError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             failures += 1
@@ -789,6 +819,8 @@ def main(argv: list[str]) -> int:
                 metadata = parse_header(path, text).get("agentic-artifact")
                 if isinstance(metadata, dict) and metadata.get("schema") == "agentic-artifact/v3" and "superseded_by" in metadata:
                     validate_replacement_graph(path, metadata, [])
+            except ObservationError:
+                raise
             except CheckError as exc:
                 print(f"ERROR: {exc}", file=sys.stderr)
                 failures += 1
@@ -800,5 +832,15 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[2:]))
+    try:
+        sys.exit(main(sys.argv[2:]))
+    except ObservationError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(2)
+    except (OSError, UnicodeError, subprocess.CalledProcessError, HeaderError):
+        print("ERROR: metadata-observation-unavailable; stage=repository-input", file=sys.stderr)
+        sys.exit(2)
+    except Exception:
+        print("ERROR: metadata-processing-failed; cause=unknown", file=sys.stderr)
+        sys.exit(2)
 PY

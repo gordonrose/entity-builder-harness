@@ -5,6 +5,7 @@ import type {
 } from "@kanbien/core/persistence";
 import type { CausationId, Result } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
+import { capturePlatformPersistenceDiagnostic, observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 
 export interface PlatformRecordChangeStore {
   append(change: RecordChange): Promise<Result<RecordChange, PlatformPersistenceError>>;
@@ -12,18 +13,21 @@ export interface PlatformRecordChangeStore {
   findByCause(causationId: CausationId): Promise<readonly RecordChange[]>;
 }
 
-export function createInMemoryPlatformRecordChangeStore(): PlatformRecordChangeStore {
+export function createInMemoryPlatformRecordChangeStore(options: PlatformPersistenceDiagnosticOptions = {}): PlatformRecordChangeStore {
   const changes = new Map<RecordChangeId, RecordChange>();
 
   return {
     async append(change) {
       if (changes.has(change.id)) {
+        const diagnosticRecord = capturePlatformPersistenceDiagnostic(() => persistenceLocalRejectionDiagnosticRecord({ operation: "append_lineage", field: "record", condition: "duplicate", phase: "state-check", effect: "local-state-unchanged" }));
+        observePlatformPersistenceDiagnostic(options, diagnosticRecord);
         return {
           ok: false,
           error: platformPersistenceError({
             code: "PLATFORM_PERSISTENCE_DUPLICATE_RECORD_CHANGE",
             defaultMessage: "Record change already exists.",
             messageKey: "platform.persistence.lineage.duplicate",
+            diagnosticRecord,
           }),
         };
       }

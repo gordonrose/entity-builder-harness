@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.bootstrap.audit-chat-bootstrap-file-set
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: bootstrap
 #   disciplines:
@@ -48,7 +48,24 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+read_failed() {
+  echo "ERROR: bootstrap-audit-observation-unavailable; stage=$1." >&2
+  exit 2
+}
+observe() {
+  local stage="$1"; shift
+  "$@" 2>/dev/null || read_failed "$stage"
+}
+matches() {
+  local status
+  if grep "$@" 2>/dev/null; then return 0; else status=$?; fi
+  [ "$status" -eq 1 ] && return 1
+  read_failed content-match
+}
+optional_matches() {
+  if matches "$@"; then :; fi
+}
+REPO_ROOT="$(observe repository-root git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/chat-bootstrap-audit.XXXXXX")"
@@ -85,7 +102,7 @@ add_tree_if_exists() {
   local path="$1"
 
   if [ -d "$path" ]; then
-    find "$path" -type f >> "$SEEDS"
+    observe seed-tree find "$path" -type f >> "$SEEDS"
   fi
 }
 
@@ -102,22 +119,22 @@ add_if_exists "scripts/01.harness/check-governed-script-command-drift.sh"
 add_if_exists "scripts/01.harness/plan-artifact-path-migration.sh"
 add_if_exists "scripts/01.harness/check-artifact-path-migration.sh"
 
-sort -u "$SEEDS" > "$QUEUE"
+observe seed-sort sort -u "$SEEDS" > "$QUEUE"
 
 extract_script_refs() {
   local path="$1"
   local dir
 
-  grep -Eo 'scripts/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" 2>/dev/null \
-    | grep -E '^scripts/(00\.chat|01\.harness|chat|harness|shared)/' || true
+  optional_matches -Eo 'scripts/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" \
+    | optional_matches -E '^scripts/(00\.chat|01\.harness|chat|harness|shared)/' || return $?
 
   case "$path" in
     scripts/*)
       dir="$(dirname "$path")"
-      grep -Eo 'SCRIPT_DIR/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" 2>/dev/null \
-        | sed "s#^SCRIPT_DIR/#${dir}/#" || true
-      grep -Eo 'dirname "\$0"\)/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" 2>/dev/null \
-        | sed "s#^dirname \"\\\$0\")/#${dir}/#" || true
+      optional_matches -Eo 'SCRIPT_DIR/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" \
+        | observe reference-transform sed "s#^SCRIPT_DIR/#${dir}/#" || return $?
+      optional_matches -Eo 'dirname "\$0"\)/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" \
+        | observe reference-transform sed "s#^dirname \"\\\$0\")/#${dir}/#" || return $?
       ;;
   esac
 }
@@ -127,7 +144,7 @@ while [ -s "$QUEUE" ]; do
 
   while IFS= read -r path; do
     [ -n "$path" ] || continue
-    grep -Fxq "$path" "$SEEN" && continue
+    if matches -Fxq -- "$path" "$SEEN"; then continue; fi
     printf '%s\n' "$path" >> "$SEEN"
 
     if [ ! -f "$path" ]; then
@@ -135,13 +152,14 @@ while [ -s "$QUEUE" ]; do
       continue
     fi
 
+    refs="$(extract_script_refs "$path")" || exit $?
     while IFS= read -r ref; do
       [ -n "$ref" ] || continue
       printf '%s\n' "$ref" >> "$SCRIPT_REFS"
       if [ -f "$ref" ]; then
         case "$ref" in
           scripts/*)
-            if ! grep -Fxq "$ref" "$SEEN"; then
+            if ! matches -Fxq -- "$ref" "$SEEN"; then
               printf '%s\n' "$ref" >> "$NEXT_QUEUE"
             fi
             ;;
@@ -149,33 +167,33 @@ while [ -s "$QUEUE" ]; do
       else
         printf '%s\n' "$ref" >> "$MISSING"
       fi
-    done < <(extract_script_refs "$path")
+    done <<< "$refs"
   done < "$QUEUE"
 
-  sort -u "$NEXT_QUEUE" > "$QUEUE"
+  observe queue-sort sort -u "$NEXT_QUEUE" > "$QUEUE"
 done
 
-find scripts -type f \
+observe script-tree find scripts -type f \
   \( -name '*.sh' -o -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.tsv' -o -name '*.json' \) \
-  | sort -u > "$ALL_SCRIPTS"
+  | observe script-sort sort -u > "$ALL_SCRIPTS"
 
 {
-  grep '^scripts/' "$SEEN" || true
-  sort -u "$SCRIPT_REFS"
-} | sort -u > "$REQUIRED"
+  optional_matches '^scripts/' "$SEEN"
+  observe reference-sort sort -u "$SCRIPT_REFS"
+} | observe required-sort sort -u > "$REQUIRED"
 
-comm -23 "$ALL_SCRIPTS" "$REQUIRED" > "$UNREFERENCED"
+observe candidate-comparison comm -23 "$ALL_SCRIPTS" "$REQUIRED" > "$UNREFERENCED"
 while IFS= read -r path; do
   [ -n "$path" ] || continue
-  if grep -Eq '^([#[:space:]]*|[[:space:]]*//[[:space:]]*)portability: .*compatibility' "$path"; then
+  if matches -Eq '^([#[:space:]]*|[[:space:]]*//[[:space:]]*)portability: .*compatibility' "$path"; then
     printf '%s\n' "$path"
   fi
 done < "$UNREFERENCED" > "$COMPATIBILITY"
 {
-  grep -E '/smoke-test-[^/]+\.sh$|/smoke-test\.sh$|/with-chat-branch\.sh$' "$UNREFERENCED" || true
+  optional_matches -E '/smoke-test-[^/]+\.sh$|/smoke-test\.sh$|/with-chat-branch\.sh$' "$UNREFERENCED"
   cat "$COMPATIBILITY"
-} | sort -u > "$VALIDATION"
-comm -23 "$UNREFERENCED" "$VALIDATION" > "$UNCLASSIFIED"
+} | observe validation-sort sort -u > "$VALIDATION"
+observe classification-comparison comm -23 "$UNREFERENCED" "$VALIDATION" > "$UNCLASSIFIED"
 
 echo "Chat bootstrap script file set audit"
 echo

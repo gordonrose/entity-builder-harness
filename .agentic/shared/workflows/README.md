@@ -4,7 +4,7 @@ id: shared.workflows.readme
 version: 1
 status: active
 created_on: "2026-06-15"
-updated_on: "2026-10-20"
+updated_on: "2026-10-27"
 layer: 06.shared
 domain: process
 disciplines:
@@ -30,6 +30,11 @@ Shared workflows govern cross-layer process that does not belong to one
 specialized layer. Chat lifecycle ownership belongs in `.agentic/00.chat/`.
 
 ## Workflows
+
+- `verify-diagnostic-coverage.md` - review diagnostic responsibilities and require
+  code-owned contracts and selected proof for coding changes.
+- `../plans/implementation/governed-diagnostic-coverage.md` - implementation and
+  compatibility evidence for the initial adoption project.
 
 - `change-shared-process.md` - change cross-layer git, commit, merge, handoff,
   deployment, release, or context-preservation process.
