@@ -456,7 +456,13 @@ class LocalCache:
         registered = {Path(record[9:]).resolve() for record in records if record.startswith('worktree ')}
         if source.resolve() not in registered:
             raise LocalCheckError('reuse-worktree-not-registered')
-        return cls(source, create=False)
+        # A registered, clean preflight may not have run check selection yet.
+        # That is an ordinary cache miss: callers must execute their local
+        # checks rather than treating absent optional acceleration as unsafe.
+        try:
+            return cls(source, create=False)
+        except FileNotFoundError:
+            return None
 
     def record_artifacts(self, records: dict) -> None:
         preparation = self.read_preparation()

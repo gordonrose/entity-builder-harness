@@ -380,4 +380,4 @@ Estimated chat cost basis:
 
 ## Notes
 
-- None recorded yet.
+- 2026-11-05: Post-integration reuse found a registered preflight with no local selector cache because its matching checks had been run directly. The selector now treats that absence as a cache miss and executes local checks; unsafe, unregistered, mismatched, and symlinked sources remain rejection conditions. Focused mechanics regressions passed.

@@ -21,6 +21,17 @@ from test_support import *
 
 
 class SelectionTests(FixtureSupport):
+    def test_registered_preflight_without_cache_falls_back_to_execution(self):
+        subprocess.run(['git', '-C', str(self.root), 'add', '-A'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'fixture baseline'], check=True)
+        with tempfile.TemporaryDirectory() as directory:
+            preflight = Path(directory) / 'preflight'
+            subprocess.run(['git', '-C', str(self.root), 'worktree', 'add', '--detach', '--quiet', str(preflight)], check=True)
+            try:
+                self.assertIsNone(local_cache.LocalCache.registered_source(self.root, preflight))
+            finally:
+                subprocess.run(['git', '-C', str(self.root), 'worktree', 'remove', '--force', str(preflight)], check=True)
+
     def test_artifact_migration_leaf_failure_reuse_and_invalidation(self):
         self.assert_owned_adapter_leaf_receipts('harness-artifact-migration-regression', 'artifact-migration')
 
