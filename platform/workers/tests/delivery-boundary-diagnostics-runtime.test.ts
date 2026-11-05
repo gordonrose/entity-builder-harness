@@ -211,7 +211,9 @@ async function main(): Promise<void> {
   Object.defineProperty(unsafe, "diagnosticRecord", { get() { accessorReads++; throw source; } });
   const current = await fixture({ handle() { throw unsafe; } });
   const unsafeResult = await current.shell.runNext(); if (!unsafeResult.ok || unsafeResult.value.status !== "dead-lettered") throw new Error("Expected terminal result");
-  deepEqual(current.observed, [own("handler", "thrown", "handler-outcome-unknown"), records[1]]); equal(accessorReads, 0);
+  deepEqual(current.observed, [own("handler", "thrown", "handler-outcome-unknown"), records[1],
+    { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } },
+    { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-rejected" } }]); equal(accessorReads, 0);
   equal(unsafeResult.value.error.cause, unsafe); await current.shell.shutdown();
   for (const thrown of [0, undefined, Object.freeze(new Error(canary)), { diagnosticRecord: { ...records[0]!, code: "unselected.source" } }]) {
     const unselected = await fixture({ handle() { throw thrown; } });
@@ -227,6 +229,39 @@ async function main(): Promise<void> {
     throws(() => operation === "enqueue" ? queue.enqueue(entry.message) : operation === "retry" ? queue.retry(entry, 0) : queue.deadLetter(entry, workerError("PLATFORM_WORKER_HANDLER_FAILED", "Fixture")), (error) => error === source);
     deepEqual(seen, [{ ...own("queue-clock", "thrown", "queue-not-mutated"), detail: { operation: operation === "deadLetter" ? "queue-dead-letter" : `queue-${operation}`, phase: "queue-clock", reason: "thrown", effect: "queue-not-mutated" } }, ...records]);
     equal(reads, 1); equal(queue.pending().length, 0); equal(queue.deadLetters().length, 0);
+  }
+  const builders = require("../src/diagnostics") as Record<string, unknown>;
+  for (const mode of ["throws", "undefined", "malformed"] as const) {
+    const processing = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+      detail: { reason: mode === "throws" ? "construction-threw" : mode === "malformed" ? "evidence-rejected" : "construction-rejected" } };
+    for (const key of ["workerDeliveryBoundaryRecord", "workerDeliveryRejectedRecord"]) {
+      const descriptor = Object.getOwnPropertyDescriptor(builders, key)!;
+      Object.defineProperty(builders, key, { ...descriptor, value: () => {
+        if (mode === "throws") throw new Error(canary);
+        return mode === "undefined" ? undefined : { code: canary };
+      } });
+      try {
+        const seen: DiagnosticRecord[] = [];
+        const queue = createInMemoryPlatformWorkerQueue({ diagnosticDefinitions: [definition], now() { throw source; }, onDiagnostic(record) { seen.push(record); } });
+        if (key === "workerDeliveryBoundaryRecord") {
+          throws(() => queue.enqueue(durableMessage()), error => error === source);
+          deepEqual(seen, [processing, ...records]);
+          const current = await fixture({ handle() { throw source; } });
+          const result = await current.shell.runNext();
+          if (!result.ok || result.value.status !== "dead-lettered") throw new Error("Expected unchanged terminal result");
+          equal(result.value.error.cause, source); equal(current.handled(), 1);
+          deepEqual(current.observed, [processing, ...records]);
+          await current.shell.shutdown();
+        } else {
+          queue.close();
+          const result = queue.enqueue(durableMessage());
+          if (result.ok) throw new Error("Expected closed rejection");
+          equal(result.error.code, "PLATFORM_WORKER_QUEUE_CLOSED");
+          deepEqual(result.error.diagnosticRecord, processing); deepEqual(seen, [processing]);
+        }
+        equal(queue.pending().length, 0); equal(JSON.stringify(seen).includes(canary), false);
+      } finally { Object.defineProperty(builders, key, descriptor); }
+    }
   }
   const closedRecords: DiagnosticRecord[] = [];
   const closedQueue = createInMemoryPlatformWorkerQueue({ onDiagnostic(record) { closedRecords.push(record); } });

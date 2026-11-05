@@ -130,7 +130,56 @@ async function main() {
     equal(createAwsSdkPlatformSqsWorkerQueueFromConfiguration(recordConfigSource({}), {
       get diagnosticDefinitions(): never { throw Error(canary); }, onDiagnostic(record) { ownOnly.push(record); },
     }).ok, false);
-    deepEqual(ownOnly, [packet("worker", sqsWorkerRequirements.map(item => ({ setting: item.setting, reason: "missing" })))]);
+    const processing = (reason: string) => ({ schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed",
+      definitionVersion: 1, detail: { reason } });
+    deepEqual(ownOnly, [packet("worker", sqsWorkerRequirements.map(item => ({ setting: item.setting, reason: "missing" }))),
+      processing("definition-selection-failed")]);
+
+    const configBuilder = require("../../../../../../packages/core/src/config/domain/reporting/diagnostic-reporting.js") as {
+      configurationDiagnostic: typeof import("@kanbien/core").configurationDiagnostic;
+    };
+    const recordBuilder = require("../../../../../../packages/core/src/diagnostics/record.js") as {
+      createDiagnosticRecord: typeof createDiagnosticRecord;
+    };
+    const originalConfig = configBuilder.configurationDiagnostic, originalRecord = recordBuilder.createDiagnosticRecord;
+    try {
+      for (const failureMode of ["rejected", "threw"] as const) {
+        const expected = processing(failureMode === "rejected" ? "construction-rejected" : "construction-threw");
+        configBuilder.configurationDiagnostic = () => {
+          if (failureMode === "threw") throw Error(canary);
+          return { ok: false, error: undefined } as never;
+        };
+        const contentSeen: DiagnosticRecord[] = [];
+        constructions.length = 0;
+        const invalid = createAwsSdkPlatformSqsWorkerQueueFromConfiguration(recordConfigSource({}),
+          { onDiagnostic(record) { contentSeen.push(record); } });
+        equal(invalid.ok, false); equal(constructions.length, 0);
+        if (!invalid.ok) deepEqual(invalid.error.diagnosticRecord, expected);
+        deepEqual(contentSeen, [expected]);
+        configBuilder.configurationDiagnostic = originalConfig;
+        recordBuilder.createDiagnosticRecord = ((definition, detail) => {
+          if (definition.code.startsWith("aws-sqs.")) {
+            if (failureMode === "threw") throw Error(canary);
+            return { ok: false, error: undefined } as never;
+          }
+          return originalRecord(definition, detail);
+        }) as typeof createDiagnosticRecord;
+        const sourceSeen: DiagnosticRecord[] = [];
+        const cause = Object.freeze(Object.assign(Error(canary), { diagnosticRecord: bundle[0], relatedDiagnosticRecords: bundle.slice(1) }));
+        let reads = 0;
+        throws(() => createAwsSdkPlatformSqsWorkerQueueFromConfiguration({ get() { reads++; throw cause; } },
+          { diagnosticDefinitions: [sourceDefinition], onDiagnostic(record, context) {
+            sourceSeen.push(record); deepEqual(context, { operation: "client-initialization", boundary: "selection" });
+          } }), error => error === cause);
+        equal(reads, 1); equal(constructions.length, 0);
+        deepEqual(sourceSeen, [expected, ...bundle]);
+        equal(JSON.stringify(sourceSeen).includes(canary), false);
+        recordBuilder.createDiagnosticRecord = originalRecord;
+      }
+    } finally {
+      configBuilder.configurationDiagnostic = originalConfig;
+      recordBuilder.createDiagnosticRecord = originalRecord;
+    }
     const sourceCause = Object.freeze(Object.assign(Error(canary), { diagnosticRecord: bundle[0], relatedDiagnosticRecords: bundle.slice(1) }));
     let deliveries = 0; const surviving: DiagnosticRecord[] = [];
     throws(() => createAwsSdkPlatformSqsWorkerQueueFromConfiguration({ get() { throw sourceCause; } }, {

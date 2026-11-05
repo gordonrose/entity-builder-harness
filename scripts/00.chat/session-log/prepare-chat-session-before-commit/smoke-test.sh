@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 4
 #   status: active
 #   created_on: "2026-07-09"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -86,6 +86,10 @@ cat > "$REPO/scripts/01.harness/artifact-metadata/update-lifecycle/script.sh" <<
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'lifecycle %s\n' "$*" >> preparation-order
+if [ "${FAULT_LIFECYCLE:-}" = malformed ]; then
+  echo private-lifecycle-canary
+  exit 0
+fi
 printf '%s\n' '{"plans":[{"path":".agentic/task.md"}],"errors":[]}'
 EOF
 chmod +x "$REPO/scripts/01.harness/artifact-metadata/update-lifecycle/script.sh"
@@ -194,6 +198,17 @@ if [[ "$(cat "$REPO/preparation-order")" != "$expected_order" ]]; then
   fail "before-verification did not complete lifecycle, structural, then selector preparation in order"
 fi
 
+: > "$REPO/preparation-order"
+if failure="$(cd "$REPO" && FAULT_LIFECYCLE=malformed \
+  bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh \
+  --before-verification --paths .agentic/task.md 2>&1)"; then
+  fail "malformed lifecycle report accepted as no artifacts"
+else
+  [ "$?" -eq 2 ] || fail "lifecycle report failure status lost"
+fi
+[[ "$failure" == *preparation-lifecycle-report-read-failed* && "$failure" != *private-lifecycle-canary* && "$failure" != *preparation\ passed* ]] || fail "lifecycle failure not safe"
+[[ "$(cat "$REPO/preparation-order")" == 'lifecycle --paths .agentic/task.md --skip-non-artifacts --apply' ]] || fail "failed report permitted downstream verification"
+
 rm "$REPO/scripts/repo/check-selection/script.sh"
 : > "$REPO/preparation-order"
 bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
@@ -234,6 +249,41 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
 
 grep -q 'Chat session is ready for commit:' "$TMP_ROOT/passing.out" \
   || fail "prepare gate did not pass with context hygiene"
+
+export REAL_GIT="$(command -v git)" REAL_AWK="$(command -v awk)" REAL_SED="$(command -v sed)"
+mkdir "$TMP_ROOT/fault-bin"
+for command in git awk sed; do
+  printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
+  cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
+fault=no
+case "$FAULT:$command:${1:-}" in
+  branch:git:branch|field:sed:*) fault=yes ;;
+esac
+if [ "$command" = awk ]; then
+  if [ "$FAULT" = section ] && [ "${1:-}" = -v ] && [[ "${2:-}" == section=* ]]; then fault=yes; fi
+  if [ "$FAULT" = adr ] && [[ "${1:-}" == *'## ADR Disposition'* ]]; then fault=yes; fi
+fi
+if [ "$fault" = yes ]; then
+  echo private-preparation-canary@example.invalid >&2
+  exit 76
+fi
+case "$command" in
+  git) exec "$REAL_GIT" "$@" ;;
+  awk) exec "$REAL_AWK" "$@" ;;
+  sed) exec "$REAL_SED" "$@" ;;
+esac
+EOF
+  chmod +x "$TMP_ROOT/fault-bin/$command"
+done
+for stage in branch section field adr; do
+  if failure="$(cd "$REPO" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" \
+    bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh 2>&1)"; then
+    fail "$stage failure permitted readiness"
+  else
+    [ "$?" -eq 2 ] || fail "$stage failure status lost"
+  fi
+  [[ "$failure" == *preparation-*-read-failed* && "$failure" != *private-preparation-canary* && "$failure" != *ready\ for\ commit* ]] || fail "$stage safe reason lost"
+done
 
 cat > "$LOG_FILE" <<EOF
 # Chat Session: prepare context hygiene smoke

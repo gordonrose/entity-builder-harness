@@ -1,7 +1,7 @@
 import type { OutboxEntry, OutboxEntryId } from "@kanbien/core/persistence";
 import type { ISODateTime, Result } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
-import { observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
+import { capturePlatformPersistenceDiagnostic, observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 import {
   nextPlatformPersistenceLease,
   platformLeaseExpired,
@@ -200,7 +200,7 @@ function failure(
   detail: PersistenceLocalRejectionDetail,
   options: PlatformPersistenceDiagnosticOptions,
 ): Result<never, PlatformPersistenceError> {
-  const diagnosticRecord = persistenceLocalRejectionDiagnosticRecord(detail);
+  const diagnosticRecord = capturePlatformPersistenceDiagnostic(() => persistenceLocalRejectionDiagnosticRecord(detail));
   observePlatformPersistenceDiagnostic(options, diagnosticRecord);
   return {
     ok: false,

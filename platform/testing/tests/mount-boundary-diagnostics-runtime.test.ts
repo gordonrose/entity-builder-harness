@@ -1,5 +1,6 @@
 import { deepEqual, equal, ok, rejects } from "node:assert/strict";
 import { createDiagnosticRecord, defineDiagnostic, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { recordConfigSource, requiredConfigValue } from "@kanbien/core/config";
 import { definePlatformApp, platformAppId } from "@kanbien/platform-contracts";
 import { mountPlatformAppForTest, type PlatformTestMountOptions } from "../src/index";
 
@@ -67,6 +68,22 @@ async function main(): Promise<void> {
   const unselected = await failure({ diagnosticRecord: primary, relatedDiagnosticRecords: companions, message: canary }, false);
   equal(unselected.diagnosticRecord, undefined); deepEqual(unselected.relatedDiagnosticRecords, []);
   deepEqual(unselected.details, { reason: "Unknown app mount failure." });
+
+  const unreadableDefinitions = new Proxy([], { get() { throw new Error(canary); } });
+  const missing = requiredConfigValue(recordConfigSource({}), canary);
+  ok(!missing.ok);
+  const coreRecord = missing.error.diagnosticRecord!;
+  const coreCompanions = Array.from({ length: 8 }, () => coreRecord);
+  const retainedCore = await failure({ ...missing.error, relatedDiagnosticRecords: coreCompanions },
+    false, { diagnosticDefinitions: unreadableDefinitions });
+  deepEqual(retainedCore.diagnosticRecord, coreRecord);
+  deepEqual(retainedCore.relatedDiagnosticRecords, coreCompanions);
+  equal(JSON.stringify(retainedCore).includes(canary), false);
+  const retainedRegistered = await failure({ diagnosticRecord: primary, relatedDiagnosticRecords: companions },
+    true, { diagnosticDefinitions: unreadableDefinitions });
+  deepEqual(retainedRegistered.diagnosticRecord, primary);
+  deepEqual(retainedRegistered.relatedDiagnosticRecords, companions);
+  equal(JSON.stringify(retainedRegistered).includes(canary), false);
 
   let messageReads = 0;
   const legacyMessage = Object.defineProperty(new Error(), "message", { get() { messageReads++; return canary; } });

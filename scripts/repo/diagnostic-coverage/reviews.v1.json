@@ -3,6 +3,785 @@
   "baseline": "d94da2b9401d3abcf86618b5d497e9b93903490a",
   "reviews": [
     {
+      "owner": "imported-cleanup-diagnostics",
+      "status": "partial",
+      "reason": "Retention, branch, worktree, commit and content observations preserve unavailable versus absent states before deletion. Native failures are excluded, mutation exit status and uncertain effect retained; no replay. Original dry-run, retained-log and disposable deletion assertions remain.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/git/cleanup-empty-chat-branches/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-cleanup-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh",
+          "sha256": "2e5c3727af51b82c1c8682f94844660c522121c62ad6ca88907fae21dfdedbda"
+        }
+      ]
+    },
+    {
+      "owner": "imported-workspace-report-diagnostics",
+      "status": "partial",
+      "reason": "Successful branch/tree/status observations are required before missing-log, clean-worktree or no-overlap claims. Exact normal inventories and injected failed reference/list/content/comparison consumers are tested; requested successful inventory fields remain unchanged.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/local-merge/list-active-chat-branches/script.sh",
+        "scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh",
+        "scripts/00.chat/reporting/report-chat-workspaces/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-local-merge-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/local-merge/list-active-chat-branches/script.sh",
+          "sha256": "b7fc1946625b9e94ddcbc4ea60a13eafbc4d32dfe049f675dcee3dc062a97c47"
+        },
+        {
+          "path": "scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh",
+          "sha256": "11b308db901d8c7bdabb74888cde051c1f7247ab0f5899ec99c604937b3feb1f"
+        },
+        {
+          "path": "scripts/00.chat/reporting/report-chat-workspaces/script.sh",
+          "sha256": "54dea1faf751b3b64a0271b9ed6dbae8d732801c65964897c63ea6346ed54a52"
+        }
+      ]
+    },
+    {
+      "owner": "imported-session-prerequisite-diagnostics",
+      "status": "partial",
+      "reason": "Metadata and reference scan failures cannot become absent prerequisites or an empty successful check. Existing missing-file refusal stays distinct from unavailable observation; fixed reasons omit rejected contents.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/session-log/check-commit-prerequisites/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-prerequisites-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/session-log/check-commit-prerequisites/script.sh",
+          "sha256": "906a97ff61928ab70a2e095e95891f4328e52415251e8291bf78a7025645ddd4"
+        }
+      ]
+    },
+    {
+      "owner": "imported-session-preparation-diagnostics",
+      "status": "partial",
+      "reason": "Lifecycle report parsing and recorded section/field/ADR reads preserve unavailable versus absent evidence. Invalid lifecycle output cannot seed preparation; original gate order and metadata policy remain.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-session-preparation-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh",
+          "sha256": "103a67e9b596cf398f946c1961c52606b6521fa65712ec908d7321755ed01eef"
+        }
+      ]
+    },
+    {
+      "owner": "imported-session-writer-diagnostics",
+      "status": "partial",
+      "reason": "Branch lookup, entry construction and replacement preserve safe stages and original failure status. A failed temporary entry read cannot insert an empty entry. Existing normal sections and caller results remain; no mutation replay.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/session-log/update-chat-log/script.sh",
+        "scripts/00.chat/session-log/record-sub-agent-activity/script.sh",
+        "scripts/00.chat/session-log/record-main-refresh-conflict/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/session-log/update-chat-log/smoke-test.sh",
+        "scripts/00.chat/session-log/record-sub-agent-activity/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-log-writers-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/session-log/update-chat-log/script.sh",
+          "sha256": "0c0278798149ab093419d80011014e90b37301e6094648087826027d09d11a07"
+        },
+        {
+          "path": "scripts/00.chat/session-log/record-sub-agent-activity/script.sh",
+          "sha256": "8dc32b5e2b1b524cdd46ed364818eed0fb22c1c7a4a27dd3d7e7f5d0474883fa"
+        },
+        {
+          "path": "scripts/00.chat/session-log/record-main-refresh-conflict/script.sh",
+          "sha256": "d9e1147bff567823c5da10f0cbccff88d3849c01ee96f79b7235d6d298a92af3"
+        }
+      ]
+    },
+    {
+      "owner": "imported-session-maintenance-diagnostics",
+      "status": "partial",
+      "reason": "Failed cleanliness/tracking observations cannot become permission to checkpoint or fallback to an untracked move. Transcript discovery child reasons/status survive registration. Actual disposable callers assert construction/replacement/stage/commit/move failures, original outcomes and no replay.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh",
+        "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh",
+        "scripts/00.chat/transcript/register-codex-session-log/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/session-log/checkpoint-chat-session-log/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-log-maintenance-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh",
+          "sha256": "17d82bc103605ae841d78f6872246ef48dc62c35f6e2ea0fb55dfb8ef65344e1"
+        },
+        {
+          "path": "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh",
+          "sha256": "a4fa4fe1434ba97b5636205e27cc67708da575166d3bbcda6e7c9ef1d5516c3a"
+        },
+        {
+          "path": "scripts/00.chat/transcript/register-codex-session-log/script.sh",
+          "sha256": "abb0a905e102116254908656a97487a273d847d24458eb6ce3d6e29fa471f9c0"
+        }
+      ]
+    },
+    {
+      "owner": "imported-startup-diagnostics",
+      "status": "partial",
+      "reason": "Only an actually absent main ref selects the historical fallback. Failed reads and branch/worktree/log/stage actions retain finite stages and uncertain effects. Clipboard remains an optional bounded retry; native text is excluded and existing startup protocol preserved.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/startup/start-chat-session/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/startup/start-chat-session/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-startup-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/startup/start-chat-session/script.sh",
+          "sha256": "28e411f06245b81ac1b3cb7a0942ddbcc136e8a80f4d07a02e7dd3fddc4af325"
+        }
+      ]
+    },
+    {
+      "owner": "imported-closeout-diagnostics",
+      "status": "partial",
+      "reason": "Failed branch lookup cannot become non-chat state. Rejected clipboard configuration is omitted; optional clipboard retry/fallback and exact gateway child statuses remain.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/closeout/build-closeout-prompt/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/command/dispatcher/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-command-dispatch-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/closeout/build-closeout-prompt/script.sh",
+          "sha256": "6784fe0a7754fef72fbef5c67071f87e1e5ef2cd79a02ae1449538dd3f4d7516"
+        }
+      ]
+    },
+    {
+      "owner": "imported-summary-diagnostics",
+      "status": "partial",
+      "reason": "Tree/content read and output creation/write failures retain finite phases and known none/unknown effect without native errors. Ordinary summary values and missing-metrics behavior remain unchanged.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/reporting/generate-commit-log-summary/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-summary-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/reporting/generate-commit-log-summary/script.sh",
+          "sha256": "3179d37a37bfd82fb4c5f79fa6d083187e3b89291a94ab3a692ae14092703765"
+        }
+      ]
+    },
+    {
+      "owner": "imported-bootstrap-audit-diagnostics",
+      "status": "partial",
+      "reason": "Read/scan/filter/sort/comparison failures cannot become an empty dependency audit. Genuine no-match and missing-reference outcomes remain; actual owner fixture checks finite stages and excludes native canaries.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-bootstrap-audit-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh",
+          "sha256": "bff37341e85f1a00715f2adae7fc8f9791550cd656734b4fdefb55b973cf340b"
+        }
+      ]
+    },
+    {
+      "owner": "imported-migration-audit-diagnostics",
+      "status": "partial",
+      "reason": "Retired-reference and summary-policy scans distinguish genuine no-match from unreadable input. Existing audit policy and successful inventory stay unchanged.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/migration/audit-chat-layer-migration/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/migration/audit-chat-layer-migration/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-migration-audit-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/migration/audit-chat-layer-migration/script.sh",
+          "sha256": "5b46f3360168a6e53827798e533129540da6b121ec1f23b028701d33c1966fda"
+        }
+      ]
+    },
+    {
+      "owner": "workbench-bootstrap-diagnostics",
+      "status": "partial",
+      "reason": "Planner scans/comparisons distinguish absence, conflicts and unavailable reads. Package read failure is not invalid JSON; rejected package/native contents are omitted. Apply failures retain stage/unknown effect and cannot print completion before final sanitization. Normal create/merge/idempotence/conflict fixtures remain.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-upstream-bootstrap-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh",
+          "sha256": "0fcd90d09cb58bd4de2f30ac1a85cad3e1feef521713adff0431c4e535ce1f84"
+        }
+      ]
+    },
+    {
+      "owner": "workbench-origin-diagnostics",
+      "status": "partial",
+      "reason": "Origin absence, mismatch and read failure remain distinct without exposing origin URLs. Clone/directory failure preserves exit status and unknown effect. Only relocated disposable targets and command doubles are exercised.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/upstream/ensure-llm-workbench-repo/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-upstream-ensure-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh",
+          "sha256": "2756e2008f5f938f54db8a474639f1536ab2d25d2c8c44028cbac9a8aefde735"
+        }
+      ]
+    },
+    {
+      "owner": "workbench-contract-diagnostics",
+      "status": "partial",
+      "reason": "Required/forbidden patterns distinguish genuine absence/presence from failed observation; native output cannot reach the report. Existing contract predicates remain unchanged.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/upstream/check-llm-workbench-contract/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/upstream/check-llm-workbench-contract/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-upstream-contract-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/upstream/check-llm-workbench-contract/script.sh",
+          "sha256": "1c8afaf2e5c3eb1a4c61737192771072667f53882878b35e96c513aef88bcde9"
+        }
+      ]
+    },
+    {
+      "owner": "integration-preparation-diagnostics",
+      "status": "partial",
+      "reason": "References and ancestry distinguish real absence/rejection from unavailable observations. Failed post-creation status/HEAD inspection cannot certify a worktree. Mutation failures preserve unknown effect/status and no replay; tests use only disposable repositories or doubles.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-integration-preparation-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/script.sh",
+          "sha256": "fda964b7733b9eb3fb76ff1882af86b13da88d9ef994fb8b1eeccbf6a0aed0a7"
+        }
+      ]
+    },
+    {
+      "owner": "harness-governed-classification-diagnostics",
+      "status": "partial",
+      "reason": "Failed header/effect/inventory reads cannot classify a script as allowed. Rejection remains 1, unavailable observation 2; existing permission policy and exact child exec status preserved.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/01.harness/run-governed-script.sh"
+      ],
+      "tests": [
+        "scripts/01.harness/smoke-test-governed-script-runner.sh"
+      ],
+      "checks": [
+        "harness-governed-runner-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/01.harness/run-governed-script.sh",
+          "sha256": "53033abdd970ae7bb78493f10fc8f88eed1af2655bb48f2e59120464f9e410fd"
+        }
+      ]
+    },
+    {
+      "owner": "harness-command-drift-diagnostics",
+      "status": "partial",
+      "reason": "Runner classification, path collection and content failures cannot become a clean command-drift report. Existing match rules and source inventory remain; injected read failures retain finite stages.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/01.harness/check-governed-script-command-drift.sh"
+      ],
+      "tests": [
+        "scripts/01.harness/smoke-test-governed-script-command-drift.sh"
+      ],
+      "checks": [
+        "harness-command-drift-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/01.harness/check-governed-script-command-drift.sh",
+          "sha256": "4884afa9a9cbc17a574d4a23dc2ba14d6f31075900f083a8cd6d38e09d6d4253"
+        }
+      ]
+    },
+    {
+      "owner": "harness-process-drift-diagnostics",
+      "status": "partial",
+      "reason": "Actual staged/commit/tree/content read failures retain unavailable status, distinct from true process drift. Existing matching and skip rules remain. Command-double fixtures prove no false clean report and no native canary.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/01.harness/check-deterministic-process-drift.sh"
+      ],
+      "tests": [
+        "scripts/01.harness/smoke-test-deterministic-process-drift.sh"
+      ],
+      "checks": [
+        "harness-process-drift-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/01.harness/check-deterministic-process-drift.sh",
+          "sha256": "bfeeae968718fb1d97e43d670a1ad1928cc90417e9c622d387ac830bc6b7db2e"
+        }
+      ]
+    },
+    {
+      "owner": "harness-header-observation-diagnostics",
+      "status": "partial",
+      "reason": "HEAD existence/tree/content and addition-history reads preserve absence versus unavailable observation. Shared parser conditions replace unsafe YAML excerpts; rejected values are omitted, reviewed-file locator retained. UTF-8 rejection remains a content failure, while deliberate binary skips/prepared cache misses remain. Existing lifecycle predicates are unchanged.",
+      "remaining_debt": [
+        "Whole-file adoption is not claimed: these reviews cover the named observation/propagation paths and their actual callers, not every OS temporary-file/cleanup failure or sink delivery. Final registered proof is recorded separately in the DIAG-012 plan. Imported ownership hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/01.harness/artifact-metadata/check-headers/script.sh"
+      ],
+      "tests": [
+        "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh"
+      ],
+      "checks": [
+        "harness-header-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+          "sha256": "b4302a2606b665d4ca2478498c79c1fcc1aa52cc18c733cd7ce5b9affec1b48d"
+        }
+      ]
+    },
+    {
+      "owner": "workbench-portability-observation-proof",
+      "status": "support",
+      "reason": "Verification-only portability guard plumbing: failed pattern/tree reads cannot certify forbidden content absent. Existing generated and temporarily installed workbench assertions remain; this command is not a runtime workload producer.",
+      "definitions": [
+        "scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/upstream/check-llm-workbench-contract/smoke-test.sh",
+        "scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh"
+      ],
+      "checks": [
+        "chat-upstream-contract-regression",
+        "chat-upstream-portability-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh",
+          "sha256": "199e2276c0338510a57a00a4657eb5d86a4e361d3277c8478feec4cd2c46354e"
+        }
+      ]
+    },
+    {
+      "owner": "imported-conflict-audit-diagnostics",
+      "status": "partial",
+      "reason": "Failed index/path-list/audit-content/matching reads retain finite reasons and exit 2, not successful emptiness or missing entries. Ordinary missing paths remain exit 1; literal leading hyphens cannot become grep options. Rejected paths/native canaries are excluded.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/main-refresh/verify-conflict-audit/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/main-refresh/verify-conflict-audit/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-conflict-audit-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/main-refresh/verify-conflict-audit/script.sh",
+          "sha256": "e960b9f84ef50365c1c82d9f6be484e0de6396cfbc3f9903c3beed8d3e12428f"
+        }
+      ]
+    },
+    {
+      "owner": "imported-local-merge-diagnostics",
+      "status": "partial",
+      "reason": "Failed reference/tree/content/metadata/status/ancestry observations cannot grant eligibility or trigger integration verification. Post-proof read failures remain unavailable rather than guessed drift. Successful inventory precedes log absence decisions; normal eligibility/refusal/proof ordering is preserved. Actual-caller doubles include partial valid stdout and native canaries.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-local-merge-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh",
+          "sha256": "a20622aa15c7875709501f944efea4288014abf3043cd51070b99046b426bc38"
+        }
+      ]
+    },
+    {
+      "owner": "imported-recovery-diagnostics",
+      "status": "partial",
+      "reason": "Failed target branch/status reads stop before import. Prepare/remove/copy/stage/delete failures retain stage and original status with effect unknown and no automatic replay; deletion is no longer suppressed into success. Ordinary import/staging assertions and faulted actual callers pass in disposable fixtures only.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/recovery/import-active-paths-to-chat-worktree/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-recovery-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh",
+          "sha256": "ab0f0779d0122a086e9bc9d4b8237b87731d1dd0fb52d1ff9c7cb863f8df32bd"
+        }
+      ]
+    },
+    {
+      "owner": "imported-session-lookup-diagnostics",
+      "status": "partial",
+      "reason": "Directory scan, metadata read and ambiguous lookup failures are distinguished from genuine missing session state. The actual resolver consumes only fixed missing/non-chat messages and cannot create a new session from failed observation. Historical recorded-session approval, success metadata and lookup precedence remain unchanged.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/session-log/paths/lib.sh",
+        "scripts/00.chat/session-log/read-current-chat-log/script.sh",
+        "scripts/00.chat/startup/resolve-current-chat-session/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/session-log/read-current-chat-log/smoke-test.sh",
+        "scripts/00.chat/startup/resolve-current-chat-session/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-session-reader-regression",
+        "chat-session-resolution-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/session-log/paths/lib.sh",
+          "sha256": "6e5bb4fad1b819ccead212376542fe2aeee789fcb17d651fb6d13c0770ea9fa4"
+        },
+        {
+          "path": "scripts/00.chat/session-log/read-current-chat-log/script.sh",
+          "sha256": "a5f5fb6801e671664bd4c3b3fb8e1de6ee92aa218d9134f431437698cb7f396e"
+        },
+        {
+          "path": "scripts/00.chat/startup/resolve-current-chat-session/script.sh",
+          "sha256": "2a478ba780b3adb0da0acab8da65cde0e408d0b279d6cf39ddb595b49514d524"
+        }
+      ]
+    },
+    {
+      "owner": "imported-transcript-observation-diagnostics",
+      "status": "partial",
+      "reason": "Failed scan, content read, timestamp read and selection retain finite producer reasons. The actual recorder carries only the allowed reasons, retains optional metrics and strict-metrics behavior, and never forwards native error text. Existing cost/pricing behavior and successful metadata remain unchanged.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/transcript/discover-codex-session-log/script.sh",
+        "scripts/00.chat/session-log/record-chat-commit/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/session-log/record-chat-commit/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-commit-metrics-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/transcript/discover-codex-session-log/script.sh",
+          "sha256": "6d78de8e6558fea528e4baa78e0b1f610137025d11e058d70a74fdb222daf11a"
+        },
+        {
+          "path": "scripts/00.chat/session-log/record-chat-commit/script.sh",
+          "sha256": "9085f5ec3f5e73814cbd647304479a7d0efe23a4701088e61b245d3f52ea6129"
+        }
+      ]
+    },
+    {
+      "owner": "imported-conflict-observation-diagnostics",
+      "status": "partial",
+      "reason": "Failed Git index or present-stage blob reads do not become empty content or a guessed conflict classification. Actually absent stages remain allowed. Existing conflict categories and command ordering are preserved; disposable command doubles prove each present stage failure and canary exclusion.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/main-refresh/classify-conflict/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/main-refresh/classify-conflict/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-conflict-classification-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/main-refresh/classify-conflict/script.sh",
+          "sha256": "6fbb8e7e8f50ad1f030fdca6fe38baba5cb6978c8e9ff427a20c0a95018384e8"
+        }
+      ]
+    },
+    {
+      "owner": "imported-log-deletion-observation-diagnostics",
+      "status": "partial",
+      "reason": "Failed staged enumeration or deleted-log content reads cannot certify an empty deletion set or empty log. Fixed stage reasons exclude native output and rejected paths. Existing recorded-commit retention decisions and success behavior remain intact.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/session-log/check-commitlog-deletions/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-log-deletion-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/session-log/check-commitlog-deletions/script.sh",
+          "sha256": "3c3fc9ed9a307504f59387694c9450bc5316bdac37ecdc44e3731a682ed6856b"
+        }
+      ]
+    },
+    {
+      "owner": "imported-refresh-observation-diagnostics",
+      "status": "partial",
+      "reason": "Ref absence remains distinct from unreadable Git state. Failed branch/status/diff/remote/branch-list observations cannot produce clean, fresh or no-remotes claims. Readiness failure crosses the actual rehearsal consumer and stops before worktree creation. Application checks current/preflight/sibling reads before interpreting them, reports whether promotion already succeeded, and retains original mutation failure status with unknown effect/no replay. Existing rehearsal fixtures prove normal cleanup and faulted actual callers. Successful inventories and refresh policy are unchanged.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh",
+        "scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh",
+        "scripts/00.chat/main-refresh/show-main-update-status/script.sh",
+        "scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh",
+        "scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh",
+        "scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-refresh-readiness-regression",
+        "chat-main-refresh-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh",
+          "sha256": "45c05a8d4f63257bc69ef15c73e300480b93d232a82f39b5eb909ab9a9f9e2c3"
+        },
+        {
+          "path": "scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh",
+          "sha256": "d750f778ea463791ea9d5b8e1454cf79c4721ea49efdc326ae4ca131b3c759ca"
+        },
+        {
+          "path": "scripts/00.chat/main-refresh/show-main-update-status/script.sh",
+          "sha256": "512f02f0eb0dbc708929a22830cfe887a81eded986308c0bf775088a222ee5a2"
+        },
+        {
+          "path": "scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh",
+          "sha256": "51268d7b2ed841deca6cfd97d6bcce531eaf8765f0fcad1631c0555803e79f5a"
+        },
+        {
+          "path": "scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh",
+          "sha256": "9835cecb950e3a2c7a7a05afe13d1f615f6e443c30bae0770ce0f5969d4ec520"
+        }
+      ]
+    },
+    {
+      "owner": "imported-worktree-observation-diagnostics",
+      "status": "partial",
+      "reason": "A failed registration read or reduction returns unavailable rather than not registered; ensure refuses creation after failed enumeration. Cleanliness checks preserve both status reads and bookkeeping policy. Write-location, ensure and window callers preserve failed root/branch/metadata/reference reads rather than diagnosing mismatch. Creation failure preserves original status with effect unknown; optional window failure remains a safe warning. Actual-caller doubles prove these outcomes including valid-looking metadata followed by failure. Native failure text is not copied.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/worktree/paths/lib.sh",
+        "scripts/00.chat/worktree/check-write-location/script.sh",
+        "scripts/00.chat/worktree/ensure-chat-worktree/script.sh",
+        "scripts/00.chat/worktree/open-window/script.sh",
+        "scripts/00.chat/worktree/dirty-worktree-check/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/worktree/paths/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-worktree-paths-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/worktree/paths/lib.sh",
+          "sha256": "4e4adaef364c1124072352b73cdbf38f99bd2031af15d187ef82826d125aa888"
+        },
+        {
+          "path": "scripts/00.chat/worktree/dirty-worktree-check/script.sh",
+          "sha256": "a0c4b8bc5d26da0d4b9b9317a299bd525d371020d8d9c49cace6d4be64187e78"
+        },
+        {
+          "path": "scripts/00.chat/worktree/check-write-location/script.sh",
+          "sha256": "74bf594d59e2a9ebbc63078e9dab5da77b9bf77956130b76cb37aa0ec3627823"
+        },
+        {
+          "path": "scripts/00.chat/worktree/ensure-chat-worktree/script.sh",
+          "sha256": "f99bf9c0f4aa94d5686716af322bfea1f0ed34b8e34d5080789e512ca6beeef0"
+        },
+        {
+          "path": "scripts/00.chat/worktree/open-window/script.sh",
+          "sha256": "341a4a3b163b01960f91b116ee881f8e53f9891f102a9140cf6c89dfd5bcadd7"
+        }
+      ]
+    },
+    {
+      "owner": "imported-command-dispatch-diagnostics",
+      "status": "partial",
+      "reason": "Invalid or unknown command names are rejected without copying supplied values. A failed command inventory is explicit rather than successful partial help. The five unchanged exec gateways retain exact child failure text and exit status; their fixture demonstrates passthrough without intercepting or guessing capability-owned reasons.",
+      "remaining_debt": [
+        "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
+      ],
+      "definitions": [
+        "scripts/00.chat/command/dispatcher/script.sh"
+      ],
+      "tests": [
+        "scripts/00.chat/command/dispatcher/smoke-test.sh"
+      ],
+      "checks": [
+        "chat-command-dispatch-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/00.chat/command/dispatcher/script.sh",
+          "sha256": "bbe1d0932d7a59bc3e5235f9c5190d8025a8db333dea0e4f3b54fd86fafe112a"
+        }
+      ]
+    },
+    {
       "owner": "harness-artifact-migration-diagnostics",
       "status": "partial",
       "reason": "The existing active migration checker and planner distinguish repository lookup/access, Git enumeration/reduction and reference-read failure from a successful empty result. Finite inline concerns exclude native streams, rejected plan values and checker matched source contents, while retaining accepted file:line finding locations. Successful planner inventory, matching/argument grammar, historical exclusions, explicit compatibility approval and child call order remain unchanged. Both existing Git enumerations still run; failed observation cannot certify no references.",
@@ -639,7 +1418,7 @@
         },
         {
           "path": "packages/core/src/authn/observations.ts",
-          "sha256": "b51e96a464066476d3ff17bdf1eb61f30fe221e19b38280b84147faf59e218c9"
+          "sha256": "31b25124898cf608ce77f4bc76fdf34c05325d0c6462d5f0e8baaa4bdca58fbc"
         },
         {
           "path": "packages/core/src/tenancy/diagnostics.ts",
@@ -651,7 +1430,7 @@
         },
         {
           "path": "packages/core/src/tenancy/observations.ts",
-          "sha256": "316ee3de2f0ccccb48dcecc63e8fd9f31cc4601dee476cbb79447985621c0e85"
+          "sha256": "4aea2bc8fdb96959e4a76c1cd6e1e84faf8797b28e493189eae2bbdff548e7a8"
         }
       ]
     },
@@ -687,11 +1466,11 @@
         },
         {
           "path": "platform/contracts/src/operational-events.ts",
-          "sha256": "8c067ad28cb03a80c1a2c07ac3dcac978529f51c8393f172d93694bfb71964e0"
+          "sha256": "0cf82989d837ab05f859e96e15e65edd1b3b033750c8a4d086b947d3796fbc3a"
         },
         {
           "path": "platform/contracts/src/operational-observations.ts",
-          "sha256": "56e732966a106523cef67150bc26e37f74eb6f0a9af9cb82e6b432c02ae91715"
+          "sha256": "ae8f77369b47ccc08e71a49694e0f381bead3ea337ed1f9d464a12e6a14ac624"
         }
       ]
     },
@@ -908,11 +1687,11 @@
       "sources": [
         {
           "path": "platform/observability/src/metric-diagnostics.ts",
-          "sha256": "8cff130c4441baf77739ee868f839339879c12655dc6d340162e0e5eeb133622"
+          "sha256": "ed61a1cf545ed755a3fff03a4a1cef43b7747ce1327e64100373a277fb07841a"
         },
         {
           "path": "platform/observability/src/metrics.ts",
-          "sha256": "1e4274c005086f4cf100640c2d83faeaf8e0a0868699cce8fb4cb5d95b88e552"
+          "sha256": "6f03256a3c8ff53c2788416ec55776bd8435f73718cebfc6cc7d3783b4aa808a"
         }
       ]
     },
@@ -966,7 +1745,7 @@
       "sources": [
         {
           "path": "platform/adapters/aws/observability/cloudwatch/src/lifecycle-observation.ts",
-          "sha256": "32f50621d1a05c8cd4381e41120018d059f2492d5b32ee85bff4faa6b133574b"
+          "sha256": "836ed488876b56aa24f9ae9cd0c85c987b3843dbf144ab9ddb4297c86885c9b6"
         }
       ]
     },
@@ -1010,12 +1789,16 @@
           "sha256": "c6844ffe6edf159d7c93aaefb407d15c0f6b0ce7aeae71f1319f6fa57488ea6b"
         },
         {
+          "path": "packages/core/src/diagnostics/reporting/processing.ts",
+          "sha256": "aafe46a98a664756082b6854f0f498674d222205110d66cd5a6acd35ea5c06eb"
+        },
+        {
           "path": "packages/core/src/diagnostics/index.ts",
-          "sha256": "236d58f9c7cb396080e8611f9c6aa00bc1609ab106f951970a14f768ee845249"
+          "sha256": "211bbf180d94a059de0b367df06fd299c828718cc2e11a743674e0e9e6ddf581"
         },
         {
           "path": "packages/core/src/diagnostics/record.ts",
-          "sha256": "87092521a24bd063cf780b36e91c5cf3b684ca1079325b3959a082d1aa91d954"
+          "sha256": "1b9d8b92e99368ddd17c07203c44a5ae4bf173aeccab84db35f548dd7b8646a0"
         },
         {
           "path": "packages/core/src/diagnostics/schema.ts",
@@ -1031,7 +1814,7 @@
         },
         {
           "path": "packages/core/src/config/contract/reporting/errors.ts",
-          "sha256": "17201d2eef8c8ca4baafae64cf93fcabb53ff6ea2681a3cf1f4c66d2f773bdb9"
+          "sha256": "cc93d7967e92f4ea8d57610a442fb51cdafbe40df69cb2e6fc7c1fb7b14911eb"
         },
         {
           "path": "packages/core/src/config/domain/reporting/issue-collection.ts",
@@ -1064,6 +1847,7 @@
         "packages/core/tests/persistence-runtime.test.ts",
         "packages/core/tests/persistence-types.test.ts",
         "packages/core/tests/queues-runtime.test.ts",
+        "packages/core/tests/validation-runtime.test.ts",
         "packages/core/tests/queues-types.test.ts"
       ],
       "checks": [
@@ -1076,7 +1860,7 @@
         },
         {
           "path": "packages/core/src/queues/index.ts",
-          "sha256": "9516f274cee4d4f99e4ca9ffa0a44fb0240dc32767d31650882b5793919bead3"
+          "sha256": "e5f435842589527863a1bc0b16e88973057d0292e350422805eaeb9456fe685b"
         },
         {
           "path": "packages/core/src/shared/index.ts",
@@ -1084,7 +1868,7 @@
         },
         {
           "path": "packages/core/src/validation/index.ts",
-          "sha256": "9be4026d135bf73038704e54618e8eb685f82dfc77f7b5432ad1ff3649927b5f"
+          "sha256": "41a25177d3519f7082f7932847eafe52d5b0aa4b83e1e37817f9260c04788230"
         }
       ],
       "definitions": [
@@ -1115,7 +1899,7 @@
       "sources": [
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/errors.ts",
-          "sha256": "feb839681435a4b913c14a521427d7b26dc2ea1c30cf973effe46bc742637808"
+          "sha256": "66b774bfc5101652b97f0d9e3997c363fe68a1563b2edb7307d4949b49f67390"
         }
       ]
     },
@@ -1175,7 +1959,7 @@
     {
       "owner": "platform-contract-registration",
       "status": "partial",
-      "reason": "Contract-owned records observe actual registration/catalog/namespace/duplicate/deferred-reference predicates, preserving legacy codes, permissive admission and getter/first-failure order. Production/testing share existing meanings and copied selected config evidence; no new policy is introduced. Startup delivery is proven in actual server/worker consumers. B03 preserves selected mount-failure primary and eight companions in production and Testing, including catalogs registered before a failing app mount. Runtime supplies its independent mount location without evicting source evidence; Testing adds no sink or Runtime dependency and retains its historical Error.message projection. B07 adds finite owner/app error-class declarations to existing profiles. A descriptor-only64-member snapshot owns admission and retained values; accessor, sparse, duplicate, unknown or changed invalid declarations fail closed with additive registration v2 while v1 remains exact. Generic composed bindings allow128 members, preserve one original field getter, and never use regex shape as membership approval. B13 adds operational event/boundary definitions and public exports while retaining historical registration definitions exactly. Event/flag producer source ownership remains separate, and actual target payload/composition proof remains pending. The pure diagnostic context snapshot/binding checks required fields and selected immutable definitions before dependent work. Callers cannot override fixed attribution while selecting a report. Observability uses the same context validator; real core-server startup consumes it without adding a diagnostic schema or changing business responses.",
+      "reason": "Contract-owned records observe actual registration/catalog/namespace/duplicate/deferred-reference predicates, preserving legacy codes, permissive admission and getter/first-failure order. Production/testing share existing meanings and copied selected config evidence; no new policy is introduced. Startup delivery is proven in actual server/worker consumers. B03 preserves selected mount-failure primary and eight companions in production and Testing, including catalogs registered before a failing app mount. Runtime supplies its independent mount location without evicting source evidence; Testing adds no sink or Runtime dependency and retains its historical Error.message projection. B07 adds finite owner/app error-class declarations to existing profiles. A descriptor-only64-member snapshot owns admission and retained values; accessor, sparse, duplicate, unknown or changed invalid declarations fail closed with additive registration v2 while v1 remains exact. Generic composed bindings allow128 members, preserve one original field getter, and never use regex shape as membership approval. B13 adds operational event/boundary definitions and public exports while retaining historical registration definitions exactly. Event/flag producer source ownership remains separate, and actual target payload/composition proof remains pending. The pure diagnostic context snapshot/binding checks required fields and selected immutable definitions before dependent work. Callers cannot override fixed attribution while selecting a report. Observability uses the same context validator; real core-server startup consumes it without adding a diagnostic schema or changing business responses. DIAG-012's approved Testing helper correction selects built-in Core definitions independently of optional catalogue reads, and retains registered mount definitions if the explicit list is unreadable. Actual schema and mount fixtures preserve the exact primary and eight companions, first-failure ordering and legacy outcomes; unselected external evidence remains excluded. No observer or new response field is introduced.",
       "tests": [
         "platform/runtime/tests/diagnostics-runtime.test.ts",
         "platform/testing/tests/diagnostics-runtime.test.ts",
@@ -1226,7 +2010,7 @@
         },
         {
           "path": "platform/testing/src/index.ts",
-          "sha256": "a31e2211acd264e3956f28d66b2532834b874d86ef38bf6e0194d0fe47f44c6f"
+          "sha256": "353778a48e39d117228d3616f0689d3fb6606e3f1ece732cc4b9e76a11dbaffe"
         },
         {
           "path": "platform/contracts/src/identifiers.ts",
@@ -1300,11 +2084,11 @@
         },
         {
           "path": "platform/config/src/contract/errors.ts",
-          "sha256": "28855f5b35019a9b87e7f786d2edd6a6f50c30fb62449ff2ccc4f7c2f9b74f19"
+          "sha256": "db3bfcfea4992f97f6463b74cdf8c3b515ac51510d8f976da56992846047b989"
         },
         {
           "path": "platform/config/src/domain/validation.ts",
-          "sha256": "cc964f1d9a2696643e5c910eeead7a1b96a3a268b50face61037f28fea0099d5"
+          "sha256": "a21e91e6509e2403ac26b793363fa433f317ef8fa02859d00f297f4199c859b2"
         },
         {
           "path": "platform/config/src/domain/loading.ts",
@@ -1356,11 +2140,11 @@
         },
         {
           "path": "platform/observability/src/diagnostics.ts",
-          "sha256": "0bc7bd1b66df004c6a1d7b03a1c2ba997062751a07c5b2e2f6fa8900f3cc027a"
+          "sha256": "6f64fd5347a2c856075221b3dd39c1b7f58897ae561d21f03aaa6a06fe0cceeb"
         },
         {
           "path": "platform/observability/src/index.ts",
-          "sha256": "b4acb0d5c60ccd66c00670d256677a88f5c1b24cacb1d1944bb76ebed3b75d4e"
+          "sha256": "34c815e4a47f83d54604321c06e8fa0f4061b4b443cd745599c4be6a658e2d68"
         },
         {
           "path": "platform/observability/src/logging.ts",
@@ -1376,7 +2160,7 @@
         },
         {
           "path": "platform/observability/src/boundary-observation.ts",
-          "sha256": "65c4eba8703b5a587d5e2314f143d519bf98ebb08bcc8dc527204c72e46af056"
+          "sha256": "252ad9317f46361a12f2928d20c1453a1e6f63026ef1776fc0333a15acd7136d"
         },
         {
           "path": "platform/observability/src/tracing.ts",
@@ -1414,7 +2198,7 @@
       "sources": [
         {
           "path": "platform/persistence/src/diagnostics.ts",
-          "sha256": "13ed7d9db46954de3637a6ed0d29f84baa22b19b06d78c5ff14b194e816e986b"
+          "sha256": "259983964f3edbf00497fca08f9cb94d45acd5ab2b340c368c66e45883582790"
         },
         {
           "path": "platform/persistence/src/errors.ts",
@@ -1422,7 +2206,7 @@
         },
         {
           "path": "platform/persistence/src/index.ts",
-          "sha256": "c6fd4a7ec57011d6bcba81bbf460208065547821776e7bfe7fb303e47eb0fcb6"
+          "sha256": "14c1bea0c3aba9cc6a3f8ca509db756ed713b1e52069a7ce7e1fd3c86bf5000e"
         },
         {
           "path": "platform/persistence/src/observability/integration.ts",
@@ -1430,7 +2214,7 @@
         },
         {
           "path": "platform/persistence/src/transaction.ts",
-          "sha256": "3a263fce516f153a3dee81e8b5920f2f21c6f0c974911879bc06c2edc753c1cf"
+          "sha256": "59fb9daf4d39a7d23c2abc80bd3d0b78ee3467b2353c5a4866cb7721c7987db7"
         },
         {
           "path": "platform/persistence/src/types.ts",
@@ -1438,15 +2222,15 @@
         },
         {
           "path": "platform/persistence/src/lineage.ts",
-          "sha256": "4e1d8891257ebaecedbb91f446661baad93d291e48294a4c79458f218ffda2ee"
+          "sha256": "ac44745c6908810083013c704adfba8203f1ddeea4643ca417b7ad70b8028e8b"
         },
         {
           "path": "platform/persistence/src/outbox.ts",
-          "sha256": "299ccb0c19290c31981cfc44d82ab95246af6cc57503518ecbbf101586adbb6a"
+          "sha256": "6ea87346c6f9e4675826ce14f9b439317f42a6ea26f63d71990912165a52a2c8"
         },
         {
           "path": "platform/persistence/src/processing.ts",
-          "sha256": "6abf139a42fd175d8309086eff118483a3c8adcce91b2bf1666a1bfd26c5ca95"
+          "sha256": "a74ad4902303dea3bec920506d292cd7058481df5b8e7ee016b7d17195410f98"
         },
         {
           "path": "platform/persistence/src/observability/port.ts",
@@ -1454,7 +2238,7 @@
         },
         {
           "path": "platform/persistence/src/relay.ts",
-          "sha256": "cf51824298b32ebedae6ca102b39d0135eb62ca7223e84f78e80837c172e6078"
+          "sha256": "89af5b9e36965be73837ef6c3612e4a8bf4b74a425bb0b55b433896e429b12ab"
         }
       ]
     },
@@ -1498,15 +2282,15 @@
       "sources": [
         {
           "path": "platform/server/src/diagnostics.ts",
-          "sha256": "53174bc250c7fcc7c4c497d3785a8ababd24e23f18d1fe7fa17dca7eb83e4786"
+          "sha256": "67bcd4bd107e218054e982175891220e23baa37403f66c714f4e6d1abaf9d301"
         },
         {
           "path": "platform/server/src/index.ts",
-          "sha256": "3e97d703e3ba13039a063c71322b903a06c549f965279754e816592a3c6f12b7"
+          "sha256": "8f0e7565d6ce783d746a53ab903fb34364178d348ef0e2acfb3f900999f0f14c"
         },
         {
           "path": "platform/server/src/main.ts",
-          "sha256": "0f0dac955368889c04442b24a71c3a51823cdda71686d7069dfd8dca3ac11053"
+          "sha256": "8d6d4d917c7ba838588f5c67422906e7607902af0b0be357db3c6f509b77db61"
         },
         {
           "path": "platform/server/src/transport.ts",
@@ -1553,11 +2337,11 @@
       "sources": [
         {
           "path": "platform/workers/src/diagnostics.ts",
-          "sha256": "0aba90052b933913dff9fe8da65cd8b395def86a05fd50928b3cca7804921c24"
+          "sha256": "d825294ffaab5c1b2a5610de04a6aadacf21f620f7c7aa1a9c189748063dcb9e"
         },
         {
           "path": "platform/workers/src/errors.ts",
-          "sha256": "65f4633cd489330a567413eb6d9a5052ab8edfbe5fd5197f40ea6ef08220b47e"
+          "sha256": "794bbcaf01af074a76597dcacc158526eb76e2c189d3948cd5dda65418d7528c"
         },
         {
           "path": "platform/workers/src/index.ts",
@@ -1565,7 +2349,7 @@
         },
         {
           "path": "platform/workers/src/worker.ts",
-          "sha256": "5ee7ef69aab548c99157474e172a74e65cffc6227fb5b7c5388f80cd0c0a41cd"
+          "sha256": "d332f9c8413ba98148bdaede8f710ab9a06b8e760506cd361ab50fa43104a520"
         },
         {
           "path": "platform/workers/src/configuration-diagnostics.ts",
@@ -1581,7 +2365,7 @@
         },
         {
           "path": "platform/workers/src/queue.ts",
-          "sha256": "05f8e2903f405ffa51d53afd03ea64748af3f3fca972dae93697874c5d3808cf"
+          "sha256": "eb9e09de5362f9e5ae73fcd7240f07e0906bb72e04954513d2bfdfc74be7de93"
         }
       ]
     },
@@ -1664,7 +2448,7 @@
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
-          "sha256": "5a1aa87fb6c3dbd9bc2968147a8a1ecad653d2f59c811734268844a8793a30e1"
+          "sha256": "45a3c8ffe21e5720068af315e0ed56d22f9816760ea5b34ef08a872886d2ae20"
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts",
@@ -2130,7 +2914,7 @@
       "sources": [
         {
           "path": "platform/security/src/authentication.ts",
-          "sha256": "f2ae1c6a9978ff308c6c66bdaa882ddcd2ad34da299a5b62a6d9cc4971af6837"
+          "sha256": "46dbab6782f5be8675fe5d8c1fa4a4113cfc4b98418298a75d29a0321476bb94"
         },
         {
           "path": "platform/security/src/authorization.ts",
@@ -2340,7 +3124,7 @@
       "sources": [
         {
           "path": "platform/adapters/aws/observability/cloudwatch/src/index.ts",
-          "sha256": "00a57ce96a56f52df7a2916826a26de09b386218f34a4d77c41450853bd2ca45"
+          "sha256": "c56144b33741cfeec73cdd1fe3ce89aad4298e19965a31d7a03556c1ff6693ef"
         },
         {
           "path": "platform/adapters/aws/observability/cloudwatch/src/configuration.ts",
@@ -2469,11 +3253,11 @@
       "sources": [
         {
           "path": "scripts/repo/check-selection/mechanics_test.py",
-          "sha256": "0a20835cf4d7c32247965d7ad0d9f8fc2206d6feabe4ee522795ee279adb15be"
+          "sha256": "43d25a8d2bcd73ee9733eaa2598389841e536e4ab0dbfd92cfea5ae349d9614a"
         },
         {
           "path": "scripts/repo/check-selection/repository_contracts_test.py",
-          "sha256": "4175f8cf310855df4396c5baa698ddd5f1bf29d700dd8c3c4f5de39b5a3c9fae"
+          "sha256": "e87dce852d2178ad6635912a66b1cdf884f3f5d49453a4a7f45380a8666ff644"
         }
       ]
     },
@@ -2525,7 +3309,7 @@
         },
         {
           "path": "packages/core/src/diagnostic-catalog.ts",
-          "sha256": "1d8cb263dc54a5dd70c594c3cd6b8cc444a35504be083d2d3edc308d6d5717d0"
+          "sha256": "67015492ff7e0508ee6972a4c628eb0a84d2a399df03ed4e4b0a4df72ce00d78"
         },
         {
           "path": "packages/core/src/index.ts",
@@ -2549,19 +3333,19 @@
         },
         {
           "path": "packages/core/src/shared/diagnostics.ts",
-          "sha256": "d7da5d3f3917883615aba58b62778bdcfe660bfa5168c148b1051a45201244de"
+          "sha256": "c0cc3115b114bf93584be1edede06ba49265af54fd4679c56ff607d19f103cff"
         },
         {
           "path": "packages/core/src/config/domain/reading/source.ts",
-          "sha256": "d965f20d9b156a1df13a0a9e97e6d4c70cb345d9ec10c18324cf8f408f203f3f"
+          "sha256": "ef56c6938e2418c019e4612e50e813e485c00241cf1cf30e6412dceb52675ccc"
         },
         {
           "path": "packages/core/src/config/domain/reading/value-readers.ts",
-          "sha256": "b069f3069eb4d73129b4779cae54905eafdf7ec1aeaaa25e140ef184733f809c"
+          "sha256": "957a8ced705d3281c48acd4ad4123637380bf4049f09a9bd8f9822d94cf1fc8f"
         },
         {
           "path": "packages/core/src/config/domain/validation/settings.ts",
-          "sha256": "2b426088c732d2aba0ea2d4c4708c170d010b09b01767b0a3669b82c1d27ffc9"
+          "sha256": "6a75c0ce4eca300c20bd6597b557664ccd824dda435226f821c10d7531961b9d"
         },
         {
           "path": "packages/core/src/config/domain/validation/json-object.ts",
@@ -2610,7 +3394,7 @@
         },
         {
           "path": "packages/core/src/i18n/observations.ts",
-          "sha256": "f45ca540413f459b6f8a227447293e79837bf7212f5fa91c7ccb8c507b77f480"
+          "sha256": "83593c4f5425b946212848be227a81be1d5d6cb5c92c94ed1f0a6f52854e63e7"
         }
       ],
       "tests": [
@@ -2650,7 +3434,7 @@
         },
         {
           "path": "packages/core/src/localization/observations.ts",
-          "sha256": "495ee4ba65447cfa243f9ddef59810499cba7fbec3792a5cf24c4667a45225be"
+          "sha256": "4461f6b27282e374f01841651576a5a6337682cdc103bca07aef04fd45a7fa2a"
         }
       ],
       "tests": [
@@ -2690,7 +3474,7 @@
         },
         {
           "path": "packages/core/src/audit/observations.ts",
-          "sha256": "ef646b217050f4f7987369196effb82c4c91daf44354426975c4343cf348a858"
+          "sha256": "924c6d6b3bc516f21d9ef1aa1e13c3a3badff962f3103dc9f099555ee4e6eaaf"
         }
       ],
       "tests": [
@@ -2732,7 +3516,7 @@
         },
         {
           "path": "packages/core/src/events/observations.ts",
-          "sha256": "12f87119e13c89ca8e9e12388e52483b4bed8a933371a61f8fd07cd0e938b63d"
+          "sha256": "6df9c5c7437a21016f5587506aa66fdb402d129560a3756d8f4dec71c090992e"
         }
       ],
       "tests": [
@@ -2774,7 +3558,7 @@
         },
         {
           "path": "packages/core/src/files/observations.ts",
-          "sha256": "c0163963e331ae7092d6dac77baecf9a84f4a489668b8ac357a5a8bd0014f177"
+          "sha256": "f68a850c081aedf332fcf9d9c65df2f97a5c4606fcc4f765940e4b5b95a0b71f"
         }
       ],
       "tests": [
@@ -2861,7 +3645,7 @@
         },
         {
           "path": "platform/adapters/aws/persistence/dynamodb/src/configuration/domain/validation.ts",
-          "sha256": "ba4dac55571d003caca31af8b427b40d7a00455ad22bce870164821be78b45b3"
+          "sha256": "3bc4e0ab3346838c6903f012c046bb586f0114a8d0bd708b3e96a7f5144e3035"
         }
       ],
       "tests": [
@@ -2995,7 +3779,7 @@
       "sources": [
         {
           "path": "platform/runtime/src/diagnostics.ts",
-          "sha256": "e4aad0d378828264c8b1486a7f94899a5e5a7e87c5bfdc92d7af7e6a64a55e6a"
+          "sha256": "04c393035117517985ff8fb6f4681ba5cd8b6e39a3c66a0dcb15e8928fca8941"
         },
         {
           "path": "platform/runtime/src/lifecycle.ts",
@@ -3072,7 +3856,7 @@
         },
         {
           "path": "packages/core/src/persistence/in-memory.ts",
-          "sha256": "22303ff5115cd1e2791dfae1cf9e0eac798e66588e29f0df3f3223fc0b32e12e"
+          "sha256": "559b8c908fddd83b411653f0ea5771dad776d33b81410929255beff01e838f0d"
         },
         {
           "path": "packages/core/src/persistence/index.ts",
@@ -3147,7 +3931,7 @@
         },
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/observations.ts",
-          "sha256": "aab3848e93e3da57ebc09d10d743b4ba2e0a31e3fbb4ec5184379544f7eb54e7"
+          "sha256": "ad1cba77c6be1d137dbc15594108ef8a8062bf12e5b67d6f72c3c2261922f538"
         }
       ]
     },
@@ -3219,7 +4003,7 @@
         },
         {
           "path": "platform/adapters/aws/persistence/dynamodb/src/observations.ts",
-          "sha256": "760f13874d946e5d5c743f59c65d391ef58da95bd153d3adb68419c83f03277d"
+          "sha256": "b152a9a36df6e3b3a81838b73b95dcf8a823102c0b5075727625ab0776a9d6a3"
         },
         {
           "path": "platform/adapters/aws/persistence/dynamodb/src/errors.ts",
@@ -3308,7 +4092,7 @@
         },
         {
           "path": "platform/adapters/aws/queue/sqs/src/observations.ts",
-          "sha256": "ac3e768f3c69c227039b91de9f5818436754c868c628e5f581cd054e5df48b82"
+          "sha256": "95b38f9ebda95fd1022f055c9e821f9cdc7af039a3294cec4639c95c4edfbd5f"
         },
         {
           "path": "platform/adapters/aws/queue/sqs/src/index.ts",
@@ -3371,7 +4155,7 @@
         },
         {
           "path": "packages/core/src/monitoring/observations.ts",
-          "sha256": "f309ddce1f047b9bb8d75ddd916ce09a42380c65b564ab9ab567ec524689d458"
+          "sha256": "5ecf3baf64e252f415301d28a51b07b3b80dacb002e083d8b3314839ec775d75"
         },
         {
           "path": "packages/core/src/monitoring/health.ts",
@@ -3391,7 +4175,7 @@
         },
         {
           "path": "packages/core/src/logging/observations.ts",
-          "sha256": "62e0d6cf3ebea38f986197e6266c01e6295e59dcc670690fab2ed67134d88886"
+          "sha256": "af4a185ceb1e798003f64f0e5fa325c6ed9f6b96e78468d01475644c4d2f6037"
         },
         {
           "path": "packages/core/src/logging/index.ts",
@@ -4460,11 +5244,11 @@
         },
         {
           "path": "platform/adapters/aws/queue/sqs/src/configuration/domain/validation.ts",
-          "sha256": "9c3259a250d919f00414bed1e13f4994463da432535340e91678642b14375227"
+          "sha256": "6f8460931e399417c2f64ea6387cd19ae1ba5f58071fed6c12923d8d3ee0d2dc"
         },
         {
           "path": "platform/adapters/aws/queue/sqs/src/configuration/domain/reporting.ts",
-          "sha256": "fda36e585b3964fdfb22909e090599a31e34621484d6c767b5aad165ee194359"
+          "sha256": "34cf485cc0f65adbb627c48a5a493caf154367d09235f7339baaaee30fdf7f9c"
         }
       ]
     },

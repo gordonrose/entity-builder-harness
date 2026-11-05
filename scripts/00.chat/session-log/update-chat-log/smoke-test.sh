@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-09"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -119,5 +119,58 @@ grep -qx 'ADR path:' "$LOG_FILE" \
 
 git -C "$REPO" diff --check \
   || fail "ADR disposition introduced whitespace errors"
+
+for consumer in record-sub-agent-activity record-main-refresh-conflict; do
+  mkdir -p "$REPO/scripts/00.chat/session-log/$consumer"
+  cp "$SOURCE_ROOT/scripts/00.chat/session-log/$consumer/script.sh" "$REPO/scripts/00.chat/session-log/$consumer/script.sh"
+done
+export WRITER_REAL_GIT="$(command -v git)" WRITER_REAL_AWK="$(command -v awk)" WRITER_REAL_MV="$(command -v mv)"
+mkdir -p "$TMP_ROOT/bin"
+cat > "$TMP_ROOT/bin/git" <<'SH'
+#!/usr/bin/env bash
+if [ "$WRITER_FAULT:$*" = 'branch:branch --show-current' ]; then echo WRITER_NATIVE_CANARY >&2; exit 99; fi
+exec "$WRITER_REAL_GIT" "$@"
+SH
+cat > "$TMP_ROOT/bin/awk" <<'SH'
+#!/usr/bin/env bash
+args=()
+for arg in "$@"; do
+  case "$arg" in
+    entry_path=*)
+      if [ "$WRITER_FAULT" = entry ]; then arg='entry_path=/no-such-WRITER_NATIVE_CANARY'; fi ;;
+  esac
+  args+=("$arg")
+done
+exec "$WRITER_REAL_AWK" "${args[@]}"
+SH
+cat > "$TMP_ROOT/bin/mv" <<'SH'
+#!/usr/bin/env bash
+if [ "$WRITER_FAULT" = replacement ]; then echo WRITER_NATIVE_CANARY >&2; exit 77; fi
+exec "$WRITER_REAL_MV" "$@"
+SH
+chmod +x "$TMP_ROOT/bin/"*
+for consumer in update-chat-log record-sub-agent-activity record-main-refresh-conflict; do
+  case "$consumer" in
+    update-chat-log) args=(question "question" "answer") ;;
+    record-sub-agent-activity) args=(--mode sub-agent --status completed --agent fixture --scope tests --summary done) ;;
+    record-main-refresh-conflict) args=(--path example.ts --type fixture --reason fixture --action retained --mode manual --preflight-branch fixture --preflight-worktree fixture) ;;
+  esac
+  (cd "$REPO"; bash "scripts/00.chat/session-log/$consumer/script.sh" "${args[@]}") > "$TMP_ROOT/ordinary.out"
+  cp "$LOG_FILE" "$TMP_ROOT/before"
+  for fault in branch entry replacement; do
+    status=0
+    (cd "$REPO"; WRITER_FAULT="$fault" PATH="$TMP_ROOT/bin:$PATH" \
+      bash "scripts/00.chat/session-log/$consumer/script.sh" "${args[@]}") > "$TMP_ROOT/fault.out" 2>&1 || status=$?
+    expected=2; stage=entry-construction
+    case "$fault" in
+      branch) stage=session-log-branch-read-failed ;;
+      replacement) stage=replacement; expected=77 ;;
+    esac
+    [ "$status" -eq "$expected" ] || fail "$consumer/$fault status $status"
+    grep -q "$stage" "$TMP_ROOT/fault.out" || fail "$consumer/$fault lost reason"
+    if grep -q WRITER_NATIVE_CANARY "$TMP_ROOT/fault.out"; then fail "$consumer/$fault leaked"; fi
+    cmp "$LOG_FILE" "$TMP_ROOT/before" || fail "$consumer/$fault changed log"
+  done
+done
 
 echo "update chat log smoke test passed."

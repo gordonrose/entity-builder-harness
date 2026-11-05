@@ -1,6 +1,6 @@
 import type { JsonValue, Result } from "@kanbien/core/shared";
 import type { DiagnosticDefinition, DiagnosticRecord } from "@kanbien/core/diagnostics";
-import { workerDiagnosticEvidence, workerDiagnosticRecord } from "./diagnostics";
+import { captureWorkerDiagnostic, workerDiagnosticEvidence, workerDiagnosticRecord } from "./diagnostics";
 
 export type PlatformWorkerErrorCode =
   | "PLATFORM_WORKER_MOUNT_FAILED"
@@ -51,8 +51,8 @@ export function workerError(
   return {
     code,
     defaultMessage,
-    diagnosticRecord: evidence.diagnosticRecord ?? fallbackDiagnosticRecord ?? workerDiagnosticRecord(code,
-      details?.["phase"] === "configuration" || details?.["phase"] === "claim" || details?.["phase"] === "complete" || details?.["phase"] === "release" ? details["phase"] : undefined),
+    diagnosticRecord: evidence.diagnosticRecord ?? fallbackDiagnosticRecord ?? captureWorkerDiagnostic(() => workerDiagnosticRecord(code,
+      details?.["phase"] === "configuration" || details?.["phase"] === "claim" || details?.["phase"] === "complete" || details?.["phase"] === "release" ? details["phase"] : undefined)),
     ...(evidence.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: evidence.relatedDiagnosticRecords }),
     ...(details === undefined ? {} : { details }),
     ...(cause === undefined ? {} : { cause }),

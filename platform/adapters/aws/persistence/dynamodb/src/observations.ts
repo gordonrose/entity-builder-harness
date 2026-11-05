@@ -1,5 +1,6 @@
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import {
+  capturePlatformPersistenceDiagnostic,
   observePlatformPersistenceDiagnostic,
   persistenceCommandDiagnosticRecord,
   persistenceLocalRejectionDiagnosticRecord,
@@ -68,9 +69,9 @@ export function dynamoDbObservation(options: PlatformPersistenceDiagnosticOption
     try {
       const name = boundary === "invocation" ? own(cause, "name") : { status: "not-inspected" as const };
       const facts = name.status === "recognized" ? nativeCondition(name.value) : { condition: "unclassified" as const, codeStatus: name.status };
-      emit(persistenceCommandDiagnosticRecord({ operation, boundary, role, ...facts,
+      emit(capturePlatformPersistenceDiagnostic(() => persistenceCommandDiagnosticRecord({ operation, boundary, role, ...facts,
         effect: boundary === "selection" || boundary === "encoding" || boundary === "client-construction" ? "not-invoked" : effect,
-        ...(facts.condition === "transaction-canceled" ? { cancellation: cancellation(cause) } : {}) }), cause);
+        ...(facts.condition === "transaction-canceled" ? { cancellation: cancellation(cause) } : {}) })), cause);
     } catch { /* Optional diagnostics cannot replace a workload failure. */ }
   };
   return {
@@ -93,11 +94,11 @@ export function dynamoDbObservation(options: PlatformPersistenceDiagnosticOption
       return attributes.decode(action, emit, (cause) => observe("decoding", cause));
     },
     reject(field: PersistenceLocalRejectionDetail["field"], condition: PersistenceLocalRejectionDetail["condition"], phase: PersistenceLocalRejectionDetail["phase"] = "state-check", knownEffect: PersistenceLocalRejectionDetail["effect"] = "unknown"): ReturnType<typeof selectPlatformPersistenceDiagnosticEvidence> {
-      try { emit(persistenceLocalRejectionDiagnosticRecord({ operation: operation as DynamoDbPersistenceOperation, field, condition, phase, effect: knownEffect })); } catch { /* Safe optional evidence only. */ }
+      emit(capturePlatformPersistenceDiagnostic(() => persistenceLocalRejectionDiagnosticRecord({ operation: operation as DynamoDbPersistenceOperation, field, condition, phase, effect: knownEffect })));
       return evidence;
     },
     source(cause: unknown): void {
-      const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause);
+      const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause, record => observePlatformPersistenceDiagnostic(options, record));
       if (selected.diagnosticRecord !== undefined) observePlatformPersistenceDiagnostic(options, selected.diagnosticRecord, { relatedDiagnosticRecords: selected.relatedDiagnosticRecords ?? [] });
       else for (const record of selected.relatedDiagnosticRecords ?? []) observePlatformPersistenceDiagnostic(options, record);
       evidence = selected;
@@ -106,7 +107,7 @@ export function dynamoDbObservation(options: PlatformPersistenceDiagnosticOption
       return { ...dynamoDbPersistenceOperationError(legacyOperation, legacyCause), ...evidence };
     },
     reconcile(observed: PersistenceStateReconciliationDetail["observed"]): void {
-      try { observePlatformPersistenceDiagnostic(options, persistenceStateReconciliationDiagnosticRecord({ operation: operation as PersistenceStateReconciliationDetail["operation"], primaryOutcome: "condition-rejected", observed, effect: "read-result-observed" })); } catch { /* Observation never confirms a write. */ }
+      observePlatformPersistenceDiagnostic(options, capturePlatformPersistenceDiagnostic(() => persistenceStateReconciliationDiagnosticRecord({ operation: operation as PersistenceStateReconciliationDetail["operation"], primaryOutcome: "condition-rejected", observed, effect: "read-result-observed" })));
     },
     evidence: () => evidence,
   };
@@ -121,8 +122,7 @@ export function attributeObservation(options: PlatformPersistenceDiagnosticOptio
   let activeDecode: { failure?: { readonly error: TypeError; readonly source: unknown } } | undefined;
   const evidence = (): ReturnType<typeof selectPlatformPersistenceDiagnosticEvidence> => {
     if (issues.length === 0) return {};
-    try { return { diagnosticRecord: persistenceStoredAttributeDiagnosticRecord({ operation, reduction, effect: operation.startsWith("read_") || operation === "list_outbox" ? "not-assessed" : "unknown", issues, truncated }) }; }
-    catch { return {}; }
+    return { diagnosticRecord: capturePlatformPersistenceDiagnostic(() => persistenceStoredAttributeDiagnosticRecord({ operation, reduction, effect: operation.startsWith("read_") || operation === "list_outbox" ? "not-assessed" : "unknown", issues, truncated })) };
   };
   return {
     row(ordinal: number): void { rowOrdinal = Number.isSafeInteger(ordinal) && ordinal >= 0 ? ordinal : undefined; },
@@ -136,7 +136,7 @@ export function attributeObservation(options: PlatformPersistenceDiagnosticOptio
     failure(message: string, field: Issue["field"], condition: Issue["condition"], source?: unknown, attributeOrdinal?: number): TypeError {
       reduction = "thrown";
       this.issue(field, condition, rowOrdinal, attributeOrdinal);
-      const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, source);
+      const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, source, record => observePlatformPersistenceDiagnostic(options, record));
       const error = Object.assign(new TypeError(message), { ...evidence(), ...selected });
       if (activeDecode !== undefined) activeDecode.failure = { error, source };
       return error;

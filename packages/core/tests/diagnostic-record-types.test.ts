@@ -1,4 +1,4 @@
-import { createDiagnosticRecord, defineDiagnostic, selectDiagnosticEvidence, type DiagnosticRecord } from "../src/diagnostics";
+import { captureDiagnosticRecord, createDiagnosticRecord, defineDiagnostic, diagnosticProcessingRecord, inspectDiagnosticEvidence, requireDiagnosticRecord, selectDiagnosticEvidence, type DiagnosticRecord, type DiagnosticSelectionStatus } from "../src/diagnostics";
 import { auditRecordError, eventPublishError, fileError, type CoreAuditErrorEvidence, type CoreError } from "../src/index";
 
 const definition = defineDiagnostic({ code: "type-proof.validation-failed", version: 1,
@@ -28,6 +28,18 @@ void [primary, companions];
 const unsafeDetail: { field: string } | undefined = evidence.diagnosticRecord?.detail;
 // @ts-expect-error Selected evidence is readonly.
 evidence.diagnosticRecord = primary;
+
+const inspection = inspectDiagnosticEvidence([definition], {});
+const status: DiagnosticSelectionStatus = inspection.primary;
+const required: DiagnosticRecord = requireDiagnosticRecord([definition], captureDiagnosticRecord(() => undefined));
+diagnosticProcessingRecord("construction-rejected");
+// @ts-expect-error Processing reasons are code-owned, not exception text.
+diagnosticProcessingRecord("private native error");
+// @ts-expect-error Inspection does not permit callers to rewrite the observed outcome.
+inspection.primary = "selected";
+// @ts-expect-error Companion outcome positions are readonly.
+inspection.companions.entries.push("rejected");
+void [status, required];
 
 const legacyErrorInput = { code: "fixture" as never, defaultMessage: "Fixed compatibility fixture." };
 type CompanionFactory = (input: typeof legacyErrorInput, evidence?: CoreAuditErrorEvidence) => CoreError;

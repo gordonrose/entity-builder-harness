@@ -1,25 +1,22 @@
 import { coreDiagnosticCatalog } from "../diagnostic-catalog";
-import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "../diagnostics/index";
+import { captureDiagnosticRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, deliverDiagnosticRecord, diagnosticProcessingRecord, type DiagnosticDefinition, type DiagnosticRecord } from "../diagnostics/index";
 import { coreAuthnDiagnosticDefinitions, coreAuthnBoundaryDiagnosticRecord, type CoreAuthnBoundaryDetail, type CoreAuthnDiagnosticOptions } from "./diagnostics";
 
-const nativeThen = Promise.prototype.then;
-function isolate(value: unknown): void {
-  if (value === undefined) return;
-  try { Reflect.apply(nativeThen, value, [undefined, () => undefined]); }
-  catch { try { Reflect.apply(nativeThen, Promise.resolve(value), [undefined, () => undefined]); } catch { /* Optional observer. */ } }
-}
-export function observeCoreAuthnDiagnostic(options: CoreAuthnDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown) {
+export function observeCoreAuthnDiagnostic(options: CoreAuthnDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown, fallback?: CoreAuthnBoundaryDetail) {
+  const processing: DiagnosticRecord[] = [];
   let definitions: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions, ...coreAuthnDiagnosticDefinitions];
-  try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; } catch { /* Optional definitions. */ }
-  const selected = selectDiagnosticEvidence(definitions, cause);
-  const checked = selectDiagnosticEvidence(coreAuthnDiagnosticDefinitions, { diagnosticRecord: own }).diagnosticRecord;
-  if (checked === undefined) return selected;
-  const ownedContext = Object.freeze({ ...checked.detail as CoreAuthnBoundaryDetail, evidence: "owned" as const });
-  const sourceContext = Object.freeze({ ...checked.detail as CoreAuthnBoundaryDetail, evidence: "source" as const });
-  const deliver = (record: DiagnosticRecord, context: typeof ownedContext | typeof sourceContext): void => { try { isolate(options?.onDiagnostic?.(record, context)); } catch { /* Preserve original work. */ } };
+  try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; } catch { processing.push(diagnosticProcessingRecord("definition-selection-failed")); }
+  const selected = selectDiagnosticEvidenceWithReport(definitions, cause, record => { processing.push(record); });
+  const checked = requireDiagnosticRecord(coreAuthnDiagnosticDefinitions, own);
+  const detail = checked.code === "core.diagnostics.processing-failed" ? fallback : checked.detail as CoreAuthnBoundaryDetail;
+  if (detail === undefined) return { ...selected, diagnosticRecord: selected.diagnosticRecord ?? checked };
+  const ownedContext = Object.freeze({ ...detail, evidence: "owned" as const });
+  const sourceContext = Object.freeze({ ...detail, evidence: "source" as const });
+  const deliver = (record: DiagnosticRecord, context: typeof ownedContext | typeof sourceContext): void => { deliverDiagnosticRecord(record, value => options?.onDiagnostic?.(value, context)); };
   deliver(checked, ownedContext);
   if (selected.diagnosticRecord !== undefined) deliver(selected.diagnosticRecord, sourceContext);
   for (const record of selected.relatedDiagnosticRecords ?? []) deliver(record, sourceContext);
+  for (const record of processing) deliver(record, ownedContext);
   return selected;
 }
 export class PrincipalObservation {
@@ -35,7 +32,8 @@ export class PrincipalObservation {
   }
   run<T>(action: () => T): T {
     try { return action(); } catch (cause) {
-      observeCoreAuthnDiagnostic(this.options, coreAuthnBoundaryDiagnosticRecord({ operation: "principal", phase: this.phase, field: this.field, reason: "threw", effect: "value-not-produced" }), cause);
+      const detail: CoreAuthnBoundaryDetail = { operation: "principal", phase: this.phase, field: this.field, reason: "threw", effect: "value-not-produced" };
+      observeCoreAuthnDiagnostic(this.options, captureDiagnosticRecord(() => coreAuthnBoundaryDiagnosticRecord(detail)), cause, detail);
       throw cause;
     }
   }

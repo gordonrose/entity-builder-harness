@@ -12,62 +12,101 @@ export interface DiagnosticRecordError { readonly code: "DIAGNOSTIC_RECORD_INVAL
 /** Shared envelope bound; catalogs export this value for non-TypeScript readers. */
 export const diagnosticRelatedRecordLimit = 8;
 
-/** Select only owned data evidence; never traverse an exception's cause or prototype. */
-export function selectDiagnosticEvidence(definitions: readonly DiagnosticDefinition[], value: unknown): {
+export interface DiagnosticEvidence {
   readonly diagnosticRecord?: DiagnosticRecord;
   readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[];
-} {
-  const primary = selectedRecord(definitions, ownDataValue(value, "diagnosticRecord"));
+}
+export type DiagnosticSelectionStatus = "absent" | "selected" | "rejected" | "unselected" | "inaccessible";
+export interface DiagnosticEvidenceInspection {
+  readonly evidence: DiagnosticEvidence;
+  readonly primary: DiagnosticSelectionStatus;
+  readonly companions: {
+    readonly status: Exclude<DiagnosticSelectionStatus, "unselected">;
+    readonly entries: readonly DiagnosticSelectionStatus[];
+  };
+}
+
+/** Compatibility projection. Use inspection when absence and rejection matter. */
+export function selectDiagnosticEvidence(definitions: readonly DiagnosticDefinition[], value: unknown): DiagnosticEvidence {
+  return inspectDiagnosticEvidence(definitions, value).evidence;
+}
+
+/** Only bounded outcomes leave this boundary, never rejected values or exception text. */
+export function inspectDiagnosticEvidence(definitions: readonly DiagnosticDefinition[], value: unknown): DiagnosticEvidenceInspection {
+  const primaryField = ownDataField(value, "diagnosticRecord");
+  const primary = primaryField.status === "present"
+    ? inspectRecord(definitions, primaryField.value)
+    : { status: primaryField.status };
   // Read independently: a malformed primary or a throwing proxy trap must not
   // discard companions that can be validated at this boundary.
-  const companions = selectedRelatedRecords(definitions, ownDataValue(value, "relatedDiagnosticRecords"));
+  const companions = inspectRelatedRecords(definitions, ownDataField(value, "relatedDiagnosticRecords"));
   return Object.freeze({
-    ...(primary === undefined ? {} : { diagnosticRecord: primary }),
-    ...(companions === undefined ? {} : { relatedDiagnosticRecords: companions }),
+    evidence: Object.freeze({
+      ...("record" in primary && primary.record !== undefined ? { diagnosticRecord: primary.record } : {}),
+      ...(companions.records === undefined ? {} : { relatedDiagnosticRecords: companions.records }),
+    }),
+    primary: primary.status,
+    companions: Object.freeze({ status: companions.status, entries: Object.freeze(companions.entries) }),
   });
 }
 
-function ownDataValue(value: unknown, key: string): unknown {
+type DataField = { readonly status: "present"; readonly value: unknown } | { readonly status: "absent" | "inaccessible" };
+function ownDataField(value: unknown, key: string): DataField {
   try {
-    if ((typeof value !== "object" || value === null) && typeof value !== "function") return undefined;
+    if ((typeof value !== "object" || value === null) && typeof value !== "function") return { status: "absent" };
     const field = Object.getOwnPropertyDescriptor(value, key);
-    return field !== undefined && "value" in field ? field.value : undefined;
-  } catch { return undefined; }
+    if (field === undefined) return { status: "absent" };
+    if (!("value" in field)) return { status: "inaccessible" };
+    return field.value === undefined ? { status: "absent" } : { status: "present", value: field.value };
+  } catch { return { status: "inaccessible" }; }
 }
 
-function selectedRecord(definitions: readonly DiagnosticDefinition[], value: unknown): DiagnosticRecord | undefined {
+function inspectRecord(definitions: readonly DiagnosticDefinition[], value: unknown): {
+  readonly status: Exclude<DiagnosticSelectionStatus, "absent">; readonly record?: DiagnosticRecord;
+} {
   try {
-    const code = ownDataValue(value, "code");
-    const version = ownDataValue(value, "definitionVersion");
-    const definition = definitions.find((candidate) => candidate.code === code && candidate.version === version);
-    if (definition === undefined) return undefined;
+    const code = ownDataField(value, "code");
+    const version = ownDataField(value, "definitionVersion");
+    if (code.status === "inaccessible" || version.status === "inaccessible") return { status: "inaccessible" };
+    if (code.status !== "present" || typeof code.value !== "string" || version.status !== "present"
+      || !Number.isSafeInteger(version.value) || (version.value as number) < 1) return { status: "rejected" };
+    const definition = definitions.find((candidate) => candidate.code === code.value && candidate.version === version.value);
+    if (definition === undefined) return { status: "unselected" };
     const checked = parseDiagnosticRecord(definition, value);
-    return checked.ok ? checked.value : undefined;
-  } catch { return undefined; }
+    return checked.ok ? { status: "selected", record: checked.value } : { status: "rejected" };
+  } catch { return { status: "inaccessible" }; }
 }
 
-function selectedRelatedRecords(definitions: readonly DiagnosticDefinition[], value: unknown): readonly DiagnosticRecord[] | undefined {
+function inspectRelatedRecords(definitions: readonly DiagnosticDefinition[], field: DataField): {
+  readonly status: Exclude<DiagnosticSelectionStatus, "unselected">;
+  readonly entries: DiagnosticSelectionStatus[];
+  readonly records?: readonly DiagnosticRecord[];
+} {
+  if (field.status !== "present") return { status: field.status, entries: [] };
+  const value = field.value;
   try {
-    if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return undefined;
+    if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return { status: "rejected", entries: [] };
     const length = Object.getOwnPropertyDescriptor(value, "length");
     if (length === undefined || !("value" in length) || !Number.isSafeInteger(length.value)
       || length.value < 0 || length.value > diagnosticRelatedRecordLimit
-      || Reflect.ownKeys(value).length !== length.value + 1) return undefined;
+      || Reflect.ownKeys(value).length !== length.value + 1) return { status: "rejected", entries: [] };
     const entries: unknown[] = [];
     for (let index = 0; index < length.value; index++) {
       const field = Object.getOwnPropertyDescriptor(value, String(index));
-      if (field === undefined || !("value" in field) || field.enumerable !== true) return undefined;
+      if (field === undefined || !("value" in field) || field.enumerable !== true) return { status: "rejected", entries: [] };
       entries.push(field.value);
     }
     // List integrity is established before any entry is examined. Unselected or
     // malformed records are excluded independently, retaining observation order.
     const copied: DiagnosticRecord[] = [];
+    const outcomes: DiagnosticSelectionStatus[] = [];
     for (const entry of entries) {
-      const checked = selectedRecord(definitions, entry);
-      if (checked !== undefined) copied.push(checked);
+      const checked = inspectRecord(definitions, entry);
+      outcomes.push(checked.status);
+      if (checked.record !== undefined) copied.push(checked.record);
     }
-    return Object.freeze(copied);
-  } catch { return undefined; }
+    return { status: "selected", entries: outcomes, records: Object.freeze(copied) };
+  } catch { return { status: "inaccessible", entries: [] }; }
 }
 
 /** Copies a dense, data-only bounded list and validates every registered record. */

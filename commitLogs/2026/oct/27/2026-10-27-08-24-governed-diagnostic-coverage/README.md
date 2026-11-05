@@ -29,6 +29,410 @@ Walk through core-server-persistence observability step by step
 
 ## Session Log
 
+### Commit and handoff — 2026-11-05
+
+- 17:36:46 UTC: user explicitly requested committing the work so far. Reviewed
+  187 changed/new paths since checkpoint c7b891fd: DIAG-012 source, connected tests,
+  imported-tool diagnostics and review registrations; DIAG-014 instructions and
+  records. No pre-staged paths. Commit only this recorded chat worktree; no push,
+  merge, deployment or new implementation scope.
+- Context hygiene: retain the DIAG-012 final verification table and DIAG-014
+  procedure/scenario evidence above; raw tool output is not a replacement for
+  registered receipts. Existing public-beta/generated-install proof is recorded
+  in DIAG-012; commit checks must validate applicable freshness. No temporary
+  evaluation files are included in the reviewed seven new source/test paths.
+- Decision: DIAG-013 implementation is deferred to logging/telemetry maturity
+  work and recorded as such in the backlog. DIAG-006/007 remain deferred.
+  Current scope closes without claiming exhaustive diagnostics, reliable remote
+  receipt, upstream incorporation or production qualification. The new chat's
+  handoff must identify the final artifact and obtain deployment authority.
+- ADR disposition for this commit: existing runtime-owned diagnostic contracts
+  ADR 0043 remains applicable. These repairs and the bounded discovery procedure
+  apply that architecture; no additional architectural replacement is introduced.
+- Commit verification sequence: prepare the explicit 187 paths, stage those exact
+  paths, pass the governed staged commit gate, commit, record the resulting SHA,
+  then perform the required session-log-only bookkeeping checkpoint. Preserve
+  prior matching evidence; do not execute deployment or broad runtime suites
+  merely because the work is being committed.
+- First staged commit gate passed. Staging exposed EOF whitespace in six new
+  shell fixtures, which unstaged tracked-only diff checking had not covered.
+  Removed only the surplus blank final lines after the pass completed; no
+  executable statements changed. Reprepare/restage before the final gate and
+  reuse unaffected receipts. This is avoidable commit-preparation rework; include
+  untracked additions in future pre-staging whitespace review.
+
+### DIAG-014 — governed discovery and correction — 2026-11-05
+
+- Scope: existing diagnostic workflow, safe-record standard, completion-standard
+  cross-reference, DIAG-014 backlog entry and this journal. No executable source,
+  runtime contract, generated catalogue, imported tool, AGENTS router or test
+  framework changes. No new runtime predicate: this is a process-only change.
+- Sequence: inspect existing governance and caller proof; add the bounded
+  discovery procedure; self-review five decision scenarios and proof sensitivity;
+  prepare these five paths; validate documentation and request the existing
+  `core-runtime` registered unit for current matching evidence; record completion.
+  Broader integration/deployment and DIAG-013 are not part of this task.
+- Activity: inspection and implementation were underway by 13:28:35 UTC (clock
+  observation, not a reconstructed start time). Existing worktree changes belong
+  to this ongoing session and are preserved. One guessed test-runner path did
+  not exist; the registered check catalogue supplied the actual command instead.
+- Representative proof selected: existing
+  `packages/core/tests/events-runtime.test.ts`, especially `diagnosticCoverage`.
+  It exercises real event operations through their observation wrapper and
+  `onDiagnostic` recipient. Exact record assertions reject missing records, wrong
+  reasons, versions, context and generic substitutions; handler cases check
+  original cause, call/effect counts, source companions and private-canary exclusion.
+  Successful publish/envelope cases and unchanged storage behaviour are covered.
+  No new fixture is needed merely to duplicate this existing DIAG-012 regression.
+  Reuse must be validated by the registered runner, not assumed from this prose.
+
+#### Consolidated self-review and scenario walkthrough
+
+Reviewed the five task paths against DIAG-014 and the existing standards. The
+workflow owns procedure; the standards only add duties/cross-references. No
+runtime consumers or mechanical enforcement changed, so generated catalogues,
+review hashes and executable harness fixtures require no update. Existing module
+structure rules remain authoritative. Required corrections: none outstanding.
+
+These are reviewed scenarios, not an executed agent-evaluation suite:
+
+| Scenario | Decision reached using the revised procedure | Incorrect response rejected |
+| --- | --- | --- |
+| Event version `0` already has `not-positive` in the owning definition | Reuse `core.events.validation-rejected/v1`; inspect the caller path first. | Creating a second diagnostic for the same observation. |
+| The operation reports `invalid-format`, but its caller receives undefined | Repair mapping/selection/propagation; assert the exact record at the receiving callback. | Replacing the known reason with a generic processing failure. |
+| A controlled dependency response establishes a previously undefined failure | Locate its capability/provider owner; define only supported facts, version changed definitions and update readers/generated exports. | Adding provider-specific meanings to Core or editing JSON as a second source. |
+| A call throws without evidence of the underlying cause | Report the observed throw and uncertainty, preserving the original outcome; add an uncertainty representation only if the owner lacks one. | Claiming access denied or replaying the call to obtain a better message. |
+| A repair needs an unapproved imported-tool edit or public compatibility change | Record the exact boundary/decision and continue independent authorised work. | Editing upstream-owned files or silently broadening scope. |
+
+Proof sensitivity was inspected in `diagnosticCoverage`: its literal object
+comparisons include code, definitionVersion and detail, and callback arrays are
+compared with the expected records. Removing a callback record or substituting
+a generic record cannot satisfy those assertions. Boundary cases separately
+assert call counts, original errors and canary exclusion. This is source-review
+evidence of assertion sensitivity, not a claim that a mutation campaign ran.
+The existing unchanged regression is deliberately reused rather than adding
+a duplicate test or manufacturing a production defect. There is no mechanical
+change for which new harness fixtures are necessary. This follows the agreed
+implementation clarification to DIAG-014's originally worded fixture criterion.
+
+#### Verification and efficiency outcome
+
+- By 13:30:48 UTC the implementation and scenario review were recorded. The
+  normal pre-verification command then exposed two correction needs: private
+  receipt writes were outside the tool's default writable worktree, and the
+  deterministic-process heuristic flagged two judgement-only instructions.
+  The existing command was rerun with reviewed local receipt-write permission;
+  narrow, explained allow markers were added for those two statements. No gate
+  was disabled and no executable or ownership hashes were changed.
+- Final pre-verification preparation passed by 13:33:01 UTC: metadata lifecycle
+  and index/header checks, deterministic-process drift, governed-command drift,
+  and non-executing commit-boundary impact planning. The command was
+  `bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh --before-verification --paths`
+  followed by the five task paths listed above. The first failed preparation and
+  sandboxed runner attempt are not passing evidence.
+- `bash scripts/repo/check-selection/script.sh --checks core-runtime --execute-local --json`
+  passed with its matching trusted-worktree receipt reused: 8.960 seconds elapsed,
+  zero test execution seconds. The runner revalidated its declared inputs/runtime;
+  no unchanged runtime suite was repeated. Later changes were only these harness
+  documents and closeout prose, outside that unit's declared inputs.
+- All 27 relative file/heading references in the three instruction documents and
+  DIAG-014 entry passed a read-only link check. Scoped whitespace checks passed.
+  Final backlog/journal closure receives scoped documentation checks, not another
+  broad pass. No new fixture or production diagnostic was necessary; the scenario
+  review is not an automated agent-behaviour guarantee or repo-wide coverage proof.
+- Efficiency lesson: use the recorded chat worktree's private receipt permission
+  when invoking preparation, and identify judgement-only requirements during
+  authoring. The two preparation corrections were local rework, not reasons to
+  rerun runtime tests. No install, deployment, Docker, Git staging/commit/push or
+  DIAG-013 implementation took place.
+
+### DIAG-012 continuation — 2026-11-05
+
+#### DIAG-012 final local verification — 2026-11-05
+
+Closed at 2026-11-05T01:39:29+00:00 (UTC), after the final registered results.
+This is the proof record for the bounded DIAG-012 scope, not a declaration that
+every repository operation or future machine failure has exhaustive diagnostics.
+
+- 01:25–01:39 UTC: corrected fixture expectations, prepared their metadata and
+  ran the final registered units against stable implementation/test inputs.
+  All 53 passed: 32 executed, 21 matching successful receipts reused.
+  Runtime batch: 590.15 seconds elapsed, 516.59 seconds executing commands.
+  Tooling batch: 755.09 seconds elapsed, 720.48 seconds executing commands.
+  Adoption/rate-limiter batch: 57.39 seconds elapsed, 39.00 seconds executing.
+  These batches overlapped; their elapsed times must not be added as wall time.
+- The largest final costs were repository-contract tests (307.77 seconds),
+  runner mechanics (249.83), persistence composition (106.06), generated/installed
+  portability (61.75) and bootstrap fixtures (49.54). The two missed test updates
+  caused avoidable rework; changed declared input closures invalidated some earlier
+  passes. Unchanged successful results were reused. No check was weakened to
+  obtain a pass, and no new optimization project was started.
+- The ordinary reason matrices and actual callers are reconciled in the plan.
+  Unexpected construction/selection failure tests are separate safeguards.
+  Imported census: 47 changed sources, 13 retained sources with explained proof.
+  Review records retain partial whole-file status and explicit observation limits.
+- Final commands used the existing selector:
+  `bash scripts/repo/check-selection/script.sh --checks <IDs below> --execute-local --json`.
+  Private worktree runner receipts are authoritative for reuse; this Markdown
+  summary and temporary JSON reports are not trusted substitute receipts.
+  Reports: `/tmp/diag012-final-runtime-v2.json`,
+  `/tmp/diag012-final-tools-v2.json`, `/tmp/diag012-final-support.json`.
+  Initial interrupted queue logs are retained under
+  `/tmp/diag012-final-{runtime,tools}.stderr`; they are not completion evidence.
+- Metadata preparation and non-executing impact planning passed. The full impact
+  plan includes later integration/container/deployment obligations; it was not
+  executed wholesale. `platform-shell-payload`, full integration, containers,
+  cloud/deployment acceptance, upstream incorporation and DIAG-013 sink-delivery
+  work remain separate. No real staging, commit, push, install, cloud or deployment
+  action was performed. Generated installs were confined to disposable fixtures.
+- Implementation and test files were frozen during the final pass. Backlog/plan
+  completion prose and this journal were written afterwards and receive only
+  scoped documentation checks; a later commit/CI boundary must independently
+  revalidate any receipt affected by its declared inputs.
+- Scoped closeout checks passed: artifact headers for the two updated plans,
+  DIAG-012's required sections/completed criteria, all 53 recorded check results,
+  added evidence links and repository diff whitespace. No implementation or test
+  change followed the final registered pass.
+
+| Registered check | Final result | Executed seconds |
+| --- | --- | ---: |
+| `chat-bootstrap-audit-regression` | passed — matching receipt reused | — |
+| `chat-cleanup-regression` | passed — matching receipt reused | — |
+| `chat-command-dispatch-regression` | passed — executed | 1.32 |
+| `chat-commit-metrics-regression` | passed — matching receipt reused | — |
+| `chat-conflict-audit-regression` | passed — matching receipt reused | — |
+| `chat-conflict-classification-regression` | passed — matching receipt reused | — |
+| `chat-export-regression` | passed — executed | 8.45 |
+| `chat-integration-preparation-regression` | passed — matching receipt reused | — |
+| `chat-local-merge-regression` | passed — matching receipt reused | — |
+| `chat-log-deletion-regression` | passed — matching receipt reused | — |
+| `chat-log-maintenance-regression` | passed — matching receipt reused | — |
+| `chat-log-writers-regression` | passed — matching receipt reused | — |
+| `chat-main-refresh-regression` | passed — matching receipt reused | — |
+| `chat-migration-audit-regression` | passed — matching receipt reused | — |
+| `chat-prerequisites-regression` | passed — matching receipt reused | — |
+| `chat-recovery-regression` | passed — executed | 0.85 |
+| `chat-refresh-readiness-regression` | passed — matching receipt reused | — |
+| `chat-session-preparation-regression` | passed — matching receipt reused | — |
+| `chat-session-reader-regression` | passed — matching receipt reused | — |
+| `chat-session-resolution-regression` | passed — executed | 0.48 |
+| `chat-startup-regression` | passed — executed | 3.41 |
+| `chat-summary-regression` | passed — matching receipt reused | — |
+| `chat-upstream-bootstrap-regression` | passed — executed | 49.54 |
+| `chat-upstream-contract-regression` | passed — matching receipt reused | — |
+| `chat-upstream-ensure-regression` | passed — matching receipt reused | — |
+| `chat-upstream-portability-regression` | passed — executed | 61.75 |
+| `chat-worktree-paths-regression` | passed — executed | 3.19 |
+| `check-selection-mechanics` | passed — executed | 249.83 |
+| `check-selection-repository-contracts` | passed — executed | 307.77 |
+| `cloudwatch-observability-runtime` | passed — executed | 26.18 |
+| `core-runtime` | passed — matching receipt reused | — |
+| `diagnostic-adoption` | passed — executed | 1.20 |
+| `diagnostic-catalog-readers` | passed — executed | 46.33 |
+| `dynamodb-persistence-runtime` | passed — matching receipt reused | — |
+| `harness-command-drift-regression` | passed — executed | 1.73 |
+| `harness-governed-runner-regression` | passed — executed | 1.77 |
+| `harness-header-regression` | passed — executed | 30.08 |
+| `harness-process-drift-regression` | passed — executed | 0.33 |
+| `module-index-structure` | passed — executed | 3.12 |
+| `persistence-composition` | passed — executed | 106.06 |
+| `platform-config-runtime` | passed — executed | 21.62 |
+| `platform-contracts-runtime` | passed — executed | 24.59 |
+| `platform-health-runtime` | passed — executed | 26.57 |
+| `platform-observability-runtime` | passed — executed | 30.48 |
+| `platform-persistence-runtime` | passed — executed | 29.15 |
+| `platform-runtime-runtime` | passed — executed | 25.10 |
+| `platform-security-runtime` | passed — executed | 26.62 |
+| `platform-server-runtime` | passed — executed | 36.89 |
+| `platform-testing-runtime` | passed — executed | 23.05 |
+| `platform-workers-runtime` | passed — executed | 31.48 |
+| `postgresql-connection-diagnostics` | passed — executed | 31.82 |
+| `security-shared-rate-limit-diagnostics` | passed — executed | 37.80 |
+| `sqs-queue-runtime` | passed — executed | 27.55 |
+
+- 00:40–01:05 UTC: completed maintenance/bootstrap/contract/integration, audit,
+  startup/closeout, header-history, session-writer/maintenance and summary/overlap
+  reader corrections. Their narrow fixtures passed. Avoidable corrections:
+  an installed-checker fixture outlived its temporary directory; startup fixture
+  picked a fault-test branch; overlap-double escaping was wrong; a YAML patch
+  hit the wrong repeated input list. Each was corrected with bounded assertions.
+  Header testing also preserved UTF-8 rejection as a content error rather than
+  incorrectly calling it an unavailable read. Added fixed registered fixture
+  owners, not new general runners. Registration/closed-dispatch tests passed.
+- 01:05–01:15 UTC: parent consolidated self-review reconciled the 60-source
+  imported census (47 corrections, 13 no-change) and runtime consumer groups.
+  Two final caller gaps were confirmed and fixed: SQS configuration construction/
+  selection and HTTP listen's optional catalogue enumeration. Temporary
+  compilation and their targeted actual-caller fixtures passed first run.
+  Bootstrap completion now follows sanitization; its narrow rerun passed with
+  an injected sanitization failure. Cleanup's base-read native output is excluded
+  and its fixture passed. Reviewed imported source bindings were added by owner.
+  Final metadata/registered proof/portability still pending; no completion claim.
+  No real Git mutation, installation, upstream edit, cloud or deployment.
+
+- 01:15–01:25 UTC: metadata preparation passed after correcting a prose-pattern
+  false positive; 15 reviewed source bindings were refreshed only after proving
+  their changes were date-only. Static diagnostic coverage passed. Final runtime
+  and imported-tool queues ran concurrently. Core, catalogue readers, DynamoDB,
+  module structure and 25 imported units passed, including generated/installed
+  portability. Two missed fixture consumers failed: CloudWatch's import allowlist
+  did not permit Core diagnostics, and the worktree fixture expected the old
+  root-creation message. Stopped both queues before further verification against
+  changing inputs. Corrected the exact allowance with forbidden-import assertions
+  and asserted the bounded startup stage/effect without native path disclosure.
+  Both narrow fixtures passed. These were avoidable consumer-review misses;
+  matching successful receipts will be reused, not represented as fresh executions.
+
+- 00:16–00:40 UTC: refresh application, explicit-path recovery, cleanup, commit
+  preparation/prerequisites, governed-runner classification, command-drift and
+  workspace/branch reports received connected observation-preservation fixes.
+  Their existing focused fixtures passed; two new leaf reuse/invalidation tests
+  and registration/closed-dispatch tests passed. Test-development corrections:
+  used the compatibility runner's actual class name, separated reuse cases that
+  had shared mutable fixtures, and corrected the sed fault double's argument
+  position. These were narrow reruns, not complete suite reruns. Bootstrap review
+  is now implementing read-vs-conflict distinctions with disposable-source tests.
+  Review bindings for this latter group and final registered proof are still
+  outstanding. No actual checkout, upstream project, deployment or cloud mutation.
+
+- 00:02–00:16 UTC: followed the worktree libraries through write-location,
+  ensure and window callers. Failed metadata/root/reference reads now stop
+  rather than misdiagnosing mismatch; creation failures retain exit status and
+  uncertain effect, optional editor failure remains a warning. Existing worktree
+  fixture passed after adding command-double cases. Conflict-audit fixture passed
+  failed index/content/match/paths reads and rejected-value canaries. Local merge
+  fixture passed unchanged eligible/refusal cases plus twelve injected read
+  failures, including post-proof reads; unknown input cannot authorize proof or
+  eligibility. One source review initially cited the superseded imported-tool
+  deferral; confirming the later recorded 55+5 approval resolved it without new
+  scope or an ownership reset. All mutations were confined to disposable test
+  repositories. This is development proof, not final registered verification.
+  Remaining census/consumer reconciliation/portability still prevent completion.
+
+### DIAG-012 implementation — 2026-11-04
+
+- 23:23–23:28 UTC: applied the approved Testing helper/pin exception.
+  Built-in Core and registered mount evidence now survive failure to read an
+  optional definition list. Exact primary/eight companions, missing-value
+  reason, schema position/call order and mount count passed in the focused
+  Testing runtime runner. Cognito/ECS/rate-limit temporary compilations and
+  runtime/boundary fixtures passed. The rate-limit runner initially failed
+  because its old package shims could not represent nested JSON exports;
+  corrected that existing fixture to copy/resolve the declared assets and
+  assert their contents, then reran without repeating compilation. No runtime
+  adapter changes were needed for these compatibility cases. Updated only
+  Testing's approved index pin and its reviewed source binding. Module-index
+  and diff-whitespace checks passed. Remaining imported census/portability,
+  consumer reconciliation and final registered proof still prevent DIAG-012
+  completion. No install, Docker, cloud, deployment or real Git mutation.
+  Follow-up static review caught one stale binding from the prior continuation:
+  the two already-tested focused mechanics cases were added after their review
+  hash was captured. Reviewed that exact diff and refreshed its binding; no
+  runner behavior or test implementation changed during this correction.
+
+- 23:04–23:20 UTC: finished the refreshed shell observation cases and passed
+  their focused tests. Worktree registration failure cannot become permission
+  to create a replacement; failed Git status cannot certify clean. Dispatcher
+  rejected values/native scan errors are excluded, and five thin gateways retain
+  exact child failure/exit. Existing export/CLI/ownership fixture passed without
+  production JS changes. Health runtime passed. Security principal bridge now
+  preserves original failure/source9 and exposes failed construction/selection;
+  its focused runtime passed. Two fixture typing mistakes required narrow
+  recompiles, and a repository-relative certificate asset required rerunning
+  the remaining security tests from the correct cwd. No dependency was missing.
+  Registered seven existing smoke fixtures as focused selector units; initial
+  direct dispatch conflicted with their effect declarations, so registration
+  uses the existing disposable-test wrapper, not relaxed permissions. A contract
+  test caught a dynamic-copy-path matching mistake before it was corrected;
+  repository registration and narrow failure/reuse/invalidation tests passed.
+  Reviewed source hashes/partial imported reviews updated; static coverage and
+  module-index gates passed. Whole imported census, Platform testing exception
+  and final registered frozen proof remain outstanding. No commits, deployments,
+  dependency installs or real-worktree Git mutations in this continuation.
+
+- 22:45–23:04 UTC: Core validation and HTTP diagnostic-only corrections are
+  implemented under the approved exceptions; their reviewed pins were updated.
+  Core validation/record fixtures, Worker remaining runtime fixtures and Server
+  remaining runtime fixtures passed. Existing Worker tests caught an over-strict
+  guard dropping an already-selected Runtime fallback: corrected by retaining
+  that legitimate cross-owner record. Old silent-failure expectations in Worker
+  and Server fixtures needed exact additional processing-record assertions;
+  these caused narrow recompiles, not broader suite reruns. PostgreSQL runtime
+  and local protocol/TLS fixtures passed. Core catalogue generation passed after
+  supplying the existing NODE_PATH (first attempt could not locate pg; no install).
+  The README-writing skill guided the scoped Core reporting explanation; safe
+  record standard/workflow now state the shared safeguard and proof boundaries.
+  Imported staged-deletion smoke passed. Refresh-readiness/freshness failures
+  now distinguish absent refs from failed reads; its expanded smoke passed,
+  including actual rehearsal refusal before mutation. No deployment or real
+  Git mutation occurred. Additional Platform testing pinned-index approval is
+  still outstanding; imported census and final source-matched proof remain open.
+
+- 22:39–22:45 UTC: recovered CloudWatch adapter and Platform observability
+  corrected fixtures passed; actual core-server configuration/startup fixture
+  passed against the temporary composition (no provider calls). Persistence
+  relay/local-store guards now preserve original failures if their diagnostic
+  builder throws or returns unusable evidence; the new focused fixture passed
+  after correcting its malformed-versus-absent expected reason. Workers had
+  the same actual-caller gap; connected queue/job changes and fault fixtures
+  are compiling, with one closure-narrowing TypeScript correction made before
+  rerun. Session-reader lookup and transcript/commit-metrics smoke tests passed
+  in disposable repositories: failed scans/reads cannot become absence, and
+  the portable metrics caller retains the finite failure reason. No final
+  stable-batch pass is claimed. Asked for the harness-required additional
+  diagnostic-only pinned-index exception for Core validation and HTTP server;
+  the user approved both. Worker compilation has passed; runtime fixtures are
+  running. Those two approved index corrections are next, without refactoring.
+
+- 22:29 UTC: resumed after the WSL disconnect. Saved source is intact; prior
+  compiler process handles were lost and one expected output was absent, so the
+  interrupted compilations were not counted as passes. Recovered Core and
+  CloudWatch compilation passed; Core queues, SQS runtime/configuration and
+  CloudWatch lifecycle fixtures passed. CloudWatch adapter reached an old
+  ten-record expectation where the new explicit selection-failure report adds
+  an eleventh; corrected the exact expected record, rerun pending. Limiting
+  concurrent compilations to two after observing 3.7 GiB memory and swap use;
+  this is resource control, not reduced verification. Imported-tool review is
+  beginning with failed Git-stage reads previously collapsed to empty content.
+
+- 22:12 UTC: user approved both diagnostic-only legacy-index exceptions (Core
+  queues and CloudWatch) and their two reviewed pins. No broader refactor or
+  provider execution is authorised. Core config/persistence focused fixtures,
+  Platform config and operational-contract fixtures passed. Runtime required a
+  narrow correction to an old silent-failure expectation; final proof remains
+  outstanding. DynamoDB and Platform persistence temporary compilations produced
+  no diagnostics; their focused runners are now executing. No full-repo suite
+  or external operation has been run for these edits.
+
+- 21:59–22:03 UTC: Group 1 connected Core runtime run passed ten files; one
+  localization assertion still expected silent definition-selection failure.
+  Added the exact new processing record assertion and re-ran only localization:
+  passed. Core type check passed, including closed reasons/readonly inspection.
+  Eleven affected runtime files now have focused passing evidence, before the
+  subsequent Core config edits. Temporary compile cycles included source-only
+  and fixture updates; do not present them as repeated broad verification.
+  Group 2 is now editing Config/Runtime/operational-contract callers and adding
+  injected-failure cases beside unchanged normal literals. No Group 2 pass is
+  claimed yet. The controlling plan records ownership and actual caller traces.
+
+- Group 1 development: two temporary Core compilations completed without
+  diagnostics (the first checked the shared mechanism before fixture changes).
+  Four focused runtime files passed: diagnostic-record (0.619s), Events
+  (0.616s), Audit (0.573s), foundation diagnostics (0.678s), run concurrently
+  against one compiled input set. Exact normal literals remain; controlled
+  builder throw/undefined/unselected records are checked independently through
+  actual Events/Audit callers. Source getters stay uncalled and companions
+  survive rejection notices. Evidence directory: `/tmp/diag012-core-Odn2Vk`.
+  A subsequent bounded review correction allows only exact prevalidated internal
+  processing objects through required-owned selection; final tests remain due.
+
+- Began after checkpoint `e94628ad` and session-only `c7b891fd`; no further
+  commit is implied by the implementation authority. Group 1 is shared explicit
+  evidence inspection and Events/Audit preservation, with ordinary reason
+  assertions kept separate from injected processing failures. Predicate and
+  ownership decisions are in the controlling plan. Development uses focused
+  fixtures and temporary compilation; broader integration remains deferred.
+
 ### Checkpoint before DIAG-012 — 2026-11-04
 
 - 21:36:10 UTC: checkpoint committed as

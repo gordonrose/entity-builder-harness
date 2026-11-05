@@ -7,7 +7,7 @@ export type { PersistenceLeaseDurationReason } from "./leasing/index";
 export { persistenceConfigurationInputDiagnostic, persistenceConfigurationInputDiagnosticRecord } from "./diagnostics";
 export { persistenceCurrentDiagnosticDefinitions, persistenceCrudDiagnosticDefinitions, persistenceCrudObservedDiagnosticRecord,
   persistenceLocalRejectionDiagnostic, persistenceLocalRejectionDiagnosticRecord, persistenceStoredRecordDiagnostic, persistenceStoredRecordDiagnosticRecord,
-  persistenceBoundaryDiagnostic, persistenceBoundaryDiagnosticRecord, observePlatformPersistenceDiagnostic, selectPlatformPersistenceDiagnosticEvidence } from "./diagnostics";
+  persistenceBoundaryDiagnostic, persistenceBoundaryDiagnosticRecord, observePlatformPersistenceDiagnostic, selectPlatformPersistenceDiagnosticEvidence, capturePlatformPersistenceDiagnostic } from "./diagnostics";
 export type { PersistenceLocalRejectionDetail, PersistenceStoredRecordDetail, PersistenceBoundaryDetail, PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 export { persistenceReconciliationDiagnostic, persistenceReconciliationDiagnosticRecord } from "./diagnostics";
 export type { PersistenceReconciliationDetail } from "./diagnostics";

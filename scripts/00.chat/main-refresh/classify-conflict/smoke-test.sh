@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -184,4 +184,29 @@ if ! printf '%s\n' "$OUTPUT" | grep -q '^type=append-only-plan-index-conflict$';
   fail "append-only plan index conflict was not classified"
 fi
 
+REAL_GIT="$(command -v git)"
+export REAL_GIT
+mkdir -p "$TMP_ROOT/bin"
+cat > "$TMP_ROOT/bin/git" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == ls-files && "${FAIL_READ:-}" == index ]]; then
+  echo PRIVATE_GIT_CANARY >&2
+  exit 71
+fi
+if [[ "$1" == show && "$2" == ":${FAIL_READ:-}:"* ]]; then
+  echo PRIVATE_GIT_CANARY >&2
+  exit 72
+fi
+exec "$REAL_GIT" "$@"
+EOF
+chmod +x "$TMP_ROOT/bin/git"
+for stage in index 1 2 3; do
+  if (cd "$REPO" && PATH="$TMP_ROOT/bin:$PATH" FAIL_READ="$stage" bash scripts/00.chat/main-refresh/classify-conflict/script.sh "$PLAN_INDEX") >"$TMP_ROOT/read.out" 2>"$TMP_ROOT/read.err"; then
+    fail "failed conflict read became successful classification"
+  fi
+  test ! -s "$TMP_ROOT/read.out" || fail "failed read emitted a classification"
+  if [[ "$stage" == index ]]; then expected='ERROR: conflict-index-read-failed';
+  else expected="ERROR: conflict-stage-read-failed stage=$stage"; fi
+  test "$(cat "$TMP_ROOT/read.err")" = "$expected" || fail "failed read lost safe stage attribution"
+done
 echo "main refresh conflict classifier smoke test passed."

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: remote-promotion
 #   disciplines:
@@ -75,6 +75,49 @@ printf '%s\n' "$OUTPUT" | grep -q '^result=prepared$' || fail "real preparation 
 
 git -C "$REPO" worktree remove "$INTEGRATION_WORKTREE"
 git -C "$REPO" branch -D "$INTEGRATION_BRANCH" >/dev/null
+
+export INTEGRATION_REAL_GIT="$(command -v git)"
+mkdir -p "$TMP_ROOT/bin"
+cat > "$TMP_ROOT/bin/git" <<'SH'
+#!/usr/bin/env bash
+case "$PREP_FAULT:$*" in
+  source-reference:*'show-ref --verify --quiet refs/heads/chat/'*|\
+  base-reference:*'show-ref --verify --quiet refs/remotes/'*|\
+  ancestry:*'merge-base --is-ancestor'*|\
+  source-commit:'rev-parse chat/'*|\
+  integration-reference:*'show-ref --verify --quiet refs/heads/agentic/'*|\
+  created-status:*'status --porcelain'*|created-head:*'rev-parse HEAD'*)
+    echo INTEGRATION_NATIVE_CANARY >&2; exit 99 ;;
+esac
+if [ "$1 $2" = 'worktree add' ]; then
+  if [ "$PREP_FAULT" = worktree-create ]; then
+    echo INTEGRATION_NATIVE_CANARY >&2; exit 77
+  fi
+  # Post-creation observation fixtures do not create an actual worktree.
+  exit 0
+fi
+if [ "$PREP_FAULT" = created-head ] && [[ "$*" == *'status --porcelain'* ]]; then exit 0; fi
+exec "$INTEGRATION_REAL_GIT" "$@"
+SH
+chmod +x "$TMP_ROOT/bin/git"
+for fault in source-reference base-reference ancestry source-commit integration-reference \
+  worktree-create created-status created-head; do
+  status=0
+  (cd "$REPO"; TMPDIR="$TMP_ROOT" PREP_FAULT="$fault" PATH="$TMP_ROOT/bin:$PATH" \
+    bash "$SOURCE_ROOT/scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/script.sh" \
+    chat/2026-09-27-remote-promotion) > "$TMP_ROOT/fault.out" 2>&1 || status=$?
+  expected=2
+  [ "$fault" != worktree-create ] || expected=77
+  [ "$status" -eq "$expected" ] || fail "$fault returned $status"
+  grep -q "stage=$fault;" "$TMP_ROOT/fault.out" || fail "$fault lost stage"
+  case "$fault" in
+    created-*) grep -q 'worktree-created=yes' "$TMP_ROOT/fault.out" || fail "$fault lost prior effect" ;;
+    worktree-create) grep -q 'effect=unknown' "$TMP_ROOT/fault.out" || fail "$fault lost uncertainty" ;;
+  esac
+  if grep -Eq 'INTEGRATION_NATIVE_CANARY|result=prepared|does not exist|not a fast-forward' "$TMP_ROOT/fault.out"; then
+    fail "$fault leaked or misdiagnosed"
+  fi
+done
 
 printf 'remote update\n' > "$REPO/remote-update.txt"
 git -C "$REPO" add remote-update.txt

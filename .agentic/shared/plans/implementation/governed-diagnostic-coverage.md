@@ -4,7 +4,7 @@ id: shared.plan.governed-diagnostic-coverage
 version: 9
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-04"
+updated_on: "2026-11-05"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -19,7 +19,484 @@ used_by:
 
 ## DIAG-012 preparation and expanded scope — 2026-11-04
 
+### Consolidated reconciliation — 2026-11-05
+
+Reviewer: parent assistant, explicit self-review (no concurrent editing agent).
+The following closes implementation review for the bounded loss paths; final
+registered local verification passed on 2026-11-05. It is not a claim that every future
+operation or arbitrary machine failure has a diagnosis.
+
+Core remains the constructor/parser and processing-safeguard owner. Existing
+capability definitions retain ordinary reason meanings; adapters supply only
+their observed facts. No entrypoint-owned validation rule, new provider
+definition, response grammar, SDK call, retry or mutation order was added.
+New processing records are a separate Core family; historical records and
+strict optional parsers remain unchanged. The combined catalogue is generated
+from runtime definitions. Approved legacy-index pins are diagnostic-only.
+
+| Actual consumer group | Disposition and exact proof anchor |
+| --- | --- |
+| Core Events/Audit | Migrated observation owners. Existing type/version/target predicate matrices in `events-runtime.test.ts` and `audit-runtime.test.ts` assert exact ordinary code/version/item/reason; added actual-operation faults assert original error, one invocation, source9 and processing notice independently. |
+| Core Authn/Tenancy/Files/I18n/Localization/Logging/Monitoring | Migrated existing observation wrappers, reusing Core capture/required selection. Their corresponding `packages/core/tests/*-runtime.test.ts` retain normal field/phase/effect assertions; fault cases use independent known context instead of reading rejected records. Opt-outs and deliberate optional public selectors stay compatible. |
+| Core config/validation/persistence/queues | Migrated known construction/selection loss at existing owners, not checking rules. `config-runtime`, `foundation-diagnostics-runtime`, `validation-runtime`, `persistence-runtime` and `queues-runtime.test.ts` prove actual returned/thrown outcomes, field/ordinal/order and no replay. `diagnostic-record-runtime/types.test.ts` distinguish absent/rejected/unselected/inaccessible and preserve valid companions. |
+| Core Authz/Security/shared primitive guards | No predicate/meaning rewrite. `foundation-diagnostics-runtime.test.ts` retains literal permission, security, date/JSON and source/declaration reasons. Strict public constructors still reject invalid programmer input; DIAG-012 does not turn all programmer errors into successful results. Shared attachment inspection is explicit without claiming a proxy retained a write. |
+| Platform Config/Contracts/Runtime/Testing | Migrated declaration, schema-result, operational-event, lifecycle and mount callers. `evidence-runtime.test.ts`, `platform-contracts-runtime.test.ts`, Runtime lifecycle/mount fixtures and Testing config/mount fixtures assert precise primary/eight, schema position, phase/subject and original result. Built-ins and registered mount evidence survive unreadable optional selections. Loader/requirement semantics remain unchanged. |
+| Platform Server/Workers/Security/Persistence | Migrated existing boundary owners and real consumers. Request/delivery/lifecycle/principal/store/relay fixtures assert ordinary code/version/detail and separately inject construction/selection failures. HTTP status/body, handler/store counts, queue settlement and original throw identity remain fixed. Process listen review additionally preserves independent built-in/mounted/explicit evidence; `process-boundary-diagnostics-runtime.test.ts` proves all selection alternatives and shutdown order. |
+| Platform Health | No ordinary mapping loss found: `platform-health-runtime.test.ts` and Server health fixtures retain not-ready, invocation, completion, projection and upstream evidence; existing selected reporter receives them. Public safe summaries and deliberate unavailable optional public detail remain unchanged. This is not universal fault interception inside every strict constructor. |
+| Platform Observability/CloudWatch | Migrated required metric/boundary/lifecycle construction and selection. Existing config, metric, boundary and CloudWatch runtime/lifecycle fixtures assert exact rejection/export/collection/timeout/completion facts; export callback failure remains visible when flush resolves. Private SDK swallowed events remain an explicit observation limit, not a successful-export claim. Remote delivery is DIAG-013. |
+| PostgreSQL/DynamoDB/SQS | Migrated adapter observation owners using shared capability mechanisms. Existing runtime/diagnostic fixtures assert native mapping, decoding, ordinal/reconciliation effects and source9. DynamoDB table/outbox/lineage oversized paths now agree in ordinary error and record. SQS configuration source/content builders and fixed-context reporter now also preserve failures: `sqs-configuration-runtime.test.ts` proves every requirement/reason and separately rejected/thrown construction with no SDK creation. |
+| ECS Fargate/Cognito/DynamoDB rate limiter | No runtime correction required by shared adoption; existing exact normal runtime and boundary fixtures passed. The rate-limit test runner alone needed nested public JSON export shim repair. Provider semantics and credentials are unchanged. |
+| Target composition and retained optional helpers | Actual core-server `configuration-test.mjs` consumes structured checks and precise selected evidence before startup; legacy optional readers are not substituted for that path. Deliberate opt-outs, no-op sinks, strict external security parsers, absent optional settings and true absent database records remain absent. Existing decoder observations run before reductions. Retiring-target shared compatibility is checked without reopening its deployment. |
+
+The new assertions distinguish exact reasons and attribution, not just record
+counts: DynamoDB's wrong ordinary index path, Testing's lost built-in/app packet,
+SQS's lost source-read result, HTTP's optional-catalogue erasure and existing
+silent-selection expectations all have actual-caller counterexamples. These
+do not substitute processing fallback for supported ordinary reasons.
+
+Imported census: all 55 manifest sources and five maintenance sources have a
+disposition. **47 changed sources** are the census paths with a diagnostic diff,
+each attached to its capability review in `reviews.v1.json`; definitions,
+exact adjacent fixtures and focused registered owners are recorded there.
+They distinguish unavailable observation from absence/cleanliness/no-match and
+preserve command effects/status. Successful requested inventories stay intact.
+The portable validation script is verification support, not a runtime producer.
+Whole-file partial status remains honest about unrelated temporary-file/cleanup
+and OS-failure coverage; no ownership hash has been reset.
+
+The **13 no-change sources** are:
+
+- `bin/llm-workbench.js`, `bin/llm-workbench-ownership.js` and
+  `scripts/00.chat/export/create-worktree-bundle/script.js`: retained bounded
+  CLI/export/ownership phases and partial-effect handling, proved by
+  `scripts/00.chat/export/smoke-test.sh`.
+- `scripts/00.chat/metrics/estimate-chat-cost/script.js`: retained safe
+  read/parse/pricing failure protocol; actual recorder consumes it, proved by
+  `session-log/record-chat-commit/smoke-test.sh`.
+- `scripts/00.chat/command/{close,new,open-window,download-repo,download-repo-diff}/script.sh`
+  and `scripts/00.chat/export/{worktree,worktree-diff}/script.sh`: seven direct
+  exec gateways preserve their child's status/report. Dispatcher and export
+  fixtures prove forwarding without introducing another mapper.
+- `scripts/00.chat/startup/{auto-start-missing-session,start-new-chat}/script.sh`:
+  retained fixed prompt routing/direct startup forwarding, with resolver/startup
+  fixtures and generated/installed portability proof.
+
+Corrections from consolidated review: moved bootstrap's success message after
+metadata sanitization; excluded native text from cleanup's final base lookup;
+fixed a malformed YAML input entry and asserted exact report fixture closure;
+added the connected SQS configuration/HTTP process repairs described above.
+Their focused tests passed. Metadata preparation, source-matched registered
+units, generated/installed portability and non-executing impact planning passed.
+The final resumed pass qualified 53 registered checks: 32 executed and 21 reused
+matching successful receipts. Two missed fixture updates were corrected before
+that pass: CloudWatch's exact Core diagnostic import allowance and the worktree
+fixture's bounded root-creation error expectation. No test or runtime source was
+edited during the final pass. Closure prose was recorded afterwards.
+
+Exact check IDs, execution/reuse decisions, timings and remaining proof boundaries
+are in the [session verification record](../../../../commitLogs/2026/oct/27/2026-10-27-08-24-governed-diagnostic-coverage/README.md#diag-012-final-local-verification--2026-11-05).
+DIAG-012 is complete for this bounded scope. Full impact integration, the separate
+`platform-shell-payload`/retiring-target compatibility batch, containers and live
+deployment remain with their recorded later boundaries; no local result waives
+those gates. DIAG-013 delivery and upstream incorporation are still separate.
+
 ### Decision and approval boundary
+
+Implementation approved by the user's instruction to commit the work and then
+implement DIAG-012. Checkpoint `e94628adbb5f09e8b25b18fcb4deb9336990bf89`
+and bookkeeping `c7b891fd` are complete. Implementation began on 2026-11-04
+after the checkpoint; the preparation-only statements below describe the prior
+phase, not a remaining approval gate. Imported scope and disposable-fixture
+authority are as bounded below. No upstream installation or ownership reset.
+
+The user approved bounded diagnostic-only corrections to the pinned legacy
+indexes `packages/core/src/queues/index.ts` and
+`platform/adapters/aws/observability/cloudwatch/src/index.ts`, and updating only
+their two reviewed implementation pins. The later approval adds
+`packages/core/src/validation/index.ts` and `platform/server/src/index.ts` with
+the same bounded conditions. The user subsequently approved the bounded
+diagnostic-preservation helper correction and pin in `platform/testing/src/index.ts`.
+Preserve existing public callers and
+workload behavior; this is not approval for a folder refactor or provider calls.
+
+### Implementation group 1 — trace and mechanism decisions
+
+- Normal Events predicates: `eventType` rejects invalid format; `eventVersion`
+  distinguishes not-integer from not-positive. Their returned errors and observer
+  use `core.events.validation-rejected/v1`, with type/version field and operation.
+  Existing `events-runtime.test.ts` literal assertions cover these paths, followed
+  by actual publish/handler selection, invocation and rejection boundaries.
+- Normal Audit adds target-type invalid-format and target-id empty/untrimmed.
+  `audit-runtime.test.ts` asserts the exact `core.audit.validation-rejected/v1`
+  result and actual recorder/boundary observations. Preserve these definitions,
+  predicates and call ordering; missing-meaning repairs are not established here.
+- Both observation wrappers currently catch builder failure into `undefined`.
+  Core's optional selector also collapses absent, rejected, unselected and
+  inaccessible evidence. Add explicit inspection at the existing record owner;
+  retain the compatibility selector's exact output. Independent companions
+  remain selectable. No raw rejected record or exception enters the outcome.
+- A shared reporting helper under `diagnostics/reporting/` will supply bounded
+  processing-failure records through existing observer/result paths. Its meaning
+  concerns diagnostic processing only, not an invented workload cause. Public
+  indexes add exports only. Existing normal records take precedence; new reports
+  do not count as proof that a supported ordinary reason was preserved.
+- Review attachment separately: an unwritable original exception is not evidence
+  that an independently observed record was lost. Preserve throw identity and
+  opt-outs. Existing source/companion preservation and observer-failure fixtures
+  remain applicable; add injected processing-failure assertions separately.
+- Planned focused proof: diagnostic-record runtime/types, Events, Audit and
+  foundation catalogue fixtures, using temporary installed-tool compilation.
+  None is claimed passed for the implementation yet.
+
+Group 1 progress: temporary Core compilation and the diagnostic-record, Events,
+Audit and foundation runtime fixtures passed on 2026-11-04. New evidence
+inspection preserves the old selector projection and separately identifies
+absent/selected/rejected/unselected/inaccessible states and bounded companion
+positions. Processing reporting uses fixed prevalidated records, not rejected
+contents or recursive construction. Unselected external evidence is still
+intentionally excluded; required owned evidence reports missing selection.
+Events/Audit now retain builder failure at the actual returned error/observer.
+Source rejection notices follow, rather than replace, valid own/source records.
+Attachment inspection reports accepted writes, occupied fields and unavailable
+writes without claiming proxy retention or sink delivery. Existing throwing
+helpers retain original identity. Registered final proof, catalogue generation,
+consumer closure and documentation remain outstanding; this is not completion.
+
+Connected Core inspection: Authn/Tenancy `observations.ts` build their own
+boundary record inside the original operation's catch; a builder throw can
+replace the original thrown value. Files, I18n, Localization, Logging and
+Monitoring have the same direct-builder risk or an own-record selection early
+return. Their existing runtime fixtures are normal-reason anchors, not proof
+against this injected fault. Migrate those observation owners using the shared
+capture/inspection/delivery functions and pass the already-known invocation
+context independently of the record. Do not widen their owned record selections
+or infer context from rejected input. Retained optional selection helpers and
+strict companion parsers remain compatible; actual observer paths use the new
+outcome. Guard predicates and the existing per-operation definitions stay put.
+
+### Implementation group 2 — configuration and runtime trace
+
+Core `config-runtime.test.ts` supplies actual missing/blank/negative/valid port,
+choice, relationship and source-read assertions. `loadPlatformConfiguration`
+passes the checked results unchanged and never assembles invalid values; retain
+that behavior. Its declaration error builder and Core source-read/declaration
+handlers require processing-failure protection, independently of these normal
+reasons. Public optional constructors/strict parsers remain compatibility APIs.
+
+Platform schema validation retains a selected precise source record as primary,
+with schema-position reporting separately observed (v1 through 65535, v2 after).
+No source selection is evidence of only a coarse external schema rejection, not
+permission to invent a reason. Preserve all eight source companions. Selection
+configuration failure must keep built-in selection available and report the
+selection failure without dropping the ordinary result. Parse/projection throws
+retain identity. `evidence-runtime.test.ts` anchors these real caller paths.
+
+Runtime lifecycle state and phase decisions remain in `lifecycle.ts`; their
+record owner in `diagnostics.ts` must no longer catch construction into empty
+evidence. `lifecycle-diagnostics-runtime.test.ts` covers normal states, all eight
+hook/resource/telemetry phases, event projection and source preservation. Keep
+context factories' existing deliberate upstream exclusion. Contracts readiness
+events/feature flags use `operational-observations.ts`; their actual literal
+predicate/boundary tests are in `platform-contracts-runtime.test.ts`. Migrate
+the observer and event error producer together, retaining the caller's known
+operation/phase even when construction fails. No predicates or ordering change.
+
+### Implementation groups 3–4 — adapter trace and connected reporting
+
+DynamoDB's current configuration checks preserve their first-error order and
+255-character limit. Corrected oversized outbox/lineage attribution in the
+ordinary error path to match the already-correct diagnostic field. Existing
+actual command/store fixtures cover native mappings, transaction cancellation
+ordinals, decoder attributes and reconciliation; their owner remains Platform
+persistence. The adapter now captures required construction at those owners,
+retains source companions and reports selection failures without changing sends,
+state transitions or returned operation errors. Its focused runtime test passed.
+
+Queue guard reasons remain in Core queues. SQS supplies command-specific native
+evidence and already-known operation/boundary context. The approved index fix
+retains existing calls and adds optional processing/context arguments for the
+connected observer; existing queue types, errors and accepted values are fixed.
+Actual SQS send/decode/reduction fault fixtures and Core queues passed after WSL
+recovery, including exact normal mappings and one invocation/no replay.
+
+CloudWatch metrics retain Platform-owned rejection, creation, recording and
+lifecycle definitions. Required builders are captured before attachment/reporting;
+same-port provenance, bounded budgets, opt-outs and SDK call order remain.
+The shared Platform observation wrapper retains independent source details and
+reports failed selection. The default reporter explicitly accepts only the new
+Core processing family in addition to caller-selected catalogues. This is not a
+general relaxation of workload catalogue selection. CloudWatch lifecycle normal
+and injected-failure fixtures passed; the adapter fixture's old silent-selection
+expectation was corrected and its focused rerun passed. Private SDK observations
+remain outside the authorised design. No cloud operation was executed.
+
+### Implementation group 5 — imported-tool traces
+
+Consolidated caller review, 2026-11-05: two required connected corrections
+remain before freeze. SQS configuration's `domain/validation.ts` must capture
+required content/source record construction; `domain/reporting.ts` must retain
+the original source bundle and separately report optional-definition failure.
+Use the same Core safeguards as the command observer, with the existing fixed
+client-initialization/selection context; no acceptance or SDK change. Extend
+`sqs-configuration-runtime.test.ts` normal and injected-failure assertions.
+HTTP `platform/server/src/main.ts` must retain built-in and independently
+available mounted/explicit catalogues when one optional enumeration fails during
+listen failure. Preserve shutdown-before-report order and startup error shape;
+report processing notices through the existing reporter. Extend
+`process-boundary-diagnostics-runtime.test.ts` using a controlled shell and real
+process caller. No additional legacy-index edit or permission is needed.
+
+- 2026-11-05 continuation: review `worktree/check-write-location`,
+  `ensure-chat-worktree` and `open-window` as actual consumers of the changed
+  path/metadata libraries. Failed root/branch/reference/metadata reads must not
+  become missing-state or mismatch diagnoses; optional window launch retains
+  warning-only semantics. Preserve successful paths, metadata policy, creation
+  order and original child failure statuses. Extend the existing worktree path
+  smoke fixture using command doubles; never execute creation/opening against
+  this real worktree. No new shared shell framework or ownership-hash reset.
+- Next connected gate review: `local-merge/verify-chat-ready-to-merge-local-main`
+  must distinguish failed reference/log-tree/metadata/status observations from
+  actual absent/dirty/mismatched state. Its existing smoke fixture owns normal
+  eligibility and refusal cases; add command-double read failures and assert
+  that integration checks cannot start from unknown input state. Conflict-audit
+  verification likewise must not report no conflicts after a failed Git-index
+  read. Preserve successful protocol and existing eligibility requirements.
+- Refresh application and explicit-path recovery are the next consumers:
+  `main-refresh/apply-rehearsed-refresh` must not treat failed status/ancestry/
+  sibling enumeration as clean, unrelated or empty. The
+  `recovery/import-active-paths-to-chat-worktree` command must not accept failed cleanliness reads or suppress a failed
+  requested deletion into success. Preserve intended operations/order, report
+  mutation failures with unknown effect and no automatic replay, and test only
+  in the existing disposable rehearsal/recovery fixtures. Failure reports must
+  exclude native command text and rejected path/branch values.
+- Next census boundary: cleanup's branch/worktree/log-retention reads and
+  preparation's lifecycle/ADR/reference reads can currently collapse failed
+  observation into emptiness or absence. Correct those existing owners, retain
+  actual 0/1 predicate meanings and use exit 2 for unavailable observation.
+  No new retention policy, automatic retry, mutation order or lifecycle rule.
+  Extend their existing adjacent disposable fixtures; keep source-hash reviews
+  partial until the remaining census and final proof are reconciled.
+- Governed-runner classification is also an actual consumer: failed header or
+  effect reads must never become an allowed/approval-sensitive classification.
+  Retain the existing permission policy and exact child exec behavior; distinguish
+  policy rejection (1) from unavailable observation (2), including `--list`.
+  The two existing governed-runner/command-drift fixtures own those paths.
+- Workspace/branch reports consume the same session/worktree libraries:
+  `reporting/report-chat-workspaces` must not call a failed status read clean;
+  `local-merge/list-active-chat-branches` must not call an unreadable branch log
+  absent. Extend the existing disposable local-merge fixture with real report
+  callers, retaining successful requested inventories and existing log precedence.
+- Maintenance census review: bootstrap's failed tree/template scans and failed
+  comparisons must not produce a clean/empty/conflict plan. Package read failure
+  is not invalid JSON, and rejected package contents/native exception text are
+  not safe conflict detail. Preserve plan/apply order and success inventories.
+  Use its existing disposable bootstrap fixture, then the already-approved
+  final generated/installed portability proof. No upstream repository execution.
+- Remaining maintenance readers: contract pattern reads preserve present/absent
+  and distinguish read failure; upstream origin lookup distinguishes absent key,
+  different origin and unavailable read without exposing the URL; integration
+  preparation distinguishes absent refs/non-fast-forward from failed observation
+  and cannot certify a created worktree after a failed status/HEAD read. Preserve
+  successful protocols and mutation order. Test only disposable repositories or
+  command doubles in existing bootstrap/integration fixtures; never run the
+  canonical upstream ensure command against the real upstream project.
+- Audit readers (`bootstrap/audit-chat-bootstrap-file-set`,
+  `migration/audit-chat-layer-migration`, and deterministic-process drift) must
+  keep an actual no-match distinct from a failed content/index/tree read. Their
+  existing pipelines/process substitutions can lose the read status and claim
+  an empty set or no drift. Correct status handling at those owners without
+  changing matching rules or successful inventory detail. Use tiny disposable
+  source trees and command doubles; add bounded fixtures where none exists.
+- Startup and session-writing closure: a failed base-reference read must not
+  select another base; checkpoint/rename predicates must distinguish missing or
+  changed inputs from failed observation before mutations. Existing log writers
+  must preserve failure stage and uncertain partial effects instead of leaking
+  native messages; failed temporary entry reads must not create empty entries.
+  Keep deliberate clipboard fallback/retries and original write order. Exercise
+  existing startup/update/sub-agent fixtures and bounded command doubles only.
+- Header verification: HEAD lookup failure currently becomes no previous text,
+  potentially skipping historical maintenance checks. Distinguish an absent
+  HEAD/path using successful reference/tree evidence from unreadable history;
+  failed history-date lookup must not become an absent date. Preserve the same
+  accepted metadata and grandfathering rules, including deliberate binary skips
+  and prepared-proof cache misses. Report finite parse/read reasons without YAML
+  excerpts, rejected field contents or native exceptions. Extend existing header
+  fixtures with read-failure and sensitive-value counterexamples.
+
+- Refresh-readiness and freshness follow-up: inspect the existing
+  `classify-refresh-readiness`, `check-chat-is-current-with-main`,
+  `show-main-update-status` and rehearsal consumer. Failed ref/branch/status/
+  comparison reads must not become absent refs, clean worktrees or no remotes.
+  Preserve successful inventories and freshness policy. Extend the existing
+  readiness smoke fixture with command doubles for finite stage failures, then
+  prove its actual rehearsal consumer stops before creating a worktree. No real
+  refresh or mutation is authorised by these diagnostic corrections.
+- Session lookup: a failed directory scan or metadata read previously became
+  "no match" inside `session-log/paths/lib.sh`. The reader now distinguishes
+  that failure from absence; multiple metadata matches also cannot route to
+  creation. The existing reader smoke fixture proves renamed success, failed
+  `find`/`awk`, and ambiguous matching without printing native text.
+- Worktree registration: `worktree/paths/lib.sh` reads Git's registered worktrees
+  through process substitution, so a failed scan can become "not registered"
+  (exit 1) and select a new path. Preserve true absence as 1; failed scan/reduction
+  must return 2 and stop `ensure-chat-worktree` before creating anything. Use its
+  existing path smoke fixture, with a failing third enumeration to exercise
+  the actual ensure consumer after both successful primary-worktree lookups.
+- Worktree cleanliness: `dirty-worktree-check` puts `git status` directly inside
+  an empty-string test, so a failed Git observation can report `clean`. Capture
+  and check each status/diff/untracked observation before interpreting contents;
+  keep both existing status observations and bookkeeping policy. Extend the
+  existing worktree path fixture with failed observation/no-clean assertions.
+- Command gateways: the five `command/{close,new,open-window,download-repo,
+  download-repo-diff}` scripts are direct exec forwards, as are both export
+  wrappers. Preserve them. The dispatcher needs fixed invalid/unknown-command
+  text and a checked inventory pipeline; its fixture proves failure passthrough
+  through all five gateways and excludes rejected-argument/native-scan canaries.
+- Transcript discovery: `find`, `grep`, `stat` and sorting failures now retain
+  finite stage reasons instead of looking like no transcript. The portable
+  commit recorder carries those reasons as safe warnings while retaining its
+  existing optional-metrics policy; strict metrics remains strict. Existing
+  commit-metrics smoke fixtures prove producer and real consumer behavior.
+- Imported changed paths for upstream handoff so far: conflict classifier and
+  its smoke test; session path library; current-session reader and its smoke
+  test; startup resolver and its smoke test; transcript discovery; commit
+  recorder and its smoke test; staged-deletion checker and its smoke test;
+  refresh-readiness classifier and its smoke test, freshness checker, status
+  reporter and rehearsal readiness consumer; worktree path library and its
+  smoke test, cleanliness checker; command dispatcher and its smoke test.
+  Installation hashes remain unchanged. The rest
+  of the 55-source census still requires recorded dispositions; these fixes
+  are not a claim that the imported group is complete.
+
+### Additional connected worker and legacy review — 2026-11-04
+
+Worker queue clock/mutation and job-handler failures reach required boundary
+records before observation. Guard those actual builders, preserving source
+identity, returned error codes, handler counts, queue state and source9. Keep
+public strict builders strict. The existing delivery fixture tests ordinary
+reasons separately from injected throw/undefined/malformed builder outcomes.
+Worker diagnostics owns worker meanings; Core supplies only shared reporting
+mechanics. No worker index implementation or pin changes.
+
+Core validation's optional `validationDiagnostic` currently catches a failed
+projection into `undefined`; HTTP server selection also catches into no evidence.
+Both implementations are pinned legacy indexes. The user approved additional
+diagnostic-only exceptions for `packages/core/src/validation/index.ts` and
+`platform/server/src/index.ts`, including only those reviewed pins. Preserve
+validation decisions, HTTP responses and public APIs; no structural refactor.
+Their approved diagnostic-only changes and reviewed pins are implemented.
+Core validation runtime and HTTP runtime fixtures passed, including real HTTP
+400/500 behavior, original invocation counts and preserved independent evidence.
+Worker focused fixtures passed after preserving the legitimately Runtime-owned
+fallback record; strict Worker-only validation of that fallback was incorrect.
+Final registered source-matched proof remains outstanding.
+
+`platform/testing/src/index.ts` has a further confirmed loss: failure to enumerate
+optional diagnostic definitions drops a valid built-in Core configuration
+record. Its pinned-index exception is now approved. Retain built-in definitions
+before optional enumeration, and keep independently registered mount catalogues
+available if explicit optional definitions cannot be read. Reuse Core's selected
+evidence parser; preserve primary/eight companions, schema and mount call order,
+historical messages and public API. The test helper has no diagnostic observer:
+this bounded preservation correction does not add a sink or evict original
+evidence to make space for a processing notice. Focused config-evidence and
+mount-boundary fixtures will prove the exact original reason and selection.
+
+Security principal projection in `platform/security/src/authentication.ts` is
+another real observer bridge to the changed Core Authn owner. Its optional
+definition failure keeps built-in selection, but silently suppresses the
+selection-failure notice; its own required boundary construction is unguarded.
+Use the shared capture/required-selection functions there, preserve the original
+projection or copy failure and Core's own report, and extend the existing
+principal cases in `platform-security-runtime.test.ts`. Security's private
+credential-envelope parsers remain restrictive; this is not permission to
+forward arbitrary security/native errors or broaden their public formats.
+
+### Continuation evidence and remaining work — 2026-11-04 23:20 UTC
+
+- Security principal focused runtime passed after exact optional-property and
+  throwing-getter fixture type corrections. The unmodified certificate/security
+  operation fixtures passed from the repository working directory; running the
+  certificate fixture from the temporary output directory first failed because
+  its real certificate asset is repository-relative. This was a test invocation
+  correction, not a source defect or missing dependency.
+- Health runtime passed unchanged. Its ordinary not-ready, invocation,
+  completion and projection meanings remain Health-owned; the existing selected
+  reporter is the consumer. Core permission/security primitive exact normal
+  reasons remain covered by foundation fixtures. No claim is made that all
+  arbitrary faults inside every strict public constructor are now caught.
+- Seven unchanged thin gateways (`command/{close,new,open-window,download-repo,
+  download-repo-diff}` and `export/{worktree,worktree-diff}`) preserve child
+  status/output by exec. The updated dispatcher fixture proves all five public
+  command gateways; the existing complete export fixture passed, including CLI,
+  ownership and export fixed phases and partial-effect alternatives. Those
+  existing bounded JS paths do not need another diagnostic implementation.
+- Registered the already-existing reader/resolver/worktree/dispatcher/readiness/
+  conflict/deletion smoke fixtures as seven focused check identities through
+  the existing fixed-dispatch wrapper. Their exact source closures are in
+  `checks.yml`, including repository input rules and required Node runtimes.
+  The new repository contract test and two narrow mechanics cases passed:
+  actual dispatch preserves child failure, matching results reuse, and source,
+  runtime and command changes invalidate proof. They are not members of the
+  ordinary runner aggregate and do not select on Platform runtime changes.
+- Updated the reviewed source bindings and added partial imported capability
+  reviews; retained existing debt and source ownership. Static diagnostic-review
+  coverage passed with no stale/unreviewed changed sources. Public-index gate
+  passed (48 indexes, 19 retained legacy pins, 9 adopted modules), shell syntax,
+  scoped metadata and diff whitespace checks passed. These are static/focused
+  checks, not final end-to-end or deployment qualification.
+
+### Approved Testing correction and connected proof — 2026-11-04 23:28 UTC
+
+The approved Testing correction is implemented. Built-in Core definitions are
+kept before reading optional definitions; app mount independently retains its
+registered catalogues despite explicit-definition failure. Exact Core missing-value
+reason, primary/eight companions, first rejected schema position, no later
+schema invocation and one mount invocation are proved by the existing config
+and mount fixtures. The complete focused Testing runtime runner passed after
+temporary compilation. Only its approved legacy pin and existing review source
+binding changed; no response field, sink, public API or folder refactor.
+
+Cognito, ECS Fargate and DynamoDB shared rate-limit runtime fixtures passed
+against the current shared sources; their boundary fixtures also passed.
+Their existing normal failures retain Security/Server-owned definitions and
+selection, so these runtime adapter sources need no compatibility edit in this
+pass. This is ordinary reason/consumer compatibility proof, not a claim that
+arbitrary faults in every strict security constructor are now intercepted.
+
+The rate-limit runner exposed a pre-existing connected fixture defect: it
+enumerates package exports but could not create nested catalogue export paths.
+Its existing runner now creates nested parents, copies declared JSON assets as
+JSON and asserts actual public resolution equals the source asset. Source
+manifests/assets resolve relative to the runner; compiled output remains
+relative to the temporary test cwd. Corrected runtime passed without recompiling
+unchanged source or installing dependencies. This affects verification only.
+
+Self-review of this bounded correction: Core remains the record selector;
+Testing only combines independently available selections. No rejected values
+enter diagnostic detail. The new assertions fail if valid Core evidence becomes
+undefined, if registered app evidence is erased, if companions are dropped or
+if parsing/mount work is replayed. Module-index gate and diff whitespace passed.
+These development checks do not replace final registered stable-batch proof.
+
+Historical progress note, superseded by the consolidated closure above:
+DIAG-012 was still in progress. Remaining work then: imported 55-source plus
+five-maintenance dispositions and necessary corrections; remaining connected
+consumer reconciliation; consolidated review and final registered
+source-matched verification, including imported portability.
+Do not treat the partial imported reviews or this progress note as closure.
+
+### First imported conflict trace
+
+`classify-conflict` reads Git's conflict stages and then each present blob before
+choosing a conflict type. A failed blob read currently becomes empty content,
+which can produce a false classification. Preserve absent-stage handling, but
+make an actual index/blob read failure return a fixed stage-specific error and
+no classification. Existing disposable Git fixtures cover normal conflict types;
+command-double cases will distinguish read failure from an honestly empty blob.
+This is diagnostic/observation integrity only, not a change to conflict policy.
+
+### Preparation record (historical)
 
 The user explicitly includes CloudWatch, DynamoDB and imported tools in
 DIAG-012 and requests preparation followed by an executive summary **before

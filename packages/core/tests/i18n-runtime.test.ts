@@ -427,11 +427,12 @@ selectedRecords.length = 0;
 let sourceAccessorReads = 0;
 const accessorFailure = Object.freeze(Object.defineProperty({ relatedDiagnosticRecords: sourceRecords.slice(1) }, "diagnosticRecord", { get() { sourceAccessorReads++; throw new Error("private-accessor"); } }));
 equal(caught(() => messageTemplate({ get length() { throw accessorFailure; } } as unknown as string, selectedOptions)), accessorFailure);
-equal(sourceAccessorReads, 0); deepEqual(selectedRecords.slice(1), sourceRecords.slice(1));
+equal(sourceAccessorReads, 0); deepEqual(selectedRecords.slice(1, 9), sourceRecords.slice(1));
+deepEqual(selectedRecords[9], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } });
 selectedRecords.length = 0;
 const malformedFailure = Object.freeze({ diagnosticRecord: { ...sourceRecords[0], raw: "private-canary" }, relatedDiagnosticRecords: [sourceRecords[1], { code: "unknown" }] });
 equal(caught(() => messageTemplate({ get length() { throw malformedFailure; } } as unknown as string, selectedOptions)), malformedFailure);
-deepEqual(selectedRecords.slice(1), [sourceRecords[1]]);
+deepEqual(selectedRecords.slice(1), [sourceRecords[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-rejected" } }]);
 for (const raw of ["private-primitive", undefined, Object.freeze(new Error("private-frozen"))]) {
   clear(); equal(caught(() => messageTemplate({ get length() { throw raw; } } as unknown as string, observations)), raw);
   deepEqual(records, [boundary("message-template", "predicate-invocation", "template")]);

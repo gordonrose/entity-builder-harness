@@ -1,5 +1,6 @@
 import { brand, err, ok, type Result } from "../../../shared/index";
-import { coreConfigPrimitiveRecord, type CoreConfigReader } from "../../contract/reporting/diagnostics";
+import { captureDiagnosticRecord, requireDiagnosticRecord } from "../../../diagnostics/index";
+import { coreConfigPrimitiveDiagnostic, coreConfigPrimitiveRecord, type CoreConfigReader } from "../../contract/reporting/diagnostics";
 import { missingConfigError, invalidConfigTypeError, invalidConfigValueError, type ConfigError } from "../../contract/reporting/errors";
 import { readConfigSource } from "./source";
 import type { EnvironmentName, SecretReference, ConfigValue, ConfigSource } from "../../contract/types";
@@ -13,7 +14,7 @@ export function environmentName(value: string): Result<EnvironmentName, ConfigEr
         "Environment name must use lowercase words separated by hyphens.",
         "config.environment.invalid",
         { value },
-        coreConfigPrimitiveRecord({ field: "environment-name", reader: "environment-name", reason: value === "" ? "empty" : "invalid-format" }),
+        requireDiagnosticRecord([coreConfigPrimitiveDiagnostic], captureDiagnosticRecord(() => coreConfigPrimitiveRecord({ field: "environment-name", reader: "environment-name", reason: value === "" ? "empty" : "invalid-format" }))),
       ),
     );
   }
@@ -30,7 +31,7 @@ export function secretReference(value: string): Result<SecretReference, ConfigEr
         "Secret reference must be a trimmed provider-neutral key or path.",
         "config.secret_reference.invalid",
         { value },
-        coreConfigPrimitiveRecord({ field: "secret-reference", reader: "secret-reference", reason: value === "" ? "empty" : "invalid-format" }),
+        requireDiagnosticRecord([coreConfigPrimitiveDiagnostic], captureDiagnosticRecord(() => coreConfigPrimitiveRecord({ field: "secret-reference", reader: "secret-reference", reason: value === "" ? "empty" : "invalid-format" }))),
       ),
     );
   }

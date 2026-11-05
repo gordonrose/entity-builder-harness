@@ -1,5 +1,5 @@
 import { messageDescriptor, type MessageDescriptor, type MessageKey, type MessageParams } from "../shared/index";
-import type { DiagnosticRecord } from "../diagnostics/index";
+import { diagnosticProcessingRecord, type DiagnosticRecord } from "../diagnostics/index";
 
 export type ValidationPath = readonly string[];
 
@@ -30,7 +30,9 @@ export interface Validator<TValue> {
 
 /** A failing diagnostic projection must not alter the validation decision. */
 export function validationDiagnostic(validator: Validator<unknown>, value: unknown): DiagnosticRecord | undefined {
-  try { return validator.diagnose?.(value); } catch { return undefined; }
+  // No projection, or an explicitly absent optional detail, is not a processing failure.
+  try { return validator.diagnose?.(value); }
+  catch { return diagnosticProcessingRecord("construction-threw"); }
 }
 
 export const validResult: ValidValidationResult = {

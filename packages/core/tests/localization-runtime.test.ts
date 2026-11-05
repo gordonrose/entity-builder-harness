@@ -485,14 +485,16 @@ async function localizationDiagnosticProof(): Promise<void> {
   const accessorSource = Object.defineProperty({}, "diagnosticRecord", { get() { evidenceReads++; return source9[0]; } });
   reset();
   throws(() => localizedFormat({ get locale(): never { throw accessorSource; } } as never, selectedDiagnostics), (cause) => cause === accessorSource);
-  equal(evidenceReads, 0); equal(records.length, 1);
-  for (const malformed of [
-    { diagnosticRecord: { ...source9[0], detail: { private: "LOCALIZATION-PRIVATE-CANARY" } } },
-    new Proxy({}, { getOwnPropertyDescriptor(): never { throw raw; } }),
-  ]) {
+  equal(evidenceReads, 0); equal(records.length, 2);
+  deepEqual(records[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } });
+  for (const [malformed, reason] of [
+    [{ diagnosticRecord: { ...source9[0], detail: { private: "LOCALIZATION-PRIVATE-CANARY" } } }, "evidence-rejected"],
+    [new Proxy({}, { getOwnPropertyDescriptor(): never { throw raw; } }), "evidence-inaccessible"],
+  ] as const) {
     reset();
     throws(() => localizedFormat({ get locale(): never { throw malformed; } } as never, selectedDiagnostics), (cause) => cause === malformed);
-    equal(records.length, 1);
+    equal(records.length, 2);
+    deepEqual(records[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason } });
   }
   reset();
   throws(() => localizedFormat({ get locale(): never { throw raw; } } as never, selectedDiagnostics), (cause) => cause === raw);
@@ -547,7 +549,12 @@ async function localizationDiagnosticProof(): Promise<void> {
   }
   reset();
   throws(() => localizedFormat({ get locale(): never { throw raw; } } as never, Object.defineProperty({ onDiagnostic: selectedDiagnostics.onDiagnostic! }, "diagnosticDefinitions", { get(): never { throw raw; } })), (cause) => cause === raw);
-  equal(records.length, 1); equal(JSON.stringify(records).includes("LOCALIZATION-PRIVATE-CANARY"), false);
+  equal(records.length, 2);
+  deepEqual(records[1], {
+    schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+    detail: { reason: "definition-selection-failed" },
+  });
+  equal(JSON.stringify(records).includes("LOCALIZATION-PRIVATE-CANARY"), false);
   await new Promise((resolve) => setTimeout(resolve, 0));
   equal(shadowReads, 0); equal(thenableCalls, 1);
 }

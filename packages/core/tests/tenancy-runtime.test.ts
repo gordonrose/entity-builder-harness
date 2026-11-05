@@ -81,7 +81,8 @@ async function main(): Promise<void> {
   let accessorReads = 0;
   observed.length = 0;
   observeCoreTenancyDiagnostic(diagnostics, own, Object.defineProperty({}, "diagnosticRecord", { get() { accessorReads++; throw canary; } }));
-  equal(accessorReads, 0); equal(observed.length, 1);
+  equal(accessorReads, 0); equal(observed.length, 2);
+  deepEqual(observed[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } });
   for (const sink of [() => { throw canary; }, () => Promise.reject(canary), () => Object.assign(Promise.reject(canary), { then() { throw canary; } }), () => ({ then(_ok: unknown, reject: (reason: unknown) => void) { reject(canary); } })]) {
     let caught = false;
     try { tenantContext(Object.defineProperty({ tenantId: id }, "isolationKey", { get() { throw canary; } }), { onDiagnostic: sink }); }

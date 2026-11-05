@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.record-main-refresh-conflict
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-18"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: refresh
 #   disciplines:
@@ -61,6 +61,10 @@ CHECKS="pending"
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --path|--type|--reason|--action|--mode|--preflight-branch|--preflight-worktree|--files|--checks)
+      [ $# -ge 2 ] || { echo "ERROR: option requires a value." >&2; exit 2; } ;;
+  esac
+  case "$1" in
     --path)
       CONFLICT_PATH="${2:-}"
       shift 2
@@ -102,7 +106,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument." >&2
       usage >&2
       exit 2
       ;;
@@ -121,19 +125,25 @@ case "$MODE" in
   deterministic|skill-assisted|manual|stopped)
     ;;
   *)
-    echo "ERROR: invalid mode: $MODE" >&2
+    echo "ERROR: invalid mode." >&2
     echo "Expected deterministic, skill-assisted, manual, or stopped." >&2
     exit 2
     ;;
 esac
 
-BRANCH="$(git branch --show-current)"
+log_operation_failed() {
+  echo "ERROR: session-log-operation-failed; stage=$1; effect=unknown; inspect before retry." >&2
+  exit "$2"
+}
+BRANCH="$(git branch --show-current 2>/dev/null)" || {
+  echo "ERROR: session-log-branch-read-failed; effect=none." >&2; exit 2;
+}
 
 case "$BRANCH" in
   chat/*|agentic/preflight/*)
     ;;
   *)
-    echo "ERROR: current branch is not a chat or preflight branch: $BRANCH" >&2
+    echo "ERROR: current branch is not a chat or preflight branch." >&2
     exit 1
     ;;
 esac
@@ -149,7 +159,7 @@ else
 fi
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE" >&2
+  echo "ERROR: missing chat log." >&2
   exit 1
 fi
 
@@ -171,9 +181,10 @@ insert_section_entry() {
       inserted = 0
       found = 0
       entry = ""
-      while ((getline line < entry_path) > 0) {
+      while ((entry_status = getline line < entry_path) > 0) {
         entry = entry (entry == "" ? "" : "\n") line
       }
+      if (entry_status < 0) exit 2
       close(entry_path)
     }
     $0 == section {
@@ -206,12 +217,13 @@ insert_section_entry() {
         print entry
       }
     }
-  ' "$LOG_FILE" > "$tmp"; then
-    mv "$tmp" "$LOG_FILE"
+  ' "$LOG_FILE" > "$tmp" 2>/dev/null; then
+    mv "$tmp" "$LOG_FILE" 2>/dev/null || log_operation_failed replacement "$?"
   else
+    local status=$?
     rm -f "$tmp"
     rm -f "$entry_tmp"
-    return 1
+    log_operation_failed entry-construction "$status"
   fi
 
   rm -f "$entry_tmp"

@@ -7,7 +7,11 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const srcRoot = path.join(packageRoot, "src"); // Locate the adapter implementation source directory.
 const packageJsonPath = path.join(packageRoot, "package.json"); // Locate the package contract metadata.
 const repositoryRoot = path.resolve(packageRoot, "../../../../.."); // Locate the repository root for readable test diagnostics.
-const allowedSourceImportPattern = /^(?:@opentelemetry\/(?:api|exporter-metrics-otlp-proto|resources|sdk-metrics)|@kanbien\/core\/(?:monitoring|config|shared)|@kanbien\/platform-observability)$/; // The generic package owns metric policy; the adapter owns provider translation.
+const allowedSourceImportPattern = /^(?:@opentelemetry\/(?:api|exporter-metrics-otlp-proto|resources|sdk-metrics)|@kanbien\/core\/(?:monitoring|config|shared|diagnostics)|@kanbien\/platform-observability)$/; // Core owns diagnostic safeguards; Platform owns metric policy; the adapter owns provider translation.
+assert.ok(allowedSourceImportPattern.test("@kanbien/core/diagnostics"));
+for (const forbidden of ["@kanbien/core/diagnostics/private", "@kanbien/platform-server", "@kanbien/app-platform-smoke"]) {
+  assert.equal(allowedSourceImportPattern.test(forbidden), false, "Diagnostic reuse must not open unrelated imports.");
+}
 
 const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8")); // Read the adapter package metadata once.
 assert.equal(packageJson.name, "@kanbien/platform-adapter-aws-observability-cloudwatch"); // Prove the public package identity matches the adapter path.

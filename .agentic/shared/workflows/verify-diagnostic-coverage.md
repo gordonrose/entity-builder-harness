@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.workflow.verify-diagnostic-coverage
-version: 14
+version: 16
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-04"
+updated_on: "2026-11-05"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -28,6 +28,57 @@ For confirmed future work found during an agreed diagnostic review, or a request
 to update the Diagnostics backlog, use its
 [maintenance workflow](maintain-diagnostics-backlog.md).
 Recording follow-up work does not waive active task requirements below.
+
+## When work uncovers an inadequately explained failure
+
+Use this procedure when authorised implementation, testing or review discovers
+an absent, wrong, overly generic or lost diagnostic. A new failure observation
+is a reason to investigate, not proof that a new diagnostic definition is needed.
+This is development-time correction, not runtime self-modification or automatic
+repair of the failing service.
+
+1. Establish the evidence safely. Identify the operation, the actual failed check
+   or returned reason, what effect is known and what remains unknown. Inspect the
+   relevant source and existing tests; use synthetic inputs or controlled
+   dependency responses where authorised. Do not retain sensitive raw output,
+   rerun an uncertain mutation or infer a cause from an unexplained exception.
+2. Trace the explanation to its actual receiving caller, using the existing task
+   inventory. Name the responsible definition/version, mapping, selected catalogue
+   and wrappers, including the point where meaning or context is lost. Inspect
+   existing shared helpers and the owning module before choosing a correction.
+3. Choose the smallest correct response from the table below. Record the evidence,
+   decision, affected files, compatibility and intended assertions in the existing
+   task plan or session record before editing; do not open another registry.
+4. Complete necessary corrections within the authorised task using the ownership,
+   module structure and connected-behaviour requirements below. Missing runtime
+   vocabulary alone is not missing governance: the existing definition/versioning
+   rules govern adding it. Genuine missing governance remains a stop condition
+   for the affected action. Out-of-scope compatibility changes, upstream-owned
+   edits and new permissions require their own decision; record the exact gap
+   through the backlog workflow and continue independent authorised work.
+5. Prove the corrected explanation at the actual caller with an existing suitable
+   regression or a focused extension. Identify the exact assertion rejecting the
+   previous absent, incorrect or generic outcome; cover successful alternatives,
+   safe context, sensitive canaries and unchanged operation effects/no replay as
+   applicable. Test processing fallbacks separately. A constructed record does
+   not prove remote delivery. Reopen affected review/preparation if inputs change;
+   follow the existing stable-batch sequence rather than rerunning unchanged suites.
+6. Record the correction and proof, or the precise unresolved boundary, in the
+   existing task/activity record. Necessary in-scope work remains incomplete until
+   its evidence is sufficient; a deferred backlog entry does not waive it.
+
+<!-- deterministic-check: allow reason="selecting a truthful diagnosis or uncertainty from observed evidence requires agent/reviewer judgement, not a universal missing-value check" -->
+| Finding established by evidence | Required response |
+| --- | --- |
+| A suitable definition already exists | Reuse it at the owning boundary; do not add a synonym or duplicate mechanism. |
+| A supported reason/context is dropped or mislabelled | Repair its producer, mapping, selection, registration or consumer; do not replace available meaning with a processing fallback. |
+| A genuinely new failure can be distinguished safely | Add the meaning at its responsible owner, following existing versioning and reader compatibility; derive JSON from runtime definitions. |
+| Failure is established but its cause is not | Use the owner's supported uncertainty report; if representation is missing, define only the observed failure/uncertainty, not a guessed cause. |
+| The necessary change exceeds authority or agreed scope | Record evidence, affected files and the exact decision needed; do not bypass ownership or silently expand the task. |
+
+The table supports agent/reviewer judgement. Structural gates cannot discover
+every missing diagnosis or prove that a reported cause is true. Behaviour tests
+prove their exercised paths, not universal diagnostic completeness.
 
 ## Review responsibilities before editing
 
@@ -139,6 +190,16 @@ than replacing them with a parallel logging framework.
    uncertainty proof. Use `partial` with concrete remaining debt when a whole file
    is not adopted. Use `support` only for contract/verification plumbing without
    an operational failure boundary. Do not refresh hashes without reviewing code.
+
+Apply the [shared processing safeguards](../standards/require-safe-diagnostic-record.md#reuse-diagnostic-processing-safeguards)
+at required real callers. Keep ordinary reason assertions separate from injected
+builder throw/undefined/malformed and selection-read failures. Prove original
+result/throw identity, no operation replay, source companions, owner selection,
+context, opt-outs and privacy. Before broad verification, inspect existing
+silent-failure expectations in affected fixtures and update them to exact safe
+outcomes; do not weaken ordinary reason assertions or rerun unchanged suites.
+For shell producer wording, identify every text/exit-status consumer and prove
+failed observation cannot select an absent-state or success branch.
 
 For changed consumer context, extend existing type/runtime/caller fixtures to
 reject missing required context and inappropriate operation/item/stage bindings,

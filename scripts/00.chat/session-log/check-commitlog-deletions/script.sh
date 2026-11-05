@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -55,12 +55,12 @@ fail() {
 }
 
 staged_deleted_commit_logs() {
-  git diff --cached --name-only --diff-filter=D -- 'commitLogs/**/README.md'
+  git diff --cached --name-only --diff-filter=D -- 'commitLogs/**/README.md' 2>/dev/null
 }
 
 head_content() {
   local path="$1"
-  git show "HEAD:${path}" 2>/dev/null || true
+  git show "HEAD:${path}" 2>/dev/null
 }
 
 has_recorded_commit() {
@@ -101,28 +101,37 @@ has_retention_marker() {
     '^(saved|retain|retained|preserve|preserved|keep|kept): +(yes|true)$|agentic-(save|saved|retain|retained|preserve|preserved|keep|kept)-log'
 }
 
+if ! DELETED_LOGS="$(staged_deleted_commit_logs)"; then
+  echo 'ERROR: commit-log-deletion-index-read-failed' >&2
+  exit 1
+fi
+ORDINAL=0
 while IFS= read -r path; do
   if [ -z "${path// }" ]; then
     continue
   fi
 
-  content="$(head_content "$path")"
+  ORDINAL=$((ORDINAL + 1))
+  if ! content="$(head_content "$path")"; then
+    fail "commit-log-deletion-content-read-failed ordinal=$ORDINAL"
+    continue
+  fi
 
   if [ -z "${content// }" ]; then
-    fail "cannot inspect deleted commit log from HEAD: $path"
+    fail "cannot inspect empty deleted commit log from HEAD ordinal=$ORDINAL"
     continue
   fi
 
   if has_recorded_commit "$content"; then
-    fail "cannot delete commit log with recorded commits: $path"
+    fail "cannot delete commit log with recorded commits ordinal=$ORDINAL"
     continue
   fi
 
   if has_retention_marker "$content"; then
-    fail "cannot delete commit log marked for retention: $path"
+    fail "cannot delete commit log marked for retention ordinal=$ORDINAL"
     continue
   fi
-done < <(staged_deleted_commit_logs)
+done <<< "$DELETED_LOGS"
 
 if [ "$FAILURES" -gt 0 ]; then
   echo "Commit log deletion gate failed." >&2

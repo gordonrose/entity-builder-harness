@@ -16,7 +16,7 @@ import {
   type MessageParams,
   type Result,
 } from "../shared/index";
-import { selectDiagnosticEvidence, type DiagnosticDescriptor, type DiagnosticRecord } from "../diagnostics/index";
+import { captureDiagnosticRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, deliverDiagnosticRecord, diagnosticProcessingRecord, type DiagnosticEvidence, type DiagnosticDescriptor, type DiagnosticRecord } from "../diagnostics/index";
 import { coreDiagnosticCatalog } from "../diagnostic-catalog";
 import { coreQueueValidationDiagnosticRecord, type CoreQueueDiagnosticOptions, type CoreQueueValidationDetail, type CoreQueueDiagnosticContext } from "./diagnostics";
 export * from "./diagnostics";
@@ -414,32 +414,31 @@ function requireNonEmpty(value: string, label: string, field: "idempotency-key" 
 }
 
 function queueValidation(field: CoreQueueValidationDetail["field"], reason: CoreQueueValidationDetail["reason"]) {
-  return coreQueueValidationDiagnosticRecord({ operation: "validate", field, reason, effect: "rejected" });
+  return requireDiagnosticRecord(coreDiagnosticCatalog.definitions,
+    captureDiagnosticRecord(() => coreQueueValidationDiagnosticRecord({ operation: "validate", field, reason, effect: "rejected" })));
 }
 
 /** Functions read the completed catalog only at invocation, never during its initialization. */
-export function selectCoreQueueDiagnosticEvidence(options: CoreQueueDiagnosticOptions | undefined, cause: unknown): ReturnType<typeof selectDiagnosticEvidence> {
+export function selectCoreQueueDiagnosticEvidence(options: CoreQueueDiagnosticOptions | undefined, cause: unknown, onProcessing?: (record: DiagnosticRecord) => unknown): DiagnosticEvidence {
   let definitions = coreDiagnosticCatalog.definitions as readonly import("../diagnostics/index").DiagnosticDefinition[];
-  try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; } catch { /* Core ownership remains selected when optional definitions are unavailable. */ }
-  return selectDiagnosticEvidence(definitions, cause);
+  try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; }
+  catch { deliverDiagnosticRecord(diagnosticProcessingRecord("definition-selection-failed"), record => onProcessing?.(record)); }
+  return selectDiagnosticEvidenceWithReport(definitions, cause, record => onProcessing?.(record));
 }
-const queuePromiseThen = Promise.prototype.then;
-function ignoreQueueDiagnosticRejection(value: unknown): void {
-  if (value === undefined) return;
-  try { Reflect.apply(queuePromiseThen, value, [undefined, () => undefined]); }
-  catch { try { Reflect.apply(queuePromiseThen, Promise.resolve(value), [undefined, () => undefined]); } catch { /* Unavailable optional sink. */ } }
-}
-export function observeCoreQueueDiagnostic(options: CoreQueueDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown): ReturnType<typeof selectDiagnosticEvidence> {
-  const selected = selectCoreQueueDiagnosticEvidence(options, cause);
-  const checked = selectCoreQueueDiagnosticEvidence(options, { diagnosticRecord: own }).diagnosticRecord;
-  if (checked === undefined || !["core.queue.validation-rejected", "core.queue.boundary-failed", "core.queue.receive-reduced"].includes(checked.code)) return selected;
-  const detail = checked.detail as CoreQueueDiagnosticContext;
+export function observeCoreQueueDiagnostic(options: CoreQueueDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown, knownContext?: CoreQueueDiagnosticContext): DiagnosticEvidence {
+  const processing: DiagnosticRecord[] = [];
+  const selected = selectCoreQueueDiagnosticEvidence(options, cause, record => { processing.push(record); });
+  const checked = requireDiagnosticRecord(coreDiagnosticCatalog.definitions, own);
+  const detail = checked.code === "core.diagnostics.processing-failed" ? knownContext
+    : ["core.queue.validation-rejected", "core.queue.boundary-failed", "core.queue.receive-reduced"].includes(checked.code) ? checked.detail as CoreQueueDiagnosticContext : undefined;
+  if (detail === undefined) return selected;
   const context: CoreQueueDiagnosticContext = Object.freeze({ operation: detail.operation, ...(detail.boundary === undefined ? {} : { boundary: detail.boundary }) });
   const deliver = (record: DiagnosticRecord): void => {
-    try { ignoreQueueDiagnosticRejection(options?.onDiagnostic?.(record, context)); } catch { /* Preserve workload behavior and callback receiver. */ }
+    deliverDiagnosticRecord(record, value => options?.onDiagnostic?.(value, context));
   };
   deliver(checked);
   if (selected.diagnosticRecord !== undefined) deliver(selected.diagnosticRecord);
   for (const record of selected.relatedDiagnosticRecords ?? []) deliver(record);
+  for (const record of processing) deliver(record);
   return selected;
 }

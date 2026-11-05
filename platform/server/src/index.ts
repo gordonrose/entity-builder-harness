@@ -1,7 +1,7 @@
 import type { Permission } from "@kanbien/core/authz";
 import { coreDiagnosticCatalog } from "@kanbien/core";
-import { serverDiagnosticRecord, serverRequestPredicateRecord, serverRequestBoundaryRecord, platformServerDiagnosticCatalog, serverDiagnosticErrorCodes, type serverObservedPhases } from "./diagnostics";
-import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { captureServerDiagnostic, serverDiagnosticRecord, serverRequestPredicateRecord, serverRequestBoundaryRecord, platformServerDiagnosticCatalog, serverDiagnosticErrorCodes, type serverObservedPhases } from "./diagnostics";
+import { diagnosticProcessingDefinition, diagnosticProcessingRecord, selectDiagnosticEvidenceWithReport, selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { validationDiagnostic } from "@kanbien/core/validation";
 export { platformServerDiagnostic, platformServerDiagnosticCatalog, serverClientAddressTrustConfigurationRecord, serverClientAddressFallbackRecord, observeServerDiagnostic } from "./diagnostics";
 export { serverDiagnosticErrorCodes } from "./diagnostics";
@@ -306,7 +306,7 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
       ok: false,
       error: {
         code: "PLATFORM_SERVER_MOUNT_FAILED",
-        ...(mounted.error.diagnosticRecord === undefined ? { diagnosticRecord: serverDiagnosticRecord("PLATFORM_SERVER_MOUNT_FAILED") } : { diagnosticRecord: mounted.error.diagnosticRecord }),
+        ...(mounted.error.diagnosticRecord === undefined ? { diagnosticRecord: captureServerDiagnostic(() => serverDiagnosticRecord("PLATFORM_SERVER_MOUNT_FAILED")) } : { diagnosticRecord: mounted.error.diagnosticRecord }),
         ...(mounted.error.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: mounted.error.relatedDiagnosticRecords }),
         defaultMessage: "Platform server failed to mount apps.",
         status: 500,
@@ -435,7 +435,7 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
   const beforeRequest = <T>(phase: "request-clock" | "request-identity" | "route-selection", action: () => T): T => {
     try { return action(); }
     catch (error) {
-      reportServerRequestObservation(input, input.request, phase === "route-selection" && routeFailure !== undefined ? routeFailure : serverRequestBoundaryRecord(phase, "handler-not-invoked"));
+      reportServerRequestObservation(input, input.request, phase === "route-selection" && routeFailure !== undefined ? routeFailure : captureServerDiagnostic(() => serverRequestBoundaryRecord(phase, "handler-not-invoked")));
       reportServerRequestEvidence(input, input.request, error);
       throw error;
     }
@@ -634,7 +634,7 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
       const error = allowedMethods.length === 0
         ? serverError("PLATFORM_SERVER_ROUTE_NOT_FOUND", 404, "No platform route matched the request.")
         : serverError("PLATFORM_SERVER_METHOD_NOT_ALLOWED", 405, "The request method is not allowed.");
-      boundaryObservations.push(serverRequestPredicateRecord("route", allowedMethods.length === 0 ? "path-not-registered" : "method-not-registered", "routing"));
+      boundaryObservations.push(captureServerDiagnostic(() => serverRequestPredicateRecord("route", allowedMethods.length === 0 ? "path-not-registered" : "method-not-registered", "routing")));
       return finish(
         errorResponse(error, allowedMethods.length === 0 ? headers : {
           ...headers,
@@ -728,9 +728,9 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
         request: platformRequest,
         principal,
       });
-    let tenantFailure = serverRequestPredicateRecord("tenant-result", "tenant-unavailable", "tenant-resolution");
+    let tenantFailure = captureServerDiagnostic(() => serverRequestPredicateRecord("tenant-result", "tenant-unavailable", "tenant-resolution"));
     const tenant = isTenantContext(tenantResolution, (field, condition) => {
-      tenantFailure = serverRequestPredicateRecord(field, condition, "tenant-resolution");
+      tenantFailure = captureServerDiagnostic(() => serverRequestPredicateRecord(field, condition, "tenant-resolution"));
     }) ? tenantResolution : undefined;
     if (route.registration.tenant === "required" && (tenant === null || tenant === undefined)) {
       boundaryObservations.push(tenantFailure);
@@ -760,7 +760,9 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
         // thrown failures, including injected/unavailable reporters. Do not
         // put independent observations into error-shaped response metadata.
         try {
-          const checked = selectedServerEvidence(input, { diagnosticRecord: record }).diagnosticRecord;
+          const checked = selectedServerEvidence(input, { diagnosticRecord: record }, notice => reportPlatformDiagnostic(diagnosticsFor(input), notice, {
+            capability: profile.capability, operation: "request-observation", stage: "request", correlationId: requestId,
+          })).diagnosticRecord;
           if (checked !== undefined) reportPlatformDiagnostic(diagnosticsFor(input), checked, {
             capability: profile.capability, operation: "request-observation", stage: "request", correlationId: requestId,
           });
@@ -775,7 +777,7 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
       const detail = validationDiagnostic(route.registration.validator, input.request.body);
       const error = { ...serverError("PLATFORM_SERVER_INVALID_REQUEST", 400, "Request body failed route validation."),
         ...(detail === undefined ? {} : { diagnosticRecord: detail }) };
-      boundaryObservations.push(serverRequestPredicateRecord("request-body", "validator-rejected", "request-validation"));
+      boundaryObservations.push(captureServerDiagnostic(() => serverRequestPredicateRecord("request-body", "validator-rejected", "request-validation")));
       return finish(errorResponse(error, headers, middleware), routeName, error);
     }
 
@@ -787,9 +789,9 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
         request: platformRequest,
         context,
       });
-      let resourceFailure = serverRequestPredicateRecord("resource-result", "object-required", "resource-resolution");
+      let resourceFailure = captureServerDiagnostic(() => serverRequestPredicateRecord("resource-result", "object-required", "resource-resolution"));
       if (!isPlatformResourceAuthorizationResolution(resourceResolution, (field, condition) => {
-        resourceFailure = serverRequestPredicateRecord(field, condition, "resource-resolution");
+        resourceFailure = captureServerDiagnostic(() => serverRequestPredicateRecord(field, condition, "resource-resolution"));
       })) {
         boundaryObservations.push(resourceFailure);
         middleware.push("error-mapping", "response-logging");
@@ -802,14 +804,14 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
         const error = forbiddenDisclosure
           ? serverError("PLATFORM_SERVER_FORBIDDEN", 403, "Access to this resource is forbidden.")
           : serverError("PLATFORM_SERVER_RESOURCE_NOT_FOUND", 404, "The requested resource was not found.");
-        boundaryObservations.push(serverRequestPredicateRecord("resource", forbiddenDisclosure ? "forbidden-disclosure" : "not-found", "resource-resolution"));
+        boundaryObservations.push(captureServerDiagnostic(() => serverRequestPredicateRecord("resource", forbiddenDisclosure ? "forbidden-disclosure" : "not-found", "resource-resolution")));
         return finish(errorResponse(error, headers, middleware), routeName, error);
       }
 
       requestBoundaryPhase = "authorization";
       const authorizer = input.deps.authorizer;
       if (authorizer === undefined || principal === undefined) {
-        boundaryObservations.push(serverRequestPredicateRecord(authorizer === undefined ? "authorizer" : "principal", "unavailable", "authorization"));
+        boundaryObservations.push(captureServerDiagnostic(() => serverRequestPredicateRecord(authorizer === undefined ? "authorizer" : "principal", "unavailable", "authorization")));
         middleware.push("error-mapping", "response-logging");
         const error = serverError("PLATFORM_SERVER_FORBIDDEN", 403, "Access to this resource is forbidden.");
         return finish(errorResponse(error, headers, middleware), routeName, error);
@@ -863,11 +865,14 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
     else if (failurePhase === "authentication" || failurePhase === "authorization") securityObservations.push(securityOperationDiagnosticRecord(failurePhase, "component-failed"));
     middleware.push("error-mapping", "response-logging");
     const failure = { ...serverError("PLATFORM_SERVER_HANDLER_FAILED", 500, "Platform route handler failed."),
-      diagnosticRecord: serverDiagnosticRecord("PLATFORM_SERVER_HANDLER_FAILED", failurePhase) };
+      diagnosticRecord: captureServerDiagnostic(() => serverDiagnosticRecord("PLATFORM_SERVER_HANDLER_FAILED", failurePhase)) };
     let boundary: DiagnosticRecord | undefined;
-    if (failurePhase === "tenant-resolution" || failurePhase === "context" || failurePhase === "request-validation" || failurePhase === "handler" || failurePhase === "response" || failurePhase === "authorization") boundary = contextDiagnostic ?? serverRequestBoundaryRecord(requestBoundaryPhase ?? failurePhase,
-      handlerCompleted ? "handler-completed-response-not-returned" : handlerInvoked ? "handler-invocation-outcome-unknown" : "handler-not-invoked");
-    const selected = selectedServerEvidence(input, error);
+    if (failurePhase === "tenant-resolution" || failurePhase === "context" || failurePhase === "request-validation" || failurePhase === "handler" || failurePhase === "response" || failurePhase === "authorization") {
+      const boundaryPhase = requestBoundaryPhase ?? failurePhase;
+      boundary = contextDiagnostic ?? captureServerDiagnostic(() => serverRequestBoundaryRecord(boundaryPhase,
+        handlerCompleted ? "handler-completed-response-not-returned" : handlerInvoked ? "handler-invocation-outcome-unknown" : "handler-not-invoked"));
+    }
+    const selected = selectedServerEvidence(input, error, record => boundaryObservations.push(record));
     if (selected.diagnosticRecord !== undefined && boundary !== undefined) boundaryObservations.push(boundary);
     const observedFailure = { ...failure, ...(boundary === undefined ? {} : { diagnosticRecord: boundary }), ...selected };
     return finish(
@@ -969,7 +974,8 @@ function handlePlatformServerTransportFailure(
     const retained = securityFailureDiagnosticRecord(input.failure.error);
     if (retained !== undefined) reportPlatformErrorDiagnostic(diagnosticsFor(input), { diagnosticRecord: retained, relatedDiagnosticRecords: securityDiagnosticRecordsFrom(input.failure.error).slice(1) }, { capability: "security", operation: "transport-admission", stage: "request", correlationId: input.failure.requestId });
     else {
-      const evidence = selectedServerEvidence(input, input.failure.error);
+      const evidence = selectedServerEvidence(input, input.failure.error, record => reportPlatformDiagnostic(diagnosticsFor(input), record,
+        { capability: "platform-server", operation: "transport", stage: "request", correlationId: input.failure.requestId }));
       if (evidence.diagnosticRecord !== undefined || evidence.relatedDiagnosticRecords !== undefined) reportPlatformErrorDiagnostic(diagnosticsFor(input), evidence, { capability: "platform-server", operation: "transport", stage: "request", correlationId: input.failure.requestId });
     }
   }
@@ -1234,7 +1240,7 @@ function findRoute(routes: readonly CompiledRoute[], request: PlatformServerRequ
       params: Object.fromEntries(route.params.map((name, index) => {
         try { return [name, decodeURIComponent(match[index + 1] ?? "")]; }
         catch (error) {
-          onDiagnostic?.(serverRequestBoundaryRecord("route-parameter-decoding", "handler-not-invoked", index));
+          onDiagnostic?.(captureServerDiagnostic(() => serverRequestBoundaryRecord("route-parameter-decoding", "handler-not-invoked", index)));
           throw error;
         }
       })),
@@ -1358,7 +1364,7 @@ function serverError(
     code,
     status,
     defaultMessage,
-    diagnosticRecord: serverDiagnosticRecord(code),
+    diagnosticRecord: captureServerDiagnostic(() => serverDiagnosticRecord(code)),
     ...(details === undefined ? {} : { details }),
   };
 }
@@ -1396,9 +1402,11 @@ function serverObservationElapsed(options: PlatformObservationDiagnostics | unde
   return serverObservationProjection(options, "elapsed-computation", () => elapsedMilliseconds(startedAt, finishedAt), original);
 }
 
-function selectedServerEvidence(input: PlatformServerRequestHandlingInput, value: unknown) {
-  try { return selectDiagnosticEvidence(input.selectDiagnosticDefinitions(), value); }
-  catch { return {}; }
+function selectedServerEvidence(input: PlatformServerRequestHandlingInput, value: unknown, onProcessing?: (record: DiagnosticRecord) => unknown) {
+  let definitions: readonly DiagnosticDefinition[] = serverBuiltinDiagnosticCatalogs.flatMap(catalog => catalog.definitions);
+  try { definitions = [...input.selectDiagnosticDefinitions()]; }
+  catch { onProcessing?.(diagnosticProcessingRecord("definition-selection-failed")); }
+  return selectDiagnosticEvidenceWithReport(definitions, value, record => onProcessing?.(record));
 }
 
 /** Only checked patterns, never an additional parameter decode or business call. */
@@ -1421,7 +1429,7 @@ function reportServerRequestObservation(input: PlatformServerRequestHandlingInpu
     const route = input.routes.find((candidate) => candidate.registration.method === request.method && candidate.pattern.test(request.path));
     const profile = route === undefined ? undefined : serverProfileForRoute(route.registration, input.profilesByName);
     if (profile === undefined ? route === undefined && unmatchedSecurityPathAllowsDiagnostics(input, request.path) : platformProfileAllowsSignal(profile, "operational_log")) {
-      const checked = selectDiagnosticEvidence(platformServerDiagnosticCatalog.definitions, { diagnosticRecord: record }).diagnosticRecord;
+      const checked = selectDiagnosticEvidence([...platformServerDiagnosticCatalog.definitions, diagnosticProcessingDefinition()], { diagnosticRecord: record }).diagnosticRecord;
       if (checked !== undefined) reportPlatformDiagnostic(diagnosticsFor(input), checked, { capability: "platform-server", operation: "transport", stage: "request",
         ...(request.requestId === undefined ? {} : { correlationId: request.requestId }) });
     }
@@ -1435,7 +1443,10 @@ function reportServerRequestEvidence(input: PlatformServerRequestHandlingInput, 
     const route = input.routes.find((candidate) => candidate.registration.method === request.method && candidate.pattern.test(request.path));
     const profile = route === undefined ? undefined : serverProfileForRoute(route.registration, input.profilesByName);
     if (profile === undefined ? route === undefined && unmatchedSecurityPathAllowsDiagnostics(input, request.path) : platformProfileAllowsSignal(profile, "operational_log")) {
-      reportPlatformErrorDiagnostic(diagnosticsFor(input), selectedServerEvidence(input, error), { capability: "platform-server", operation: "request", stage: "request",
+      const notices: DiagnosticRecord[] = [];
+      reportPlatformErrorDiagnostic(diagnosticsFor(input), selectedServerEvidence(input, error, record => notices.push(record)), { capability: "platform-server", operation: "request", stage: "request",
+        ...(request.requestId === undefined ? {} : { correlationId: request.requestId }) });
+      for (const record of notices) reportPlatformDiagnostic(diagnosticsFor(input), record, { capability: "platform-server", operation: "request", stage: "request",
         ...(request.requestId === undefined ? {} : { correlationId: request.requestId }) });
     }
   } catch { /* Observation must not replace the original synchronous failure. */ }

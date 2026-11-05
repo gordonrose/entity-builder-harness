@@ -1,6 +1,6 @@
 import { PeriodicExportingMetricReader, TimeoutError, type CollectionResult, type PeriodicExportingMetricReaderOptions,
   type PushMetricExporter } from "@opentelemetry/sdk-metrics";
-import { metricCollectionIssuesRecord, metricCollectionFailureRecord, metricExportFailureRecord, metricLifecycleFailureRecord,
+import { capturePlatformMetricDiagnostic, metricCollectionIssuesRecord, metricCollectionFailureRecord, metricExportFailureRecord, metricLifecycleFailureRecord,
   reportPlatformObservationBoundary, reportPlatformObservationSources,
   type PlatformMetricLifecycleDiagnosticBinding, type PlatformObservationDiagnostics, type PlatformObservationBoundaryDetail } from "@kanbien/platform-observability";
 
@@ -19,14 +19,14 @@ export class ObservedPeriodicMetricReader extends PeriodicExportingMetricReader 
     try { result = await super.collect(options); }
     catch (error) {
       reportPlatformObservationBoundary(this.observations, { operation: "metric-collection", phase: "collection", reason: "rejected", effect: "unknown" }, error);
-      safely(() => this.diagnostics?.report(metricCollectionFailureRecord(failureReason(error)), "collection"));
+      safely(() => this.diagnostics?.report(capturePlatformMetricDiagnostic(() => metricCollectionFailureRecord(failureReason(error))), "collection"));
       throw error;
     }
     // Reporting/inspection failures must not become SDK collection failures.
     try {
       const errors = result.errors, count = errors.length;
       if (count > 0) {
-        safely(() => this.diagnostics?.report(metricCollectionIssuesRecord(count), "collection"));
+        safely(() => this.diagnostics?.report(capturePlatformMetricDiagnostic(() => metricCollectionIssuesRecord(count)), "collection"));
         // Public returned errors only; bounded own data, never accessors/iterators/private causes.
         if (this.observations?.reporter !== undefined && Number.isSafeInteger(count) && Array.isArray(errors)) {
           for (let index = 0; index < Math.min(count, 8); index++) {
@@ -55,7 +55,7 @@ export function observeMetricExporter(exporter: PushMetricExporter, diagnostics?
           // SDK ExportResultCode.SUCCESS is 0; no transitive @opentelemetry/core import.
           try {
             if (result.code !== 0) {
-              safely(() => diagnostics?.report(metricExportFailureRecord("callback-failed"), "export"));
+              safely(() => diagnostics?.report(capturePlatformMetricDiagnostic(() => metricExportFailureRecord("callback-failed")), "export"));
               if (observations?.reporter !== undefined) {
                 const error = Object.getOwnPropertyDescriptor(result, "error");
                 if (error !== undefined && "value" in error) reportPlatformObservationSources(runtimeObservations, error.value);
@@ -74,7 +74,7 @@ export function observeMetricExporter(exporter: PushMetricExporter, diagnostics?
       } catch (error) {
         if (!callbackThrew) {
           reportPlatformObservationBoundary(runtimeObservations, { operation: "metric-export", phase, reason: "threw", effect: "unknown" }, error);
-          safely(() => diagnostics?.report(metricExportFailureRecord("invocation-threw"), "export"));
+          safely(() => diagnostics?.report(capturePlatformMetricDiagnostic(() => metricExportFailureRecord("invocation-threw")), "export"));
         }
         throw error;
       }
@@ -117,7 +117,7 @@ export function observeMetricLifecycle(operation: () => Promise<void>, phase: "f
     let location: Pick<PlatformObservationBoundaryDetail, "phase" | "field"> | undefined;
     try { if (reason !== undefined) location = invocationLocation?.(); } catch { /* Optional location cannot replace original failure. */ }
     reportPlatformObservationBoundary(scopedObservations, { operation: phase === "flush" ? "metric-flush" : "metric-shutdown", phase: location?.phase ?? phase, ...(location?.field === undefined ? {} : { field: location.field }), reason: reason === undefined ? "rejected" : "threw", effect: location === undefined ? "unknown" : "not-attempted" }, error);
-    safely(() => diagnostics?.report(metricLifecycleFailureRecord(phase, boundary, reason ?? failureReason(error)), phase));
+    safely(() => diagnostics?.report(capturePlatformMetricDiagnostic(() => metricLifecycleFailureRecord(phase, boundary, reason ?? failureReason(error))), phase));
   }
 }
 

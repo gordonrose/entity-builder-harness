@@ -1,4 +1,4 @@
-import { configurationDiagnostic, createDiagnosticRecord, validateConfigRequirements,
+import { configurationDiagnostic, createDiagnosticRecord, validateConfigRequirements, captureDiagnosticRecord, requireDiagnosticRecord,
   type ConfigSource, type ConfigSettingRequirement, type CoreQueueDiagnosticOptions, type Result, type DiagnosticDefinition } from "@kanbien/core";
 import { sqsSenderRequirements, sqsWorkerRequirements } from "../contract/requirements";
 import { sqsSenderConfigurationDiagnostic, sqsWorkerConfigurationDiagnostic, sqsSenderConfigurationSourceDiagnostic,
@@ -22,15 +22,20 @@ function validate(source: ConfigSource, requirements: readonly ConfigSettingRequ
   const checked = check({ get(name) {
     try { return source.get(name); }
     catch (cause) {
-      const observation = createDiagnosticRecord(sourceDefinition, { phase: "configuration-source-read", source: name,
-        reason: "unclassified-read-failure", effect: "not-assessed" });
-      if (observation.ok) observeSqsConfiguration(diagnostics, observation.value, cause);
+      const observation = requireDiagnosticRecord([sourceDefinition], captureDiagnosticRecord(() => {
+        const record = createDiagnosticRecord(sourceDefinition, { phase: "configuration-source-read", source: name,
+          reason: "unclassified-read-failure", effect: "not-assessed" });
+        return record.ok ? record.value : undefined;
+      }));
+      observeSqsConfiguration(diagnostics, observation, cause);
       throw cause;
     }
   } }, requirements);
   if (checked.ok) return checked;
-  const record = configurationDiagnostic(definition, checked.error.issues);
-  if (!record.ok) throw new TypeError("SQS_CONFIGURATION_DIAGNOSTIC_INVALID");
-  observeSqsConfiguration(diagnostics, record.value);
-  return { ok: false, error: { code: "PLATFORM_ADAPTER_AWS_SQS_CONFIG_INVALID", defaultMessage: "AWS SQS configuration is invalid.", diagnosticRecord: record.value } };
+  const record = requireDiagnosticRecord([definition], captureDiagnosticRecord(() => {
+    const result = configurationDiagnostic(definition, checked.error.issues);
+    return result.ok ? result.value : undefined;
+  }));
+  observeSqsConfiguration(diagnostics, record);
+  return { ok: false, error: { code: "PLATFORM_ADAPTER_AWS_SQS_CONFIG_INVALID", defaultMessage: "AWS SQS configuration is invalid.", diagnosticRecord: record } };
 }

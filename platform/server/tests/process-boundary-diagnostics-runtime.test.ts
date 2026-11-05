@@ -3,6 +3,8 @@ import type { LogRecord } from "@kanbien/core/logging";
 import { definePlatformApp, platformAppId } from "@kanbien/platform-contracts";
 import { startPlatformServerProcess } from "../src/main";
 import type { Server } from "node:http";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import { createDiagnosticRecord, defineDiagnostic, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 
 const canary = "synthetic-private-process-boundary";
 const observations = (logs: readonly LogRecord[]) => logs.filter((record) => record.message === "platform.diagnostic.observed")
@@ -83,6 +85,52 @@ async function selectionAndRegistrationBoundaries(): Promise<void> {
   }
 }
 
+async function listenEvidencePreservation(): Promise<void> {
+  const shellModule = require("../src/index.js") as { createPlatformServerShell: typeof import("../src/index").createPlatformServerShell };
+  const original = shellModule.createPlatformServerShell;
+  const builtin = coreDiagnosticCatalog.definitions.find(item => item.code === "core.shared.date-invalid")!;
+  const appDefinition = defineDiagnostic({ code: "fixture.listen.failure", version: 1,
+    classification: { failureKind: "unknown", failureSource: "unknown", severity: "error", recovery: "manual_investigation" },
+    detail: { type: "integer", minimum: 0, maximum: 8 } } as const);
+  const appCatalog = { owner: "fixture", definitions: [appDefinition] };
+  try {
+    for (const mode of ["normal", "mounted-unavailable", "explicit-unavailable", "both-unavailable"] as const) {
+      const checked = createDiagnosticRecord(mode === "both-unavailable" ? builtin : appDefinition,
+        mode === "both-unavailable" ? { reason: "invalid-format" } : 0);
+      ok(checked.ok);
+      const primary = checked.value;
+      const companions: DiagnosticRecord[] = Array.from({ length: 8 }, () => primary);
+      const cause = Object.freeze(Object.assign(Error(canary), { diagnosticRecord: primary, relatedDiagnosticRecords: companions }));
+      const order: string[] = [], logs: LogRecord[] = [];
+      shellModule.createPlatformServerShell = async () => ({ ok: true, value: {
+        mounted: { get diagnosticCatalogs() {
+          if (mode === "mounted-unavailable" || mode === "both-unavailable") throw Error(canary);
+          return [appCatalog];
+        } },
+        lifecycle: { async start() { order.push("start"); return { ok: true, value: undefined }; },
+          async shutdown() { order.push("shutdown"); return { ok: true, value: undefined }; } },
+        async listen() { order.push("listen"); throw cause; },
+      } as never });
+      let selections = 0;
+      const result = await startPlatformServerProcess({ env: {}, installSignalHandlers: false,
+        logger: { write(record) { logs.push(record); } },
+        get diagnosticCatalogs() {
+          if (++selections > 2 && (mode === "explicit-unavailable" || mode === "both-unavailable")) throw Error(canary);
+          return [appCatalog];
+        },
+      });
+      ok(!result.ok);
+      equal(result.error.code, "PLATFORM_SERVER_START_FAILED"); equal(result.error.status, 500);
+      deepEqual(result.error.diagnosticRecord, primary); deepEqual(result.error.relatedDiagnosticRecords, companions);
+      deepEqual(order, ["start", "listen", "shutdown"]); equal(selections, 3);
+      const processing = observations(logs).filter(record => record.code === "core.diagnostics.processing-failed");
+      deepEqual(processing.map(record => record.detail), Array.from({ length: mode === "normal" ? 0 : mode === "both-unavailable" ? 2 : 1 },
+        () => ({ reason: "definition-selection-failed" })));
+      equal(JSON.stringify([result, logs]).includes(canary), false);
+    }
+  } finally { shellModule.createPlatformServerShell = original; }
+}
+
 async function main() {
   const id = platformAppId("process-boundary");
   ok(id.ok);
@@ -128,6 +176,7 @@ async function main() {
     if (server?.listening) await new Promise<void>((resolve, reject) => server!.close((error) => error ? reject(error) : resolve()));
   }
   await selectionAndRegistrationBoundaries();
+  await listenEvidencePreservation();
   console.log("Server process shutdown, logger selection and partial signal registration preserve effects and throw identity.");
 }
 void main().catch((error: unknown) => { console.error(error); process.exitCode = 1; });

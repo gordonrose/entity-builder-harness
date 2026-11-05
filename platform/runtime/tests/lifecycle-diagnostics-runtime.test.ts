@@ -135,6 +135,37 @@ async function main(): Promise<void> {
   controller = createPlatformRuntimeLifecycle({ apps: [app({ beforeStart() { throw source; } })], diagnosticDefinitions: [upstream], onDiagnostic(r) { all.push(r); throw cause; } });
   error = failed(await controller.start()); equal(error.cause, source); equal(error.diagnosticRecord?.code, "fixture.failure"); equal(error.relatedDiagnosticRecords?.length, 8); equal(all.length, 10);
   detail(all[0], base);
+  // A failure in diagnostic construction cannot replace the lifecycle cause or
+  // hide independently valid source evidence. The call still runs exactly once.
+  const builderModule = require("../../../packages/core/src/diagnostics/record") as { createDiagnosticRecord: typeof createDiagnosticRecord };
+  const originalBuilder = builderModule.createDiagnosticRecord;
+  for (const mode of ["throws", "rejected", "malformed"] as const) {
+    const reports: DiagnosticRecord[] = [];
+    const contexts: unknown[] = [];
+    let invoked = 0;
+    builderModule.createDiagnosticRecord = ((definition: typeof upstream, detail: never) => {
+      if (!definition.code.startsWith("platform-runtime.")) return originalBuilder(definition, detail);
+      if (mode === "throws") throw cause;
+      if (mode === "rejected") return { ok: false, error: {} };
+      return { ok: true, value: { schema: "core/diagnostic-record/v1", code: definition.code, definitionVersion: definition.version, detail: { private: secret } } };
+    }) as typeof createDiagnosticRecord;
+    try {
+      const c = createPlatformRuntimeLifecycle({ apps: [app({ beforeStart() { invoked++; throw source; } })],
+        diagnosticDefinitions: [upstream], onDiagnostic(r, context) { reports.push(r); contexts.push(context); } });
+      const failure = failed(await c.start());
+      equal(invoked, 1); equal(failure.cause, source);
+      deepEqual(failure.diagnosticRecord, checked.value);
+      deepEqual(failure.relatedDiagnosticRecords, Array.from({ length: 8 }, (): DiagnosticRecord => checked.value));
+      const processing = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+        detail: { reason: mode === "throws" ? "construction-threw" : mode === "rejected" ? "construction-rejected" : "evidence-rejected" } };
+      deepEqual(reports, [processing, ...Array.from({ length: 9 }, (): DiagnosticRecord => checked.value)]);
+      deepEqual(contexts[0], { capability: "platform-runtime", operation: "start", stage: "startup" });
+      const stateFailure = failed(await c.start());
+      equal(stateFailure.code, "PLATFORM_RUNTIME_INVALID_STATE");
+      deepEqual(stateFailure.diagnosticRecord, processing);
+      equal(JSON.stringify(reports).includes(secret), false);
+    } finally { builderModule.createDiagnosticRecord = originalBuilder; }
+  }
   equal((await createPlatformRuntimeLifecycle({ apps: [], get diagnosticDefinitions(): never { throw cause; }, onDiagnostic() { return Promise.reject(cause); } }).start()).ok, true);
 
   // Snapshot failures keep the original sync events()/async shutdown escape policy.

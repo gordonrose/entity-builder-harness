@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -184,6 +184,65 @@ git -C "$REPO" worktree add --quiet "$UNIQUE_PREFLIGHT_WORKTREE" "$UNIQUE_PREFLI
 printf 'unique stale preflight\n' >> "$UNIQUE_PREFLIGHT_WORKTREE/unique.txt"
 git -C "$UNIQUE_PREFLIGHT_WORKTREE" add unique.txt
 git -C "$UNIQUE_PREFLIGHT_WORKTREE" commit -q -m "unique stale preflight work"
+
+# Faulted application runs use command doubles, not real promotion/cleanup.
+export REAL_GIT="$(command -v git)" PREFLIGHT_HEAD PREFLIGHT_WORKTREE STALE_PREFLIGHT_WORKTREE
+export MERGED_MARKER="$TMP_ROOT/simulated-merge" MUTATION_MARKER="$TMP_ROOT/simulated-mutations"
+mkdir "$TMP_ROOT/fault-bin"
+cat > "$TMP_ROOT/fault-bin/git" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+args=("$@")
+cwd=""
+if [ "${1:-}" = -C ]; then cwd="$2"; shift 2; fi
+fault=no
+case "$FAULT:${1:-}:${2:-}" in
+  reference:show-ref:*|branch:branch:--show-current|ancestry:merge-base:*|worktree-list:worktree:list)
+    fault=yes ;;
+  current-status:status:*) [ -n "$cwd" ] || fault=yes ;;
+  preflight-status:status:*) [ "$cwd" != "$PREFLIGHT_WORKTREE" ] || fault=yes ;;
+  sibling-status:status:*) [ "$cwd" != "$STALE_PREFLIGHT_WORKTREE" ] || fault=yes ;;
+  sibling-ancestry:merge-base:*) [ ! -f "$MERGED_MARKER" ] || fault=yes ;;
+  sibling-list:branch:--format=*) fault=yes ;;
+  post-head:rev-parse:HEAD) [ ! -f "$MERGED_MARKER" ] || fault=yes ;;
+  fast-forward:merge:--ff-only|remove-preflight:worktree:remove|delete-preflight:branch:-d)
+    fault=yes ;;
+esac
+if [ "$fault" = yes ]; then
+  echo private-refresh-canary@example.invalid >&2
+  exit 73
+fi
+case "${1:-}:${2:-}" in
+  merge:--ff-only) echo merge >> "$MUTATION_MARKER"; touch "$MERGED_MARKER"; exit 0 ;;
+  worktree:remove|branch:-d) echo cleanup >> "$MUTATION_MARKER"; exit 0 ;;
+  rev-parse:HEAD) if [ -f "$MERGED_MARKER" ]; then printf '%s\n' "$PREFLIGHT_HEAD"; exit 0; fi ;;
+esac
+exec "$REAL_GIT" "${args[@]}"
+EOF
+chmod +x "$TMP_ROOT/fault-bin/git"
+original_head="$(git -C "$REPO" rev-parse HEAD)"
+for stage in reference branch ancestry worktree-list current-status preflight-status fast-forward post-head remove-preflight delete-preflight sibling-list sibling-ancestry sibling-status; do
+  rm -f "$MERGED_MARKER" "$MUTATION_MARKER"
+  expected=2
+  case "$stage" in fast-forward|remove-preflight|delete-preflight) expected=73 ;; esac
+  if failure="$(cd "$REPO" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" \
+    bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh "$PREFLIGHT_BRANCH" 2>&1)"; then
+    fail "$stage observation/mutation failure was accepted"
+  else
+    [ "$?" -eq "$expected" ] || fail "$stage failure status was lost: $failure"
+  fi
+  [[ "$failure" == *refresh-*-failed* && "$failure" != *private-refresh-canary* && "$failure" != *Applied\ rehearsed* ]] || fail "$stage safe outcome lost"
+  case "$stage" in
+    reference|branch|ancestry|worktree-list|current-status|preflight-status)
+      [ ! -e "$MUTATION_MARKER" ] || fail "$stage failed observation permitted mutation"
+      [[ "$failure" == *applied=no* ]] || fail "pre-mutation failure lost effect" ;;
+    fast-forward|remove-preflight|delete-preflight)
+      [[ "$failure" == *effect=unknown* ]] || fail "failed mutation effect was guessed" ;;
+    *) [[ "$failure" == *applied=yes* ]] || fail "completed simulated promotion was lost" ;;
+  esac
+  [ "$(git -C "$REPO" rev-parse HEAD)" = "$original_head" ] || fail "fault fixture performed a real promotion"
+  [ -d "$PREFLIGHT_WORKTREE" ] || fail "fault fixture performed real cleanup"
+done
 
 PROMOTE_OUTPUT="$(
   cd "$REPO"

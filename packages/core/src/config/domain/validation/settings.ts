@@ -2,9 +2,9 @@ import type { Result } from "../../../shared/index";
 import type { ConfigSource, ConfigSettingRule, ConfigSettingRequirement, ConfigSettingDefinition, ConfigSettingRelationship } from "../../contract/types";
 import type { ConfigSettingsFailure, ConfigSettingsRelationshipFailure } from "../../contract/reporting/errors";
 import type { ConfigRelationshipIssue, ConfigSettingIssue } from "../../contract/reporting/setting-issues";
-import { createDiagnosticRecord } from "../../../diagnostics/index";
+import { captureDiagnosticRecord, createDiagnosticRecord, requireDiagnosticRecord } from "../../../diagnostics/index";
 import { attachCoreDiagnosticRecord } from "../../../shared/index";
-import { coreConfigDeclarationDiagnostic, coreConfigRelationshipDeclarationDiagnostic, coreConfigSourceRecord, coreConfigChoiceDeclarationDiagnostic } from "../../contract/reporting/diagnostics";
+import { coreConfigDeclarationDiagnostic, coreConfigRelationshipDeclarationDiagnostic, coreConfigSourceDiagnostic, coreConfigSourceRecord, coreConfigChoiceDeclarationDiagnostic } from "../../contract/reporting/diagnostics";
 
 
 const nativeDeclarationSome = Array.prototype.some;
@@ -98,7 +98,7 @@ export function validateConfigSettings(source: ConfigSource, definitions: readon
   for (const { setting, source: sourceKey, rule } of definitions) {
     let raw;
     try { raw = source.get(sourceKey); }
-    catch (error) { throw attachCoreDiagnosticRecord(error, coreConfigSourceRecord("schema", definitionIndex)); }
+    catch (error) { throw attachCoreDiagnosticRecord(error, requireDiagnosticRecord([coreConfigSourceDiagnostic], captureDiagnosticRecord(() => coreConfigSourceRecord("schema", definitionIndex)))); }
     definitionIndex++;
     const issue = (reason: ConfigSettingIssue["reason"]) => issues.push({ setting, reason });
     if (raw === undefined) { issue("missing"); continue; }
@@ -134,14 +134,20 @@ export function validateConfigSettings(source: ConfigSource, definitions: readon
 }
 
 function rejectDeclaration(field: NonNullable<typeof coreConfigDeclarationDiagnostic.__detail>["field"], reason: NonNullable<typeof coreConfigDeclarationDiagnostic.__detail>["reason"], index?: number): never {
-  const record = createDiagnosticRecord(coreConfigDeclarationDiagnostic, { field, reason, ...(index === undefined ? {} : { index }) });
+  const record = requireDiagnosticRecord([coreConfigDeclarationDiagnostic], captureDiagnosticRecord(() => {
+    const checked = createDiagnosticRecord(coreConfigDeclarationDiagnostic, { field, reason, ...(index === undefined ? {} : { index }) });
+    return checked.ok ? checked.value : undefined;
+  }));
   const error = new TypeError("CONFIGURATION_SCHEMA_INVALID");
-  throw record.ok ? attachCoreDiagnosticRecord(error, record.value) : error;
+  throw attachCoreDiagnosticRecord(error, record);
 }
 function rejectRelationshipDeclaration(field: NonNullable<typeof coreConfigRelationshipDeclarationDiagnostic.__detail>["field"], reason: NonNullable<typeof coreConfigRelationshipDeclarationDiagnostic.__detail>["reason"], index?: number): never {
-  const record = createDiagnosticRecord(coreConfigRelationshipDeclarationDiagnostic, { field, reason, ...(index === undefined ? {} : { index }) });
+  const record = requireDiagnosticRecord([coreConfigRelationshipDeclarationDiagnostic], captureDiagnosticRecord(() => {
+    const checked = createDiagnosticRecord(coreConfigRelationshipDeclarationDiagnostic, { field, reason, ...(index === undefined ? {} : { index }) });
+    return checked.ok ? checked.value : undefined;
+  }));
   const error = new TypeError("CONFIGURATION_RELATIONSHIP_SCHEMA_INVALID");
-  throw record.ok ? attachCoreDiagnosticRecord(error, record.value) : error;
+  throw attachCoreDiagnosticRecord(error, record);
 }
 
 /** Apply reusable requirements to a logical-name source; concrete bindings stay outside Core. */
@@ -160,9 +166,12 @@ export function validateConfigRequirements(source: ConfigSource, requirements: r
 
 function checkedChoices(input: readonly string[]): readonly string[] {
   const reject = (reason: NonNullable<typeof coreConfigChoiceDeclarationDiagnostic.__detail>["reason"], index?: number): never => {
-    const record = createDiagnosticRecord(coreConfigChoiceDeclarationDiagnostic, { reason, ...(index === undefined ? {} : { index }) });
+    const record = requireDiagnosticRecord([coreConfigChoiceDeclarationDiagnostic], captureDiagnosticRecord(() => {
+      const checked = createDiagnosticRecord(coreConfigChoiceDeclarationDiagnostic, { reason, ...(index === undefined ? {} : { index }) });
+      return checked.ok ? checked.value : undefined;
+    }));
     const error = new TypeError("CONFIGURATION_CHOICE_DECLARATION_INVALID");
-    throw record.ok ? attachCoreDiagnosticRecord(error, record.value) : error;
+    throw attachCoreDiagnosticRecord(error, record);
   };
   if (!Array.isArray(input)) reject("wrong-type");
   if (input.length === 0) reject("empty");

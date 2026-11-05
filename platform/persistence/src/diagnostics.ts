@@ -2,7 +2,7 @@ import { persistenceMaintenanceDiagnosticCatalog } from "./maintenance/index";
 import { persistenceLeasingDiagnosticCatalog } from "./leasing/index";
 import { coreDiagnosticCatalog } from "@kanbien/core";
 import { configReasonNames } from "@kanbien/core/config";
-import { createDiagnosticRecord, defineDiagnostic, selectDiagnosticEvidence, deliverDiagnosticRecord, deliverDiagnosticRecords, type DiagnosticDefinition, type DiagnosticRecord, type FailureKind } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, createDiagnosticRecord, defineDiagnostic, diagnosticProcessingRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, deliverDiagnosticRecord, deliverDiagnosticRecords, type DiagnosticDefinition, type DiagnosticEvidence, type DiagnosticRecord, type FailureKind } from "@kanbien/core/diagnostics";
 
 /** Canonical runtime identities; deployment mappings consume this export. */
 export const persistenceDiagnosticCodes = [
@@ -238,24 +238,33 @@ export function resolvePlatformPersistenceDiagnosticOptions(defaults: PlatformPe
   if (invocation === undefined) return defaults ?? {};
   const owner = invocation;
   let definitions: readonly DiagnosticDefinition[] = [];
-  try { definitions = [...(defaults?.diagnosticDefinitions ?? [])]; } catch { /* Unavailable optional definitions remain unselected. */ }
-  try { definitions = [...definitions, ...(invocation.diagnosticDefinitions ?? [])]; } catch { /* Retain independently available default definitions. */ }
+  const unavailable = () => deliverDiagnosticRecord(diagnosticProcessingRecord("definition-selection-failed"), record => owner.onDiagnostic?.(record));
+  try { definitions = [...(defaults?.diagnosticDefinitions ?? [])]; } catch { unavailable(); }
+  try { definitions = [...definitions, ...(invocation.diagnosticDefinitions ?? [])]; } catch { unavailable(); }
   return Object.freeze({ diagnosticDefinitions: Object.freeze(definitions), onDiagnostic(record: DiagnosticRecord) {
     return deliverDiagnosticRecord(record, selected => owner?.onDiagnostic?.(selected));
   } });
 }
-export function selectPlatformPersistenceDiagnosticEvidence(options: PlatformPersistenceDiagnosticOptions, cause: unknown): ReturnType<typeof selectDiagnosticEvidence> {
-  try { return selectDiagnosticEvidence([...coreDiagnosticCatalog.definitions, ...platformPersistenceDiagnosticCatalog.definitions, ...(options.diagnosticDefinitions ?? [])], cause); }
-  catch { return {}; }
+export function selectPlatformPersistenceDiagnosticEvidence(options: PlatformPersistenceDiagnosticOptions, cause: unknown, onProcessing?: (record: DiagnosticRecord) => unknown): DiagnosticEvidence {
+  let definitions: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions, ...platformPersistenceDiagnosticCatalog.definitions];
+  try { definitions = [...definitions, ...(options.diagnosticDefinitions ?? [])]; }
+  catch { deliverDiagnosticRecord(diagnosticProcessingRecord("definition-selection-failed"), record => onProcessing?.(record)); }
+  return selectDiagnosticEvidenceWithReport(definitions, cause, record => onProcessing?.(record));
+}
+/** Apply the shared processing guard without moving persistence meanings to Core. */
+export function capturePlatformPersistenceDiagnostic(build: () => DiagnosticRecord | undefined): DiagnosticRecord {
+  return requireDiagnosticRecord([...coreDiagnosticCatalog.definitions, ...platformPersistenceDiagnosticCatalog.definitions], captureDiagnosticRecord(build));
 }
 /** The independent location never displaces any of the source's primary/eight. */
-export function observePlatformPersistenceDiagnostic(options: PlatformPersistenceDiagnosticOptions | undefined, ownRecord: DiagnosticRecord, cause?: unknown): ReturnType<typeof selectDiagnosticEvidence> {
-  const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause);
-  const own = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, { diagnosticRecord: ownRecord }).diagnosticRecord;
-  deliverDiagnosticRecords([...(own === undefined ? [] : [own]),
-    ...(selected.diagnosticRecord === undefined ? [] : [selected.diagnosticRecord]), ...(selected.relatedDiagnosticRecords ?? [])],
+export function observePlatformPersistenceDiagnostic(options: PlatformPersistenceDiagnosticOptions | undefined, ownRecord: DiagnosticRecord, cause?: unknown): DiagnosticEvidence {
+  const notices: DiagnosticRecord[] = [];
+  const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause, record => notices.push(record));
+  const own = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, { diagnosticRecord: ownRecord }).diagnosticRecord
+    ?? capturePlatformPersistenceDiagnostic(() => ownRecord);
+  deliverDiagnosticRecords([own,
+    ...(selected.diagnosticRecord === undefined ? [] : [selected.diagnosticRecord]), ...(selected.relatedDiagnosticRecords ?? []), ...notices],
     record => options?.onDiagnostic?.(record));
-  return selected;
+  return own.code === "core.diagnostics.processing-failed" ? { ...selected, diagnosticRecord: selected.diagnosticRecord ?? own } : selected;
 }
 function requiredRecord<T>(definition: DiagnosticDefinition<T>, detail: T): DiagnosticRecord<T> {
   const checked = createDiagnosticRecord(definition, detail);

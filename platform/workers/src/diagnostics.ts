@@ -1,5 +1,5 @@
 import { coreDiagnosticCatalog } from "@kanbien/core";
-import { createDiagnosticRecord, defineDiagnostic, selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, requireDiagnosticRecord, diagnosticProcessingRecord, deliverDiagnosticRecord, deliverDiagnosticRecords, selectDiagnosticEvidenceWithReport, createDiagnosticRecord, defineDiagnostic, type DiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { PlatformDiagnosticContext, PlatformDiagnosticReporter } from "@kanbien/platform-contracts";
 import { reportPlatformDiagnostic } from "@kanbien/platform-observability";
 import { platformWorkerConfigurationDiagnostic } from "./configuration-diagnostics";
@@ -75,28 +75,24 @@ export interface PlatformWorkerQueueDiagnosticOptions {
   readonly diagnosticDefinitions?: readonly DiagnosticDefinition[];
   readonly onDiagnostic?: (record: DiagnosticRecord) => unknown;
 }
-const intrinsicPromiseThen = Promise.prototype.then;
+export function captureWorkerDiagnostic(build: () => DiagnosticRecord | undefined): DiagnosticRecord {
+  return requireDiagnosticRecord([...coreDiagnosticCatalog.definitions, ...platformWorkerDiagnosticCatalog.definitions], captureDiagnosticRecord(build));
+}
 export function observeWorkerQueueDiagnostic(options: PlatformWorkerQueueDiagnosticOptions, own: DiagnosticRecord, cause?: unknown): void {
-  try {
-    let definitions: readonly DiagnosticDefinition[] = [];
-    try { definitions = options.diagnosticDefinitions ?? []; } catch { /* Optional selection only. */ }
-    const evidence = workerDiagnosticEvidence(cause, definitions);
-    for (const record of [own, evidence.diagnosticRecord, ...(evidence.relatedDiagnosticRecords ?? [])]) {
-      if (record === undefined) continue;
-      try {
-        const pending = options.onDiagnostic?.(record);
-        if (pending === undefined) continue;
-        const ignore = (): void => undefined;
-        try { Reflect.apply(intrinsicPromiseThen, pending, [undefined, ignore]); }
-        catch { Reflect.apply(intrinsicPromiseThen, Promise.resolve(pending), [undefined, ignore]); }
-      } catch { /* Optional sink cannot replace the queue mutation or throw. */ }
-    }
-  } catch { /* Optional diagnostics only. */ }
+  const notices: DiagnosticRecord[] = [];
+  let definitions: readonly DiagnosticDefinition[] = [];
+  try { definitions = options.diagnosticDefinitions ?? []; }
+  catch { notices.push(diagnosticProcessingRecord("definition-selection-failed")); }
+  const evidence = workerDiagnosticEvidence(cause, definitions, record => notices.push(record));
+  deliverDiagnosticRecords([captureWorkerDiagnostic(() => own), ...(evidence.diagnosticRecord === undefined ? [] : [evidence.diagnosticRecord]),
+    ...(evidence.relatedDiagnosticRecords ?? []), ...notices], record => options.onDiagnostic?.(record));
 }
 
-export function workerDiagnosticEvidence(cause: unknown, definitions: readonly DiagnosticDefinition[] = []): ReturnType<typeof selectDiagnosticEvidence> {
-  try { return selectDiagnosticEvidence([...coreDiagnosticCatalog.definitions, ...platformWorkerDiagnosticCatalog.definitions, ...definitions], cause); }
-  catch { return {}; }
+export function workerDiagnosticEvidence(cause: unknown, definitions: readonly DiagnosticDefinition[] = [], onProcessing?: (record: DiagnosticRecord) => unknown): DiagnosticEvidence {
+  let selected: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions, ...platformWorkerDiagnosticCatalog.definitions];
+  try { selected = [...selected, ...definitions]; }
+  catch { deliverDiagnosticRecord(diagnosticProcessingRecord("definition-selection-failed"), record => onProcessing?.(record)); }
+  return selectDiagnosticEvidenceWithReport(selected, cause, record => onProcessing?.(record));
 }
 
 /** Raw-throw boundaries deliver their location independently; they do not decorate or replace the thrown value. */
@@ -105,12 +101,17 @@ export function reportWorkerBoundary(reporter: PlatformDiagnosticReporter, detai
   try {
     const context: PlatformDiagnosticContext = { capability: "platform-worker", operation: detail.operation,
       stage: detail.operation === "process-start" ? "startup" : detail.operation === "job-delivery" ? "request" : "shutdown" };
-    const own = createDiagnosticRecord(platformWorkerBoundaryDiagnostic, detail);
-    if (own.ok) reportPlatformDiagnostic(reporter, own.value, context);
-    const retained = workerDiagnosticEvidence(cause, definitions);
+    const own = captureWorkerDiagnostic(() => {
+      const checked = createDiagnosticRecord(platformWorkerBoundaryDiagnostic, detail);
+      return checked.ok ? checked.value : undefined;
+    });
+    reportPlatformDiagnostic(reporter, own, context);
+    const notices: DiagnosticRecord[] = [];
+    const retained = workerDiagnosticEvidence(cause, definitions, record => notices.push(record));
     if (retained.diagnosticRecord !== undefined) reportPlatformDiagnostic(reporter, retained.diagnosticRecord, context);
     const companions = retained.relatedDiagnosticRecords;
     if (companions !== undefined) for (let index = 0; index < companions.length; index++) reportPlatformDiagnostic(reporter, companions[index]!, context);
+    for (const record of notices) reportPlatformDiagnostic(reporter, record, context);
   } catch { /* Optional diagnostics cannot change source throw identity or cleanup. */ }
 }
 

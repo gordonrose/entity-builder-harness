@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { coreDiagnosticCatalog } from "@kanbien/core";
 import { diagnosticDescriptor, diagnosticRelatedRecordLimit, type DiagnosticDescriptor, type DiagnosticDefinition } from "@kanbien/core/diagnostics";
 import { securityPeerIdentityDiagnosticRecord, securityPeerTrustDiagnosticRecord, platformSecurityDiagnosticCatalog } from "@kanbien/platform-security";
-import { persistenceFailureClassifications, persistenceObservedPhases, persistenceObservedDiagnosticRecord, persistenceBoundaryDiagnosticRecord, platformPersistenceError, observePlatformPersistenceDiagnostic, selectPlatformPersistenceDiagnosticEvidence, platformPersistenceDiagnosticCatalog, type PlatformPersistenceDiagnosticOptions, type PlatformPersistenceError } from "@kanbien/platform-persistence";
+import { capturePlatformPersistenceDiagnostic, persistenceFailureClassifications, persistenceObservedPhases, persistenceObservedDiagnosticRecord, persistenceBoundaryDiagnosticRecord, platformPersistenceError, observePlatformPersistenceDiagnostic, selectPlatformPersistenceDiagnosticEvidence, platformPersistenceDiagnosticCatalog, type PlatformPersistenceDiagnosticOptions, type PlatformPersistenceError } from "@kanbien/platform-persistence";
 
 export type PostgreSqlPersistenceOperation =
   | "administration"
@@ -51,9 +51,9 @@ export function postgreSqlPersistenceOperationError(
   const selected = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause);
   const peers = diagnostic.facts.classification === "tls_trust_invalid" ? postgreSqlSecurityDiagnosticRecords(cause) : [];
   const hasNativeFacts = diagnostic.facts.classification !== "unknown" || diagnostic.facts.phase !== "unknown" || diagnostic.facts.code_status !== "absent";
-  const native = persistenceObservedDiagnosticRecord(diagnostic.facts, operation);
-  const own = local ?? (delivery === "all" && !hasNativeFacts ? persistenceBoundaryDiagnosticRecord({ operation, phase: "invocation", boundary: "body", condition: "threw",
-    effect: ["readiness", "restore_verification", "read_outbox", "list_outbox", "read_processing", "read_lineage"].includes(operation) ? "not-assessed" : "unknown" }) : native);
+  const native = capturePlatformPersistenceDiagnostic(() => persistenceObservedDiagnosticRecord(diagnostic.facts, operation));
+  const own = local ?? (delivery === "all" && !hasNativeFacts ? capturePlatformPersistenceDiagnostic(() => persistenceBoundaryDiagnosticRecord({ operation, phase: "invocation", boundary: "body", condition: "threw",
+    effect: ["readiness", "restore_verification", "read_outbox", "list_outbox", "read_processing", "read_lineage"].includes(operation) ? "not-assessed" : "unknown" })) : native);
   // Selecting a source does not deliver it. A direct catch always reports its
   // observed location; the transaction caller explicitly reports its own first.
   if (delivery === "all") observePlatformPersistenceDiagnostic(options, own, cause);

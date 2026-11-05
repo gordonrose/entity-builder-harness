@@ -2187,6 +2187,34 @@
             "field"
           ]
         }
+      },
+      {
+        "code": "core.diagnostics.processing-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "bug",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "construction-rejected",
+                "construction-threw",
+                "evidence-rejected",
+                "definition-unselected",
+                "evidence-inaccessible",
+                "definition-selection-failed"
+              ]
+            }
+          }
+        }
       }
     ]
   }

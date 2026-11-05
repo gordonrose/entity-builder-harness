@@ -13,7 +13,7 @@ import {
   type PlatformAuthzPermissionMapping,
 } from "./authorization";
 import type { PlatformJwtVerifier } from "./jwt";
-import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, diagnosticProcessingRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { observeSecurityFailure, securityFailureDiagnosticRecord, securityDiagnosticRecordsFrom, securityOperationDiagnosticRecord, platformSecurityDiagnosticCatalog, securityPrincipalBoundaryDiagnosticRecord, type SecurityPrincipalBoundaryDetail } from "./diagnostics";
 
 export interface PlatformAuthenticationResult {
@@ -71,14 +71,19 @@ export function principalFromPlatformAuthenticationResult(
   diagnostics?: PlatformPrincipalDiagnosticOptions,
 ): Principal | undefined {
   let definitions: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions, ...platformSecurityDiagnosticCatalog.definitions];
-  try { definitions = [...definitions, ...(diagnostics?.diagnosticDefinitions ?? [])]; } catch { /* Optional selection. */ }
+  let selectionFailed = false;
+  try { definitions = [...definitions, ...(diagnostics?.diagnosticDefinitions ?? [])]; } catch { selectionFailed = true; }
   const deliver = (record: DiagnosticRecord, evidence: PlatformPrincipalDiagnosticContext["evidence"]): void => {
-    const checked = selectDiagnosticEvidence(definitions, { diagnosticRecord: record }).diagnosticRecord;
-    if (checked !== undefined) try { isolatePrincipalObservation(diagnostics?.onDiagnostic?.(checked, Object.freeze({ operation: "principal-from-authentication", evidence }))); } catch { /* Keep raw result/throw. */ }
+    const checked = requireDiagnosticRecord(definitions, record);
+    try { isolatePrincipalObservation(diagnostics?.onDiagnostic?.(checked, Object.freeze({ operation: "principal-from-authentication", evidence }))); } catch { /* Keep raw result/throw. */ }
+    if (selectionFailed) {
+      selectionFailed = false;
+      deliver(diagnosticProcessingRecord("definition-selection-failed"), "owned");
+    }
   };
-  const observe = (own: DiagnosticRecord, cause?: unknown): void => {
-    deliver(own, "owned");
-    const selected = selectDiagnosticEvidence(definitions, cause);
+  const observe = (build: () => DiagnosticRecord, cause?: unknown): void => {
+    deliver(captureDiagnosticRecord(build), "owned");
+    const selected = selectDiagnosticEvidenceWithReport(definitions, cause, (record) => deliver(record, "source"));
     if (selected.diagnosticRecord !== undefined) deliver(selected.diagnosticRecord, "source");
     for (const record of selected.relatedDiagnosticRecords ?? []) deliver(record, "source");
   };
@@ -87,7 +92,7 @@ export function principalFromPlatformAuthenticationResult(
   const missing = (attribute: PlatformPrincipalMissingAttribute, absent: boolean): boolean => {
     if (absent) {
       try { isolatePrincipalObservation(diagnostics?.onMissingAttribute?.(attribute)); } catch { /* Optional guard observer. */ }
-      observe(securityOperationDiagnosticRecord("authentication", "principal-attribute-missing", { attribute }));
+      observe(() => securityOperationDiagnosticRecord("authentication", "principal-attribute-missing", { attribute }));
     }
     return absent;
   };
@@ -110,7 +115,7 @@ export function principalFromPlatformAuthenticationResult(
   } catch (cause) {
     // The Core constructor owns its copy/iteration failures and reports them
     // directly through the bridge; do not invent a second projection failure.
-    if (!constructing) observe(securityPrincipalBoundaryDiagnosticRecord(field), cause);
+    if (!constructing) observe(() => securityPrincipalBoundaryDiagnosticRecord(field), cause);
     throw cause;
   }
 }

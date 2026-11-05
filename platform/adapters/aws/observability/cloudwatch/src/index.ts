@@ -8,13 +8,14 @@ import { // Import the SDK pieces that construct bounded metric aggregation and 
   PeriodicExportingMetricReader, // Batch and periodically export metrics outside the request path.
   type ViewOptions, // Describe histogram, attribute, and cardinality policy to the SDK.
 } from "@opentelemetry/sdk-metrics"; // Keep provider SDK use inside the AWS observability adapter.
-import { observabilityConfigurationRecord, validatePlatformMetricSeries, type PlatformMetricSeries,
+import { capturePlatformMetricDiagnostic, platformObservabilityDiagnosticCatalog, observabilityConfigurationRecord, validatePlatformMetricSeries, type PlatformMetricSeries,
   attachPlatformMetricDiagnostic, metricRejectionRecord, metricCreationRecord, metricRecordingRecord } from "@kanbien/platform-observability";
 import { reportPlatformObservationBoundary, type PlatformMetricLifecycleDiagnosticBinding, type PlatformObservationDiagnostics, type PlatformObservationBoundaryDetail } from "@kanbien/platform-observability";
 import { ObservedPeriodicMetricReader, observeMetricExporter, observeMetricLifecycle, metricObservationContext, CloudWatchConstructionObservation } from "./lifecycle-observation";
 import { validateCloudWatchOtelMetricsConfiguration } from "./configuration";
 export { validateCloudWatchOtelMetricsConfiguration } from "./configuration";
 import type { MetricKind, MetricPoint, Metrics } from "@kanbien/core/monitoring"; // Implement the existing provider-neutral Core metrics port.
+import { captureDiagnosticRecord, requireDiagnosticRecord } from "@kanbien/core/diagnostics";
 
 export interface CloudWatchOtelMetricSeries extends PlatformMetricSeries {}
 
@@ -109,7 +110,7 @@ function buildCloudWatchOtelMetrics(options: { readonly meter: CloudWatchOtelMet
       try {
       const matched = seriesBySourceName.get(String(point.name)); // Find the exact target-approved source metric identity.
       if (matched === undefined) { // Reject an unreviewed point rather than inventing an exporter series.
-        throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric is not declared by the target catalogue."), metricRejectionRecord("undeclared-metric")));
+        throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric is not declared by the target catalogue."), capturePlatformMetricDiagnostic(() => metricRejectionRecord("undeclared-metric"))));
       }
       const { series, index } = matched;
       field = "record";
@@ -122,14 +123,14 @@ function buildCloudWatchOtelMetrics(options: { readonly meter: CloudWatchOtelMet
         try { instrument = createInstrument(options.meter, series); }
         catch (error) {
           reportPlatformObservationBoundary(runtimeObservations, { operation: "metric-instrument-creation", phase: "instrument-creation", field: "meter", reason: "threw", effect: "unknown" }, error);
-          throw known(attachPlatformMetricDiagnostic(metrics, new Error("Metric instrument creation did not complete."), metricCreationRecord(index)));
+          throw known(attachPlatformMetricDiagnostic(metrics, new Error("Metric instrument creation did not complete."), capturePlatformMetricDiagnostic(() => metricCreationRecord(index))));
         }
       }
       instruments.set(series.sourceName, instrument); // Retain the instrument so future requests do not rebuild SDK state.
       try { recordInstrument(instrument, series.sourceKind, point.value, attributes); }
       catch (error) {
         reportPlatformObservationBoundary(runtimeObservations, { operation: "metric-recording", phase: "instrument-recording", field: "record", reason: "threw", effect: "unknown" }, error);
-        throw known(attachPlatformMetricDiagnostic(metrics, new Error("Metric recording invocation did not complete."), metricRecordingRecord(index)));
+        throw known(attachPlatformMetricDiagnostic(metrics, new Error("Metric recording invocation did not complete."), capturePlatformMetricDiagnostic(() => metricRecordingRecord(index))));
       }
       } catch (error) {
         if (error !== currentFailure) reportPlatformObservationBoundary(runtimeObservations, { operation: "metric-recording", phase: "input-projection", field, reason: "threw", effect: "not-attempted" }, error);
@@ -198,10 +199,10 @@ function assertPointMatchesSeries( // Validate that a Core point exactly fits th
   known: <T>(error: T) => T,
 ): void { // Throw a safe configuration-style error before any provider recording occurs.
   if (point.kind !== series.sourceKind) { // Prevent a counter and a timer from sharing an OTel identity.
-    throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric kind does not match its target catalogue definition."), metricRejectionRecord("kind-mismatch", seriesIndex)));
+    throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric kind does not match its target catalogue definition."), capturePlatformMetricDiagnostic(() => metricRejectionRecord("kind-mismatch", seriesIndex))));
   }
   if (String(point.unit) !== series.sourceUnit) { // Prevent values with different units from being aggregated together.
-    throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric unit does not match its target catalogue definition."), metricRejectionRecord("unit-mismatch", seriesIndex)));
+    throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric unit does not match its target catalogue definition."), capturePlatformMetricDiagnostic(() => metricRejectionRecord("unit-mismatch", seriesIndex))));
   }
   // Keep the original short-circuit predicate/read order; never reread a mutable
   // point to explain which already-observed numeric predicate rejected it.
@@ -209,23 +210,23 @@ function assertPointMatchesSeries( // Validate that a Core point exactly fits th
   if (isDistributionKind(point.kind) && point.value < 0) rejectValue("negative-distribution");
   if (point.kind === "counter" && point.value < 0) rejectValue("negative-counter");
   function rejectValue(reason: "not-finite" | "negative-counter" | "negative-distribution"): never {
-    throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric value is invalid for its declared kind."), metricRejectionRecord(reason, seriesIndex)));
+    throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric value is invalid for its declared kind."), capturePlatformMetricDiagnostic(() => metricRejectionRecord(reason, seriesIndex))));
   }
   const allowedLabels = new Set(series.allowedLabelNames); // Build the approved label-name lookup once per checked point.
   for (const [index, labelName] of Object.keys(point.labels ?? {}).entries()) { // Inspect every requested Core label before it becomes a provider attribute.
     if (!allowedLabels.has(labelName)) { // Reject a label the target did not explicitly review.
-      throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric label is not declared by the target catalogue."), metricRejectionRecord("unapproved-label", seriesIndex, index)));
+      throw known(attachPlatformMetricDiagnostic(metrics, new RangeError("CloudWatch OTel metric label is not declared by the target catalogue."), capturePlatformMetricDiagnostic(() => metricRejectionRecord("unapproved-label", seriesIndex, index))));
     }
   }
 }
 
 function validateCloudWatchOtelMetricsOptions(options: CloudWatchOtelMetricsOptions): void {
   const checked = validateCloudWatchOtelMetricsConfiguration(options);
-  if (!checked.ok) throw Object.assign(new RangeError("CloudWatch OTel metrics require a reviewed private collector and valid metric configuration."), { diagnosticRecord: observabilityConfigurationRecord(checked.error) });
+  if (!checked.ok) throw Object.assign(new RangeError("CloudWatch OTel metrics require a reviewed private collector and valid metric configuration."), { diagnosticRecord: requireDiagnosticRecord(platformObservabilityDiagnosticCatalog.definitions, captureDiagnosticRecord(() => observabilityConfigurationRecord(checked.error))) });
 }
 function validateMetricSeries(series: readonly CloudWatchOtelMetricSeries[]): void {
   const checked = validatePlatformMetricSeries(series);
-  if (!checked.ok) throw Object.assign(new RangeError("CloudWatch OTel metric series configuration is invalid."), { diagnosticRecord: observabilityConfigurationRecord(checked.error) });
+  if (!checked.ok) throw Object.assign(new RangeError("CloudWatch OTel metric series configuration is invalid."), { diagnosticRecord: requireDiagnosticRecord(platformObservabilityDiagnosticCatalog.definitions, captureDiagnosticRecord(() => observabilityConfigurationRecord(checked.error))) });
 }
 
 function maxCardinalityLimit(series: readonly CloudWatchOtelMetricSeries[]): number { // Derive a reader-level defensive cap from the reviewed per-series limits.

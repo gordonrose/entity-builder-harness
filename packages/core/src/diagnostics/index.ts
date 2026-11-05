@@ -1,8 +1,10 @@
 export { defineDiagnostic, validDiagnosticDefinition } from "./definition";
 export type { DiagnosticDefinition, DiagnosticClassification } from "./definition";
-export { createDiagnosticRecord, parseDiagnosticRecord, parseRelatedDiagnosticRecords, selectDiagnosticEvidence, diagnosticRelatedRecordLimit } from "./record";
+export { createDiagnosticRecord, parseDiagnosticRecord, parseRelatedDiagnosticRecords, selectDiagnosticEvidence, inspectDiagnosticEvidence, diagnosticRelatedRecordLimit } from "./record";
 export { deliverDiagnosticRecord, deliverDiagnosticRecords } from "./reporting/delivery";
-export type { DiagnosticRecord, DiagnosticRecordError } from "./record";
+export { diagnosticProcessingDefinition, diagnosticProcessingRecord, captureDiagnosticRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport } from "./reporting/processing";
+export type { DiagnosticProcessingReason } from "./reporting/processing";
+export type { DiagnosticRecord, DiagnosticRecordError, DiagnosticEvidence, DiagnosticEvidenceInspection, DiagnosticSelectionStatus } from "./record";
 export { validDiagnosticSchema } from "./schema";
 export type { DiagnosticDetailSchema, DiagnosticDetail } from "./schema";
 

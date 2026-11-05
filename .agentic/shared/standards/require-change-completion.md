@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 9
+version: 10
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-01"
+updated_on: "2026-11-05"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -148,6 +148,11 @@ uncertain outcomes must remain distinct.
 A genuine failure or newly discovered required consumer reopens the affected
 inventory and source review. Keep unrelated enhancements in a separate task;
 neither freeze nor a correction list permits leaving a required fix unresolved.
+
+For inadequately explained failures discovered during authorised work, use the
+[diagnostic discovery procedure](../workflows/verify-diagnostic-coverage.md#when-work-uncovers-an-inadequately-explained-failure).
+It determines the correction or escalation path; recording necessary in-scope
+work in a backlog does not satisfy this completion requirement.
 
 ## Authoritative specialization
 

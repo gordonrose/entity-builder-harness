@@ -372,7 +372,8 @@ async function fileDiagnosticsProof(): Promise<void> {
   const accessorSource = Object.defineProperty({}, "diagnosticRecord", { get() { evidenceReads++; return sources[0]; } });
   reset();
   throws(() => fileStorageRef({ get key(): never { throw accessorSource; } }, selectedOptions), (cause) => cause === accessorSource);
-  equal(seen.length, 1); equal(evidenceReads, 0);
+  equal(seen.length, 2); equal(evidenceReads, 0);
+  deepEqual(seen[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } });
   for (const raw of [undefined, null, 17, "FILES-PRIVATE-CANARY", Object.freeze(new TypeError("FILES-PRIVATE-CANARY"))]) {
     reset();
     throws(() => putFileInput({ get id(): never { throw raw; } } as never, options), (cause) => cause === raw);
@@ -733,7 +734,8 @@ async function fileDiagnosticsProof(): Promise<void> {
   equal(seen.length, 0);
   reset();
   throws(() => fileStorageRef({ get key(): never { throw sourceFailure; } }, Object.defineProperty({ onDiagnostic: selectedOptions.onDiagnostic }, "diagnosticDefinitions", { get(): never { throw sourceFailure; } })), (cause) => cause === sourceFailure);
-  equal(seen.length, 1);
+  equal(seen.length, 2);
+  deepEqual(seen[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "definition-selection-failed" } });
   equal(JSON.stringify(seen).includes("FILES-PRIVATE-CANARY"), false);
 }
 

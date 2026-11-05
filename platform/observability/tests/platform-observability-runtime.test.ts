@@ -247,12 +247,13 @@ async function boundaryCoverage(): Promise<void> {
   reportPlatformObservationBoundary(selected, detail, source); assertOwnNine();
   reportPlatformObservationSources(selected, source); deepEqual([...records], sourceRecords); records.length = 0;
   reportPlatformObservationBoundary(selected, { ...detail, field: "private" } as unknown as PlatformObservationBoundaryDetail, source);
-  deepEqual([...records], sourceRecords); records.length = 0;
+  const processing = (reason: string) => ({ schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason } });
+  deepEqual([...records], [processing("construction-rejected"), ...sourceRecords]); records.length = 0;
   let reads = 0;
   reportPlatformObservationSources(selected, Object.defineProperty({}, "diagnosticRecord", { get() { reads++; throw source; } }));
-  equal(reads, 0); equal(records.length, 0);
+  equal(reads, 0); deepEqual([...records], [processing("evidence-inaccessible")]); records.length = 0;
   reportPlatformObservationSources(observations, source); equal(records.length, 0, "unselected application records stay unavailable");
-  reportPlatformObservationSources(selected, { diagnosticRecord: { ...sourceRecords[0], private: "canary" } }); equal(records.length, 0);
+  reportPlatformObservationSources(selected, { diagnosticRecord: { ...sourceRecords[0], private: "canary" } }); deepEqual([...records], [processing("evidence-rejected")]); records.length = 0;
   reportPlatformObservationBoundary({ ...selected, context: Object.defineProperty({ capability: "fixture", stage: "request" }, "operation", { get() { reads++; return "private"; }, enumerable: true }) as never }, detail, source);
   equal(reads, 0); equal(records.length, 0);
   // A failed optional catalog must leave independently trusted Core records usable.
@@ -262,7 +263,7 @@ async function boundaryCoverage(): Promise<void> {
   const coreNine = { diagnosticRecord: builtin, relatedDiagnosticRecords: Array.from({ length: 8 }, () => builtin) };
   for (const bad of [Object.defineProperty({ ...observations }, "definitions", { get() { throw source; } }), { ...observations, definitions: [{ code: "private" }] }] as const) {
     reportPlatformObservationBoundary(bad as PlatformObservationDiagnostics, detail, coreNine);
-    equal(records[0]?.code, "observability.boundary-failed"); equal(records.length, 10); deepEqual(records.slice(1), Array.from({ length: 9 }, (): DiagnosticRecord => builtin)); records.length = 0;
+    equal(records[0]?.code, "observability.boundary-failed"); equal(records.length, 11); deepEqual(records.slice(1, 10), Array.from({ length: 9 }, (): DiagnosticRecord => builtin)); deepEqual(records[10], processing("definition-selection-failed")); records.length = 0;
   }
   let recursive = 0;
   const reentrant: PlatformObservationDiagnostics = { context, reporter: { report(): { status: "written" } { recursive++; reportPlatformObservationBoundary(reentrant, detail, source); return { status: "written" }; } } };

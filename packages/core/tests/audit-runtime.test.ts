@@ -299,12 +299,15 @@ async function diagnosticCoverage(event: AuditEvent): Promise<void> {
   let evidenceReads = 0;
   const accessor = Object.defineProperty(new Error("private"), "diagnosticRecord", { get() { evidenceReads++; throw source; } });
   await rejects(recorder.record(Object.defineProperty({ ...event }, "actor", { get() { throw accessor; } })), (error) => error === accessor);
-  equal(evidenceReads, 0); equal(records.length, 1); records.length = 0;
+  equal(evidenceReads, 0); equal(records.length, 2);
+  deepEqual(records[1], literal("core.diagnostics.processing-failed", { reason: "evidence-inaccessible" })); records.length = 0;
   const unselected: DiagnosticRecord[] = [];
   await rejects(inMemoryAuditRecorder({ onDiagnostic(record) { unselected.push(record); } }).record(failedEvent), (error) => error === source); equal(unselected.length, 1);
   const malformed = Object.freeze(Object.assign(new Error("private-malformed"), { diagnosticRecord: { ...sourceRecords[0], detail: { secret: "private-malformed" } }, relatedDiagnosticRecords: sourceRecords.slice(1) }));
   await rejects(recorder.record(Object.defineProperty({ ...event }, "actor", { get() { throw malformed; } })), (error) => error === malformed);
-  equal(records.length, 9); deepEqual(records.slice(1), sourceRecords.slice(1)); equal(JSON.stringify(records).includes("private-malformed"), false); records.length = 0;
+  equal(records.length, 10); deepEqual(records.slice(1, 9), sourceRecords.slice(1));
+  deepEqual(records[9], literal("core.diagnostics.processing-failed", { reason: "evidence-rejected" }));
+  equal(JSON.stringify(records).includes("private-malformed"), false); records.length = 0;
   const unhandled: unknown[] = [], listener = (error: unknown): void => { unhandled.push(error); };
   process.on("unhandledRejection", listener);
   try {

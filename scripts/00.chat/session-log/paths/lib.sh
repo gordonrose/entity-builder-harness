@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -74,30 +74,40 @@ chat_log_metadata_value() {
   local log_file="$1"
   local key="$2"
 
-  sed -n '/<!-- agentic-session/,/-->/p' "$log_file" \
-    | sed '/<!-- agentic-session/d;/-->/d' \
-    | sed -n "s/^${key}: //p" \
-    | head -n 1
+  # One reader preserves an I/O failure even when the caller disables errexit.
+  if ! awk -v key="$key" '
+    /<!-- agentic-session/ { inside = 1; next }
+    /-->/ { inside = 0; next }
+    inside && !printed && index($0, key ": ") == 1 {
+      print substr($0, length(key) + 3); printed = 1
+    }
+  ' "$log_file" 2>/dev/null; then
+    printf 'ERROR: session-metadata-read-failed\n' >&2
+    return 2
+  fi
 }
 
 chat_log_file_for_session_by_metadata() {
   local session_id="$1"
   local branch="chat/${session_id}"
-  local grouped_parent found_file found_count file
+  local grouped_parent found_file found_count file files recorded_id recorded_branch
 
-  grouped_parent="$(chat_log_grouped_dir_for_session "$session_id")"
+  grouped_parent="$(chat_log_grouped_dir_for_session "$session_id")" || { printf 'ERROR: session-date-invalid\n' >&2; return 2; }
   grouped_parent="${grouped_parent%/*}"
   found_file=""
   found_count=0
 
   if [ -d "$grouped_parent" ]; then
+    files="$(find "$grouped_parent" -mindepth 2 -maxdepth 2 -type f -name README.md 2>/dev/null)" || { printf 'ERROR: session-directory-read-failed\n' >&2; return 2; }
     while IFS= read -r file; do
-      if [ "$(chat_log_metadata_value "$file" "id")" = "$session_id" ] \
-        || [ "$(chat_log_metadata_value "$file" "branch")" = "$branch" ]; then
+      [ -n "$file" ] || continue
+      recorded_id="$(chat_log_metadata_value "$file" "id")" || return 2
+      recorded_branch="$(chat_log_metadata_value "$file" "branch")" || return 2
+      if [ "$recorded_id" = "$session_id" ] || [ "$recorded_branch" = "$branch" ]; then
         found_file="$file"
         found_count=$((found_count + 1))
       fi
-    done < <(find "$grouped_parent" -mindepth 2 -maxdepth 2 -type f -name README.md | sort)
+    done <<< "$files"
   fi
 
   if [ "$found_count" -eq 1 ]; then
@@ -105,14 +115,17 @@ chat_log_file_for_session_by_metadata() {
     return 0
   fi
 
-  return 1
+  # Only a successful scan with no match means absence. Ambiguity is not absence.
+  [ "$found_count" -eq 0 ] && return 1
+  printf 'ERROR: session-log-ambiguous\n' >&2
+  return 2
 }
 
 chat_log_file_for_session() {
   local session_id="$1"
-  local grouped_dir flat_file metadata_file
+  local grouped_dir flat_file metadata_file lookup_status
 
-  grouped_dir="$(chat_log_grouped_dir_for_session "$session_id")"
+  grouped_dir="$(chat_log_grouped_dir_for_session "$session_id")" || { printf 'ERROR: session-date-invalid\n' >&2; return 2; }
   flat_file="commitLogs/${session_id}/README.md"
 
   if [ -f "${grouped_dir}/README.md" ]; then
@@ -122,6 +135,8 @@ chat_log_file_for_session() {
   elif metadata_file="$(chat_log_file_for_session_by_metadata "$session_id")"; then
     printf '%s\n' "$metadata_file"
   else
+    lookup_status=$?
+    [ "$lookup_status" -eq 1 ] || return "$lookup_status"
     printf '%s\n' "${grouped_dir}/README.md"
   fi
 }
@@ -130,6 +145,6 @@ chat_log_dir_for_session() {
   local session_id="$1"
   local log_file
 
-  log_file="$(chat_log_file_for_session "$session_id")"
+  log_file="$(chat_log_file_for_session "$session_id")" || return $?
   printf '%s\n' "${log_file%/README.md}"
 }

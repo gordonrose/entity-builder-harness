@@ -167,6 +167,34 @@ const isolatedMeter: CloudWatchOtelMetricMeter = {
   createHistogram() { creations++; return { record() { invocations++; } } as any; },
 };
 const checkedPort = createCloudWatchOtelMetrics({ meter: isolatedMeter, series });
+const metricProducers = require("../../../../../observability/src/metric-diagnostics") as Record<string, unknown>;
+for (const key of ["metricRejectionRecord", "metricCreationRecord", "metricRecordingRecord"] as const) {
+  const descriptor = Object.getOwnPropertyDescriptor(metricProducers, key)!;
+  for (const mode of ["throw", "undefined"] as const) {
+    let creations = 0, invocations = 0;
+    const build = () => {
+      creations++;
+      if (key === "metricCreationRecord") throw new Error("PRIVATE_CREATION");
+      return { add() { invocations++; throw new Error("PRIVATE_RECORDING"); } } as any;
+    };
+    const port = createCloudWatchOtelMetrics({ meter: { createCounter: build, createGauge: build, createHistogram: build }, series });
+    try {
+      Object.defineProperty(metricProducers, key, { ...descriptor, value: () => { if (mode === "throw") throw new Error("PRIVATE_DIAGNOSTIC"); return undefined; } });
+      throws(() => port.record(point({ ...basic, ...(key === "metricRejectionRecord" ? { name: "undeclared.metric" } : {}) })), error => {
+        equal(error instanceof Error, true);
+        equal((error as Error).message, key === "metricRejectionRecord" ? "CloudWatch OTel metric is not declared by the target catalogue."
+          : key === "metricCreationRecord" ? "Metric instrument creation did not complete." : "Metric recording invocation did not complete.");
+        deepEqual(Object.getOwnPropertyDescriptor(error, "diagnosticRecord")?.value, {
+          schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+          detail: { reason: mode === "throw" ? "construction-threw" : "construction-rejected" },
+        });
+        return true;
+      });
+      equal(creations, key === "metricRejectionRecord" ? 0 : 1);
+      equal(invocations, key === "metricRecordingRecord" ? 1 : 0);
+    } finally { Object.defineProperty(metricProducers, key, descriptor); }
+  }
+}
 for (const [input, expected] of [
   [{ ...basic, name: "synthetic.private" }, { reason: "undeclared-metric" }],
   [{ ...basic, kind: "gauge" as const, unit: "ms", value: NaN }, { reason: "kind-mismatch", seriesIndex: 0 }],
@@ -323,4 +351,5 @@ const fallbackPort = createCloudWatchOtelMetrics({ meter: { ...isolatedMeter, cr
 equal(definitionReads, 0, "stage binding must not eagerly read optional definition getters");
 boundaryRecords.length = 0;
 throws(() => fallbackPort.record(point(basic)), /Metric instrument creation/);
-equal(definitionReads, 1); equal(boundaryRecords.length, 10); deepEqual(boundaryRecords.slice(1), sourceNine);
+equal(definitionReads, 1); equal(boundaryRecords.length, 11); deepEqual(boundaryRecords.slice(1, 10), sourceNine);
+deepEqual(boundaryRecords[10], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "definition-selection-failed" } });

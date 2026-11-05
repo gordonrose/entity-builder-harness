@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.main-refresh.verify-conflict-audit
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -49,14 +49,17 @@ PATHS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --session-log)
+      [ $# -ge 2 ] || { echo "ERROR: missing session-log argument" >&2; exit 2; }
       SESSION_LOG="${2:-}"
       shift 2
       ;;
     --path)
+      [ $# -ge 2 ] || { echo "ERROR: missing path argument" >&2; exit 2; }
       PATHS+=("${2:-}")
       shift 2
       ;;
     --paths-file)
+      [ $# -ge 2 ] || { echo "ERROR: missing paths-file argument" >&2; exit 2; }
       PATHS_FILE="${2:-}"
       shift 2
       ;;
@@ -65,7 +68,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown argument: $1" >&2
+      echo "ERROR: unknown argument" >&2
       usage >&2
       exit 2
       ;;
@@ -73,31 +76,39 @@ while [ $# -gt 0 ]; do
 done
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "ERROR: not inside a Git worktree." >&2
+  echo "ERROR: Git worktree could not be verified." >&2
   exit 1
 fi
 
 if [ -n "$PATHS_FILE" ]; then
   if [ ! -f "$PATHS_FILE" ]; then
-    echo "ERROR: missing paths file: $PATHS_FILE" >&2
+    echo "ERROR: missing paths file" >&2
     exit 1
   fi
 
+  if ! supplied_paths="$(cat "$PATHS_FILE" 2>/dev/null)"; then
+    echo "ERROR: conflict-paths-file-read-failed" >&2
+    exit 2
+  fi
   while IFS= read -r path; do
     [ -z "$path" ] && continue
     PATHS+=("$path")
-  done < "$PATHS_FILE"
+  done <<< "$supplied_paths"
 fi
 
 if [ "${#PATHS[@]}" -eq 0 ]; then
+  if ! unresolved_paths="$(git diff --name-only --diff-filter=U 2>/dev/null)"; then
+    echo "ERROR: conflict-index-read-failed" >&2
+    exit 2
+  fi
   while IFS= read -r path; do
     [ -z "$path" ] && continue
     PATHS+=("$path")
-  done < <(git diff --name-only --diff-filter=U)
+  done <<< "$unresolved_paths"
 fi
 
 if [ -z "$SESSION_LOG" ]; then
-  BRANCH="$(git branch --show-current)"
+  BRANCH="$(git branch --show-current 2>/dev/null)" || { echo "ERROR: conflict-branch-read-failed" >&2; exit 2; }
   if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH" 2>/dev/null)"; then
     if [ -n "${AGENTIC_SESSION_LOG:-}" ]; then
       SESSION_LOG="$AGENTIC_SESSION_LOG"
@@ -111,7 +122,7 @@ if [ -z "$SESSION_LOG" ]; then
 fi
 
 if [ ! -f "$SESSION_LOG" ]; then
-  echo "ERROR: missing session log: $SESSION_LOG" >&2
+  echo "ERROR: missing session log" >&2
   exit 1
 fi
 
@@ -121,7 +132,7 @@ if [ "${#PATHS[@]}" -eq 0 ]; then
   exit 0
 fi
 
-AUDIT_PATHS="$(
+if ! AUDIT_PATHS="$(
   awk '
     $0 == "## Main Refresh Conflicts" { in_section = 1; next }
     in_section && /^## / { in_section = 0 }
@@ -131,8 +142,11 @@ AUDIT_PATHS="$(
       sub(/`$/, "", line)
       print line
     }
-  ' "$SESSION_LOG"
-)"
+  ' "$SESSION_LOG" 2>/dev/null
+)"; then
+  echo "ERROR: conflict-audit-read-failed" >&2
+  exit 2
+fi
 
 FAILED=0
 
@@ -141,10 +155,15 @@ for path in "${PATHS[@]}"; do
     continue
   fi
 
-  if printf '%s\n' "$AUDIT_PATHS" | grep -Fxq "$path"; then
+  if grep -Fxq -- "$path" <<< "$AUDIT_PATHS" 2>/dev/null; then
     echo "OK: conflict path recorded: $path"
   else
-    echo "ERROR: conflict path missing from session audit: $path" >&2
+    match_status=$?
+    if [ "$match_status" -ne 1 ]; then
+      echo "ERROR: conflict-audit-match-failed" >&2
+      exit 2
+    fi
+    echo "ERROR: conflict path missing from session audit" >&2
     FAILED=1
   fi
 done

@@ -98,6 +98,17 @@ function configurationSafety(): void {
     deepEqual(result, expected("configuration", "configuration", "wrong-shape"));
     equal(JSON.stringify(result).includes(canary), false);
   }
+  for (const [path, field] of fields.slice(1)) {
+    const failed = check({ ...base, [path]: "x".repeat(256) });
+    if (failed.ok) throw new Error("Expected oversized name rejection.");
+    equal(failed.error.details.path, path);
+    deepEqual(failed.error.diagnosticRecord, { schema: "core/diagnostic-record/v1", code: "persistence.configuration-invalid", definitionVersion: 1,
+      detail: { field, reason: "too-long" } });
+    equal(check({ ...base, [path]: "x".repeat(255) }).ok, true);
+  }
+  const allLong = check({ ...base, tableName: "x".repeat(256), outboxDueIndexName: "x".repeat(256), lineageCauseIndexName: "x".repeat(256) });
+  if (allLong.ok) throw new Error("Expected first oversized name rejection.");
+  equal(allLong.error.details.path, "tableName");
   deepEqual(check({}), expected("region", "region", "missing"));
   deepEqual(check({ ...base, lineageCauseIndexName: null, tableName: null, region: null }), expected("region", "region", "wrong-type"));
   const failure = check({ ...base, region: 1 });
@@ -497,6 +508,41 @@ async function main(): Promise<void> {
   equal(seen.length, 10);
   deepEqual(seen.slice(1), sourceRecords);
   if (!sourceFailure.ok) { deepEqual(sourceFailure.error.diagnosticRecord, sourceRecords[0]); deepEqual(sourceFailure.error.relatedDiagnosticRecords, sourceRecords.slice(1)); }
+
+  const builders = require("../../../../../persistence/src/diagnostics") as typeof import("../../../../../persistence/src/diagnostics");
+  const originalCommand = builders.persistenceCommandDiagnosticRecord, originalAttribute = builders.persistenceStoredAttributeDiagnosticRecord;
+  const originalConfiguration = builders.persistenceConfigurationDiagnosticRecord;
+  for (const mode of ["throws", "missing"] as const) {
+    const broken = (): never => { if (mode === "throws") throw new Error("PRIVATE_BUILDER_CANARY"); return undefined as never; };
+    builders.persistenceCommandDiagnosticRecord = broken;
+    builders.persistenceStoredAttributeDiagnosticRecord = broken;
+    builders.persistenceConfigurationDiagnosticRecord = broken;
+    try {
+      const expected = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+        detail: { reason: mode === "throws" ? "construction-threw" : "construction-rejected" } };
+      seen.length = 0; let calls = 0;
+      const result = await createDynamoDbPlatformPersistenceFactWriter({ configuration, onDiagnostic, client: { send: async () => { calls++; throw fullSource; } } }).write(mutation);
+      if (result.ok) throw new Error("Expected original write failure.");
+      equal(calls, 1); deepEqual(result.error.diagnosticRecord, sourceRecords[0]); deepEqual(result.error.relatedDiagnosticRecords, sourceRecords.slice(1));
+      deepEqual(seen, [expected, ...sourceRecords]);
+      const invalid = dynamoDbPersistenceConfiguration({ ...configuration, tableName: "" });
+      if (invalid.ok) throw new Error("Expected original configuration rejection.");
+      equal(invalid.error.details.path, "tableName"); deepEqual(invalid.error.diagnosticRecord, expected);
+      seen.length = 0;
+      const item = { ...outboxRecordToItem(platformOutboxRecord({ entry })), subjectKind: {} };
+      await rejects(createDynamoDbPlatformOutboxStore({ configuration, onDiagnostic, client: { send: async () => ({ Item: item }) } }).get(entry.id), error => {
+        equal(error instanceof TypeError, true);
+        deepEqual(Object.getOwnPropertyDescriptor(error, "diagnosticRecord")?.value, expected);
+        return true;
+      });
+      deepEqual(seen, [expected]);
+      equal(JSON.stringify(seen).includes("PRIVATE_BUILDER_CANARY"), false);
+    } finally {
+      builders.persistenceCommandDiagnosticRecord = originalCommand;
+      builders.persistenceStoredAttributeDiagnosticRecord = originalAttribute;
+      builders.persistenceConfigurationDiagnosticRecord = originalConfiguration;
+    }
+  }
 
   for (const [cause, status] of [[17, "absent"], [null, "absent"], [{ name: 1 }, "wrong-type"], [{ name: "PRIVATE_UNKNOWN_CANARY" }, "unrecognized"], [Object.defineProperty({}, "name", { get() { throw new Error("must not inspect accessor"); } }), "unavailable"]] as const) {
     seen.length = 0;

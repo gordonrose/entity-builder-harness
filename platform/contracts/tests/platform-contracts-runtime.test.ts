@@ -444,12 +444,42 @@ async function operationalContractsDiagnostics(): Promise<void> {
   }
   let evidenceReads = 0;
   const inaccessible = Object.defineProperty({}, "diagnosticRecord", { get() { evidenceReads++; throw raw; } });
-  for (const thrown of [inaccessible, { diagnosticRecord: { ...source9[0], code: "private.unselected" } }, { diagnosticRecord: { ...source9[0], detail: { private: "PRIVATE-contract-canary" } } }]) {
+  for (const [thrown, reason] of [[inaccessible, "evidence-inaccessible"], [{ diagnosticRecord: { ...source9[0], code: "private.unselected" } }, undefined], [{ diagnosticRecord: { ...source9[0], detail: { private: "PRIVATE-contract-canary" } } }, "evidence-rejected"]] as const) {
     records.length = 0;
     throws(() => fixedFeatureFlagReader({ get [flag](): boolean { throw thrown; } }, false, options), (error) => error === thrown);
-    deepEqual(getRecords(), [boundary("fixed-feature-flags", "snapshot", "flags", "reader-not-produced")]);
+    deepEqual(getRecords(), [boundary("fixed-feature-flags", "snapshot", "flags", "reader-not-produced"), ...(reason === undefined ? [] : [literal("core.diagnostics.processing-failed", { reason })])]);
   }
   equal(evidenceReads, 0);
+  const builders = require("../src/registration-diagnostics") as {
+    platformOperationalEventDiagnosticRecord: typeof platformOperationalEventDiagnosticRecord;
+    platformOperationalBoundaryDiagnosticRecord: typeof platformOperationalBoundaryDiagnosticRecord;
+  };
+  const originalEvent = builders.platformOperationalEventDiagnosticRecord, originalBoundary = builders.platformOperationalBoundaryDiagnosticRecord;
+  for (const mode of ["throws", "missing", "malformed"] as const) {
+    const broken = (): DiagnosticRecord => {
+      if (mode === "throws") throw new Error("PRIVATE-contract-canary");
+      return mode === "missing" ? undefined as never : { ...source9[0]!, detail: { private: "PRIVATE-contract-canary" } };
+    };
+    builders.platformOperationalEventDiagnosticRecord = broken;
+    builders.platformOperationalBoundaryDiagnosticRecord = broken;
+    try {
+      const processing = literal("core.diagnostics.processing-failed", { reason: mode === "throws" ? "construction-threw" : mode === "missing" ? "construction-rejected" : "definition-unselected" });
+      records.length = contexts.length = 0;
+      const rejected = platformReadinessObservationEvent(null, options);
+      if (rejected.ok) throw new Error("Expected original rejection.");
+      equal(rejected.error.code, "PLATFORM_OPERATIONAL_EVENT_INVALID");
+      deepEqual(rejected.error.diagnosticRecord, processing);
+      deepEqual(records, [processing]);
+      deepEqual(contexts[0], { operation: "readiness-event", phase: "validation", evidence: "owned" });
+      records.length = contexts.length = 0;
+      throws(() => fixedFeatureFlagReader({ get [flag](): boolean { throw raw; } }, false, options), error => error === raw);
+      deepEqual(records, [processing, ...source9]);
+      deepEqual(contexts[0], { operation: "fixed-feature-flags", phase: "snapshot", evidence: "owned" });
+    } finally {
+      builders.platformOperationalEventDiagnosticRecord = originalEvent;
+      builders.platformOperationalBoundaryDiagnosticRecord = originalBoundary;
+    }
+  }
   const unhandled: unknown[] = [], onUnhandled = (error: unknown): void => { unhandled.push(error); };
   process.on("unhandledRejection", onUnhandled);
   try {

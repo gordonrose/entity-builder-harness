@@ -1,4 +1,10 @@
-import { createDiagnosticRecord, defineDiagnostic } from "@kanbien/core/diagnostics";
+import { coreDiagnosticCatalog } from "@kanbien/core";
+import { captureDiagnosticRecord, requireDiagnosticRecord, createDiagnosticRecord, defineDiagnostic } from "@kanbien/core/diagnostics";
+
+/** Guard required server-owned construction without weakening strict public builders. */
+export function captureServerDiagnostic(build: () => import("@kanbien/core/diagnostics").DiagnosticRecord | undefined) {
+  return requireDiagnosticRecord([...coreDiagnosticCatalog.definitions, ...platformServerDiagnosticCatalog.definitions], captureDiagnosticRecord(build));
+}
 
 export const serverDiagnosticErrorCodes = [
   "PLATFORM_SERVER_MOUNT_FAILED", "PLATFORM_SERVER_CONFIG_INVALID", "PLATFORM_SERVER_START_FAILED",

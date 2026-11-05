@@ -1,4 +1,4 @@
-import { createDiagnosticRecord, defineDiagnostic, parseDiagnosticRecord, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, requireDiagnosticRecord, diagnosticProcessingDefinition, createDiagnosticRecord, defineDiagnostic, parseDiagnosticRecord, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { metricValidationReasons, type Metrics } from "@kanbien/core/monitoring";
 import type { PlatformDiagnosticContext, PlatformDiagnosticReporter } from "@kanbien/platform-contracts";
 import { platformMetricLifecycleDiagnosticDefinitions } from "./metric-lifecycle-diagnostics";
@@ -37,6 +37,11 @@ export const metricRecordingDiagnostic = defineDiagnostic({ code: "observability
 } as const);
 export const platformMetricDiagnosticDefinitions = [metricPreparationDiagnostic, metricRejectionDiagnostic, metricCreationDiagnostic, metricRecordingDiagnostic] as const;
 
+/** Protect required producer evidence without changing a metric's result or retrying it. */
+export function capturePlatformMetricDiagnostic(build: () => DiagnosticRecord): DiagnosticRecord {
+  return requireDiagnosticRecord([...platformMetricDiagnosticDefinitions, ...platformMetricLifecycleDiagnosticDefinitions], captureDiagnosticRecord(build));
+}
+
 export function metricPreparationRecord(field: "name" | "kind" | "value" | "unit" | "label" | "clock" | "timestamp" | "recorder",
   reason: typeof metricValidationReasons[number] | "wrong-type" | "access-failed" | "clock-threw" | "invalid-date" | "unclassified-preparation-failure", index?: number): DiagnosticRecord {
   return requiredRecord(metricPreparationDiagnostic, { field, reason, phase: "point-preparation", effect: "recording-not-attempted", ...(index === undefined ? {} : { index }) });
@@ -62,7 +67,7 @@ function requiredRecord(definition: typeof platformMetricDiagnosticDefinitions[n
 // Merely copying a valid diagnosticRecord (or wrapping a different port) proves nothing.
 const origins = new WeakMap<object, { readonly port: Metrics; readonly record: DiagnosticRecord }>();
 export function attachPlatformMetricDiagnostic(port: Metrics, error: Error, record: DiagnosticRecord): Error {
-  const definition = metricDefinitionFor(record);
+  const definition = metricDefinitionFor(record, [...platformMetricDiagnosticDefinitions, diagnosticProcessingDefinition()]);
   if (!definition) throw new TypeError("OBSERVABILITY_METRIC_DIAGNOSTIC_INVALID");
   const checked = parseDiagnosticRecord<unknown>(definition, record);
   if (!checked.ok) throw new TypeError("OBSERVABILITY_METRIC_DIAGNOSTIC_INVALID");
@@ -119,7 +124,7 @@ function boundedBinding<Operation extends string>(reporter: PlatformDiagnosticRe
   return { report(record, operation) {
     if (reporter === undefined || reporting || exhausted) return;
     try {
-      const definition = metricDefinitionFor(record, definitions);
+      const definition = metricDefinitionFor(record, [...definitions, diagnosticProcessingDefinition()]);
       if (!definition || !operations.includes(operation)) return;
       const checked = parseDiagnosticRecord<unknown>(definition, record);
       if (!checked.ok) return;
@@ -127,8 +132,11 @@ function boundedBinding<Operation extends string>(reporter: PlatformDiagnosticRe
       if (reported.has(key)) return;
       if (reported.size === platformMetricDiagnosticLimit - 1) {
         exhausted = true; reporting = true;
-        const control = createDiagnosticRecord(platformDiagnosticReportingSuppressedDiagnostic, { reason: "attempt-limit", limit: 128, attempted: 127, effect: "further-observations-not-attempted" });
-        if (control.ok) reportPlatformDiagnostic(reporter, control.value, context(operation));
+        const control = requireDiagnosticRecord([platformDiagnosticReportingSuppressedDiagnostic], captureDiagnosticRecord(() => {
+          const result = createDiagnosticRecord(platformDiagnosticReportingSuppressedDiagnostic, { reason: "attempt-limit", limit: 128, attempted: 127, effect: "further-observations-not-attempted" });
+          return result.ok ? result.value : undefined;
+        }));
+        reportPlatformDiagnostic(reporter, control, context(operation));
         return;
       }
       reported.add(key);

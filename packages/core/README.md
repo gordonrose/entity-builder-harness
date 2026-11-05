@@ -149,9 +149,77 @@ The [safe-diagnostic standard](../../.agentic/shared/standards/require-safe-diag
 governs reuse and its limits. The
 [delivery tests](tests/diagnostic-delivery-runtime.test.ts) cover order, identity,
 rejected results and continued delivery. Status-bearing log-write observation
-remains with Platform; the pinned legacy queue helper is not migrated by this
-bounded change. This section explains the new delivery exports, not every
+remains with Platform. Core queues also uses these shared delivery helpers.
+This section explains the delivery exports, not every
 historical diagnostics export.
+
+### When the report itself cannot be produced
+
+Suppose a queue operation has already failed. The queue code knows the reason,
+but the function it calls to build a diagnostic unexpectedly throws. These are
+two different failures: the queue operation failed, and its explanation could
+not be built. Reporting the second must not replace the first with a different
+queue error, retry the operation, or reveal the thrown exception's text.
+
+[processing.ts](src/diagnostics/reporting/processing.ts) supplies shared tools
+for that reporting problem. They are available through `@kanbien/core/diagnostics`:
+
+- `captureDiagnosticRecord(build)` calls the supplied report-building function
+  once. If it throws or returns no record, this helper returns a fixed
+  `core.diagnostics.processing-failed` record instead. It does **not** check the
+  operation or validate a returned record's contents.
+- `requireDiagnosticRecord(definitions, record)` checks a required report
+  against the definitions its owner accepts. If it cannot keep that report, it
+  returns a processing-failure record. Existing capability wrappers combine
+  this check with `captureDiagnosticRecord`; future callers can do the same.
+- `diagnosticProcessingRecord(reason)` returns one of the prepared, fixed
+  reports; `DiagnosticProcessingReason` is the TypeScript list of permitted
+  reason names. `diagnosticProcessingDefinition()` supplies their definition
+  for a reader that needs to recognise this code. The Core catalogue includes it.
+- `selectDiagnosticEvidenceWithReport(definitions, error, report)` keeps valid
+  reports from an error and separately calls `report` for rejected or inaccessible
+  evidence. An unknown external definition remains excluded, without a notice:
+  excluding another owner's unselected records can be intentional.
+
+For example, this invented caller simulates a broken report-building function:
+
+```typescript
+import { captureDiagnosticRecord } from "@kanbien/core/diagnostics";
+
+const report = captureDiagnosticRecord(() => undefined);
+// report is:
+// { schema: "core/diagnostic-record/v1",
+//   code: "core.diagnostics.processing-failed", definitionVersion: 1,
+//   detail: { reason: "construction-rejected" } }
+```
+
+This does not say why the queue failed. The caller still owns the queue result
+and supplies the known operation/location when passing the report to a receiver.
+It preserves any independently valid original reports as well.
+
+[record.ts](src/diagnostics/record.ts) also exports `inspectDiagnosticEvidence`.
+Unlike the older `selectDiagnosticEvidence`, it tells the caller whether the
+main record was absent, accepted, rejected, from an unselected definition, or
+inaccessible. It checks the accompanying records separately, up to the existing
+limit of eight. `DiagnosticEvidence` describes retained records;
+`DiagnosticSelectionStatus` names those outcomes; `DiagnosticEvidenceInspection`
+describes the result containing both. Rejected values and exception text are
+not returned. The older selector still returns only retained records for callers
+that need its existing interface.
+
+Separately, `inspectCoreDiagnosticAttachment` in
+[shared/diagnostics.ts](src/shared/diagnostics.ts) reports whether adding a record
+to an error was accepted, blocked, or unnecessary because a field already exists.
+It never replaces the error. A successful property write does not prove that a
+logger received anything. Delivery confirmation remains separate work (DIAG-013).
+
+The [supported-reason standard](../../.agentic/shared/standards/require-safe-diagnostic-record.md#supported-reason-preservation)
+requires the real operation's reason to survive; a processing-failure fallback
+is not proof of that. [Record tests](tests/diagnostic-record-runtime.test.ts)
+and [Events tests](tests/events-runtime.test.ts) exercise these distinct cases.
+DIAG-012's [implementation plan](../../.agentic/shared/plans/implementation/governed-diagnostic-coverage.md)
+records which actual consumers have been reviewed; these helpers do not
+automatically migrate every caller.
 
 Do not put secrets, tokens, raw request bodies, provider objects, class
 instances, or rich runtime values into diagnostic facts.
@@ -211,7 +279,9 @@ errors can have no attached record; consumers must observe their own call
 boundary when evidence is unavailable. A Core record neither assesses a remote
 operation effect nor authorizes retry. Pure brands/fixed authn/authz/tenancy
 ports have no added failure policy; validator diagnostic projection stays
-optional.
+optional. A missing projection or a projection deliberately returning no detail
+still returns `undefined`; a projection that throws now returns a safe
+processing-failure record instead. The validation decision is unchanged.
 
 ## Translation-Ready Meaning
 

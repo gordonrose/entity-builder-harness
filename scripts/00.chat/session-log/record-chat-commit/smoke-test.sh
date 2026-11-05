@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-18"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -283,6 +283,52 @@ fs.unlinkSync(pricing);
 result = invoke();
 assert.equal(result.status, 0); assert.equal(result.stdout, 'estimated_chat_cost: unavailable; pricing snapshot not found\nestimated_chat_cost_basis: unavailable; pricing snapshot not found\n');
 console.log('imported chat cost diagnostic ports passed.');
+NODE
+
+node - "$REPO" "$TMP_ROOT" "$SESSION_ID" "$LOG_FILE" <<'NODE'
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const [repo, temporary, session, log] = process.argv.slice(2);
+const home = path.join(temporary, 'codex-home');
+const bins = path.join(temporary, 'fault-bin');
+fs.mkdirSync(bins);
+const script = 'scripts/00.chat/transcript/discover-codex-session-log/script.sh';
+const invoke = (env = {}, args = [session, log]) => spawnSync('bash', [script, ...args], {
+  cwd: repo, encoding: 'utf8', env: { ...process.env, CODEX_HOME: home, ...env },
+});
+let result = invoke();
+assert.equal(result.status, 0);
+assert.equal(result.stdout.trim(), path.join(home, 'sessions/2026/06/18/rollout-test.jsonl'));
+assert.equal(result.stderr, '');
+result = invoke({}, ['unmatched-private-canary']);
+assert.equal(result.status, 1); assert.equal(result.stderr, 'ERROR: transcript-match-absent\n'); assert.equal(result.stdout, '');
+for (const [command, reason] of [['find', 'scan'], ['grep', 'read'], ['stat', 'stat'], ['sort', 'selection']]) {
+  const executable = path.join(bins, command);
+  fs.writeFileSync(executable, '#!/usr/bin/env bash\necho PRIVATE_TRANSCRIPT_CANARY >&2\nexit 70\n', { mode: 0o755 });
+  result = invoke({ PATH: `${bins}:${process.env.PATH}` });
+  assert.equal(result.status, 3, command);
+  assert.equal(result.stdout, '', command);
+  assert.equal(result.stderr, `ERROR: transcript-${reason}-failed\n`, command);
+  fs.unlinkSync(executable);
+}
+// A portable recorder may continue without metrics, but must retain why discovery failed.
+const logPath = path.join(repo, log), previous = fs.readFileSync(logPath, 'utf8');
+try {
+  fs.writeFileSync(logPath, previous.replace(/^(transcript_(?:path|bytes|source)):.*/gm, '$1:'));
+  const executable = path.join(bins, 'find');
+  fs.writeFileSync(executable, '#!/usr/bin/env bash\necho PRIVATE_TRANSCRIPT_CANARY >&2\nexit 70\n', { mode: 0o755 });
+  result = spawnSync('bash', ['scripts/00.chat/session-log/record-chat-commit/script.sh', 'fixture-sha', 'Fixture', 'Diagnostic handoff'], {
+    cwd: repo, encoding: 'utf8', env: { ...process.env, CODEX_HOME: home, CHAT_TRANSCRIPT_PROVIDER: 'codex',
+      CHAT_TRANSCRIPT_METRICS_MODE: 'portable', PATH: `${bins}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.stderr.includes('WARNING: transcript-scan-failed\n'));
+  assert.equal((result.stdout + result.stderr + fs.readFileSync(logPath, 'utf8')).includes('PRIVATE_TRANSCRIPT_CANARY'), false);
+  fs.unlinkSync(executable);
+} finally { fs.writeFileSync(logPath, previous); }
+console.log('transcript reason propagation fixtures passed.');
 NODE
 
 echo "record chat commit metrics smoke test passed."

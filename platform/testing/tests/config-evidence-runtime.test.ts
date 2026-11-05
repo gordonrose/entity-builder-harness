@@ -68,3 +68,24 @@ equal(rejectedWithUnavailableSelection.ok, false);
 if (rejectedWithUnavailableSelection.ok) throw new Error("Expected original rejection.");
 equal(rejectedWithUnavailableSelection.error.code, "PLATFORM_TEST_INVALID_CONFIG");
 equal(rejectedWithUnavailableSelection.error.diagnosticRecord, undefined);
+
+// Optional selection failure must not erase the reason already established by Core.
+const coreFailure = requiredConfigValue(source, canary);
+if (coreFailure.ok) throw new Error("Expected missing configuration.");
+const coreRecord = coreFailure.error.diagnosticRecord!;
+const coreCompanions = Array.from({ length: 8 }, () => coreRecord);
+const failureWithCompanions = { ...coreFailure.error, relatedDiagnosticRecords: coreCompanions };
+let rejectedCalls = 0, skippedCalls = 0;
+const retained = validatePlatformTestConfigSchemas([
+  { parse(supplied) { equal(supplied, source); return { ok: true, value: 443 }; } },
+  { parse(supplied) { equal(supplied, source); rejectedCalls++; return { ok: false, error: failureWithCompanions }; } },
+  { parse() { skippedCalls++; return { ok: true, value: 1 }; } },
+], source, uninspectableDefinitions);
+equal(retained.ok, false);
+if (retained.ok) throw new Error("Expected original rejection.");
+equal(rejectedCalls, 1); equal(skippedCalls, 0);
+deepEqual(retained.error.details, { schemaIndex: 1, configCode: "CONFIG_MISSING" });
+deepEqual(retained.error.diagnosticRecord, coreRecord);
+deepEqual(retained.error.diagnosticRecord?.detail, { field: "value", reader: "required", reason: "missing" });
+deepEqual(retained.error.relatedDiagnosticRecords, coreCompanions);
+equal(JSON.stringify(retained.error).includes(canary), false);

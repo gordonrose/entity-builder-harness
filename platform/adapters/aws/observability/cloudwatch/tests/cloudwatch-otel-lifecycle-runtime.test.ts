@@ -355,5 +355,40 @@ async function independentPublicSources(): Promise<void> {
   await new Promise<void>((resolve) => setImmediate(resolve));
 }
 
-async function main(): Promise<void> { runnerDispatchProof(); await sdkBoundaryBaseline(); await wrapperPreservation(); await collectionAndSdkObservation(); await independentPublicSources(); await httpExporterObservation(); }
+async function processingFailurePreservation(): Promise<void> {
+  const producers = require("../../../../../observability/src/metric-lifecycle-diagnostics") as Record<string, unknown>;
+  const data = { resource: resourceFromAttributes({}), scopeMetrics: [] };
+  for (const key of ["metricExportFailureRecord", "metricLifecycleFailureRecord", "metricCollectionFailureRecord", "metricCollectionIssuesRecord"] as const) {
+    const descriptor = Object.getOwnPropertyDescriptor(producers, key)!;
+    for (const mode of ["throw", "undefined"] as const) {
+      const fixture = capture(); const failure = Object.freeze(new Error("PRIVATE_LIFECYCLE_BUILDER"));
+      const originalCollect = PeriodicExportingMetricReader.prototype.collect;
+      let calls = 0;
+      try {
+        Object.defineProperty(producers, key, { ...descriptor, value: () => { if (mode === "throw") throw failure; return undefined; } });
+        if (key === "metricExportFailureRecord") {
+          const exporter: PushMetricExporter = { export(_data, callback) { calls++; callback({ code: 1, error: failure }); }, async forceFlush() {}, async shutdown() {} };
+          let callbacks = 0;
+          observeMetricExporter(exporter, fixture.binding).export(data, result => { callbacks++; equal(result.error, failure); });
+          equal(callbacks, 1);
+        } else if (key === "metricLifecycleFailureRecord") {
+          await rejects(observeMetricLifecycle(() => { calls++; return Promise.reject(failure); }, "flush", "runtime", fixture.binding), error => error === failure);
+        } else {
+          const result: CollectionResult = { resourceMetrics: data, errors: [failure] };
+          PeriodicExportingMetricReader.prototype.collect = async () => { calls++; if (key === "metricCollectionFailureRecord") throw failure; return result; };
+          const reader = new ObservedPeriodicMetricReader({ exporter: { export() {}, async forceFlush() {}, async shutdown() {} }, exportIntervalMillis: 60_000 }, fixture.binding);
+          if (key === "metricCollectionFailureRecord") await rejects(reader.collect(), error => error === failure);
+          else equal(await reader.collect(), result);
+        }
+        equal(calls, 1);
+        deepEqual(fixture.records, [envelope("core.diagnostics.processing-failed", { reason: mode === "throw" ? "construction-threw" : "construction-rejected" })]);
+      } finally {
+        Object.defineProperty(producers, key, descriptor);
+        PeriodicExportingMetricReader.prototype.collect = originalCollect;
+      }
+    }
+  }
+}
+
+async function main(): Promise<void> { runnerDispatchProof(); await sdkBoundaryBaseline(); await wrapperPreservation(); await collectionAndSdkObservation(); await independentPublicSources(); await processingFailurePreservation(); await httpExporterObservation(); }
 void main().then(() => console.log("Metric lifecycle SDK boundaries, preservation, uncertainty and local HTTP export passed."));

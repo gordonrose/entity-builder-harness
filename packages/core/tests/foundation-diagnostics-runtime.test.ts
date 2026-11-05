@@ -55,6 +55,7 @@ deepEqual(coreDiagnosticCatalog.definitions.filter(({ code }) => !code.startsWit
   ["core.files.validation-rejected", 1], ["core.files.operation-rejected", 1], ["core.files.boundary-failed", 1],
   ["core.i18n.validation-rejected", 1], ["core.i18n.selection-observed", 1], ["core.i18n.boundary-failed", 1],
   ["core.localization.validation-rejected", 1], ["core.localization.unsupported-observed", 1], ["core.localization.boundary-failed", 1],
+  ["core.diagnostics.processing-failed", 1],
 ]);
 deepEqual(coreDiagnosticCatalog.definitions.filter(({ code }) => code.startsWith("core.persistence.")).map(({ code, version }) => [code, version]), [
   ["core.persistence.validation-rejected", 1], ["core.persistence.in-memory-boundary-failed", 1],

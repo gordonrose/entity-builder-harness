@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -92,4 +92,23 @@ if ! grep -q '| Total | USD 0.0030 |' "$TMP_ROOT/printed.md"; then
   fail "summary did not aggregate estimated chat cost"
 fi
 
+cat > "$TMP_ROOT/fault.cjs" <<'JS'
+const fs = require('fs');
+for (const method of ['readdirSync', 'readFileSync', 'writeFileSync']) {
+  const original = fs[method];
+  fs[method] = function (...args) {
+    if (method === process.env.SUMMARY_FAULT) throw new Error('SUMMARY_NATIVE_CANARY');
+    return original.apply(this, args);
+  };
+}
+JS
+for pair in readdirSync:log-tree readFileSync:log-content writeFileSync:output-write; do
+  fault="${pair%%:*}"; stage="${pair#*:}"; status=0
+  (cd "$REPO"; SUMMARY_FAULT="$fault" NODE_OPTIONS="--require=$TMP_ROOT/fault.cjs" \
+    bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh --output "$TMP_ROOT/fault.md") \
+    > "$TMP_ROOT/fault.out" 2>&1 || status=$?
+  [ "$status" -eq 2 ] || fail "$fault status $status"
+  grep -q "stage=$stage;" "$TMP_ROOT/fault.out" || fail "$fault lost stage"
+  if grep -Eq 'SUMMARY_NATIVE_CANARY|Total chats:|Wrote ' "$TMP_ROOT/fault.out"; then fail "$fault misreported"; fi
+done
 echo "commit log summary smoke test passed."

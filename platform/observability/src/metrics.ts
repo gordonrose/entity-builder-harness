@@ -9,7 +9,7 @@ import {
 } from "@kanbien/core/monitoring";
 import { isoDateTimeFromDate, type Clock } from "@kanbien/core/shared";
 import { platformOptionalErrorClassification, type PlatformErrorClassificationOptions } from "@kanbien/platform-contracts";
-import { metricPreparationRecord, metricRecordingRecord, platformMetricFailureObservation, type PlatformMetricDiagnosticOptions } from "./metric-diagnostics";
+import { capturePlatformMetricDiagnostic, metricPreparationRecord, metricRecordingRecord, platformMetricFailureObservation, type PlatformMetricDiagnosticOptions } from "./metric-diagnostics";
 import { reportPlatformObservationBoundary, reportPlatformObservationSources, type PlatformObservationDiagnostics } from "./boundary-observation";
 import { platformObservationOperations, type PlatformObservationBoundaryDetail } from "./boundary-definitions";
 
@@ -36,8 +36,8 @@ export function recordPlatformMetric(
   let predicate: MetricValidationObservation | undefined;
   let primitiveInput: unknown;
   const observe = (observation: MetricValidationObservation) => { predicate = observation; };
-  const report = (record: ReturnType<typeof metricRecordingRecord>) => {
-    try { diagnostics?.binding.report(record, diagnostics.operation); } catch { /* Optional diagnostics remain isolated. */ }
+  const report = (build: () => ReturnType<typeof metricRecordingRecord>) => {
+    try { diagnostics?.binding.report(capturePlatformMetricDiagnostic(build), diagnostics.operation); } catch { /* Optional diagnostics remain isolated. */ }
   };
   try {
     const record = metrics.record; // Preserve original method-access ordering and this binding.
@@ -67,7 +67,7 @@ export function recordPlatformMetric(
     const pending: ReturnType<Metrics["record"]> = Reflect.apply(record, metrics, [{ name, kind, value, unit, recordedAt, ...(labels === undefined ? {} : { labels }) }]);
     if (pending !== undefined) {
       const rejected = (error: unknown): void => {
-        try { const known = platformMetricFailureObservation(metrics, error); report(known ?? metricRecordingRecord());
+        try { const known = platformMetricFailureObservation(metrics, error); report(() => known ?? metricRecordingRecord());
           if (known === undefined) reportPlatformObservationSources(observations, error); }
         catch { /* A rejection handler must not create another rejected promise. */ }
       };
@@ -81,23 +81,27 @@ export function recordPlatformMetric(
       }
     }
   } catch (error) {
-    if (phase === "invoke") { const known = platformMetricFailureObservation(metrics, error); report(known ?? metricRecordingRecord());
+    if (phase === "invoke") { const known = platformMetricFailureObservation(metrics, error); report(() => known ?? metricRecordingRecord());
       if (known === undefined) reportPlatformObservationSources(observations, error); return; }
     const observed = predicate;
     if (observed !== undefined && observed.field === phase) {
-      report(metricPreparationRecord(observed.field, observed.reason, observed.index));
+      report(() => metricPreparationRecord(observed.field, observed.reason, observed.index));
     } else if ((phase === "name" || phase === "unit") && typeof primitiveInput !== "string") {
-      report(metricPreparationRecord(phase, "wrong-type"));
-    } else if (phase === "clock") report(metricPreparationRecord("clock", "clock-threw"));
+      const field = phase;
+      report(() => metricPreparationRecord(field, "wrong-type"));
+    } else if (phase === "clock") report(() => metricPreparationRecord("clock", "clock-threw"));
     else if (phase === "timestamp") {
       let invalidDate = false;
       try { invalidDate = Number.isNaN(Date.prototype.getTime.call(observedDate)); } catch { /* Non-date/access failure is not an invalid-date observation. */ }
-      report(metricPreparationRecord("timestamp", invalidDate ? "invalid-date" : "unclassified-preparation-failure"));
+      report(() => metricPreparationRecord("timestamp", invalidDate ? "invalid-date" : "unclassified-preparation-failure"));
     } else if (phase === "recorder-access" || phase === "name-access" || phase === "kind-access" || phase === "value-access" || phase === "unit-access" || phase === "label-access") {
       const field = phase === "recorder-access" ? "recorder" : phase === "name-access" ? "name" : phase === "kind-access" ? "kind"
         : phase === "value-access" ? "value" : phase === "unit-access" ? "unit" : "label";
-      report(metricPreparationRecord(field, "access-failed"));
-    } else report(metricPreparationRecord(phase, "unclassified-preparation-failure"));
+      report(() => metricPreparationRecord(field, "access-failed"));
+    } else {
+      const field = phase;
+      report(() => metricPreparationRecord(field, "unclassified-preparation-failure"));
+    }
     reportPlatformObservationSources(observations, error);
   }
 }

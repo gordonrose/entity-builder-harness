@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.update-chat-log
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -46,17 +46,23 @@ if [ $# -lt 1 ]; then
   exit 2
 fi
 
-BRANCH="$(git branch --show-current)"
+log_operation_failed() {
+  echo "ERROR: session-log-operation-failed; stage=$1; effect=unknown; inspect before retry." >&2
+  exit "$2"
+}
+BRANCH="$(git branch --show-current 2>/dev/null)" || {
+  echo "ERROR: session-log-branch-read-failed; effect=none." >&2; exit 2;
+}
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  echo "ERROR: current branch is not a chat branch." >&2
   exit 1
 fi
 
 LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE" >&2
+  echo "ERROR: missing chat log." >&2
   exit 1
 fi
 
@@ -78,9 +84,10 @@ insert_section_entry() {
       inserted = 0
       found = 0
       entry = ""
-      while ((getline line < entry_path) > 0) {
+      while ((entry_status = getline line < entry_path) > 0) {
         entry = entry (entry == "" ? "" : "\n") line
       }
+      if (entry_status < 0) exit 2
       close(entry_path)
     }
     $0 == section {
@@ -113,12 +120,13 @@ insert_section_entry() {
         print entry
       }
     }
-  ' "$LOG_FILE" > "$tmp"; then
-    mv "$tmp" "$LOG_FILE"
+  ' "$LOG_FILE" > "$tmp" 2>/dev/null; then
+    mv "$tmp" "$LOG_FILE" 2>/dev/null || log_operation_failed replacement "$?"
   else
+    local status=$?
     rm -f "$tmp"
     rm -f "$entry_tmp"
-    return 1
+    log_operation_failed entry-construction "$status"
   fi
 
   rm -f "$entry_tmp"
@@ -132,7 +140,7 @@ set_adr_disposition() {
 
   tmp="$(mktemp)"
 
-  awk -v needed="$needed" -v path="$path" -v reason="$reason" '
+  if awk -v needed="$needed" -v path="$path" -v reason="$reason" '
     function adr_path_line() {
       return path == "" ? "ADR path:" : "ADR path: " path
     }
@@ -190,9 +198,11 @@ set_adr_disposition() {
         }
       }
     }
-  ' "$LOG_FILE" > "$tmp"
+  ' "$LOG_FILE" > "$tmp" 2>/dev/null; then :; else
+    log_operation_failed adr-construction "$?"
+  fi
 
-  mv "$tmp" "$LOG_FILE"
+  mv "$tmp" "$LOG_FILE" 2>/dev/null || log_operation_failed replacement "$?"
 }
 
 COMMAND="$1"

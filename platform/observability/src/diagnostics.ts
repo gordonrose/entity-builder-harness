@@ -1,4 +1,4 @@
-import { parseDiagnosticRecord, diagnosticRelatedRecordLimit, deliverDiagnosticRecord, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { diagnosticProcessingDefinition, parseDiagnosticRecord, diagnosticRelatedRecordLimit, deliverDiagnosticRecord, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { Logger } from "@kanbien/core/logging";
 import type { Clock } from "@kanbien/core/shared";
 import { validatedDiagnosticLog } from "./diagnostic-log";
@@ -38,7 +38,9 @@ export function createPlatformDiagnosticReporter(options: { readonly catalogs: r
     });
     catalogs.push(checked.value);
   }
-  const definitions = catalogs.flatMap((catalog) => catalog.definitions);
+  // Reporting faults have one Core-owned vocabulary, independent of a caller's
+  // selected workload catalogues. No other unselected family becomes accepted.
+  const definitions = [diagnosticProcessingDefinition(), ...catalogs.flatMap((catalog) => catalog.definitions)];
   return {
     report(record, context) {
       try {

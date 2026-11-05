@@ -22,6 +22,25 @@ function capture() {
 function detail(record: DiagnosticRecord | undefined): unknown { return record?.detail; }
 
 async function main(): Promise<void> {
+  const producers = require("../src/metric-diagnostics") as Record<string, unknown>;
+  for (const key of ["metricPreparationRecord", "metricRecordingRecord"] as const) {
+    const descriptor = Object.getOwnPropertyDescriptor(producers, key)!;
+    for (const mode of ["throw", "undefined", "invalid"] as const) {
+      const fixture = capture(); let calls = 0;
+      try {
+        Object.defineProperty(producers, key, { ...descriptor, value: () => {
+          if (mode === "throw") throw new Error("PRIVATE_METRIC_BUILDER");
+          return mode === "undefined" ? undefined : { code: "private-canary" };
+        } });
+        recordPlatformMetric({ record() { calls++; throw new Error("PRIVATE_METRIC_OPERATION"); } }, clock,
+          key === "metricPreparationRecord" ? { name: "" } : valid, fixture.options);
+        equal(calls, key === "metricPreparationRecord" ? 0 : 1);
+        deepEqual(fixture.records(), [{ schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+          detail: { reason: mode === "throw" ? "construction-threw" : mode === "undefined" ? "construction-rejected" : "evidence-rejected" } }]);
+        equal(JSON.stringify(fixture.logs).includes("PRIVATE_"), false);
+      } finally { Object.defineProperty(producers, key, descriptor); }
+    }
+  }
   for (const [input, expected] of [
     [{ name: "" }, { field: "name", reason: "empty" }],
     [{ name: " fixture.point" }, { field: "name", reason: "untrimmed" }],

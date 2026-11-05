@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -40,7 +40,7 @@ if [ "$READ_STATUS" -eq 0 ]; then
 fi
 
 case "$CURRENT_METADATA" in
-  *"ERROR: current branch is not a chat branch:"*|*"ERROR: missing chat log:"*)
+  "ERROR: current branch is not a chat branch"|"ERROR: missing chat log")
     exec bash scripts/00.chat/startup/auto-start-missing-session/script.sh "$OPENING_PROMPT"
     ;;
 esac

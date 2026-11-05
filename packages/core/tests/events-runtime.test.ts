@@ -285,7 +285,8 @@ async function diagnosticCoverage(event: EventEnvelope): Promise<void> {
   let sourceReads = 0;
   const accessor = Object.defineProperty(new Error("private"), "diagnosticRecord", { get() { sourceReads++; throw cause; } });
   await rejects(bus.publish(Object.defineProperty([], "map", { get() { throw accessor; } })), (error) => error === accessor);
-  equal(sourceReads, 0); equal(records.length, 1); records.length = 0;
+  equal(sourceReads, 0); equal(records.length, 2);
+  deepEqual(records[1], literal("core.diagnostics.processing-failed", { reason: "evidence-inaccessible" })); records.length = 0;
   const unselected: DiagnosticRecord[] = [];
   const unavailable = inMemoryEventBus({}, { onDiagnostic(record) { unselected.push(record); } });
   await rejects(unavailable.publish(Object.defineProperty([], "map", { get() { throw cause; } })), (error) => error === cause);
@@ -294,7 +295,9 @@ async function diagnosticCoverage(event: EventEnvelope): Promise<void> {
   const malformedResult = await inMemoryEventBus({ handlers: [{ handle() { throw malformed; } }] }, diagnostics).publish([event]);
   if (malformedResult.ok) throw new Error("Expected malformed-source handler failure");
   equal(malformedResult.error.diagnosticRecord?.code, "core.events.boundary-failed"); deepEqual(malformedResult.error.relatedDiagnosticRecords, sourceRecords.slice(1));
-  equal(records.length, 9); deepEqual(records.slice(1), sourceRecords.slice(1)); equal(JSON.stringify(records).includes("private-malformed"), false); records.length = 0;
+  equal(records.length, 10); deepEqual(records.slice(1, 9), sourceRecords.slice(1));
+  deepEqual(records[9], literal("core.diagnostics.processing-failed", { reason: "evidence-rejected" }));
+  equal(JSON.stringify(records).includes("private-malformed"), false); records.length = 0;
   for (const raw of ["private-handler-primitive", Object.freeze(new Error("private-handler-frozen"))]) {
     const result = await inMemoryEventBus({ handlers: [{ handle() { throw raw; } }] }, diagnostics).publish([event]);
     if (result.ok) throw new Error("Expected handler failure"); equal(result.error.cause, raw);

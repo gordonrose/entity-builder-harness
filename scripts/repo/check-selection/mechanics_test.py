@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-04"
+#   updated_on: "2026-11-05"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -60,10 +60,50 @@ class SelectionTests(FixtureSupport):
     def test_chat_commit_metrics_leaf_failure_reuse_and_invalidation(self):
         self.assert_owned_adapter_leaf_receipts('chat-commit-metrics-regression', 'chat-commit-metrics')
 
+    def test_imported_diagnostic_leaf_failure_reuse_and_invalidation(self):
+        self.assert_owned_adapter_leaf_receipts('chat-refresh-readiness-regression', 'chat-refresh-readiness')
+
+    def test_imported_audit_leaf_failure_reuse_and_invalidation(self):
+        self.assert_owned_adapter_leaf_receipts('chat-conflict-audit-regression', 'chat-conflict-audit')
+
+    def test_imported_cleanup_leaf_failure_reuse_and_invalidation(self):
+        self.assert_owned_adapter_leaf_receipts('chat-cleanup-regression', 'chat-cleanup')
+
+    def test_imported_prerequisites_leaf_failure_reuse_and_invalidation(self):
+        self.assert_owned_adapter_leaf_receipts('chat-prerequisites-regression', 'chat-prerequisites')
+
+    def test_imported_recovery_leaf_failure_reuse_and_invalidation(self):
+        self.assert_owned_adapter_leaf_receipts('chat-recovery-regression', 'chat-recovery')
+
     def test_chat_leaf_closed_dispatch_preserves_child_status_without_forwarded_commands(self):
         wrapper = self.root / 'scripts/repo/check-selection/smoke-test.sh'
         shutil.copyfile(ROOT / 'scripts/repo/check-selection/smoke-test.sh', wrapper)
         units = {
+            'chat-startup': 'scripts/00.chat/startup/start-chat-session/smoke-test.sh',
+            'chat-log-writers': 'scripts/00.chat/session-log/update-chat-log/smoke-test.sh',
+            'chat-log-maintenance': 'scripts/00.chat/session-log/checkpoint-chat-session-log/smoke-test.sh',
+            'chat-summary': 'scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh',
+            'chat-upstream-portability': 'scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh',
+            'harness-governed-runner': 'scripts/01.harness/smoke-test-governed-script-runner.sh',
+            'harness-command-drift': 'scripts/01.harness/smoke-test-governed-script-command-drift.sh',
+            'harness-process-drift': 'scripts/01.harness/smoke-test-deterministic-process-drift.sh',
+            'chat-bootstrap-audit': 'scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/smoke-test.sh',
+            'chat-migration-audit': 'scripts/00.chat/migration/audit-chat-layer-migration/smoke-test.sh',
+            'chat-upstream-ensure': 'scripts/00.chat/upstream/ensure-llm-workbench-repo/smoke-test.sh',
+            'chat-upstream-contract': 'scripts/00.chat/upstream/check-llm-workbench-contract/smoke-test.sh',
+            'chat-upstream-bootstrap': 'scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh',
+            'chat-integration-preparation': 'scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/smoke-test.sh',
+            'chat-cleanup': 'scripts/00.chat/git/cleanup-empty-chat-branches/smoke-test.sh',
+            'chat-prerequisites': 'scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh',
+            'chat-conflict-audit': 'scripts/00.chat/main-refresh/verify-conflict-audit/smoke-test.sh',
+            'chat-recovery': 'scripts/00.chat/recovery/import-active-paths-to-chat-worktree/smoke-test.sh',
+            'chat-session-reader': 'scripts/00.chat/session-log/read-current-chat-log/smoke-test.sh',
+            'chat-session-resolution': 'scripts/00.chat/startup/resolve-current-chat-session/smoke-test.sh',
+            'chat-worktree-paths': 'scripts/00.chat/worktree/paths/smoke-test.sh',
+            'chat-command-dispatch': 'scripts/00.chat/command/dispatcher/smoke-test.sh',
+            'chat-refresh-readiness': 'scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh',
+            'chat-conflict-classification': 'scripts/00.chat/main-refresh/classify-conflict/smoke-test.sh',
+            'chat-log-deletion': 'scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh',
             'chat-export': 'scripts/00.chat/export/smoke-test.sh',
             'chat-commit-metrics': 'scripts/00.chat/session-log/record-chat-commit/smoke-test.sh',
         }

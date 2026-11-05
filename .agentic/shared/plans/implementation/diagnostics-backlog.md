@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.diagnostics-backlog
-version: 23
+version: 26
 status: active
 created_on: "2026-11-01"
-updated_on: "2026-11-04"
+updated_on: "2026-11-05"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -1548,7 +1548,23 @@ Evidence and update history:
 
 ## DIAG-012 — Make diagnostic construction and selection loss explicit
 
-Status: open
+Status: done
+
+2026-11-05T01:39:29+00:00 (UTC): the bounded implementation, imported-tool
+reconciliation and final local verification are complete. All 53 registered
+checks passed (32 executed and 21 reused against matching inputs in the resumed
+pass). The [consolidated review](governed-diagnostic-coverage.md#consolidated-reconciliation--2026-11-05)
+records actual consumers, proof anchors and observation limits; the
+[session verification record](../../../../commitLogs/2026/oct/27/2026-10-27-08-24-governed-diagnostic-coverage/README.md#diag-012-final-local-verification--2026-11-05)
+records exact check identities and timings. This closes reason/packet preservation
+and processing-loss safeguards in the agreed scope, not DIAG-013 sink delivery,
+private SDK observations that are not exposed, universal OS-failure interception,
+upstream installation, container qualification or deployment acceptance.
+
+2026-11-04T21:36:10+00:00 (UTC): implementation approved after the requested
+checkpoint commit `e94628adbb5f09e8b25b18fcb4deb9336990bf89`.
+The expanded prepared scope remains controlling; no implementation completion
+or new runtime proof is claimed by this status change.
 
 ### 1. ID
 
@@ -1575,7 +1591,8 @@ imported-tool diagnostics. The controlling
 [preparation and implementation sequence](governed-diagnostic-coverage.md#diag-012-preparation-and-expanded-scope--2026-11-04)
 names the file groups, imported-source census, normal-failure traces, tests,
 approval boundary and completion gates. Earlier deferral notes below remain
-historical. Preparation is authorised; implementation awaits the user's go-ahead.
+historical. Implementation was subsequently authorised and is now complete within
+the bounded scope and proof recorded above; no further go-ahead is outstanding.
 
 ### 4. Background
 
@@ -1601,8 +1618,9 @@ undefined. The assistant had overemphasised failures of diagnostic processing
 itself. The user asked to correct this entry: normal reason-to-diagnostic
 coverage comes first, and fault-handling comes second. The earlier injected
 failure probe does not establish whether all normal supported reasons survive.
-That inventory and its real-caller tests remain to be completed; no total number
-of broken mappings or affected operations has yet been established.
+At that point, the inventory and real-caller tests remained to be completed;
+the total number of broken mappings or affected operations had not been established.
+The dated completion record above now links their bounded reconciliation and proof.
 
 ### 5. User stories
 
@@ -1674,60 +1692,60 @@ of broken mappings or affected operations has yet been established.
 
 #### Code and connected consumers
 
-- [ ] Establish the bounded operation inventory before fixing mappings. For
+- [x] Establish the bounded operation inventory before fixing mappings. For
   every supported failure alternative, name the actual triggering check/input,
   returned reason and item, mapping function, diagnostic code/version and detail,
   selected catalogue/reader, wrappers and final error-handling caller. Include
   supported combinations and source failures where applicable. Record adequate,
   broken, intentionally different, deferred or still-unproved paths explicitly;
   do not claim repo-wide completeness from a sample of modules.
-- [ ] Reconcile the expanded CloudWatch, DynamoDB and imported-tool paths in
+- [x] Reconcile the expanded CloudWatch, DynamoDB and imported-tool paths in
   the controlling preparation. Assign actual migrate/no-change/observation-limit
   dispositions with proof. Earlier deferral labels do not exclude these diagnostic
   paths now; unrelated integration, index design, remote delivery and deployment
   work retain their separate ownership.
-- [ ] Fix each demonstrated broken connection so ordinary supported failures
+- [x] Fix each demonstrated broken connection so ordinary supported failures
   produce and retain the correct diagnostic. A generic fallback must not replace
   a precise supported reason merely to make a test pass. Establish whether the
   defect is in the producer, mapping, definition selection, registration or
   caller before choosing the owning change; do not loosen strict readers to
   accept arbitrary reasons or unrelated records.
-- [ ] For every proposed fix, record its owning layer/file and why: Core owns
+- [x] For every proposed fix, record its owning layer/file and why: Core owns
   reusable checking/record mechanisms, capabilities own their meanings,
   adapters own service-specific interpretation, and entrypoints supply concrete
   selection/bindings/context. Follow the
   [module structure standard](../../../03.product/standards/public-module-structure.md#dependency-direction-and-diagnostic-ownership);
   do not fix a dependency's missing rule with an entrypoint-owned copy or place
   service-specific meanings in shared Core diagnostics.
-- [ ] Record the shared mechanism considered and whether to reuse it or retain
+- [x] Record the shared mechanism considered and whether to reuse it or retain
   a genuinely different local mapping. Correct shared defects once and prove
   affected callers, rather than copying fixes across adapters or forcing
   different behaviours through one universal mapper.
-- [ ] Keep accepted shapes, reusable constraints and diagnostic meanings with
+- [x] Keep accepted shapes, reusable constraints and diagnostic meanings with
   their contracts; checking/mapping work with the relevant implementation;
   public indexes export-only. Follow responsibility-based folder organisation
   for touched/new work without refactoring unrelated legacy modules. Runtime
   definitions remain authoritative; generated JSON, selected readers and
   affected documentation are reconciled, not edited into competing definitions.
-- [ ] Keep supported reason meanings and item/operation attribution intact.
+- [x] Keep supported reason meanings and item/operation attribution intact.
   Preserve declared first-failure versus collected-report behaviour and bounds;
   any legitimate truncation remains explicit. Do not invent continuation,
   diagnoses for checks that never ran, or a new validation policy.
-- [ ] Trace retained compatibility helpers that intentionally return undefined
+- [x] Trace retained compatibility helpers that intentionally return undefined
   to their actual callers. Where production uses a structured-result alternative,
   prove that wiring; do not remove a supported compatibility interface or label
   it a production loss solely because its return type permits undefined.
-- [ ] Inventory actual constructor/selector/attachment results and downstream
+- [x] Inventory actual constructor/selector/attachment results and downstream
   consumers; distinguish safe absence, explicit opt-out, rejection and processing
   failure. Do not classify every undefined return as a defect.
-- [ ] Provide and consume explicit safe outcomes for demonstrated loss paths,
+- [x] Provide and consume explicit safe outcomes for demonstrated loss paths,
   with additive compatibility where needed. Preserve existing record identities,
   ordinary accepted/rejected inputs, original return/throw identity and work
   ordering. Do not assert an unobserved operation cause or effect.
-- [ ] Preserve independently valid source/companion evidence. If the full
+- [x] Preserve independently valid source/companion evidence. If the full
   original detail cannot safely survive, make that unavailability explicit
   without bypassing validation or copying raw detail.
-- [ ] Reconcile every affected owner/export/caller/test/catalogue reader; record
+- [x] Reconcile every affected owner/export/caller/test/catalogue reader; record
   justified no-change consumers. Generated catalogue changes follow existing
   versioning rules only if new definitions are actually required. Fix a mapping
   or registration error without gratuitously changing definitions. If an owning
@@ -1745,48 +1763,49 @@ of broken mappings or affected operations has yet been established.
   [supported reason preservation](../../standards/require-safe-diagnostic-record.md#supported-reason-preservation)
   section and the existing coverage workflow. This checks off the instruction
   change only, not runtime adoption or the planned behaviour fixtures.
-- [ ] Extend the existing safe-diagnostic standard and coverage workflow to
+- [x] Extend the existing safe-diagnostic standard and coverage workflow to
   distinguish deliberate exclusion from diagnostic-processing loss, and require
   the corresponding fault-injection consumer assertion. Preserve privacy,
   original workload outcome and no-replay requirements; no new registry or
   blanket catch/undefined ban.
-- [ ] Update only reviewed ownership records with actual proof; a passing source
+- [x] Update only reviewed ownership records with actual proof; a passing source
   hash check is not a semantic completeness claim.
 
 #### Regression fixtures
 
-- [ ] For each inventoried supported reason, supply an ordinary input that
+- [x] For each inventoried supported reason, supply an ordinary input that
   genuinely triggers the operation's check, call the real checking/loading
   path, and assert the exact diagnostic code, version, reason and applicable
   item/operation context at the error-handling caller. The normal-path tests
   must not depend on replacing the diagnostic builder with a throwing stub.
   Existence of some error or some diagnostic is insufficient proof.
-- [ ] Cover successful inputs without spurious failure diagnostics, distinct
+- [x] Cover successful inputs without spurious failure diagnostics, distinct
   failure alternatives and supported multiple failures. Preserve report order,
   first-error policy and sensitive-value exclusion. Verify dependent work is
   prevented where the existing operation contract requires it.
-- [ ] Demonstrate that these assertions catch a missing mapping, wrong item,
+- [x] Demonstrate that these assertions catch a missing mapping, wrong item,
   precise-to-generic reduction, dropped packet or omitted selected definition
   where that boundary applies. Use bounded counterexamples in existing fixtures,
   not a repo-wide mutation campaign. Unknown/untrusted records must still fail
   strict selection; the correction is to register supported owners correctly.
-- [ ] Extend existing Core diagnostic-record/foundation and events/audit runtime
+- [x] Extend existing Core diagnostic-record/foundation and events/audit runtime
   fixtures: normal exact reason, forced builder failure, unselected code/version,
   malformed/accessor evidence, companion preservation and frozen/primitive
   original errors. Assert both the original workload outcome and visible safe
   diagnostic-processing outcome at the real caller.
-- [ ] Extend affected Platform config/runtime and adapter tests according to
+- [x] Extend affected Platform config/runtime and adapter tests according to
   the reconciled caller inventory. Include synthetic sensitive canaries and
   verify no recursive reporting, replay or raw rejected-field disclosure.
-- [ ] Prove both DynamoDB index-length alternatives and table attribution,
+- [x] Prove both DynamoDB index-length alternatives and table attribution,
   real command/store/decoder recipients, CloudWatch exposed failure alternatives
   and export-failure-with-resolved-flush. Test imported producer and parser
   together, including missing versus unreadable observations, safe child failure,
   partial effects and unchanged successful output. Verify actual dispatcher
   membership and portable generated consumers; fixture files alone are not proof.
-- [ ] Narrow tests first; final affected registered units once after connected
-  review and freeze. All new regression work is planned, not completed by the
-  audit's exploratory probe. Broad/live proof retains its existing boundaries.
+- [x] Narrow tests first; final affected registered units once after connected
+  review and freeze. The audit's exploratory probe alone was not completion;
+  the registered final proof above now qualifies the implementation. Broad/live
+  proof retains its existing boundaries.
 
 Evidence and update history:
 
@@ -1823,7 +1842,7 @@ Evidence and update history:
 
 ## DIAG-013 — Expose diagnostic reporting outcomes without changing workload results
 
-Status: open
+Status: open — implementation deferred to the logging and telemetry maturity work.
 
 ### 1. ID
 
@@ -1935,3 +1954,162 @@ Evidence and update history:
   exploratory probe. DIAG-011 remains done for its agreed consolidation scope;
   this is a new visibility requirement. DIAG-012 owns earlier construction/
   selection handling; existing telemetry and deployment plans own remote proof.
+
+- 2026-11-05T17:36:46+00:00 (Europe/Dublin): recorded the user's agreed
+  deferral to the next logging/telemetry maturity review before this session's
+  commit. That work must establish receiving responsibilities, confirmation
+  levels, optional/required reporting and independent failure visibility before
+  implementing DIAG-013. This remains a requirement of that follow-on, not a
+  completion claim. Production qualification is a separate authorised handoff.
+
+## DIAG-014 — Govern diagnostic improvements when development uncovers a failure
+
+Status: done — bounded harness procedure and reviewed proof completed on 2026-11-05.
+
+### 1. ID
+
+DIAG-014
+
+### 2. Date/time raised
+
+2026-11-05T13:04:10+00:00 (Europe/Dublin).
+
+This is the backlog recording time; the preceding discussion's exact timestamp
+was not recorded.
+
+### 3. Summary
+
+Make discovering an inadequately explained failure an explicit trigger in the
+existing development workflow: establish what happened, reuse or correct the
+appropriate diagnostic, prove that the explanation reaches its intended caller,
+and record anything outside the authorised work. This is agent-led improvement
+of repository code, not an application rewriting itself while running.
+
+### 4. Background
+
+After reviewing what DIAG-012 changed, the user asked whether an agent encountering
+a failure not yet described by the repo could improve future diagnostics as part
+of its work. The user wants those improvements to follow the ownership, safe
+reporting, file organisation and testing practices already established, rather
+than create another ad hoc reporting mechanism.
+
+Existing diagnostic governance already covers many of these duties. The gap to
+address is an explicit discovery trigger and bounded repair sequence connecting
+them. Not every poorly explained failure needs a new diagnostic: an existing
+reason may have been dropped, the wrong definition selected, or the evidence may
+not establish a cause. Missing runtime definitions do not by themselves mean
+governance is missing; existing governance can authorise how to define them.
+
+DIAG-012 remains completed for its recorded repairs. DIAG-013 separately covers
+visibility into reporting/delivery outcomes. This task does not reopen either
+scope or claim that every possible failure can be detected automatically.
+
+### 5. User stories
+
+- As an agent working on an authorised change, I need
+  `.agentic/shared/workflows/verify-diagnostic-coverage.md` to explain what to do
+  when a failure has no accurate diagnostic: inspect evidence, check existing
+  definitions and connected callers, then reuse, repair, extend or record a gap.
+- As a module maintainer, I need the existing
+  `.agentic/shared/standards/require-safe-diagnostic-record.md` and
+  `.agentic/03.product/standards/public-module-structure.md` to remain the owners
+  of reporting and organisation requirements. Corrections must use the relevant
+  module's existing contract/domain/reporting structure and shared Core helpers;
+  adapters supply provider evidence and entrypoints compose, rather than owning
+  reusable rules. Public indexes remain gateways.
+- As the user, I need necessary in-scope corrections completed without repeated
+  approval, but unrelated enhancements, upstream-owned changes and compatibility
+  decisions outside the agreed scope recorded or escalated. The task plan and
+  activity journal should show the discovery, decision, affected files and proof.
+- As a future investigator, I need tests proving that a supported failure's
+  actual reason reaches the receiving caller without exposing sensitive values,
+  inventing a cause, changing the operation's result or repeating its work.
+
+### 6. Acceptance criteria
+
+#### Code and connected consumers
+
+- [x] Define the decision sequence explicitly: establish observed facts; reuse an
+  existing suitable definition; fix broken mapping/selection/propagation where
+  applicable; add or version an owner-defined diagnostic only when necessary;
+  retain honest uncertainty when evidence cannot establish the cause.
+- [x] Future corrections trace the operation's result through construction,
+  selection and the actual receiving caller. They preserve precise supported
+  reasons and valid context; a generic processing-failure record is not a
+  substitute for an available operation diagnosis. Do not claim remote delivery
+  from a local construction or handoff test.
+- [x] Require runtime definitions to remain authoritative, reconcile affected
+  readers and generated catalogues, and preserve historical contracts or follow
+  their explicit versioning rules. Do not introduce a parallel registry or
+  duplicate rules in adapters, entrypoints or JSON.
+- [x] This task does not predetermine a production defect or authorise a repo-wide
+  migration. Select a bounded representative proof during implementation; keep
+  runtime self-modification, automatic deployment, replay and unrelated feature
+  work out of scope.
+
+#### Harness
+
+- [x] Extend the existing
+  [diagnostic coverage workflow](../../workflows/verify-diagnostic-coverage.md)
+  with the discovery trigger, decision sequence, connected-consumer review and
+  evidence requirements. Add a short corresponding duty to the
+  [safe diagnostic standard](../../standards/require-safe-diagnostic-record.md),
+  linking rather than duplicating the procedure.
+- [x] Reconcile the existing
+  [completion standard](../../standards/require-change-completion.md) only where
+  needed: necessary newly discovered corrections reopen the relevant task's
+  review/proof before closure. Ordinary authorised corrections continue;
+  incompatible, upstream-owned, genuinely ungoverned or extra-permission work is
+  recorded/escalated, while independent authorised work continues.
+- [x] Preserve the existing
+  [module structure standard](../../../03.product/standards/public-module-structure.md).
+  No new universal folder framework, registry, blanket scanner or mandatory full
+  suite per discovery. Distinguish mechanical checks from the human/agent judgement
+  needed to establish whether an explanation is accurate and complete.
+- [x] Require a concise discovery/decision/proof record in the existing task plan
+  and activity journal. Use this backlog for deferred work, not a second tracking
+  system. Recording a gap must not silently mark necessary in-scope work complete.
+
+#### Regression fixtures
+
+- [x] Review representative scenarios for an existing usable definition, a dropped
+  known reason, a genuinely new supported failure, insufficient evidence, and an
+  out-of-scope or permission-bound change. Record expected actions and distinguish
+  scenario-review evidence from executable test results.
+- [x] For the bounded implementation proof, reuse a suitable actual-caller test
+  or extend it where necessary
+  that fails with the previous absent, wrong or unjustifiably generic diagnosis
+  and passes with the correct code, version and allowed context. Include the
+  corresponding successful case, sensitive canaries, unchanged operation outcome
+  and no repeated work. Helper-only assertions are insufficient.
+- [x] Extend existing harness fixtures only where mechanical enforcement changes;
+  a prose-string match is not proof that the agent correctly diagnosed a failure.
+  Name exact affected tests during planning. Run narrow tests during development
+  and the proportionate registered checks at the stable-batch boundary, reusing
+  valid unchanged evidence rather than repeatedly running broad suites.
+
+Evidence and update history:
+
+- 2026-11-05T13:04:10+00:00 (Europe/Dublin): recorded at the user's request
+  following the DIAG-012 walkthrough and discussion of governed diagnostic
+  improvement during development. This update changes the backlog only; no
+  runtime behaviour, harness instructions or regression fixtures were changed.
+
+- 2026-11-05T13:33:38+00:00 (Europe/Dublin): implemented the
+  [discovery procedure](../../workflows/verify-diagnostic-coverage.md#when-work-uncovers-an-inadequately-explained-failure),
+  a linked duty in the safe-record standard and a completion-standard
+  cross-reference. Five scenarios and counterexamples were self-reviewed in the
+  session journal's DIAG-014 section. This is process guidance with reviewed
+  examples, not a claim of automatic semantic enforcement.
+  In line with the approved implementation proposal, clarified the fixture
+  criterion to permit reusing existing adequate proof: Events' real-operation
+  tests already assert exact records at the caller, successes, original effects,
+  no replay and private-canary exclusion. No runtime or mechanical enforcement
+  change justified a duplicate fixture.
+  Registered `core-runtime` passed by validated matching-receipt reuse (8.960 s,
+  zero test execution); final preparation, metadata, process/command drift,
+  relative links and scoped whitespace checks passed. Preparation needed local
+  receipt-write permission and two explained judgement annotations; the journal
+  retains those failed attempts and corrections. Only the three instruction
+  documents, this backlog and the existing session journal changed for DIAG-014.
+  DIAG-013 and broader integration/deployment remain outside this task.

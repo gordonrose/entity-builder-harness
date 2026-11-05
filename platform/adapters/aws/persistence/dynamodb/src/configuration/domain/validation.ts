@@ -1,5 +1,5 @@
 import { configReasonNames, stringConfigValue, type ConfigValue } from "@kanbien/core/config";
-import { persistenceConfigurationDiagnosticRecord, persistenceConfigurationInputDiagnosticRecord } from "@kanbien/platform-persistence";
+import { capturePlatformPersistenceDiagnostic, persistenceConfigurationDiagnosticRecord, persistenceConfigurationInputDiagnosticRecord } from "@kanbien/platform-persistence";
 import type { DynamoDbPersistenceConfiguration } from "../contract/types";
 import type { DynamoDbPersistenceConfigurationError } from "../contract/errors";
 
@@ -29,7 +29,7 @@ export function dynamoDbPersistenceConfiguration(
           code: "PLATFORM_ADAPTER_AWS_DYNAMODB_PERSISTENCE_CONFIG_INVALID",
           defaultMessage: "DynamoDB persistence adapter configuration is invalid.",
           details: { path, reason: "A non-empty value is required." },
-          diagnosticRecord: persistenceConfigurationDiagnosticRecord(configurationField(path), "blank"),
+          diagnosticRecord: capturePlatformPersistenceDiagnostic(() => persistenceConfigurationDiagnosticRecord(configurationField(path), "blank")),
         },
       };
     }
@@ -40,13 +40,14 @@ export function dynamoDbPersistenceConfiguration(
   else if (input.outboxDueIndexName.length > 255) oversized = "outbox-index";
   else if (input.lineageCauseIndexName.length > 255) oversized = "lineage-index";
   if (oversized !== undefined) {
+    const field = oversized;
     return {
       ok: false,
       error: {
         code: "PLATFORM_ADAPTER_AWS_DYNAMODB_PERSISTENCE_CONFIG_INVALID",
         defaultMessage: "DynamoDB persistence adapter configuration is invalid.",
-        details: { path: "tableName", reason: "Table and index names must be at most 255 characters." },
-        diagnosticRecord: persistenceConfigurationDiagnosticRecord(oversized, "too-long"),
+        details: { path: oversized === "store" ? "tableName" : oversized === "outbox-index" ? "outboxDueIndexName" : "lineageCauseIndexName", reason: "Table and index names must be at most 255 characters." },
+        diagnosticRecord: capturePlatformPersistenceDiagnostic(() => persistenceConfigurationDiagnosticRecord(field, "too-long")),
       },
     };
   }
@@ -63,6 +64,6 @@ function inputFailure(path: typeof requiredFields[number] | "configuration", rea
     code: "PLATFORM_ADAPTER_AWS_DYNAMODB_PERSISTENCE_CONFIG_INVALID" as const,
     defaultMessage: "DynamoDB persistence adapter configuration is invalid.",
     details: { path, reason: reason === "missing" ? "A required value is missing." : reason === "wrong-type" ? "A text value is required." : "A configuration object is required." },
-    diagnosticRecord: persistenceConfigurationInputDiagnosticRecord(configurationField(path), reason),
+    diagnosticRecord: capturePlatformPersistenceDiagnostic(() => persistenceConfigurationInputDiagnosticRecord(configurationField(path), reason)),
   } };
 }

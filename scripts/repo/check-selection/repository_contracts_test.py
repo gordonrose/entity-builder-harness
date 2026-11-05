@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-04"
+#   updated_on: "2026-11-05"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -22,6 +22,76 @@ from test_support import *
 
 class RepositoryContractTests(unittest.TestCase):
     def codes(self, report): return {item["code"] for item in report["findings"]}
+
+    def test_imported_diagnostic_fixtures_have_focused_registered_owners(self):
+        import re
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        expected = {
+            "chat-startup-regression": ("scripts/00.chat/startup/start-chat-session/smoke-test.sh", True),
+            "chat-log-writers-regression": ("scripts/00.chat/session-log/update-chat-log/smoke-test.sh", False),
+            "chat-log-maintenance-regression": ("scripts/00.chat/session-log/checkpoint-chat-session-log/smoke-test.sh", False),
+            "chat-summary-regression": ("scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh", True),
+            "chat-upstream-portability-regression": ("scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh", True),
+            "harness-governed-runner-regression": ("scripts/01.harness/smoke-test-governed-script-runner.sh", False),
+            "harness-command-drift-regression": ("scripts/01.harness/smoke-test-governed-script-command-drift.sh", False),
+            "harness-process-drift-regression": ("scripts/01.harness/smoke-test-deterministic-process-drift.sh", False),
+            "chat-bootstrap-audit-regression": ("scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/smoke-test.sh", False),
+            "chat-migration-audit-regression": ("scripts/00.chat/migration/audit-chat-layer-migration/smoke-test.sh", False),
+            "chat-upstream-ensure-regression": ("scripts/00.chat/upstream/ensure-llm-workbench-repo/smoke-test.sh", False),
+            "chat-upstream-contract-regression": ("scripts/00.chat/upstream/check-llm-workbench-contract/smoke-test.sh", False),
+            "chat-upstream-bootstrap-regression": ("scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh", True),
+            "chat-integration-preparation-regression": ("scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/smoke-test.sh", False),
+            "chat-cleanup-regression": ("scripts/00.chat/git/cleanup-empty-chat-branches/smoke-test.sh", False),
+            "chat-prerequisites-regression": ("scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh", False),
+            "chat-conflict-audit-regression": ("scripts/00.chat/main-refresh/verify-conflict-audit/smoke-test.sh", False),
+            "chat-recovery-regression": ("scripts/00.chat/recovery/import-active-paths-to-chat-worktree/smoke-test.sh", False),
+            "chat-session-reader-regression": ("scripts/00.chat/session-log/read-current-chat-log/smoke-test.sh", False),
+            "chat-session-resolution-regression": ("scripts/00.chat/startup/resolve-current-chat-session/smoke-test.sh", True),
+            "chat-worktree-paths-regression": ("scripts/00.chat/worktree/paths/smoke-test.sh", True),
+            "chat-command-dispatch-regression": ("scripts/00.chat/command/dispatcher/smoke-test.sh", True),
+            "chat-refresh-readiness-regression": ("scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh", True),
+            "chat-conflict-classification-regression": ("scripts/00.chat/main-refresh/classify-conflict/smoke-test.sh", False),
+            "chat-log-deletion-regression": ("scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh", False),
+        }
+        for identity, (fixture, uses_node) in expected.items():
+            with self.subTest(identity=identity):
+                check = catalog['checks'][identity]
+                unit = identity.removesuffix('-regression')
+                self.assertEqual(check['argv'], ['bash', 'scripts/repo/check-selection/smoke-test.sh', '--unit', unit])
+                self.assertEqual(check['owner'], 'repo.test.check-selection.wrapper')
+                wrapper = (ROOT / 'scripts/repo/check-selection/smoke-test.sh').read_text()
+                self.assertEqual(wrapper.count(unit + ') exec bash ' + fixture + ' ;;'), 1)
+                self.assertEqual(check['stage'], 'local')
+                self.assertEqual(check['boundary'], 'integration')
+                self.assertEqual(check['effects'], ['read-only', 'writes-files'])
+                self.assertFalse(check['scope_inputs'])
+                self.assertFalse(selection.validate_check(ROOT, identity, check))
+                self.assertEqual('node' in check['runtime']['tools'], uses_node)
+                inputs = check['inputs']
+                self.assertEqual(len(inputs), len(set(inputs)))
+                # Real copied source files, not merely the fixture itself, must invalidate proof.
+                copied = re.findall(r'\$SOURCE_ROOT/(scripts/[^"\s$]+)"', (ROOT / fixture).read_text())
+                for source in [fixture, 'scripts/repo/check-selection/smoke-test.sh', *copied]:
+                    self.assertTrue(any(selection.below(source, ref) for ref in inputs), source)
+                rules = [rule for rule in catalog['repository_inputs'] if identity in rule['checks']]
+                self.assertEqual(len(rules), 1)
+                self.assertEqual(set(rules[0]['inputs']), set(inputs))
+                self.assertFalse(any(selection.below('platform/server/src/index.ts', ref) for ref in inputs))
+                self.assertNotIn(identity, catalog['checks']['check-selection-regression']['members'])
+        readiness = catalog['checks']['chat-refresh-readiness-regression']['inputs']
+        merge = catalog['checks']['chat-local-merge-regression']['inputs']
+        for source in ('scripts/00.chat/local-merge/list-active-chat-branches',
+                       'scripts/00.chat/local-merge/report-chat-branch-overlaps',
+                       'scripts/00.chat/reporting/report-chat-workspaces'):
+            self.assertIn(source, merge)
+        merge_rule = next(rule for rule in catalog['repository_inputs']
+                          if rule['checks'] == ['chat-local-merge-regression'])
+        self.assertEqual(set(merge_rule['inputs']), set(merge))
+        for rule in catalog['repository_inputs']:
+            for source in rule['inputs']:
+                self.assertNotIn(' - scripts/', source, 'indented YAML list item became part of a path')
+        for capability in ('classify-refresh-readiness', 'check-chat-is-current-with-main', 'show-main-update-status', 'rehearse-refresh-from-main'):
+            self.assertIn('scripts/00.chat/main-refresh/' + capability, readiness)
 
     def test_configuration_requirements_have_one_harness_standard_owner(self):
         canonical = '.agentic/03.product/standards/config-runtime-settings.md'

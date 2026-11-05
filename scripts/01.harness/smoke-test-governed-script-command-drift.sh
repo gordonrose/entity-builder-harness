@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 01.harness
 #   domain: validation
 #   disciplines:
@@ -121,5 +121,32 @@ EOF
 bash scripts/01.harness/check-governed-script-command-drift.sh \
   --paths .agentic/00.chat/workflows/basename-prose.md \
   > "$TMP_ROOT/basename-prose.out"
+
+export REAL_GREP="$(command -v grep)" REAL_FIND="$(command -v find)"
+mkdir "$TMP_ROOT/fault-bin"
+for command in grep find; do
+  printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
+  cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
+case "$FAULT:$command:${1:-}" in
+  content:grep:-n|scan:find:*)
+    echo private-command-drift-canary@example.invalid >&2
+    exit 78 ;;
+esac
+case "$command" in
+  grep) exec "$REAL_GREP" "$@" ;;
+  find) exec "$REAL_FIND" "$@" ;;
+esac
+EOF
+  chmod +x "$TMP_ROOT/fault-bin/$command"
+done
+for stage in content scan; do
+  if failure="$(PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" \
+    bash scripts/01.harness/check-governed-script-command-drift.sh --paths .agentic 2>&1)"; then
+    fail "failed $stage read reported no drift"
+  else
+    [ "$?" -eq 2 ] || fail "$stage failure status lost"
+  fi
+  [[ "$failure" == *"command-drift-$stage-read-failed"* && "$failure" != *private-command-drift-canary* && "$failure" != *No\ governed* ]] || fail "$stage safe failure lost"
+done
 
 echo "governed script command drift smoke test passed"

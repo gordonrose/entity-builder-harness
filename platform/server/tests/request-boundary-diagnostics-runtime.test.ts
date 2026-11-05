@@ -35,7 +35,7 @@ async function fixture(mode: Mode = "default") {
     tenant: { tenantId: canary, isolationKey: canary } as unknown,
     resource: { kind: "authorize" } as unknown,
     tenantError: undefined as unknown, resourceError: undefined as unknown, handlerError: undefined as unknown,
-    validatorError: undefined as unknown, validationAllowed: true,
+    validatorError: undefined as unknown, validationAllowed: true, projectionThrows: false,
     clockFailureAt: 0, clockCalls: 0, tenantCalls: 0, resourceCalls: 0, handlerCalls: 0, authorizerCalls: 0,
     validatorCalls: 0, optionalTenant: undefined as unknown,
   };
@@ -76,6 +76,7 @@ async function fixture(mode: Mode = "default") {
         ...(name === "validation" ? { validator: {
           validate(value: unknown): value is unknown { void value; state.validatorCalls++; if (state.validatorError !== undefined) throw state.validatorError; return state.validationAllowed; },
           explain: () => invalidResult(validationIssue({ code: "WRONG_TYPE", defaultMessage: "Request body rejected." })),
+          diagnose() { if (state.projectionThrows) throw new Error(canary); return undefined; },
         } } : {}),
         handler: { handle(_request, context) {
           state.handlerCalls++; if (state.handlerError !== undefined) throw state.handlerError;
@@ -106,6 +107,34 @@ function boundary(phase: string, effect: string, index?: number) {
 }
 function predicateRecords(records: readonly DiagnosticRecord[]) { return records.filter((record) => record.code === "platform-server.request-predicate-rejected"); }
 function assertPrivate(value: unknown) { const serialized = JSON.stringify(value); equal(serialized.includes(canary), false); equal(serialized.includes("diagnosticRecord"), false); }
+
+async function diagnosticProcessingProof(): Promise<void> {
+  const processing = (reason: string) => ({ schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason } });
+  for (const mode of ["default", "injected"] as const) {
+    const f = await fixture(mode);
+    f.state.validationAllowed = false; f.state.projectionThrows = true;
+    const response = await f.request("/validation/private");
+    equal(response.status, 400); equal(f.state.validatorCalls, 1); equal(f.state.handlerCalls, 0);
+    deepEqual(f.observed, [predicate("request-body", "validator-rejected", "request-validation"), processing("construction-threw")]);
+    assertPrivate(response); await f.shell.lifecycle.shutdown();
+  }
+  const builders = require("../src/diagnostics") as Record<string, unknown>;
+  for (const mode of ["throws", "undefined", "malformed"] as const) {
+    const descriptor = Object.getOwnPropertyDescriptor(builders, "serverRequestBoundaryRecord")!;
+    Object.defineProperty(builders, "serverRequestBoundaryRecord", { ...descriptor, value: () => {
+      if (mode === "throws") throw new Error(canary);
+      return mode === "undefined" ? undefined : { code: canary };
+    } });
+    try {
+      const f = await fixture("injected"); f.state.handlerError = failure;
+      const response = await f.request("/handler/private");
+      equal(response.status, 500); equal(f.state.handlerCalls, 1);
+      deepEqual(f.observed, [processing(mode === "throws" ? "construction-threw" : mode === "malformed" ? "evidence-rejected" : "construction-rejected"), ...evidenceLiterals]);
+      assertPrivate(response); equal(JSON.stringify(f.observed).includes(canary), false);
+      await f.shell.lifecycle.shutdown();
+    } finally { Object.defineProperty(builders, "serverRequestBoundaryRecord", descriptor); }
+  }
+}
 
 async function tenantPredicates(): Promise<void> {
   const f = await fixture();
@@ -226,7 +255,7 @@ async function rawThrowsAndOtherCalls(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  await tenantPredicates(); await resourcePredicates(); await deliveryAndFullEvidence(); await rawThrowsAndOtherCalls();
+  await tenantPredicates(); await resourcePredicates(); await deliveryAndFullEvidence(); await rawThrowsAndOtherCalls(); await diagnosticProcessingProof();
   console.log("Server request predicates, raw boundary throws, full evidence delivery and profile/privacy tests passed.");
 }
 void main().catch((error) => { console.error(error); process.exitCode = 1; });

@@ -1,6 +1,6 @@
 export { metricPreparationDiagnostic, metricRejectionDiagnostic, metricCreationDiagnostic, metricRecordingDiagnostic,
   metricPreparationRecord, metricRejectionRecord, metricCreationRecord, metricRecordingRecord,
-  attachPlatformMetricDiagnostic, createPlatformMetricDiagnosticBinding, platformMetricDiagnosticLimit } from "./metric-diagnostics";
+  attachPlatformMetricDiagnostic, capturePlatformMetricDiagnostic, createPlatformMetricDiagnosticBinding, platformMetricDiagnosticLimit } from "./metric-diagnostics";
 export type { PlatformMetricDiagnosticBinding, PlatformMetricDiagnosticOptions, PlatformMetricOperation } from "./metric-diagnostics";
 export { createPlatformMetricLifecycleDiagnosticBinding } from "./metric-diagnostics";
 export type { PlatformMetricLifecycleDiagnosticBinding, PlatformMetricLifecycleOperation } from "./metric-diagnostics";

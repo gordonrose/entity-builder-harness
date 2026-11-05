@@ -1,32 +1,32 @@
 import { coreDiagnosticCatalog } from "../diagnostic-catalog";
-import { selectDiagnosticEvidence, type DiagnosticRecord } from "../diagnostics/index";
+import { captureDiagnosticRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, deliverDiagnosticRecord, diagnosticProcessingRecord, type DiagnosticRecord } from "../diagnostics/index";
 import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
 import { coreEventDiagnosticDefinitions, coreEventBoundaryDiagnosticRecord, coreEventValidationDiagnosticRecord,
   type CoreEventBoundaryDetail, type CoreEventDiagnosticContext, type CoreEventDiagnosticOptions, type CoreEventValidationDetail } from "./diagnostics";
 
-const nativeThen = Promise.prototype.then;
-export function selectCoreEventDiagnosticDefinitions(options: CoreEventDiagnosticOptions | undefined) {
+export function selectCoreEventDiagnosticDefinitions(options: CoreEventDiagnosticOptions | undefined, onProcessing?: (record: DiagnosticRecord) => unknown) {
   const builtins = [...coreDiagnosticCatalog.definitions, ...coreEventDiagnosticDefinitions];
-  try { return [...builtins, ...(options?.diagnosticDefinitions ?? [])]; } catch { return builtins; }
+  try { return [...builtins, ...(options?.diagnosticDefinitions ?? [])]; }
+  catch {
+    deliverDiagnosticRecord(diagnosticProcessingRecord("definition-selection-failed"), record => onProcessing?.(record));
+    return builtins;
+  }
 }
-function observe(options: CoreEventDiagnosticOptions | undefined, own: DiagnosticRecord | undefined, fallback: CoreEventDiagnosticContext, cause?: unknown) {
-  const definitions = selectCoreEventDiagnosticDefinitions(options);
-  const selected = selectDiagnosticEvidence(definitions, cause);
-  const checked = selectDiagnosticEvidence(definitions, { diagnosticRecord: own }).diagnosticRecord;
-  const detail = checked?.detail as CoreEventDiagnosticContext | undefined ?? fallback;
+function observe(options: CoreEventDiagnosticOptions | undefined, own: DiagnosticRecord, fallback: CoreEventDiagnosticContext, cause?: unknown) {
+  const processing: DiagnosticRecord[] = [];
+  const definitions = selectCoreEventDiagnosticDefinitions(options, record => { processing.push(record); });
+  const selected = selectDiagnosticEvidenceWithReport(definitions, cause, record => { processing.push(record); });
+  const checked = requireDiagnosticRecord(definitions, own);
+  const detail = checked.code === "core.diagnostics.processing-failed" ? fallback : checked.detail as CoreEventDiagnosticContext;
   const context = Object.freeze({ operation: detail.operation,
     ...(detail.phase === undefined ? {} : { phase: detail.phase }), ...(detail.field === undefined ? {} : { field: detail.field }) });
   const deliver = (record: DiagnosticRecord): void => {
-    try {
-      const value = options?.onDiagnostic?.(record, context);
-      if (value === undefined) return;
-      try { Reflect.apply(nativeThen, value, [undefined, () => undefined]); }
-      catch { Reflect.apply(nativeThen, Promise.resolve(value), [undefined, () => undefined]); }
-    } catch { /* Preserve original work, receiver and thrown value. */ }
+    deliverDiagnosticRecord(record, value => options?.onDiagnostic?.(value, context));
   };
   if (checked !== undefined) deliver(checked);
   if (selected.diagnosticRecord !== undefined) deliver(selected.diagnosticRecord);
   for (const record of selected.relatedDiagnosticRecords ?? []) deliver(record);
+  for (const record of processing) deliver(record);
   if (checked !== undefined) attachCoreDiagnosticRecord(cause, checked);
   return { definitions, ...(selected.diagnosticRecord === undefined ? checked === undefined ? {} : { diagnosticRecord: checked } : { diagnosticRecord: selected.diagnosticRecord }),
     ...(selected.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: selected.relatedDiagnosticRecords }) };
@@ -52,17 +52,14 @@ export class EventObservation {
     this.location(previousPhase, previousField);
     return value;
   }
-  validation(detail: Omit<CoreEventValidationDetail, "effect">): DiagnosticRecord | undefined {
-    let own: DiagnosticRecord | undefined;
-    try { own = coreEventValidationDiagnosticRecord({ ...detail, effect: "rejected" }); } catch { /* Optional evidence. */ }
-    observe(this.options, own, { operation: detail.operation, field: detail.field });
-    return own;
+  validation(detail: Omit<CoreEventValidationDetail, "effect">): DiagnosticRecord {
+    const own = captureDiagnosticRecord(() => coreEventValidationDiagnosticRecord({ ...detail, effect: "rejected" }));
+    return observe(this.options, own, { operation: detail.operation, field: detail.field }).diagnosticRecord!;
   }
   failed(cause: unknown, reason: CoreEventBoundaryDetail["reason"] = "threw") {
-    let own: DiagnosticRecord | undefined;
-    try { own = coreEventBoundaryDiagnosticRecord({ operation: this.operation, phase: this.phase, reason, effect: this.effect,
+    const own = captureDiagnosticRecord(() => coreEventBoundaryDiagnosticRecord({ operation: this.operation, phase: this.phase, reason, effect: this.effect,
       ...(this.field === undefined ? {} : { field: this.field }), ...(this.handlerEffect === undefined ? {} : { handlerEffect: this.handlerEffect }),
-      ...(this.eventOrdinal === undefined ? {} : { eventOrdinal: this.eventOrdinal }), ...(this.handlerOrdinal === undefined ? {} : { handlerOrdinal: this.handlerOrdinal }) }); } catch { /* Independently preserve source. */ }
+      ...(this.eventOrdinal === undefined ? {} : { eventOrdinal: this.eventOrdinal }), ...(this.handlerOrdinal === undefined ? {} : { handlerOrdinal: this.handlerOrdinal }) }));
     return observe(this.options, own, { operation: this.operation, phase: this.phase, ...(this.field === undefined ? {} : { field: this.field }) }, cause);
   }
   run<T>(action: () => T): T { try { return action(); } catch (cause) { this.failed(cause); throw cause; } }

@@ -120,8 +120,12 @@ async function selection(): Promise<void> {
       f.send([undefined, null, canary, accessors, { ...literals[0], definitionVersion: 2 },
         { ...literals[0], code: "unselected.operation" }, { ...literals[0], detail: { index: canary } },
         { ...literals[0], detail: { index: 0, token: canary } }]);
-      equal((await f.request()).status, 200); equal(reads, 0); equal(f.attempts(), 0); equal(f.observed.length, 0);
+      equal((await f.request()).status, 200); equal(reads, 0); equal(f.attempts(), 5);
+      deepEqual(f.observed.map(item => item.record), ["evidence-rejected", "evidence-rejected", "evidence-inaccessible", "evidence-rejected", "evidence-rejected"].map(reason => ({
+        schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason },
+      })));
       equal(JSON.stringify(f.logs).includes(canary), false);
+      f.observed.length = 0;
       const mutable = { ...literals[0]!, detail: { index: 0 } };
       f.send([mutable]); equal((await f.request()).status, 200); mutable.detail.index = 9;
       deepEqual(f.observed.map((item) => item.record), [literals[0]], "Validated records are copied before an injected sink sees them.");

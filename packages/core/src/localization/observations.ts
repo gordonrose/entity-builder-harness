@@ -1,28 +1,25 @@
 import { coreDiagnosticCatalog } from "../diagnostic-catalog";
-import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "../diagnostics/index";
+import { selectDiagnosticEvidence, captureDiagnosticRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, deliverDiagnosticRecord, diagnosticProcessingRecord, type DiagnosticDefinition, type DiagnosticRecord } from "../diagnostics/index";
 import { coreLocalizationDiagnosticDefinitions, coreLocalizationBoundaryDiagnosticRecord, coreLocalizationValidationDiagnosticRecord, coreLocalizationUnsupportedDiagnosticRecord, type CoreLocalizationBoundaryDetail, type CoreLocalizationDiagnosticContext, type CoreLocalizationDiagnosticOptions, type CoreLocalizationValidationDetail } from "./diagnostics";
 
-export function selectCoreLocalizationDiagnosticEvidence(options: CoreLocalizationDiagnosticOptions | undefined, cause: unknown) {
+export function selectCoreLocalizationDiagnosticEvidence(options: CoreLocalizationDiagnosticOptions | undefined, cause: unknown, onProcessing?: (record: DiagnosticRecord) => unknown) {
   let definitions: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions, ...coreLocalizationDiagnosticDefinitions];
-  try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; } catch { /* Optional selection unavailable. */ }
-  return selectDiagnosticEvidence(definitions, cause);
+  try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; }
+  catch { deliverDiagnosticRecord(diagnosticProcessingRecord("definition-selection-failed"), record => onProcessing?.(record)); }
+  return onProcessing === undefined ? selectDiagnosticEvidence(definitions, cause) : selectDiagnosticEvidenceWithReport(definitions, cause, onProcessing);
 }
-const nativeThen = Promise.prototype.then;
-function isolate(value: unknown): void {
-  if (value === undefined) return;
-  try { Reflect.apply(nativeThen, value, [undefined, () => undefined]); }
-  catch { try { Reflect.apply(nativeThen, Promise.resolve(value), [undefined, () => undefined]); } catch { /* Optional observer. */ } }
-}
-export function observeCoreLocalizationDiagnostic(options: CoreLocalizationDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown) {
-  const selected = selectCoreLocalizationDiagnosticEvidence(options, cause);
-  const checked = selectCoreLocalizationDiagnosticEvidence(options, { diagnosticRecord: own }).diagnosticRecord;
-  if (checked === undefined || !coreLocalizationDiagnosticDefinitions.some((definition) => definition.code === checked.code && definition.version === checked.definitionVersion)) return selected;
-  const detail = checked.detail as CoreLocalizationDiagnosticContext;
+export function observeCoreLocalizationDiagnostic(options: CoreLocalizationDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown, fallback?: CoreLocalizationDiagnosticContext) {
+  const processing: DiagnosticRecord[] = [];
+  const selected = selectCoreLocalizationDiagnosticEvidence(options, cause, record => { processing.push(record); });
+  const checked = requireDiagnosticRecord(coreLocalizationDiagnosticDefinitions, own);
+  const detail = checked.code === "core.diagnostics.processing-failed" ? fallback : checked.detail as CoreLocalizationDiagnosticContext;
+  if (detail === undefined) return { ...selected, diagnosticRecord: selected.diagnosticRecord ?? checked };
   const context = Object.freeze({ operation: detail.operation, ...(detail.phase === undefined ? {} : { phase: detail.phase }), ...(detail.field === undefined ? {} : { field: detail.field }) });
-  const deliver = (record: DiagnosticRecord): void => { try { isolate(options?.onDiagnostic?.(record, context)); } catch { /* Keep original receiver and work. */ } };
+  const deliver = (record: DiagnosticRecord): void => { deliverDiagnosticRecord(record, value => options?.onDiagnostic?.(value, context)); };
   deliver(checked);
   if (selected.diagnosticRecord !== undefined) deliver(selected.diagnosticRecord);
   for (const record of selected.relatedDiagnosticRecords ?? []) deliver(record);
+  for (const record of processing) deliver(record);
   return selected;
 }
 /** One actual call. Positive guard evidence is emitted before legacy error formatting. */
@@ -40,9 +37,9 @@ export class LocalizationObservation {
   }
   read<T>(field: CoreLocalizationBoundaryDetail["field"], action: () => T): T { return this.at(this.phase, field, action); }
   validation(field: CoreLocalizationValidationDetail["field"], reason: CoreLocalizationValidationDetail["reason"]): void {
-    const record = coreLocalizationValidationDiagnosticRecord({ operation: this.operation as CoreLocalizationValidationDetail["operation"], field, reason, effect: "predicate-rejected" });
+    const record = requireDiagnosticRecord(coreLocalizationDiagnosticDefinitions, captureDiagnosticRecord(() => coreLocalizationValidationDiagnosticRecord({ operation: this.operation as CoreLocalizationValidationDetail["operation"], field, reason, effect: "predicate-rejected" })));
     this.validationRecord = record;
-    observeCoreLocalizationDiagnostic(this.options, record);
+    observeCoreLocalizationDiagnostic(this.options, record, undefined, { operation: this.operation, field });
   }
   rejects(field: CoreLocalizationValidationDetail["field"], reason: CoreLocalizationValidationDetail["reason"], action: () => boolean): boolean {
     const rejected = this.at("predicate-invocation", field, action);
@@ -58,13 +55,14 @@ export class LocalizationObservation {
     return this.validationRecord === undefined ? error : Object.assign(error, { diagnosticRecord: this.validationRecord });
   }
   unsupported(): DiagnosticRecord {
-    const record = coreLocalizationUnsupportedDiagnosticRecord({ operation: "format", phase: "implementation-selection", reason: "unsupported-implementation", effect: "format-not-performed" });
-    observeCoreLocalizationDiagnostic(this.options, record);
+    const record = requireDiagnosticRecord(coreLocalizationDiagnosticDefinitions, captureDiagnosticRecord(() => coreLocalizationUnsupportedDiagnosticRecord({ operation: "format", phase: "implementation-selection", reason: "unsupported-implementation", effect: "format-not-performed" })));
+    observeCoreLocalizationDiagnostic(this.options, record, undefined, { operation: "format", phase: "implementation-selection" });
     return record;
   }
   run<T>(action: () => T): T {
     try { return action(); } catch (cause) {
-      observeCoreLocalizationDiagnostic(this.options, coreLocalizationBoundaryDiagnosticRecord({ operation: this.operation, phase: this.phase, ...(this.field === undefined ? {} : { field: this.field }), reason: "threw", effect: "value-not-produced" }), cause);
+      const detail: CoreLocalizationBoundaryDetail = { operation: this.operation, phase: this.phase, ...(this.field === undefined ? {} : { field: this.field }), reason: "threw", effect: "value-not-produced" };
+      observeCoreLocalizationDiagnostic(this.options, captureDiagnosticRecord(() => coreLocalizationBoundaryDiagnosticRecord(detail)), cause, detail);
       throw cause;
     }
   }

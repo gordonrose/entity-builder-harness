@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.reporting.generate-commit-log-summary
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: reporting
 #   disciplines:
@@ -76,6 +76,13 @@ fi
 node - "$MODE" "$OUTPUT_PATH" <<'NODE'
 const fs = require('fs');
 const path = require('path');
+
+let stage = 'log-tree';
+let effect = 'none';
+process.on('uncaughtException', () => {
+  console.error('ERROR: session-summary-failed; stage=' + stage + '; effect=' + effect + '.');
+  process.exit(2);
+});
 
 const mode = process.argv[2];
 const outputPath = process.argv[3];
@@ -252,6 +259,7 @@ function metricTable(stats, formatter) {
 
 const logs = walk(root).sort();
 const records = logs.map((filePath) => {
+  stage = 'log-content';
   const content = fs.readFileSync(filePath, 'utf8');
   const data = metadata(content);
   return {
@@ -295,7 +303,10 @@ if (mode === 'print') {
   process.exit(0);
 }
 
+stage = 'output-directory';
+effect = 'unknown';
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+stage = 'output-write';
 fs.writeFileSync(outputPath, output);
 console.log(`Wrote ${outputPath}`);
 NODE

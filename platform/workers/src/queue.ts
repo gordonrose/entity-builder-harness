@@ -1,7 +1,7 @@
 import type { QueueMessage } from "@kanbien/core/queues";
 import { isoDateTimeFromDate, type ISODateTime, type Result } from "@kanbien/core/shared";
 import { workerFailure, type PlatformWorkerError } from "./errors";
-import { observeWorkerQueueDiagnostic, workerDeliveryBoundaryRecord, workerDeliveryRejectedRecord, type PlatformWorkerQueueDiagnosticOptions, type WorkerDeliveryBoundaryDetail } from "./diagnostics";
+import { captureWorkerDiagnostic, observeWorkerQueueDiagnostic, workerDeliveryBoundaryRecord, workerDeliveryRejectedRecord, type PlatformWorkerQueueDiagnosticOptions, type WorkerDeliveryBoundaryDetail } from "./diagnostics";
 import type {
   PlatformWorkerDeadLetter,
   PlatformWorkerIdempotencyStore,
@@ -20,7 +20,7 @@ export function createInMemoryPlatformWorkerQueue(input: PlatformWorkerQueueDiag
   return {
     enqueue(message) {
       if (closed) {
-        const own = workerDeliveryRejectedRecord({ operation: "queue-enqueue", field: "queue-state", condition: "closed", effect: "queue-not-mutated" });
+        const own = captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ operation: "queue-enqueue", field: "queue-state", condition: "closed", effect: "queue-not-mutated" }));
         observeWorkerQueueDiagnostic(input, own);
         return workerFailure("PLATFORM_WORKER_QUEUE_CLOSED", "Worker queue is closed.", undefined, undefined, [], own);
       }
@@ -28,7 +28,7 @@ export function createInMemoryPlatformWorkerQueue(input: PlatformWorkerQueueDiag
       let phase: WorkerDeliveryBoundaryDetail["phase"] = "queue-mutation";
       let stamp: ISODateTime;
       try { pending.push({ message, attempt: 1, enqueuedAt: (phase = "queue-clock", stamp = now(), phase = "queue-mutation", stamp) }); }
-      catch (error) { observeWorkerQueueDiagnostic(input, workerDeliveryBoundaryRecord({ operation: "queue-enqueue", phase, reason: "thrown", effect: phase === "queue-clock" ? "queue-not-mutated" : "queue-mutation-unknown" }), error); throw error; }
+      catch (error) { observeWorkerQueueDiagnostic(input, captureWorkerDiagnostic(() => workerDeliveryBoundaryRecord({ operation: "queue-enqueue", phase, reason: "thrown", effect: phase === "queue-clock" ? "queue-not-mutated" : "queue-mutation-unknown" })), error); throw error; }
       return workerSuccess();
     },
     next() {
@@ -36,7 +36,7 @@ export function createInMemoryPlatformWorkerQueue(input: PlatformWorkerQueueDiag
     },
     retry(entry, delayMs) {
       if (closed) {
-        const own = workerDeliveryRejectedRecord({ operation: "queue-retry", field: "queue-state", condition: "closed", effect: "queue-not-mutated" });
+        const own = captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ operation: "queue-retry", field: "queue-state", condition: "closed", effect: "queue-not-mutated" }));
         observeWorkerQueueDiagnostic(input, own);
         return workerFailure("PLATFORM_WORKER_QUEUE_CLOSED", "Worker queue is closed.", undefined, undefined, [], own);
       }
@@ -48,7 +48,7 @@ export function createInMemoryPlatformWorkerQueue(input: PlatformWorkerQueueDiag
         attempt: entry.attempt + 1,
         enqueuedAt: (phase = "queue-clock", stamp = now(), phase = "queue-mutation", stamp),
         delayMs,
-      }); } catch (error) { observeWorkerQueueDiagnostic(input, workerDeliveryBoundaryRecord({ operation: "queue-retry", phase, reason: "thrown", effect: phase === "queue-clock" ? "queue-not-mutated" : "queue-mutation-unknown" }), error); throw error; }
+      }); } catch (error) { observeWorkerQueueDiagnostic(input, captureWorkerDiagnostic(() => workerDeliveryBoundaryRecord({ operation: "queue-retry", phase, reason: "thrown", effect: phase === "queue-clock" ? "queue-not-mutated" : "queue-mutation-unknown" })), error); throw error; }
       return workerSuccess();
     },
     deadLetter(entry, error) {
@@ -59,7 +59,7 @@ export function createInMemoryPlatformWorkerQueue(input: PlatformWorkerQueueDiag
         attempts: entry.attempt,
         failedAt: (phase = "queue-clock", stamp = now(), phase = "queue-mutation", stamp),
         error,
-      }); } catch (error) { observeWorkerQueueDiagnostic(input, workerDeliveryBoundaryRecord({ operation: "queue-dead-letter", phase, reason: "thrown", effect: phase === "queue-clock" ? "queue-not-mutated" : "queue-mutation-unknown" }), error); throw error; }
+      }); } catch (error) { observeWorkerQueueDiagnostic(input, captureWorkerDiagnostic(() => workerDeliveryBoundaryRecord({ operation: "queue-dead-letter", phase, reason: "thrown", effect: phase === "queue-clock" ? "queue-not-mutated" : "queue-mutation-unknown" })), error); throw error; }
     },
     pending: () => pending.map(copyQueueEntry),
     deadLetters: () => deadLetters.map(copyDeadLetter),

@@ -1,5 +1,5 @@
 import { coreDiagnosticCatalog } from "@kanbien/core";
-import { createDiagnosticRecord, defineDiagnostic, selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, createDiagnosticRecord, defineDiagnostic, deliverDiagnosticRecord, diagnosticProcessingRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, type DiagnosticDefinition, type DiagnosticEvidence, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { PlatformDiagnosticCatalog, PlatformDiagnosticContext } from "@kanbien/platform-contracts";
 
 export type PlatformRuntimeDiagnosticObserver = (
@@ -37,8 +37,7 @@ export const platformRuntimeBoundaryDiagnostic = defineDiagnostic({
 export const platformRuntimeDiagnosticCatalog = Object.freeze({ owner: "platform-runtime", definitions: Object.freeze([platformRuntimeStateDiagnostic, platformRuntimeBoundaryDiagnostic]) });
 export type RuntimeBoundaryDetail = NonNullable<typeof platformRuntimeBoundaryDiagnostic.__detail>;
 export type RuntimeStateDetail = NonNullable<typeof platformRuntimeStateDiagnostic.__detail>;
-export type RuntimeEvidence = ReturnType<typeof selectDiagnosticEvidence>;
-const intrinsicPromiseThen = Promise.prototype.then;
+export type RuntimeEvidence = DiagnosticEvidence;
 
 function contextFor(operation: RuntimeBoundaryDetail["operation"] | RuntimeStateDetail["operation"]): PlatformDiagnosticContext {
   return { capability: "platform-runtime", operation,
@@ -47,37 +46,36 @@ function contextFor(operation: RuntimeBoundaryDetail["operation"] | RuntimeState
         : operation === "request-context" || operation === "job-context" ? "request" : "runtime" };
 }
 function observe(options: PlatformRuntimeDiagnosticOptions, record: DiagnosticRecord, context: PlatformDiagnosticContext, catalogs?: readonly PlatformDiagnosticCatalog[]): void {
-  try {
-    const pending = options.onDiagnostic?.(record, context, catalogs);
-    if (pending === undefined) return;
-    const ignore = (): void => undefined;
-    try { Reflect.apply(intrinsicPromiseThen, pending, [undefined, ignore]); }
-    catch { Reflect.apply(intrinsicPromiseThen, Promise.resolve(pending), [undefined, ignore]); }
-  } catch { /* Diagnostic delivery never changes the operation or waits for a sink. */ }
+  deliverDiagnosticRecord(record, selected => options.onDiagnostic?.(selected, context, catalogs));
 }
-function selected(options: PlatformRuntimeDiagnosticOptions, cause: unknown, catalogs?: readonly PlatformDiagnosticCatalog[]): RuntimeEvidence {
-  try { return selectDiagnosticEvidence([...coreDiagnosticCatalog.definitions, ...platformRuntimeDiagnosticCatalog.definitions,
-    ...(options.diagnosticDefinitions ?? []), ...(catalogs ?? []).flatMap((catalog) => catalog.definitions)], cause); }
-  catch { return {}; }
+function selected(options: PlatformRuntimeDiagnosticOptions, cause: unknown, notices: DiagnosticRecord[], catalogs?: readonly PlatformDiagnosticCatalog[]): RuntimeEvidence {
+  let definitions = [...coreDiagnosticCatalog.definitions, ...platformRuntimeDiagnosticCatalog.definitions];
+  try { definitions = [...definitions, ...(options.diagnosticDefinitions ?? []), ...(catalogs ?? []).flatMap((catalog) => catalog.definitions)]; }
+  catch { notices.push(diagnosticProcessingRecord("definition-selection-failed")); }
+  return selectDiagnosticEvidenceWithReport(definitions, cause, record => notices.push(record));
 }
 export function runtimeBoundaryEvidence(options: PlatformRuntimeDiagnosticOptions, detail: RuntimeBoundaryDetail, cause: unknown,
   catalogs?: readonly PlatformDiagnosticCatalog[], includeUpstream = true): RuntimeEvidence {
-  let own: DiagnosticRecord | undefined;
-  try { const checked = createDiagnosticRecord(platformRuntimeBoundaryDiagnostic, detail); if (checked.ok) own = checked.value; } catch { /* Preserve the original failure. */ }
-  const retained = includeUpstream ? selected(options, cause, catalogs) : {};
+  const own = requireDiagnosticRecord([platformRuntimeBoundaryDiagnostic], captureDiagnosticRecord(() => {
+    const checked = createDiagnosticRecord(platformRuntimeBoundaryDiagnostic, detail);
+    return checked.ok ? checked.value : undefined;
+  }));
+  const notices: DiagnosticRecord[] = [];
+  const retained = includeUpstream ? selected(options, cause, notices, catalogs) : {};
   const context = contextFor(detail.operation);
-  if (own !== undefined) observe(options, own, context, catalogs);
+  observe(options, own, context, catalogs);
   if (retained.diagnosticRecord !== undefined) observe(options, retained.diagnosticRecord, context, catalogs);
   const companions = retained.relatedDiagnosticRecords;
   if (companions !== undefined) for (let index = 0; index < companions.length; index++) observe(options, companions[index]!, context, catalogs);
-  return { ...(retained.diagnosticRecord === undefined ? own === undefined ? {} : { diagnosticRecord: own } : { diagnosticRecord: retained.diagnosticRecord }),
+  for (const notice of notices) observe(options, notice, context, catalogs);
+  return { diagnosticRecord: retained.diagnosticRecord ?? own,
     ...(retained.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: retained.relatedDiagnosticRecords }) };
 }
 export function runtimeStateEvidence(options: PlatformRuntimeDiagnosticOptions, detail: RuntimeStateDetail): RuntimeEvidence {
-  try {
+  const own = requireDiagnosticRecord([platformRuntimeStateDiagnostic], captureDiagnosticRecord(() => {
     const checked = createDiagnosticRecord(platformRuntimeStateDiagnostic, detail);
-    if (!checked.ok) return {};
-    observe(options, checked.value, contextFor(detail.operation));
-    return { diagnosticRecord: checked.value };
-  } catch { return {}; }
+    return checked.ok ? checked.value : undefined;
+  }));
+  observe(options, own, contextFor(detail.operation));
+  return { diagnosticRecord: own };
 }

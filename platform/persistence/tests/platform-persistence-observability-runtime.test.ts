@@ -13,7 +13,7 @@ import {
   platformPersistenceError,
   platformPersistenceErrorClasses,
   persistenceBoundaryDiagnosticRecord, observePlatformPersistenceDiagnostic, selectPlatformPersistenceDiagnosticEvidence,
-  createPlatformOutboxRelay, platformPersistenceLeaseOwner, persistenceRelayBoundaryDiagnosticRecord, recordPlatformPersistenceObservation,
+  createPlatformOutboxRelay, createInMemoryPlatformOutboxStore, platformPersistenceLeaseOwner, persistenceRelayBoundaryDiagnosticRecord, recordPlatformPersistenceObservation,
   type PlatformOutboxStore, type PlatformPersistenceObserver,
 } from "../src/index";
 
@@ -153,7 +153,8 @@ async function main(): Promise<void> {
   for (const source of ["primitive-canary", Object.freeze(new Error("frozen-canary")), Object.defineProperty({}, "diagnosticRecord", { get() { throw new Error("accessor-canary"); } })]) {
     const copied: unknown[] = [];
     observePlatformPersistenceDiagnostic({ onDiagnostic(record) { copied.push(record); throw "observer-canary"; } }, own, source);
-    deepEqual(copied, [own]);
+    const inaccessible = typeof source === "object" && Object.getOwnPropertyDescriptor(source, "diagnosticRecord")?.get !== undefined;
+    deepEqual(copied, inaccessible ? [own, { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } }] : [own]);
   }
   let evidenceGetterReads = 0;
   const malformed = { diagnosticRecord: { ...primary, detail: { canary: "unapproved-canary" } }, relatedDiagnosticRecords: [related.value, primary] };
@@ -187,6 +188,42 @@ async function main(): Promise<void> {
   }
   const relayOwner = platformPersistenceLeaseOwner("observer-relay");
   if (!relayOwner.ok) throw new Error("Invalid relay owner");
+  const diagnosticModule = require("../src/diagnostics") as Record<string, unknown>;
+  for (const mode of ["throws", "undefined", "malformed"] as const) {
+    const processing = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+      detail: { reason: mode === "throws" ? "construction-threw" : mode === "malformed" ? "evidence-rejected" : "construction-rejected" } };
+    for (const key of ["persistenceRelayBoundaryDiagnosticRecord", "persistenceLocalRejectionDiagnosticRecord"]) {
+      const descriptor = Object.getOwnPropertyDescriptor(diagnosticModule, key)!;
+      Object.defineProperty(diagnosticModule, key, { ...descriptor, value: () => {
+        if (mode === "throws") throw new Error("builder-private-canary");
+        return mode === "undefined" ? undefined : { code: "unselected-private-canary" };
+      } });
+      try {
+        const seen: DiagnosticRecord[] = [];
+        const store = createInMemoryPlatformOutboxStore({ onDiagnostic(record) { seen.push(record); } });
+        if (key === "persistenceLocalRejectionDiagnosticRecord") {
+          const result = await store.listDeliverable({ asOf: "2026-11-04T00:00:00.000Z" as never, limit: 0 });
+          equal(result.ok, false);
+          if (result.ok) throw new Error("Expected limit rejection");
+          equal(result.error.code, "PLATFORM_PERSISTENCE_INVALID_LIMIT");
+          deepEqual(result.error.diagnosticRecord, processing);
+          deepEqual(seen, [processing]);
+        } else {
+          let sends = 0;
+          const relay = createPlatformOutboxRelay({
+            outbox: { ...store, async listDeliverable() { throw sourceNine; } },
+            queue: { async send() { sends++; return { ok: true, value: undefined }; } },
+            owner: relayOwner.value, leaseDurationMs: 1000, clock: fixedClock(new Date("2026-11-04T00:00:00.000Z")),
+            observer: { record() {}, onDiagnostic(record) { seen.push(record); } },
+          });
+          await rejects(relay.runOnce(), (error: unknown) => error === sourceNine);
+          equal(sends, 0);
+          deepEqual(seen, [processing, core, ...Array(8).fill(primary)]);
+        }
+        equal(JSON.stringify(seen).includes("private-canary"), false);
+      } finally { Object.defineProperty(diagnosticModule, key, descriptor); }
+    }
+  }
   for (const mode of ["default", "injected", "unavailable", "disabled"] as const) for (const raw of [true, false]) {
     const logged: LogRecord[] = [], received: { record: unknown; context: unknown }[] = [], roles: unknown[] = [];
     let sends = 0, transitions = 0;

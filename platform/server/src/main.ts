@@ -1,7 +1,7 @@
 import { recordConfigSource } from "@kanbien/core/config";
 import { coreDiagnosticCatalog } from "@kanbien/core";
 import { platformRuntimeDiagnosticCatalog } from "@kanbien/platform-runtime";
-import { selectDiagnosticEvidence } from "@kanbien/core/diagnostics";
+import { selectDiagnosticEvidenceWithReport, diagnosticProcessingRecord, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { Logger, LogRecord } from "@kanbien/core/logging";
 import { noopMetrics, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { systemClock, type Result } from "@kanbien/core/shared";
@@ -118,14 +118,20 @@ export async function startPlatformServerProcess(
     });
   } catch (error) {
     await shell.value.lifecycle.shutdown();
-    let evidence = {};
-    try { evidence = selectDiagnosticEvidence([
+    const notices: DiagnosticRecord[] = [];
+    let definitions: readonly DiagnosticDefinition[] = [
       ...coreDiagnosticCatalog.definitions,
       ...platformRuntimeDiagnosticCatalog.definitions,
       ...platformServerDiagnosticCatalog.definitions,
-      ...shell.value.mounted.diagnosticCatalogs.flatMap((catalog) => catalog.definitions),
-      ...(options.diagnosticCatalogs ?? []).flatMap((catalog) => catalog.definitions),
-    ], error); } catch { /* Keep the historical startup failure if evidence is unavailable. */ }
+    ];
+    // Each optional catalogue source is independent of the built-in selection.
+    try { definitions = [...definitions, ...shell.value.mounted.diagnosticCatalogs.flatMap((catalog) => catalog.definitions)]; }
+    catch { notices.push(diagnosticProcessingRecord("definition-selection-failed")); }
+    try { definitions = [...definitions, ...(options.diagnosticCatalogs ?? []).flatMap((catalog) => catalog.definitions)]; }
+    catch { notices.push(diagnosticProcessingRecord("definition-selection-failed")); }
+    const evidence = selectDiagnosticEvidenceWithReport(definitions, error, record => notices.push(record));
+    for (const record of notices) reportPlatformDiagnostic(diagnostics, record,
+      { capability: "platform-server", operation: "listen", stage: "startup" });
     return {
       ok: false,
       error: {

@@ -1,12 +1,21 @@
 import { deepEqual, equal, notEqual, throws } from "node:assert/strict";
-import { createDiagnosticRecord, defineDiagnostic, parseDiagnosticRecord, parseRelatedDiagnosticRecords, selectDiagnosticEvidence, diagnosticRelatedRecordLimit, type DiagnosticRecord } from "../src/diagnostics/index";
+import { createDiagnosticRecord, defineDiagnostic, parseDiagnosticRecord, parseRelatedDiagnosticRecords, selectDiagnosticEvidence, inspectDiagnosticEvidence, captureDiagnosticRecord, diagnosticProcessingDefinition, diagnosticProcessingRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, diagnosticRelatedRecordLimit, type DiagnosticRecord } from "../src/diagnostics/index";
 import { configReasonNames, configIssueReasons, configValueIssueReasons, parseConfigJsonObject, recordConfigSource, validateConfigSettings } from "../src/config/index";
 import { persistenceError } from "../src/persistence/index";
 import { auditRecordError, type CoreAuditErrorEvidence } from "../src/audit/index";
 import { fileError } from "../src/files/index";
 import { i18nError } from "../src/i18n/index";
 import { localizationError } from "../src/localization/index";
-import { eventPublishError } from "../src/events/index";
+import { eventPublishError, eventType, eventEnvelope } from "../src/events/index";
+import { auditEventType, auditEvent } from "../src/audit/index";
+import { principal } from "../src/authn/index";
+import { tenantContext } from "../src/tenancy/index";
+import { fileStorageRef } from "../src/files/index";
+import { messageTemplate } from "../src/i18n/index";
+import { localizedFormat } from "../src/localization/index";
+import { logRecord } from "../src/logging/index";
+import { monitoringComponent } from "../src/monitoring/index";
+import { attachCoreDiagnosticRecord, inspectCoreDiagnosticAttachment } from "../src/shared/diagnostics";
 import { queueError } from "../src/queues/index";
 import type { CoreError } from "../src/shared/index";
 
@@ -192,3 +201,123 @@ equal(Object.isFrozen(copiedEvidence), true);
 equal(Object.isFrozen(copiedEvidence.relatedDiagnosticRecords), true);
 equal(Object.isFrozen(copiedEvidence.diagnosticRecord?.detail), true);
 console.log("Core selects only validated owned diagnostic evidence without traversing exceptions.");
+
+// Normal literals above remain the primary proof; these exercise processing separately.
+deepEqual(inspectDiagnosticEvidence([definition], {}), {
+  evidence: {}, primary: "absent", companions: { status: "absent", entries: [] },
+});
+const inspected = inspectDiagnosticEvidence([definition], {
+  diagnosticRecord: malformed, relatedDiagnosticRecords: [unselected, selectedLiteral, malformed],
+});
+deepEqual(inspected, {
+  evidence: { relatedDiagnosticRecords: [selectedLiteral] }, primary: "rejected",
+  companions: { status: "selected", entries: ["unselected", "selected", "rejected"] },
+});
+equal(inspectDiagnosticEvidence([definition], primaryAccessor).primary, "inaccessible");
+equal(inspectDiagnosticEvidence([definition], { relatedDiagnosticRecords: Array(1) }).companions.status, "rejected");
+equal(inspectDiagnosticEvidence([], { diagnosticRecord: selectedLiteral }).primary, "unselected");
+equal(inspectDiagnosticEvidence([definition], new Proxy({}, { getOwnPropertyDescriptor() { throw new Error("private-processing-canary"); } })).primary, "inaccessible");
+equal(sourceGetterReads, 0);
+equal(Object.isFrozen(inspected.companions.entries), true);
+equal(JSON.stringify(inspected).includes("synthetic-private-canary"), false);
+const reports: DiagnosticRecord[] = [];
+deepEqual(selectDiagnosticEvidenceWithReport([definition], {
+  diagnosticRecord: malformed, relatedDiagnosticRecords: [malformed, selectedLiteral, malformed],
+}, record => reports.push(record)), { relatedDiagnosticRecords: [selectedLiteral] });
+deepEqual(reports, [diagnosticProcessingRecord("evidence-rejected")], "bounded notices do not displace companions");
+deepEqual(selectDiagnosticEvidenceWithReport([definition], { diagnosticRecord: malformed }, () => { throw new Error("private-processing-canary"); }), {});
+equal(captureDiagnosticRecord(() => selectedLiteral), selectedLiteral);
+for (const [build, reason] of [
+  [() => undefined, "construction-rejected"],
+  [() => { throw new Error("private-processing-canary"); }, "construction-threw"],
+] as const) {
+  const record = captureDiagnosticRecord(build);
+  deepEqual(record, { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed",
+    definitionVersion: 1, detail: { reason } });
+  equal(parseDiagnosticRecord(diagnosticProcessingDefinition(), record).ok, true);
+  equal(JSON.stringify(record).includes("private-processing-canary"), false);
+}
+deepEqual(requireDiagnosticRecord([], selectedLiteral), diagnosticProcessingRecord("definition-unselected"));
+deepEqual(requireDiagnosticRecord([definition], malformed), diagnosticProcessingRecord("evidence-rejected"));
+
+const retainedError = new Error("private-processing-canary");
+equal(inspectCoreDiagnosticAttachment(retainedError, selectedLiteral), "write-accepted");
+equal(inspectCoreDiagnosticAttachment(retainedError, malformed), "existing-field");
+equal(attachCoreDiagnosticRecord(retainedError, malformed), retainedError);
+equal(inspectCoreDiagnosticAttachment(Object.freeze({}), selectedLiteral), "write-failed");
+equal(inspectCoreDiagnosticAttachment("private-processing-canary", selectedLiteral), "unsupported-target");
+equal(inspectCoreDiagnosticAttachment(new Proxy({}, { getOwnPropertyDescriptor() { throw new Error(); } }), selectedLiteral), "inspection-failed");
+
+// Substitute only the owning builder, exercising public operations and their real wrappers.
+for (const [modulePath, name, operation] of [
+  ["../src/events/diagnostics", "coreEventValidationDiagnosticRecord", eventType],
+  ["../src/audit/diagnostics", "coreAuditValidationDiagnosticRecord", auditEventType],
+] as const) {
+  const owner = require(modulePath) as Record<string, unknown>;
+  const original = owner[name];
+  try {
+    for (const [replacement, reason] of [
+      [() => { throw new Error("private-processing-canary"); }, "construction-threw"],
+      [() => undefined, "construction-rejected"],
+      [() => malformed, "definition-unselected"],
+    ] as const) {
+      owner[name] = replacement;
+      const delivered: DiagnosticRecord[] = [];
+      const failure = operation("Bad", { onDiagnostic(record, context) {
+        deepEqual(context, { operation: "event-type", field: "type" }); delivered.push(record);
+      } });
+      equal(failure.ok, false);
+      if (failure.ok) throw new Error("Expected ordinary validation failure.");
+      deepEqual(failure.error.diagnosticRecord, diagnosticProcessingRecord(reason));
+      deepEqual(delivered, [diagnosticProcessingRecord(reason)]);
+      equal(JSON.stringify(delivered).includes("private-processing-canary"), false);
+    }
+  } finally { owner[name] = original; }
+  const normal = operation("Bad");
+  if (normal.ok) throw new Error("Expected normal validation failure.");
+  equal(normal.error.diagnosticRecord?.code, modulePath.includes("/events/") ? "core.events.validation-rejected" : "core.audit.validation-rejected");
+  deepEqual(normal.error.diagnosticRecord?.detail, { operation: "event-type", field: "type", reason: "invalid-format", effect: "rejected" });
+}
+
+type FaultOptions = {
+  diagnosticDefinitions: readonly (typeof definition)[];
+  onDiagnostic: (record: DiagnosticRecord, context: unknown) => unknown;
+};
+const boundaryCases: readonly [string, string, string, (cause: unknown, options: FaultOptions) => unknown][] = [
+  ["events/diagnostics", "coreEventBoundaryDiagnosticRecord", "envelope", (cause, options) => eventEnvelope({ get id(): never { throw cause; } } as never, options)],
+  ["audit/diagnostics", "coreAuditBoundaryDiagnosticRecord", "event", (cause, options) => auditEvent({ get id(): never { throw cause; } } as never, options)],
+  ["authn/diagnostics", "coreAuthnBoundaryDiagnosticRecord", "principal", (cause, options) => principal({ get id(): never { throw cause; } } as never, options)],
+  ["tenancy/diagnostics", "coreTenancyBoundaryDiagnosticRecord", "tenant-context", (cause, options) => tenantContext({ get tenantId(): never { throw cause; } } as never, options)],
+  ["files/diagnostics", "coreFileBoundaryDiagnosticRecord", "storage-ref", (cause, options) => fileStorageRef({ get key(): never { throw cause; } }, options)],
+  ["i18n/diagnostics", "coreI18nBoundaryDiagnosticRecord", "message-template", (cause, options) => messageTemplate({ get length(): never { throw cause; } } as never, options)],
+  ["localization/diagnostics", "coreLocalizationBoundaryDiagnosticRecord", "localized-format", (cause, options) => localizedFormat({ get locale(): never { throw cause; } } as never, options)],
+  ["logging/diagnostics", "coreLoggingBoundaryDiagnosticRecord", "log-record", (cause, options) => logRecord({ get level(): never { throw cause; } } as never, options)],
+  ["monitoring/boundary-diagnostics", "coreMonitoringBoundaryDiagnosticRecord", "component", (cause, options) => monitoringComponent({ get type(): never { throw cause; }, name: "api" }, options)],
+];
+for (const [modulePath, name, expectedOperation, invoke] of boundaryCases) {
+  const owner = require("../src/" + modulePath) as Record<string, unknown>;
+  const original = owner[name];
+  const source = Object.freeze({ diagnosticRecord: selectedLiteral, relatedDiagnosticRecords: Array(8).fill(selectedLiteral) });
+  const delivered: DiagnosticRecord[] = [];
+  const options: FaultOptions = { diagnosticDefinitions: [definition], onDiagnostic(record, context) {
+    equal((context as { operation: string }).operation, expectedOperation);
+    delivered.push(record);
+  } };
+  throws(() => invoke(source, options), error => error === source);
+  const ordinary = delivered[0]!;
+  equal(ordinary.code.endsWith(".boundary-failed"), true);
+  deepEqual(delivered.slice(1), Array(9).fill(selectedLiteral));
+  try {
+    for (const [replacement, reason] of [
+      [() => { throw new Error("private-processing-canary"); }, "construction-threw"],
+      [() => undefined, "construction-rejected"],
+      [() => ({ ...ordinary, detail: { private: "private-processing-canary" } }), "evidence-rejected"],
+    ] as const) {
+      owner[name] = replacement;
+      delivered.length = 0;
+      throws(() => invoke(source, options), error => error === source);
+      deepEqual(delivered, [diagnosticProcessingRecord(reason), ...Array(9).fill(selectedLiteral)]);
+      equal(JSON.stringify(delivered).includes("private-processing-canary"), false);
+    }
+  } finally { owner[name] = original; }
+}

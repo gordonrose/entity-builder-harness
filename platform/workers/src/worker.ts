@@ -55,7 +55,7 @@ import {
   platformRuntimeDiagnosticCatalog,
 } from "@kanbien/platform-runtime";
 import { workerError, workerFailure, type PlatformWorkerError } from "./errors";
-import { platformWorkerDiagnosticCatalog, platformWorkerBoundaryDiagnostic, reportWorkerBoundary, workerDiagnosticEvidence,
+import { captureWorkerDiagnostic, platformWorkerDiagnosticCatalog, platformWorkerBoundaryDiagnostic, reportWorkerBoundary, workerDiagnosticEvidence,
   workerDeliveryRejectedRecord, workerCoordinationRecord, workerDeliveryBoundaryRecord, type WorkerDeliveryBoundaryDetail } from "./diagnostics";
 import { workerDiagnosticErrorCodes } from "./diagnostics";
 import { workerConfigurationDiagnosticRecord } from "./configuration-diagnostics";
@@ -195,13 +195,15 @@ export async function createPlatformWorkerShell(
         if (profile === undefined || !platformProfileAllowsSignal(profile, "operational_log")) return;
         const context: PlatformDiagnosticContext = { capability: "platform-worker", operation: "job-delivery", stage: "request" };
         reportPlatformDiagnostic(diagnostics, own, context);
-        const evidence = workerDiagnosticEvidence(cause, diagnosticDefinitions());
+        const notices: DiagnosticRecord[] = [];
+        const evidence = workerDiagnosticEvidence(cause, diagnosticDefinitions(), record => notices.push(record));
         if (evidence.diagnosticRecord !== undefined) reportPlatformDiagnostic(diagnostics, evidence.diagnosticRecord, context);
         for (const source of evidence.relatedDiagnosticRecords ?? []) reportPlatformDiagnostic(diagnostics, source, context);
+        for (const record of notices) reportPlatformDiagnostic(diagnostics, record, context);
       } catch { /* Observation cannot affect delivery or settlement. */ }
     }
     const boundary: WorkerBoundaryObserver = (at, reason, cause, knownEffect = effect) => {
-      const own = workerDeliveryBoundaryRecord({ operation: "job-delivery", phase: at, reason, effect: knownEffect });
+      const own = captureWorkerDiagnostic(() => workerDeliveryBoundaryRecord({ operation: "job-delivery", phase: at, reason, effect: knownEffect }));
       observe(own, cause); return own;
     };
     function recordWorkerObservation(...args: Parameters<typeof recordWorkerObservationUnchecked>): void {
@@ -221,7 +223,7 @@ export async function createPlatformWorkerShell(
     }
     try {
     if (!lifecycle.isReady()) {
-      return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker shell is not ready.", undefined, undefined, [], workerDeliveryRejectedRecord({ field: "lifecycle", condition: "not-ready", effect: "handler-not-invoked" }));
+      return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker shell is not ready.", undefined, undefined, [], captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "lifecycle", condition: "not-ready", effect: "handler-not-invoked" })));
     }
 
     const entry = queue.next();
@@ -234,7 +236,7 @@ export async function createPlatformWorkerShell(
     if (job === undefined) {
       const error = workerError("PLATFORM_WORKER_JOB_NOT_FOUND", "No platform job is registered for the queue message type.", {
         messageType: String(entry.message.type),
-      }, undefined, [], workerDeliveryRejectedRecord({ field: "job", condition: "unmatched", effect: "handler-not-invoked" }));
+      }, undefined, [], captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "job", condition: "unmatched", effect: "handler-not-invoked" })));
       phase = "dead-letter";
       queue.deadLetter(entry, error);
       return { ok: true, value: deadLettered(entry, error) };
@@ -310,13 +312,14 @@ export async function createPlatformWorkerShell(
     }
 
     if (durableClaim.value.kind === "already-completed") {
-      observe(workerCoordinationRecord(durableClaim.value.outcome === "terminal-failure" ? "already-terminal" : "already-completed"));
+      const condition = durableClaim.value.outcome === "terminal-failure" ? "already-terminal" : "already-completed";
+      observe(captureWorkerDiagnostic(() => workerCoordinationRecord(condition)));
       phase = "observation";
       if (durableClaim.value.outcome === "terminal-failure") {
         const terminalFailure = workerError(
           "PLATFORM_WORKER_DURABLE_PROCESSING_TERMINAL_FAILURE",
           "Durable outbox processing previously reached a terminal failure.",
-          undefined, undefined, [], workerCoordinationRecord("already-terminal"),
+          undefined, undefined, [], captureWorkerDiagnostic(() => workerCoordinationRecord("already-terminal")),
         );
         recordDurablePersistenceObservation(
           options,
@@ -389,7 +392,7 @@ export async function createPlatformWorkerShell(
       try {
         phase = "lookup";
         if (await options.idempotency.hasProcessed(idempotencyKey)) {
-          observe(workerCoordinationRecord("idempotency-duplicate"));
+          observe(captureWorkerDiagnostic(() => workerCoordinationRecord("idempotency-duplicate")));
           phase = "observation";
           recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
             outcome: "succeeded",
@@ -715,7 +718,7 @@ function validateJobPayload(job: PlatformJobRegistration, message: QueueMessage,
   }
 
   const detail = validationDiagnostic(job.validator, message.payload);
-  const own = workerDeliveryRejectedRecord({ field: "payload", condition: "validator-rejected", effect: "handler-not-invoked" });
+  const own = captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "payload", condition: "validator-rejected", effect: "handler-not-invoked" }));
   observe(own, detail === undefined ? undefined : { diagnosticRecord: detail });
   return workerError("PLATFORM_WORKER_INVALID_PAYLOAD", "Queue message payload failed job validation.", {
     jobName: String(job.name),
@@ -769,7 +772,7 @@ async function claimDurableOutboxProcessing(
     if (claim.value.disposition === "already-completed") {
       const outcome = claim.value.record.completion?.outcome;
       if (outcome === undefined) {
-        const own = workerDeliveryRejectedRecord({ field: "completion-outcome", condition: "absent", effect: "handler-not-invoked" });
+        const own = captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "completion-outcome", condition: "absent", effect: "handler-not-invoked" }));
         observe(own);
         return {
           ok: false,
@@ -785,7 +788,7 @@ async function claimDurableOutboxProcessing(
     }
 
     if (claim.value.disposition === "lease-active") {
-      const own = workerCoordinationRecord("lease-active"); observe(own);
+      const own = captureWorkerDiagnostic(() => workerCoordinationRecord("lease-active")); observe(own);
       return {
         ok: false,
         error: workerError(
@@ -799,7 +802,7 @@ async function claimDurableOutboxProcessing(
 
     const lease = claim.value.record.lease;
     if (lease === undefined) {
-      const own = workerDeliveryRejectedRecord({ field: "claimed-lease", condition: "absent", effect: "handler-not-invoked" }); observe(own);
+      const own = captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "claimed-lease", condition: "absent", effect: "handler-not-invoked" })); observe(own);
       return {
         ok: false,
         error: workerError(
@@ -852,7 +855,7 @@ function durableOutboxEnvelopeFailure(field: "payload" | "outbox-id" | "message-
     error: workerError(
       "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID",
       "Durable outbox delivery must preserve one stable outbox identity.",
-      undefined, undefined, [], workerDeliveryRejectedRecord({ field, condition, effect: "handler-not-invoked" }),
+      undefined, undefined, [], captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field, condition, effect: "handler-not-invoked" })),
     ),
   };
 }

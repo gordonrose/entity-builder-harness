@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.transcript.register-codex-session-log
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-18"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: transcript
 #   disciplines:
@@ -44,30 +44,32 @@ if [ $# -ne 0 ]; then
   exit 2
 fi
 
-BRANCH="$(git branch --show-current)"
+BRANCH="$(git branch --show-current 2>/dev/null)" || {
+  echo "ERROR: transcript-registration-branch-read-failed; effect=none." >&2; exit 2;
+}
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
-  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  echo "ERROR: current branch is not a chat branch." >&2
   exit 1
 fi
 
 LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 
 if [ ! -f "$LOG_FILE" ]; then
-  echo "ERROR: missing chat log: $LOG_FILE" >&2
+  echo "ERROR: missing chat log." >&2
   exit 1
 fi
 
 CODEX_SESSION_LOG_PATH="$(bash scripts/00.chat/transcript/discover-codex-session-log/script.sh "$SESSION_ID" "$LOG_FILE")"
 
 if [ ! -f "$CODEX_SESSION_LOG_PATH" ]; then
-  echo "ERROR: discovered Codex session log is not a file: $CODEX_SESSION_LOG_PATH" >&2
+  echo "ERROR: discovered Codex session log is not a file." >&2
   exit 1
 fi
 
 tmp="$(mktemp)"
 
-awk -v transcript_provider="codex" -v transcript_path="$CODEX_SESSION_LOG_PATH" '
+if awk -v transcript_provider="codex" -v transcript_path="$CODEX_SESSION_LOG_PATH" '
   BEGIN {
     in_meta = 0
     wrote_provider = 0
@@ -107,9 +109,17 @@ awk -v transcript_provider="codex" -v transcript_path="$CODEX_SESSION_LOG_PATH" 
   {
     print
   }
-' "$LOG_FILE" > "$tmp"
+' "$LOG_FILE" > "$tmp" 2>/dev/null; then :; else
+  status=$?
+  echo "ERROR: transcript-registration-construction-failed; effect=none." >&2
+  exit "$status"
+fi
 
-mv "$tmp" "$LOG_FILE"
+if mv "$tmp" "$LOG_FILE" 2>/dev/null; then :; else
+  status=$?
+  echo "ERROR: transcript-registration-replacement-failed; effect=unknown; inspect before retry." >&2
+  exit "$status"
+fi
 
 echo "Registered Codex session log:"
 echo "session_log=$LOG_FILE"

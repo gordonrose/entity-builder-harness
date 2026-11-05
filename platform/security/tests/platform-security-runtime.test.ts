@@ -109,9 +109,38 @@ async function main(): Promise<void> {
   const hostileSource = Object.defineProperty({}, "diagnosticRecord", { get() { diagnosticAccessorReads++; throw identityCanary; } });
   identityRecords.length = 0;
   try { principalFromPlatformAuthenticationResult(Object.defineProperty({ ...identityInput }, "subject", { get() { throw hostileSource; } }), identityOptions); } catch (error) { equal(error, hostileSource); }
-  equal(diagnosticAccessorReads, 0); equal(identityRecords.length, 1);
+  equal(diagnosticAccessorReads, 0); equal(identityRecords.length, 2);
+  deepEqual(identityRecords[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+    detail: { reason: "evidence-inaccessible" } });
   equal(parseDiagnosticRecord(securityPrincipalBoundaryDiagnostic, identityRecords[0]).ok, true);
   equal(parseDiagnosticRecord(securityPrincipalBoundaryDiagnostic, { ...identityRecords[0], detail: { field: identityCanary } }).ok, false);
+  const principalDiagnosticBuilders = require("../src/diagnostics") as Record<string, unknown>;
+  const originalPrincipalBuilder = principalDiagnosticBuilders.securityPrincipalBoundaryDiagnosticRecord;
+  try {
+    for (const [mode, reason] of [["throw", "construction-threw"], ["absent", "construction-rejected"], ["malformed", "evidence-rejected"]] as const) {
+      let calls = 0;
+      principalDiagnosticBuilders.securityPrincipalBoundaryDiagnosticRecord = () => {
+        calls++;
+        if (mode === "throw") throw new Error(identityCanary);
+        return mode === "absent" ? undefined : { code: identityCanary };
+      };
+      identityRecords.length = 0;
+      throws(() => principalFromPlatformAuthenticationResult(Object.defineProperty({ ...identityInput }, "subject", { get() { throw identityFailure; } }),
+        { ...identityOptions, diagnosticDefinitions: [identitySourceDefinition] }), (error) => error === identityFailure);
+      equal(calls, 1);
+      deepEqual(identityRecords[0], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason } });
+      deepEqual(identityRecords.slice(1), identitySources);
+      equal(JSON.stringify(identityRecords).includes(identityCanary), false);
+    }
+  } finally { principalDiagnosticBuilders.securityPrincipalBoundaryDiagnosticRecord = originalPrincipalBuilder; }
+  identityRecords.length = 0;
+  const { principalId: _principalId, ...missingPrincipalId } = identityInput;
+  equal(principalFromPlatformAuthenticationResult(missingPrincipalId, {
+    ...identityOptions,
+    get diagnosticDefinitions(): never { throw new Error(identityCanary); },
+  }), undefined);
+  deepEqual(identityRecords.map((record) => record.code), ["security.authentication.principal-attribute-missing", "core.diagnostics.processing-failed"]);
+  deepEqual(identityRecords[1]?.detail, { reason: "definition-selection-failed" });
   for (const sink of [() => { throw identityCanary; }, () => Promise.reject(identityCanary), () => Object.assign(Promise.reject(identityCanary), { then() { throw identityCanary; } }), () => ({ then(_ok: unknown, reject: (reason: unknown) => void) { reject(identityCanary); } })]) {
     let caught = false;
     try { principalFromPlatformAuthenticationResult(Object.defineProperty({ ...identityInput }, "subject", { get() { throw identityFailure; } }), { onDiagnostic: sink, onMissingAttribute: sink }); }

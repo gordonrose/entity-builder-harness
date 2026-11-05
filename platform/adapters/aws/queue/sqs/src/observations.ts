@@ -3,7 +3,7 @@ import {
   coreQueueReceiveReductionDiagnosticRecord, observeCoreQueueDiagnostic,
   selectCoreQueueDiagnosticEvidence, type CoreQueueDiagnosticOptions,
   type CoreQueueBoundaryDetail, type CoreQueueValidationDetail, type CoreQueueReceiveReductionDetail,
-  type DiagnosticRecord,
+  captureDiagnosticRecord, requireDiagnosticRecord, coreDiagnosticCatalog, type CoreQueueDiagnosticContext, type DiagnosticRecord,
 } from "@kanbien/core";
 import type { PlatformSqsCommandClient } from "./worker";
 
@@ -46,16 +46,16 @@ function nativeObservation(cause: unknown, operation: CoreQueueBoundaryDetail["o
 
 export function sqsObservation(options: CoreQueueDiagnosticOptions | undefined, operation: CoreQueueBoundaryDetail["operation"]) {
   let evidence: ReturnType<typeof selectCoreQueueDiagnosticEvidence> = {};
-  const emit = (own: DiagnosticRecord, cause?: unknown): void => {
-    const source = observeCoreQueueDiagnostic(options, own, cause);
+  const emit = (build: () => DiagnosticRecord, context: CoreQueueDiagnosticContext, cause?: unknown): void => {
+    const own = requireDiagnosticRecord(coreDiagnosticCatalog.definitions, captureDiagnosticRecord(build));
+    const source = observeCoreQueueDiagnostic(options, own, cause, context);
     evidence = { diagnosticRecord: source.diagnosticRecord ?? own, ...(source.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: source.relatedDiagnosticRecords }) };
   };
   const failure = (boundary: CoreQueueBoundaryDetail["boundary"], cause: unknown, reason: "threw" | "rejected" = "threw"): void => {
-    try { emit(coreQueueBoundaryDiagnosticRecord({ operation, boundary, reason,
+    emit(() => coreQueueBoundaryDiagnosticRecord({ operation, boundary, reason,
       effect: operation === "decode" ? "not-assessed" : boundary === "construction" || boundary === "selection" || boundary === "encoding" ? "not-invoked" : "unknown",
       ...(boundary === "invocation" && (allSdkOperations as readonly string[]).includes(operation) ? { native: nativeObservation(cause, operation) } : {}),
-    }), cause); }
-    catch { /* Optional diagnostics must preserve native identities and policy. */ }
+    }), { operation, boundary }, cause);
   };
   return {
     failure,
@@ -63,7 +63,8 @@ export function sqsObservation(options: CoreQueueDiagnosticOptions | undefined, 
       try { return action(); } catch (cause) { failure(boundary, cause); throw cause; }
     },
     reject(field: CoreQueueValidationDetail["field"], reason: CoreQueueValidationDetail["reason"], cause?: unknown): ReturnType<typeof selectCoreQueueDiagnosticEvidence> {
-      try { emit(coreQueueValidationDiagnosticRecord({ operation: operation === "client-initialization" ? "validate" : operation, field, reason, effect: "rejected" }), cause); } catch { /* Optional only. */ }
+      const validationOperation = operation === "client-initialization" ? "validate" : operation;
+      emit(() => coreQueueValidationDiagnosticRecord({ operation: validationOperation, field, reason, effect: "rejected" }), { operation: validationOperation }, cause);
       return evidence;
     },
     async send(source: { readonly client: PlatformSqsCommandClient }, argument: () => unknown): Promise<unknown> {
@@ -94,7 +95,10 @@ export function receiveReductions(options: CoreQueueDiagnosticOptions) {
       else if (issues.length < 16) issues.push({ field, reason, reduction }); else truncated = true;
     },
     flush(): void {
-      if (issues.length !== 0) { try { observeCoreQueueDiagnostic(options, coreQueueReceiveReductionDiagnosticRecord({ operation: "receive", issues, truncated, effect: "reduction-observed" })); } catch { /* Optional only. */ } }
+      if (issues.length !== 0) {
+        const own = requireDiagnosticRecord(coreDiagnosticCatalog.definitions, captureDiagnosticRecord(() => coreQueueReceiveReductionDiagnosticRecord({ operation: "receive", issues, truncated, effect: "reduction-observed" })));
+        observeCoreQueueDiagnostic(options, own, undefined, { operation: "receive" });
+      }
       issues.length = 0; truncated = false;
     },
   };

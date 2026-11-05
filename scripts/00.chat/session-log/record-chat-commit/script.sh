@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -179,7 +179,16 @@ fi
 case "${TRANSCRIPT_PROVIDER:-${LLM_WORKBENCH_TRANSCRIPT_PROVIDER:-}}" in
   codex)
     if [ -z "${TRANSCRIPT_PATH// }" ]; then
-      TRANSCRIPT_PATH="$(bash scripts/00.chat/transcript/discover-codex-session-log/script.sh "$SESSION_ID" "$LOG_FILE" 2>/dev/null || true)"
+      if DISCOVERY_OUTPUT="$(bash scripts/00.chat/transcript/discover-codex-session-log/script.sh "$SESSION_ID" "$LOG_FILE" 2>&1)"; then
+        TRANSCRIPT_PATH="$DISCOVERY_OUTPUT"
+      else
+        TRANSCRIPT_PATH=""
+        case "$DISCOVERY_OUTPUT" in
+          'ERROR: transcript-home-absent'|'ERROR: transcript-match-absent'|'ERROR: transcript-workspace-failed'|'ERROR: transcript-stat-failed'|'ERROR: transcript-read-failed'|'ERROR: transcript-scan-failed'|'ERROR: transcript-selection-failed')
+            printf 'WARNING: %s\n' "${DISCOVERY_OUTPUT#ERROR: }" >&2 ;;
+          *) echo 'WARNING: transcript-discovery-failed' >&2 ;;
+        esac
+      fi
     fi
     if [ -n "${TRANSCRIPT_PATH// }" ]; then
       TRANSCRIPT_PROVIDER="codex"

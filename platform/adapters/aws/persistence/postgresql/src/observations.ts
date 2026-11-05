@@ -1,4 +1,5 @@
 import {
+  capturePlatformPersistenceDiagnostic,
   observePlatformPersistenceDiagnostic,
   persistenceBoundaryDiagnosticRecord,
   persistenceLocalRejectionDiagnosticRecord,
@@ -12,15 +13,14 @@ import {
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 
 export function observeBoundary(options: PlatformPersistenceDiagnosticOptions | undefined, detail: PersistenceBoundaryDetail, cause?: unknown): { readonly diagnosticRecord?: DiagnosticRecord } {
-  try { const diagnosticRecord = persistenceBoundaryDiagnosticRecord(detail); observePlatformPersistenceDiagnostic(options, diagnosticRecord, cause); return { diagnosticRecord }; }
-  catch { return {}; }
+  const diagnosticRecord = capturePlatformPersistenceDiagnostic(() => persistenceBoundaryDiagnosticRecord(detail));
+  observePlatformPersistenceDiagnostic(options, diagnosticRecord, cause);
+  return { diagnosticRecord };
 }
 export function localRejection(options: PlatformPersistenceDiagnosticOptions | undefined, detail: PersistenceLocalRejectionDetail): { readonly diagnosticRecord?: DiagnosticRecord } {
-  try {
-    const diagnosticRecord = persistenceLocalRejectionDiagnosticRecord(detail);
+    const diagnosticRecord = capturePlatformPersistenceDiagnostic(() => persistenceLocalRejectionDiagnosticRecord(detail));
     observePlatformPersistenceDiagnostic(options, diagnosticRecord);
     return { diagnosticRecord };
-  } catch { return {}; }
 }
 
 type Issue = PersistenceStoredRecordDetail["issues"][number];
@@ -36,8 +36,7 @@ export function storedObservation(options: PlatformPersistenceDiagnosticOptions 
   let decodeDelegated = false;
   const evidence = (): { readonly diagnosticRecord?: DiagnosticRecord } => {
     if (issues.length === 0) return {};
-    try { return { diagnosticRecord: persistenceStoredRecordDiagnosticRecord({ operation, reduction: actualReduction, effect, issues, truncated }) }; }
-    catch { return {}; }
+    return { diagnosticRecord: capturePlatformPersistenceDiagnostic(() => persistenceStoredRecordDiagnosticRecord({ operation, reduction: actualReduction, effect, issues, truncated })) };
   };
   return {
     evidence,
@@ -48,9 +47,8 @@ export function storedObservation(options: PlatformPersistenceDiagnosticOptions 
     },
     threw(cause: unknown): void {
       actualReduction = "thrown";
-      try { decodeFailure = persistenceBoundaryDiagnosticRecord({ operation, phase: "invocation", boundary: "decode", condition: "threw", effect });
-        decodeSource = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause); }
-      catch { /* Unknown decoding evidence must not replace the throw. */ }
+      decodeFailure = capturePlatformPersistenceDiagnostic(() => persistenceBoundaryDiagnosticRecord({ operation, phase: "invocation", boundary: "decode", condition: "threw", effect }));
+      decodeSource = selectPlatformPersistenceDiagnosticEvidence(options ?? {}, cause, record => observePlatformPersistenceDiagnostic(options, record));
     },
     issue(field: Issue["field"], condition: Issue["condition"], ordinal?: number): void {
       const existing = issues.find((issue) => issue.field === field && issue.condition === condition);

@@ -4,7 +4,7 @@
 //   version: 5
 //   status: draft
 //   created_on: "2026-10-24"
-//   updated_on: "2026-11-04"
+//   updated_on: "2026-11-05"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -24,7 +24,7 @@ import { posix } from "node:path";
 import { postgreSqlLoginNameRule, postgreSqlPasswordCredentials } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { configReasonNames as configurationReasons, parseConfigJsonObject, recordConfigSource, validateConfigSettings, type ConfigSettingDefinition, type ConfigSettingIssue, type ConfigSettingRelationship } from "@kanbien/core/config";
 import { loadPlatformConfiguration, configurationDiagnostic, defineConfigurationDiagnostic, defineConfigurationSourceReadDiagnostic, configurationSourceReadDiagnosticRecord, defineConfigurationRelationshipDiagnostics, configurationRelationshipDiagnostic } from "@kanbien/platform-config";
-import { createDiagnosticRecord, defineDiagnostic, parseDiagnosticRecord, parseRelatedDiagnosticRecords, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, createDiagnosticRecord, defineDiagnostic, diagnosticProcessingDefinition, requireDiagnosticRecord, parseDiagnosticRecord, parseRelatedDiagnosticRecords, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { platformSecurityDiagnosticCatalog, validateCertificateAuthorityContent } from "@kanbien/platform-security";
 import { platformPersistenceDiagnosticCatalog, persistenceMaintenanceDiagnosticCatalog,
   validatePersistenceMigrationInstructions, validatePersistenceVerificationInstructions,
@@ -86,7 +86,7 @@ const persistenceSourceDefinitions = [...coreDiagnosticCatalog.definitions, ...p
 const taskDiagnosticDefinitions = [...persistenceConfigurationDiagnosticCatalog.definitions, ...platformSecurityDiagnosticCatalog.definitions, ...persistenceSourceDefinitions, ...platformObservabilityDiagnosticCatalog.definitions];
 export const persistenceStartupDiagnosticBinding = bindPlatformDiagnosticContext(
   { capability: 'persistence', operation: 'startup', stage: 'startup' },
-  [...persistenceConfigurationDiagnosticCatalog.definitions, ...platformSecurityDiagnosticCatalog.definitions, ...platformObservabilityDiagnosticCatalog.definitions],
+  [...persistenceConfigurationDiagnosticCatalog.definitions, ...platformSecurityDiagnosticCatalog.definitions, ...platformObservabilityDiagnosticCatalog.definitions, diagnosticProcessingDefinition()],
 );
 /** Revalidate the exact selected catalog before serializing a task envelope. */
 export function persistenceTaskDiagnosticFields(diagnostic?: DiagnosticRecord, relatedDiagnosticRecords?: readonly DiagnosticRecord[]) {
@@ -105,9 +105,11 @@ export function persistenceTaskDiagnosticFields(diagnostic?: DiagnosticRecord, r
 }
 
 export function persistenceConfigurationFailure(issues: readonly ConfigSettingIssue[], definition = persistenceConfigurationDiagnostic) {
-  const diagnostic = configurationDiagnostic(definition, issues);
-  if (!diagnostic.ok) throw new TypeError("PERSISTENCE_CONFIGURATION_DIAGNOSTIC_INVALID");
-  return { ok: false as const, error: { code: "CONFIGURATION_INVALID" as const, diagnostic: diagnostic.value } };
+  const diagnostic = requireDiagnosticRecord([definition], captureDiagnosticRecord(() => {
+    const checked = configurationDiagnostic(definition, issues);
+    return checked.ok ? checked.value : undefined;
+  }));
+  return { ok: false as const, error: { code: "CONFIGURATION_INVALID" as const, diagnostic } };
 }
 
 export function persistenceConfigurationResult(env: NodeJS.ProcessEnv, purpose: "server" | "migration" | "restore" | "administration", implementation?: KanbienCorePersistenceImplementation) {
@@ -178,9 +180,11 @@ export function persistenceAdministrationConfigurationResult(env: NodeJS.Process
   });
   const checked = validateConfigSettings(source, definitions, persistenceAdministrationRelationships);
   if (!checked.ok) {
-    const diagnostic = configurationRelationshipDiagnostic(persistenceAdministrationDiagnostics, checked.error);
-    if (!diagnostic.ok) throw new TypeError("PERSISTENCE_ADMINISTRATION_DIAGNOSTIC_INVALID");
-    return { ok: false as const, error: { ...checked.error, diagnostic: diagnostic.value } };
+    const diagnostic = requireDiagnosticRecord(persistenceAdministrationDiagnostics.definitions, captureDiagnosticRecord(() => {
+      const record = configurationRelationshipDiagnostic(persistenceAdministrationDiagnostics, checked.error);
+      return record.ok ? record.value : undefined;
+    }));
+    return { ok: false as const, error: { ...checked.error, diagnostic } };
   }
   return { ok: true as const, value: {
     migration: { username: checked.value["migration.username"] as string },
@@ -202,9 +206,11 @@ export function persistenceCertificateAuthorityResult(env: NodeJS.ProcessEnv, re
     : !path.startsWith("/app/assets/") ? "location-not-allowed"
     : posix.normalize(path) !== path ? "path-not-normalized" : !path.endsWith(".crt") ? "extension-not-allowed" : undefined;
   if (reason !== undefined) {
-    const checked = createDiagnosticRecord(persistenceCertificateSourceDiagnostic, { source, reason, phase: "configuration-source-validation", effect: "not-started" });
-    if (!checked.ok) throw new TypeError("PERSISTENCE_CERTIFICATE_SOURCE_DIAGNOSTIC_INVALID");
-    return { ok: false as const, error: { diagnostic: checked.value } };
+    const diagnostic = requireDiagnosticRecord([persistenceCertificateSourceDiagnostic], captureDiagnosticRecord(() => {
+      const checked = createDiagnosticRecord(persistenceCertificateSourceDiagnostic, { source, reason, phase: "configuration-source-validation", effect: "not-started" });
+      return checked.ok ? checked.value : undefined;
+    }));
+    return { ok: false as const, error: { diagnostic } };
   }
   let value: string;
   try {
@@ -214,7 +220,7 @@ export function persistenceCertificateAuthorityResult(env: NodeJS.ProcessEnv, re
     try { if (typeof error === "object" && error !== null) { const field = Object.getOwnPropertyDescriptor(error, "code"); if (field && "value" in field) code = field.value; } } catch { /* unknown observation */ }
     const readReason = code === "ENOENT" ? "not-found" : code === "EACCES" || code === "EPERM" ? "read-denied"
       : code === "ENOTDIR" ? "not-a-directory" : code === "EISDIR" ? "is-a-directory" : "unclassified-read-failure";
-    return { ok: false as const, error: { diagnostic: configurationSourceReadDiagnosticRecord(persistenceCertificateReadDiagnostic, source, readReason) } };
+    return { ok: false as const, error: { diagnostic: requireDiagnosticRecord([persistenceCertificateReadDiagnostic], captureDiagnosticRecord(() => configurationSourceReadDiagnosticRecord(persistenceCertificateReadDiagnostic, source, readReason))) } };
   }
   const parsed = validateCertificateAuthorityContent(value, "compatible-complete-blocks");
   if (!parsed.ok) return { ok: false as const, error: { diagnostic: parsed.error.diagnosticRecord } };

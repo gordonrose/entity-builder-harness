@@ -18,6 +18,7 @@ import {
   type QueueMessageType,
   coreQueueValidationDiagnosticRecord,
   coreQueueBoundaryDiagnosticRecord,
+  diagnosticProcessingRecord,
   type DiagnosticRecord,
   type CoreQueueDiagnosticContext,
 } from "@kanbien/core";
@@ -198,7 +199,37 @@ async function main(): Promise<void> {
   }
   for (const cause of [0, "PRIVATE_SQS_CANARY", Object.freeze(new Error("PRIVATE_SQS_CANARY")), Object.defineProperty({}, "diagnosticRecord", { get() { throw new Error("Do not read source accessor"); } })]) {
     clear(); await createPlatformSqsQueue({ queueUrl, onDiagnostic, client: { send: async () => { throw cause; } } }).send(durableMessage);
-    equal(records.length, 1); equal(detail(records[0]!).effect, "unknown");
+    const inaccessible = typeof cause === "object" && Object.getOwnPropertyDescriptor(cause, "diagnosticRecord")?.get !== undefined;
+    equal(records.length, inaccessible ? 2 : 1); equal(detail(records[0]!).effect, "unknown");
+    if (inaccessible) deepEqual(records[1], diagnosticProcessingRecord("evidence-inaccessible"));
+  }
+  const diagnosticModule = require("../../../../../../packages/core/src/queues/diagnostics") as Record<string, unknown>;
+  for (const key of ["coreQueueBoundaryDiagnosticRecord", "coreQueueValidationDiagnosticRecord", "coreQueueReceiveReductionDiagnosticRecord"] as const) {
+    const descriptor = Object.getOwnPropertyDescriptor(diagnosticModule, key)!;
+    for (const mode of ["throw", "undefined"] as const) {
+      clear(); let calls = 0;
+      try {
+        Object.defineProperty(diagnosticModule, key, { ...descriptor, value: () => { if (mode === "throw") throw new Error("PRIVATE_SQS_BUILDER"); return undefined; } });
+        const expected = diagnosticProcessingRecord(mode === "throw" ? "construction-threw" : "construction-rejected");
+        if (key === "coreQueueBoundaryDiagnosticRecord") {
+          const result = await createPlatformSqsQueue({ queueUrl, onDiagnostic, client: { async send() { calls++; throw source; } } }).send(durableMessage);
+          equal(calls, 1); equal(result.ok, false);
+          if (!result.ok) deepEqual(result.error.diagnosticRecord, sourceRecords[0]);
+          deepEqual(records, [expected, ...sourceRecords]);
+          contexts.forEach(context => deepEqual(context, { operation: "send", boundary: "invocation" }));
+        } else if (key === "coreQueueValidationDiagnosticRecord") {
+          const result = decodePlatformQueueMessage(undefined, { onDiagnostic });
+          equal(result.ok, false);
+          if (!result.ok) deepEqual(result.error.diagnosticRecord, expected);
+          deepEqual(records, [expected]); deepEqual(contexts, [{ operation: "decode" }]);
+        } else {
+          const reduction = receiveReductions({ onDiagnostic });
+          reduction.add("body", "absent", "field-unavailable"); reduction.flush(); reduction.flush();
+          deepEqual(records, [expected]); deepEqual(contexts, [{ operation: "receive" }]);
+        }
+        equal(JSON.stringify(records).includes("PRIVATE_SQS"), false);
+      } finally { Object.defineProperty(diagnosticModule, key, descriptor); }
+    }
   }
   let sends = 0;
   const quietClient: PlatformSqsCommandClient = { send: async () => { sends++; return {}; } };

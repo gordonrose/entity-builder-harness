@@ -49,7 +49,7 @@
     },
     {
       "path": "packages/core/src/queues/index.ts",
-      "sha256": "ab99cbceac9766d4bbd7ded32f35ad4c0c50e0d68085dbf45cb23e3a82cb152e",
+      "sha256": "a42f903989b1605b9ef45a4eee7325dba49d4d1e927722eac330fac65742099b",
       "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
     },
     {
@@ -64,12 +64,12 @@
     },
     {
       "path": "packages/core/src/validation/index.ts",
-      "sha256": "daa1022933b804fc7e9af8f1bf464b9521f130c2fb0fe4bebb93424bea72047c",
+      "sha256": "763514aad047bf375e9a1c57e052ff275b0895d23d31cd7c846dfb4fecbea9df",
       "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
     },
     {
       "path": "platform/adapters/aws/observability/cloudwatch/src/index.ts",
-      "sha256": "e8ad2696f10c4e2e1ba9bc5db7bcaee7c2d5c507041e0c9d808e28afefbd7357",
+      "sha256": "281d729983d32fdcb8604a74ac31f310be4027229daafb4c4acc9e150d5d5364",
       "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
     },
     {
@@ -89,12 +89,12 @@
     },
     {
       "path": "platform/server/src/index.ts",
-      "sha256": "69b61ff9d5bc5e299a5c67e822fe2fcd1cce1aa2bfe3e3d24407a3f1376443d8",
+      "sha256": "2936c22d96173abc9d3dc379e034e3da631007037d7db435e92c21ec052956ab",
       "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
     },
     {
       "path": "platform/testing/src/index.ts",
-      "sha256": "a53b61f2545b6e75d4ea72254b8854a0c27657b542c86f99f68f4f0c71952d58",
+      "sha256": "54c9e054452c68d4c4a3d79e6cc3a62765948aa29ef6bb8ed0e8f3b7a5ec193a",
       "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
     }
   ]

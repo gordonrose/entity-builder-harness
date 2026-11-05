@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standards.safe-diagnostic-record
-version: 7
+version: 9
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-11-04"
+updated_on: "2026-11-05"
 layer: 06.shared
 domain: diagnostics
 disciplines: [security, sre, agentic]
@@ -205,6 +205,13 @@ link to the harness, and generated JSON stays derived rather than separately edi
 
 ## Supported reason preservation
 
+<!-- deterministic-check: allow reason="recognising an inadequate diagnostic requires evidence and source-review judgement; structural checks cannot establish diagnostic completeness" -->
+When authorised development uncovers a missing or inadequate explanation, apply
+the [discovery-and-correction procedure](../workflows/verify-diagnostic-coverage.md#when-work-uncovers-an-inadequately-explained-failure).
+Reuse or repair existing owner-defined diagnostics before adding new meanings.
+Evidence, privacy, compatibility and task authority still govern the correction;
+diagnostic improvement does not authorise business-behaviour changes or replay.
+
 For new or changed diagnostic paths and scoped adoption/refactoring, every
 supported failure established by the operation must retain its safe meaning
 and applicable item/operation context through to the actual error-handling
@@ -244,6 +251,34 @@ or remote delivery; those require their own consumer proof.
 These are source-review and behaviour-test obligations, not claims that the
 structural adoption scanner proves all reason paths. Unproved in-scope paths
 remain open; a sample does not certify repository-wide completeness.
+
+### Reuse diagnostic-processing safeguards
+
+For a required report at an actual operation boundary, reuse Core's
+`captureDiagnosticRecord` and `requireDiagnosticRecord` through the owning
+capability wrapper. They guard report construction/selection, not the operation
+itself. Keep strict public constructors strict; do not globally convert
+programmer errors into successful results or label an intentionally absent
+optional report as a failure. Use `inspectDiagnosticEvidence` or
+`selectDiagnosticEvidenceWithReport` where the caller must distinguish absence
+from rejection/inaccessibility. Compatibility-only selectors remain permitted
+where their deliberate omission policy is proved at the actual caller.
+
+The shared `core.diagnostics.processing-failed/v1` definition owns only finite
+report-processing reasons. Do not add provider codes, rejected contents, native
+exceptions or guessed operation reasons to it. Preserve the original operation
+result, valid source primary/eight companions, and separately known context.
+Validate against the appropriate owner's selected definitions: an existing
+Runtime or Security record must not be discarded merely because a Worker or
+Persistence wrapper received it. Never replay a builder or operation to recover
+diagnostic detail. A rejected attachment is not evidence of failed delivery.
+
+For shell/CLI protocols, retain finite producer reasons through their actual
+parsers and callers; do not treat failed reads as empty/absent state. Updating
+safe wording requires connected routing tests, including counterexamples where
+native output spoofs a recognised state. Successful requested inventories stay
+distinct from safe failure reports. These duties do not authorise imported-file
+ownership resets, workflow mutations or operations outside the task's scope.
 
 ## Adoption proof and limits
 

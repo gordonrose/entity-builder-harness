@@ -661,7 +661,8 @@ async function diagnosticCoverage(): Promise<void> {
   equal(accessorReads, 0);
   deepEqual(malformedWrapped.diagnosticRecord, boundary("unit-of-work", "operation", "operation-not-returned"));
   deepEqual(malformedWrapped.relatedDiagnosticRecords, companions);
-  deepEqual(selected, [boundary("unit-of-work", "operation", "operation-not-returned"), ...companions]);
+  deepEqual(selected, [boundary("unit-of-work", "operation", "operation-not-returned"), ...companions,
+    { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } }]);
   const accessorCompanions: DiagnosticRecord[] = [];
   Object.defineProperty(accessorCompanions, "0", { enumerable: true, get() { accessorReads++; throw new Error(privateValue); } });
   selected.length = 0;
@@ -670,13 +671,16 @@ async function diagnosticCoverage(): Promise<void> {
   equal(accessorReads, 0);
   deepEqual(accessorWrapped.diagnosticRecord, sourcePrimary);
   equal(accessorWrapped.relatedDiagnosticRecords, undefined);
-  deepEqual(selected, [boundary("unit-of-work", "operation", "operation-not-returned"), sourcePrimary]);
-  for (const failure of [makeSource(), Object.assign(new Error(privateValue), { diagnosticRecord: { ...sourcePrimary, detail: { ordinal: privateValue } }, relatedDiagnosticRecords: Array(9).fill(sourcePrimary) })]) {
+  deepEqual(selected, [boundary("unit-of-work", "operation", "operation-not-returned"), sourcePrimary,
+    { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-rejected" } }]);
+  for (const [failure, rejectedList] of [[makeSource(), false], [Object.assign(new Error(privateValue), { diagnosticRecord: { ...sourcePrimary, detail: { ordinal: privateValue } }, relatedDiagnosticRecords: Array(9).fill(sourcePrimary) }), true]] as const) {
     const records: DiagnosticRecord[] = [];
     const noAppDefinitions = inMemoryUnitOfWork({ onDiagnostic: (record) => records.push(record) });
     const result = await rejected(() => noAppDefinitions.run(() => { throw failure; })) as { readonly diagnosticRecord: DiagnosticRecord; readonly relatedDiagnosticRecords?: readonly DiagnosticRecord[] };
     deepEqual(result.diagnosticRecord, boundary("unit-of-work", "operation", "operation-not-returned"));
-    deepEqual(records, [boundary("unit-of-work", "operation", "operation-not-returned")]);
+    deepEqual(records, [boundary("unit-of-work", "operation", "operation-not-returned"), ...(rejectedList ? [
+      { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-rejected" } },
+    ] : [])]);
     equal(JSON.stringify(records).includes(privateValue), false);
   }
   const builtIn = pageRequest({ limit: 0 });
@@ -691,6 +695,26 @@ async function diagnosticCoverage(): Promise<void> {
   const expectedOtherCore = { schema: "core/diagnostic-record/v1", code: "core.authz.permission-invalid", definitionVersion: 1, detail: { field: "resource", reason: "empty" } };
   deepEqual(otherCoreWrapped.diagnosticRecord, expectedOtherCore);
   deepEqual(builtInRecords, [boundary("unit-of-work", "operation", "operation-not-returned"), expectedOtherCore]);
+  const builders = require("../src/persistence/diagnostics") as typeof import("../src/persistence/diagnostics");
+  const original = builders.corePersistenceInMemoryBoundaryRecord;
+  for (const mode of ["throws", "missing"] as const) {
+    builders.corePersistenceInMemoryBoundaryRecord = (): never => { if (mode === "throws") throw new Error(privateValue); return undefined as never; };
+    try {
+      const records: DiagnosticRecord[] = [];
+      const cause = makeSource();
+      const expected = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+        detail: { reason: mode === "throws" ? "construction-threw" : "construction-rejected" } };
+      const failed = await rejected(() => inMemoryUnitOfWork({ diagnosticDefinitions: [sourceDefinition], onDiagnostic: record => records.push(record) }).run(() => { throw cause; })) as { cause: unknown; diagnosticRecord: DiagnosticRecord; relatedDiagnosticRecords: readonly DiagnosticRecord[] };
+      equal(failed.cause, cause); deepEqual(failed.diagnosticRecord, sourcePrimary); deepEqual(failed.relatedDiagnosticRecords, companions);
+      deepEqual(records, [expected, ...sources]);
+      records.length = 0;
+      const plain = new Error(privateValue);
+      const repository = inMemoryRepository<Entity, string>({ getId() { throw plain; }, onDiagnostic: record => records.push(record) });
+      equal(await rejected(() => repository.save(seed)), plain);
+      deepEqual(Object.getOwnPropertyDescriptor(plain, "diagnosticRecord")?.value, expected);
+      deepEqual(records, [expected]);
+    } finally { builders.corePersistenceInMemoryBoundaryRecord = original; }
+  }
   await new Promise<void>((resolve) => setImmediate(resolve));
 }
 

@@ -5,7 +5,7 @@ import type {
 } from "@kanbien/core/persistence";
 import { err, ok, type Result } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
-import { persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
+import { capturePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 
 /**
  * The safe facts that must be written with a product's state change.
@@ -113,7 +113,7 @@ function invalidMutation(
       defaultMessage,
       messageKey: "platform.persistence.transaction.mutation.invalid",
       params: { reason },
-      diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "validate-mutation", field, condition, phase: "validation", effect: "not-started" }),
+      diagnosticRecord: capturePlatformPersistenceDiagnostic(() => persistenceLocalRejectionDiagnosticRecord({ operation: "validate-mutation", field, condition, phase: "validation", effect: "not-started" })),
     }),
   );
 }

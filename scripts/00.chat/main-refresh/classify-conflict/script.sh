@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -52,10 +52,13 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-STAGES="$(git ls-files -u -- "$CONFLICT_PATH")"
+if ! STAGES="$(git ls-files -u -- "$CONFLICT_PATH" 2>/dev/null)"; then
+  echo "ERROR: conflict-index-read-failed" >&2
+  exit 1
+fi
 
 if [ -z "$STAGES" ]; then
-  echo "ERROR: path has no unresolved conflict stages: ${CONFLICT_PATH}" >&2
+  echo "ERROR: conflict-stages-absent" >&2
   exit 1
 fi
 
@@ -69,7 +72,10 @@ stage_content() {
   local stage="$1"
 
   if has_stage "$stage"; then
-    git show ":${stage}:${CONFLICT_PATH}" 2>/dev/null || true
+    if ! git show ":${stage}:${CONFLICT_PATH}" 2>/dev/null; then
+      printf 'ERROR: conflict-stage-read-failed stage=%s\n' "$stage" >&2
+      return 1
+    fi
   fi
 }
 

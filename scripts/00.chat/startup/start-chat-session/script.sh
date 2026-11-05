@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.startup.start-chat-session
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -85,8 +85,20 @@ WORKTREE_PATH="$(chat_worktree_path_for_branch "$REPO_ROOT" "$BRANCH")"
 BASE_BRANCH="main"
 CHAT_LIFECYCLE_WORKFLOW=".agentic/00.chat/workflows/chat-start.md"
 
-if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
-  BASE_BRANCH="$(git branch --show-current)"
+startup_read_failed() {
+  echo "ERROR: startup-observation-unavailable; stage=$1; creation-not-started." >&2
+  exit 2
+}
+startup_apply() {
+  local stage="$1" status; shift
+  if "$@" 2>/dev/null; then return 0; else status=$?; fi
+  echo "ERROR: startup-operation-failed; stage=$stage; effect=unknown; inspect before retry." >&2
+  exit "$status"
+}
+if git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}" 2>/dev/null; then :; else
+  status=$?
+  [ "$status" -eq 1 ] || startup_read_failed base-reference
+  BASE_BRANCH="$(git branch --show-current 2>/dev/null)" || startup_read_failed current-branch
 fi
 
 if [ -z "${BASE_BRANCH// }" ]; then
@@ -102,28 +114,25 @@ if ! WORKTREE_STATUS="$(bash scripts/00.chat/worktree/dirty-worktree-check/scrip
 fi
 
 if [ "$OUTPUT_FORMAT" = "text" ]; then
-  git status --short
+  git status --short 2>/dev/null || startup_read_failed displayed-status
 fi
 
 if [ -e "$WORKTREE_PATH" ]; then
-  echo "ERROR: new chat worktree destination already exists: $WORKTREE_PATH" >&2
+  echo "ERROR: new chat worktree destination already exists." >&2
   exit 1
 fi
 
-if ! mkdir -p "${WORKTREE_PATH%/*}"; then
-  echo "ERROR: cannot create persistent chat worktree root: ${WORKTREE_PATH%/*}" >&2
-  exit 1
-fi
+startup_apply root-create mkdir -p "${WORKTREE_PATH%/*}"
 
 if [ ! -w "${WORKTREE_PATH%/*}" ]; then
-  echo "ERROR: persistent chat worktree root is not writable: ${WORKTREE_PATH%/*}" >&2
+  echo "ERROR: persistent chat worktree root is not writable." >&2
   exit 1
 fi
 
-git branch "$BRANCH" "$BASE_BRANCH"
-git worktree add --quiet "$WORKTREE_PATH" "$BRANCH"
+startup_apply branch-create git branch "$BRANCH" "$BASE_BRANCH"
+startup_apply worktree-create git worktree add --quiet "$WORKTREE_PATH" "$BRANCH"
 
-mkdir -p "$WORKTREE_PATH/$LOG_DIR"
+startup_apply log-directory-create mkdir -p "$WORKTREE_PATH/$LOG_DIR"
 
 cat > "$WORKTREE_PATH/$LOG_FILE" <<EOF
 # Chat Session: ${STAMP} ${SLUG}
@@ -310,7 +319,7 @@ copy_first_prompt_with_retry() {
 
   local attempt=1
   while [ "$attempt" -le 2 ]; do
-    if printf '%s' "$FIRST_PROMPT" | "$@"; then
+    if printf '%s' "$FIRST_PROMPT" | "$@" 2>/dev/null; then
       echo "Copied first agent prompt to clipboard."
       return 0
     fi
@@ -328,7 +337,7 @@ copy_first_prompt_with_retry() {
 }
 
 if [ "$OUTPUT_FORMAT" = "json" ]; then
-  git -C "$WORKTREE_PATH" add "$LOG_FILE"
+  startup_apply log-stage git -C "$WORKTREE_PATH" add "$LOG_FILE"
   emit_json_packet
   exit 0
 fi
@@ -358,10 +367,10 @@ case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
     echo "Skipping empty chat branch cleanup."
     ;;
   *)
-    echo "ERROR: invalid CHAT_CLEANUP_EMPTY_BRANCHES value: ${CHAT_CLEANUP_EMPTY_BRANCHES}" >&2
+    echo "ERROR: invalid CHAT_CLEANUP_EMPTY_BRANCHES value." >&2
     echo "Use apply, dry-run, skip, 0, false, or no." >&2
     exit 2
     ;;
 esac
 
-git -C "$WORKTREE_PATH" add "$LOG_FILE"
+startup_apply log-stage git -C "$WORKTREE_PATH" add "$LOG_FILE"

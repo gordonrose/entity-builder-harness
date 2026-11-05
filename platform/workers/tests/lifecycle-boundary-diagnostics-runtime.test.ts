@@ -96,7 +96,13 @@ async function main(): Promise<void> {
       const shell = await createPlatformWorkerShell({ apps: [{ ...app(), lifecycle: { beforeStart() { throw bad; } } }], deps: target.deps });
       if (!shell.ok) throw new Error(shell.error.code); const result = await shell.value.start(); if (result.ok) throw new Error("Expected failure");
       deepEqual(result.error.diagnosticRecord, runtime("start", "app.beforeStart")); deepEqual(result.error.relatedDiagnosticRecords, literals);
-      equal(target.observed.length, 9); equal((result.error.cause as { cause: unknown }).cause, bad);
+      const inaccessible = Object.getOwnPropertyDescriptor(bad, "diagnosticRecord")?.get !== undefined;
+      equal(target.observed.length, inaccessible ? 10 : 9);
+      if (inaccessible) deepEqual(target.observed.at(-1), {
+        record: { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } },
+        context: { capability: "platform-runtime", operation: "start", stage: "startup" },
+      });
+      equal((result.error.cause as { cause: unknown }).cause, bad);
     }
     const q = createInMemoryPlatformWorkerQueue(); Object.defineProperty(q, "close", { value: 42 });
     const shell = await createPlatformWorkerShell({ apps: [], deps: createPlatformTestMountDeps(), queue: q }); if (!shell.ok) throw new Error(shell.error.code);

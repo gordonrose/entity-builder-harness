@@ -1,5 +1,5 @@
 import { coreDiagnosticCatalog } from "@kanbien/core";
-import { createDiagnosticRecord, selectDiagnosticEvidence, validDiagnosticDefinition, type DiagnosticDefinition } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, requireDiagnosticRecord, diagnosticProcessingRecord, createDiagnosticRecord, selectDiagnosticEvidenceWithReport, validDiagnosticDefinition, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { platformContractDiagnosticCatalog, type PlatformDiagnosticContext, type PlatformDiagnosticReporter } from "@kanbien/platform-contracts";
 import { platformObservabilityDiagnosticCatalog } from "./configuration";
 import { reportPlatformDiagnostic } from "./diagnostics";
@@ -28,10 +28,12 @@ function reportObservation(options: PlatformObservationDiagnostics | undefined, 
     if (reporter === undefined || reporting.has(reporter)) return;
     const builtins: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions, ...platformObservabilityDiagnosticCatalog.definitions, ...platformContractDiagnosticCatalog.definitions];
     let definitions = builtins;
+    const processing: DiagnosticRecord[] = [];
     try {
       const additional = options?.definitions;
       if (additional !== undefined && Array.isArray(additional) && additional.every(validDiagnosticDefinition)) definitions = [...builtins, ...additional];
-    } catch { /* An unavailable optional selection cannot erase trusted built-ins. */ }
+      else if (additional !== undefined) processing.push(diagnosticProcessingRecord("definition-selection-failed"));
+    } catch { processing.push(diagnosticProcessingRecord("definition-selection-failed")); }
     const context = options!.context;
     // Validate/copy before any injected sink: the default reporter performs this same exact context policy.
     const fields = Object.getOwnPropertyDescriptors(context);
@@ -42,13 +44,16 @@ function reportObservation(options: PlatformObservationDiagnostics | undefined, 
     if (![copied.capability, copied.operation].every((value) => typeof value === "string" && /^[a-z][a-z0-9.-]{0,127}$/.test(value))
       || !["configuration", "startup", "runtime", "request", "readiness", "migration", "recovery", "shutdown"].includes(copied.stage)
       || (copied.correlationId !== undefined && (typeof copied.correlationId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(copied.correlationId)))) return;
-    let own: ReturnType<typeof createDiagnosticRecord> | undefined;
-    try { if (detail !== undefined) own = createDiagnosticRecord(platformObservationBoundaryDiagnostic, detail); } catch { /* Source remains independently selectable. */ }
-    const selected = selectDiagnosticEvidence(definitions, source);
+    const own = detail === undefined ? undefined : requireDiagnosticRecord(definitions, captureDiagnosticRecord(() => {
+      const result = createDiagnosticRecord(platformObservationBoundaryDiagnostic, detail);
+      return result.ok ? result.value : undefined;
+    }));
+    const selected = selectDiagnosticEvidenceWithReport(definitions, source, record => { processing.push(record); });
     reporting.add(reporter); entered = true;
-    if (own?.ok) reportPlatformDiagnostic(reporter, own.value, copied);
+    if (own !== undefined) reportPlatformDiagnostic(reporter, own, copied);
     if (selected.diagnosticRecord !== undefined) reportPlatformDiagnostic(reporter, selected.diagnosticRecord, copied);
     for (const record of selected.relatedDiagnosticRecords ?? []) reportPlatformDiagnostic(reporter, record, copied);
+    for (const record of processing) reportPlatformDiagnostic(reporter, record, copied);
   } catch { /* Optional diagnostics never replace workload behavior. */ }
   finally { if (entered && reporter !== undefined) reporting.delete(reporter); }
 }

@@ -25,6 +25,34 @@ import {
 import { validationIssue } from "../src/validation/index";
 
 equal(coreConfigDiagnosticCatalog.owner, "core.config");
+// Faults in reporting are not faults in the value/source operation itself.
+// Run actual public readers and declaration checking, not only record builders.
+const configBuilders = require("../src/config/contract/reporting/diagnostics") as typeof import("../src/config/contract/reporting/diagnostics");
+const originalPrimitive = configBuilders.coreConfigPrimitiveRecord, originalSource = configBuilders.coreConfigSourceRecord;
+for (const mode of ["throws", "missing"] as const) {
+  const broken = (): never => { if (mode === "throws") throw new Error("PRIVATE-CONFIG-CANARY"); return undefined as never; };
+  configBuilders.coreConfigPrimitiveRecord = broken;
+  configBuilders.coreConfigSourceRecord = broken;
+  try {
+    const expected = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+      detail: { reason: mode === "throws" ? "construction-threw" : "construction-rejected" } };
+    for (const result of [stringConfigValue(recordConfigSource({}), "PRIVATE"), numberConfigValue(recordConfigSource({ PORT: "bad" }), "PORT"), environmentName("Bad Name"), secretReference(" ")]) {
+      if (result.ok) throw new Error("Expected original invalid input.");
+      deepEqual(result.error.diagnosticRecord, expected);
+    }
+    for (const operation of [
+      (source: { get(): never }) => stringConfigValue(source, "PRIVATE"),
+      (source: { get(): never }) => validateConfigRequirements(source, [{ setting: "port", rule: destinationPortConstraint }]),
+    ]) {
+      const original = new Error("PRIVATE-CONFIG-CANARY"); let calls = 0;
+      throws(() => operation({ get() { calls++; throw original; } }), error => error === original);
+      equal(calls, 1); deepEqual(Object.getOwnPropertyDescriptor(original, "diagnosticRecord")?.value, expected);
+    }
+  } finally {
+    configBuilders.coreConfigPrimitiveRecord = originalPrimitive;
+    configBuilders.coreConfigSourceRecord = originalSource;
+  }
+}
 equal(coreConfigDiagnosticCatalog.definitions, coreConfigDiagnosticDefinitions, "module catalogue reuses the authoritative objects");
 equal(Object.isFrozen(coreConfigDiagnosticCatalog), true);
 deepEqual(coreConfigDiagnosticCatalog.definitions.map(({ code, version }) => [code, version]), [

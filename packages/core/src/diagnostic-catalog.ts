@@ -1,4 +1,5 @@
 import { coreConfigDiagnosticCatalog } from "./config/contract/reporting/diagnostics";
+import { diagnosticProcessingDefinition } from "./diagnostics/reporting/processing";
 import { coreSharedDiagnosticDefinitions } from "./shared/diagnostics";
 import { coreSecurityDiagnosticDefinitions } from "./security/diagnostics";
 import { coreAuthzDiagnosticDefinitions } from "./authz/diagnostics";
@@ -24,4 +25,5 @@ export const coreDiagnosticCatalog = Object.freeze({ owner: "core", definitions:
   ...coreMonitoringDiagnosticDefinitions, ...coreLoggingDiagnosticDefinitions,
   ...coreAuditDiagnosticDefinitions, ...coreEventDiagnosticDefinitions, ...coreFileDiagnosticDefinitions,
   ...coreI18nDiagnosticDefinitions, ...coreLocalizationDiagnosticDefinitions,
+  diagnosticProcessingDefinition(),
 ]) });

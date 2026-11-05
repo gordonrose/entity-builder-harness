@@ -52,6 +52,44 @@ const large = validatePlatformConfigSchemas({ source: recordConfigSource({}), sc
 if (large.ok) throw new Error("Expected large-index rejection.");
 deepEqual(large.error.diagnosticRecord, { schema: "core/diagnostic-record/v1", code: "platform-config.schema-rejected", definitionVersion: 2, detail: { schemaIndex: 65_536, reason: "missing" } });
 
+// Actual schema callers retain their precise source even if the positional
+// diagnostic cannot be constructed. This is separate from normal-reason proof.
+const builderModule = require("../../../packages/core/src/diagnostics/record") as { createDiagnosticRecord: typeof createDiagnosticRecord };
+const originalBuilder = builderModule.createDiagnosticRecord;
+for (const mode of ["throws", "rejected", "malformed"] as const) {
+  const reports: DiagnosticRecord[] = [];
+  builderModule.createDiagnosticRecord = ((definition: typeof selected, detail: never) => {
+    if (!definition.code.startsWith("platform-config.")) return originalBuilder(definition, detail);
+    if (mode === "throws") throw new Error("synthetic-private-canary");
+    if (mode === "rejected") return { ok: false, error: {} };
+    return { ok: true, value: { schema: "core/diagnostic-record/v1", code: definition.code, definitionVersion: definition.version, detail: { private: "synthetic-private-canary" } } };
+  }) as typeof createDiagnosticRecord;
+  try {
+    const failed = validatePlatformConfigSchemas({ ...input, onDiagnostic: record => reports.push(record) });
+    if (failed.ok) throw new Error("Expected original rejection.");
+    deepEqual(failed.error.diagnosticRecord, record);
+    deepEqual(failed.error.relatedDiagnosticRecords, Array.from({ length: 8 }, () => record));
+    const expected = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+      detail: { reason: mode === "throws" ? "construction-threw" : mode === "rejected" ? "construction-rejected" : "evidence-rejected" } };
+    deepEqual(reports, [expected, ...Array.from({ length: 9 }, () => record)]);
+    reports.length = 0;
+    throws(() => validatePlatformConfigSchemas({ source: input.source, schemas: [{ parse() { throw projectionFailure; } }], onDiagnostic: value => reports.push(value) }), value => value === projectionFailure);
+    deepEqual(reports, [expected]);
+    const noSource = validatePlatformConfigSchemas({ source: input.source, schemas: [{ parse: () => ({ ok: false, error: configError("CONFIG_MISSING", [issue]) }) }] });
+    if (noSource.ok) throw new Error("Expected original rejection without upstream evidence.");
+    deepEqual(noSource.error.diagnosticRecord, expected);
+  } finally { builderModule.createDiagnosticRecord = originalBuilder; }
+}
+const selectionReports: DiagnosticRecord[] = [];
+const builtinFailure = stringConfigValue(recordConfigSource({}), "PRIVATE_NAME");
+if (builtinFailure.ok) throw new Error("Expected missing input.");
+const builtinResult = validatePlatformConfigSchemas({ source: input.source, schemas: [{ parse: () => builtinFailure }],
+  get diagnosticDefinitions(): never { throw projectionFailure; }, onDiagnostic: record => selectionReports.push(record) });
+if (builtinResult.ok) throw new Error("Expected original missing-input result.");
+deepEqual(builtinResult.error.diagnosticRecord?.detail, { field: "value", reader: "string", reason: "missing" });
+deepEqual(selectionReports.at(-1)?.detail, { reason: "definition-selection-failed" });
+equal(JSON.stringify(selectionReports).includes("PRIVATE_NAME"), false);
+
 async function isolation() {
   const unhandled: unknown[] = [];
   const listener = (value: unknown) => { unhandled.push(value); };

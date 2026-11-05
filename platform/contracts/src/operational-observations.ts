@@ -1,5 +1,5 @@
 import { coreDiagnosticCatalog } from "@kanbien/core";
-import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, deliverDiagnosticRecord, diagnosticProcessingRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, type DiagnosticDefinition, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { platformContractDiagnosticCatalog, platformOperationalBoundaryDiagnosticDefinition, platformOperationalEventDiagnosticDefinition,
   platformOperationalBoundaryDiagnosticRecord, type PlatformOperationalBoundaryDiagnosticDetail } from "./registration-diagnostics";
 
@@ -12,28 +12,23 @@ export interface PlatformOperationalDiagnosticOptions {
   readonly diagnosticDefinitions?: readonly DiagnosticDefinition[];
   readonly onDiagnostic?: (record: DiagnosticRecord, context: PlatformOperationalDiagnosticContext) => unknown;
 }
-const nativeThen = Promise.prototype.then;
-function isolate(value: unknown): void {
-  if (value === undefined) return;
-  try { Reflect.apply(nativeThen, value, [undefined, () => undefined]); }
-  catch { try { Reflect.apply(nativeThen, Promise.resolve(value), [undefined, () => undefined]); } catch { /* Optional sink. */ } }
-}
 /** Independent own/source9 delivery, never a mutation of the thrown value. */
-export function observePlatformOperationalDiagnostic(options: PlatformOperationalDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown): void {
-  try {
-    const checked = selectDiagnosticEvidence([platformOperationalBoundaryDiagnosticDefinition, platformOperationalEventDiagnosticDefinition], { diagnosticRecord: own }).diagnosticRecord;
-    if (checked === undefined) return;
+export function observePlatformOperationalDiagnostic(options: PlatformOperationalDiagnosticOptions | undefined, own: DiagnosticRecord, cause?: unknown,
+  fallback?: Pick<PlatformOperationalDiagnosticContext, "operation" | "phase">): void {
+    const checked = requireDiagnosticRecord([platformOperationalBoundaryDiagnosticDefinition, platformOperationalEventDiagnosticDefinition], own);
+    const detail = checked.code === "core.diagnostics.processing-failed" ? fallback : checked.detail as Pick<PlatformOperationalDiagnosticContext, "operation" | "phase">;
+    if (detail === undefined) return;
+    const notices: DiagnosticRecord[] = [];
     let definitions: readonly DiagnosticDefinition[] = [...coreDiagnosticCatalog.definitions, ...platformContractDiagnosticCatalog.definitions];
-    try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; } catch { /* Trusted built-ins remain available. */ }
-    const selected = selectDiagnosticEvidence(definitions, cause);
-    const detail = checked.detail as Pick<PlatformOperationalDiagnosticContext, "operation" | "phase">;
+    try { definitions = [...definitions, ...(options?.diagnosticDefinitions ?? [])]; } catch { notices.push(diagnosticProcessingRecord("definition-selection-failed")); }
+    const selected = selectDiagnosticEvidenceWithReport(definitions, cause, record => notices.push(record));
     const deliver = (record: DiagnosticRecord, evidence: PlatformOperationalDiagnosticContext["evidence"]): void => {
-      try { isolate(options?.onDiagnostic?.(record, Object.freeze({ operation: detail.operation, phase: detail.phase, evidence }))); } catch { /* Keep original result and identity. */ }
+      deliverDiagnosticRecord(record, value => options?.onDiagnostic?.(value, Object.freeze({ operation: detail.operation, phase: detail.phase, evidence })));
     };
     deliver(checked, "owned");
     if (selected.diagnosticRecord !== undefined) deliver(selected.diagnosticRecord, "source");
     for (const record of selected.relatedDiagnosticRecords ?? []) deliver(record, "source");
-  } catch { /* Observation is optional. */ }
+    for (const record of notices) deliver(record, "owned");
 }
 export class PlatformOperationalObservation {
   private phase: PlatformOperationalBoundaryDiagnosticDetail["phase"];
@@ -53,7 +48,8 @@ export class PlatformOperationalObservation {
   }
   run<T>(action: () => T): T {
     try { return action(); } catch (cause) {
-      observePlatformOperationalDiagnostic(this.options, platformOperationalBoundaryDiagnosticRecord({ operation: this.operation, phase: this.phase, field: this.field, effect: this.effect }), cause);
+      const detail = { operation: this.operation, phase: this.phase, field: this.field, effect: this.effect };
+      observePlatformOperationalDiagnostic(this.options, captureDiagnosticRecord(() => platformOperationalBoundaryDiagnosticRecord(detail)), cause, detail);
       throw cause;
     }
   }

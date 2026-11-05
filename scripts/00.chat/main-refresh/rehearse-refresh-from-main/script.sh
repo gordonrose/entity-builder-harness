@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -54,12 +54,41 @@ case "$BASE_BRANCH" in
     ;;
 esac
 
-if ! git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" >/dev/null; then
-  echo "ERROR: base ref does not resolve to a commit: ${BASE_BRANCH}" >&2
+if git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" >/dev/null 2>&1; then
+  :
+else
+  status=$?
+  if [ "$status" -eq 1 ]; then
+    echo "ERROR: refresh-base-unresolved" >&2
+  else
+    echo "ERROR: refresh-base-read-failed" >&2
+  fi
   exit 1
 fi
 
-CLASSIFICATION="$(bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh "$BASE_BRANCH" | sed -n 's/^classification=//p' | head -n 1)"
+if READINESS="$(bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh "$BASE_BRANCH" 2>/dev/null)"; then
+  READINESS_STATUS=0
+else
+  READINESS_STATUS=$?
+fi
+CLASSIFICATION=""
+READINESS_FAILURE="refresh-readiness-check-failed"
+while IFS= read -r line; do
+  case "$line" in
+    classification=clean|classification=current-session-bookkeeping|classification=repo-work|classification=unsupported-dirty)
+      CLASSIFICATION="${line#classification=}" ;;
+    reason=refresh-base-unresolved|reason=refresh-base-read-failed|reason=refresh-branch-read-failed|reason=refresh-session-lookup-failed|reason=refresh-workspace-create-failed|reason=refresh-status-read-failed|reason=refresh-dirty-paths-read-failed|reason=refresh-staged-paths-read-failed|reason=refresh-incoming-paths-read-failed|reason=refresh-overlap-read-failed)
+      READINESS_FAILURE="${line#reason=}" ;;
+  esac
+done <<< "$READINESS"
+if [ "$READINESS_STATUS" -ne 0 ]; then
+  echo "ERROR: $READINESS_FAILURE" >&2
+  exit 1
+fi
+if [ -z "$CLASSIFICATION" ]; then
+  echo "ERROR: refresh-readiness-result-invalid" >&2
+  exit 1
+fi
 
 if [ "$CLASSIFICATION" != "clean" ]; then
   echo "ERROR: preflight requires a clean chat worktree." >&2

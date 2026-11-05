@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -70,6 +70,33 @@ printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts
 git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' commit --quiet -m 'base'
 
+export START_REAL_GIT="$(command -v git)"
+mkdir -p "$TMP_ROOT/fault-bin"
+cat > "$TMP_ROOT/fault-bin/git" <<'SH'
+#!/usr/bin/env bash
+case "$START_FAULT:$*" in
+  base-reference:'show-ref --verify --quiet refs/heads/main'|\
+  displayed-status:'status --short')
+    echo START_NATIVE_CANARY >&2; exit 99 ;;
+  branch-create:'branch chat/'*|worktree-create:'worktree add '*|log-stage:*' add commitLogs/'*)
+    echo START_NATIVE_CANARY >&2; exit 77 ;;
+esac
+exec "$START_REAL_GIT" "$@"
+SH
+chmod +x "$TMP_ROOT/fault-bin/git"
+for fault in base-reference displayed-status branch-create worktree-create log-stage; do
+  status=0
+  (cd "$REPO"; START_FAULT="$fault" PATH="$TMP_ROOT/fault-bin:$PATH" \
+    AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/fault-worktrees" CHAT_CLEANUP_EMPTY_BRANCHES=skip \
+    CHAT_COPY_PROMPT=skip CHAT_OPEN_WORKTREE_WINDOW=skip \
+    bash scripts/00.chat/startup/start-chat-session/script.sh "fault $fault") > "$TMP_ROOT/fault.out" 2>&1 || status=$?
+  expected=77
+  case "$fault" in base-reference|displayed-status) expected=2 ;; esac
+  [ "$status" -eq "$expected" ] || fail "$fault status $status"
+  grep -q "stage=$fault;" "$TMP_ROOT/fault.out" || fail "$fault lost stage"
+  if grep -q START_NATIVE_CANARY "$TMP_ROOT/fault.out"; then fail "$fault leaked"; fi
+done
+
 AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=skip \
@@ -90,7 +117,7 @@ if [ "$root_branch" != "main" ]; then
   fail "root branch changed to $root_branch"
 fi
 
-chat_branch="$(git -C "$REPO" branch --format='%(refname:short)' | grep '^chat/' | head -n 1)"
+chat_branch="$(git -C "$REPO" branch --format='%(refname:short)' --list 'chat/*test-chat-worktree-session')"
 if [ -z "$chat_branch" ]; then
   fail "chat branch was not created"
 fi
@@ -181,6 +208,7 @@ mkdir -p "$FAKE_BIN"
 cat > "$FAKE_BIN/clip.exe" <<'EOF'
 #!/usr/bin/env bash
 cat >/dev/null
+echo START_CLIPBOARD_CANARY >&2
 exit 1
 EOF
 chmod +x "$FAKE_BIN/clip.exe"
@@ -196,6 +224,9 @@ PATH="$FAKE_BIN:$PATH" \
 
 if ! grep -q 'WARNING: Clipboard copy via clip.exe failed; printing prompt instead.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
   fail "clipboard failure did not warn before falling back"
+fi
+if grep -q START_CLIPBOARD_CANARY "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "clipboard failure leaked native output"
 fi
 
 if ! grep -q 'Paste this into Codex / Claude / Mistral:' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then

@@ -26,7 +26,7 @@ import {
   type CoreQueueDiagnosticContext,
   type QueueMessage,
 } from "../src/queues/index";
-import { diagnosticDescriptor, createDiagnosticRecord, defineDiagnostic, type DiagnosticRecord } from "../src/diagnostics/index";
+import { diagnosticProcessingRecord, diagnosticDescriptor, createDiagnosticRecord, defineDiagnostic, type DiagnosticRecord } from "../src/diagnostics/index";
 import { spanId, traceContext, traceId } from "../src/monitoring/index";
 import { causationId, correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
@@ -338,6 +338,26 @@ async function main(): Promise<void> {
   observeCoreQueueDiagnostic(Object.defineProperty({}, "onDiagnostic", { get() { throw raw; } }), own, sourceError);
   deepEqual(selectCoreQueueDiagnosticEvidence(Object.defineProperty({}, "diagnosticDefinitions", { get() { throw raw; } }), sourceError), { diagnosticRecord: source[0], relatedDiagnosticRecords: source.slice(1) });
   const reduction = coreQueueReceiveReductionDiagnosticRecord({ operation: "receive", issues: [{ field: "receive-count", reason: "not-positive", reduction: "count-one" }], truncated: false, effect: "reduction-observed" });
+  const diagnosticModule = require("../src/queues/diagnostics") as Record<string, unknown>;
+  const originalBuilder = Object.getOwnPropertyDescriptor(diagnosticModule, "coreQueueValidationDiagnosticRecord")!;
+  for (const failure of ["throw", "undefined"] as const) {
+    try {
+      Object.defineProperty(diagnosticModule, "coreQueueValidationDiagnosticRecord", { ...originalBuilder, value: () => { if (failure === "throw") throw raw; return undefined; } });
+      const result = queueMessageVersion(0);
+      equal(result.ok, false);
+      if (result.ok) throw new Error("Expected original queue validation failure");
+      equal(result.error.code, "QUEUE_INVALID_VERSION");
+      deepEqual(result.error.diagnosticRecord, diagnosticProcessingRecord(failure === "throw" ? "construction-threw" : "construction-rejected"));
+    } finally { Object.defineProperty(diagnosticModule, "coreQueueValidationDiagnosticRecord", originalBuilder); }
+  }
+  seen.length = 0; contexts.length = 0;
+  observeCoreQueueDiagnostic(owner, diagnosticProcessingRecord("construction-threw"), sourceError, { operation: "send", boundary: "invocation" });
+  deepEqual(seen, [diagnosticProcessingRecord("construction-threw"), ...source]);
+  contexts.forEach(context => deepEqual(context, { operation: "send", boundary: "invocation" }));
+  seen.length = 0;
+  observeCoreQueueDiagnostic(owner, own, Object.defineProperty({ relatedDiagnosticRecords: source.slice(1) }, "diagnosticRecord", { get() { accessorReads++; throw raw; } }));
+  deepEqual(seen, [own, ...source.slice(1), diagnosticProcessingRecord("evidence-inaccessible")]);
+  equal(accessorReads, 0);
   equal(reduction.code, "core.queue.receive-reduced"); equal(JSON.stringify([...seen, reduction]).includes("PRIVATE_QUEUE_CANARY"), false);
   await Promise.resolve();
 }

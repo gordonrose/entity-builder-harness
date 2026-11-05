@@ -1,5 +1,5 @@
 import { coreDiagnosticCatalog } from "../diagnostic-catalog";
-import { selectDiagnosticEvidence, type DiagnosticDefinition, type DiagnosticRecord } from "../diagnostics/index";
+import { captureDiagnosticRecord, deliverDiagnosticRecord, diagnosticProcessingRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, type DiagnosticDefinition, type DiagnosticEvidence, type DiagnosticRecord } from "../diagnostics/index";
 import { attachCoreDiagnosticRecord, err, ok } from "../shared/index";
 import type { ConcurrencyToken } from "./concurrency";
 import { corePersistenceInMemoryBoundaryRecord, corePersistenceValidationRecord,
@@ -158,28 +158,22 @@ export function inMemoryUnitOfWork(options: InMemoryPersistenceDiagnosticOptions
 
 function selectedDefinitions(options: InMemoryPersistenceDiagnosticOptions) {
   try { return [...coreDiagnosticCatalog.definitions, ...(options.diagnosticDefinitions ?? [])]; }
-  catch { return coreDiagnosticCatalog.definitions; }
+  catch { observe(options, diagnosticProcessingRecord("definition-selection-failed")); return coreDiagnosticCatalog.definitions; }
 }
-const intrinsicPromiseThen = Promise.prototype.then;
 function observe(options: InMemoryPersistenceDiagnosticOptions, record: DiagnosticRecord): void {
-  try {
-    const pending = options.onDiagnostic?.(record);
-    if (pending === undefined) return;
-    const ignore = (): void => undefined;
-    try { Reflect.apply(intrinsicPromiseThen, pending, [undefined, ignore]); }
-    catch { Reflect.apply(intrinsicPromiseThen, Promise.resolve(pending), [undefined, ignore]); }
-  } catch { /* Diagnostics cannot replace a callback failure or wait for a sink. */ }
+  deliverDiagnosticRecord(record, value => options.onDiagnostic?.(value));
 }
 function boundaryEvidence(options: InMemoryPersistenceDiagnosticOptions, detail: CorePersistenceInMemoryBoundaryDetail, error: unknown,
-  definitions: readonly DiagnosticDefinition[] = selectedDefinitions(options)): ReturnType<typeof selectDiagnosticEvidence> {
-  const source = selectDiagnosticEvidence(definitions, error);
-  let own: DiagnosticRecord | undefined;
-  try { own = corePersistenceInMemoryBoundaryRecord(detail); } catch { /* Preserve the original throw. */ }
-  if (own !== undefined) observe(options, own);
+  definitions: readonly DiagnosticDefinition[] = selectedDefinitions(options)): DiagnosticEvidence {
+  const notices: DiagnosticRecord[] = [];
+  const source = selectDiagnosticEvidenceWithReport(definitions, error, record => notices.push(record));
+  const own = requireDiagnosticRecord(coreDiagnosticCatalog.definitions, captureDiagnosticRecord(() => corePersistenceInMemoryBoundaryRecord(detail)));
+  observe(options, own);
   if (source.diagnosticRecord !== undefined) observe(options, source.diagnosticRecord);
   for (const companion of source.relatedDiagnosticRecords ?? []) observe(options, companion);
-  if (own !== undefined) attachCoreDiagnosticRecord(error, own);
-  return { ...(source.diagnosticRecord === undefined ? own === undefined ? {} : { diagnosticRecord: own } : { diagnosticRecord: source.diagnosticRecord }),
+  for (const notice of notices) observe(options, notice);
+  attachCoreDiagnosticRecord(error, own);
+  return { diagnosticRecord: source.diagnosticRecord ?? own,
     ...(source.relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords: source.relatedDiagnosticRecords }) };
 }
 

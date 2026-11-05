@@ -1,6 +1,6 @@
 import type { Result } from "@kanbien/core/shared";
-import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
-import { platformOperationalEventDiagnosticRecord, type PlatformOperationalEventDiagnosticDetail } from "./registration-diagnostics";
+import { captureDiagnosticRecord, requireDiagnosticRecord, type DiagnosticRecord } from "@kanbien/core/diagnostics";
+import { platformOperationalEventDiagnosticDefinition, platformOperationalEventDiagnosticRecord, type PlatformOperationalEventDiagnosticDetail } from "./registration-diagnostics";
 import { observePlatformOperationalDiagnostic, PlatformOperationalObservation, type PlatformOperationalDiagnosticOptions } from "./operational-observations";
 
 /**
@@ -128,8 +128,8 @@ function keyTraversalSelection(keys: string[], observation: PlatformOperationalO
 }
 
 function invalid(issue: EventIssue, diagnostics?: PlatformOperationalDiagnosticOptions): Result<never, PlatformOperationalEventError> {
-  const diagnosticRecord = platformOperationalEventDiagnosticRecord(issue);
-  observePlatformOperationalDiagnostic(diagnostics, diagnosticRecord);
+  const diagnosticRecord = requireDiagnosticRecord([platformOperationalEventDiagnosticDefinition], captureDiagnosticRecord(() => platformOperationalEventDiagnosticRecord(issue)));
+  observePlatformOperationalDiagnostic(diagnostics, diagnosticRecord, undefined, { operation: "readiness-event", phase: "validation" });
   return { ok: false, error: { code: "PLATFORM_OPERATIONAL_EVENT_INVALID", defaultMessage: "Operational event does not match the closed readiness observation envelope.", diagnosticRecord } };
 }
 

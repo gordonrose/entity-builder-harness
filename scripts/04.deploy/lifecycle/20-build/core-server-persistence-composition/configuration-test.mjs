@@ -5,7 +5,7 @@
 //   version: 6
 //   status: draft
 //   created_on: "2026-10-24"
-//   updated_on: "2026-11-04"
+//   updated_on: "2026-11-05"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -65,6 +65,7 @@ const valid = {
 destinationPortConstraintRegression();
 configurationReasonSelectionRegression();
 await startupDiagnosticContextRegression();
+await startupProcessingFailureRegression();
 await configurationResponsibilityRegression();
 await implementationSelectionRegression();
 
@@ -225,6 +226,36 @@ async function startupDiagnosticContextRegression() {
   const evidence = config.persistenceStartupDiagnosticBinding.select(missing.error.diagnostic, { capability: 'wrong', operation: 'wrong', stage: 'runtime' });
   assert.deepEqual(evidence.context, { capability: 'persistence', operation: 'startup', stage: 'startup' }, 'caller cannot override fixed startup attribution');
   assert.equal(config.persistenceStartupDiagnosticBinding.select({ ...missing.error.diagnostic, detail: { issues: [{ setting: 'unregistered.setting', reason: 'missing' }] } }), undefined);
+}
+
+async function startupProcessingFailureRegression() {
+  const reporting = require(join(compiled, "packages/core/src/config/domain/reporting/diagnostic-reporting.js"));
+  const original = reporting.configurationDiagnostic;
+  const previousError = console.error, previousExit = process.exitCode;
+  const attempts = globalThis.poolAttempts;
+  try {
+    for (const mode of ["throws", "rejected", "malformed"]) {
+      reporting.configurationDiagnostic = definition => {
+        if (mode === "throws") throw new Error("PRIVATE-BUILDER-CANARY");
+        if (mode === "rejected") return { ok: false, error: { code: "DIAGNOSTIC_RECORD_INVALID" } };
+        return { ok: true, value: { schema: "core/diagnostic-record/v1", code: definition.code, definitionVersion: 1, detail: { private: "PRIVATE-BUILDER-CANARY" } } };
+      };
+      const output = [];
+      console.error = line => output.push(JSON.parse(line));
+      await server.runKanbienCoreServerPersistenceMain({ ...valid, PERSISTENCE_POSTGRES_PORT: undefined });
+      assert.equal(process.exitCode, 1);
+      assert.equal(globalThis.poolAttempts, attempts, "diagnostic failure cannot start or retry the dependent database work");
+      assert.equal(output.length, 1);
+      assert.deepEqual(output[0].diagnostic, { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+        detail: { reason: mode === "throws" ? "construction-threw" : mode === "rejected" ? "construction-rejected" : "evidence-rejected" } });
+      assert.deepEqual(output[0].diagnostic_context, { capability: "persistence", operation: "startup", stage: "startup" });
+      assert.equal(JSON.stringify(output).includes("PRIVATE-BUILDER-CANARY"), false);
+    }
+  } finally {
+    reporting.configurationDiagnostic = original;
+    console.error = previousError;
+    process.exitCode = previousExit;
+  }
 }
 
 async function privateTaskDiagnosticRegression() {

@@ -437,7 +437,8 @@ async function telemetryObservations(): Promise<void> {
     const malformedSource = Object.defineProperty({}, "diagnosticRecord", { get() { accessorReads++; throw "synthetic-private-accessor-canary"; } });
     const malformed: DiagnosticRecord[] = [];
     recordPostgreSqlPersistenceTelemetry(() => { throw malformedSource; }, input, { onDiagnostic: (record) => malformed.push(record) });
-    deepEqual(malformed, [expected("callback")]); equal(accessorReads, 0);
+    deepEqual(malformed, [expected("callback"), { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+      detail: { reason: "evidence-inaccessible" } }]); equal(accessorReads, 0);
     for (const rejectedObserver of [() => { throw safeSource; }, () => Promise.reject(safeSource),
       () => Object.defineProperty(Promise.reject(safeSource), "then", { get() { shadowReads++; throw safeSource; } }),
       () => ({ then() { throw safeSource; } })]) {

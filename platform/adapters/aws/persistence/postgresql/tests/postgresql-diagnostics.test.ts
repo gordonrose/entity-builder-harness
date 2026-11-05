@@ -4,7 +4,7 @@
 //   version: 1
 //   status: active
 //   created_on: "2026-10-26"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-05"
 //   layer: 03.product
 //   domain: persistence.diagnostics
 //   disciplines: [security, sre]
@@ -67,6 +67,24 @@ async function failedConnection(port: number, ssl: false | { ca?: string; server
 }
 
 async function main(): Promise<void> {
+  const builders = require("../../../../../persistence/src/diagnostics") as Record<string, unknown>;
+  const descriptor = Object.getOwnPropertyDescriptor(builders, "persistenceObservedDiagnosticRecord")!;
+  for (const mode of ["throws", "undefined", "malformed"] as const) {
+    Object.defineProperty(builders, "persistenceObservedDiagnosticRecord", { ...descriptor, value: () => {
+      if (mode === "throws") throw new Error(canary);
+      return mode === "undefined" ? undefined : { code: canary };
+    } });
+    try {
+      const seen: unknown[] = [];
+      const result = postgreSqlPersistenceOperationError("readiness", { code: "28P01", message: canary }, { onDiagnostic(record) { seen.push(record); } });
+      const processing = { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1,
+        detail: { reason: mode === "throws" ? "construction-threw" : mode === "malformed" ? "evidence-rejected" : "construction-rejected" } };
+      equal(result.code, "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED");
+      equal(result.diagnostic?.facts?.["classification"], "authentication_rejected");
+      deepEqual(result.diagnosticRecord, processing); deepEqual(seen, [processing]);
+      equal(JSON.stringify(result).includes(canary), false);
+    } finally { Object.defineProperty(builders, "persistenceObservedDiagnosticRecord", descriptor); }
+  }
   for (const [code, reason] of [["ERR_TLS_CERT_ALTNAME_INVALID", "hostname-mismatch"], ["CERT_HAS_EXPIRED", "expired"], ["CERT_NOT_YET_VALID", "not-yet-valid"],
     ["SELF_SIGNED_CERT_IN_CHAIN", "untrusted-chain"], ["DEPTH_ZERO_SELF_SIGNED_CERT", "untrusted-chain"], ["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "untrusted-chain"], ["UNABLE_TO_GET_ISSUER_CERT_LOCALLY", "untrusted-chain"]] as const) {
     const error = postgreSqlPersistenceOperationError("readiness", { code, message: canary });

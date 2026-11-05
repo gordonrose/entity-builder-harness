@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-04"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: worktree
 #   disciplines:
@@ -234,9 +234,157 @@ printf 'not a directory\n' > "$blocked_root"
 if AGENTIC_CHAT_WORKTREE_ROOT="$blocked_root" HOME="$TMP_ROOT/unwritable-home" CHAT_CLEANUP_EMPTY_BRANCHES=skip CHAT_COPY_PROMPT=skip CHAT_OPEN_WORKTREE_WINDOW=skip bash -c 'cd "$1" && bash scripts/00.chat/startup/start-chat-session/script.sh "unwritable destination"' sh "$repo" >"$TMP_ROOT/unwritable.out" 2>&1; then
   fail "startup accepted an unusable persistent destination"
 fi
-grep -q 'cannot create persistent chat worktree root' "$TMP_ROOT/unwritable.out" || fail "unwritable destination failure was unclear"
+grep -Fqx 'ERROR: startup-operation-failed; stage=root-create; effect=unknown; inspect before retry.' "$TMP_ROOT/unwritable.out" || fail "unwritable destination lost its bounded stage and effect"
+if grep -Fq "$blocked_root" "$TMP_ROOT/unwritable.out"; then
+  fail "unwritable destination exposed native path text"
+fi
 if [ -n "$(git -C "$repo" branch --format='%(refname:short)' | grep '^chat/' || true)" ]; then
   fail "startup created a chat branch after persistent destination preflight failed"
 fi
+
+REAL_GIT="$(command -v git)"
+REAL_AWK="$(command -v awk)"
+export REAL_GIT REAL_AWK
+mkdir -p "$TMP_ROOT/fault-bin"
+cat > "$TMP_ROOT/fault-bin/git" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+original=("$@")
+if [ "${1:-}" = -C ]; then shift 2; fi
+case "${FAULT:-}:$1:${2:-}" in
+  root:rev-parse:--show-toplevel|branch:branch:--show-current|reference:show-ref:--verify)
+    echo "private-registration-canary@example.invalid" >&2
+    exit 128 ;;
+esac
+set -- "${original[@]}"
+case "${FAULT:-}:$1:${2:-}" in
+  dirty-status:status:*|dirty-unstaged:diff:--name-only|dirty-staged:diff:--cached|dirty-untracked:ls-files:*)
+    echo "private-registration-canary@example.invalid" >&2
+    exit 128 ;;
+esac
+if [ "${3:-}" = worktree ] && [ "${4:-}" = list ]; then
+  count="$(<"$READ_COUNT")"
+  count=$((count + 1))
+  printf '%s\n' "$count" > "$READ_COUNT"
+  if [ "$count" -eq "$FAIL_READ" ]; then
+    echo "private-registration-canary@example.invalid" >&2
+    exit 128
+  fi
+fi
+if [ "${3:-}" = worktree ] && [ "${4:-}" = add ]; then
+  echo mutation-attempted > "$MUTATION_MARKER"
+  echo "private-registration-canary@example.invalid" >&2
+  exit 99
+fi
+exec "$REAL_GIT" "$@"
+EOF
+chmod +x "$TMP_ROOT/fault-bin/git"
+cat > "$TMP_ROOT/fault-bin/awk" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+if [ "${FAULT:-}" = metadata ] && [ "${2:-}" = key=branch ]; then
+  "$REAL_AWK" "$@"
+  echo "private-registration-canary@example.invalid" >&2
+  exit 2
+fi
+exec "$REAL_AWK" "$@"
+EOF
+cat > "$TMP_ROOT/fault-bin/code" <<'EOF'
+#!/usr/bin/env bash
+echo opened > "$WINDOW_MARKER"
+echo "private-registration-canary@example.invalid" >&2
+exit 23
+EOF
+chmod +x "$TMP_ROOT/fault-bin/awk" "$TMP_ROOT/fault-bin/code"
+for failed_read in 1 3; do
+  printf '0\n' > "$TMP_ROOT/read-count"
+  if fault_output="$(PATH="$TMP_ROOT/fault-bin:$PATH" READ_COUNT="$TMP_ROOT/read-count" FAIL_READ="$failed_read" MUTATION_MARKER="$TMP_ROOT/mutation" \
+    bash -c 'cd "$1" && bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh "$2"' sh "$TMP_ROOT/legacy/repo" "$legacy_log" 2>&1)"; then
+    fail "ensure accepted failed worktree enumeration $failed_read"
+  fi
+  [[ "$fault_output" == *worktree-registration-read-failed* ]] || fail "worktree read failure reason lost"
+  [[ "$fault_output" != *private-registration-canary* ]] || fail "worktree native output leaked"
+  [ ! -e "$TMP_ROOT/mutation" ] || fail "worktree read failure permitted creation"
+done
+
+# True absence remains different from a failed enumeration.
+if absence_output="$(bash -c 'source "$1"; chat_worktree_registered_path_for_branch "$2" chat/nonexistent' sh \
+  "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$TMP_ROOT/legacy/repo" 2>&1)"; then
+  fail "unregistered branch unexpectedly found"
+else
+  [ "$?" -eq 1 ] || fail "honest absence no longer returns 1"
+fi
+[ -z "$absence_output" ] || fail "honest absence emitted an error"
+
+for stage in status unstaged staged untracked; do
+  if fault_output="$(cd "$legacy_worktree" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="dirty-$stage" \
+    bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping 2>&1)"; then
+    fail "failed $stage observation reported a clean worktree"
+  else
+    [ "$?" -eq 2 ] || fail "failed $stage observation lost its unavailable exit status"
+  fi
+  [[ "$fault_output" == *"worktree-$stage-read-failed"* ]] || fail "$stage read reason lost"
+  [[ "$fault_output" != *private-registration-canary* ]] || fail "native $stage failure leaked"
+  [[ "$fault_output" != *clean* && "$fault_output" != *bookkeeping-only* ]] || fail "failed $stage read became an accepted state"
+done
+
+for capability in check-write-location ensure-chat-worktree open-window; do
+  for stage in root branch metadata; do
+    # ensure reads the current branch only after validating its metadata;
+    # all of these faults precede creation or editor invocation.
+    printf '0\n' > "$TMP_ROOT/read-count"
+    args=()
+    [ "$capability" != ensure-chat-worktree ] || args=("$legacy_log")
+    if fault_output="$(cd "$legacy_worktree" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT="$stage" \
+      READ_COUNT="$TMP_ROOT/read-count" FAIL_READ=0 MUTATION_MARKER="$TMP_ROOT/mutation" \
+      WINDOW_MARKER="$TMP_ROOT/window" bash "scripts/00.chat/worktree/$capability/script.sh" "${args[@]}" 2>&1)"; then
+      fail "$capability accepted failed $stage read"
+    else
+      [ "$?" -eq 2 ] || fail "$capability did not distinguish an unavailable $stage observation"
+    fi
+    [[ "$fault_output" == *read-failed* ]] || fail "$capability lost $stage read failure"
+    [[ "$fault_output" != *private-registration-canary* ]] || fail "$capability leaked native $stage text"
+    [[ "$fault_output" != *does\ not\ match* && "$fault_output" != *not\ a\ chat\ branch* ]] || fail "$capability misdiagnosed failed $stage read"
+    [ ! -e "$TMP_ROOT/mutation" ] || fail "read failure permitted creation"
+    [ ! -e "$TMP_ROOT/window" ] || fail "read failure permitted window launch"
+  done
+done
+
+if fault_output="$(cd "$legacy_worktree" && PATH="$TMP_ROOT/fault-bin:$PATH" FAULT=reference \
+  READ_COUNT="$TMP_ROOT/read-count" FAIL_READ=0 \
+  bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh "$legacy_log" 2>&1)"; then
+  fail "failed reference read was accepted"
+else
+  [ "$?" -eq 2 ] || fail "reference failure became branch absence"
+fi
+[[ "$fault_output" == *worktree-branch-reference-read-failed* && "$fault_output" != *private-registration-canary* ]] || fail "reference failure lost safe reason"
+
+# Window launch is deliberately optional: failure is a safe warning, not success.
+window_output="$(cd "$legacy_worktree" && PATH="$TMP_ROOT/fault-bin:$PATH" WINDOW_MARKER="$TMP_ROOT/window" \
+  bash scripts/00.chat/worktree/open-window/script.sh 2>&1)"
+[[ "$window_output" == *outcome\ is\ unconfirmed* && "$window_output" != *private-registration-canary* && "$window_output" != *Opened* ]] || fail "optional launch failure misreported"
+[ -f "$TMP_ROOT/window" ] || fail "editor double was not invoked"
+
+repo="$TMP_ROOT/create-failure/repo"
+init_repo "$repo"
+branch="chat/2026-11-05-create-failure"
+git -C "$repo" branch "$branch"
+planned="$(AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/create-failure-worktrees" bash -c \
+  'source "$1"; chat_worktree_path_for_branch "$2" "$3"' sh \
+  "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$repo" "$branch")"
+creation_log="$repo/session.md"
+printf '<!-- agentic-session\nbranch: %s\nworktree: %s\n-->\n' "$branch" "$planned" > "$creation_log"
+printf '0\n' > "$TMP_ROOT/read-count"
+if creation_output="$(cd "$repo" && AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/create-failure-worktrees" \
+  PATH="$TMP_ROOT/fault-bin:$PATH" READ_COUNT="$TMP_ROOT/read-count" FAIL_READ=0 \
+  MUTATION_MARKER="$TMP_ROOT/mutation" bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh "$creation_log" 2>&1)"; then
+  fail "failed creation reported success"
+else
+  [ "$?" -eq 99 ] || fail "creation failure lost original exit status"
+fi
+[[ "$creation_output" == *worktree-creation-failed* && "$creation_output" == *effect=unknown* \
+  && "$creation_output" != *private-registration-canary* ]] || fail "creation failure lost safe effect/phase"
+[ -f "$TMP_ROOT/mutation" ] || fail "creation double was not exercised"
+[ ! -d "$planned" ] || fail "creation fault fixture changed the intended target"
 
 echo "persistent chat worktree smoke test passed."

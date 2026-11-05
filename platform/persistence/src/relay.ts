@@ -16,7 +16,7 @@ import {
 } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
 import { validatePersistenceLeaseDuration, persistenceRelayConfigurationError } from "./leasing/index";
-import { observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, persistenceRelayBoundaryDiagnosticRecord,
+import { capturePlatformPersistenceDiagnostic, observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, persistenceRelayBoundaryDiagnosticRecord,
   resolvePlatformPersistenceDiagnosticOptions, selectPlatformPersistenceDiagnosticEvidence,
   type PersistenceRelayBoundaryDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 import type { DiagnosticDefinition, DiagnosticRecord } from "@kanbien/core/diagnostics";
@@ -265,8 +265,8 @@ export function platformOutboxQueueMessage(
 }
 
 function relayBoundaryRecord(boundary: PersistenceRelayBoundaryDetail["boundary"], effect: PersistenceRelayBoundaryDetail["effect"],
-  reason: PersistenceRelayBoundaryDetail["reason"], operation: PersistenceRelayBoundaryDetail["operation"] = "run-once"): DiagnosticRecord | undefined {
-  try { return persistenceRelayBoundaryDiagnosticRecord({ operation, boundary, reason, effect }); } catch { return undefined; }
+  reason: PersistenceRelayBoundaryDetail["reason"], operation: PersistenceRelayBoundaryDetail["operation"] = "run-once"): DiagnosticRecord {
+  return capturePlatformPersistenceDiagnostic(() => persistenceRelayBoundaryDiagnosticRecord({ operation, boundary, reason, effect }));
 }
 function relayDiagnostics(options: PlatformOutboxRelayOptions): PlatformPersistenceDiagnosticOptions {
   return resolvePlatformPersistenceDiagnosticOptions(undefined, {
@@ -300,7 +300,7 @@ function invalidRelayState(
       code: "PLATFORM_PERSISTENCE_OUTBOX_NOT_LEASED",
       defaultMessage,
       messageKey: "platform.persistence.relay.outbox.not_leased",
-      diagnosticRecord: persistenceLocalRejectionDiagnosticRecord({ operation: "claim_outbox", field: "lease", condition: "absent", phase: "state-check", effect: "unknown" }),
+      diagnosticRecord: capturePlatformPersistenceDiagnostic(() => persistenceLocalRejectionDiagnosticRecord({ operation: "claim_outbox", field: "lease", condition: "absent", phase: "state-check", effect: "unknown" })),
     }),
   };
 }

@@ -150,7 +150,8 @@ async function main(): Promise<void> {
   const accessor = Object.defineProperty({}, "diagnosticRecord", { get() { diagnosticReads++; throw canary; } });
   observed.length = 0;
   sameThrow(() => principal(Object.defineProperty({ ...base }, "subject", { get() { throw accessor; } }), diagnostics), accessor);
-  equal(diagnosticReads, 0); equal(observed.length, 1);
+  equal(diagnosticReads, 0); equal(observed.length, 2);
+  deepEqual(observed[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } });
   for (const badSource of [{ diagnosticRecord: sources[0] }, { diagnosticRecord: { ...sources[0], detail: { ordinal: canary } } }]) {
     observed.length = 0;
     sameThrow(() => principal(Object.defineProperty({ ...base }, "subject", { get() { throw badSource; } }), diagnostics), badSource);

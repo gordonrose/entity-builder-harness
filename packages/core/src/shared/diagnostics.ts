@@ -23,12 +23,19 @@ export const coreSharedDiagnosticDefinitions = Object.freeze([coreDateDiagnostic
 
 /** Never replace an existing record or change a thrown value to make it writable. */
 export function attachCoreDiagnosticRecord<T>(error: T, record: DiagnosticRecord): T {
-  if ((typeof error === "object" && error !== null) || typeof error === "function") {
-    try {
-      if (!Object.getOwnPropertyDescriptor(error, "diagnosticRecord")) Object.defineProperty(error, "diagnosticRecord", { value: record, enumerable: true, configurable: true });
-    } catch { /* Primitive, frozen and host errors may not retain evidence. */ }
-  }
+  inspectCoreDiagnosticAttachment(error, record);
   return error;
+}
+export type CoreDiagnosticAttachmentStatus = "unsupported-target" | "existing-field" | "inspection-failed" | "write-failed" | "write-accepted";
+/** A write accepted by a proxy is not proof of later retention or observer delivery. */
+export function inspectCoreDiagnosticAttachment(error: unknown, record: DiagnosticRecord): CoreDiagnosticAttachmentStatus {
+  if ((typeof error !== "object" || error === null) && typeof error !== "function") return "unsupported-target";
+  try { if (Object.getOwnPropertyDescriptor(error, "diagnosticRecord")) return "existing-field"; }
+  catch { return "inspection-failed"; }
+  try {
+    Object.defineProperty(error, "diagnosticRecord", { value: record, enumerable: true, configurable: true });
+    return "write-accepted";
+  } catch { return "write-failed"; }
 }
 export function coreDateRecord(reason: "invalid-format" | "parse-rejected") {
   const result = createDiagnosticRecord(coreDateDiagnostic, { reason });

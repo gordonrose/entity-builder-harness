@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.remote-promotion.prepare-clean-integration-worktree
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-05"
 #   layer: 00.chat
 #   domain: remote-promotion
 #   disciplines:
@@ -75,44 +75,59 @@ done
 case "$SOURCE_BRANCH" in
   chat/*) ;;
   *)
-    echo "ERROR: source must be a chat branch: $SOURCE_BRANCH" >&2
+    echo "ERROR: source must be a chat branch." >&2
     exit 1
     ;;
 esac
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+CREATED=no
+read_failed() {
+  echo "ERROR: integration-preparation-observation-unavailable; stage=$1; worktree-created=$CREATED." >&2
+  exit 2
+}
+observe() {
+  local stage="$1"; shift
+  "$@" 2>/dev/null || read_failed "$stage"
+}
+matches() {
+  local stage="$1" status; shift
+  if "$@" 2>/dev/null; then return 0; else status=$?; fi
+  [ "$status" -eq 1 ] && return 1
+  read_failed "$stage"
+}
+REPO_ROOT="$(observe repository-root git rev-parse --show-toplevel)"
 REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
 BASE_REF="refs/remotes/${REMOTE_NAME}/${BASE_BRANCH}"
 
-if ! git show-ref --verify --quiet "refs/heads/${SOURCE_BRANCH}"; then
-  echo "ERROR: source branch does not exist locally: $SOURCE_BRANCH" >&2
+if ! matches source-reference git show-ref --verify --quiet "refs/heads/${SOURCE_BRANCH}"; then
+  echo "ERROR: source branch does not exist locally." >&2
   exit 1
 fi
 
-if ! git show-ref --verify --quiet "$BASE_REF"; then
-  echo "ERROR: remote base is absent: ${REMOTE_NAME}/${BASE_BRANCH}; fetch first." >&2
+if ! matches base-reference git show-ref --verify --quiet "$BASE_REF"; then
+  echo "ERROR: remote base is absent; fetch first." >&2
   exit 1
 fi
 
-if ! git merge-base --is-ancestor "$BASE_REF" "$SOURCE_BRANCH"; then
-  echo "ERROR: source is not a fast-forward candidate from ${REMOTE_NAME}/${BASE_BRANCH}." >&2
+if ! matches ancestry git merge-base --is-ancestor "$BASE_REF" "$SOURCE_BRANCH"; then
+  echo "ERROR: source is not a fast-forward candidate from the remote base." >&2
   exit 1
 fi
 
-SOURCE_COMMIT="$(git rev-parse "$SOURCE_BRANCH")"
+SOURCE_COMMIT="$(observe source-commit git rev-parse "$SOURCE_BRANCH")"
 SAFE_SOURCE="$(printf '%s' "$SOURCE_BRANCH" | sed 's#[^A-Za-z0-9._-]#_#g')"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 INTEGRATION_BRANCH="agentic/remote-promotion/${SAFE_SOURCE}-${STAMP}"
 PROMOTION_ROOT="${TMPDIR:-/tmp}/agentic-remote-promotions"
 INTEGRATION_WORKTREE="${PROMOTION_ROOT}/${SAFE_SOURCE}-${STAMP}-$$"
 
-if git show-ref --verify --quiet "refs/heads/${INTEGRATION_BRANCH}"; then
-  echo "ERROR: generated integration branch already exists: $INTEGRATION_BRANCH" >&2
+if matches integration-reference git show-ref --verify --quiet "refs/heads/${INTEGRATION_BRANCH}"; then
+  echo "ERROR: generated integration branch already exists." >&2
   exit 1
 fi
 
 if [ -e "$INTEGRATION_WORKTREE" ]; then
-  echo "ERROR: generated integration worktree path already exists: $INTEGRATION_WORKTREE" >&2
+  echo "ERROR: generated integration worktree path already exists." >&2
   exit 1
 fi
 
@@ -128,15 +143,24 @@ if [ "$DRY_RUN" = "yes" ]; then
   exit 0
 fi
 
-mkdir -p "$PROMOTION_ROOT"
-git worktree add -b "$INTEGRATION_BRANCH" "$INTEGRATION_WORKTREE" "$SOURCE_COMMIT"
+apply_command() {
+  local stage="$1" status; shift
+  if "$@" 2>/dev/null; then return 0; else status=$?; fi
+  echo "ERROR: integration-preparation-failed; stage=$stage; effect=unknown; inspect before retry." >&2
+  exit "$status"
+}
+apply_command directory-create mkdir -p "$PROMOTION_ROOT"
+apply_command worktree-create git worktree add -b "$INTEGRATION_BRANCH" "$INTEGRATION_WORKTREE" "$SOURCE_COMMIT"
+CREATED=yes
 
-if [ -n "$(git -C "$INTEGRATION_WORKTREE" status --porcelain)" ]; then
-  echo "ERROR: created integration worktree is unexpectedly dirty: $INTEGRATION_WORKTREE" >&2
+WORKTREE_STATUS="$(observe created-status git -C "$INTEGRATION_WORKTREE" status --porcelain)"
+if [ -n "$WORKTREE_STATUS" ]; then
+  echo "ERROR: created integration worktree is unexpectedly dirty." >&2
   exit 1
 fi
 
-if [ "$(git -C "$INTEGRATION_WORKTREE" rev-parse HEAD)" != "$SOURCE_COMMIT" ]; then
+CREATED_HEAD="$(observe created-head git -C "$INTEGRATION_WORKTREE" rev-parse HEAD)"
+if [ "$CREATED_HEAD" != "$SOURCE_COMMIT" ]; then
   echo "ERROR: integration worktree does not point at the verified source commit." >&2
   exit 1
 fi

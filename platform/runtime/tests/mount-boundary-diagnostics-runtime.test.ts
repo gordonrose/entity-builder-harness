@@ -61,11 +61,12 @@ async function main(): Promise<void> {
   detail(emitted[0], "app-mount", "invocation", "step-completion-unobserved", 0);
   equal((await mountPlatformRuntimeApps({ apps: [], deps: createPlatformTestMountDeps(), get diagnosticDefinitions(): never { throw cause; }, onDiagnostic(): never { throw cause; } })).ok, true);
   // Invalid/unselected/accessor evidence never gains admission merely because mounting failed.
-  for (const upstream of [{ diagnosticRecord: { ...checked.value, definitionVersion: 2 } }, { diagnosticRecord: checked.value }, { get diagnosticRecord(): never { throw new Error("No getter"); } }]) {
+  for (const [upstream, inaccessible] of [[{ diagnosticRecord: { ...checked.value, definitionVersion: 2 } }, false], [{ diagnosticRecord: checked.value }, false], [{ get diagnosticRecord(): never { throw new Error("No getter"); } }, true]] as const) {
     emitted.length = 0;
     result = await mountPlatformRuntimeApps({ apps: [{ id, name: secret, mount() { throw upstream; } }], deps: createPlatformTestMountDeps(), onDiagnostic(r) { emitted.push(r); return Promise.reject(cause); } });
     equal(result.ok, false); if (result.ok) throw new Error("Expected failure"); equal(result.error.cause, upstream);
-    equal(result.error.diagnosticRecord?.code, "platform-runtime.boundary-failed"); equal(emitted.length, 1);
+    equal(result.error.diagnosticRecord?.code, "platform-runtime.boundary-failed"); equal(emitted.length, inaccessible ? 2 : 1);
+    if (inaccessible) deepEqual(emitted[1], { schema: "core/diagnostic-record/v1", code: "core.diagnostics.processing-failed", definitionVersion: 1, detail: { reason: "evidence-inaccessible" } });
   }
 }
 main().catch((error: unknown) => { console.error(error); process.exitCode = 1; });

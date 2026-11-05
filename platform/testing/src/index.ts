@@ -385,14 +385,9 @@ export async function mountPlatformAppForTest(
     await app.mount(registry.forApp(appId.value), deps);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown app mount failure.";
-    let evidence: Pick<PlatformTestError, "diagnosticRecord" | "relatedDiagnosticRecords"> = {};
-    try {
-      evidence = selectDiagnosticEvidence([
-        ...coreDiagnosticCatalog.definitions,
-        ...(options.diagnosticDefinitions ?? []),
-        ...registry.diagnosticCatalogs().flatMap((catalog) => catalog.definitions),
-      ], error);
-    } catch { /* Optional evidence cannot replace the historical mount result. */ }
+    const evidence = selectedConfigEvidence(error,
+      () => options.diagnosticDefinitions ?? [],
+      () => registry.diagnosticCatalogs().flatMap((catalog) => catalog.definitions));
     return mountFailure(registry.errors(), { reason: message }, evidence);
   }
 
@@ -484,7 +479,7 @@ export function validatePlatformTestConfigSchemas(
           code: "PLATFORM_TEST_INVALID_CONFIG",
           defaultMessage: "A platform test config schema rejected the supplied config source.",
           details: { schemaIndex, configCode: error.code },
-          ...selectedConfigEvidence(error, diagnosticDefinitions),
+          ...selectedConfigEvidence(error, () => diagnosticDefinitions),
         },
       };
     }
@@ -495,9 +490,13 @@ export function validatePlatformTestConfigSchemas(
   return { ok: true, value: parsedValues };
 }
 
-function selectedConfigEvidence(error: unknown, definitions: readonly DiagnosticDefinition[]) {
-  try { return selectDiagnosticEvidence([...coreDiagnosticCatalog.definitions, ...definitions], error); }
-  catch { return {}; }
+function selectedConfigEvidence(error: unknown, ...readDefinitions: readonly (() => readonly DiagnosticDefinition[])[]) {
+  let definitions = coreDiagnosticCatalog.definitions;
+  for (const read of readDefinitions) {
+    try { definitions = [...definitions, ...read()]; }
+    catch { /* An unavailable optional catalogue must not erase independently selected evidence. */ }
+  }
+  return selectDiagnosticEvidence(definitions, error);
 }
 
 export async function runPlatformTestHealthChecks(

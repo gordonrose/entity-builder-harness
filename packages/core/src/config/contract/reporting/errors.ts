@@ -1,6 +1,6 @@
 import { validationIssue, type NonEmptyValidationIssues } from "../../../validation/index";
-import type { DiagnosticRecord } from "../../../diagnostics/index";
-import { coreConfigPrimitiveRecord, type CoreConfigReader } from "./diagnostics";
+import { captureDiagnosticRecord, requireDiagnosticRecord, type DiagnosticRecord } from "../../../diagnostics/index";
+import { coreConfigPrimitiveDiagnostic, coreConfigPrimitiveRecord, type CoreConfigReader } from "./diagnostics";
 import type { ConfigSettingIssue, ConfigRelationshipIssue } from "./setting-issues";
 
 export type ConfigErrorCode = "CONFIG_INVALID" | "CONFIG_MISSING";
@@ -36,7 +36,7 @@ export function missingConfigError(key: string, reader: Exclude<CoreConfigReader
       messageKey: "config.missing",
       params: { key },
     }),
-  ], { diagnosticRecord: coreConfigPrimitiveRecord({ field: "value", reader, reason: "missing" }) });
+  ], { diagnosticRecord: requireDiagnosticRecord([coreConfigPrimitiveDiagnostic], captureDiagnosticRecord(() => coreConfigPrimitiveRecord({ field: "value", reader, reason: "missing" }))) });
 }
 
 export function invalidConfigTypeError(key: string, expected: string, value: unknown, reader: "string" | "number" | "boolean", reason: "wrong-type" | "non-finite" = "wrong-type"): ConfigError {
@@ -46,7 +46,7 @@ export function invalidConfigTypeError(key: string, expected: string, value: unk
     "Config value has the wrong type.",
     "config.invalid_type",
     { key, expected, actual: configValueType(value) },
-    coreConfigPrimitiveRecord({ field: "value", reader, reason }),
+    requireDiagnosticRecord([coreConfigPrimitiveDiagnostic], captureDiagnosticRecord(() => coreConfigPrimitiveRecord({ field: "value", reader, reason }))),
   );
 }
 
