@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-05T21:59:09Z
-latest_commit_sha: 8188dfba0b2e6d23dcfd253fd4ad2eb4e13b1152
-chat_duration: 15844s (00:04:24:04)
+latest_commit_at_utc: 2026-11-05T23:34:14Z
+latest_commit_sha: 2b658a32bd10b2a28354bab7a370a6a77094a946
+chat_duration: 21549s (00:05:59:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -532,6 +532,17 @@ Decision: Complete combined-source integration passed all128 local instances
 
 Rationale: Selector session91504 exited0 after its final identity sweep: verdict passed, findings empty,128local instances passed,18later-stage obligations deferred,30executed and98reused. Elapsed1917.575833s, command execution1596.204858s. The17formerly blocked checks now have actual passing proof. Check-selection, diagnostic-base/runtime, infrastructure and shell-package aggregates reported zero nested child command executions and reused their already-passing members. Necessary reruns carry verified-inputs-changed or dependency-proof-changed reasons; no unchanged member suite was manually repeated. Evidence /tmp/diagnostics-qualification-integration-fixture-corrected-20261105.json and progress; focused full payload /tmp/diagnostics-qualification-fixture-focused-final-20261105.json passed0 in180.937578s. Frozen reviewed source is HEAD1ff7 plus exactly the two fixture corrections and plan/journal. Fixture SHA256 configuration1894e4f3acf91cc780a7edb92db37759379806eb1ee73526e1c9944d44bfd2d4, processba710141919feb153c019bbf42ffef1026c65797288198a4e4649656a7b545cd. No uncertain/drift finding, runtime fix, new architecture or weakened assertion. Preserve the qualification plan as the frozen sequence/review record; its coordinator link points here for current completion evidence, avoiding another plan-input edit after final verification. Actual local images remain bound to1ff7 and recorded IDs, not a new commit or published digest. Cloud/remote receipt, precise packaged shutdown/invalid-configuration limits, DIAG013 maturity deferral and imported-upstream limits remain explicit. Next: stage only the four approved paths, pass the normal staged gate, make the approved local task commit, record its exact SHA and checkpoint the journal; then run normal merge readiness and obtain specific next-stage authority.
 
+
+### 2026-11-05T23:34:14Z - Commit recorded
+
+Commit: `2b658a32bd10b2a28354bab7a370a6a77094a946`
+
+Message: test(diagnostics): reconcile compiled qualification fixtures
+
+Summary: Approved test-only consumer repairs: exact offending DynamoDB field, live implementation injection behind a getter-only rate facade, single diagnostic-definition reads, and a pool mock connected through the real selected composition. Runtime sources, public exports, definitions, dependencies, image inputs and provider state unchanged. Complete registered isolated payload passed180.937578s. Full integration passed128 local instances,30executed98reused,0findings and18later-stage deferred in1917.575833s; all formerly blocked units proved. Staged commit gate exited0 with0executed34reused0findings in45.092860s. Qualification plan and journal preserve both1ff7 image identities, failed/repeated attempts, evidence reuse, reserved private target and remote/invalid-config/shutdown/upstream limits. No main merge, push, hosted publication or AWS mutation.
+
+ADR impact: No new ADR: fixture compatibility and evidence reconciliation preserve the established runtime, selection, diagnostic and deployment architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -566,6 +577,13 @@ Rationale: Selector session91504 exited0 after its final identity sweep: verdict
   Message: fix(package): include persistence composition in image closure
   Summary: Approved packaging-only correction: one existing composition source COPY, exact reviewed Dockerfile hash in the existing same-engine anonymous recovery, and explicit omission/import counterexamples in the owned payload fixture; no runtime logic/dependency/base/registry change. Focused package-custody and persistence-payload regressions passed in 347.31 seconds. First staged selector passed with zero findings in 199.56 seconds but its outer command returned 143 after the ready marker; retained as an unsuccessful gate invocation. Confirmation exited 0, zero findings, 30 reused receipts and no executed checks in 44.47 selector seconds. Full integration and fresh-source images remain pending; prior core image is qualified only for its recorded 4e3d4853 source.
   ADR impact: No architecture decision; existing package closure, source review and qualification boundaries retained.
+
+
+- Commit: `2b658a32bd10b2a28354bab7a370a6a77094a946`
+  Time UTC: 2026-11-05T23:34:14Z
+  Message: test(diagnostics): reconcile compiled qualification fixtures
+  Summary: Approved test-only consumer repairs: exact offending DynamoDB field, live implementation injection behind a getter-only rate facade, single diagnostic-definition reads, and a pool mock connected through the real selected composition. Runtime sources, public exports, definitions, dependencies, image inputs and provider state unchanged. Complete registered isolated payload passed180.937578s. Full integration passed128 local instances,30executed98reused,0findings and18later-stage deferred in1917.575833s; all formerly blocked units proved. Staged commit gate exited0 with0executed34reused0findings in45.092860s. Qualification plan and journal preserve both1ff7 image identities, failed/repeated attempts, evidence reuse, reserved private target and remote/invalid-config/shutdown/upstream limits. No main merge, push, hosted publication or AWS mutation.
+  ADR impact: No new ADR: fixture compatibility and evidence reconciliation preserve the established runtime, selection, diagnostic and deployment architecture.
 
 ## Main Refresh Conflicts
 
@@ -711,9 +729,9 @@ Reason: This qualification continuation documents and verifies existing contract
 ## Session Metrics
 
 Raised at UTC: 2026-11-05T17:35:05Z
-Latest commit at UTC: 2026-11-05T21:59:09Z
-Latest commit SHA: 8188dfba0b2e6d23dcfd253fd4ad2eb4e13b1152
-Chat duration: 15844s (00:04:24:04)
+Latest commit at UTC: 2026-11-05T23:34:14Z
+Latest commit SHA: 2b658a32bd10b2a28354bab7a370a6a77094a946
+Chat duration: 21549s (00:05:59:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
