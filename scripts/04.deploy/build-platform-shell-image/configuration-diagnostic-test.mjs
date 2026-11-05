@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.script.build-platform-shell-image.configuration-diagnostic-test
-//   version: 1
+//   version: 2
 //   status: active
 //   created_on: "2026-10-30"
-//   updated_on: "2026-10-30"
+//   updated_on: "2026-11-05"
 //   layer: 04.deploy
 //   domain: diagnostics
 //   disciplines: [architecture, security, sre]
@@ -99,7 +99,7 @@ export async function verifyTargetConfigurationDiagnostics(runtimeRoot, reposito
       const input = Object.fromEntries(Object.entries({ ...storeInput, [key]: "x".repeat(256) }).map(([name, value]) => [name, value]));
       const result = dynamo.dynamoDbPersistenceConfiguration(new Proxy(input, { get(value, name) { counts[name] = (counts[name] ?? 0) + 1; return value[name]; } }));
       assert.deepEqual(result.error.diagnosticRecord, persistenceRecord(field, "too-long"));
-      assert.equal(result.error.details.path, "tableName");
+      assert.equal(result.error.details.path, key);
       const order = ["tableName", "outboxDueIndexName", "lineageCauseIndexName"];
       assert.deepEqual(counts, { region: 1, tableName: 2, outboxDueIndexName: order.indexOf(key) >= 1 ? 2 : 1, lineageCauseIndexName: key === "lineageCauseIndexName" ? 2 : 1 });
     }
@@ -214,7 +214,9 @@ export async function verifyTargetConfigurationDiagnostics(runtimeRoot, reposito
   // Actual wrapper, with injected upstream records. The target must retain
   // valid companions even if the primary is malformed, without serializing
   // the injected native error envelope or invoking any provider operation.
-  const rate = require(join(runtimeRoot, "platform/adapters/aws/security/dynamodb-rate-limiter/src/index.js"));
+  // Patch the implementation: the public facade forwards a getter-only export.
+  const rate = require(join(runtimeRoot, "platform/adapters/aws/security/dynamodb-rate-limiter/src/rate-limiter.js"));
+  const publicRate = require(join(runtimeRoot, "platform/adapters/aws/security/dynamodb-rate-limiter/src/index.js"));
   const server = await load("infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js");
   const originalRate = rate.createDynamoDbFixedWindowPlatformRateLimiterFromEnv;
   const savedCode = process.exitCode; const savedProcessEnv = { ...process.env };
@@ -223,6 +225,7 @@ export async function verifyTargetConfigurationDiagnostics(runtimeRoot, reposito
     for (const primary of [good, { ...good, detail: { issues: [{ setting: canary, reason: "unsupported" }] } }]) {
       const output = [];
       rate.createDynamoDbFixedWindowPlatformRateLimiterFromEnv = () => ({ ok: false, error: { code: "PLATFORM_ADAPTER_AWS_DYNAMODB_RATE_LIMIT_CONFIG_INVALID", defaultMessage: "Safe failure.", details: { path: "PLATFORM_RATE_LIMIT_DYNAMODB_TABLE", reason: "A non-empty value is required." }, diagnosticRecord: primary, relatedDiagnosticRecords: [companion], cause: { secret: canary } } });
+      assert.equal(publicRate.createDynamoDbFixedWindowPlatformRateLimiterFromEnv, rate.createDynamoDbFixedWindowPlatformRateLimiterFromEnv, "actual public startup binding sees the injected implementation");
       for (const key of Object.keys(process.env)) delete process.env[key]; Object.assign(process.env, processEnvironment({ ...serverEnv, PLATFORM_RATE_LIMIT_PROVIDER: "dynamodb" }));
       console.error = (line) => output.push(JSON.parse(line));
       await server.runKanbienPlatformServerMain();
@@ -327,14 +330,14 @@ export async function verifySqsConstructorConfigurationDiagnostics(runtimeRoot) 
     rejected(() => sqs.createPlatformSqsWorkerQueue(new Proxy({ ...valid, queueUrl: value }, { get(value, name) { reads.push(name); return value[name]; } })), "queue-address", reason, ErrorType, message);
     // Original configuration reads still precede the new optional diagnostic
     // selection/delivery reads; later configuration fields remain untouched.
-    assert.deepEqual(reads, ["queueUrl", "diagnosticDefinitions", "diagnosticDefinitions", "onDiagnostic"]);
+    assert.deepEqual(reads, ["queueUrl", "diagnosticDefinitions", "onDiagnostic"]);
   }
   for (const [key, setting, maximum] of [["waitTimeSeconds", "receive-wait", 20], ["visibilityTimeoutSeconds", "visibility-timeout", 43200]]) {
     for (const [value, reason] of [[undefined, "missing"], [null, "wrong-type"], ["1", "wrong-type"], [NaN, "not-finite"], [Infinity, "not-finite"], [-Infinity, "not-finite"], [1.5, "invalid-integer"], [-1, "out-of-range"], [maximum + 1, "out-of-range"]]) {
       const reads = [];
       rejected(() => sqs.createPlatformSqsWorkerQueue(new Proxy({ ...valid, [key]: value }, { get(value, name) { reads.push(name); return value[name]; } })), setting, reason, RangeError, `${key} must be an integer from 0 to ${maximum}.`);
       assert.deepEqual(reads, [...(key === "waitTimeSeconds" ? ["queueUrl", "waitTimeSeconds"] : ["queueUrl", "waitTimeSeconds", "visibilityTimeoutSeconds"]),
-        "diagnosticDefinitions", "diagnosticDefinitions", "onDiagnostic"]);
+        "diagnosticDefinitions", "onDiagnostic"]);
     }
     for (const value of [0, maximum]) assert(sqs.createPlatformSqsWorkerQueue({ ...valid, [key]: value }));
   }

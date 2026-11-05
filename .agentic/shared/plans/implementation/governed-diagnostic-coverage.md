@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.governed-diagnostic-coverage
-version: 9
+version: 10
 status: active
 created_on: "2026-10-27"
 updated_on: "2026-11-05"
@@ -77,8 +77,9 @@ remain historical, and do not certify the merged source automatically.
    governed source merge/push necessarily precedes new published/live proof.
    Record source integration separately from final production qualification;
    do not weaken the main-only publication rule or claim live sign-off early.
-4. With exact receipts, freshly align the declared `kanbien-core-platform`
-   bootstrap/persistence scopes. Review the exact update, permissions, retained
+4. With exact receipts, freshly align the active `kanbien-core-platform`
+   persistence scope; bootstrap is accepted-historical, not another deployment
+   target. Review the exact update, permissions, retained
    accepted image, current rollback compatibility and recovery arrangement
    before execution. Use the existing Deploy and Run controllers; reconcile
    interrupted operations before any repeat. The current accepted pointer is
@@ -100,7 +101,8 @@ and service healthy at task definition 35. This is baseline health, not proof
 that the new diagnostics are deployed. Earlier Docker attempts failed or timed
 out. After the user's restart, the configured Linux Unix socket returned server
 version `29.9.2`; use that endpoint, not the unsupported Windows-pipe context.
-Container qualification has not yet run against the final source.
+Corrected-source local container evidence is recorded below; it is not hosted
+publication, deployed acceptance or remote diagnostic receipt.
 GitHub authentication is available; protected-environment approval, exact
 publication/deployment commands and target recovery must still be established.
 Current request authorizes qualification and intended main/remote integration,
@@ -156,6 +158,85 @@ the existing source/payload/container owners for the corrected source.
 The legacy outer build wrapper retained a bounded failure category, while the
 specific cause required its existing BuildKit history; that observation limit
 is not repaired or represented as universal reason preservation here.
+
+### Corrected-source evidence and remaining blocker
+
+The approved packaging-only correction is task commit
+`8188dfba0b2e6d23dcfd253fd4ad2eb4e13b1152`. Its journal-only successor,
+`1ff7b618e50a9f80b3630be9b5dd2773f8b7feee`, was clean before the new builds and
+is the exact qualified local image source. Both existing same-engine anonymous
+recovery commands exited zero with stored Docker configuration untouched:
+
+- Core tag `kanbien-core-server:diagnostics-1ff7b618-20261105`, local image ID
+  `sha256:3e1d2d33093622666048a0b2eb7412a1709108d56a1bf54d8f0bb427c3c47ee4`.
+- Persistence tag `kanbien-core-server-persistence:diagnostics-1ff7b618-20261105`,
+  local image ID
+  `sha256:b03969ec8c539ad8c81d7f9fa5270e6db3ccabd1b0ac9b939952768196e35b27`.
+
+Both OCI revision labels match that source. Persistence isolated compilation and
+its normal finished-image TLS/PostgreSQL smoke passed operations, restricted
+roles, exact authentication-failure attribution, readiness fault/recovery and
+synthetic-canary exclusion. Its existing inactive-observer counterexample also
+passed, rejecting `packaged-readiness-metric-ready-not-exported`. Cleanup proved
+the core container and all five persistence effects absent. Logs are
+`/tmp/diagnostics-qualification-{core-corrected,persistence-corrected,persistence-negative-corrected}-20261105.log`.
+These are local image IDs, not published ECR digests or package-custody receipts;
+the earlier packaged invalid-configuration/shutdown/remote-receipt limits remain.
+
+The complete integration selection against main `77f086d6` exited one with
+verdict `gap`: 110 passed (39 executed successfully, 71 reused), one failed,
+17 prerequisite-blocked and 18 later-stage deferred; elapsed 1593.589826 seconds.
+No final input-drift or uncertain findings were reported. Retain the report
+`/tmp/diagnostics-qualification-integration-corrected-20261105.json`; neither
+this failed run nor deferred external checks establish complete qualification.
+
+The sole failed owner is `platform-shell-payload`. A bounded diagnostic replay
+of its existing `check-source.sh --payload-only` command exited one and retained
+`/tmp/diagnostics-qualification-platform-payload-failure-20261105.log`. Its
+configuration fixture line 102 still expects ordinary `error.details.path` to
+be `tableName` for every oversized field. The implementation and passing adapter
+test preserve the exact offending table/outbox/lineage key, as expressly required
+by the approved index-attribution correction in implementation groups 3–4.
+This missed compiled-fixture consumer needs a key-specific expectation, not a
+runtime reversion or removal of the compatibility check. Preserve its exact
+diagnostic and read-count assertions. The user subsequently approved this
+test-only correction, affected verification and a local commit after its gate
+passes. The fixture now expects the iterated key; no runtime implementation or
+diagnostic contract changed. Self-review confirms both index alternatives still
+reject a hard-coded table path. Prepare the three-path fixture/plan/journal
+batch, run the affected registered owner and resume integration using matching
+receipts; proof remains pending until those commands finish. The first corrected
+focus still failed later in this same fixture: its rate-limiter injection tried
+to assign the module split's getter-only public re-export. The bounded diagnostic
+replay retained that setup failure. Injection now targets the existing compiled
+implementation module, with an explicit assertion that the public export sees
+the injected function; all actual server, selected companion, rejection and
+canary assertions remain. Review of connected process/delivery patch sites found
+no matching getter-only injection. The next registered focus exposed two exact
+SQS guard read-order expectations still requiring duplicate definition reads;
+the existing shared selector reads once. Both expectations now require that
+single read, retaining original configuration order, error and no-SDK assertions.
+Bounded existing SQS/numeric/bridge fixture diagnosis then passed. The connected
+process fixture exposed a pool mock disconnected by the composition module's
+frozen selected factory. Its fixture now invokes the real selector and forwards
+only the selected pool factory to the existing injected connection export,
+restoring both exports afterward. Startup, close/query counts, source/error
+identity and canary assertions remain. The bounded test/planning batch therefore
+contains four paths, adding `process-diagnostic-test.mjs`; no runtime source or
+registry changed. Use existing callable fixtures for diagnosis, then reprepare
+all four paths before the next registered complete pass. The replay temporarily isolates and
+restores workspace package links; do not overlap further such diagnostics with
+verification or assume runtime identity without the selector's revalidation.
+
+No main merge/push, hosted publication, AWS mutation, shared-environment fault or
+accepted-release promotion has occurred. The existing AWS owner is a private
+persistence candidate, not a separately established staging environment. Agree
+the safe target arrangement and exact rollback-compatible receipt before live
+proof. Main-only publication ordering, independent provider observations and
+image-bound acceptance receipts remain required; historical proof cannot be
+silently carried to this changed image. DIAG-013 remains open/deferred to the
+required logging/telemetry maturity review; DIAG-006/007 and imported upstream
+incorporation/partial-coverage limits remain unchanged.
 
 ## DIAG-012 preparation and expanded scope — 2026-11-04
 

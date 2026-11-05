@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.script.build-platform-shell-image.process-diagnostic-test
-//   version: 1
+//   version: 2
 //   status: active
 //   created_on: "2026-10-30"
-//   updated_on: "2026-10-30"
+//   updated_on: "2026-11-05"
 //   layer: 04.deploy
 //   domain: diagnostics
 //   disciplines: [architecture, security, sre]
@@ -129,10 +129,19 @@ async function verifyDynamoConstructorTargets(load) {
 
 async function verifyCorePersistenceStartup(load) {
   const connection = load("platform/adapters/aws/persistence/postgresql/src/connection.js");
+  const composition = load("infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.js");
   const config = load("infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js");
   const telemetry = load("infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.js");
   const originalPool = connection.createNodePostgreSqlTokenConnectionPool, originalAuthority = config.persistenceCertificateAuthorityResult;
   const originalConfiguration = telemetry.observabilityConfigurationFromTargetEnvironment;
+  const originalSelection = composition.selectPersistenceImplementation;
+  // The real selector retains a frozen factory; inject at its selected boundary.
+  composition.selectPersistenceImplementation = (value) => {
+    const selected = originalSelection(value);
+    return selected.ok ? { ...selected, value: { ...selected.value,
+      createPool: (...args) => connection.createNodePostgreSqlTokenConnectionPool(...args),
+    } } : selected;
+  };
   let pools = 0, closes = 0, queries = 0;
   connection.createNodePostgreSqlTokenConnectionPool = () => { pools++; return { query: async () => { queries++; throw new Error(canary); }, connect: async () => { throw new Error(canary); }, end: async () => { closes++; } }; };
   config.persistenceCertificateAuthorityResult = () => ({ ok: true, value: "fixture-certificate" });
@@ -215,6 +224,7 @@ async function verifyCorePersistenceStartup(load) {
     "actual migration task projection retains its selected primary/eight through runner and task serializer");
     assert(!JSON.stringify(sink.output).includes(canary));
   } finally {
+    composition.selectPersistenceImplementation = originalSelection;
     connection.createNodePostgreSqlTokenConnectionPool = originalPool; config.persistenceCertificateAuthorityResult = originalAuthority;
     telemetry.observabilityConfigurationFromTargetEnvironment = originalConfiguration; sink.restore();
   }
