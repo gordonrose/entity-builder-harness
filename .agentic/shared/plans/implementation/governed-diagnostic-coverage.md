@@ -17,6 +17,128 @@ used_by:
 -->
 # Governed diagnostic coverage implementation plan
 
+## Production qualification continuation — 2026-11-05
+
+Qualification coordinator: the November 5 session recorded in
+`commitLogs/2026/nov/05/2026-11-05-17-35-diagnostics-production-qualification/README.md`.
+This section governs the current verification handoff; earlier local results
+remain historical, and do not certify the merged source automatically.
+
+### Source, review and evidence reuse
+
+- Initial combined commit: `c2fc6f4690443c6978612ed17d9da717e11bfa08`, clean
+  before qualification bookkeeping. It contains source handoff `f78627e4`,
+  reviewed integration `9b40cbf6`, and the missing-preflight-cache fallback.
+  Subsequent qualification document/review changes must be listed separately;
+  freeze and record the actual commit before any image build/publication.
+- Initial structural gate found eight stale source bindings and one unreviewed
+  release-succession source. Explicit self-review reconciles their deltas with
+  source `f78627e4`, the earlier main-side lifecycle corrections, the recorded
+  conflict decisions and their actual negative fixtures. Review status/debt
+  must stay partial where operational coverage is incomplete.
+- Inventory: classifier metadata-only versus semantic conflicts and large-input
+  pipe handling; exact no-op stack/parameter binding and malformed observations;
+  structured configuration with bounded maintenance timeouts; independent
+  restoration identity, predecessor-proof custody, exact ALARM episode and
+  truthful recovery chronology; isolated restore IAM posture and terminal/expired
+  reservation cleanup; immutable release history versus current rollback
+  contract selection; absent optional preflight evidence versus unsafe cache.
+- Reuse only private selector receipts whose source, runtime, dependency and
+  verification-contract identities match. The prior single composition pass,
+  direct fixture runs, historical October images and source-chat full passes
+  prove their recorded inputs only. They are not complete current integration,
+  container, CI, deployed or remote-receipt evidence.
+
+### Bounded sequence and existing commands
+
+1. Close review/metadata corrections, run structural adoption, and validate the
+   nonexecuting impact plan. Use the existing selector for affected final units:
+   `chat-conflict-classification-regression`, `check-selection-mechanics`,
+   `check-selection-repository-contracts`, `diagnostic-catalog-readers`,
+   `persistence-provider-regression`, `acceptance-route-regression`,
+   `restore-connection-diagnostics`, and `persistence-composition` where selected.
+   Then run one complete source-diff integration selection against `main`,
+   reusing matching focused evidence. Do not equate one selected unit with that
+   complete run. Fixes beyond qualification documentation/harness need the
+   applicable existing authority before changing runtime code.
+2. Package using the existing core smoke owner
+   `scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh`
+   and persistence build/smoke owners under `40-package/`. Build labels bind
+   `SOURCE_COMMIT_SHA` to image IDs. Inspect the generated payload using its
+   `prepare-runtime.mjs`/`verify-runtime.mjs` owners, and run the existing
+   capability-negative fixture. Packaged proof must resolve compiled shims,
+   exported JSON, certificates and dependencies without checkout-only assets.
+   Disposable PostgreSQL/TLS/container checks cover startup, meaningful CRUD,
+   invalid configuration, dependency failures, exact reasons, shutdown and
+   synthetic-canary exclusion to the extent their actual assertions establish.
+   Record any missing representative case; do not invent another framework.
+3. The protected, main-only GitHub publication workflows own qualification,
+   ECR scan, SBOM, provenance and package-custody receipts. Consequently the
+   governed source merge/push necessarily precedes new published/live proof.
+   Record source integration separately from final production qualification;
+   do not weaken the main-only publication rule or claim live sign-off early.
+4. With exact receipts, freshly align the declared `kanbien-core-platform`
+   bootstrap/persistence scopes. Review the exact update, permissions, retained
+   accepted image, current rollback compatibility and recovery arrangement
+   before execution. Use the existing Deploy and Run controllers; reconcile
+   interrupted operations before any repeat. The current accepted pointer is
+   `release-cb3cf3292e03fda8e7e40188` for persistence.
+5. Verify rollout, exact digest/source, private readiness and meaningful
+   operations. Controlled faults require an approved isolated arrangement.
+   Use receipt-bound replacement/credential/restore/observability controllers
+   only where their specific effects are approved. Accept via existing
+   release-succession only after all required evidence agrees; retain the
+   predecessor and verify restoration if required. Remote diagnostic receipt
+   needs actual collector/backend evidence, not a local logger return or an
+   operator notification attestation alone.
+
+### Prerequisites, permissions and limits
+
+AWS SSO was verified for account `337159794548`, profile `kanbien-dev`, region
+`eu-west-1`. Read-only observation found the persistence stack `UPDATE_COMPLETE`
+and service healthy at task definition 35. This is baseline health, not proof
+that the new diagnostics are deployed. Earlier Docker attempts failed or timed
+out. After the user's restart, the configured Linux Unix socket returned server
+version `29.9.2`; use that endpoint, not the unsupported Windows-pipe context.
+Container qualification has not yet run against the final source.
+GitHub authentication is available; protected-environment approval, exact
+publication/deployment commands and target recovery must still be established.
+Current request authorizes qualification and intended main/remote integration,
+not unreviewed shared-environment fault injection or destructive recovery.
+
+Only harness and kanbien-core-server deployment/runtime are in scope. The
+retiring kanbien-platform deployment stays excluded. DIAG-013 is open and a
+required input to the logging/telemetry maturity review; DIAG-006/007 remain
+deferred assessments. Imported-tool upstream incorporation and all existing
+partial diagnostic/adaptor-observation limits remain explicit. Record clock,
+failed attempts, reused evidence, source/image/receipt/task/accepted-release
+identities and remaining gaps in the existing session journal.
+
+### Current qualification findings
+
+The first eight-unit attempt passed conflict classification and selector
+mechanics, but acceptance rehearsal failed; the run was interrupted during
+repository-contract verification and produced no complete final report. Its
+successful private receipts may be reused only after normal identity validation.
+The legacy raw-proof rejection fixture omitted the now-required independent
+restoration-verifier receipt. Add that existing receipt to reach the intended
+`acceptance-evidence-retained-proof-receipts-required` guard; preserve its exact
+rejection and prohibition on provider calls. This is a fixture prerequisite
+correction, not a relaxation of acceptance policy or a runtime fix.
+
+The nonexecuting integration plan against `77f086d6` selected 146 instances
+(128 local, 18 later-stage) with no findings. It is planning evidence only.
+Local compatibility checks for the retiring shell remain selectable; its
+deployment/runtime operations remain excluded. The existing bootstrap payload
+fixture runs the generated command and requires exit within five seconds of
+SIGTERM, but does not assert shutdown diagnostic ordering. Persistence payload
+import checks use the installed external driver; only the image build repeats
+resolution against assembled dependencies. Existing persistence container smoke
+proves TLS operations, exact authentication-rejection classification and canary
+exclusion, but its forced container removal does not prove graceful shutdown.
+Do not report these narrower checks as complete packaged invalid-configuration,
+shutdown-reason or remote-diagnostic-receipt qualification.
+
 ## DIAG-012 preparation and expanded scope — 2026-11-04
 
 ### Consolidated reconciliation — 2026-11-05

@@ -4,7 +4,7 @@ id: product.plan.telemetry-implementation-follow-on
 version: 1
 status: draft
 created_on: "2026-10-29"
-updated_on: "2026-10-29"
+updated_on: "2026-11-05"
 layer: 03.product
 domain: observability
 disciplines: [architecture, security, sre]
@@ -56,6 +56,19 @@ expensive checks; freeze their inputs. Separate local, package and explicitly
 authorized live evidence. Do not use this backlog to add a parallel framework.
 
 ## Deferred workstreams
+
+### Required DIAG-013 input to the logging/telemetry maturity review
+
+[DIAG-013](../../../shared/plans/implementation/diagnostics-backlog.md#diag-013--expose-diagnostic-reporting-outcomes-without-changing-workload-results)
+remains open and implementation-deferred. Resumption of this plan must decide
+receiving responsibilities, optional versus required reporting, observable
+handoff/rejection/unavailability and asynchronous completion, and independent
+failure visibility through real callers before choosing an implementation.
+Preserve workload results, disabled/omitted reporters, privacy, no replay and
+no recursive reporting through a failed sink. A local handoff or completed
+logger call is not evidence of collector/backend receipt. Current production
+qualification must state its actual remote evidence and any gap; it must not
+mark this requirement complete or start the logging redesign incidentally.
 
 ### 1. Synchronous and asynchronous recording contract
 

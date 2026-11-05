@@ -29,6 +29,16 @@ class SelectionTests(FixtureSupport):
             subprocess.run(['git', '-C', str(self.root), 'worktree', 'add', '--detach', '--quiet', str(preflight)], check=True)
             try:
                 self.assertIsNone(local_cache.LocalCache.registered_source(self.root, preflight))
+                report = self.run_plan(checks=['local'], execute=True, reuse_from_worktree=preflight)
+                self.assertFalse(report['findings'], report['findings'])
+                self.assertEqual(report['execution_summary']['executed_check_ids'], ['local'])
+                self.assertEqual(report['execution_summary']['reused_check_ids'], [])
+                cache_path = Path(subprocess.run(['git', '-C', str(preflight), 'rev-parse', '--absolute-git-dir'], check=True, capture_output=True, text=True).stdout.strip()) / 'agentic-local-checks'
+                cache_path.mkdir(mode=0o755)
+                cache_path.chmod(0o755)
+                unsafe = self.run_plan(checks=['local'], execute=True, reuse_from_worktree=preflight)
+                self.assertIn({'code': 'reuse-worktree-unavailable', 'detail': 'local-cache-permissions-invalid'}, unsafe['findings'])
+                self.assertEqual(unsafe['execution_summary']['executed_check_ids'], [])
             finally:
                 subprocess.run(['git', '-C', str(self.root), 'worktree', 'remove', '--force', str(preflight)], check=True)
 

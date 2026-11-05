@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-11-05T20:57:40Z
+latest_commit_sha: c2fc6f4690443c6978612ed17d9da717e11bfa08
+chat_duration: 12155s (00:03:22:35)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -56,9 +56,28 @@ production qualification planning for completed diagnostics work
 - Decision: User authorized a narrow conflict-harness update and reviewed integration resolution
   Rationale: Add deterministic handling only for lifecycle metadata-only conflicts; retain manual review for semantic deployment contracts. Resolve the six recorded conflicts in a fresh preflight by preserving structured diagnostics, timeout/lifecycle safety, safe provider uncertainty, and truthful acceptance evidence. Planned proof: classifier smoke test, harness drift checks, changed deployment fixtures, and selected integration proof.
 
+
+- Decision: Resume end-to-end diagnostics qualification and eventual main/remote promotion
+  Rationale: Qualify c2fc6f4690443c6978612ed17d9da717e11bfa08 with existing registered source checks, packaged payloads, disposable Docker and separately reviewed core-server AWS acceptance. AWS identity matches 337159794548/eu-west-1 and existing persistence service is healthy at task definition 35; Docker default socket is currently unreachable and desktop context uses unsupported npipe. Structural adoption found eight stale review sources plus unreviewed release-succession integration changes. Reconcile exact deltas and retain partial debt before final focused/impact verification. Current implementation is not yet signed off; no live fault or deployment operation is approved by credential availability alone.
+
+
+- Decision: Qualification reconciliation reviewed and frozen for source checks
+  Rationale: Self-review compared f78627e4 with the final merged deltas and actual negative fixtures. Refreshed eight exact source-review bindings without upgrading partial status; registered the main-side release-history compatibility delta with explicit remaining debt. Strengthened the missing-cache fixture to prove actual runner execution and unsafe-cache rejection; two focused mechanics tests and direct release-succession regressions pass. DIAG-013 is now explicitly linked as a required open maturity-review workstream. Package and live acceptance remain separate. Prior apply output did not certify the complete integration: the known passing cached report covered only persistence-composition. Final preparation and one complete integration selector run remain required. Docker Linux socket refuses connections; host Windows client reported 29.8.1 once but subsequent bounded probes failed/timed out, so it is not a usable qualified route.
+
+
+- Decision: Final qualification found an acceptance-fixture prerequisite mismatch
+  Rationale: The first eight-unit selector run is retained at /tmp/diagnostics-qualification-focused-20261105.json with safe progress alongside it; acceptance-route-regression failed while independent units continue. A parser probe confirms the legacy raw-proof negative fixture omits the now-mandatory restoration-verifier receipt and therefore reaches arguments-invalid instead of its intended retained-proof-receipts-required guard. Correct only that fixture prerequisite after this batch completes, retain its expected rejection and no-provider-call assertion, and rerun the affected registered unit. The earlier preflight journal pass does not qualify the current combined fixture. Docker retry after user confirmation still cannot connect to the default Linux socket; the existing Desktop proxy denies workspace access and the Windows client fails WSL interop. No engine/configuration changes or image operations have been performed.
+
+
+- Decision: Docker restored; interrupted source batch resumed with a fixture-only correction
+  Rationale: At 20:55 UTC the normal Linux Docker endpoint returned server 29.9.2 after earlier bounded failures; no configuration workaround was introduced. The prior selector process no longer exists after interruption and its final JSON is empty. Progress records only two completed passes, one acceptance failure and an incomplete repository-contract check; never certify the entire batch. Its unchanged successful private receipts will be validated for reuse. Added the existing independent restoration-verifier receipt to the legacy raw-proof negative fixture without changing the expected rejection or no-provider-call guard. The read-only complete integration plan took 111.84 seconds and selected 146 instances (128 local, 18 later-stage), with no findings. Package shutdown/invalid-configuration and remote-receipt limits are explicit in the existing qualification plan. Final preparation and resumed verification follow this frozen correction batch; no image, publication, deployment, main merge or push has occurred.
+
 ## Context Hygiene
 
-- None recorded yet.
+
+
+- Summary: Continue only in the November 5 chat worktree at c2fc6f46 plus the six explicit qualification paths. Preserve all historical source/preflight worktrees; do not treat incomplete runs as passing proof.
+  Durable evidence: The existing qualification plan and session journal own scope and decisions. Private selector receipts own reusable local proof. Interrupted attempt: /tmp/diagnostics-qualification-focused-20261105.progress; complete nonexecuting plan: /tmp/diagnostics-qualification-integration-plan-20261105.json. Docker now responds on the normal Linux socket. AWS baseline is healthy but has not received the new diagnostics.
 
 ## Activity Log
 
@@ -219,13 +238,90 @@ Mode: manual
 
 Action: Retained independent restore proof, predecessor binding and premature-collection rejection; added alarm-episode tests.
 
+
+### 2026-11-05T20:04:12Z - Decision
+
+Decision: Resume end-to-end diagnostics qualification and eventual main/remote promotion
+
+Rationale: Qualify c2fc6f4690443c6978612ed17d9da717e11bfa08 with existing registered source checks, packaged payloads, disposable Docker and separately reviewed core-server AWS acceptance. AWS identity matches 337159794548/eu-west-1 and existing persistence service is healthy at task definition 35; Docker default socket is currently unreachable and desktop context uses unsupported npipe. Structural adoption found eight stale review sources plus unreviewed release-succession integration changes. Reconcile exact deltas and retain partial debt before final focused/impact verification. Current implementation is not yet signed off; no live fault or deployment operation is approved by credential availability alone.
+
+
+### 2026-11-05T20:08:33Z - Decision
+
+Decision: Qualification reconciliation reviewed and frozen for source checks
+
+Rationale: Self-review compared f78627e4 with the final merged deltas and actual negative fixtures. Refreshed eight exact source-review bindings without upgrading partial status; registered the main-side release-history compatibility delta with explicit remaining debt. Strengthened the missing-cache fixture to prove actual runner execution and unsafe-cache rejection; two focused mechanics tests and direct release-succession regressions pass. DIAG-013 is now explicitly linked as a required open maturity-review workstream. Package and live acceptance remain separate. Prior apply output did not certify the complete integration: the known passing cached report covered only persistence-composition. Final preparation and one complete integration selector run remain required. Docker Linux socket refuses connections; host Windows client reported 29.8.1 once but subsequent bounded probes failed/timed out, so it is not a usable qualified route.
+
+
+### 2026-11-05T20:27:16Z - Decision
+
+Decision: Final qualification found an acceptance-fixture prerequisite mismatch
+
+Rationale: The first eight-unit selector run is retained at /tmp/diagnostics-qualification-focused-20261105.json with safe progress alongside it; acceptance-route-regression failed while independent units continue. A parser probe confirms the legacy raw-proof negative fixture omits the now-mandatory restoration-verifier receipt and therefore reaches arguments-invalid instead of its intended retained-proof-receipts-required guard. Correct only that fixture prerequisite after this batch completes, retain its expected rejection and no-provider-call assertion, and rerun the affected registered unit. The earlier preflight journal pass does not qualify the current combined fixture. Docker retry after user confirmation still cannot connect to the default Linux socket; the existing Desktop proxy denies workspace access and the Windows client fails WSL interop. No engine/configuration changes or image operations have been performed.
+
+
+### 2026-11-05T20:55:53Z - Decision
+
+Decision: Docker restored; interrupted source batch resumed with a fixture-only correction
+
+Rationale: At 20:55 UTC the normal Linux Docker endpoint returned server 29.9.2 after earlier bounded failures; no configuration workaround was introduced. The prior selector process no longer exists after interruption and its final JSON is empty. Progress records only two completed passes, one acceptance failure and an incomplete repository-contract check; never certify the entire batch. Its unchanged successful private receipts will be validated for reuse. Added the existing independent restoration-verifier receipt to the legacy raw-proof negative fixture without changing the expected rejection or no-provider-call guard. The read-only complete integration plan took 111.84 seconds and selected 146 instances (128 local, 18 later-stage), with no findings. Package shutdown/invalid-configuration and remote-receipt limits are explicit in the existing qualification plan. Final preparation and resumed verification follow this frozen correction batch; no image, publication, deployment, main merge or push has occurred.
+
+
+### 2026-11-05T20:57:09Z - ADR disposition
+
+ADR needed: no
+
+Reason: This qualification continuation documents and verifies existing contracts; fixture prerequisites and optional-cache fallback preserve the established architecture.
+
+
+### 2026-11-05T20:57:09Z - Context hygiene
+
+Summary: Continue only in the November 5 chat worktree at c2fc6f46 plus the six explicit qualification paths. Preserve all historical source/preflight worktrees; do not treat incomplete runs as passing proof.
+
+Durable evidence: The existing qualification plan and session journal own scope and decisions. Private selector receipts own reusable local proof. Interrupted attempt: /tmp/diagnostics-qualification-focused-20261105.progress; complete nonexecuting plan: /tmp/diagnostics-qualification-integration-plan-20261105.json. Docker now responds on the normal Linux socket. AWS baseline is healthy but has not received the new diagnostics.
+
+
+### 2026-11-05T20:57:40Z - Commit recorded
+
+Commit: `9b40cbf6480e9aaf27edf2bbc3b1e2e9dfdc83c4`
+
+Message: Merge committed diagnostic handoff through reviewed preflight
+
+Summary: Late lifecycle registration of the already-applied reviewed integration. Six conflict dispositions are in the existing journal; current final qualification is still pending and historical preflight fixture passes are not final proof.
+
+ADR impact: No new architecture; existing conflict resolution policy retained.
+
+
+### 2026-11-05T20:57:40Z - Commit recorded
+
+Commit: `c2fc6f4690443c6978612ed17d9da717e11bfa08`
+
+Message: fix(harness): fall back when preflight cache is absent
+
+Summary: Late lifecycle registration of the approved optional-cache fallback. Registered same-repository missing cache executes normal checks; unsafe or unregistered evidence remains rejected. Strengthened real-run/unsafe-permission mechanics proof passed in the interrupted qualification batch; complete integration remains pending.
+
+ADR impact: No new architecture; cache availability is not verification authority.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `9b40cbf6480e9aaf27edf2bbc3b1e2e9dfdc83c4`
+  Time UTC: 2026-11-05T20:57:40Z
+  Message: Merge committed diagnostic handoff through reviewed preflight
+  Summary: Late lifecycle registration of the already-applied reviewed integration. Six conflict dispositions are in the existing journal; current final qualification is still pending and historical preflight fixture passes are not final proof.
+  ADR impact: No new architecture; existing conflict resolution policy retained.
+
+
+- Commit: `c2fc6f4690443c6978612ed17d9da717e11bfa08`
+  Time UTC: 2026-11-05T20:57:40Z
+  Message: fix(harness): fall back when preflight cache is absent
+  Summary: Late lifecycle registration of the approved optional-cache fallback. Registered same-repository missing cache executes normal checks; unsafe or unregistered evidence remains rejected. Strengthened real-run/unsafe-permission mechanics proof passed in the interrupted qualification batch; complete integration remains pending.
+  ADR impact: No new architecture; cache availability is not verification authority.
 
 ## Main Refresh Conflicts
 
@@ -364,19 +460,19 @@ Action: Retained independent restore proof, predecessor binding and premature-co
 
 ## ADR Disposition
 
-ADR needed: unknown
+ADR needed: no
 ADR path:
-Reason:
+Reason: This qualification continuation documents and verifies existing contracts; fixture prerequisites and optional-cache fallback preserve the established architecture.
 
 ## Session Metrics
 
 Raised at UTC: 2026-11-05T17:35:05Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-11-05T20:57:40Z
+Latest commit SHA: c2fc6f4690443c6978612ed17d9da717e11bfa08
+Chat duration: 12155s (00:03:22:35)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 

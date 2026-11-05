@@ -3,6 +3,20 @@
   "baseline": "d94da2b9401d3abcf86618b5d497e9b93903490a",
   "reviews": [
     {
+      "owner": "qualification-release-history-compatibility",
+      "status": "partial",
+      "reason": "Reviewed the main-side compatibility_identity and compatibility_record delta: current-contract checks remain enabled by default for selection and recording, while explicit archive reads retain receipt hashes and immutable identity validation without comparing historical contracts with current files. Existing changed-contract and tampered-archive fixtures distinguish these cases. CLI storage failures use the existing fixed unavailable outcome; no publication, replay or acceptance authority is added.",
+      "remaining_debt": [
+        "This review covers the compatibility-history integration and its real collector consumer, not exhaustive whole-file operational failure or remote acceptance coverage. Existing release mutations require their owning explicit authority."
+      ],
+      "definitions": ["scripts/04.deploy/lifecycle/60-run/release-succession/script.py"],
+      "tests": ["scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py", "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py"],
+      "checks": ["acceptance-route-regression"],
+      "sources": [
+        {"path": "scripts/04.deploy/lifecycle/60-run/release-succession/script.py", "sha256": "7f696f2eb0cf4d7f7f136ef41e4e6368d7ddc4aba60d9b7010a4c6cdbc50c6bb"}
+      ]
+    },
+    {
       "owner": "imported-cleanup-diagnostics",
       "status": "partial",
       "reason": "Retention, branch, worktree, commit and content observations preserve unavailable versus absent states before deletion. Native failures are excluded, mutation exit status and uncertain effect retained; no replay. Original dry-run, retained-log and disposable deletion assertions remain.",
@@ -627,7 +641,7 @@
     {
       "owner": "imported-conflict-observation-diagnostics",
       "status": "partial",
-      "reason": "Failed Git index or present-stage blob reads do not become empty content or a guessed conflict classification. Actually absent stages remain allowed. Existing conflict categories and command ordering are preserved; disposable command doubles prove each present stage failure and canary exclusion.",
+      "reason": "Failed Git index or present-stage blob reads do not become empty content or a guessed conflict classification. Actually absent stages remain allowed. Existing conflict categories and command ordering are preserved; disposable command doubles prove each present stage failure and canary exclusion. Qualification self-review reconciled the metadata-date-only category, equality of all non-date stage contents, and the here-string correction preventing early grep exit from becoming a large-input pipe failure. Semantic deployment conflicts remain manual; the 6000-line fixture exercises actual classification.",
       "remaining_debt": [
         "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
       ],
@@ -643,7 +657,7 @@
       "sources": [
         {
           "path": "scripts/00.chat/main-refresh/classify-conflict/script.sh",
-          "sha256": "6fbb8e7e8f50ad1f030fdca6fe38baba5cb6978c8e9ff427a20c0a95018384e8"
+          "sha256": "ba4681542395a595a2dabb66343dbafa64220d259184eff0bbf9bf511e36137d"
         }
       ]
     },
@@ -1020,7 +1034,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
-          "sha256": "1971a9a6b5af019bec6deaf9fb22627379ba304dd1028b08b48cbf2f6c80abe9"
+          "sha256": "0dca7bb8b1f9240dda20ac83ffac66572969c4da8fbc07dd74323e98e762384e"
         }
       ]
     },
@@ -1128,7 +1142,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
-          "sha256": "d72562d05297e22a7b4be54347a83feb0dcb0fc03b4b9be636ae965d5d5e4d41"
+          "sha256": "d0a796a5bd4d1a4fc243a00c1025644f9f90df46a5b5a3e0c224663aefd02c77"
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py",
@@ -1144,7 +1158,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
-          "sha256": "eeaee2fa43bb9a1f101d278ccd1eb5546521ca6173e9e2eb313a3039bdedc6e3"
+          "sha256": "53bebb5e98cee1e445ffd2133bf696fa71bdd689f164f508f5920986d0dc737d"
         }
       ]
     },
@@ -2448,7 +2462,7 @@
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
-          "sha256": "45a3c8ffe21e5720068af315e0ed56d22f9816760ea5b34ef08a872886d2ae20"
+          "sha256": "d43bf6845b557e7b8ed120991cf8b5d4f7b09ecde8a7a7d3b6ef797e32de4136"
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts",
@@ -2513,7 +2527,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
-          "sha256": "75d636a4ba7761a5a6e385535c3c41feeb972061a75091165aaaaa5ac485039c"
+          "sha256": "57267291768aeec960338174aa0ae01da8059c0cd90326dcea37e9f070489de0"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py",
@@ -3253,7 +3267,7 @@
       "sources": [
         {
           "path": "scripts/repo/check-selection/mechanics_test.py",
-          "sha256": "43d25a8d2bcd73ee9733eaa2598389841e536e4ab0dbfd92cfea5ae349d9614a"
+          "sha256": "00e67aeabe3986b3790bc4cb331d683ca108a15352b9ce91f47ead0b08d0ed51"
         },
         {
           "path": "scripts/repo/check-selection/repository_contracts_test.py",
@@ -3264,7 +3278,7 @@
     {
       "owner": "runner-core-verification-enforcement",
       "status": "partial",
-      "reason": "Runner and cache proof ownership is separate from runtime exports and adapter behavior. Source/input/runtime/contract identity, fresh command-boundary validation, permission boundaries and fixture-only checks are proved by mechanics and actual catalog contracts. Structural proof is not semantic completeness. B12 replaces arbitrary child output retention with fixed markers and validates selected bounded nested observations while preserving statuses, cache/reuse/invalidation, permissions and the original seven-member aggregate. Typed owning failures retain finite distinctions without package/path/native text. This support review does not make nested summaries proof authority. Checkpoint correction: reviewed native skill-entry prose classification and its focused regression. Scripts, nested lookalikes and authoritative contracts remain uncovered without executable checks; no execution permissions or runtime proof are waived.",
+      "reason": "Runner and cache proof ownership is separate from runtime exports and adapter behavior. Source/input/runtime/contract identity, fresh command-boundary validation, permission boundaries and fixture-only checks are proved by mechanics and actual catalog contracts. Structural proof is not semantic completeness. B12 replaces arbitrary child output retention with fixed markers and validates selected bounded nested observations while preserving statuses, cache/reuse/invalidation, permissions and the original seven-member aggregate. Typed owning failures retain finite distinctions without package/path/native text. This support review does not make nested summaries proof authority. Checkpoint correction: reviewed native skill-entry prose classification and its focused regression. Scripts, nested lookalikes and authoritative contracts remain uncovered without executable checks; no execution permissions or runtime proof are waived. Qualification review: a registered same-repository preflight with an absent optional cache supplies no reusable proof, so selected checks execute locally. Registration, symlink, repository and unsafe-cache checks remain enforced. The actual-runner regression distinguishes absent cache from unsafe permissions and asserts execution versus reuse explicitly.",
       "tests": [
         "scripts/repo/check-selection/mechanics_test.py",
         "scripts/repo/check-selection/repository_contracts_test.py"
@@ -3279,7 +3293,7 @@
       "sources": [
         {
           "path": "scripts/repo/check-selection/local_cache.py",
-          "sha256": "85e3b5e9943c11aaa10aa5794db16f13f6a1c52934386a74cd0aa7c29bb13cbb"
+          "sha256": "a74cc93437a2d32c3abe6874d50df293b308036ea888bb93a2a9053b429f20ef"
         },
         {
           "path": "scripts/repo/check-selection/script.py",
