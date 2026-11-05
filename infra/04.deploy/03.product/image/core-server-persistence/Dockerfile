@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-05"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -33,6 +33,7 @@ COPY platform/adapters/aws/observability/cloudwatch/ ./platform/adapters/aws/obs
 COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persistence/postgresql/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts ./infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts

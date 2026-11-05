@@ -36,7 +36,14 @@ production qualification planning for completed diagnostics work
 
 ## Questions Asked
 
-- None recorded yet.
+
+
+- Asked: Use the existing temporary anonymous Docker-client recovery for both fixed local packages?
+  Response: User explicitly approved both core and persistence recovery runs; same Linux engine, stored credentials/settings untouched, no publication or AWS operations.
+
+
+- Asked: Correct the missing persistence composition Docker COPY, refresh the existing review pin and rerun payload/image proof?
+  Response: User explicitly approved the packaging correction and verification only; no runtime logic, dependency installation, cloud action or architecture redesign.
 
 ## Issues Raised
 
@@ -76,12 +83,28 @@ production qualification planning for completed diagnostics work
 - Decision: Frozen qualification source checkpoint established
   Rationale: Task source checkpoint is 9d34cf8084e5a9d60f2ac740ca32a18ba2d43226; a subsequent journal-only checkpoint supplies the clean image-build HEAD. No runtime source changed in qualification reconciliation. Current inventory keeps bootstrap-runtime accepted-historical and core-server-persistence active: validate historical declarations but do not reactivate or deploy bootstrap; live updates remain bounded to the active persistence scope. Corrected the recorder invocation reference HEAD to its resolved immutable task SHA before checkpointing. Source integration and exact image/source labels must be recorded separately from eventual main merge, protected publication and approved live acceptance.
 
+
+- Decision: Frozen-source integration and approved Docker recovery are in progress
+  Rationale: Exact qualification/build HEAD is 4e3d4853744b166884923d906a149d30146ef221, journal-only successor of task 9d34cf80. Integration runs against main 77f086d6 using the existing selector and registered source-worktree reuse, with 146 selected instances; corrected acceptance-route-regression has passed. Native core smoke and its direct failed-child diagnostic attempt both reached Docker build rejection; native persistence build also rejected before its finished-image smoke, so no qualified image or live proof exists yet. Exact retained core record juvfhbpa2albq96909ymcm48h failed at public Dockerfile frontend resolution with credential-helper exit 1; delivery census independently covered 429 entrypoints/5 scopes with zero gaps, and local payload/compilation passed. Docker history accepts the record ID, not its display-qualified ref; two read-only qualified-ref probes failed without replaying builds. User explicitly approved the existing fixed core and persistence anonymous-client recovery; both wrappers bound the same normal Linux engine and report stored configuration untouched. Logs: /tmp/diagnostics-qualification-integration-final-20261105.{json,progress}, core-image, core-build-direct, core-build-retained-id, persistence-build, core-recovery and persistence-recovery logs with the same qualification prefix/date. Repetition is limited to failed owners whose canonical recovery necessarily repeats preflight; do not rerun completed source units independently. Pending: complete local/container checks and negative capability proof, exact image IDs/revision labels, then separately approved protected publication and active-persistence AWS acceptance. This activity-only journal update is excluded from both Docker contexts and is not a runtime input change; keep HEAD fixed until the running checks finish. No runtime fix, main merge, push, publication, deployment or shared fault injection has occurred.
+
+
+- Decision: Core finished-image qualification passed on the frozen source
+  Rationale: The approved core recovery exited 0. Normal builder and packaged container smoke passed health/release identity; disposable cleanup verified its one container absent, and the recovery reported stored configuration untouched. Tag kanbien-core-server:diagnostics-4e3d4853-20261105 resolves to local image ID sha256:6c6c86ecb1dd4b7e8565ab80d9c5a2997e93170d8a4988eae88bb3d688dca889 with org.opencontainers.image.revision exactly 4e3d4853744b166884923d906a149d30146ef221. This is local container qualification, not a published ECR digest, hosted custody receipt, deployed behaviour or remote diagnostic receipt. Matching payload tests include generated command SIGTERM exit but not shutdown diagnostic ordering. Persistence recovery/negative capability and complete source integration remain in progress; no new runtime edit or HEAD change.
+
+
+- Decision: Batch the confirmed image-copy defect before final qualification resumes
+  Rationale: Retained anonymous-build record 5kk51pwhf0gmv2v3qj84ov6mj failed at isolated Docker TypeScript compilation: configuration and server import kanbien-core-server-persistence-composition.ts, which exists in the checkout but is absent from explicit Docker COPY roots. Other reported type errors are not assumed resolved until isolated compilation passes. Consumer inventory: the new copy supplies implementation selection/configuration composition, whose existing app/PostgreSQL imports are already copied; Dockerfile-specific allowlist already permits this entrypoint. Preserve runtime predicates, configuration/reasons, role operations, public base digests, destinations and cleanup. Planned batch: one COPY plus lifecycle date; exact reviewed Dockerfile pin/date in the existing anonymous recovery; source-matched review hash with unchanged adoption status; explicit omission counterexample in the existing payload fixture; qualification plan/journal. Existing registered payload and custody checks, preparation, staged gate and actual Docker build/smoke/negative remain required. Keep the legacy outer-build diagnostic limitation explicit: it retained a category, while actual cause required the existing BuildKit history; no logging redesign here. Before editing, SIGINT stopped only the verified isolated selector group 4041 after 36 completed passes including mechanics; exit 130 and vanished parent/child PIDs confirmed. That run is not a completed integration pass. Successful private receipts remain eligible for normal identity-matched reuse; do not rerun the expensive unchanged mechanics unit independently.
+
 ## Context Hygiene
 
 
 
 - Summary: Continue only in the November 5 chat worktree at c2fc6f46 plus the six explicit qualification paths. Preserve all historical source/preflight worktrees; do not treat incomplete runs as passing proof.
   Durable evidence: The existing qualification plan and session journal own scope and decisions. Private selector receipts own reusable local proof. Interrupted attempt: /tmp/diagnostics-qualification-focused-20261105.progress; complete nonexecuting plan: /tmp/diagnostics-qualification-integration-plan-20261105.json. Docker now responds on the normal Linux socket. AWS baseline is healthy but has not received the new diagnostics.
+
+
+- Summary: Approved packaging batch is frozen and its focused payload/custody units passed; preserve the prior 36 successful source receipts and do not certify the interrupted full run.
+  Durable evidence: The qualification plan and journal contain the actual BuildKit omission, approvals, unchanged runtime scope, core image identity and incomplete integration boundary. Focused result /tmp/diagnostics-qualification-packaging-focused-20261105.json and progress passed both registered units. Dockerfile hash e463add94011b248ad5e8a4d78b1e887d43fad0fafd6bf70c95f150af9cc27ec; existing recovery hash 6c136d12661d527b1eb0b56f038aea33af769bfcc79b00266bded43077657435. Current six task paths only; staged gate and exact-SHA checkpoint precede new image builds. All prior Docker runs ended, no source integration/deployment/publication occurred.
 
 ## Activity Log
 
@@ -323,6 +346,48 @@ ADR impact: No new diagnostic architecture or telemetry implementation.
 Decision: Frozen qualification source checkpoint established
 
 Rationale: Task source checkpoint is 9d34cf8084e5a9d60f2ac740ca32a18ba2d43226; a subsequent journal-only checkpoint supplies the clean image-build HEAD. No runtime source changed in qualification reconciliation. Current inventory keeps bootstrap-runtime accepted-historical and core-server-persistence active: validate historical declarations but do not reactivate or deploy bootstrap; live updates remain bounded to the active persistence scope. Corrected the recorder invocation reference HEAD to its resolved immutable task SHA before checkpointing. Source integration and exact image/source labels must be recorded separately from eventual main merge, protected publication and approved live acceptance.
+
+
+### 2026-11-05T21:20:54Z - Decision
+
+Decision: Frozen-source integration and approved Docker recovery are in progress
+
+Rationale: Exact qualification/build HEAD is 4e3d4853744b166884923d906a149d30146ef221, journal-only successor of task 9d34cf80. Integration runs against main 77f086d6 using the existing selector and registered source-worktree reuse, with 146 selected instances; corrected acceptance-route-regression has passed. Native core smoke and its direct failed-child diagnostic attempt both reached Docker build rejection; native persistence build also rejected before its finished-image smoke, so no qualified image or live proof exists yet. Exact retained core record juvfhbpa2albq96909ymcm48h failed at public Dockerfile frontend resolution with credential-helper exit 1; delivery census independently covered 429 entrypoints/5 scopes with zero gaps, and local payload/compilation passed. Docker history accepts the record ID, not its display-qualified ref; two read-only qualified-ref probes failed without replaying builds. User explicitly approved the existing fixed core and persistence anonymous-client recovery; both wrappers bound the same normal Linux engine and report stored configuration untouched. Logs: /tmp/diagnostics-qualification-integration-final-20261105.{json,progress}, core-image, core-build-direct, core-build-retained-id, persistence-build, core-recovery and persistence-recovery logs with the same qualification prefix/date. Repetition is limited to failed owners whose canonical recovery necessarily repeats preflight; do not rerun completed source units independently. Pending: complete local/container checks and negative capability proof, exact image IDs/revision labels, then separately approved protected publication and active-persistence AWS acceptance. This activity-only journal update is excluded from both Docker contexts and is not a runtime input change; keep HEAD fixed until the running checks finish. No runtime fix, main merge, push, publication, deployment or shared fault injection has occurred.
+
+
+### 2026-11-05T21:27:41Z - Question
+
+Asked: Use the existing temporary anonymous Docker-client recovery for both fixed local packages?
+
+Response: User explicitly approved both core and persistence recovery runs; same Linux engine, stored credentials/settings untouched, no publication or AWS operations.
+
+
+### 2026-11-05T21:27:41Z - Decision
+
+Decision: Core finished-image qualification passed on the frozen source
+
+Rationale: The approved core recovery exited 0. Normal builder and packaged container smoke passed health/release identity; disposable cleanup verified its one container absent, and the recovery reported stored configuration untouched. Tag kanbien-core-server:diagnostics-4e3d4853-20261105 resolves to local image ID sha256:6c6c86ecb1dd4b7e8565ab80d9c5a2997e93170d8a4988eae88bb3d688dca889 with org.opencontainers.image.revision exactly 4e3d4853744b166884923d906a149d30146ef221. This is local container qualification, not a published ECR digest, hosted custody receipt, deployed behaviour or remote diagnostic receipt. Matching payload tests include generated command SIGTERM exit but not shutdown diagnostic ordering. Persistence recovery/negative capability and complete source integration remain in progress; no new runtime edit or HEAD change.
+
+
+### 2026-11-05T21:36:16Z - Question
+
+Asked: Correct the missing persistence composition Docker COPY, refresh the existing review pin and rerun payload/image proof?
+
+Response: User explicitly approved the packaging correction and verification only; no runtime logic, dependency installation, cloud action or architecture redesign.
+
+
+### 2026-11-05T21:36:16Z - Decision
+
+Decision: Batch the confirmed image-copy defect before final qualification resumes
+
+Rationale: Retained anonymous-build record 5kk51pwhf0gmv2v3qj84ov6mj failed at isolated Docker TypeScript compilation: configuration and server import kanbien-core-server-persistence-composition.ts, which exists in the checkout but is absent from explicit Docker COPY roots. Other reported type errors are not assumed resolved until isolated compilation passes. Consumer inventory: the new copy supplies implementation selection/configuration composition, whose existing app/PostgreSQL imports are already copied; Dockerfile-specific allowlist already permits this entrypoint. Preserve runtime predicates, configuration/reasons, role operations, public base digests, destinations and cleanup. Planned batch: one COPY plus lifecycle date; exact reviewed Dockerfile pin/date in the existing anonymous recovery; source-matched review hash with unchanged adoption status; explicit omission counterexample in the existing payload fixture; qualification plan/journal. Existing registered payload and custody checks, preparation, staged gate and actual Docker build/smoke/negative remain required. Keep the legacy outer-build diagnostic limitation explicit: it retained a category, while actual cause required the existing BuildKit history; no logging redesign here. Before editing, SIGINT stopped only the verified isolated selector group 4041 after 36 completed passes including mechanics; exit 130 and vanished parent/child PIDs confirmed. That run is not a completed integration pass. Successful private receipts remain eligible for normal identity-matched reuse; do not rerun the expensive unchanged mechanics unit independently.
+
+
+### 2026-11-05T21:49:48Z - Context hygiene
+
+Summary: Approved packaging batch is frozen and its focused payload/custody units passed; preserve the prior 36 successful source receipts and do not certify the interrupted full run.
+
+Durable evidence: The qualification plan and journal contain the actual BuildKit omission, approvals, unchanged runtime scope, core image identity and incomplete integration boundary. Focused result /tmp/diagnostics-qualification-packaging-focused-20261105.json and progress passed both registered units. Dockerfile hash e463add94011b248ad5e8a4d78b1e887d43fad0fafd6bf70c95f150af9cc27ec; existing recovery hash 6c136d12661d527b1eb0b56f038aea33af769bfcc79b00266bded43077657435. Current six task paths only; staged gate and exact-SHA checkpoint precede new image builds. All prior Docker runs ended, no source integration/deployment/publication occurred.
 
 ## Sub-Agent Activity
 

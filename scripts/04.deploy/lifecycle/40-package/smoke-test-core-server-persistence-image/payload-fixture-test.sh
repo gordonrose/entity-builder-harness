@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 4
 #   status: draft
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-05"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -55,12 +55,12 @@ function missingCopiedEntrypointImports(dockerfileSource) {
   return [...missing].sort();
 }
 assert.deepEqual(missingCopiedEntrypointImports(dockerfile), [], 'actual relative entrypoint dependencies must be copied into the image build');
-const diagnosticModules = ['kanbien-core-server-persistence-diagnostics', 'kanbien-core-server-persistence-operation-diagnostics'];
-for (const module of diagnosticModules) {
+const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'kanbien-core-server-persistence-operation-diagnostics', 'kanbien-core-server-persistence-composition'];
+for (const module of requiredEntrypointModules) {
   const source = `${entrypointDirectory}/${module}.ts`;
   const copy = `COPY ${source} ./${source}`;
   const omitted = dockerfile.split('\n').filter((line) => line !== copy).join('\n');
-  assert.deepEqual(missingCopiedEntrypointImports(omitted), [source], 'omitting a real diagnostic dependency must fail copy-closure proof');
+  assert.deepEqual(missingCopiedEntrypointImports(omitted), [source], 'omitting a required entrypoint dependency must fail copy-closure proof');
 }
 function rejects(mutate, undo, nodePath = path.join(root, 'node_modules'), expectedCode) {
   mutate();
@@ -84,7 +84,7 @@ rejects(() => {}, () => {}, path.join(compiled, 'absent-external-dependencies'))
 const entry = path.join(compiled, 'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.js');
 const entryContent = fs.readFileSync(entry);
 rejects(() => fs.writeFileSync(entry, 'module.exports = {};'), () => fs.writeFileSync(entry, entryContent));
-for (const module of diagnosticModules) {
+for (const module of requiredEntrypointModules) {
   const diagnostic = path.join(compiled, entrypointDirectory, `${module}.js`);
   const content = fs.readFileSync(diagnostic);
   rejects(() => fs.unlinkSync(diagnostic), () => fs.writeFileSync(diagnostic, content), path.join(root, 'node_modules'), 'payload-import-unresolved');
@@ -92,7 +92,7 @@ for (const module of diagnosticModules) {
 fs.unlinkSync(path.join(compiled, 'packages/core/src/diagnostics/index.js'));
 const prepared = spawnSync(process.execPath, [path.join(root, 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs'), '--compiled-root', compiled], {encoding:'utf8'});
 assert.equal(prepared.status, 1, 'missing compiled export must fail preparation');
-console.log('Persistence payload regression passed (9 broken-payload cases and 2 omitted-source cases; no container or target access).');
+console.log('Persistence payload regression passed (10 broken-payload cases and 3 omitted-source cases; no container or target access).');
 NODE
 python3 - "$ROOT" "$TEMPORARY_DIRECTORY" <<'PY'
 import json, os, shutil, subprocess, sys

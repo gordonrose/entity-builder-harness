@@ -4817,7 +4817,7 @@
     {
       "owner": "operational-persistence-image-boundaries",
       "status": "adopted",
-      "reason": "Retain exact persistence build and runtime payload requirements, original role/setup/program predicates and cleanup precedence. Fixed child codes identify TLS/setup/resources/HTTP/digest/receiver/removal and each retained operation separately; failed observations never prove operation nonacceptance. Public-image recovery binds reviewed dependency bytes including its sourced helper and rejects substitutions. Existing real-wrapper fake-command/full-success, payload and recovery mutation fixtures establish local proof only.",
+      "reason": "Retain exact persistence build and runtime payload requirements, original role/setup/program predicates and cleanup precedence. Fixed child codes identify TLS/setup/resources/HTTP/digest/receiver/removal and each retained operation separately; failed observations never prove operation nonacceptance. Public-image recovery binds reviewed dependency bytes including its sourced helper and rejects substitutions. Qualification reviewed the single added composition COPY and refreshed only that Dockerfile pin; public images, invocation order and same-engine/configuration safeguards are unchanged. Existing real-wrapper fake-command/full-success, payload and recovery mutation fixtures establish local proof only; actual image qualification remains separate.",
       "tests": [
         "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py",
         "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
@@ -4853,7 +4853,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
-          "sha256": "764e7f0cfa9f187ce4d60ffc3ddd3f58197311581bf0faa90347dc7d4dc31d23"
+          "sha256": "6c136d12661d527b1eb0b56f038aea33af769bfcc79b00266bded43077657435"
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",

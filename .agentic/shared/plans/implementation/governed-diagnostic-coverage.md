@@ -139,6 +139,24 @@ exclusion, but its forced container removal does not prove graceful shutdown.
 Do not report these narrower checks as complete packaged invalid-configuration,
 shutdown-reason or remote-diagnostic-receipt qualification.
 
+At source `4e3d4853744b166884923d906a149d30146ef221`, approved anonymous-client
+recovery passed the complete core image smoke and cleanup; its local image ID is
+`sha256:6c6c86ecb1dd4b7e8565ab80d9c5a2997e93170d8a4988eae88bb3d688dca889`.
+It is not a published digest. Persistence then failed isolated Docker compilation:
+the existing server/configuration imports require
+`kanbien-core-server-persistence-composition.ts`, but its explicit Docker COPY
+was missing. Checkout compilation therefore did not prove build-context closure.
+The user approved adding only that COPY, refreshing the existing recovery pin,
+and extending the existing payload omission/import counterexamples. Runtime
+logic, dependencies, base digests, registries and cloud state stay unchanged.
+The full selector was interrupted with exit 130 after 36 successful instances,
+including mechanics, before this input batch changed. Its report is incomplete;
+retain only matching successful private receipts. Reprepare this batch and use
+the existing source/payload/container owners for the corrected source.
+The legacy outer build wrapper retained a bounded failure category, while the
+specific cause required its existing BuildKit history; that observation limit
+is not repaired or represented as universal reason preservation here.
+
 ## DIAG-012 preparation and expanded scope — 2026-11-04
 
 ### Consolidated reconciliation — 2026-11-05
