@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-04T21:36:30Z
-latest_commit_sha: e94628adbb5f09e8b25b18fcb4deb9336990bf89
-chat_duration: 738738s (08:13:12:18)
+latest_commit_at_utc: 2026-11-05T17:47:57Z
+latest_commit_sha: e47e90abe27990a80de05fbb6ead3b3312ad9f1d
+chat_duration: 811425s (09:09:23:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -5558,6 +5558,17 @@ Summary: Checkpoint accumulated diagnostics, configuration ownership, tests and 
 
 ADR impact: Existing ADR 0043 retained; no new architecture decision in checkpoint.
 
+
+### 2026-11-05T17:47:57Z - Commit recorded
+
+Commit: `e47e90abe27990a80de05fbb6ead3b3312ad9f1d`
+
+Message: fix(diagnostics): preserve failure evidence and govern diagnostic improvements
+
+Summary: Committed 187 reviewed files covering DIAG-012 runtime and imported-tool diagnostic preservation, connected tests and registrations, DIAG-014 governed discovery, and DIAG-013 deferral to logging/telemetry. Final staged commit gates passed; production qualification remains separate. No push or deployment.
+
+ADR impact: Existing ADR 0043 retained; no new architecture replacement.
+
 ## Sub-Agent Activity
 
 - Administrator credential migration: user-requested sub-agent reconciled the
@@ -5696,6 +5707,13 @@ Summary: Implemented via sub-agent in the recorded Oct27 worktree and accepted b
   Summary: Checkpoint accumulated diagnostics, configuration ownership, tests and governance before DIAG-012. Staged gate passed: 51 executed, 70 deferred, zero findings. Dormant RAG prose activation corrected with focused counterexamples; runtime build excluded. DIAG-012 implementation remains next.
   ADR impact: Existing ADR 0043 retained; no new architecture decision in checkpoint.
 
+
+- Commit: `e47e90abe27990a80de05fbb6ead3b3312ad9f1d`
+  Time UTC: 2026-11-05T17:47:57Z
+  Message: fix(diagnostics): preserve failure evidence and govern diagnostic improvements
+  Summary: Committed 187 reviewed files covering DIAG-012 runtime and imported-tool diagnostic preservation, connected tests and registrations, DIAG-014 governed discovery, and DIAG-013 deferral to logging/telemetry. Final staged commit gates passed; production qualification remains separate. No push or deployment.
+  ADR impact: Existing ADR 0043 retained; no new architecture replacement.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -5709,9 +5727,9 @@ Reason: Durable ownership and compatibility decision for runtime diagnostics, ge
 ## Session Metrics
 
 Raised at UTC: 2026-10-27T08:24:12Z
-Latest commit at UTC: 2026-11-04T21:36:30Z
-Latest commit SHA: e94628adbb5f09e8b25b18fcb4deb9336990bf89
-Chat duration: 738738s (08:13:12:18)
+Latest commit at UTC: 2026-11-05T17:47:57Z
+Latest commit SHA: e47e90abe27990a80de05fbb6ead3b3312ad9f1d
+Chat duration: 811425s (09:09:23:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
