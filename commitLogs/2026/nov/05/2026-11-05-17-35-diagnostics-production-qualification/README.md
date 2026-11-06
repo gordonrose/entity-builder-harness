@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-06T09:46:16Z
-latest_commit_sha: 566f0b1f04802535ed3918ff1741c3b9e0af34b4
-chat_duration: 58271s (00:16:11:11)
+latest_commit_at_utc: 2026-11-06T15:35:19Z
+latest_commit_sha: 4d321840b9699271ce99429e52f7575c9200ca0d
+chat_duration: 79214s (00:22:00:14)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1005,6 +1005,17 @@ Decision: Final impact completed in632.251707s:13executed3reused3deferred, no fi
 
 Rationale: Complete report SHA2567af71575d0ffd1c0f765df58de5bfd27ee707e29905d70bf805534e69b534bb6; command555.858398s. Three focused proofs reused; all other required local checks reran after runtime invalidation. Fresh preparation report SHA2566123b34a36db77fd300bc17d571e61587a7a0b37e12cb0f736d95352b862dd33 matches prior safe facts, but is independently fresh AWS observation. Staged gate must independently authorize commit; no later-stage proof inferred from local success.
 
+
+### 2026-11-06T15:35:19Z - Commit recorded
+
+Commit: `4d321840b9699271ce99429e52f7575c9200ca0d`
+
+Message: fix(deploy): preserve deployed template for image transitions
+
+Summary: Approved narrow image-transition owner correction: use deployed template for update and rollback without widening ECS-only resource guard or changing runtime/package identity. Counterexample and hostile IAM/RDS guard fixtures included;42controller cases passed exploratory, final focused3 and impact16local passed after WSL runtime invalidation. Final impact13executed3reused3laterstage deferred0findings632.251707s; staged gate exited0ready, reused6commit-boundary checks17.457689s and deferredintegrationowners remain for post-refresh/root gates. Six approved paths only. Immutable published imageab7664c6/sourceafe9d25a unchanged. No AWS workload mutation; rejected review still unexecuted. Prior approvals cover clean rehearsed main refresh/integration/normal push then bounded rejected-review discard and live five-stage proof.
+
+ADR impact: No ADR: existing image-only controller ownership correction, not architecture redesign.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1074,6 +1085,13 @@ Rationale: Complete report SHA2567af71575d0ffd1c0f765df58de5bfd27ee707e29905d70b
   Message: Merge branch 'main' into agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-fbac1e6a2f2a/20261106094443
   Summary: Approved non-rewriting main refresh after fresh normal origin fetch confirmed main/originafe9d25a; classifierclean. Preflight566f0b1f clean merge, identical verified file tree to fbac1e6a, no conflicts. Normal apply/post-integration gate passed with matching local evidence before governed cleanup of only the clean temporary preflight worktree and its branch. Commit remains in chat history; temporary worktree itself removed, older unique/dirty recovery refs retained. Root readiness and approved main merge/push remain next; no AWS operation.
   ADR impact: No new architecture or runtime source change; recorded merge preserves task97a8ebd4 and prior history.
+
+
+- Commit: `4d321840b9699271ce99429e52f7575c9200ca0d`
+  Time UTC: 2026-11-06T15:35:19Z
+  Message: fix(deploy): preserve deployed template for image transitions
+  Summary: Approved narrow image-transition owner correction: use deployed template for update and rollback without widening ECS-only resource guard or changing runtime/package identity. Counterexample and hostile IAM/RDS guard fixtures included;42controller cases passed exploratory, final focused3 and impact16local passed after WSL runtime invalidation. Final impact13executed3reused3laterstage deferred0findings632.251707s; staged gate exited0ready, reused6commit-boundary checks17.457689s and deferredintegrationowners remain for post-refresh/root gates. Six approved paths only. Immutable published imageab7664c6/sourceafe9d25a unchanged. No AWS workload mutation; rejected review still unexecuted. Prior approvals cover clean rehearsed main refresh/integration/normal push then bounded rejected-review discard and live five-stage proof.
+  ADR impact: No ADR: existing image-only controller ownership correction, not architecture redesign.
 
 ## Main Refresh Conflicts
 
@@ -1219,9 +1237,9 @@ Reason: This qualification continuation documents and verifies existing contract
 ## Session Metrics
 
 Raised at UTC: 2026-11-05T17:35:05Z
-Latest commit at UTC: 2026-11-06T09:46:16Z
-Latest commit SHA: 566f0b1f04802535ed3918ff1741c3b9e0af34b4
-Chat duration: 58271s (00:16:11:11)
+Latest commit at UTC: 2026-11-06T15:35:19Z
+Latest commit SHA: 4d321840b9699271ce99429e52f7575c9200ca0d
+Chat duration: 79214s (00:22:00:14)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
