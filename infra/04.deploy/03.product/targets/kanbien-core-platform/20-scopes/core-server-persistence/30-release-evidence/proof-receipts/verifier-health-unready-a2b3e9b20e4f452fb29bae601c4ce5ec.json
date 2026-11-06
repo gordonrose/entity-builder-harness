@@ -1,0 +1,32 @@
+{
+  "context": {
+    "completion_deadline_seconds": 120,
+    "completion_duration_seconds": 26,
+    "record_id": "core-persistence-acceptance-v1"
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:bf4a97528d6d216c03907be30175cb5f10d11896c4c2157571795eabd1753dee"
+  },
+  "operation": "health-unready",
+  "proof_type": "verifier",
+  "provenance": {
+    "collected_at": "2026-11-06T16:12:15.151199Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "verify-candidate",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/a2b3e9b20e4f452fb29bae601c4ce5ec",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:38",
+    "exit_code": 0,
+    "image_digest": "sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17",
+    "result_code": "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY",
+    "started_at": "2026-11-06T17:11:44.892000+01:00",
+    "stopped_at": "2026-11-06T17:12:11.054000+01:00",
+    "terminal_status": "STOPPED"
+  }
+}

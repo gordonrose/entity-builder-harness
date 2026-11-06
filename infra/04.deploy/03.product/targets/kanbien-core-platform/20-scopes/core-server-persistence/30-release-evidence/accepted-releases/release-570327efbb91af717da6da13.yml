@@ -1,0 +1,21 @@
+schema: deploy/accepted-release-history/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+status: accepted
+release:
+  id: release-570327efbb91af717da6da13
+  source_revision: afe9d25abafc6635e9b37dbfe62644e09c742ba5
+  image_digest: sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17
+  contract_revisions:
+    configuration:
+      path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+      sha256: sha256:1543c6145efb18085c110a92585abc265c8767f4f123ae7a0625f3244f695958
+    permissions:
+      path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
+      sha256: sha256:c8391213ba2a1dae617f2f9de6dd65e69286df7c4e2f36265ed247a464ab67b4
+  proof_set_sha256: sha256:a1609fb386f47e938d2543cc274522f75c4388d3dbe72d63892f548ad70542fd
+predecessor: release-cb3cf3292e03fda8e7e40188
+evidence:
+  path: release-candidates/release-570327efbb91af717da6da13.yml
+  sha256: sha256:60206fce94aace9e49375c7b031c74ea7aa08213d0d2df42b46320792cbe8e3d
+  kind: verified-release-candidate

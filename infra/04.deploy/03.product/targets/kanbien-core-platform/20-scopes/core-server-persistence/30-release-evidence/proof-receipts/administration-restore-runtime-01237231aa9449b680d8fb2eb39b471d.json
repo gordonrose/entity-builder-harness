@@ -1,0 +1,31 @@
+{
+  "context": {
+    "completion_deadline_seconds": 300,
+    "completion_duration_seconds": 25
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:72dc3c2dc4ada1f8e1b33c5e9ab3a4e50efdd3612a904f40593bca4fe7dbefb3"
+  },
+  "operation": "restore-runtime",
+  "proof_type": "administration",
+  "provenance": {
+    "collected_at": "2026-11-06T16:18:36.936296Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "run-administration",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/01237231aa9449b680d8fb2eb39b471d",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:19",
+    "exit_code": 0,
+    "image_digest": "sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17",
+    "result_code": "PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED",
+    "started_at": "2026-11-06T17:18:08.205000+01:00",
+    "stopped_at": "2026-11-06T17:18:33.555000+01:00",
+    "terminal_status": "STOPPED"
+  }
+}

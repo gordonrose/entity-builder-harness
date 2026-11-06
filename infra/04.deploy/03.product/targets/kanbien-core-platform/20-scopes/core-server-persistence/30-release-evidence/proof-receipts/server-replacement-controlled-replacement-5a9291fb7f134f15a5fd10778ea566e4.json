@@ -1,0 +1,35 @@
+{
+  "context": {
+    "original_stopped_reason": "governed core-server-persistence replacement rehearsal",
+    "recovery_boundary": "2026-11-06T16:10:30.569482Z",
+    "runtime_task_definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:38",
+    "successor_started_at": "2026-11-06T17:11:16.390000+01:00",
+    "successor_task_arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/dcab92fd13a94dc993dae9290cf9d2fe"
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:af574dfbcead33a1fd70ffd41a211032ab71ca38a98363657dc16434b19453c9"
+  },
+  "operation": "controlled-replacement",
+  "proof_type": "server-replacement",
+  "provenance": {
+    "collected_at": "2026-11-06T16:11:25.789943Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "rehearse-server-replacement",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/5a9291fb7f134f15a5fd10778ea566e4",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:38",
+    "exit_code": 0,
+    "image_digest": "sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17",
+    "result_code": "PERSISTENCE_SERVER_REPLACED",
+    "started_at": "2026-11-06T17:01:30.861000+01:00",
+    "stopped_at": "2026-11-06T17:11:18.183000+01:00",
+    "stopped_reason": "governed core-server-persistence replacement rehearsal",
+    "terminal_status": "STOPPED"
+  }
+}
