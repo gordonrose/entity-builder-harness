@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.governed-diagnostic-coverage
-version: 13
+version: 16
 status: active
 created_on: "2026-10-27"
 updated_on: "2026-11-06"
@@ -24,7 +24,195 @@ Qualification coordinator: the November 5 session recorded in
 This section governs the current verification handoff; earlier local results
 remain historical, and do not certify the merged source automatically.
 
-Current position (2026-11-05, after explicit promotion approval): the complete
+### Latest qualification position — 2026-11-06
+
+The approved modern AWS CLI prefix correction is task
+`6ca52f67f0e55409caaf16fb37399926da11b927`. Its existing registered focused
+owners passed (three executed, 92.122597 seconds); complete impact verification
+passed 46 local instances (12 executed, 34 reused, zero findings) in 749.960088
+seconds, with six later-stage checks deferred. The staged commit gate passed.
+Source and predicate inventories, sensitivity counterexamples, private report
+hashes, failed attempts and actual reuse/invalidation reasons are in the
+existing session journal. No runtime package, Docker, IAM or workload changes.
+
+The clean main-refresh rehearsal contained the exact tested file tree without
+conflicts. Its normal post-apply gate passed with 46 reused results, zero
+executed checks and zero findings in 54.679532 seconds, then removed only that
+clean temporary preflight worktree/branch. Existing recovery siblings remain.
+Final root readiness was eligible against clean chat successor
+`3140702368aaf7073d2089434ca83d537ed83abd`; it reused all 46 proofs in
+50.231999 seconds and independently reconciled the delivery census.
+
+Approved main merge `afe9d25abafc6635e9b37dbfe62644e09c742ba5` has the exact
+verified tree `45bedf59056bb1114d1dab3d130bb0264bddd107`. Normal push and
+independent remote observation confirmed that SHA. The single approved hosted
+retry is [42137237026](https://github.com/gordonrose/entity-builder-harness/actions/runs/42137237026),
+created `2026-11-06T00:29:52Z` on that main SHA; its exact protected environment
+was approved once. The run completed successfully at `2026-11-06T00:37:50Z`
+(478 seconds from creation; job 448 seconds). Actual packaged/container smoke,
+inactive-observer negative capability, fixed-role access, publication, ECR scan,
+SPDX SBOM, provenance/SBOM attestations and custody upload all passed. Positive
+and negative container cleanup observed all five effects absent; no shared
+environment fault was injected.
+
+Qualified immutable image digest and runner-inspected image identity are
+`sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17`.
+The complete ECR scan is bound to AMD64 runnable manifest
+`sha256:cf7041126e005805038620dd5fc9767d9053b62c777369a47a50e96035bcfcb2`,
+with zero critical and high findings under the existing scan policy; this does
+not claim absence of every vulnerability severity. The existing safe custody
+validator independently passed with zero findings for the exact expected
+target/candidate/package/program, main SHA and run reference
+`github-actions-run:42137237026`. Retained artifact ID `13466233788`, named
+`kanbien-core-platform-persistence-package-custody-42137237026`, has GitHub
+artifact digest
+`sha256:444dc6b1e746c731c3f5db2d8f411cf82b8523e5fc2a4c156cc3c8e70544e77f`.
+The private downloaded evidence is under
+`/tmp/diagnostics-custody-42137237026-2Utrk4mM/`; custody receipt SHA-256 is
+`3a2036ab8652485e40c402f2117d855528873b926b02185c00ddf33d3794df98`.
+Full proof/log hashes and original failures remain in the session journal.
+
+This qualifies source-to-published-package custody, not deployed acceptance,
+remote diagnostic receipt or full production sign-off. The target's accepted
+release/workload remains unchanged. No second retry or workload deployment was
+performed or authorized by this batch. This post-dispatch plan/journal update
+does not change the immutable hosted source. The previous run and diagnosis
+below remain historical evidence, not current publication proof.
+
+The user approved the existing read-only fixed-target preparation and
+rollback-readiness inspection for `kanbien-core-platform/core-server-persistence`
+using `kanbien-dev`, account `337159794548`, region `eu-west-1`:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh --receipt /tmp/diagnostics-custody-42137237026-2Utrk4mM/package-custody-receipt.json --json
+```
+
+The existing owner checks declaration, exact qualified image, identity, live
+budget/private foundation and current target using provider reads. Resolve the
+retained accepted image/receipt and current compatibility record with existing
+release-succession reads and narrow provider observations before presenting the
+exact receipt-bound update, safe reserved-target runtime proofs and rollback
+packet. No AWS workload mutation is authorized by publication or this proposed
+preflight; do not execute either without its corresponding user approval.
+
+#### Read-only target and rollback result — 2026-11-06
+
+The approved preparation exited zero with `prepared`, no findings, at
+`2026-11-06T00:44:36Z` (approximately 22.5 seconds). It freshly proved the exact
+published candidate image/scan, covered declaration, available private
+foundation/startup routes, live target-filtered USD 100 budget and valid template.
+The separate STS observation confirmed the expected account. These observations
+are a preflight snapshot and must be refreshed before a later mutation.
+
+Narrow provider reads found stack `UPDATE_COMPLETE`, service `ACTIVE`, desired
+one/running one/pending zero, rollout `COMPLETED`, task definition revision 35,
+and no existing change sets. The task-definition image matches the stack and
+retained accepted release: source
+`72dadc7d48cae074f92df809e5527f47dfd69931`, digest
+`sha256:e9d12f96384f0518c1fbd71e2b506d86cf05361ebf253ee35f2de075bc327178`.
+The independently pinned restoration-verifier digest remains
+`sha256:304a85b1a8e141247c397032855dffc7c663541871721d734bd53a82ad07c413`.
+RDS is available, private, encrypted, IAM-authentication enabled and
+deletion-protected, with seven-day backups. These are orchestrator/provider
+observations, not new private application-operation or remote diagnostic proof.
+
+The existing release-succession `validate-current` operation passed for
+`release-cb3cf3292e03fda8e7e40188`. The retained predecessor package receipt
+`github-actions-run:40232309637` validates; its exact image
+`sha256:d65005e10e420d75067c867f2a732b63bcd796445e6a9eb802c5d15f5827434e`
+is still available and passes the existing live ECR scan reader. Generic
+succession validation confirms that compatibility record
+`rollback-compatibility-8f1ffbb5741c5ce923b0cfab` is authentic and matches current
+configuration/permission contract hashes. However, invoking the existing target
+`prepare.rollback_compatibility` read-only with that real receipt/record returns
+`False`. Therefore overall deployment readiness is **blocked on rollback**,
+despite candidate preparation passing. No change set or AWS mutation occurred.
+
+The receiving target controller and retained evidence disagree at two concrete
+boundaries, which earlier local fixtures did not cover together:
+
+- The authentic record covers `core-server-service` and
+  `private-release-verifier-task`; the target additionally demands
+  `persistence-restoration-verifier-task`. Its rollback parameter builder would
+  select the old digest for restoration verification as well as the server,
+  although administration/migration support remains on the supplied support
+  receipt. The current deployed restoration verifier has its own image binding.
+  Do not add fictional coverage to the immutable record or remove this guard
+  without first reconciling the actual governed workload/receipt ownership.
+- The generic owner and acceptance collector support the record's
+  `qualified_predecessor` identity. The target's subsequent ownership check
+  assumes `historical_release_id`, which this identity does not contain; its
+  exception handler would reject that format even if workload coverage matched.
+  Existing provider CLI regression uses a constructed historical-release,
+  three-workload record, not the real qualified-predecessor/two-workload handoff.
+
+Restricted observations are in `/tmp/diagnostics-target-preflight-kEM1PGSf/`;
+the journal records report hashes and the exact safe read inventory. No native
+provider messages, endpoints, secret values or raw evidence were copied here.
+Source/package qualification remains valid for its exact published image, but
+it does not waive this newly exercised controller-consumer requirement.
+
+The next proposed approval is bounded rollback-readiness reconciliation at
+`prepare-candidate`, `transition-qualified-release` and their existing provider
+CLI/controller regressions, with existing declaration/acceptance owners reviewed
+as necessary. Correct the qualified-versus-historical identity consumer and
+reconcile restoration-verifier image ownership with authentic compatibility
+coverage; retain current-contract, receipt/image, no-permission-regression,
+change-shape and uncertainty/reconciliation protections. Use real retained
+record-shape counterexamples in the existing tests, not another framework.
+Do not silently edit accepted/archive evidence or treat unexercised coverage as
+proved. Complete applicable source-matched review, registered verification and
+governed commit/merge/push before returning the deployment/recovery packet.
+Any new live proof or AWS mutation needs separate exact authority; none is
+authorized now. The retiring Kanbien/staging Stage 6 applicability exception
+does not apply to this fixed core-server candidate and is not being adopted.
+
+#### Approved local rollback correction — source review closed
+
+The user approved the bounded correction and governed commit/main merge/push;
+deployment remains a separate authority boundary. The preceding proposed scope
+is now implemented, not awaiting implementation approval. This changes the
+deployment controller, not the published runtime image or its custody identity.
+
+Receipt loading reuses the existing generic validator on one parsed document
+and retains its checked custody reference in the private target projection;
+the external safe validation report is unchanged. The authentic qualified
+predecessor now matches source, digest and custody reference. Historical release
+ownership, current contract hashes and retained proof validation remain required.
+Server/private-verifier coverage is mandatory; only the known historical extra
+restoration coverage is tolerated, without granting authority to downgrade it.
+
+Rollback retains administration/migration and restoration on the supplied
+qualified support receipt. Both deployed pins must already match it; distinct
+support/restoration mismatch codes block before mutation. Fresh support-image
+scan failure and retained-image/foundation failure preserve their finite actual
+reason alongside the existing outer rejection. Submission review and read-only
+reconciliation enforce identical pins; normal update still selects the new
+candidate for all three digest parameters. Differently pinned restoration is
+not coerced. Immutable accepted/archive evidence is unchanged.
+
+Parent self-review reconciled the eight task paths with the recorded consumer
+and predicate inventories. Existing permission-surface consumers tolerate the
+additive checked reference; the acceptance collector already supports qualified
+predecessors and independently qualified restoration, so neither needs changes.
+Actual-archive, provenance mismatch, missing/unknown workload, malformed/unsafe
+receipt, legacy ownership, contract/proof tampering, pin retention, exact failure
+reason, no-mutation rejection and no-replay reconciliation assertions reject
+the material counterexamples. The source-matched diagnostic owner remains
+partial; this is not whole-file adoption or live rollback proof. No ADR is
+needed: existing split image ownership and identity formats are restored.
+
+Exploratory evidence: the real-record assertion rejected the old consumer in
+0.033 seconds; an earlier wrong test-class invocation was discovery failure,
+not behavioral evidence. Provider regression passed five tests in 17.167 seconds
+and controller regression passed 41 in 2.054 seconds; the final focused controller
+case passed in 0.525 seconds after reason-preservation adjustments. These direct
+runs do not seed trusted reuse. Required corrections are closed and there are
+no other writers; freeze the eight-path batch for normal preparation, registered
+focused owners and complete impact verification. Those final gates and Git
+integration are still pending. The journal records attempts, times and hashes.
+
+Historical position (2026-11-05, after explicit promotion approval): the complete
 registered integration selection passed 128 local instances (30 executed,
 98 reused, zero findings); 18 later-stage instances remain deferred. The final
 isolated packaged-payload check and staged gate passed, and fixture-only task

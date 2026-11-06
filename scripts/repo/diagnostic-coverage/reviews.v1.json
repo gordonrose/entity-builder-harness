@@ -1123,7 +1123,7 @@
     {
       "owner": "operational-persistence-deployment-observation",
       "status": "partial",
-      "reason": "Reviewed prepare/create/deploy/retire boundaries retain actual parameter and provider call order, finite code/status observations and known operation identity without echoing native failures, private child output or rejected values. Retire distinguishes positively classified missing from unavailable provider observations; failed submit/read responses do not establish no effect. Existing controller reconciliation, CAS/admission and mutation behavior are retained. The additionally source-censused regression file is verification support for this same capability, not an operational provider caller.",
+      "reason": "Reviewed prepare/create/deploy/retire boundaries retain actual parameter and provider call order, finite code/status observations and known operation identity without echoing native failures, private child output or rejected values. Retire distinguishes positively classified missing from unavailable provider observations; failed submit/read responses do not establish no effect. Receipt loading reuses the existing custody validator on one document and retains its validated run reference; qualified rollback matches source/digest/custody while historical ownership and current contract/proof checks remain. Rollback selects the predecessor only for server/private verifier; qualified support and restoration pins are checked, retained and identically reconciled. Distinct pin failures and supported scan/foundation reasons remain visible, with no provider mutation on rejection or replay during reconciliation. Actual archive-shape and controller fixtures cover these paths without editing live evidence. The additionally source-censused regression file is verification support, not an operational provider caller. This is bounded local coverage, not live rollback or whole-file operational adoption.",
       "remaining_debt": [
         "Only the listed reviewed production sources are claimed. Parent-owned final proof remains pending; B14 owns live CloudFormation/ECS/RDS effects, reconciliation and acceptance."
       ],
@@ -1142,7 +1142,11 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
-          "sha256": "d0a796a5bd4d1a4fc243a00c1025644f9f90df46a5b5a3e0c224663aefd02c77"
+          "sha256": "2339826d4a8f862ee60d9710067b256894f4720de2c932da229ba4c55937a4a8"
+        },
+        {
+          "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+          "sha256": "66544552909f066c2697acccd562617d8bc8c0f0b42432ff00d8a15c29577f66"
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py",
@@ -1158,7 +1162,11 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
-          "sha256": "53bebb5e98cee1e445ffd2133bf696fa71bdd689f164f508f5920986d0dc737d"
+          "sha256": "ff7fa48ddc5d644bb68da9e606e7c70c8de9e3b63f62707e7e25d2d8c0820c65"
+        },
+        {
+          "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py",
+          "sha256": "d6c74a40820b83d8191dbc411489bd9485300dfe6cdc377d59d616ee5f17a976"
         }
       ]
     },

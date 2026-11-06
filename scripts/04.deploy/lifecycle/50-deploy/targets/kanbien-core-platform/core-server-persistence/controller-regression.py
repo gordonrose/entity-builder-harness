@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-06"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -238,6 +238,71 @@ class ControllerRegression(unittest.TestCase):
         submitted=next(parts for parts in provider.calls if parts[1]=='create-change-set')
         self.assertIn('--use-previous-template',submitted)
         self.assertNotIn('--template-body',submitted)
+
+    def test_qualified_rollback_main_retains_support_and_restoration_images(self):
+        module = load(DEPLOY/'transition-qualified-release/script.py')
+        prepare = load(DEPLOY/'prepare-candidate/script.py')
+        evidence = ROOT/'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence'
+        retained_path = evidence/'package-receipts/package-custody-40232309637.json'
+        support_path = evidence/'package-receipts/package-custody-40419185209.json'
+        retained, support = prepare.validate_receipt(retained_path), prepare.validate_receipt(support_path)
+        outputs = {'RepositoryUri': 'synthetic-image-repository'}
+        original = {**prepare.candidate_parameters(outputs, {}, support), 'EnableObservability': 'true'}
+        desired = {**prepare.candidate_parameters(outputs, {}, retained), 'SupportImageDigest': support['image_digest'], 'RestoreVerifierImageDigest': support['image_digest'], 'EnableObservability': 'true'}
+        name = 'kanbien-core-platform-persistence-rollback-' + retained['image_digest'][7:19]
+        arguments = ['test', '--receipt', str(retained_path), '--operation', 'rollback', '--rollback-compatibility-id', 'rollback-compatibility-8f1ffbb5741c5ce923b0cfab', '--support-receipt', str(support_path), '--json']
+        for wrong_pin in (None, 'SupportImageDigest', 'RestoreVerifierImageDigest', 'support-scan', 'retained-scan', 'foundation'):
+            with self.subTest(wrong_pin=wrong_pin):
+                current = {**original}
+                if wrong_pin in ('SupportImageDigest', 'RestoreVerifierImageDigest'): current[wrong_pin] = 'sha256:'+'a'*64
+                state = {'submitted': None, 'executed': False}
+                def response(parts):
+                    operation = parts[1]
+                    if operation == 'describe-stacks':
+                        params = desired if state['executed'] else current
+                        return True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in params.items()]}]}, 'ok'
+                    if operation == 'describe-services': return True, {'services': [{'desiredCount': 1, 'runningCount': 1}]}, 'ok'
+                    if operation == 'create-change-set':
+                        submitted = json.loads(Path(parts[parts.index('--parameters')+1].removeprefix('file://')).read_text())
+                        resolved = {item['ParameterKey']: current[item['ParameterKey']] if item.get('UsePreviousValue') else item['ParameterValue'] for item in submitted}
+                        self.assertEqual(resolved, desired)
+                        self.assertTrue(next(item for item in submitted if item['ParameterKey']=='EnableObservability')['UsePreviousValue'])
+                        state['submitted'] = resolved
+                        return True, {}, 'ok'
+                    if operation == 'describe-change-set':
+                        if state['submitted'] is None: return False, None, 'aws-resource-missing'
+                        return True, {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ChangeSetType': 'UPDATE', 'ExecutionStatus': 'EXECUTE_COMPLETE' if state['executed'] else 'AVAILABLE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in state['submitted'].items()], 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::ECS::TaskDefinition'}}]}, 'ok'
+                    if operation == 'execute-change-set': state['executed'] = True; return True, {}, 'ok'
+                    raise AssertionError(f'unexpected provider operation: {operation}')
+                provider = Provider(response)
+                create = SimpleNamespace(package_gates=lambda _path: True)
+                def image_check(receipt):
+                    failed = (wrong_pin=='support-scan' and receipt['image_digest']==support['image_digest']) or (wrong_pin=='retained-scan' and receipt['image_digest']==retained['image_digest'])
+                    return not failed, 'persistence-candidate-image-scan-not-clean' if failed else 'ok'
+                infrastructure = (None, 'persistence-private-startup-endpoints-unavailable') if wrong_pin=='foundation' else ({}, 'ok')
+                with patch.object(module, 'load', side_effect=[prepare, create]), patch.object(sys, 'argv', arguments), patch.object(prepare, 'aws', provider.aws), patch.object(prepare, 'live_budget', return_value=(True, 'ok')), patch.object(prepare, 'foundation_outputs', return_value=(outputs, 'ok')), patch.object(prepare, 'infrastructure_parameters', return_value=infrastructure), patch.object(prepare, 'candidate_image', side_effect=image_check) as scans:
+                    report = result(module.main)[1]
+                if wrong_pin is None:
+                    self.assertEqual(report['verdict'], 'transitioned')
+                    self.assertEqual([call.args[0]['image_digest'] for call in scans.call_args_list], [support['image_digest'], retained['image_digest']])
+                    self.assertEqual(sum(parts[1]=='execute-change-set' for parts in provider.calls), 1)
+                else:
+                    self.assertEqual(report['verdict'], 'blocked')
+                    code = {'support-scan': 'persistence-rollback-support-package-not-proven', 'RestoreVerifierImageDigest': 'persistence-rollback-restoration-image-mismatch', 'retained-scan': 'persistence-release-transition-alignment-not-proven', 'foundation': 'persistence-release-transition-alignment-not-proven'}.get(wrong_pin, 'persistence-rollback-support-image-mismatch')
+                    self.assertEqual(report['findings'][0]['code'], code)
+                    if wrong_pin in ('SupportImageDigest', 'RestoreVerifierImageDigest'): scans.assert_not_called()
+                    if wrong_pin in ('support-scan', 'retained-scan', 'foundation'):
+                        reason = 'persistence-private-startup-endpoints-unavailable' if wrong_pin=='foundation' else 'persistence-candidate-image-scan-not-clean'
+                        self.assertEqual(report['findings'], [{'code': code}, {'code': reason}])
+                    self.assertFalse(any(parts[1] in ('create-change-set', 'execute-change-set') for parts in provider.calls))
+        parameters = [{'ParameterKey': key, 'ParameterValue': value} for key, value in desired.items()]
+        completed = {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE', 'ChangeSetType': 'UPDATE', 'Parameters': parameters, 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::ECS::TaskDefinition'}}]}
+        for restore_digest, expected in ((support['image_digest'], 'transitioned'), (retained['image_digest'], 'uncertain')):
+            observed = {**desired, 'RestoreVerifierImageDigest': restore_digest}
+            provider = Provider(lambda parts: (True, completed, 'ok') if parts[1]=='describe-change-set' else (True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in observed.items()]}]}, 'ok'))
+            with patch.object(prepare, 'aws', provider.aws), patch.object(module, 'retain_failure_diagnostic', return_value=None):
+                self.assertEqual(result(lambda: module.reconcile(prepare, name, retained['image_digest'], retained['source_revision'], support['image_digest']))[1]['verdict'], expected)
+            self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
 
     def test_image_transition_retains_unowned_stack_parameters_and_discards_only_rejected_review(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
