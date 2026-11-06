@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-06T09:44:06Z
-latest_commit_sha: 97a8ebd47b9d91f9a2e0674efed04fda80edc3e8
-chat_duration: 58141s (00:16:09:01)
+latest_commit_at_utc: 2026-11-06T09:46:16Z
+latest_commit_sha: 566f0b1f04802535ed3918ff1741c3b9e0af34b4
+chat_duration: 58271s (00:16:11:11)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -261,6 +261,10 @@ production qualification planning for completed diagnostics work
 
 - Summary: Final rollback correction source proof passed; preserve failing registration attempt and matching reuse before task commit.
   Durable evidence: Same recorded active worktree and branch HEAD3140702368aaf7073d2089434ca83d537ed83abd, exactly8approved task paths. Parent consolidated self-review and follow-up ledger-only correction closed; no runtime/image/archive changes after freeze. Final preparation passed. Registered focused final3checks passed62.095417s:2executed1reused, provider reran because review contract changed; direct structural diagnosis never seeded reuse. Final complete impact passed16local,0findings,0executed16reused,3later-stage obligations deferred in37.168103s; unchanged repository-contracts405.389644s and composition/payload proofs were reused, not repeated. Final plan valid0findings35.961565s. Reports /tmp/diagnostics-rollback-focused-final-20261106.json SHA256829b01011041a5e385bd8ae638adf4ace0fdca1751e9a8ba5e3f693229fcd04e; /tmp/diagnostics-rollback-impact-final-20261106.json SHA256fc6d83b2581f5066127305d06cc8713924b11ece9451bf80ce28a5b0585938ab; initial failed full /tmp/diagnostics-rollback-impact-20261106.json SHA256cd20e82cb85e9d1315547b45ce4a2ddd320fed23e9c3551bd361f94daa3d0d5d retains sole missing source registration and all other passing results. Exploratory original guard/correction times and failed class/lookup/patch attempts recorded above; large discovery outputs reduced to owner/predicate identities, not copied raw. Main/root cleanafe9d25a when inspected; fresh fetch/refresh/root readiness still pending. Published image and hosted custody42137237026 remain exactly bound to sourceafe9d25a, not this controller commit. Stage only8approved paths, pass staged gate, then task commit/record/checkpoint and normal non-rewriting refresh/main readiness/merge/push. No AWS operation authorized yet, pending question; no Docker/install/publication/upstream mutation. Older recovery refs/worktrees preserved; global workspace report remains historical partial, not passed. DIAG013 required deferred logging review, DIAG006/007 deferred and shutdown/remote-receipt limits unchanged. No ADR required: existing ownership and immutable identity consumer repair only.
+
+
+- Summary: Main refresh applied; retain exact final source tree and post-integration reuse before root readiness.
+  Durable evidence: Task97a8ebd47b9d91f9a2e0674efed04fda80edc3e8 and journalcheckpointfbac1e6a preserved. Fresh origin fetch completed0 with main/origin bothafe9d25a; classifierclean. Rehearsed merge566f0b1f04802535ed3918ff1741c3b9e0af34b4 has identical verified files; no conflicts. Applied through normal owner, post-gate passed16local with0executed16reused0findings3externaldeferred42.172084s. /tmp/diagnostics-rollback-main-refresh-apply-20261106.log records proof and removed-worktree-and-deleted-branch for only /tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-fbac1e6a2f2a-20261106094443 and exact matching preflight ref. Temporary worktree is removed, its committed source remains in chat history; no older recovery siblings altered. Recorder empty transcript-field whitespace normalized as in prior checkpoints; no helper redesign. Corrected recorded merge subject to exact git log subject, not a paraphrase. Staged commit gate had6matchingcommit proofs reused24.093283s; integration requirements passed separately. Root readiness, main merge and normal origin push are next under prior explicit approval. Publishedimage/custody/source and AWS target remain unchanged. Pending asynchronous AWS stage approval is not assumed. Global workspace inventory remains prior partial for unrelated missing registration; actual target/root/chat registration is authoritative and no pruning is permitted.
 
 ## Activity Log
 
@@ -873,6 +877,24 @@ Summary: Eight approved paths preserve validated custody provenance and immutabl
 
 ADR impact: No new architecture: existing custody, immutable identity and split image ownership reconciled.
 
+
+### 2026-11-06T09:46:16Z - Commit recorded
+
+Commit: `566f0b1f04802535ed3918ff1741c3b9e0af34b4`
+
+Message: Merge branch 'main' into agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-fbac1e6a2f2a/20261106094443
+
+Summary: Approved non-rewriting main refresh after fresh normal origin fetch confirmed main/originafe9d25a; classifierclean. Preflight566f0b1f clean merge, identical verified file tree to fbac1e6a, no conflicts. Normal apply/post-integration gate passed with matching local evidence before governed cleanup of only the clean temporary preflight worktree and its branch. Commit remains in chat history; temporary worktree itself removed, older unique/dirty recovery refs retained. Root readiness and approved main merge/push remain next; no AWS operation.
+
+ADR impact: No new architecture or runtime source change; recorded merge preserves task97a8ebd4 and prior history.
+
+
+### 2026-11-06T09:46:55Z - Context hygiene
+
+Summary: Main refresh applied; retain exact final source tree and post-integration reuse before root readiness.
+
+Durable evidence: Task97a8ebd47b9d91f9a2e0674efed04fda80edc3e8 and journalcheckpointfbac1e6a preserved. Fresh origin fetch completed0 with main/origin bothafe9d25a; classifierclean. Rehearsed merge566f0b1f04802535ed3918ff1741c3b9e0af34b4 has identical verified files; no conflicts. Applied through normal owner, post-gate passed16local with0executed16reused0findings3externaldeferred42.172084s. /tmp/diagnostics-rollback-main-refresh-apply-20261106.log records proof and removed-worktree-and-deleted-branch for only /tmp/agentic-main-refresh-preflight/chat-2026-11-05-17-35-production-qualification-p-fbac1e6a2f2a-20261106094443 and exact matching preflight ref. Temporary worktree is removed, its committed source remains in chat history; no older recovery siblings altered. Recorder empty transcript-field whitespace normalized as in prior checkpoints; no helper redesign. Corrected recorded merge subject to exact git log subject, not a paraphrase. Staged commit gate had6matchingcommit proofs reused24.093283s; integration requirements passed separately. Root readiness, main merge and normal origin push are next under prior explicit approval. Publishedimage/custody/source and AWS target remain unchanged. Pending asynchronous AWS stage approval is not assumed. Global workspace inventory remains prior partial for unrelated missing registration; actual target/root/chat registration is authoritative and no pruning is permitted.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -935,6 +957,13 @@ ADR impact: No new architecture: existing custody, immutable identity and split 
   Message: fix(deploy): reconcile qualified persistence rollback ownership
   Summary: Eight approved paths preserve validated custody provenance and immutable historical/qualified rollback compatibility, retain already-qualified support/restoration pins, preserve exact finite failure reasons and extend existing authentic-archive/provider/controller assertions. Final focused3checks passed62.095417s; complete impact16local passed0findings with16reused37.168103s and3later-stage deferred. Missing fixture source binding was caught, corrected and re-proved without runtime changes or repeated unrelated suites; full failed attempt retained. Staged gate exited0 ready. No AWS mutation, Docker/publication or accepted-evidence rewrite. Main refresh/readiness/merge/push next under existing approval; exact published runtime remains sourceafe9d25a/custody42137237026.
   ADR impact: No new architecture: existing custody, immutable identity and split image ownership reconciled.
+
+
+- Commit: `566f0b1f04802535ed3918ff1741c3b9e0af34b4`
+  Time UTC: 2026-11-06T09:46:16Z
+  Message: Merge branch 'main' into agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-fbac1e6a2f2a/20261106094443
+  Summary: Approved non-rewriting main refresh after fresh normal origin fetch confirmed main/originafe9d25a; classifierclean. Preflight566f0b1f clean merge, identical verified file tree to fbac1e6a, no conflicts. Normal apply/post-integration gate passed with matching local evidence before governed cleanup of only the clean temporary preflight worktree and its branch. Commit remains in chat history; temporary worktree itself removed, older unique/dirty recovery refs retained. Root readiness and approved main merge/push remain next; no AWS operation.
+  ADR impact: No new architecture or runtime source change; recorded merge preserves task97a8ebd4 and prior history.
 
 ## Main Refresh Conflicts
 
@@ -1080,9 +1109,9 @@ Reason: This qualification continuation documents and verifies existing contract
 ## Session Metrics
 
 Raised at UTC: 2026-11-05T17:35:05Z
-Latest commit at UTC: 2026-11-06T09:44:06Z
-Latest commit SHA: 97a8ebd47b9d91f9a2e0674efed04fda80edc3e8
-Chat duration: 58141s (00:16:09:01)
+Latest commit at UTC: 2026-11-06T09:46:16Z
+Latest commit SHA: 566f0b1f04802535ed3918ff1741c3b9e0af34b4
+Chat duration: 58271s (00:16:11:11)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
