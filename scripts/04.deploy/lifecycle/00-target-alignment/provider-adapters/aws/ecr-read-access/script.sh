@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.adapter.aws.ecr-read-access
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-06"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -61,11 +61,11 @@ probe_not_denied() {
   else
     status=$?
   fi
-  if grep -Eq "^An error occurred \\((AccessDenied|AccessDeniedException|UnauthorizedOperation|UnrecognizedClientException|InvalidClientTokenId|ExpiredToken|ExpiredTokenException)\\) when calling the ${provider_operation} operation:" "$output"; then
+  if grep -Eq "^(aws: \\[ERROR\\]: )?An error occurred \\((AccessDenied|AccessDeniedException|UnauthorizedOperation|UnrecognizedClientException|InvalidClientTokenId|ExpiredToken|ExpiredTokenException)\\) when calling the ${provider_operation} operation:" "$output"; then
     rm -f "$output"
     fail "DELIVERY_ACCESS_${operation}_DENIED"
   fi
-  if [ -n "$missing_codes" ] && grep -Eq "^An error occurred \\((${missing_codes})\\) when calling the ${provider_operation} operation:" "$output"; then
+  if [ -n "$missing_codes" ] && grep -Eq "^(aws: \\[ERROR\\]: )?An error occurred \\((${missing_codes})\\) when calling the ${provider_operation} operation:" "$output"; then
     rm -f "$output"
     return 0
   fi

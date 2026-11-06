@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.governed-diagnostic-coverage
-version: 10
+version: 13
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-05"
+updated_on: "2026-11-06"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -23,6 +23,135 @@ Qualification coordinator: the November 5 session recorded in
 `commitLogs/2026/nov/05/2026-11-05-17-35-diagnostics-production-qualification/README.md`.
 This section governs the current verification handoff; earlier local results
 remain historical, and do not certify the merged source automatically.
+
+Current position (2026-11-05, after explicit promotion approval): the complete
+registered integration selection passed 128 local instances (30 executed,
+98 reused, zero findings); 18 later-stage instances remain deferred. The final
+isolated packaged-payload check and staged gate passed, and fixture-only task
+commit `2b658a32bd10b2a28354bab7a370a6a77094a946` was preserved in clean branch
+successor `f7a52482d177d520320c1d40c1397a1878ed7a37`. The final target-specific
+root readiness gate was eligible for that exact state. The global workspace
+inventory remains partial because of an unrelated historical missing temporary
+registration; no registrations were pruned or that report represented as passed.
+
+Approved non-rewriting main merge `f392d394e842e00087b37c49074ac82e188574f6`
+has the identical tree `d13f388eea6c50190752e4e0c60737902d533d89` and was pushed
+normally to `origin/main`, independently observed at that exact SHA. Protected
+persistence publication run
+[42132562331](https://github.com/gordonrose/entity-builder-harness/actions/runs/42132562331)
+was dispatched once on that main SHA and its specific `kanbien-core-platform`
+environment approval was granted under the same user authority. It completed
+with failure at the fixed delivery-role access probe, after actual payload and
+positive/negative finished-container qualification passed. Hosted image ID was
+`sha256:e7a62de647f31b12c6b8d420d69414fdbb0274dd48712293af366a0eca6c914c`;
+this is an ephemeral runner image ID, not a published ECR digest. The capability
+negative test rejected `packaged-readiness-metric-ready-not-exported` and
+observed all five cleanup effects absent. The image's exact source remains the
+main merge above, not the subsequent local documentation edits.
+
+The failing code is
+`DELIVERY_ACCESS_DESCRIBE_IMAGES_PROBE_INCONCLUSIVE`. OIDC role assumption and
+the authorization-token read succeeded; the deliberately absent all-zero-digest
+DescribeImages probe was neither a recognized denial nor a recognized exact
+ImageNotFound response. The adapter deletes its private raw observation and
+retains only this safe category. Therefore neither missing permissions nor a
+formatting/parser defect is established by the retained evidence. ECR login,
+publication, scan, SBOM, attestations and receipt/upload steps were skipped;
+the run has zero artifacts. Do not bypass the guard, broaden IAM permissions,
+replay the workflow without diagnosis, or claim a qualified hosted receipt.
+Run duration was 245 seconds from creation to final update (job 217 seconds).
+The complete and failed logs are retained privately as
+`/tmp/diagnostics-qualification-publication-42132562331-{complete,failed}.log`.
+
+The user subsequently approved read-only AWS diagnosis, not workload mutation
+or a speculative fix. The approved fixed-target commands, with raw observations
+kept private and only bounded error codes reported, were:
+
+```bash
+aws --version
+AWS_PROFILE=kanbien-dev aws sts get-caller-identity
+AWS_PROFILE=kanbien-dev aws ecr describe-images --region eu-west-1 --repository-name kanbien-core-platform/core-server --image-ids imageDigest=sha256:0000000000000000000000000000000000000000000000000000000000000000 --output json
+AWS_PROFILE=kanbien-dev aws iam list-role-policies --role-name github-kanbien-core-platform-delivery
+AWS_PROFILE=kanbien-dev aws iam list-attached-role-policies --role-name github-kanbien-core-platform-delivery
+```
+
+Read the exact returned policy identifiers through their existing read-only
+IAM operations if needed. A local administrator-profile probe can establish
+native missing-image response semantics and CLI behavior, but cannot prove the
+hosted assumed role's effective access; preserve that limitation. Any required
+source correction, CI diagnostic change, IAM mutation or publication rerun
+needs its exact evidence-backed proposal and authority before execution.
+
+Read-only diagnosis completed on November 6 using profile `kanbien-dev`,
+account `337159794548`, region `eu-west-1`, and the fixed repository/role above.
+The native all-zero-digest probe returned exit 254 with the expected
+`ImageNotFoundException` for `DescribeImages`, but its header begins
+`aws: [ERROR]: An error occurred ...`. Local AWS CLI is `2.36.50`; the existing
+anchored pattern rejects this header. A bounded replay using only the known
+header and a synthetic message confirmed grep status 1 for the existing
+pattern and 0 for the proposed exact optional-prefix pattern. This is
+diagnostic reproduction, not a replacement registered verification framework.
+
+The failed hosted run used runner image `ubuntu-26.04`, version
+`20261101.186.1`. Its [versioned software manifest](https://github.com/actions/runner-images/blob/ubuntu26/20261101.186/images/ubuntu/Ubuntu2604-Readme.md)
+declares AWS CLI `2.39.3`; that version's [formatter source](https://raw.githubusercontent.com/aws/aws-cli/2.39.3/awscli/errorformat.py)
+adds the same exact prefix, and its driver defaults to enhanced error format.
+This establishes a format incompatibility that explains the observed gate
+category; the original deleted CI response is still unavailable, so the
+hosted role's exact original provider error is not independently recovered.
+The role has one inline policy, `publish-core-image`, and no attached managed
+policies. Its actual inline statement explicitly allows `ecr:DescribeImages`
+on the fixed repository, without a condition; no explicit deny is present
+in that document. This does not certify absence of an SCP, permissions
+boundary or other effective-access restriction. No IAM expansion is justified.
+
+Private observations are under `/tmp/diagnostics-ecr-readonly-B7r5mJQT/`,
+outside repository evidence. No credentials or raw provider messages were
+printed or copied into this plan. All completed provider calls were reads.
+No product/runtime source, gate implementation, test, review binding, IAM
+policy or hosted workflow was changed or rerun during this diagnosis.
+
+The user approved this single bounded correction/publication batch:
+accept only the optional exact `aws: [ERROR]: ` prefix in both existing denial
+and expected-missing header patterns; retain exact operation/code allowlists,
+denial precedence, unknown-response failure and canary exclusion. Extend the
+existing target-wrapper regression for both formats, prefixed denials,
+wrong-operation/unknown/prose-only counterexamples, and refresh only its
+affected diagnostic review binding without upgrading partial coverage.
+Run affected existing registered checks and required commit/merge gates,
+reusing matching proofs; then commit, non-rewriting merge/push to main, and
+perform one protected persistence publication retry including its environment
+approval. The fixed-role hosted probe must pass before any image publication.
+No dependency installation locally, IAM mutation, workload deployment, fault
+injection, upstream incorporation or logging/telemetry redesign is proposed.
+
+The adapter now recognizes only the optional exact prefix in its existing two
+patterns. The existing wrapper table retains all legacy cases and repeats its
+failed-response alternatives in the modern format, including leading newline,
+scan denial, exact denial/not-found collision, wrong operation, untrusted prefix
+and wrong severity. Its original call-count/fixed repository/canary checks stay
+unchanged. Before changing the implementation, this expanded regression failed
+seven subcases against the old parser in 7.769 seconds; the retained exploratory
+counterexample log is `/tmp/diagnostics-ecr-prefix-before-fix-20261106.log`.
+The existing `operational-target-live-alignment-bindings` review was reconciled
+to the source delta and kept `partial`; no definition or public meaning changed.
+Self-review covers all five paths (adapter, existing test, review ledger,
+qualification plan and session journal), including unchanged core/collector
+publisher consumers without authority to run those publishers. No product,
+package or Docker inputs changed. No additional corrections remain identified;
+prepare/freeze this batch, prove its existing registered owners, then complete
+impact/commit/refresh/main gates before the single authorized hosted retry.
+Registered proof is pending, not inferred from the exploratory counterexample.
+
+The approval
+API operation succeeded, although local output projection failed; read-only
+reconciliation confirmed no pending approval and the exact job running, so no
+mutation was repeated. Qualification-plan/journal updates after dispatch do not
+change the immutable hosted source. No workload deployment, fault or recovery
+mutation is included in this approval. Preserve the existing image identities
+and remaining proof limits below; obtain receipt-bound deployment/recovery
+authority before the next stage. DIAG-013 remains open/deferred and a required
+logging/telemetry maturity-review input, not part of this qualification slice.
 
 ### Source, review and evidence reuse
 
@@ -228,8 +357,10 @@ all four paths before the next registered complete pass. The replay temporarily 
 restores workspace package links; do not overlap further such diagnostics with
 verification or assume runtime identity without the selector's revalidation.
 
-No main merge/push, hosted publication, AWS mutation, shared-environment fault or
-accepted-release promotion has occurred. The existing AWS owner is a private
+At the historical failed-integration checkpoint above, no main merge/push,
+hosted publication, AWS mutation, shared-environment fault or accepted-release
+promotion had occurred. The current promotion/publication status is recorded
+at the start of this continuation. The existing AWS owner is a private
 persistence candidate, not a separately established staging environment. Agree
 the safe target arrangement and exact rollback-compatible receipt before live
 proof. Main-only publication ordering, independent provider observations and

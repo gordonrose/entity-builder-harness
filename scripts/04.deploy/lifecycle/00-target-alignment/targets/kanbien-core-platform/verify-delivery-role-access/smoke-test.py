@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.alignment-wrapper-diagnostics
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-31"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-06"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -88,7 +88,19 @@ raise SystemExit(status)
             ({'describe-images': [9, error('RepositoryNotFoundException', 'DescribeImages')]}, 1, 'DESCRIBE_IMAGES_PROBE_INCONCLUSIVE', 2),
             ({'describe-images': [9, error('ImageNotFoundException', 'DescribeImageScanFindings')]}, 1, 'DESCRIBE_IMAGES_PROBE_INCONCLUSIVE', 2),
             ({'describe-images': [9, error('AccessDeniedException', 'DescribeImages') + '\nImageNotFound']}, 1, 'DESCRIBE_IMAGES_DENIED', 2),
+            ({'describe-images': [9, error('AccessDeniedException', 'DescribeImages') + '\n' + error('ImageNotFoundException', 'DescribeImages')]}, 1, 'DESCRIBE_IMAGES_DENIED', 2),
+            ({'describe-image-scan-findings': [9, error('AccessDeniedException', 'DescribeImageScanFindings')]}, 1, 'DESCRIBE_SCAN_FINDINGS_DENIED', 3),
             ({'get-authorization-token': [9, error('ExpiredTokenException', 'GetAuthorizationToken')]}, 1, 'GET_AUTHORIZATION_TOKEN_DENIED', 1),
+            ({'describe-images': [9, 'untrusted-prefix: ' + error('ImageNotFoundException', 'DescribeImages')]}, 1, 'DESCRIBE_IMAGES_PROBE_INCONCLUSIVE', 2),
+            ({'describe-images': [9, 'aws: [WARNING]: ' + error('ImageNotFoundException', 'DescribeImages')]}, 1, 'DESCRIBE_IMAGES_PROBE_INCONCLUSIVE', 2),
+        ]
+        # Modern AWS CLI adds exactly this prefix. Preserve the legacy cases and
+        # run every failed-response alternative through the modern format too.
+        cases += [
+            ({operation: [status, '\n' + '\n'.join('aws: [ERROR]: ' + line for line in message.splitlines())]
+              if status else [status, message]
+              for operation, (status, message) in outcomes.items()}, expected, code, count)
+            for outcomes, expected, code, count in cases
         ]
         for outcomes, status, code, count in cases:
             with self.subTest(outcomes=outcomes):
