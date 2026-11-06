@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-06T00:27:52Z
-latest_commit_sha: 6854ceecc9e0810bccc1fe48d03441ddea83295f
-chat_duration: 24767s (00:06:52:47)
+latest_commit_at_utc: 2026-11-06T09:44:06Z
+latest_commit_sha: 97a8ebd47b9d91f9a2e0674efed04fda80edc3e8
+chat_duration: 58141s (00:16:09:01)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -862,6 +862,17 @@ Summary: Final rollback correction source proof passed; preserve failing registr
 
 Durable evidence: Same recorded active worktree and branch HEAD3140702368aaf7073d2089434ca83d537ed83abd, exactly8approved task paths. Parent consolidated self-review and follow-up ledger-only correction closed; no runtime/image/archive changes after freeze. Final preparation passed. Registered focused final3checks passed62.095417s:2executed1reused, provider reran because review contract changed; direct structural diagnosis never seeded reuse. Final complete impact passed16local,0findings,0executed16reused,3later-stage obligations deferred in37.168103s; unchanged repository-contracts405.389644s and composition/payload proofs were reused, not repeated. Final plan valid0findings35.961565s. Reports /tmp/diagnostics-rollback-focused-final-20261106.json SHA256829b01011041a5e385bd8ae638adf4ace0fdca1751e9a8ba5e3f693229fcd04e; /tmp/diagnostics-rollback-impact-final-20261106.json SHA256fc6d83b2581f5066127305d06cc8713924b11ece9451bf80ce28a5b0585938ab; initial failed full /tmp/diagnostics-rollback-impact-20261106.json SHA256cd20e82cb85e9d1315547b45ce4a2ddd320fed23e9c3551bd361f94daa3d0d5d retains sole missing source registration and all other passing results. Exploratory original guard/correction times and failed class/lookup/patch attempts recorded above; large discovery outputs reduced to owner/predicate identities, not copied raw. Main/root cleanafe9d25a when inspected; fresh fetch/refresh/root readiness still pending. Published image and hosted custody42137237026 remain exactly bound to sourceafe9d25a, not this controller commit. Stage only8approved paths, pass staged gate, then task commit/record/checkpoint and normal non-rewriting refresh/main readiness/merge/push. No AWS operation authorized yet, pending question; no Docker/install/publication/upstream mutation. Older recovery refs/worktrees preserved; global workspace report remains historical partial, not passed. DIAG013 required deferred logging review, DIAG006/007 deferred and shutdown/remote-receipt limits unchanged. No ADR required: existing ownership and immutable identity consumer repair only.
 
+
+### 2026-11-06T09:44:06Z - Commit recorded
+
+Commit: `97a8ebd47b9d91f9a2e0674efed04fda80edc3e8`
+
+Message: fix(deploy): reconcile qualified persistence rollback ownership
+
+Summary: Eight approved paths preserve validated custody provenance and immutable historical/qualified rollback compatibility, retain already-qualified support/restoration pins, preserve exact finite failure reasons and extend existing authentic-archive/provider/controller assertions. Final focused3checks passed62.095417s; complete impact16local passed0findings with16reused37.168103s and3later-stage deferred. Missing fixture source binding was caught, corrected and re-proved without runtime changes or repeated unrelated suites; full failed attempt retained. Staged gate exited0 ready. No AWS mutation, Docker/publication or accepted-evidence rewrite. Main refresh/readiness/merge/push next under existing approval; exact published runtime remains sourceafe9d25a/custody42137237026.
+
+ADR impact: No new architecture: existing custody, immutable identity and split image ownership reconciled.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -917,6 +928,13 @@ Durable evidence: Same recorded active worktree and branch HEAD3140702368aaf7073
   Message: Merge branch 'main' into agentic/preflight/chat-2026-11-05-17-35-production-qualification-p-0d62f3471539/20261106002608
   Summary: Approved non-rewriting main refresh after task6ca52f67 and journal0d62f347. Fresh origin/main and local main both f392d394. Rehearsal merged without conflicts; git diff proved exact preflight/verified active source-tree equality and main ancestry before apply. Existing apply owner fast-forwarded active branch, then post-integration validation passed46reused0executed0findings6deferred in54.679532s. Normal cleanup removed only the exact clean temporary rehearsal worktree and branch; older preflights/historical registrations preserved. No dependency installation, source edits or direct main mutation in refresh. Root target readiness remains next before approved main merge/push/publication retry.
   ADR impact: No new ADR; branch maintenance only.
+
+
+- Commit: `97a8ebd47b9d91f9a2e0674efed04fda80edc3e8`
+  Time UTC: 2026-11-06T09:44:06Z
+  Message: fix(deploy): reconcile qualified persistence rollback ownership
+  Summary: Eight approved paths preserve validated custody provenance and immutable historical/qualified rollback compatibility, retain already-qualified support/restoration pins, preserve exact finite failure reasons and extend existing authentic-archive/provider/controller assertions. Final focused3checks passed62.095417s; complete impact16local passed0findings with16reused37.168103s and3later-stage deferred. Missing fixture source binding was caught, corrected and re-proved without runtime changes or repeated unrelated suites; full failed attempt retained. Staged gate exited0 ready. No AWS mutation, Docker/publication or accepted-evidence rewrite. Main refresh/readiness/merge/push next under existing approval; exact published runtime remains sourceafe9d25a/custody42137237026.
+  ADR impact: No new architecture: existing custody, immutable identity and split image ownership reconciled.
 
 ## Main Refresh Conflicts
 
@@ -1062,9 +1080,9 @@ Reason: This qualification continuation documents and verifies existing contract
 ## Session Metrics
 
 Raised at UTC: 2026-11-05T17:35:05Z
-Latest commit at UTC: 2026-11-06T00:27:52Z
-Latest commit SHA: 6854ceecc9e0810bccc1fe48d03441ddea83295f
-Chat duration: 24767s (00:06:52:47)
+Latest commit at UTC: 2026-11-06T09:44:06Z
+Latest commit SHA: 97a8ebd47b9d91f9a2e0674efed04fda80edc3e8
+Chat duration: 58141s (00:16:09:01)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
