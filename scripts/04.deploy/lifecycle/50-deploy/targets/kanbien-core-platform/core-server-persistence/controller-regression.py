@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 7
+#   version: 8
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-06"
@@ -239,6 +239,51 @@ class ControllerRegression(unittest.TestCase):
         self.assertIn('--use-previous-template',submitted)
         self.assertNotIn('--template-body',submitted)
 
+    def test_image_transition_uses_deployed_template_and_keeps_resource_guard(self):
+        module = load(DEPLOY/'transition-qualified-release/script.py')
+        prepare = load(DEPLOY/'prepare-candidate/script.py')
+        receipt = {'image_digest': 'sha256:'+'a'*64, 'source_revision': 'a'*40}
+        desired = {'ImageDigest': receipt['image_digest'], 'SupportImageDigest': receipt['image_digest'], 'RestoreVerifierImageDigest': receipt['image_digest'], 'SourceRevision': receipt['source_revision']}
+        current = {**desired, 'ImageDigest': 'sha256:'+'b'*64, 'SupportImageDigest': 'sha256:'+'b'*64, 'RestoreVerifierImageDigest': 'sha256:'+'b'*64, 'SourceRevision': 'b'*40, 'EnableObservability': 'true'}
+        name = 'kanbien-core-platform-persistence-update-' + receipt['image_digest'][7:19]
+        for forced_type in (None, 'AWS::IAM::Role', 'AWS::RDS::DBInstance'):
+            with self.subTest(forced_type=forced_type):
+                state = {'submitted': None, 'executed': False, 'uses_deployed': False}
+                def response(parts):
+                    operation = parts[1]
+                    if operation == 'describe-stacks':
+                        values = {**current, **desired} if state['executed'] else current
+                        return True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in values.items()]}]}, 'ok'
+                    if operation == 'describe-services': return True, {'services': [{'desiredCount': 1, 'runningCount': 1}]}, 'ok'
+                    if operation == 'create-change-set':
+                        state['uses_deployed'] = '--use-previous-template' in parts and '--template-body' not in parts
+                        submitted = json.loads(Path(parts[parts.index('--parameters')+1].removeprefix('file://')).read_text())
+                        resolved = {item['ParameterKey']: current[item['ParameterKey']] if item.get('UsePreviousValue') else item['ParameterValue'] for item in submitted}
+                        self.assertEqual(resolved, {**current, **desired})
+                        self.assertTrue(next(item for item in submitted if item['ParameterKey']=='EnableObservability')['UsePreviousValue'])
+                        state['submitted'] = resolved
+                        return True, {}, 'ok'
+                    if operation == 'describe-change-set':
+                        if state['submitted'] is None: return False, None, 'aws-resource-missing'
+                        # The real failed review brought in RDS/IAM changes from
+                        # the repository template. A deployed-template request
+                        # avoids that input, but never waives the result guard.
+                        resource_type = forced_type or ('AWS::ECS::TaskDefinition' if state['uses_deployed'] else 'AWS::RDS::DBInstance')
+                        return True, {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE' if state['executed'] else 'AVAILABLE', 'ChangeSetType': 'UPDATE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in state['submitted'].items()], 'Changes': [{'ResourceChange': {'ResourceType': resource_type}}]}, 'ok'
+                    if operation == 'execute-change-set': state['executed'] = True; return True, {}, 'ok'
+                    raise AssertionError(operation)
+                provider = Provider(response)
+                with patch.object(module, 'load', side_effect=[prepare, SimpleNamespace(package_gates=lambda _path: True)]), patch.object(sys, 'argv', ['test', '--receipt', 'synthetic', '--operation', 'update', '--json']), patch.object(module.time, 'sleep'), patch.object(prepare, 'aws', provider.aws), patch.object(prepare, 'validate_receipt', return_value=receipt), patch.object(prepare, 'retained_release', return_value=False), patch.object(prepare, 'live_budget', return_value=(True, 'ok')), patch.object(prepare, 'foundation_outputs', return_value=({'RepositoryUri': 'synthetic'}, 'ok')), patch.object(prepare, 'infrastructure_parameters', return_value=({}, 'ok')), patch.object(prepare, 'candidate_image', return_value=(True, 'ok')), patch.object(prepare, 'candidate_parameters', return_value=desired):
+                    report = result(module.main)[1]
+                if forced_type is None:
+                    self.assertEqual(report['verdict'], 'transitioned')
+                    self.assertTrue(state['uses_deployed'])
+                    self.assertEqual(sum(parts[1]=='execute-change-set' for parts in provider.calls), 1)
+                else:
+                    self.assertEqual(report['verdict'], 'blocked')
+                    self.assertEqual(report['findings'], [{'code': 'persistence-update-change-set-review-invalid'}])
+                    self.assertFalse(state['executed'])
+
     def test_qualified_rollback_main_retains_support_and_restoration_images(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
         prepare = load(DEPLOY/'prepare-candidate/script.py')
@@ -263,6 +308,8 @@ class ControllerRegression(unittest.TestCase):
                         return True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in params.items()]}]}, 'ok'
                     if operation == 'describe-services': return True, {'services': [{'desiredCount': 1, 'runningCount': 1}]}, 'ok'
                     if operation == 'create-change-set':
+                        self.assertIn('--use-previous-template', parts)
+                        self.assertNotIn('--template-body', parts)
                         submitted = json.loads(Path(parts[parts.index('--parameters')+1].removeprefix('file://')).read_text())
                         resolved = {item['ParameterKey']: current[item['ParameterKey']] if item.get('UsePreviousValue') else item['ParameterValue'] for item in submitted}
                         self.assertEqual(resolved, desired)

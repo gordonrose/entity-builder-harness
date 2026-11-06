@@ -1146,7 +1146,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
-          "sha256": "66544552909f066c2697acccd562617d8bc8c0f0b42432ff00d8a15c29577f66"
+          "sha256": "2f96fb65e93daf8ca15df9158a4c865b13115ed229fd00243d2bc794c013a7e6"
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py",
@@ -1162,7 +1162,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
-          "sha256": "ff7fa48ddc5d644bb68da9e606e7c70c8de9e3b63f62707e7e25d2d8c0820c65"
+          "sha256": "237df2de6e7d4b50f9f965f114461b6c98cff808c6c10aca2908d7b399bf21ac"
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py",
