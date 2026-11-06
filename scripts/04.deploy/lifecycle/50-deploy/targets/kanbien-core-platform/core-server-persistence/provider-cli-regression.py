@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.provider-cli-boundaries
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-06"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -96,6 +96,40 @@ class ProviderCliRegression(unittest.TestCase):
             self.assertEqual(result.returncode,1)
             self.assertEqual(json.loads(result.stdout)['findings'][0]['code'],code)
 
+    def test_retained_qualified_rollback_uses_actual_archive_and_custody(self):
+        path = ROOT/'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py'
+        spec = importlib.util.spec_from_file_location('rollback_prepare', path)
+        prepare = importlib.util.module_from_spec(spec); spec.loader.exec_module(prepare)
+        evidence = ROOT/'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence'
+        receipt_path = evidence/'package-receipts/package-custody-40232309637.json'
+        identifier = 'rollback-compatibility-8f1ffbb5741c5ce923b0cfab'
+        record_path = evidence/'rollback-compatibility'/f'{identifier}.yml'
+        before = {path: path.read_bytes() for path in (receipt_path, record_path)}
+        receipt = json.loads(before[receipt_path])
+        with patch.object(prepare, 'aws', side_effect=AssertionError('provider reached')):
+            self.assertTrue(prepare.rollback_compatibility(receipt, identifier))
+            validated = prepare.validate_receipt(receipt_path)
+            self.assertEqual(validated['receipt_reference'], receipt['receipt_reference'])
+            self.assertTrue(prepare.rollback_compatibility(validated, identifier))
+            self.assertFalse(prepare.rollback_compatibility({**validated, 'receipt_reference': 'github-actions-run:1'}, identifier))
+            self.assertFalse(prepare.rollback_compatibility({**validated, 'source_revision': 'a'*40}, identifier))
+            self.assertFalse(prepare.rollback_compatibility({**validated, 'image_digest': 'sha256:'+'a'*64}, identifier))
+            owner = prepare.succession_control()
+            record, reference = owner.compatibility_record(evidence, identifier)
+            for workloads in (['core-server-service'], ['core-server-service', 'private-release-verifier-task', 'unowned-task'], ['persistence-restoration-verifier-task']):
+                changed = {**reference, 'identity': {**reference['identity'], 'workloads': workloads}}
+                with patch.object(prepare, 'succession_control', return_value=owner), patch.object(owner, 'compatibility_record', return_value=(record, changed)):
+                    self.assertFalse(prepare.rollback_compatibility(validated, identifier))
+            with tempfile.TemporaryDirectory() as directory:
+                invalid = Path(directory)/'receipt.json'
+                for broken in ({**receipt, 'receipt_reference': 'synthetic-secret-do-not-retain'},
+                               {**receipt, 'checks': {}}, {**receipt, 'extra': 'synthetic-secret-do-not-retain'}):
+                    invalid.write_text(json.dumps(broken))
+                    self.assertIsNone(prepare.validate_receipt(invalid))
+                invalid.write_text('{synthetic-secret-do-not-retain')
+                self.assertIsNone(prepare.validate_receipt(invalid))
+        self.assertEqual(before, {path: path.read_bytes() for path in before})
+
     def test_rollback_uses_immutable_owner_and_current_contracts(self):
         def load(path):
             spec=importlib.util.spec_from_file_location(path.stem,path);value=importlib.util.module_from_spec(spec);spec.loader.exec_module(value);return value
@@ -128,10 +162,13 @@ class ProviderCliRegression(unittest.TestCase):
                 self.assertFalse(prepare.rollback_compatibility(rollback,identifier));self.assertTrue(prepare.retained_release(rollback))
                 permission.write_bytes(before);self.assertTrue(prepare.rollback_compatibility(rollback,identifier))
                 proof.write_text('{"evidence_class":"changed"}');self.assertFalse(prepare.rollback_compatibility(rollback,identifier))
-            params=[{'ParameterKey':k,'ParameterValue':v} for k,v in {'ImageDigest':rollback['image_digest'],'RestoreVerifierImageDigest':rollback['image_digest'],'SupportImageDigest':'sha256:'+'b'*64,'SourceRevision':rollback['source_revision']}.items()]
+            params=[{'ParameterKey':k,'ParameterValue':v} for k,v in {'ImageDigest':rollback['image_digest'],'RestoreVerifierImageDigest':'sha256:'+'b'*64,'SupportImageDigest':'sha256:'+'b'*64,'SourceRevision':rollback['source_revision']}.items()]
             change={'ChangeSetName':'rollback-safe','Status':'CREATE_COMPLETE','ChangeSetType':'UPDATE','Parameters':params,'Changes':[{'ResourceChange':{'ResourceType':'AWS::ECS::TaskDefinition'}}]}
             self.assertTrue(transition.reviewable(change,'UPDATE_COMPLETE','rollback-safe',rollback['image_digest'],rollback['source_revision'],'sha256:'+'b'*64))
             self.assertFalse(transition.reviewable(change,'UPDATE_COMPLETE','rollback-safe',rollback['image_digest'],rollback['source_revision']))
+            wrong = copy.deepcopy(change)
+            next(item for item in wrong['Parameters'] if item['ParameterKey']=='RestoreVerifierImageDigest')['ParameterValue']=rollback['image_digest']
+            self.assertFalse(transition.reviewable(wrong,'UPDATE_COMPLETE','rollback-safe',rollback['image_digest'],rollback['source_revision'],'sha256:'+'b'*64))
 
     def test_provider_absence_is_operation_specific(self):
         path=ROOT/'scripts/04.deploy/shared/provider-adapters/aws/response.py'

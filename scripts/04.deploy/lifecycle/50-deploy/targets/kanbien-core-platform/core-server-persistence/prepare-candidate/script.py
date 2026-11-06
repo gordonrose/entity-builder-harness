@@ -97,21 +97,19 @@ def report(verdict: str, codes: list[str], facts: dict[str, Any] | None = None) 
 
 
 def validate_receipt(path: Path) -> dict[str, Any] | None:
-    command = [
-        "bash", str(ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"),
-        "--receipt", str(path), "--expected-target", "kanbien-core-platform",
-        "--expected-candidate", EXPECTED["candidate"], "--expected-package-contract", EXPECTED["package"],
-        "--expected-program", EXPECTED["program"], "--json",
-    ]
-    try: result = subprocess.run(command, capture_output=True, text=True)
-    except (OSError, UnicodeError): return None
-    if result.returncode:
-        return None
+    """Reuse custody validation and retain its checked provenance for rollback."""
     try:
-        value = json.loads(result.stdout)
-    except json.JSONDecodeError:
+        spec = importlib.util.spec_from_file_location("persistence_custody_validation", ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py")
+        if spec is None or spec.loader is None: return None
+        owner = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(owner)
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+        expected = argparse.Namespace(expected_target="kanbien-core-platform", expected_candidate=EXPECTED["candidate"], expected_package_contract=EXPECTED["package"], expected_program=EXPECTED["program"])
+        try: owner.validate(receipt, expected)
+        except owner.Failure: return None
+        return {**json.loads(owner.report("passed", receipt=receipt)), "receipt_reference": receipt["receipt_reference"]}
+    except (OSError, UnicodeError, ValueError, TypeError, KeyError, ImportError, AttributeError, SyntaxError):
         return None
-    return value if isinstance(value, dict) else None
 
 
 def declaration_covered() -> bool:
@@ -403,10 +401,14 @@ def rollback_compatibility(receipt: dict[str, Any], identifier: str | None) -> b
         identity=reference["identity"]
         if reference["target"]!="kanbien-core-platform" or reference["scope"]!="core-server-persistence":return False
         if identity["image_digest"]!=receipt["image_digest"] or identity["source_revision"]!=receipt["source_revision"]:return False
-        expected={"core-server-service","persistence-restoration-verifier-task","private-release-verifier-task"}
-        if set(identity["workloads"])!=expected:return False
+        expected={"core-server-service","private-release-verifier-task"}
+        workloads=set(identity["workloads"])
+        if not expected <= workloads <= expected|{"persistence-restoration-verifier-task"}:return False
         contracts={"configuration_contract":"infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml","permission_contract":"infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"}
         if any(identity[key]["path"]!=path for key,path in contracts.items()):return False
+        qualified=identity.get("qualified_predecessor")
+        if qualified is not None:
+            return qualified=={"source_revision":receipt["source_revision"],"image_digest":receipt["image_digest"],"package_custody_reference":receipt["receipt_reference"]}
         # Reading compatibility must retain the same historical ownership that
         # was required when recording it; a detached archive is not a rollback.
         try:

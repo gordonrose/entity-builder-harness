@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-06"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -60,7 +60,7 @@ def reviewable(change, status, name, digest, revision, support_digest=None):
     if not isinstance(change,dict) or status not in STABLE_STACK_STATES: return False
     if not (change.get("ChangeSetName")==name or (isinstance(change.get("ChangeSetName"),str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/",1)[-1].split("/",1)[0]==name)) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"}: return False
     params={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
-    if params.get("ImageDigest")!=digest or params.get("SupportImageDigest")!=(support_digest or digest) or params.get("RestoreVerifierImageDigest")!=digest or params.get("SourceRevision")!=revision: return False
+    if params.get("ImageDigest")!=digest or params.get("SupportImageDigest")!=(support_digest or digest) or params.get("RestoreVerifierImageDigest")!=(support_digest or digest) or params.get("SourceRevision")!=revision: return False
     changes=[x.get("ResourceChange",{}) for x in change.get("Changes",[]) if isinstance(x,dict)]
     return bool(changes) and {x.get("ResourceType") for x in changes} <= ALLOWED
 
@@ -119,7 +119,7 @@ def wait_reviewable(prepare,name,status,digest,revision,support_digest=None):
         if attempt<5: time.sleep(2)
     return None,"persistence-release-transition-not-reviewable"
 def reconcile(prepare,name,digest,revision,support_digest=None):
-    verdict,code=prepare.observe_update(name,{"ImageDigest":digest,"SupportImageDigest":support_digest or digest,"RestoreVerifierImageDigest":digest,"SourceRevision":revision},lambda change:reviewable(change,"UPDATE_COMPLETE",name,digest,revision,support_digest))
+    verdict,code=prepare.observe_update(name,{"ImageDigest":digest,"SupportImageDigest":support_digest or digest,"RestoreVerifierImageDigest":support_digest or digest,"SourceRevision":revision},lambda change:reviewable(change,"UPDATE_COMPLETE",name,digest,revision,support_digest))
     finding=retain_failure_diagnostic(prepare,name,digest,code,verdict) if verdict in {"failed","uncertain"} else None
     return emit("transitioned" if verdict=="complete" else verdict,code,*((finding,) if finding else ()),facts={"change_set":name,"image_digest":digest,"source_revision":revision})
 def main():
@@ -161,15 +161,23 @@ def main():
     ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
     if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
     current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict) and isinstance(item.get("ParameterKey"),str) and isinstance(item.get("ParameterValue"),str)}
-    if args.operation=="rollback" and current_parameters.get("SupportImageDigest")!=support_digest:return emit("blocked","persistence-rollback-support-image-mismatch")
+    if args.operation=="rollback":
+        if current_parameters.get("SupportImageDigest")!=support_digest:return emit("blocked","persistence-rollback-support-image-mismatch")
+        if current_parameters.get("RestoreVerifierImageDigest")!=support_digest:return emit("blocked","persistence-rollback-restoration-image-mismatch")
+        support_ok,support_code=prepare.candidate_image(support)
+        if not support_ok:return emit("blocked","persistence-rollback-support-package-not-proven",support_code)
     ok,service,code=prepare.aws("ecs","describe-services","--cluster",CLUSTER,"--services",SERVICE); services=service.get("services",[]) if ok and isinstance(service,dict) else []
     if len(services)!=1 or not isinstance(services[0],dict) or services[0].get("desiredCount")!=1 or services[0].get("runningCount")!=1: return emit("blocked","persistence-release-transition-service-not-healthy")
     outputs,code=prepare.foundation_outputs(); infra,code2=prepare.infrastructure_parameters(outputs) if outputs else (None,code)
-    if infra is None or not prepare.candidate_image(receipt)[0]: return emit("blocked","persistence-release-transition-alignment-not-proven")
+    if infra is None:return emit("blocked","persistence-release-transition-alignment-not-proven",code2)
+    image_ok,image_code=prepare.candidate_image(receipt)
+    if not image_ok:return emit("blocked","persistence-release-transition-alignment-not-proven",image_code)
     digest,revision=receipt["image_digest"],receipt["source_revision"]
     name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
     expected=prepare.candidate_parameters(outputs,infra,receipt)
-    if args.operation=="rollback":expected["SupportImageDigest"]=support_digest
+    if args.operation=="rollback":
+        expected["SupportImageDigest"]=support_digest
+        expected["RestoreVerifierImageDigest"]=support_digest
     parameters=update_parameter_inputs(current_parameters, expected)
     if parameters is None: return emit("blocked", "persistence-release-transition-update-parameter-inputs-invalid")
     ok,_,code=prepare.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)

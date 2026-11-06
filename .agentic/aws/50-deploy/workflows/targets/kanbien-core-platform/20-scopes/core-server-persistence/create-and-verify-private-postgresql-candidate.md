@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 6
+version: 7
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-26"
+updated_on: "2026-11-06"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -511,6 +511,21 @@ network, or target changes. `rollback` requires an earlier qualified
 persistence receipt and a predecessor whose permission contract is explicitly
 compatible; the dependency-free bootstrap image and a predecessor with unknown
 legacy permission facts are never eligible persistence rollbacks.
+
+The compatible predecessor covers the server and private release verifier.
+The immutable owner may bind either a retained historical release or a qualified
+predecessor's exact source, digest and package-custody reference; neither format
+waives current contract hashes or retained proof validation. Additional recorded
+restoration-verifier coverage is not authority to roll that program back.
+Rollback keeps administration, migration and restoration verification on the
+explicit qualified `--support-receipt`. Both deployed `SupportImageDigest` and
+`RestoreVerifierImageDigest` must already match that receipt, whose image/scan
+is freshly checked. A different independently pinned restoration image blocks
+this bounded route rather than being coerced or downgraded. Only the server and
+private verifier select the compatible predecessor. Submission review and
+read-only reconciliation require those same exact image bindings; unknown
+outcomes never authorize resubmission. Normal update still selects the new
+candidate image for all three digest parameters.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_b_receipt" --operation update --json
