@@ -1,0 +1,31 @@
+{
+  "context": {
+    "completion_deadline_seconds": 300,
+    "completion_duration_seconds": 24
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:a54816daa1500cc20b420f616af7444c107c2ab6a0ac42a545eab823235a4a25"
+  },
+  "operation": "confirm-runtime-iam-access",
+  "proof_type": "administration",
+  "provenance": {
+    "collected_at": "2026-11-06T15:45:14.887458Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "run-administration",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/aeb1da99e1394c9cad1226a13bc3d3a6",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:19",
+    "exit_code": 0,
+    "image_digest": "sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17",
+    "result_code": "PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED",
+    "started_at": "2026-11-06T16:44:45.313000+01:00",
+    "stopped_at": "2026-11-06T16:45:09.819000+01:00",
+    "terminal_status": "STOPPED"
+  }
+}

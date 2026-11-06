@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.governed-diagnostic-coverage
-version: 20
+version: 23
 status: active
 created_on: "2026-10-27"
 updated_on: "2026-11-06"
@@ -25,6 +25,161 @@ This section governs the current verification handoff; earlier local results
 remain historical, and do not certify the merged source automatically.
 
 ### Latest qualification position — 2026-11-06
+
+#### Live AWS qualification accepted — 16:28 UTC
+
+The complete existing acceptance route passed on the reserved
+`kanbien-core-platform/core-server-persistence` target. All fifteen required
+runtime proofs and three observability receipts are genuine and retained.
+The final fresh health operation was `kp-0551528a6ef8432bb4ad7471b73be4b4`,
+task `29f86771c4bc47dc8214fc6ceb1318b7`, with a 25-second successful terminal
+observation. The input validator reported `covered`, zero findings; the
+collector independently accepted current service/source/image/health,
+database/snapshot/record binding, clone cleanup and budget, then wrote the
+immutable candidate. Candidate validation passed. Guarded release succession
+promoted `release-570327efbb91af717da6da13` at
+`2026-11-06T16:28:10.301202Z`, preserving predecessor
+`release-cb3cf3292e03fda8e7e40188` and all prior archives. Post-promotion current
+reference validation passed; declared scope inventory passed with zero findings;
+target declaration reported `repository-declaration-complete`, zero findings.
+
+| Boundary | Retained identity |
+| --- | --- |
+| Qualified runtime source | `afe9d25abafc6635e9b37dbfe62644e09c742ba5` |
+| Hosted build/custody | GitHub Actions `42137237026`; original custody SHA-256 `3a2036ab8652485e40c402f2117d855528873b926b02185c00ddf33d3794df98` |
+| Published image index | `sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17` |
+| Runnable AMD64 manifest | `sha256:cf7041126e005805038620dd5fc9767d9053b62c777369a47a50e96035bcfcb2` |
+| Deployment-controller correction | task `4d321840b9699271ce99429e52f7575c9200ca0d`, integrated main `7e1c01cbeb08462d9bf7d063cdcc804f2334f116`; no image input changed |
+| Accepted live release | `release-570327efbb91af717da6da13`; 23 hashed retained references, proof-set SHA-256 `a1609fb386f47e938d2543cc274522f75c4388d3dbe72d63892f548ad70542fd` |
+
+The existing evidence root now retains the typed
+`acceptance-inputs-20261106-diagnostics.json`, exact original hosted custody,
+controller-produced proof/observability receipts, immutable candidate/archive
+and guarded current reference. Additional genuine baseline, replacement and
+final-current-health receipts are retained without substituting them for the
+fifteen named acceptance obligations. Exact command outcomes, task/operation
+predecessors, hashes, timing, failed/pending observations and reuse are in the
+current session journal.
+
+Successful startup/readiness, meaningful private record operations, retained
+data across controlled replacement, compatible rollback and return, runtime
+identity failure/recovery, actual alarm-email receipt and native isolated
+restore/cleanup are proved for this package/target. The one uncertain recovery
+health observation was reconciled to its original successful task; no restore,
+replacement or task was replayed. Alarm-evaluation delay reused the retained
+unready proof rather than repeating the fault. Disposable clone and temporary
+authority are independently absent; source database and recovery snapshot remain.
+
+This is bounded live qualification, not universal diagnostic delivery or a new
+production-target rollout. Existing source/packaged/container evidence remains
+bound to its recorded inputs: compiled invalid-configuration fixtures do not
+become exhaustive finished-container cases; replacement/process exit does not
+prove shutdown diagnostic ordering; readiness metrics, alarms and actual email
+do not prove remote structured diagnostic-record acknowledgement. DIAG-013 stays
+open/deferred and a mandatory logging/telemetry maturity-review requirement.
+DIAG-006/007, imported-tool upstream incorporation, declared partial coverage and
+the retiring-platform deployment exclusion remain unchanged.
+
+Final evidence/documentation closeout is pending normal preparation, selected
+local verification, staged gate, clean main refresh, root readiness and the
+already-approved normal evidence commit/main merge/push. The 32-path batch
+contains only this plan, current journal and the existing scope's new acceptance
+inputs/custody/proofs/receipts/archive/reference. No runtime fix, dependency
+install, Docker operation, publication, wider cloud change or new verification
+framework is required or authorised by this closeout.
+
+#### Live continuation checkpoint — 16:17 UTC
+
+The compatible rollback and return-to-candidate sequence passed all four
+fresh health/read proofs. The candidate is back on qualified image `ab7664c6…`.
+The named native snapshot is available, and the isolated database restore
+passed its genuine one-shot verifier: retained record retrieved, 35-second
+completion within the 120-second bound, accepted closed log observation.
+Its receipt is `restore-isolated-restore-a6cbd651784c4fbe9ed7217c6ab58a63.json`
+under the existing proof directory. Exact disposable cleanup removed the
+temporary access policy and submitted clone deletion once. Independent cleanup
+observation now confirms database absent, temporary authority absent and no
+active verifier tasks. Source database and snapshot are retained.
+
+The controlled runtime-identity revocation and replacement passed genuine
+live-but-unready verification. The existing alarm's three consecutive
+one-minute evaluation periods then produced metric `0` and `ALARM`. Failure
+receipt: `readiness-failure-observed-659e3e5f47cf.json`. The operator confirmed
+the actual email receipt as `2026-11-06 16:13:47 UTC`; that reported second-
+precision value is retained unchanged in the journal. The separate operator
+confirmation timestamp is `16:15:47Z`, not fabricated subsecond email timing.
+The matching episode's notification receipt is
+`readiness-alarm-notified-600b6da60048.json`. Both are under the existing
+`observability-receipts/` directory. Subscription confirmation alone was not
+counted as notification delivery.
+
+Recovery is in flight through the existing controller with those exact two
+receipts: limited runtime-identity restoration, one replacement, fresh health
+then retained-data read, followed by readiness metric `1` and alarm `OK`.
+Do not replay a completed child effect after a pending observation. Twelve
+of the fifteen required runtime proofs are retained; recovery's three terminal
+proofs and its observability receipt remain pending. Clone-absence proof is
+complete. Require a final fresh current-health operation, complete acceptance-input
+validation/collection, candidate validation and guarded release promotion
+before sign-off. The accepted reference has not moved. Remaining work stays
+within the recorded five-stage approval; deferrals and qualification limits
+below are unchanged.
+
+#### Live continuation checkpoint — 15:52 UTC
+
+This checkpoint supersedes the pending-source-gate and unexecuted-review
+statements below; those remain historical evidence of the first blocked attempt.
+The deployed-template correction is task `4d321840b9699271ce99429e52f7575c9200ca0d`,
+verified and normally merged/pushed as main
+`7e1c01cbeb08462d9bf7d063cdcc804f2334f116`. After WSL recovery, final focus
+passed three checks and complete impact passed 16 local checks: 13 executed,
+three matching proofs reused, zero findings, three later-stage obligations
+deferred, 632.252 seconds. Staged, clean rehearsed refresh/post-integration and
+root readiness passed; post-integration reused all 16 without rerunning suites.
+The runtime package remains source `afe9d25a`, custody `42137237026`, digest
+`ab7664c696fd…`; it was not rebuilt or relabelled for controller changes.
+
+The exact rejected, unexecuted review was discarded through its approved owner.
+One corrected ECS-only review was executed; observation-only reconciliation
+reported `transitioned` / `persistence-update-operation-complete`. No IAM,
+database, network or template change was admitted. Fresh private health passed.
+Administration observations confirmed applied migration state, effective
+privileges and runtime IAM access without replaying bootstrap, grants or
+migrations. The fixed synthetic-record idempotent create passed. Controlled
+server replacement then passed after exact original/successor reconciliation,
+and a fresh private read proved retained data through the replacement.
+Genuine image-bound receipts are retained under the existing scope's
+`30-release-evidence/proof-receipts/`; exact IDs, durations and paths are in the
+session journal. These are live application proofs, not remote structured
+diagnostic-receipt or complete acceptance proof.
+
+The approved snapshot `kanbien-core-platform-persistence-recovery-20261106-diag01`
+is submitted and pending. Its source record precedes snapshot submission.
+The compatible rollback rehearsal is in flight through the existing controller,
+using retained receipt `40232309637`, compatibility
+`rollback-compatibility-8f1ffbb5741c5ce923b0cfab` and current support receipt.
+Only server/private-verifier images may select the predecessor; administration,
+migration and restoration remain on the qualified new package. Reconcile exact
+operations, never resubmit pending effects. Perform rollback health then read,
+return to the candidate, and prove candidate health then read. Wait for the
+snapshot to be available before the credential-failure exercise so the restore
+point retains the healthy identity state.
+
+Next: approved bounded failure/actual alarm-email receipt/recovery, isolated
+restore verification and exact disposable-clone cleanup, then fresh complete
+acceptance collection/validation/promotion and final evidence/Git closeout.
+The operator agreed to watch the alarm email; retain an actual delivery time,
+not inferred subscription confirmation. Exact clone cleanup is separately
+approved for `kanbien-core-platform-persistence-restore-20261106-diag01` only,
+after terminal evidence, proven ownership and stopped verifier tasks; retain
+source database and snapshot. Current accepted reference has not moved.
+
+WSL removed old temporary evidence; the exact hosted receipt was reacquired and
+its recorded SHA-256 validated. New private reports are under
+`/tmp/diagnostics-resume-20261106.HAR9AaWE/`. Lost/interrupted full-suite output
+was not counted as passed. DIAG-013 remains open/deferred and required by the
+logging/telemetry maturity review; DIAG-006/007, upstream incorporation and the
+documented container/shutdown/remote-diagnostic limits remain unchanged.
 
 #### Rollback correction integrated — 09:48 UTC
 

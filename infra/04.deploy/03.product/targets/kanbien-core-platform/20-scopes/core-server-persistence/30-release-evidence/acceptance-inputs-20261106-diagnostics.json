@@ -1,0 +1,48 @@
+{
+  "schema": "deploy/acceptance-inputs/v1",
+  "target": "kanbien-core-platform",
+  "scope": "core-server-persistence",
+  "values": {
+    "candidate_receipt": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-42137237026.json",
+    "rollback_receipt": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40232309637.json",
+    "restoration_verifier_receipt": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-42137237026.json",
+    "rollback_compatibility_id": "rollback-compatibility-8f1ffbb5741c5ce923b0cfab",
+    "proof_receipts": {
+      "migration-applied-state": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/administration-observe-migration-state-8dc550a79b2e491dbe4a28af829ecb2c.json",
+      "effective-privilege": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/administration-prove-effective-privilege-8edf7de7eb2a431d9a21dff505e27f79.json",
+      "server-replacement": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/server-replacement-controlled-replacement-d20e8579400242c5ad5281d3f49f0b68.json",
+      "server-replacement-read": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-7388beae139f45018eb3b6d8c71385b7.json",
+      "runtime-identity-initial-access": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/administration-confirm-runtime-iam-access-aeb1da99e1394c9cad1226a13bc3d3a6.json",
+      "credential-revocation": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/administration-revoke-runtime-bd03fea7800441a8b7fe881e57b8f66d.json",
+      "credential-revocation-unready": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-unready-a2b3e9b20e4f452fb29bae601c4ce5ec.json",
+      "rollback-b-health": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-ready-1333e0b5b7ed408cb53a9a3225ab3e84.json",
+      "rollback-b-read": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-fd5a785f989b4edf8a51130c6fc65129.json",
+      "rollback-final-health": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-ready-a4d9ea43e1274c6887f5f590f27200c5.json",
+      "rollback-final-read": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-975d3ba8c7a947d38acf319bcb300d14.json",
+      "isolated-restore": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/restore-isolated-restore-a6cbd651784c4fbe9ed7217c6ab58a63.json",
+      "credential-recovery": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/administration-restore-runtime-01237231aa9449b680d8fb2eb39b471d.json",
+      "credential-recovery-health": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-ready-e93437e1ebff48e0ae51d57b5185281a.json",
+      "credential-recovery-read": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-38044034a8144dad881d41452f461889.json"
+    },
+    "server_replacement_original": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/d20e8579400242c5ad5281d3f49f0b68",
+    "server_replacement_successor": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/ef0a4e1898564812a57fa81d68b0a968",
+    "recovery_snapshot": "kanbien-core-platform-persistence-recovery-20261106-diag01",
+    "record_proof_receipt": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-create-0824f5718e274b02a22efd88d944ec7f.json",
+    "proof_applicability": null,
+    "observability_receipts": {
+      "readiness-failure-observed": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/observability-receipts/readiness-failure-observed-659e3e5f47cf.json",
+      "readiness-alarm-notified": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/observability-receipts/readiness-alarm-notified-600b6da60048.json",
+      "readiness-recovery-observed": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/observability-receipts/readiness-recovery-observed-7ff87b5bc50e.json"
+    },
+    "server_replacement_read_predecessor": "none",
+    "credential_revocation_unready_predecessor": "none",
+    "credential_recovery_health_predecessor": "kp-98a9f80e36044c3a89b3a48943b007ab",
+    "credential_recovery_read_predecessor": "kp-347be46fa8764a9f825262e38933a5ba",
+    "rollback_b_health_predecessor": "kp-8e6aad5dbdcd46439c6a2f9d554824ce",
+    "rollback_b_read_predecessor": "kp-f1ca18cd65284b37bef35d6433276190",
+    "rollback_final_health_predecessor": "kp-171fed3c4bbb41b4b6ad74fed647936d",
+    "rollback_final_read_predecessor": "kp-06a0ba8f808c4111afcb0e928e8ea51c",
+    "current_health_predecessor": "kp-04fc80839de34bc7bd93db99674a0f12",
+    "current_health_task": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/29f86771c4bc47dc8214fc6ceb1318b7"
+  }
+}

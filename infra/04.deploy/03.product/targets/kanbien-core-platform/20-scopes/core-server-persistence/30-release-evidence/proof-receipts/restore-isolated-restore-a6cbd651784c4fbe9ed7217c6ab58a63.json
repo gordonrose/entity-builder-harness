@@ -1,0 +1,33 @@
+{
+  "context": {
+    "completion_deadline_seconds": 120,
+    "completion_duration_seconds": 35,
+    "restored_database": "kanbien-core-platform-persistence-restore-20261106-diag01",
+    "snapshot": "kanbien-core-platform-persistence-recovery-20261106-diag01"
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:ebc7739678115d44bc2dbeed273ce3c7c9c96952573fa4b953a4441a7bc09995"
+  },
+  "operation": "isolated-restore",
+  "proof_type": "restore",
+  "provenance": {
+    "collected_at": "2026-11-06T16:10:40.335808Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "rehearse-isolated-database-restore",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/a6cbd651784c4fbe9ed7217c6ab58a63",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-restoration-verifier:36",
+    "exit_code": 0,
+    "image_digest": "sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17",
+    "result_code": "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED",
+    "started_at": "2026-11-06T17:09:53.305000+01:00",
+    "stopped_at": "2026-11-06T17:10:28.380000+01:00",
+    "terminal_status": "STOPPED"
+  }
+}
