@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 7
+version: 8
 status: active
 created_on: "2026-10-23"
 updated_on: "2026-11-06"
@@ -507,7 +507,12 @@ verifier; only task identities and bounded safe result codes become evidence.
 The only governed route for a persistence-capable image update or compatible
 rollback is receipt-bound and permits CloudFormation to alter only ECS task
 definitions and the candidate service. It rejects database, secret, role,
-network, or target changes. `rollback` requires an earlier qualified
+network, or target changes. Both operations use the deployed template through
+`--use-previous-template` and preserve non-image parameters; an image transition
+must not import unrelated repository-template changes. The reviewed resource
+guard remains mandatory, including when the deployed template was selected.
+Logging/configuration alignment remains with its separate existing controls.
+`rollback` requires an earlier qualified
 persistence receipt and a predecessor whose permission contract is explicitly
 compatible; the dependency-free bootstrap image and a predecessor with unknown
 legacy permission facts are never eligible persistence rollbacks.

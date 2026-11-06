@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.governed-diagnostic-coverage
-version: 16
+version: 20
 status: active
 created_on: "2026-10-27"
 updated_on: "2026-11-06"
@@ -25,6 +25,148 @@ This section governs the current verification handoff; earlier local results
 remain historical, and do not certify the merged source automatically.
 
 ### Latest qualification position — 2026-11-06
+
+#### Rollback correction integrated — 09:48 UTC
+
+Task `97a8ebd47b9d91f9a2e0674efed04fda80edc3e8` is merged and pushed as
+main `d3888fd40f3859dd312d5975ddb9c43fcde61f64`; an independent remote read
+confirmed that SHA. Its tree `4642de36ad7f3b798cced6c40f2e8fefa6029d8b`
+exactly matches verified clean chat successor
+`197610e57b246a8f48efd40fbce0a0d9d9363998`. The following pending local-gate
+statements are historical: final focused verification passed three checks in
+62.095417 seconds; complete impact passed all 16 local instances with zero
+findings, reusing all 16 in 37.168103 seconds. Staged commit, clean rehearsed
+refresh/post-integration and final eligible root readiness passed. The latter
+two reused all 16 proofs in 42.172084 and 38.701121 seconds. Temporary preflight
+cleanup used the normal owner; older recovery worktrees remain preserved.
+
+The first full run retained 15 passing local results but rejected one omitted
+reviewed source binding for `provider-cli-regression.py`. The existing partial
+owner now includes its exact hash; affected registered proof was rerun and the
+remaining matching results reused. No census exclusion, gate bypass, runtime
+correction or repeated unrelated expensive suite was used. Detailed commands,
+attempts, timings and report hashes are in the current session journal.
+
+This controller integration does not rebuild or relabel the published runtime.
+The qualified image/custody below still identifies source `afe9d25a`, run
+`42137237026` and digest `sha256:ab7664c696fd6e2efd60eb34ac355e00f17afc94d15eee34794b43851f96bf17`.
+No AWS operation ran during this correction; the last observed target baseline
+below is historical and requires fresh observation. Deployment, actual runtime
+acceptance and remote diagnostic receipt are not proved by these source gates.
+This post-push planning/activity update is an ongoing documentation batch, not
+part of the immutable verified/pushed tree above.
+
+#### Five-stage live qualification — approved continuation
+
+Current live gate: the first receipt-bound image update was **blocked before
+execution**. Its named review
+`kanbien-core-platform-persistence-update-ab7664c696fd` remains
+`CREATE_COMPLETE` / `AVAILABLE`, unexecuted. The running workload remains on
+the prior image; no runtime failure or database change was injected.
+The controller submitted the repository template rather than the deployed
+template. Review includes RDS `EnableCloudwatchLogsExports` and three IAM role
+policy modifications, outside its ECS-only allowlist. Existing normalization
+shows those three role-policy bodies are equal; the template's explicit RDS
+export difference is `[postgresql, upgrade]` versus
+`[postgresql, iam-db-auth-error]`. Do not infer an actual IAM-policy difference
+or apply that wider review. Fresh preparation passed in 25.161 seconds and
+rollback/scan readiness in 7.617 seconds; the single update attempt blocked
+after 47.247 seconds. No resubmission or execution followed.
+
+User-approved correction (implemented; final gates pending): use `--use-previous-template` in the
+existing qualified image-transition owner, following the existing restoration
+image-only control. Preserve current non-image parameters, exact receipt/pin
+bindings, resource-change guard and uncertainty/reconciliation behavior. Extend
+existing controller regressions for both update/rollback submission boundaries,
+refresh only reviewed source bindings and complete normal registered source
+verification and Git integration. Then, under exact cleanup authority, use the
+existing `discard-rejected-review` operation for this unexecuted named review
+only, prove absence and permit one fresh guarded update. No ad-hoc AWS update,
+repository-template substitution, expanded IAM/RDS allowance or archive rewrite.
+Preserving the deployed template does not waive separate declared logging or
+acceptance requirements; their existing owners must still prove live state.
+The subsequent explicit user approval covers this narrow source correction,
+existing proof/Git integration, named unexecuted-review discard and resumption
+of the five runtime-proof stages. The remaining deployed proofs depend on this
+gate; no cleanup or second update has run yet.
+
+Parent self-review reconciled six task paths: transition owner, controller
+regressions, source-matched diagnostic ledger, owning AWS workflow, this plan
+and session journal (including the two preserved earlier documentation changes).
+The implementation changes only template selection for both image operations;
+no resource allowlist, receipt, parameter, permission, reconciliation, public
+CLI or runtime package contract changes. The existing restoration-image owner
+is the reviewed precedent, not a competing implementation. The new real-caller
+update counterexample returns a wider review when the repository template is
+submitted; it rejected the old code in 0.053 seconds. Corrected deployed-template
+submission transitions once, preserves observability through `UsePreviousValue`,
+and still blocks forced IAM and RDS changes before execution. The authentic
+rollback main fixture also requires the same deployed-template option. All
+42 controller cases passed in 1.970 seconds as exploratory proof, not a trusted
+final receipt. Exact reviewed transition/controller hashes are updated in the
+existing partial owner; provider CLI fixture binding is preserved unchanged.
+No other affected consumer needs changes. Required corrections are closed;
+freeze this six-path batch for normal preparation, registered final focused
+checks and validated complete impact selection. No other writers or ADR.
+
+The user now explicitly asks to complete all five remaining stages: deployment,
+meaningful private runtime proof, controlled failure/recovery (replacement,
+compatible rollback and isolated restore as applicable), remote observations
+and privacy/shutdown limits, then verified acceptance and final evidence/Git
+closeout. This supersedes the earlier pending narrow-stage request below.
+Use only the existing fixed-target controllers and complete acceptance route;
+do not import the retiring-target Stage 6 exception or create a new framework.
+The current live attempt retains safe reports under
+`/tmp/diagnostics-live-qualification-20261106.2Q1qUVpX/`.
+
+Fresh preparation passed with zero findings. Account observation confirmed
+`337159794548`; stack/service still match immutable current release
+`release-cb3cf3292e03fda8e7e40188`, source `72dadc7d`, server/support digest
+`e9d12f96`, independent restoration digest `304a85b1`, one healthy task and
+observability enabled. The accepted reference validates unchanged. Refresh
+rollback compatibility and retained image/scan before the guarded update.
+All source controllers still match the verified pushed tree; only this plan
+and the ongoing journal differ locally. Image custody remains source `afe9d25a`.
+
+Execute one reserved operation per fresh phase and reconcile its identity on
+interruption. Use existing strict image-bound receipt applicability rather
+than carrying old proofs to the new image. No broad IAM/infra changes, runtime
+fixes, package installation, publication or source database/backup deletion are
+authorized. Disposable restore cleanup must satisfy provider ownership and
+explicit destructive-action approval requirements; no exception is assumed.
+Do not synthesize operator notification confirmation or diagnostic receipt.
+The journal records actual outcomes, time, attempts, reuse and remaining gates.
+
+#### Earlier bounded AWS proposal — superseded by the five-stage approval
+
+The current asynchronous request is for fresh fixed-target preparation, an
+ECS-only receipt-bound update, private `health-ready`/`read` proof and conditional
+compatible image rollback only if needed. Profile `kanbien-dev`, account
+`337159794548`, region `eu-west-1`, reserved scope
+`kanbien-core-platform/core-server-persistence` only. Proposed existing commands:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh --receipt /tmp/diagnostics-custody-42137237026-2Utrk4mM/package-custody-receipt.json --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt /tmp/diagnostics-custody-42137237026-2Utrk4mM/package-custody-receipt.json --operation update --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode health-ready --new-operation --expected-operation <observed-same-mode-predecessor-or-none> --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --new-operation --expected-operation <observed-same-mode-predecessor-or-none> --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40232309637.json --operation rollback --rollback-compatibility-id rollback-compatibility-8f1ffbb5741c5ce923b0cfab --support-receipt /tmp/diagnostics-custody-42137237026-2Utrk4mM/package-custody-receipt.json --json
+```
+
+These are proposals, not shell-ready substitutions or authority. Resolve each
+same-mode predecessor through the existing reservation owner; `none` is valid
+only for a genuinely first reservation. Reconcile pending/uncertain operations
+through their exact existing identities rather than launching another task or
+resubmitting a change set. An interrupted image transition uses the same receipt
+and operation with `--reconcile`. Conditional rollback requires fresh image,
+contract and matching support/restoration-pin guards; it is not authorization
+for a planned fault or rollback rehearsal. Stop on drift or an unproved guard.
+No fault injection, database/grant/migration changes, publication, IAM edits or
+accepted-release pointer changes are included. Fault/recovery qualification and
+full declared acceptance remain separate required proof/authority boundaries;
+positive rollout/private reads alone cannot sign off the full slice. AWS
+authentication by itself is not deployment permission. DIAG-013 remains open
+and required in the logging/telemetry review, not implemented by this stage.
 
 The approved modern AWS CLI prefix correction is task
 `6ca52f67f0e55409caaf16fb37399926da11b927`. Its existing registered focused

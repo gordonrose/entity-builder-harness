@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-11-06"
@@ -23,7 +23,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[8]
 STACK, CLUSTER, SERVICE = "kanbien-core-platform-core-server-persistence", "kanbien-core-platform", "kanbien-core-platform-core-server-persistence"
-TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 ALLOWED = {"AWS::ECS::TaskDefinition", "AWS::ECS::Service"}
 STABLE_STACK_STATES = {"CREATE_COMPLETE", "UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"}
 DIAGNOSTICS = ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py"
@@ -184,7 +183,7 @@ def main():
     if not ok:
         if code!="aws-resource-missing": return emit("blocked",code)
         with tempfile.NamedTemporaryFile(mode="w",suffix=".json",encoding="utf-8") as file:
-            json.dump(parameters,file); file.flush(); ok,_,code=prepare.aws("cloudformation","create-change-set","--stack-name",STACK,"--change-set-name",name,"--change-set-type","UPDATE","--template-body",f"file://{TEMPLATE}","--parameters",f"file://{file.name}","--capabilities","CAPABILITY_NAMED_IAM")
+            json.dump(parameters,file); file.flush(); ok,_,code=prepare.aws("cloudformation","create-change-set","--stack-name",STACK,"--change-set-name",name,"--change-set-type","UPDATE","--use-previous-template","--parameters",f"file://{file.name}","--capabilities","CAPABILITY_NAMED_IAM")
         if not ok: return emit("uncertain",code,facts={"change_set":name})
     change,code=wait_reviewable(prepare,name,status,digest,revision,support_digest)
     if change is None: return reconcile(prepare,name,digest,revision,support_digest)
