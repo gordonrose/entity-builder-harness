@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-09T21:15:42Z
-latest_commit_sha: 6f17203053e61172359b9de2f85c8356e8d69aa3
-chat_duration: 274115s (03:04:08:35)
+latest_commit_at_utc: 2026-11-09T22:34:17Z
+latest_commit_sha: 5210046bbcbe5b46fe15c41de3fc8dc7c46016c6
+chat_duration: 278830s (03:05:27:10)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -86,6 +86,17 @@ Summary: Verified feature, Core helpers, test migration/governance and isolated 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-09T22:34:17Z - Commit recorded
+
+Commit: `5210046bbcbe5b46fe15c41de3fc8dc7c46016c6`
+
+Message: fix: qualify restricted PostgreSQL feature administration and startup
+
+Summary: Corrected final TCP readiness, circular ADMIN grant and explicit owner selection for history/permission observation; added regressions and source-matched reviews.45 affected local checks passed; uninstrumented image and AWS proof remain pending. No push.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -98,6 +109,13 @@ ADR impact: covered by session ADR disposition
   Time UTC: 2026-11-09T21:15:42Z
   Message: feat: qualify isolated entity-smoke deployment and governed test boundaries
   Summary: Verified feature, Core helpers, test migration/governance and isolated deployment/proof controls. Full local reconciliation passed122 checks; actual image and AWS acceptance remain outstanding. No push.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `5210046bbcbe5b46fe15c41de3fc8dc7c46016c6`
+  Time UTC: 2026-11-09T22:34:17Z
+  Message: fix: qualify restricted PostgreSQL feature administration and startup
+  Summary: Corrected final TCP readiness, circular ADMIN grant and explicit owner selection for history/permission observation; added regressions and source-matched reviews.45 affected local checks passed; uninstrumented image and AWS proof remain pending. No push.
   ADR impact: covered by session ADR disposition
 
 ## Main Refresh Conflicts
@@ -113,9 +131,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-09T21:15:42Z
-Latest commit SHA: 6f17203053e61172359b9de2f85c8356e8d69aa3
-Chat duration: 274115s (03:04:08:35)
+Latest commit at UTC: 2026-11-09T22:34:17Z
+Latest commit SHA: 5210046bbcbe5b46fe15c41de3fc8dc7c46016c6
+Chat duration: 278830s (03:05:27:10)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
