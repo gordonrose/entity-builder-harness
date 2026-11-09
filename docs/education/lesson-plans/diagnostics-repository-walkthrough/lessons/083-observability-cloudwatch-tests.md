@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-boundaries.test.mjs -->
+<!-- course-file: platform/adapters/aws/observability/cloudwatch/tests/test-infrastructure/static-validation/cloudwatch-otel-adapter-boundaries.test.mjs -->
 
 ### cloudwatch-otel-adapter-boundaries.test.mjs
 
-[Open current source](../../../../../platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-boundaries.test.mjs) · **Snapshot:** modified existing file; 5 added / 2 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/observability/cloudwatch/tests/test-infrastructure/static-validation/cloudwatch-otel-adapter-boundaries.test.mjs) · **Snapshot:** modified existing file; 5 added / 2 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for the existing opentelemetry adapter.
 
@@ -68,11 +68,11 @@ Owning registered proof: `cloudwatch-observability-runtime`, `persistence-compos
 
 <!-- course-source-sha256: before=ca3593dc7a89e955d7c035c6429391b7b41cd7236a9cfa1ab649b10201b0c406 after=90c2380548e12cb2f4c1df1607e6eb315d3abafaa6b48d2c96e2956a054e704e -->
 
-<!-- course-file: platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-runtime.test.ts -->
+<!-- course-file: platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-adapter-runtime.test.ts -->
 
 ### cloudwatch-otel-adapter-runtime.test.ts
 
-[Open current source](../../../../../platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 204 added / 2 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 204 added / 2 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for the existing opentelemetry adapter.
 
@@ -92,11 +92,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=7ef94c20fd8be1186d15cb161dfe05f0d759cb8d97c2cf85394f4a08c3a0513e after=afa01f710833e82cfa2bf77c94fb72ecb8122f750ebcace97681c4677b9e3005 -->
 
-<!-- course-file: platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-lifecycle-runtime.test.ts -->
+<!-- course-file: platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-lifecycle-runtime.test.ts -->
 
 ### cloudwatch-otel-lifecycle-runtime.test.ts
 
-[Open current source](../../../../../platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-lifecycle-runtime.test.ts) · **Snapshot:** added (absent from baseline); 360 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-lifecycle-runtime.test.ts) · **Snapshot:** added (absent from baseline); 360 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for the existing opentelemetry adapter.
 

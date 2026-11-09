@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.govern-scope-lifecycle
-version: 2
+version: 4
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-26"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.scope-lifecycle
 disciplines: [agentic, security, sre]
@@ -30,8 +30,10 @@ validate the target lifecycle inventory before provider or release commands.
    lifecycle state and exact workload ownership matching its workload binding.
    Stop if a scope is unindexed, points outside its own canonical files, or two
    active scopes own one workload.
-2. For an independent scope, retain its active state only after its own
-   declaration, local/package proof, and release route are complete.
+2. Add an independent scope as `candidate` without predecessor or successor,
+   using workload identities disjoint from every other indexed scope. Require
+   its complete declaration, local/package proof and release route; do not
+   label it active before its own accepted evidence has been validated.
 3. For a successor, add it as `candidate` with its active predecessor and the
    overlapping workload identities. Validate both scope contracts and the
    candidate's required local/package checks before any provider mutation.
@@ -47,8 +49,9 @@ validate the target lifecycle inventory before provider or release commands.
 6. After the candidate has the required accepted-release evidence, use the
    local `scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh`
    with `--scope-contract <path> --write --json`. It invokes the owning record
-   validator before making the candidate active and its predecessor
-   `accepted-historical` with reciprocal links. It grants no provider authority.
+   validator before making the candidate active. For a successor it also makes
+   its predecessor `accepted-historical` with reciprocal links. Independent
+   activation changes only the selected candidate. It grants no provider authority.
    Re-run the target declaration and release gates; active/historical records
    are validated again by the inventory check.
 7. A later reversion is a new governed release/recovery operation. Prepare the
@@ -72,6 +75,23 @@ promote those temporary records; ordinary validation and promotion require
 accepted live evidence. Existing genuine records without this additive field
 retain their historical live meaning. Rehearsal success is local runtime
 evidence, never container, CI, provider, or production acceptance evidence.
+
+A route may explicitly select `accepted_record.source: release-succession-current`
+instead of an embedded legacy accepted record. Its schema must be
+`deploy/release-current-ref/v1` and its path must be the scope's existing
+`30-release-evidence/current-accepted-release.yml`. That reference's `active`
+status means a current release, not an already active scope. The read-only
+target validator must validate immutable lineage and retained candidate/proof
+meaning and report the matching target, scope and live/simulated evidence class.
+The scope promoter requires that report before its index transition. Routes
+without the selector retain the existing embedded-record validation rules.
+
+New release promotion still requires current contracts and the owning route's
+fresh full proof before advancing that reference. Historical current-reference
+validation is not a fresh health check. An interrupted exact original archive/
+reference promotion may reconcile through the same succession control without
+claiming new health or rerunning provider operations. Offline route coverage
+alone cannot authorize acceptance or an index transition.
 
 ## Executable release succession
 

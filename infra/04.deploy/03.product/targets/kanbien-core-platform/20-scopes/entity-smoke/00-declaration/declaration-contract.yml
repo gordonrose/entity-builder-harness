@@ -1,0 +1,1112 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.scope-contract
+#   version: 2
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [architecture, security, sre]
+#   kind: deployment-scope-contract
+#   purpose: Declare the isolated feature and its complete required proof without claiming live or accepted state.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.plan.entity-smoke-core-platform
+#     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
+schema: "deploy/target-scope-contract/v1"
+id: "kanbien-core-platform-entity-smoke"
+target: "kanbien-core-platform"
+scope: "entity-smoke"
+status: "candidate-not-live"
+owner: "feature-platform"
+acceptance:
+  route: "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml"
+program:
+  id: "kanbien-entity-smoke"
+  contract: "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml"
+  image_contract: "infra/04.deploy/03.product/image/entity-smoke/image-contract.yml"
+  local_proof: "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"
+workload:
+  operation: "controlled-candidate-deployment"
+  runtime_selection: "ecs-fargate-private-immutable-digest"
+  runtime_template: "30-provider-realization/aws/cloudformation/entity-smoke.yml"
+  runtime_boundary: "isolated-private-feature-postgresql-verified-tls"
+  startup_access: "10-foundation/technical-access.yml#workload-startup"
+  network: "10-foundation/network.yml#private-verifier-route"
+configuration:
+  value_policy: "names-and-shapes-only-no-values"
+  required_names:
+    ["NODE_ENV","PLATFORM_SOURCE_COMMIT_SHA","PERSISTENCE_POSTGRES_HOST","PERSISTENCE_POSTGRES_PORT","PERSISTENCE_POSTGRES_DATABASE","PERSISTENCE_POSTGRES_SCHEMA","PERSISTENCE_POSTGRES_CA_PATH","PERSISTENCE_POSTGRES_IAM_REGION","PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","PERSISTENCE_RUNTIME_DATABASE_USERNAME","PERSISTENCE_MIGRATION_DATABASE_USERNAME","PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE","PERSISTENCE_ADMINISTRATOR_CREDENTIALS","HOST","PORT","PLATFORM_DEPLOYMENT_EXPOSURE","ENTITY_SMOKE_VERIFICATION_URL","ENTITY_SMOKE_EXPECTED_SOURCE","ENTITY_SMOKE_DATABASE_PROOF_OPERATION"]
+  optional_names:
+    ["ENTITY_SMOKE_ADMINISTRATION_OPERATION","ENTITY_SMOKE_MIGRATION_OPERATION","ENTITY_SMOKE_VERIFICATION_OPERATION","ENTITY_SMOKE_PROOF_LABEL","ENTITY_SMOKE_EXPECTED_DIGEST"]
+  secret_names:
+    ["PERSISTENCE_ADMINISTRATOR_CREDENTIALS"]
+  secret_dependencies:
+    -
+      id: "entity-smoke-administrator-credentials"
+      dependency: "postgresql"
+      purpose: "administrative-identity-and-grant-management"
+      owner: "feature-platform"
+      authorised_workloads:
+        ["entity-smoke-administration"]
+      access_class: "administrative"
+      injection_name: "PERSISTENCE_ADMINISTRATOR_CREDENTIALS"
+      target_reference_id: "postgresql-administrator-credentials"
+      expected_fields:
+        ["username","password"]
+      delivery:
+        method: "target-secret-store-injection"
+        phase: "workload-startup"
+      access_grant:
+        owner: "feature-platform"
+        policy: "target-bound-administrator-secret-access"
+        privilege_boundary: "declared-access-class-boundary-not-effective-privilege-proof"
+        proof_requirement: "provider-binding-and-effective-access-observation-required"
+      rotation:
+        owner: "feature-platform"
+        policy: "administrative-credential-rotation-requires-replacement"
+        application_behavior: "replacement-required"
+        completed_task_behavior: "no-replay"
+      revocation:
+        owner: "feature-platform"
+        policy: "urgent-revocation"
+        condition: "credential-compromise-or-retirement"
+        workload_effect: "block-new-start-and-stop-active-authorised-workloads"
+        proof_requirement: "delivery-and-dependency-access-denied-observation-required"
+      retirement:
+        owner: "feature-platform"
+        policy: "retire-after-scope-replacement"
+        condition: "successor-accepted-and-revocation-proved"
+      failure_behaviour:
+        completion:
+          unavailable:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+          invalid_shape:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+      safe_diagnostics:
+        unavailable: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        invalid_shape: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        credential_rejected: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        access_denied: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+  workload_identity_dependencies:
+    -
+      id: "entity-smoke-postgresql-runtime-iam-authentication"
+      dependency: "postgresql"
+      purpose: "runtime-dml-access"
+      owner: "feature-platform"
+      authorised_workloads:
+        ["entity-smoke-server"]
+      access_class: "runtime"
+      authentication_reference_id: "postgresql-runtime-iam-authentication"
+      delivery:
+        method: "workload-identity-token"
+        phase: "dependency-connection"
+      access_grant:
+        owner: "feature-platform"
+        policy: "entity-smoke-target-bound-runtime-rds-iam-connect"
+        privilege_boundary: "declared-access-class-boundary-not-effective-privilege-proof"
+        proof_requirement: "provider-binding-and-effective-access-observation-required"
+      authentication_lifecycle:
+        owner: "feature-platform"
+        policy: "rds-iam-task-role-and-connection-token-lifecycle"
+        task_role_credential_renewal: "provider-managed-automatic"
+        new_connection_token_generation: "generate-for-each-new-database-connection"
+        existing_session_behavior: "remains-valid-until-closed-or-governed-revocation"
+        replacement_policy: "not-required-for-normal-token-expiry"
+        completed_task_behavior: "no-replay"
+      revocation:
+        owner: "feature-platform"
+        policy: "urgent-revocation"
+        condition: "credential-compromise-or-retirement"
+        workload_effect: "block-new-start-and-stop-active-authorised-workloads"
+        proof_requirement: "delivery-and-dependency-access-denied-observation-required"
+      retirement:
+        owner: "feature-platform"
+        policy: "retire-after-scope-replacement"
+        condition: "successor-accepted-and-revocation-proved"
+      failure_behaviour:
+        startup:
+          unavailable: "process-exits"
+          invalid_shape: "process-exits"
+        readiness:
+          unavailable: "block-readiness"
+          invalid_shape: "block-readiness"
+      safe_diagnostics:
+        unavailable: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        invalid_shape: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        credential_rejected: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        access_denied: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+    -
+      id: "entity-smoke-postgresql-migration-iam-authentication"
+      dependency: "postgresql"
+      purpose: "migration-structural-access"
+      owner: "feature-platform"
+      authorised_workloads:
+        ["entity-smoke-migration"]
+      access_class: "migration"
+      authentication_reference_id: "postgresql-migration-iam-authentication"
+      delivery:
+        method: "workload-identity-token"
+        phase: "dependency-connection"
+      access_grant:
+        owner: "feature-platform"
+        policy: "entity-smoke-target-bound-migration-rds-iam-connect"
+        privilege_boundary: "declared-access-class-boundary-not-effective-privilege-proof"
+        proof_requirement: "provider-binding-and-effective-access-observation-required"
+      authentication_lifecycle:
+        owner: "feature-platform"
+        policy: "rds-iam-task-role-and-connection-token-lifecycle"
+        task_role_credential_renewal: "provider-managed-automatic"
+        new_connection_token_generation: "generate-for-each-new-database-connection"
+        existing_session_behavior: "remains-valid-until-closed-or-governed-revocation"
+        replacement_policy: "not-required-for-normal-token-expiry"
+        completed_task_behavior: "no-replay"
+      revocation:
+        owner: "feature-platform"
+        policy: "urgent-revocation"
+        condition: "credential-compromise-or-retirement"
+        workload_effect: "block-new-start-and-stop-active-authorised-workloads"
+        proof_requirement: "delivery-and-dependency-access-denied-observation-required"
+      retirement:
+        owner: "feature-platform"
+        policy: "retire-after-scope-replacement"
+        condition: "successor-accepted-and-revocation-proved"
+      failure_behaviour:
+        completion:
+          unavailable:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+          invalid_shape:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+      safe_diagnostics:
+        unavailable: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        invalid_shape: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        credential_rejected: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        access_denied: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+    -
+      id: "entity-smoke-postgresql-restoration-runtime-iam-authentication"
+      dependency: "postgresql"
+      purpose: "isolated-restoration-record-read-only-runtime-access"
+      owner: "feature-platform"
+      authorised_workloads:
+        ["entity-smoke-restore-reader"]
+      access_class: "runtime"
+      authentication_reference_id: "postgresql-runtime-iam-authentication"
+      delivery:
+        method: "workload-identity-token"
+        phase: "dependency-connection"
+      access_grant:
+        owner: "feature-platform"
+        policy: "entity-smoke-target-bound-restoration-runtime-rds-iam-connect"
+        privilege_boundary: "declared-access-class-boundary-not-effective-privilege-proof"
+        proof_requirement: "provider-binding-and-effective-access-observation-required"
+      authentication_lifecycle:
+        owner: "feature-platform"
+        policy: "rds-iam-task-role-and-connection-token-lifecycle"
+        task_role_credential_renewal: "provider-managed-automatic"
+        new_connection_token_generation: "generate-for-each-new-database-connection"
+        existing_session_behavior: "remains-valid-until-closed-or-governed-revocation"
+        replacement_policy: "not-required-for-normal-token-expiry"
+        completed_task_behavior: "no-replay"
+      revocation:
+        owner: "feature-platform"
+        policy: "urgent-revocation"
+        condition: "credential-compromise-or-retirement"
+        workload_effect: "block-new-start-and-stop-active-authorised-workloads"
+        proof_requirement: "delivery-and-dependency-access-denied-observation-required"
+      retirement:
+        owner: "feature-platform"
+        policy: "retire-after-scope-replacement"
+        condition: "successor-accepted-and-revocation-proved"
+      failure_behaviour:
+        completion:
+          unavailable:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+          invalid_shape:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+      safe_diagnostics:
+        unavailable: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        invalid_shape: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        credential_rejected: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        access_denied: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+    -
+      id: "entity-smoke-postgresql-database-proof"
+      dependency: "postgresql"
+      purpose: "rolled-back-effective-privilege-and-original-record-preservation-proof"
+      owner: "feature-platform"
+      authorised_workloads:
+        ["entity-smoke-database-proof"]
+      access_class: "runtime"
+      authentication_reference_id: "postgresql-runtime-iam-authentication"
+      delivery:
+        method: "workload-identity-token"
+        phase: "dependency-connection"
+      access_grant:
+        owner: "feature-platform"
+        policy: "entity-smoke-target-bound-runtime-rds-iam-connect"
+        privilege_boundary: "declared-access-class-boundary-not-effective-privilege-proof"
+        proof_requirement: "provider-binding-and-effective-access-observation-required"
+      authentication_lifecycle:
+        owner: "feature-platform"
+        policy: "rds-iam-task-role-and-connection-token-lifecycle"
+        task_role_credential_renewal: "provider-managed-automatic"
+        new_connection_token_generation: "generate-for-each-new-database-connection"
+        existing_session_behavior: "remains-valid-until-closed-or-governed-revocation"
+        replacement_policy: "not-required-for-normal-token-expiry"
+        completed_task_behavior: "no-replay"
+      revocation:
+        owner: "feature-platform"
+        policy: "urgent-revocation"
+        condition: "credential-compromise-or-retirement"
+        workload_effect: "block-new-start-and-stop-active-authorised-workloads"
+        proof_requirement: "delivery-and-dependency-access-denied-observation-required"
+      retirement:
+        owner: "feature-platform"
+        policy: "retire-after-scope-replacement"
+        condition: "successor-accepted-and-revocation-proved"
+      failure_behaviour:
+        completion:
+          unavailable:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+          invalid_shape:
+            outcome: "unsuccessful-completion"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+      safe_diagnostics:
+        unavailable: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        invalid_shape: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        credential_rejected: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+        access_denied: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+dependencies:
+  required:
+    ["postgresql"]
+  optional: []
+  persistence:
+    ["postgresql"]
+  excluded:
+    ["public-ingress","application-authentication-authorization","tenancy","queues-and-workers","telemetry-rollout","hard-purge"]
+persistence_diagnostics:
+  declaration_schema: "deploy/persistence-diagnostic-mapping/v1"
+  status: "declared"
+  dependency:
+    id: "postgresql"
+    required: true
+  workloads:
+    -
+      id: "entity-smoke-server"
+      mappings:
+        -
+          code: "persistence.transport-unavailable"
+          stage: "readiness"
+          effect: "not-ready"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable"
+          next_check: "inspect-declared-target-alignment-evidence"
+        -
+          code: "persistence.trust-validation-failed"
+          stage: "startup"
+          effect: "not-ready"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed"
+          next_check: "inspect-governed-scope-configuration"
+        -
+          code: "persistence.credential-rejected"
+          stage: "readiness"
+          effect: "not-ready"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.runtime-permission-denied"
+          stage: "request"
+          effect: "stop-and-escalate"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.capacity-exhausted"
+          stage: "request"
+          effect: "bounded-reconnect"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.schema-incompatible"
+          stage: "readiness"
+          effect: "not-ready"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.operation-timed-out"
+          stage: "request"
+          effect: "request-uncertain-reconcile-before-retry"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.outcome-uncertain"
+          stage: "request"
+          effect: "request-uncertain-reconcile-before-retry"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.unclassified-failure"
+          stage: "request"
+          effect: "stop-and-escalate"
+          retryability: "stop-and-escalate"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure"
+          next_check: "collect-governed-provider-observation"
+    -
+      id: "entity-smoke-verifier"
+      mappings:
+        -
+          code: "persistence.transport-unavailable"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable"
+          next_check: "inspect-declared-target-alignment-evidence"
+        -
+          code: "persistence.trust-validation-failed"
+          stage: "startup"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed"
+          next_check: "inspect-governed-scope-configuration"
+        -
+          code: "persistence.credential-rejected"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.runtime-permission-denied"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.capacity-exhausted"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.schema-incompatible"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.operation-timed-out"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.outcome-uncertain"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.unclassified-failure"
+          stage: "request"
+          effect: "stop-and-escalate"
+          retryability: "stop-and-escalate"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure"
+          next_check: "collect-governed-provider-observation"
+    -
+      id: "entity-smoke-migration"
+      mappings:
+        -
+          code: "persistence.transport-unavailable"
+          stage: "migration"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable"
+          next_check: "inspect-declared-target-alignment-evidence"
+        -
+          code: "persistence.trust-validation-failed"
+          stage: "startup"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed"
+          next_check: "inspect-governed-scope-configuration"
+        -
+          code: "persistence.credential-rejected"
+          stage: "migration"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.runtime-permission-denied"
+          stage: "migration"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.capacity-exhausted"
+          stage: "migration"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.schema-incompatible"
+          stage: "migration"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.operation-timed-out"
+          stage: "migration"
+          effect: "block-release-require-fresh-state-observation"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.outcome-uncertain"
+          stage: "migration"
+          effect: "block-release-require-fresh-state-observation"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.unclassified-failure"
+          stage: "migration"
+          effect: "stop-and-escalate"
+          retryability: "stop-and-escalate"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure"
+          next_check: "collect-governed-provider-observation"
+    -
+      id: "entity-smoke-administration"
+      mappings:
+        -
+          code: "persistence.transport-unavailable"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable"
+          next_check: "inspect-declared-target-alignment-evidence"
+        -
+          code: "persistence.trust-validation-failed"
+          stage: "startup"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed"
+          next_check: "inspect-governed-scope-configuration"
+        -
+          code: "persistence.credential-rejected"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.runtime-permission-denied"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.capacity-exhausted"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.schema-incompatible"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.operation-timed-out"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.outcome-uncertain"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.unclassified-failure"
+          stage: "request"
+          effect: "stop-and-escalate"
+          retryability: "stop-and-escalate"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure"
+          next_check: "collect-governed-provider-observation"
+    -
+      id: "entity-smoke-restore-reader"
+      mappings:
+        -
+          code: "persistence.transport-unavailable"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable"
+          next_check: "inspect-declared-target-alignment-evidence"
+        -
+          code: "persistence.trust-validation-failed"
+          stage: "startup"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed"
+          next_check: "inspect-governed-scope-configuration"
+        -
+          code: "persistence.credential-rejected"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.runtime-permission-denied"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.capacity-exhausted"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.schema-incompatible"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.operation-timed-out"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.outcome-uncertain"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.unclassified-failure"
+          stage: "request"
+          effect: "stop-and-escalate"
+          retryability: "stop-and-escalate"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure"
+          next_check: "collect-governed-provider-observation"
+    -
+      id: "entity-smoke-database-proof"
+      mappings:
+        -
+          code: "persistence.transport-unavailable"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable"
+          next_check: "inspect-declared-target-alignment-evidence"
+        -
+          code: "persistence.trust-validation-failed"
+          stage: "startup"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed"
+          next_check: "inspect-governed-scope-configuration"
+        -
+          code: "persistence.credential-rejected"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.runtime-permission-denied"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.capacity-exhausted"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "bounded-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted"
+          next_check: "collect-governed-provider-observation"
+        -
+          code: "persistence.schema-incompatible"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "target-correction-required"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.operation-timed-out"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.outcome-uncertain"
+          stage: "request"
+          effect: "failed-completion"
+          retryability: "no-automatic-retry"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain"
+          next_check: "observe-persistence-state-before-replay"
+        -
+          code: "persistence.unclassified-failure"
+          stage: "request"
+          effect: "stop-and-escalate"
+          retryability: "stop-and-escalate"
+          safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure"
+          next_check: "collect-governed-provider-observation"
+  connection_investigation:
+    command: "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh"
+    operation: "diagnose-connection"
+    mode_environment:
+      PERSISTENCE_RESTORE_DIAGNOSTIC_MODE: "connection"
+    target: "positively-bound-disposable-restored-database"
+    proof_binding: "retained-record-receipt-and-snapshot-source-incarnation-tags"
+    effects:
+      ["ecs-task-launch","temporary-restored-instance-iam-access","owned-task-deadline-stop","temporary-access-removal","writes-diagnostic-evidence"]
+    maximum_attempts_per_database_incarnation: 1
+    maximum_log_reads_per_stream_per_invocation: 3
+    deadline_seconds: 120
+    unknown_launch: "retain-exclusive-reservation-and-reconcile-only"
+    cleanup: "require-terminal-diagnostic-and-recovery-tasks-before-temporary-access-removal-or-existing-disposable-database-cleanup"
+    recovery_acceptance_evidence: false
+health_recovery:
+  declaration_schema: "deploy/health-failure-and-recovery-declaration/v2"
+  workloads:
+    -
+      id: "entity-smoke-server"
+      workload_type: "long-running-server"
+      binding: "entity-smoke-server-service"
+      persistence_writes: true
+      liveness:
+        path: "/livez"
+        expected_status: 200
+      readiness:
+        path: "/readyz"
+        expected_status: 200
+        depends_on:
+          ["postgresql"]
+      health_signal_mapping:
+        provider_replacement_signal: "liveness"
+        dependency_readiness_effect: "block-candidate-acceptance"
+        candidate_acceptance_signals:
+          ["liveness","readiness"]
+      startup_failure:
+        invalid_required_configuration:
+          result: "process-exits"
+          diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+      dependency_failures:
+        -
+          dependency: "postgresql"
+          unavailable:
+            result: "not-ready"
+            diagnostic_code: "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED"
+      automatic_workload_recovery:
+        owner: "aws-ecs-service"
+        unhealthy_workload: "replace"
+        prohibited_automatic_actions:
+          ["replay-uncertain-operation"]
+      release_recovery:
+        strategy: "restore-prior-accepted-immutable-release"
+        automatic_restore: "prohibited"
+        verification: "repeat-declared-health-and-meaningful-operation"
+      proof:
+        local:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-local-proof"
+          review_before: "package-qualification"
+        package:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-package-proof"
+          review_before: "scope-acceptance"
+        live_recovery:
+          status: "planned"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-live_recovery-proof"
+          review_before: "scope-acceptance"
+    -
+      id: "entity-smoke-verifier"
+      workload_type: "run-to-completion-task"
+      binding: "entity-smoke-verifier-task"
+      persistence_writes: false
+      required_workloads:
+        ["entity-smoke-server"]
+      completion:
+        deadline_seconds: 180
+        success:
+          exit_code: 0
+          result_code: "ENTITY_SMOKE_RECORD_RETRIEVED"
+        interruption:
+          policy: "stop-and-escalate"
+        retry_policy: "no-automatic-retries"
+      server_mediated_dependency_proof:
+        dependency: "postgresql"
+        target_workload: "entity-smoke-server"
+        route_access: "private-application-route-only"
+        direct_dependency_credentials: "prohibited"
+        direct_dependency_network: "prohibited"
+        direct_dependency_connection_limit: 0
+        proof_steps:
+          ["create-and-commit-synthetic-record-through-target-workload","replace-target-workload","read-original-record-through-replacement-workload"]
+        acceptance_record:
+          identity: "generated-feature-record"
+          equivalent_repeat: "new-record-only-after-explicit-new-attempt"
+          concurrent_create: "controller-reserves-one-create-per-proof-label"
+          conflicting_reuse: "reject-preexisting-proof-label"
+          lost_response_after_commit: "observe-indexed-label-before-new-attempt"
+          readback: "original-id-and-facts-digest-required-no-recreation"
+          identifier_collision: "reject-duplicate-id-preserve-original-facts"
+        cleanup:
+          owner: "feature-platform"
+          retention: "until-replacement-and-restore-proof-accepted"
+          abandoned_verifier_policy: "retain-for-governed-cleanup"
+          route: "server-mediated-governed-cleanup"
+          outcome: "logical-delete-synthetic-record-after-retention-purge-separately-governed"
+      proof:
+        local:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-local-proof"
+          review_before: "package-qualification"
+        package:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-package-proof"
+          review_before: "scope-acceptance"
+        completion:
+          status: "planned"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-completion-proof"
+          review_before: "scope-acceptance"
+    -
+      id: "entity-smoke-migration"
+      workload_type: "run-to-completion-task"
+      binding: "entity-smoke-migration-task"
+      persistence_writes: false
+      required_workloads: []
+      completion:
+        deadline_seconds: 300
+        success:
+          exit_code: 0
+          result_code: "ENTITY_SMOKE_MIGRATION_APPLIED"
+        interruption:
+          policy: "stop-and-escalate"
+        retry_policy: "no-automatic-retries"
+      migration_execution:
+        dependency: "postgresql"
+        credential_access_class: "migration"
+        manifest:
+          ordering: "strictly-ascending-immutable-identifiers"
+          checksum: "required-before-execution"
+        executor: "exactly-one"
+        lock_wait_seconds: 30
+        execution_timeout_seconds: 240
+        transaction_boundary: "per-migration-atomic-where-supported"
+        interruption_policy: "do-not-retry-uncertain-outcome"
+        unknown_outcome_policy: "block-release-require-fresh-state-observation"
+        fresh_state_observation:
+          workload: "entity-smoke-administration"
+          operation: "observe-migration-state"
+          replay_permitted_result: "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"
+          applied_state_result: "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED"
+          receipt: "durable-task-receipt-required-before-retry"
+        compatibility_strategy: "expand-deploy-verify-contract-later"
+        replay_handling:
+          already_applied_checksum_match: "no-op-record-accepted-state"
+          checksum_mismatch: "block-release-require-fresh-state-observation"
+          concurrent_executor: "reject-before-apply"
+      proof:
+        local:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-local-proof"
+          review_before: "package-qualification"
+        package:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-package-proof"
+          review_before: "scope-acceptance"
+        completion:
+          status: "planned"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-completion-proof"
+          review_before: "scope-acceptance"
+    -
+      id: "entity-smoke-administration"
+      workload_type: "run-to-completion-task"
+      binding: "entity-smoke-administration-task"
+      persistence_writes: false
+      required_workloads: []
+      completion:
+        deadline_seconds: 300
+        success:
+          exit_code: 0
+          result_code: "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED"
+        interruption:
+          policy: "stop-and-escalate"
+        retry_policy: "no-automatic-retries"
+      administrative_execution:
+        dependency: "postgresql"
+        credential_access_class: "administrative"
+        runtime_identity_probe:
+          dependency: "postgresql"
+          credential_access_class: "runtime"
+          purpose: "effective-runtime-permission-proof-without-administrator-credentials"
+          workload: "entity-smoke-database-proof"
+          target_workload: "entity-smoke-server"
+        allowed_operations:
+          ["preflight","bootstrap","grant-runtime","observe-permissions","observe-migration-state","revoke-runtime","restore-runtime"]
+        prohibited_operations:
+          ["application-server-startup","ordinary-migration-execution","unrestricted-sql-console"]
+        ordinary_migration_boundary: "schema-ownership-and-reviewed-ddl-only"
+        runtime_boundary: "declared-application-dml-only"
+      proof:
+        local:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-local-proof"
+          review_before: "package-qualification"
+        package:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-package-proof"
+          review_before: "scope-acceptance"
+        completion:
+          status: "planned"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-completion-proof"
+          review_before: "scope-acceptance"
+    -
+      id: "entity-smoke-restore-reader"
+      workload_type: "run-to-completion-task"
+      binding: "entity-smoke-restore-reader-task"
+      persistence_writes: false
+      required_workloads: []
+      completion:
+        deadline_seconds: 180
+        success:
+          exit_code: 0
+          result_code: "ENTITY_SMOKE_RESTORED_RECORD_RETRIEVED"
+        interruption:
+          policy: "stop-and-escalate"
+        retry_policy: "no-automatic-retries"
+      restoration_verification:
+        dependency: "postgresql"
+        source_mutation: "prohibited"
+        database_route: "isolated-restored-database-only"
+        credential_access_class: "runtime"
+        expected_record: "retained-synthetic-acceptance-record"
+        cleanup: "delete-disposable-restored-database-only-after-completion-or-governed-failure"
+      proof:
+        local:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-local-proof"
+          review_before: "package-qualification"
+        package:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-package-proof"
+          review_before: "scope-acceptance"
+        completion:
+          status: "planned"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-completion-proof"
+          review_before: "scope-acceptance"
+    -
+      id: "entity-smoke-database-proof"
+      workload_type: "run-to-completion-task"
+      binding: "entity-smoke-database-proof-task"
+      persistence_writes: false
+      required_workloads: []
+      completion:
+        deadline_seconds: 180
+        success:
+          exit_code: 0
+          result_code: "ENTITY_SMOKE_EFFECTIVE_PRIVILEGES_PROVEN"
+        interruption:
+          policy: "stop-and-escalate"
+        retry_policy: "no-automatic-retries"
+      proof:
+        local:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-local-proof"
+          review_before: "package-qualification"
+        package:
+          status: "planned"
+          command: "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-package-proof"
+          review_before: "scope-acceptance"
+        completion:
+          status: "planned"
+          owner: "feature-platform"
+          follow_up: "execute-isolated-feature-completion-proof"
+          review_before: "scope-acceptance"
+  persistence_recovery:
+    server_replacement:
+      verifier_workload: "entity-smoke-verifier"
+      outcome: "original-record-survives-server-replacement"
+      proof_requirement: "required-before-persistence-scope-acceptance"
+    image_rollback:
+      predecessor: "persistence-capable-accepted-release"
+      schema_compatibility: "required"
+      permission_contract_compatibility: "required"
+      database_reversal: "prohibited"
+      legacy_permission_facts: "not-an-automatic-rollback-candidate"
+      prohibited_effects:
+        ["re-broaden-runtime-grants","inject-administrative-credentials-into-ordinary-migration","restore-migration-history-write","undo-revocation"]
+      proof_requirement: "required-before-persistence-scope-acceptance"
+    isolated_database_restore:
+      restore_target: "new-isolated-database"
+      verification: "isolated-application-reads-known-synthetic-record"
+      source_mutation: "prohibited"
+      proof_requirement: "required-before-persistence-scope-acceptance"
+  initial_release_recovery:
+    applicability: "no-current-or-historical-accepted-release"
+    strategy: "stop-own-scope-workloads-preserve-data"
+    provider_mutation: "explicit-approved-bounded-control-only"
+    automatic_replay: "prohibited"
+    database_reversal: "prohibited"
+    verification: "owned-workloads-stopped-and-data-preserved"
+    proof_requirement: "required-before-first-scope-acceptance"
+    subsequent_releases: "prior-compatible-accepted-image-required"
+receipt:
+  status: "qualified-receipt-required-before-candidate-deployment"
+  owner: "feature-platform"
+  safe_fields:
+    ["target","environment_class","provider_region_alias","candidate_id","package_contract_id","program_id","source_revision","image_digest","release_identity","checked_at","receipt_reference"]
+rollback:
+  status: "initial-release-stop-preserve-subsequent-compatible-accepted-image"
+  owner: "feature-platform"
+  strategy: "governed-release-succession-selection"
+  maximum_automatic_retries: 0
+excludes:
+  - "public-ingress"
+  - "application-authentication-authorization"
+  - "tenancy"
+  - "queues-and-workers"
+  - "telemetry-rollout"
+  - "hard-purge"
+change_impact:
+  schema: "deploy/change-impact/v1"
+  inputs:
+    - "apps/entity-smoke"
+    - "infra/04.deploy/03.product/entrypoints/entity-smoke"
+    - "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts"
+    - "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-migration.main.ts"
+    - "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-administration.main.ts"
+    - "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-verifier.main.ts"
+    - "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts"
+    - "infra/04.deploy/03.product/image/entity-smoke"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml"
+    - "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/entity-smoke-runtime-configuration.py"
+    - "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition"
+    - "scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image"
+    - "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image"
+    - "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody"
+    - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke"
+    - ".github/workflows/publish-kanbien-core-platform-entity-smoke.yml"
+    - "packages/core"
+    - "platform/persistence"
+    - "platform/adapters/aws/persistence/postgresql"
+    - "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke"
+  requirements:
+    -
+      id: "feature-runtime-package-and-acceptance"
+      purpose: "Bind the actual feature implementation, isolated provider surface, custody and full live proof."
+      owner: "feature-platform"
+      required_by:
+        - "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/workload-binding.yml"
+        - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml"
+        - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml"
+        - "scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh"
+        - "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
+        - "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/plan.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execute.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-stop.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-reader.sh"
+      declarations:
+        - "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml"
+        - "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml"
+        - "infra/04.deploy/03.product/image/entity-smoke/image-contract.yml"
+        - "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml"
+      expectation: "Every proof is owned and executable; passing source checks never substitutes for container qualification or real AWS acceptance."
+      local_proofs:
+        - "scope-inventory"
+        - "runnable-program"
+        - "entity-smoke-composition"
+        - "entity-smoke-acceptance-controls"
+        - "entity-smoke-runtime"
+        - "entity-smoke-publication-contract"
+      package_proofs:
+        - "entity-smoke-container"
+      target_proofs:
+        - "entity-smoke-target-alignment"
+      run_proofs:
+        - "entity-smoke-acceptance"
+

@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.script.build-platform-shell-image.prepare-runtime
-//   version: 2
+//   version: 3
 //   status: active
 //   created_on: "2026-07-10"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-09"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -53,6 +53,9 @@ writePackageShim("@kanbien/core", {
 });
 writePackageShim("@kanbien/app-platform-smoke", {
   ".": join(runtimeRoot, "apps/platform-smoke/src/index.js"),
+});
+writePackageShim("@kanbien/app-entity-smoke", {
+  ".": join(runtimeRoot, "apps/entity-smoke/src/index.js"),
 });
 writePackageShim("@kanbien/product-kanbien-platform", {
   ".": join(runtimeRoot, "products/kanbien-platform/src/index.js"),

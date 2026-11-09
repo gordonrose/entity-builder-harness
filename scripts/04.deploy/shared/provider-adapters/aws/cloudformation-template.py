@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [security, sre]
@@ -23,7 +23,7 @@ import json
 import yaml
 
 
-class Loader(yaml.SafeLoader):
+class Loader(getattr(yaml, "CSafeLoader", yaml.SafeLoader)):
     pass
 
 

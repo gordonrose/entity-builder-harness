@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 10
+version: 11
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-05"
+updated_on: "2026-11-09"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -82,6 +82,14 @@ blocks this handoff; a passing exploratory test does not close it. Source review
 does not grant git, deployment or other external authority.
 
 ## Verification and stage boundaries
+
+Follow the [test-execution standard](../testing/standards/test-execution.md)
+for development feedback versus commit/integration proof. During implementation,
+path-scoped development selection may execute declared fast checks and leave the
+full integration obligations pending. Report that state as partial, not complete
+verification. Do not run full regression after every edit. The sequence below
+applies when closing integration proof on stable inputs; development feedback
+cannot satisfy or bypass staged, CI or local-main promotion gates.
 
 Before broad verification or image qualification, complete implementation and
 affected-consumer changes required by the applicable requirements, close the

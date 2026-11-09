@@ -5,7 +5,7 @@
 #   version: 8
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-04"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -128,7 +128,7 @@ class DiscoveryTests(unittest.TestCase):
             'node scripts/repo/diagnostic-coverage/export-catalogs.mjs --compiled-root .cache/diagnostic-catalog-export --check',
             'python3 -B scripts/repo/diagnostic-coverage/smoke-test.py'])
         self.assertEqual(len(calls), 3)
-        for unit, command in [('server', 'platform:server:check'), ('product', 'product:kanbien-platform:check'), ('cloudwatch', 'platform:adapter:aws:observability:cloudwatch:check'), ('ecs-fargate', 'platform:adapter:aws:runtime:ecs-fargate:check'), ('dynamodb-persistence', 'platform:adapter:aws:persistence:dynamodb:check'), ('sqs-queue', 'platform:adapter:aws:queue:sqs:check')]:
+        for unit, command in [('entity-smoke', 'app:entity-smoke:check'), ('server', 'platform:server:check'), ('product', 'product:kanbien-platform:check'), ('cloudwatch', 'platform:adapter:aws:observability:cloudwatch:check'), ('ecs-fargate', 'platform:adapter:aws:runtime:ecs-fargate:check'), ('dynamodb-persistence', 'platform:adapter:aws:persistence:dynamodb:check'), ('sqs-queue', 'platform:adapter:aws:queue:sqs:check')]:
             self.assertEqual(self.verification_fixture(path, ['--unit', unit]), (0, ['npm --ignore-scripts run ' + command]))
             self.assertEqual(self.verification_fixture(path, ['--unit', unit], fail=7), (7, ['npm --ignore-scripts run ' + command]))
         self.assertEqual(self.verification_fixture('scripts/04.deploy/build-platform-shell-image/check-source.sh', ['--payload-only']),
@@ -268,7 +268,7 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(set(owners['observability']['checks']), {
             'platform-observability-runtime', 'platform-persistence-runtime', 'platform-server-runtime',
             'platform-workers-runtime', 'platform-health-runtime', 'diagnostic-catalog-readers'})
-        self.assertIn('platform/health/tests/platform-health-runtime.test.ts', owners['observability']['tests'])
+        self.assertIn('platform/health/tests/integration/platform-health-runtime.test.ts', owners['observability']['tests'])
         for capability in ['server', 'workers']:
             self.assertIn('platform/config/src/diagnostics.ts', owners[capability]['definitions'])
         self.assertIn('platform/security/src/diagnostics.ts', owners['server']['definitions'])
@@ -276,7 +276,7 @@ class DiscoveryTests(unittest.TestCase):
             self.assertIn(f'platform/{capability}/src/diagnostics.ts', owners['observability']['definitions'])
         # Configuration predicates and security mechanisms retain their own
         # proof owners; their debt/status must not be absorbed by this split.
-        self.assertTrue(any('platform/observability/tests/configuration-runtime.test.ts' in entry['tests']
+        self.assertTrue(any('platform/observability/tests/integration/configuration-runtime.test.ts' in entry['tests']
                             and 'platform/observability/src/configuration.ts' in entry.get('definitions', [])
                             and 'platform-observability-runtime' in entry['checks'] for entry in reviews))
         self.assertTrue(any('platform/security/src/diagnostics.ts' in [source['path'] for source in entry['sources']]

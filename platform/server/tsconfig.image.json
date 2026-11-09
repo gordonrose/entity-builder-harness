@@ -20,6 +20,9 @@
       "@kanbien/app-platform-smoke": [
         "apps/platform-smoke/src/index.ts"
       ],
+      "@kanbien/app-entity-smoke": [
+        "apps/entity-smoke/src/index.ts"
+      ],
       "@kanbien/product-kanbien-platform": [
         "products/kanbien-platform/src/index.ts"
       ],
@@ -86,6 +89,8 @@
   "include": [
     "src/**/*.ts",
     "../../apps/platform-smoke/src/**/*.ts",
+    "../../apps/entity-smoke/src/**/*.ts",
+    "../../apps/entity-smoke/features/**/*.ts",
     "../../products/kanbien-platform/src/**/*.ts",
     "../../infra/04.deploy/03.product/entrypoints/**/*.ts",
     "../config/src/**/*.ts",

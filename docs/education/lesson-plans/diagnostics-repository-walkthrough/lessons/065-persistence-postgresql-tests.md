@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts -->
+<!-- course-file: platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts -->
 
 ### postgresql-diagnostics.test.ts
 
-[Open current source](../../../../../platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts) · **Snapshot:** modified existing file; 66 added / 6 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts) · **Snapshot:** modified existing file; 66 added / 6 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for postgresql: provider evidence.
 
@@ -70,11 +70,11 @@ Owning registered proof: `postgresql-connection-diagnostics`. Look up their exac
 
 <!-- course-source-sha256: before=0566d3f2097cd84ce6e6a83d7ce06d45e71bd72b6198b354596c909b0b646556 after=d68f6077a04956aa344a0d95d7e0be0f9246e43f6abbc0c95ff05d782906141a -->
 
-<!-- course-file: platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-boundaries.test.mjs -->
+<!-- course-file: platform/adapters/aws/persistence/postgresql/tests/test-infrastructure/static-validation/postgresql-persistence-adapter-boundaries.test.mjs -->
 
 ### postgresql-persistence-adapter-boundaries.test.mjs
 
-[Open current source](../../../../../platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-boundaries.test.mjs) · **Snapshot:** modified existing file; 2 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/persistence/postgresql/tests/test-infrastructure/static-validation/postgresql-persistence-adapter-boundaries.test.mjs) · **Snapshot:** modified existing file; 2 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for postgresql: provider evidence.
 
@@ -90,11 +90,11 @@ Owning registered proof: `postgresql-connection-diagnostics`, `diagnostic-catalo
 
 <!-- course-source-sha256: before=791d2d2b9ccbba8c3c2d888735346b1b2e40d7c743ba9b4981c84a427f881c5d after=e167dff6fe7e105a3db9ae63879280898ebcc11540c61c48af90ab48ad45d790 -->
 
-<!-- course-file: platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts -->
+<!-- course-file: platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts -->
 
 ### postgresql-persistence-adapter-runtime.test.ts
 
-[Open current source](../../../../../platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 675 added / 2 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 675 added / 2 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for postgresql: provider evidence.
 

@@ -1733,12 +1733,12 @@ config becomes a service registry or starts a database client.
 
 ## Tests and remaining work
 
-[config-runtime.test.ts](../../tests/config-runtime.test.ts) covers reading,
+[config-runtime.test.ts](../../tests/config/unit/config-runtime.test.ts) covers reading,
 value checks, comparisons, JSON and collection.
-[config-types.test.ts](../../tests/config-types.test.ts) covers the public types.
-[foundation-diagnostics-runtime.test.ts](../../tests/foundation-diagnostics-runtime.test.ts)
+[config-types.test.ts](../../tests/config/type-level/config-types.test.ts) covers the public types.
+[foundation-diagnostics-runtime.test.ts](../../tests/diagnostics/contract/foundation-diagnostics-runtime.test.ts)
 covers precise evidence, preserved throws and read counts.
-[Core boundary tests](../../tests/core-boundaries.test.mjs) and the
+[Core boundary tests](../../tests/test-infrastructure/static-validation/core-boundaries.test.mjs) and the
 [module-structure fixtures](../../../../scripts/repo/module-structure/smoke-test.mjs)
 cover indexes and dependency boundaries.
 
@@ -1750,7 +1750,7 @@ report detail. They do not install packages or qualify a deployed runtime.
 
 The [actual startup fixture](../../../../scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs)
 checks failure before pool construction and fixed startup context. The
-[Platform reporter fixture](../../../../platform/observability/tests/diagnostics-runtime.test.ts)
+[Platform reporter fixture](../../../../platform/observability/tests/integration/diagnostics-runtime.test.ts)
 checks internal delivery and reporting-failure isolation.
 
 All public config exports and internal-only file exports are covered above.

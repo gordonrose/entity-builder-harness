@@ -55,7 +55,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "tests/*-runtime.test.ts",
+    "tests/**/*-runtime.test.ts",
     "../../platform/config/src/**/*.ts",
     "../../platform/contracts/src/**/*.ts",
     "../../platform/health/src/**/*.ts",

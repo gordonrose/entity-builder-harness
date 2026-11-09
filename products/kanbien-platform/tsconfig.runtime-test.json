@@ -11,6 +11,9 @@
     "outDir": "../../.cache/product-kanbien-platform-runtime",
     "baseUrl": "../..",
     "paths": {
+      "@kanbien/app-entity-smoke": [
+        "apps/entity-smoke/src/index.ts"
+      ],
       "@kanbien/app-platform-smoke": [
         "apps/platform-smoke/src/index.ts"
       ],
@@ -61,7 +64,9 @@
   },
   "include": [
     "src/**/*.ts",
-    "tests/*-runtime.test.ts",
+    "tests/**/*-runtime.test.ts",
+    "../../apps/entity-smoke/src/**/*.ts",
+    "../../apps/entity-smoke/features/**/*.ts",
     "../../apps/platform-smoke/src/**/*.ts",
     "../../platform/**/*.ts"
   ]

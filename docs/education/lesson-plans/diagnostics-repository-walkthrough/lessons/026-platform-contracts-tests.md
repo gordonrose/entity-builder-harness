@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/contracts/tests/platform-contracts-runtime.test.ts -->
+<!-- course-file: platform/contracts/tests/contract/platform-contracts-runtime.test.ts -->
 
 ### platform-contracts-runtime.test.ts
 
-[Open current source](../../../../../platform/contracts/tests/platform-contracts-runtime.test.ts) · **Snapshot:** modified existing file; 158 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/contracts/tests/contract/platform-contracts-runtime.test.ts) · **Snapshot:** modified existing file; 158 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for platform registration contracts.
 
@@ -72,11 +72,11 @@ Owning registered proof: `platform-contracts-runtime`, `platform-observability-r
 
 <!-- course-source-sha256: before=b1c1949fe36b08cce922d97ca78433c4f1ab1a17bbfc5d7f82acbd1b7b46ba4b after=62bdc70a38bf5107df78e3b49c223785515c563409a8125ff46027f69ffe3203 -->
 
-<!-- course-file: platform/contracts/tests/platform-contracts-types.test.ts -->
+<!-- course-file: platform/contracts/tests/type-level/platform-contracts-types.test.ts -->
 
 ### platform-contracts-types.test.ts
 
-[Open current source](../../../../../platform/contracts/tests/platform-contracts-types.test.ts) · **Snapshot:** modified existing file; 38 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/contracts/tests/type-level/platform-contracts-types.test.ts) · **Snapshot:** modified existing file; 38 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for platform registration contracts.
 
@@ -94,11 +94,11 @@ Owning registered proof: `platform-contracts-runtime`, `platform-observability-r
 
 <!-- course-source-sha256: before=33cd48c21df06cdebf7976efe6bc90ffddf115f339cff5839675af3b9c644fc4 after=50604d633dc4b05fd3bd017e37539e7a21e3a3b88b730b6b29e7eb04e5d3595f -->
 
-<!-- course-file: platform/contracts/tests/registration-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/contracts/tests/contract/registration-diagnostics-runtime.test.ts -->
 
 ### registration-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/contracts/tests/registration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 255 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/contracts/tests/contract/registration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 255 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for platform registration contracts.
 

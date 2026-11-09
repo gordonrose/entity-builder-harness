@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: deploy.standard.operational-realization-gate
-  version: 3
+  version: 5
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-10-26"
+  updated_on: "2026-11-09"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -57,9 +57,17 @@ gate. Without that record, the normal requirements below apply.
 ## Required Realization Contract
 
 Every capability that can mutate a live target, perform a migration, execute a
-background job, or require a recovery action must have a versioned
-`operational-realization-contract/v1` before execution. Use the existing [template and schema](../../01.harness/templates/operational-realization-contract.v1.guide.md),
-retained at their compatible paths; this standard owns their deployment semantics.
+background job, or require a recovery action must have a versioned realization
+contract before execution. The existing
+[v1 template and schema](../../01.harness/templates/operational-realization-contract.v1.guide.md)
+retain their compatible paths and admission behaviour. Select
+[v2](../schemas/operational-realization-contract.v2.guide.md) for explicit
+synchronous unit-to-unit connections or workloads without direct storage.
+Declare empty connection/store lists explicitly rather than invent a dependency.
+Direct store declarations must match the unit's own connections; a service call
+does not confer its callee's storage authority. This standard owns both
+versions' deployment semantics; all proof levels, ordered gates, safety and
+provider approval requirements below remain mandatory.
 
 The contract must declare all of the following.
 
@@ -80,6 +88,25 @@ The contract must declare all of the following.
 An execution unit may not depend on an implied service or setting. Each such
 relationship must be an explicit edge between declared nodes. The compiler
 rejects unknown nodes and missing dependency edges.
+
+## Bounded disposable-restore change shape
+
+Ordinary contracts continue to forbid delete, replace and permission broadening.
+Only v2 may explicitly declare `change_shape.disposable_restore_cleanup`, with
+exactly four true fields: `original_readback_required`,
+`positive_ownership_required`, `explicit_execution_approval_required` and
+`preserve_source_and_shared_resources`. Its allowed classes must be exactly
+`[delete]`; forbidden classes exactly `[create, update, replace, broaden-permission]`.
+Malformed or partial opt-ins fail closed. Existing v1 admission is unchanged.
+
+This declaration permits validation of the truthful cleanup shape, not execution.
+An applicable provider-owned rule and actual controller must separately require
+the original successful readback, positive disposable-resource ownership and
+explicit concrete execution approval, protecting source and shared resources.
+All eight gates, input-bound evidence and actual normalized change counts still
+apply. The compiler cannot establish those provider facts from booleans. The
+currently approved provider case is solely the entity-smoke isolated restore
+under its [applicability rule](../../aws/standards/operational-realization-applicability.md#entity-smoke-disposable-restore-cleanup).
 
 ## Proof Levels
 

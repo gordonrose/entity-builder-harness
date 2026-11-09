@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-health-failure-and-recovery-declaration.implementation
-#   version: 9
+#   version: 11
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -33,6 +33,26 @@ SAFE_DIAGNOSTIC = re.compile(r"^[A-Z][A-Z0-9_]{2,}$")
 SAFE_RELATIVE_PATH = re.compile(r"^(?!/)(?!.*://)[A-Za-z0-9._/-]+$")
 SAFE_SOURCE_REFERENCE = re.compile(r"^(?!/)(?!.*://)[A-Za-z0-9._/#-]+$")
 PROOF_STATUSES = {"passed", "planned", "deferred"}
+INITIAL_RELEASE_RECOVERY = {
+    "applicability": "no-current-or-historical-accepted-release",
+    "strategy": "stop-own-scope-workloads-preserve-data",
+    "provider_mutation": "explicit-approved-bounded-control-only",
+    "automatic_replay": "prohibited",
+    "database_reversal": "prohibited",
+    "verification": "owned-workloads-stopped-and-data-preserved",
+    "proof_requirement": "required-before-first-scope-acceptance",
+    "subsequent_releases": "prior-compatible-accepted-image-required",
+}
+
+
+def check_initial_release_recovery(health: dict[str, Any], codes: list[str]) -> None:
+    """An optional first-release policy never changes the default rollback rule.
+
+    Actual eligibility is selected against accepted custody by release-succession;
+    a shape-valid declaration alone does not prove absence of an accepted release.
+    """
+    if "initial_release_recovery" in health and health["initial_release_recovery"] != INITIAL_RELEASE_RECOVERY:
+        codes.append("initial-release-recovery-invalid")
 
 
 def load_contract(path: Path) -> dict[str, Any]:
@@ -188,6 +208,7 @@ def validate_v2(contract: dict[str, Any], source: Path | None, binding: dict[str
         if isinstance(item, dict) and item.get("workload_type") == "run-to-completion-task" and not set(item.get("required_workloads", [])).issubset(all_ids - {item.get("id")}): codes.append("task-required-workload-invalid")
     if binding is not None and set(bindings) != {item.get("binding") for item in workloads if isinstance(item, dict)}: codes.append("workload-binding-inventory-mismatch")
     check_persistence_recovery(health, workloads, codes)
+    check_initial_release_recovery(health, codes)
     return list(dict.fromkeys(codes))
 
 
@@ -356,21 +377,35 @@ def check_server_mediated_dependency_proof(
         "server-mediated-dependency-proof-acceptance-record-invalid",
         codes,
     )
-    if acceptance_record is not None and acceptance_record != {
+    fixed_record = {
         "identity": "stable-synthetic-acceptance-record",
         "equivalent_repeat": "return-original-record-without-duplicate",
         "concurrent_create": "exactly-one-record-preserve-original-facts",
         "conflicting_reuse": "reject-conflict-preserve-original-facts",
         "lost_response_after_commit": "reconcile-original-record-before-retry",
-    }:
+    }
+    generated_record = {
+        "identity": "generated-feature-record",
+        "equivalent_repeat": "new-record-only-after-explicit-new-attempt",
+        "concurrent_create": "controller-reserves-one-create-per-proof-label",
+        "conflicting_reuse": "reject-preexisting-proof-label",
+        "lost_response_after_commit": "observe-indexed-label-before-new-attempt",
+        "readback": "original-id-and-facts-digest-required-no-recreation",
+        "identifier_collision": "reject-duplicate-id-preserve-original-facts",
+    }
+    if acceptance_record is not None and acceptance_record not in (fixed_record, generated_record):
         codes.append("server-mediated-dependency-proof-acceptance-record-invalid")
+    generated = acceptance_record == generated_record
     cleanup = mapping(declared.get("cleanup"), "server-mediated-dependency-proof-cleanup-invalid", codes)
     if cleanup is not None and (
         not non_empty(cleanup.get("owner"))
         or cleanup.get("retention") != "until-replacement-and-restore-proof-accepted"
         or cleanup.get("abandoned_verifier_policy") != "retain-for-governed-cleanup"
         or cleanup.get("route") != "server-mediated-governed-cleanup"
-        or cleanup.get("outcome") != "delete-synthetic-record-only-after-retention"
+        or cleanup.get("outcome") != (
+            "logical-delete-synthetic-record-after-retention-purge-separately-governed"
+            if generated else "delete-synthetic-record-only-after-retention"
+        )
     ):
         codes.append("server-mediated-dependency-proof-cleanup-invalid")
 
@@ -549,6 +584,8 @@ def validate(contract: dict[str, Any], source_path: Path | None = None, binding:
     if declaration is None:
         return codes
     if declaration.get("declaration_schema") == "deploy/health-failure-and-recovery-declaration/v2": return validate_v2(contract, source_path, binding)
+    if "initial_release_recovery" in declaration:
+        codes.append("initial-release-recovery-v2-required")
     if declaration.get("declaration_schema") != "deploy/health-recovery-declaration/v1":
         codes.append("health-recovery-schema-invalid")
 

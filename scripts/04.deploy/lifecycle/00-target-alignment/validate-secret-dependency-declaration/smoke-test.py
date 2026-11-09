@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-secret-dependency-declaration
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -27,15 +28,20 @@ from typing import Any
 
 import yaml
 
+if not __debug__:
+    raise SystemExit("SECRET_DEPENDENCY_FIXTURE_ASSERTIONS_DISABLED")
 
 ROOT = Path(__file__).resolve().parents[5]
 CHECK = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh"
 SOURCE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml"
 TEMPLATE = ROOT / ".agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.template.yml"
+CANARY = "sensitive-proof-selector-canary"
 
 
 def run(path: Path) -> tuple[int, dict[str, Any]]:
     result = subprocess.run([str(CHECK), "--scope-contract", str(path), "--json"], capture_output=True, text=True, check=False)
+    assert CANARY not in result.stdout + result.stderr
+    assert "Traceback" not in result.stdout + result.stderr
     return result.returncode, json.loads(result.stdout)
 
 
@@ -141,6 +147,8 @@ def scope_with(baseline: dict[str, Any], workloads: list[dict[str, str]], entrie
 
 
 def main() -> int:
+    disabled = subprocess.run(["python3", str(Path(__file__))], env={**os.environ, "PYTHONOPTIMIZE": "1"}, capture_output=True, text=True, check=False)
+    assert disabled.returncode != 0 and disabled.stderr.strip() == "SECRET_DEPENDENCY_FIXTURE_ASSERTIONS_DISABLED"
     baseline = yaml.safe_load(SOURCE.read_text(encoding="utf-8"))
     assert isinstance(baseline, dict)
     status, report = run(SOURCE)
@@ -324,6 +332,74 @@ def main() -> int:
         missing_administrative_identity = copy.deepcopy(administrative_executor)
         missing_administrative_identity["configuration"]["workload_identity_dependencies"] = []
         expect_failure(missing_administrative_identity, "administrative-runtime-identity-probe-missing", directory)
+
+        separate_probe = copy.deepcopy(administrative_executor)
+        proof_task = workload("runtime-proof", "run-to-completion-task")
+        proof_task["completion"] = {"success": {"exit_code": 0, "result_code": "RUNTIME_PERMISSIONS_PROVEN"}}
+        separate_probe["health_recovery"]["workloads"].extend([proof_task, workload("application", "long-running-server")])
+        probe = separate_probe["health_recovery"]["workloads"][1]["administrative_execution"]["runtime_identity_probe"]
+        probe.update({"workload": "runtime-proof", "target_workload": "application"})
+        proof_identity = identity_entry("proof-runtime-identity", "runtime", ["runtime-proof"], identity_completion_failure())
+        application_identity = identity_entry("application-runtime-identity", "runtime", ["application"], identity_server_failure())
+        application_identity["authentication_reference_id"] = proof_identity["authentication_reference_id"]
+        separate_probe["configuration"]["workload_identity_dependencies"] = [proof_identity, application_identity]
+        expect_pass(separate_probe, directory, "separate-runtime-proof-no-admin-runtime-access")
+        for selector in ("workload", "target_workload"):
+            incomplete = copy.deepcopy(separate_probe)
+            del incomplete["health_recovery"]["workloads"][1]["administrative_execution"]["runtime_identity_probe"][selector]
+            expect_failure(incomplete, "administrative-executor-declaration-invalid", directory)
+        for selector, value in (("workload", CANARY), ("workload", "persistence-admin"), ("workload", []), ("target_workload", "unknown"), ("target_workload", "runtime-proof")):
+            invalid = copy.deepcopy(separate_probe)
+            invalid["health_recovery"]["workloads"][1]["administrative_execution"]["runtime_identity_probe"][selector] = value
+            expect_failure(invalid, "runtime-identity-proof-workload-invalid", directory)
+        for index in (2, 3):
+            duplicate = copy.deepcopy(separate_probe)
+            duplicate["health_recovery"]["workloads"].append(copy.deepcopy(duplicate["health_recovery"]["workloads"][index]))
+            expect_failure(duplicate, "runtime-identity-proof-workload-invalid", directory)
+        for index, wrong_type in ((2, "long-running-server"), (3, [])):
+            wrong_kind = copy.deepcopy(separate_probe)
+            wrong_kind["health_recovery"]["workloads"][index]["workload_type"] = wrong_type
+            expect_failure(wrong_kind, "runtime-identity-proof-workload-invalid", directory)
+        for bad_success in ({}, {"exit_code": False, "result_code": "VALID"}, {"exit_code": 1, "result_code": "VALID"}, {"exit_code": 0, "result_code": []}):
+            incomplete = copy.deepcopy(separate_probe)
+            incomplete["health_recovery"]["workloads"][2]["completion"]["success"] = bad_success
+            expect_failure(incomplete, "runtime-identity-proof-workload-invalid", directory)
+        for execution in ("administrative_execution", "migration_execution", "server_mediated_dependency_proof"):
+            mixed = copy.deepcopy(separate_probe)
+            mixed["health_recovery"]["workloads"][2][execution] = {"dependency": "persistence"}
+            expect_failure(mixed, "runtime-identity-proof-workload-invalid", directory)
+        wrong_dependency = copy.deepcopy(separate_probe)
+        wrong_dependency["health_recovery"]["workloads"][1]["administrative_execution"]["runtime_identity_probe"]["dependency"] = "other"
+        expect_failure(wrong_dependency, "administrative-executor-declaration-invalid", directory)
+        wrong_identity = copy.deepcopy(separate_probe)
+        wrong_identity["configuration"]["workload_identity_dependencies"][1]["authentication_reference_id"] = "other-runtime-identity"
+        expect_failure(wrong_identity, "runtime-identity-proof-authentication-mismatch", directory)
+        wrong_identity_dependency = copy.deepcopy(separate_probe)
+        wrong_identity_dependency["dependencies"]["required"].append("other")
+        wrong_identity_dependency["configuration"]["workload_identity_dependencies"][0]["dependency"] = "other"
+        expect_failure(wrong_identity_dependency, "runtime-identity-proof-authentication-mismatch", directory)
+        for index in (0, 1):
+            missing_identity = copy.deepcopy(separate_probe)
+            del missing_identity["configuration"]["workload_identity_dependencies"][index]
+            expect_failure(missing_identity, "runtime-identity-proof-authentication-mismatch", directory)
+        for access_class in ("administrative", "migration"):
+            privileged_secret = copy.deepcopy(separate_probe)
+            extra = secret_entry("proof-privileged", access_class, ["runtime-proof"], completion_failure())
+            privileged_secret["configuration"]["secret_dependencies"].append(extra)
+            privileged_secret["configuration"]["secret_names"].append(extra["injection_name"])
+            expect_failure(privileged_secret, "runtime-identity-proof-privileged-access-prohibited", directory)
+            privileged_identity = copy.deepcopy(separate_probe)
+            privileged_identity["configuration"]["workload_identity_dependencies"].append(identity_entry("proof-privileged", access_class, ["runtime-proof"], identity_completion_failure()))
+            expect_failure(privileged_identity, "runtime-identity-proof-privileged-access-prohibited", directory)
+        ambiguous_identity = copy.deepcopy(separate_probe)
+        ambiguous_identity["configuration"]["workload_identity_dependencies"].append(identity_entry("second-runtime", "runtime", ["runtime-proof"], identity_completion_failure()))
+        expect_failure(ambiguous_identity, "runtime-identity-proof-authentication-mismatch", directory)
+        feature = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml"
+        status, report = run(feature)
+        assert status == 0 and report["verdict"] == "passed", report
+        existing = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml"
+        status, report = run(existing)
+        assert status == 0 and report["verdict"] == "passed", report
 
         missing = copy.deepcopy(baseline)
         missing["configuration"].pop("secret_dependencies")

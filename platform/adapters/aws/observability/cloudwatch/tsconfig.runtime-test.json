@@ -27,6 +27,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "tests/*-runtime.test.ts"
+    "tests/**/*-runtime.test.ts"
   ]
 }

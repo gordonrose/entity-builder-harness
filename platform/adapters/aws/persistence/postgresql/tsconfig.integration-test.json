@@ -34,7 +34,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "tests/postgresql-persistence-adapter-integration.test.ts",
+    "tests/integration/postgresql-persistence-adapter-integration.test.ts",
     "../../../../../apps/platform-smoke/src/persistence/**/*.ts",
     "../../../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts",
     "../../../../../platform/persistence/src/**/*.ts"

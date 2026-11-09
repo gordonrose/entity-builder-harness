@@ -178,7 +178,7 @@ The [configuration standard](../../.agentic/03.product/standards/config-runtime-
 owns requirements; the [module structure standard](../../.agentic/03.product/standards/public-module-structure.md)
 owns file/dependency boundaries. This guide explains their implementation.
 
-[Loading runtime tests](tests/configuration-loading-runtime.test.ts) exercise the
+[Loading runtime tests](tests/integration/configuration-loading-runtime.test.ts) exercise the
 examples, read order, comparisons, invalid instructions, throw identity, assembly
 failures and actual shared-result consumption. Existing runtime/evidence/type
 tests and the package boundary checker retain registered-schema/report proof.

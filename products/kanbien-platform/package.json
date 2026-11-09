@@ -10,6 +10,7 @@
     "src"
   ],
   "dependencies": {
+    "@kanbien/app-entity-smoke": "0.0.0",
     "@kanbien/app-platform-smoke": "0.0.0"
   },
   "devDependencies": {

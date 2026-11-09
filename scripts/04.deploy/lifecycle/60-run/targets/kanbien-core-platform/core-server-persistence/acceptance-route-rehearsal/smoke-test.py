@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.persistence-acceptance-route.impl
-#   version: 2
+#   version: 4
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -162,7 +162,11 @@ def full_route():
         root=Path(directory);shutil.copytree(ROOT/TARGET,root/TARGET)
         shutil.copytree(ROOT/'.agentic/04.deploy/60-run/schemas',root/'.agentic/04.deploy/60-run/schemas')
         shutil.copytree(ROOT/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector',root/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector')
-        image_contract=Path(yaml.safe_load((root/CONTRACT).read_text())['program']['image_contract']);(root/image_contract).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/image_contract,root/image_contract)
+        # The whole target clone includes unrelated candidate scopes. Supply
+        # their declared image metadata too, without inventing accepted proof.
+        image_contracts={Path(yaml.safe_load(path.read_text())['program']['image_contract']) for path in (root/TARGET/'20-scopes').glob('*/00-declaration/declaration-contract.yml')}
+        for image_contract in sorted(image_contracts):
+            (root/image_contract).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/image_contract,root/image_contract)
         evidence_root=root/SCOPE/'30-release-evidence'
         # Construct a simulated predecessor in this disposable tree. Copied
         # live archives cannot be relabelled as simulated history.
@@ -289,9 +293,10 @@ def full_route():
         passed('record validation rejects cross-proof snapshot mismatch')
         # Exercise actual promotion and downstream validators in the temporary target.
         index=root/TARGET/'20-scopes/scope-index.yml';value=yaml.safe_load(index.read_text())
+        unrelated_scopes={entry['id']:copy.deepcopy(entry) for entry in value['scopes'] if entry['id'] not in {'bootstrap-runtime','core-server-persistence'}}
         for entry in value['scopes']:
             if entry['id']=='core-server-persistence':entry['lifecycle']='candidate'
-            else:entry['lifecycle']='active';entry.pop('successor',None)
+            elif entry['id']=='bootstrap-runtime':entry['lifecycle']='active';entry.pop('successor',None)
         index.write_text(yaml.safe_dump(value,sort_keys=False))
         bootstrap=root/TARGET/'20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml';record_b=yaml.safe_load(bootstrap.read_text());record_b.update(status='rehearsed',evidence_class='simulated');bootstrap.write_text(yaml.safe_dump(record_b))
         for field in ('last_rehearsal','last_restoration_rehearsal'):
@@ -323,7 +328,9 @@ def full_route():
         index.write_text(index_before)
         passed('promotion and downstream reject foreign evidence, outside roots and invalid current ownership before writes')
         cli(Path('scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh'),'--scope-contract',root/CONTRACT,'--rehearsal-root',root,'--write','--json')
-        promoted=yaml.safe_load(index.read_text());assert [item['lifecycle'] for item in promoted['scopes']]==['accepted-historical','active']
+        promoted=yaml.safe_load(index.read_text());by_id={item['id']:item for item in promoted['scopes']}
+        assert by_id['bootstrap-runtime']['lifecycle']=='accepted-historical' and by_id['core-server-persistence']['lifecycle']=='active'
+        assert all(by_id[name]==entry for name,entry in unrelated_scopes.items()),'unrelated candidate scope was changed by predecessor promotion'
         cli(Path('scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh'),'--target-root',root/TARGET/'20-scopes','--rehearsal-root',root,'--json')
         cli(Path('scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh'),'--target-root',root/TARGET,'--rehearsal-root',root,'--json')
         passed('actual promotion and lifecycle/target downstream gates accept complete temporary route')
@@ -344,6 +351,42 @@ def full_route():
             code,report=capture(collector,['--receipt',values['candidate_receipt'],'--rollback-receipt',values['rollback_receipt'],'--restoration-verifier-receipt',values['restoration_verifier_receipt'],'--server-replacement-original',facts['original_task'],'--server-replacement-successor',facts['successor_task'],'--recovery-snapshot',facts['recovery_snapshot'],'--record-proof-receipt',facts['record_proof_receipt'],'--current-health-task',health,'--proof','server-replacement='+facts['original_task']]);assert code and report['findings']==[{'code':'acceptance-evidence-retained-proof-receipts-required'}],report
             broken=yaml.safe_load(manifest.read_text());del broken['values']['proof_receipts']['migration-applied-state'];manifest.write_text(yaml.safe_dump(broken));code,report=capture(collector,['--inputs',str(manifest),'--json']);assert code and report['findings'],report
         passed('missing argument and incomplete retained proof set return structured pre-observation failures')
+        # Initial activation has no accepted predecessor. Keep an unrelated
+        # accepted baseline in this temporary root and prove it is untouched.
+        initial_inventory = yaml.safe_load(index.read_text())
+        selected = next(item for item in initial_inventory['scopes'] if item['id'] == 'core-server-persistence')
+        selected['lifecycle'] = 'candidate'; selected.pop('predecessor', None)
+        baseline = next(item for item in initial_inventory['scopes'] if item['id'] == 'bootstrap-runtime')
+        baseline['lifecycle'] = 'active'; baseline.pop('successor', None)
+        baseline_binding = root/TARGET/'20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml'
+        bound = yaml.safe_load(baseline_binding.read_text())
+        names = {item['id']: 'baseline-' + item['id'] for item in bound['workloads']}
+        for item in bound['workloads']: item['id'] = names[item['id']]
+        for item in bound['runtime_requirements']: item['workload'] = names[item['workload']]
+        baseline['workload_ownership'] = list(names.values())
+        baseline_binding.write_text(yaml.safe_dump(bound, sort_keys=False))
+        baseline_contract = root/TARGET/'20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml'
+        declared = yaml.safe_load(baseline_contract.read_text())
+        for item in declared['health_recovery']['workloads']: item['binding'] = names[item['binding']]
+        baseline_contract.write_text(yaml.safe_dump(declared, sort_keys=False))
+        index.write_text(yaml.safe_dump(initial_inventory, sort_keys=False))
+        unchanged_baseline = copy.deepcopy(baseline)
+        baseline_bytes = bootstrap.read_bytes()
+        initial_bytes = index.read_bytes()
+        preview = cli(Path('scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh'),'--scope-contract',root/CONTRACT,'--rehearsal-root',root,'--json')
+        assert preview['verdict'] == 'ready' and index.read_bytes() == initial_bytes
+        rejected = yaml.safe_load(collector.RECORD.read_text()); saved_record = collector.RECORD.read_bytes()
+        rejected['status'] = 'failed'; collector.RECORD.write_text(yaml.safe_dump(rejected))
+        blocked = cli(Path('scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh'),'--scope-contract',root/CONTRACT,'--rehearsal-root',root,'--write','--json',ok=False)
+        assert blocked['findings'] == [{'code':'scope-promotion-evidence-not-accepted'}] and index.read_bytes() == initial_bytes
+        collector.RECORD.write_bytes(saved_record)
+        cli(Path('scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh'),'--scope-contract',root/CONTRACT,'--rehearsal-root',root,'--write','--json')
+        activated = yaml.safe_load(index.read_text())
+        assert next(item for item in activated['scopes'] if item['id']=='bootstrap-runtime') == unchanged_baseline
+        assert next(item for item in activated['scopes'] if item['id']=='core-server-persistence')['lifecycle'] == 'active'
+        assert all(next(item for item in activated['scopes'] if item['id']==name)==entry for name,entry in unrelated_scopes.items()),'unrelated candidate scope was changed by independent activation'
+        assert bootstrap.read_bytes() == baseline_bytes and collector.RECORD.read_bytes() == saved_record
+        passed('independent activation validates its own accepted evidence, blocks failed evidence, previews without writes and preserves the unrelated accepted baseline')
     assert hashes()==initial,'genuine accepted evidence changed'
     passed('all genuine accepted evidence and lifecycle files preserved byte-for-byte')
 

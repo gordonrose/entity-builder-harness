@@ -1,0 +1,61 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.aws.publication-template
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [security, sre]
+#   kind: cloudformation-template
+#   purpose: Create only an immutable feature image repository and repository-limited publication identity without modifying accepted delivery roles.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.plan.entity-smoke-core-platform
+#     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Isolated entity-smoke image custody; no deployment or database authority.
+Parameters:
+  ExistingGitHubOidcProviderArn:
+    Type: String
+    AllowedPattern: '^arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com$'
+Resources:
+  FeatureRepository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: kanbien-core-platform/entity-smoke
+      ImageTagMutability: IMMUTABLE
+      ImageScanningConfiguration: { ScanOnPush: true }
+      EncryptionConfiguration: { EncryptionType: AES256 }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: entity-smoke }]
+  FeaturePublisherRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: github-kanbien-core-platform-entity-smoke-publisher
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: entity-smoke }]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Federated: !Ref ExistingGitHubOidcProviderArn }
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: repo:gordonrose/entity-builder-harness:environment:kanbien-core-platform
+      Policies:
+        - PolicyName: publish-entity-smoke-image-only
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - Effect: Allow
+                Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:CompleteLayerUpload, ecr:DescribeImageScanFindings, ecr:DescribeImages, ecr:DescribeRepositories, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart]
+                Resource: !GetAtt FeatureRepository.Arn
+Outputs:
+  FeatureRepositoryUri: { Value: !GetAtt FeatureRepository.RepositoryUri }
+  FeatureRepositoryArn: { Value: !GetAtt FeatureRepository.Arn }
+  FeaturePublisherRoleArn: { Value: !GetAtt FeaturePublisherRole.Arn }

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standard.require-secret-dependency-declaration
-version: 5
+version: 6
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-25"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.secret-management
 disciplines: [agentic, security, sre]
@@ -65,6 +65,27 @@ authentication reference ID, never a token. Provider binding and live proof
 must still establish the matching task identity and effective access. A
 migration executor may use a matching `migration` workload identity instead
 of a migration secret, but it may not silently omit authentication.
+
+An administrative executor must declare `runtime_identity_probe` for the same
+dependency. Its original three-field shape (`dependency`,
+`credential_access_class: runtime`, `purpose`) keeps the probe in that executor,
+which must have the corresponding runtime workload identity. Alternatively,
+add both `workload` and `target_workload`: the first names one distinct
+run-to-completion proof task; the second names the application server or worker.
+Both must declare runtime workload identities with exactly the same single
+authentication reference for that dependency. The separate proof task must
+declare successful completion and cannot receive administrative/migration
+credentials or execute administration, migrations or server-mediated proof.
+The administrator still needs its own administrative credential, but does not
+need runtime authentication merely to arrange a separate proof.
+
+This alternative changes proof ownership, not acceptance requirements.
+Matching portable references are not proof of actual database identity or
+access. Provider binding and live evidence must establish the database,
+schema/user, task permissions, permitted/denied operations and retained
+completion result. Separate-task success cannot replace meaningful requests
+through the actual application and its own identity/network path. Existing
+in-administrator probes remain supported without rewriting accepted evidence.
 
 Access grants, rotation, revocation, and retirement are separate parts of the
 contract. `access_grant` names accountable ownership and a declared

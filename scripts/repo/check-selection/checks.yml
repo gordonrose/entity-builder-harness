@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 13
+#   version: 20
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -752,13 +752,14 @@ checks:
     - packages/core
     - platform
     - apps/platform-smoke
+    - apps/entity-smoke
     - products/kanbien-platform
     - infra/04.deploy/03.product/entrypoints
     - package.json
     - package-lock.json
     runtime: &verification_unit_runtime
       tools: [bash, python3, node, npm, typescript, git]
-      node_packages: [typescript, '@types/node', '@types/pg', pg, '@aws-sdk/client-dynamodb', '@aws-sdk/client-sqs', '@aws-sdk/rds-signer', '@opentelemetry/api', '@opentelemetry/exporter-metrics-otlp-proto', '@opentelemetry/resources', '@opentelemetry/sdk-metrics', '@kanbien/core', '@kanbien/platform-config', '@kanbien/platform-persistence', '@kanbien/platform-testing', '@kanbien/platform-security', '@kanbien/platform-server', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-contracts', '@kanbien/platform-health', '@kanbien/platform-workers', '@kanbien/platform-adapter-aws-queue-sqs', '@kanbien/platform-adapter-aws-runtime-ecs-fargate', '@kanbien/platform-adapter-aws-auth-cognito', '@kanbien/platform-adapter-aws-observability-cloudwatch', '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter', '@kanbien/platform-adapter-aws-persistence-dynamodb', '@kanbien/platform-adapter-aws-persistence-postgresql', '@kanbien/product-kanbien-platform', '@kanbien/app-platform-smoke']
+      node_packages: [typescript, '@types/node', '@types/pg', pg, '@aws-sdk/client-dynamodb', '@aws-sdk/client-sqs', '@aws-sdk/rds-signer', '@opentelemetry/api', '@opentelemetry/exporter-metrics-otlp-proto', '@opentelemetry/resources', '@opentelemetry/sdk-metrics', '@kanbien/core', '@kanbien/platform-config', '@kanbien/platform-persistence', '@kanbien/platform-testing', '@kanbien/platform-security', '@kanbien/platform-server', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-contracts', '@kanbien/platform-health', '@kanbien/platform-workers', '@kanbien/platform-adapter-aws-queue-sqs', '@kanbien/platform-adapter-aws-runtime-ecs-fargate', '@kanbien/platform-adapter-aws-auth-cognito', '@kanbien/platform-adapter-aws-observability-cloudwatch', '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter', '@kanbien/platform-adapter-aws-persistence-dynamodb', '@kanbien/platform-adapter-aws-persistence-postgresql', '@kanbien/product-kanbien-platform', '@kanbien/app-platform-smoke', '@kanbien/app-entity-smoke']
       environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
       config_inputs: [.python-version, pyproject.toml, requirements.txt, .npmrc, .node-version, .nvmrc]
   diagnostic-catalog-readers: &diagnostic_unit
@@ -779,6 +780,7 @@ checks:
     - packages/core
     - platform
     - apps/platform-smoke
+    - apps/entity-smoke
     - products/kanbien-platform
     - infra/04.deploy/03.product/entrypoints
     - package.json
@@ -808,35 +810,47 @@ checks:
   platform-contracts-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, contracts]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/contracts, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/contracts, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-contracts']}
+  entity-smoke-runtime:
+    <<: *package_unit
+    applicability: {kind: bound, program_id: kanbien-entity-smoke}
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, entity-smoke]
+    feedback:
+      development: true
+      expected_seconds: 30
+      isolation: worktree
+      rationale: Compile public feature types and run source-discovered local feature and runner tests without packaging or providers.
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, apps/entity-smoke, packages/core, platform/contracts, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
+    runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/core', '@kanbien/platform-contracts']}
   platform-config-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, config]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/config, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/config, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-config']}
   platform-security-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, security]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/security, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/security, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-security']}
   platform-observability-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, observability]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/observability, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/observability, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-observability']}
   platform-health-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, health]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/health, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/health, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-health']}
   platform-persistence-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, persistence]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/persistence, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/persistence, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-persistence']}
   dynamodb-persistence-runtime:
     <<: *package_unit
+    feedback: {development: true, expected_seconds: 30, isolation: worktree, rationale: Compile and run local DynamoDB adapter contracts without contacting AWS.}
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, dynamodb-persistence]
     inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, platform/persistence, platform/adapters/aws/persistence/dynamodb, package.json, package-lock.json]
     runtime:
@@ -852,22 +866,22 @@ checks:
   platform-runtime-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, runtime]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/runtime, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/runtime, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-runtime']}
   platform-testing-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, testing]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/testing, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/testing, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-testing']}
   platform-workers-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, workers]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/workers, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/workers, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/platform-workers']}
   platform-smoke-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, smoke-app]
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, apps/platform-smoke, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, apps/platform-smoke, packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts, package.json, package-lock.json]
     runtime: {<<: *package_runtime, node_packages: [typescript, '@types/node', '@kanbien/app-platform-smoke']}
   cloudwatch-observability-runtime:
     <<: *diagnostic_unit
@@ -882,6 +896,7 @@ checks:
     - package-lock.json
   platform-server-runtime:
     <<: *diagnostic_unit
+    feedback: {development: false, expected_seconds: 60, isolation: worktree, rationale: Preserve assembled startup prerequisites; image payload proof belongs to checkpoint integration.}
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, server]
     inputs: &package_unit_inputs
     - scripts/repo/diagnostic-coverage/verify.sh
@@ -914,9 +929,11 @@ checks:
       node_packages: [typescript, '@types/node', '@kanbien/core', '@kanbien/platform-contracts', '@kanbien/platform-config', '@kanbien/platform-health', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-security', '@kanbien/platform-server', '@kanbien/platform-testing', '@kanbien/platform-adapter-aws-runtime-ecs-fargate']
   kanbien-platform-runtime:
     <<: *diagnostic_unit
+    feedback: {development: false, expected_seconds: 60, isolation: worktree, rationale: Verify complete product assembly and preserve package prerequisites at integration.}
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, product]
     inputs: *package_unit_inputs
   platform-shell-payload:
+    feedback: {development: false, expected_seconds: 90, isolation: worktree, rationale: Assemble the actual image payload at integration; failures remain blocking.}
     boundary: integration
     scope_inputs: false
     argv: [bash, scripts/04.deploy/build-platform-shell-image/check-source.sh, --payload-only]
@@ -931,6 +948,7 @@ checks:
     - platform
     - products/kanbien-platform
     - apps/platform-smoke
+    - apps/entity-smoke
     - infra/04.deploy/03.product/image
     - package.json
     - package-lock.json
@@ -974,6 +992,10 @@ checks:
     owner: deploy.test.validate-secret-dependency-declaration.wrapper
     inputs:
     - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
+    - .agentic/04.deploy/00-target-alignment/schemas
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
     runtime:
       tools:
       - bash
@@ -985,6 +1007,7 @@ checks:
       - PYTHONPATH
       - PYTHONHOME
       - PYTHONHASHSEED
+      - PYTHONOPTIMIZE
       config_inputs:
       - .python-version
       - pyproject.toml
@@ -1173,6 +1196,28 @@ checks:
       - .python-version
       - pyproject.toml
       - requirements.txt
+  release-succession-regression:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.release-succession.wrapper
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 15
+      isolation: worktree
+      rationale: Simulate immutable release custody and first-versus-subsequent recovery selection in disposable directories without providers.
+    runtime:
+      tools: [bash, python3, git]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+    inputs:
+    - .gitignore
+    - scripts/repo/check-selection/checks.yml
+    - scripts/04.deploy/lifecycle/60-run/release-succession
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py
   health-failure-recovery-declaration-regression:
     argv:
     - bash
@@ -1185,6 +1230,7 @@ checks:
     owner: deploy.test.validate-health-failure-and-recovery-declaration
     inputs:
     - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+    - .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml
     runtime:
       tools:
       - bash
@@ -1286,6 +1332,7 @@ checks:
     - package-lock.json
     - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
   postgresql-connection-diagnostics:
+    feedback: {development: true, expected_seconds: 60, isolation: disposable-fixture, rationale: Exercise local PostgreSQL connection diagnostic fixtures without a provider or shared database.}
     boundary: integration
     scope_inputs: false
     argv:
@@ -1744,6 +1791,113 @@ checks:
     - platform/server
     - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
     scope_inputs: false
+  entity-smoke-acceptance-controls:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.entity-smoke.acceptance-controls.wrapper
+    applicability: {kind: bound, program_id: kanbien-entity-smoke}
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 15
+      isolation: disposable-fixture
+      rationale: Exercise cleanup, final admission, archives and actual route parsers with controlled promotion dependencies; no AWS, Docker or live acceptance evidence is created.
+    runtime:
+      tools: [bash, python3, git]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+    inputs:
+    - scripts/04.deploy
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - infra/04.deploy/03.product
+    - .agentic/04.deploy
+    - .agentic/aws/standards/operational-realization-applicability.md
+    - packages/core
+    - apps/entity-smoke/contracts
+    - apps/platform-smoke/contracts
+    - platform/contracts/contracts
+    - platform/persistence/contracts
+    - platform/workers/contracts
+  entity-smoke-composition:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.entity-smoke.composition.wrapper
+    applicability: {kind: bound, program_id: kanbien-entity-smoke}
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 60
+      isolation: worktree
+      rationale: Compile isolated public feature wiring and exercise controlled private HTTP and administrative observation without Docker or AWS.
+    runtime:
+      tools: [bash, python3, node, npm, typescript]
+      node_packages: [typescript, '@types/node', '@types/pg', pg, '@aws-sdk/rds-signer']
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.npmrc, .node-version, .nvmrc, .python-version, pyproject.toml, requirements.txt]
+    inputs:
+    - .agentic/aws/standards/operational-realization-applicability.md
+    - .agentic/aws/workflows/execute-approved-aws-change.md
+    - scripts/04.deploy/lifecycle/20-build/entity-smoke-composition
+    - scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.py
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/scope-index.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - infra/04.deploy/03.product/entrypoints/contracts
+    - apps/platform-smoke/contracts
+    - platform/workers/contracts
+    - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/dependency-test.mjs
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image
+    - scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/entity-smoke-runtime-configuration.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml
+    - scripts/04.deploy/operational-realization-gate/script.py
+    - infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
+    - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
+    - infra/04.deploy/03.product/image/entity-smoke/realization-contract.v2.yml
+    - infra/04.deploy/03.product/entrypoints/entity-smoke
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-migration.main.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-administration.main.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-verifier.main.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
+    - apps/entity-smoke
+    - packages/core
+    - platform/config
+    - platform/contracts
+    - platform/health
+    - platform/observability
+    - platform/persistence
+    - platform/runtime
+    - platform/security
+    - platform/server
+    - platform/adapters/aws/persistence/postgresql
+    - package.json
+    - package-lock.json
   persistence-composition:
     boundary: integration
     argv:
@@ -1873,6 +2027,46 @@ checks:
       kind: bound
       program_id: kanbien-core-server-persistence
       image_id: kanbien-core-server-persistence-image
+  entity-smoke-container:
+    argv: [bash, scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh]
+    stage: package
+    evidence_class: container-qualification
+    effects: [network, writes-files]
+    owner: deploy.command.smoke-test-entity-smoke-image
+    applicability:
+      kind: bound
+      program_id: kanbien-entity-smoke
+      image_id: kanbien-entity-smoke-image
+  entity-smoke-publication-contract:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.entity-smoke.publication-contract
+    applicability: {kind: bound, program_id: kanbien-entity-smoke}
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 5
+      isolation: worktree
+      rationale: Check publication ordering and lost-response controls with local doubles, without Docker or AWS.
+    runtime:
+      tools: [bash, python3]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+      node_packages: []
+    inputs:
+    - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody
+    - .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
+    - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml
   bootstrap-container:
     argv:
     - bash
@@ -1902,6 +2096,15 @@ checks:
       image_id: kanbien-core-server-persistence-image
       target: kanbien-core-platform
       scope: core-server-persistence
+  entity-smoke-target-alignment:
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.sh, --receipt, '{package_receipt}', --json]
+    stage: deploy
+    evidence_class: live
+    effects: [network, writes-files]
+    owner: deploy.command.entity-smoke.target-alignment
+    parameters:
+      package_receipt: {kind: path, required: true, schema: deploy/package-custody-receipt/v1}
+    applicability: {kind: bound, program_id: kanbien-entity-smoke, image_id: kanbien-entity-smoke-image, target: kanbien-core-platform, scope: entity-smoke}
   bootstrap-target-alignment:
     argv:
     - bash
@@ -1917,6 +2120,21 @@ checks:
       image_id: kanbien-core-server-image
       target: kanbien-core-platform
       scope: bootstrap-runtime
+  entity-smoke-acceptance:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/collect-acceptance.sh, --inputs, '{acceptance_inputs}', --write-candidate, --json]
+    stage: acceptance
+    evidence_class: live
+    effects: [network, writes-files]
+    owner: deploy.command.entity-smoke.collect-acceptance
+    applicability:
+      kind: bound
+      program_id: kanbien-entity-smoke
+      image_id: kanbien-entity-smoke-image
+      target: kanbien-core-platform
+      scope: entity-smoke
+    parameters:
+      acceptance_inputs: {kind: path, required: true, schema: deploy/acceptance-inputs/v1}
+    acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml
   persistence-acceptance:
     argv:
     - bash
@@ -1969,6 +2187,7 @@ checks:
         schema: deploy/acceptance-inputs/v1
     acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
   check-selection-mechanics:
+    feedback: {development: false, expected_seconds: 300, isolation: disposable-fixture, rationale: Full selector and cache mechanics are checkpoint proof; focused fixture cases provide editing feedback.}
     boundary: integration
     argv:
     - bash
@@ -2026,6 +2245,7 @@ checks:
       - requirements.txt
       node_packages: []
   check-selection-repository-contracts:
+    feedback: {development: false, expected_seconds: 360, isolation: disposable-fixture, rationale: Repository-wide graph and gate contracts are stable checkpoint verification.}
     boundary: integration
     argv:
     - bash
@@ -2515,7 +2735,7 @@ checks:
     stage: local
     evidence_class: static
     effects:
-    - read-only
+    - writes-files
     owner: deploy.test.operational-realization-gate
     runtime:
       tools:
@@ -2528,6 +2748,7 @@ checks:
       - PYTHONPATH
       - PYTHONHOME
       - PYTHONHASHSEED
+      - PYTHONOPTIMIZE
       config_inputs:
       - .python-version
       - pyproject.toml
@@ -2537,6 +2758,8 @@ checks:
     - .agentic/01.harness/templates/operational-realization-contract.v1.template.yml
     - .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml
     - .agentic/01.harness/templates/operational-realization-contract.v1.guide.md
+    - .agentic/04.deploy/schemas/operational-realization-contract.v2.schema.yml
+    - .agentic/04.deploy/schemas/operational-realization-contract.v2.guide.md
   acceptance-route:
     argv:
     - bash
@@ -4233,6 +4456,33 @@ checks:
     inputs:
     - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
 repository_inputs:
+- inputs: [apps/entity-smoke]
+  checks: [entity-smoke-runtime, entity-smoke-composition]
+- inputs:
+  - scripts/04.deploy/lifecycle/20-build/entity-smoke-composition
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke
+  - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image
+  - scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke
+  - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/entity-smoke-runtime-configuration.py
+  - infra/04.deploy/03.product/image/entity-smoke
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml
+  - infra/04.deploy/03.product/entrypoints/entity-smoke
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-migration.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-administration.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-verifier.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json
+  checks: [entity-smoke-composition, entity-smoke-container]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image
+  checks: [entity-smoke-composition, entity-smoke-container]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody
+  - .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml
+  checks: [entity-smoke-publication-contract]
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
   - scripts/00.chat/startup/start-chat-session
@@ -4451,7 +4701,7 @@ repository_inputs:
 - inputs:
   - scripts/repo/module-structure
   - packages/core/src/config/index.ts
-  - packages/core/tests/core-boundaries.test.mjs
+  - packages/core/tests/test-infrastructure/static-validation/core-boundaries.test.mjs
   - .agentic/03.product/standards/public-module-structure.md
   - .agentic/03.product/standards/config-runtime-settings.md
   checks: [module-index-structure-regression]
@@ -4653,8 +4903,15 @@ repository_inputs:
   - artifact-placement-regression
 - inputs:
   - scripts/04.deploy/operational-realization-gate
+  - .agentic/04.deploy/schemas/operational-realization-contract.v2.schema.yml
+  - .agentic/04.deploy/schemas/operational-realization-contract.v2.guide.md
+  - .agentic/04.deploy/standards/operational-realization-gate.md
+  - .agentic/04.deploy/workflows/operational-realization-gate.md
   checks:
   - operational-realization-regression
+- inputs:
+  - scripts/04.deploy/operational-realization-gate/script.py
+  checks: [entity-smoke-composition]
 - inputs:
   - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
@@ -4766,6 +5023,11 @@ repository_inputs:
   - scripts/04.deploy/lifecycle/60-run/release-succession
   checks:
   - shell-release-evidence-regression
+- inputs:
+  - .gitignore
+  - scripts/04.deploy/lifecycle/60-run/release-succession
+  - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py
+  checks: [release-succession-regression]
 - inputs:
   - scripts/02.rag-rulebook/validate-okf-source-material-reviews
   - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml

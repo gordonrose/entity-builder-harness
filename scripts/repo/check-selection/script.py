@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 7
+#   version: 8
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-04"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -36,6 +36,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'scripts/repo/check-selection'))
+import execution_policy
 from local_cache import (LocalCache, LocalCheckError, RuntimeIdentityWindow, runtime_identity,
                          valid_node_package, local_check_diagnostic, CACHE_INVALIDATION_REASONS, NO_PRIOR_EVIDENCE, TOOLS)
 sys.path.insert(0, str(ROOT / 'scripts/01.harness/artifact-metadata'))
@@ -375,6 +376,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     timings = {'planning_seconds': 0.0, 'fingerprinting_seconds': 0.0, 'runtime_identity_seconds': 0.0, 'receipt_validation_seconds': 0.0, 'command_execution_seconds': 0.0}
     root = args.root.resolve()
     boundary = getattr(args, 'boundary', 'integration')
+    development = getattr(args, 'development', False)
     record_preparation = getattr(args, 'record_preparation', False)
     require_preparation = getattr(args, 'require_preparation', False)
     catalog_path = args.catalog or root / 'scripts/repo/check-selection/checks.yml'
@@ -396,6 +398,12 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     checks = catalog.get('checks', {})
     findings: list[dict[str, str]] = []
     if catalog.get('schema') != 'repo/check-catalog/v1' or not isinstance(checks, dict): checks = {}; findings.append({'code': 'check-catalog-invalid'})
+    for check_id, check in checks.items():
+        if isinstance(check, dict): findings += execution_policy.validate_feedback(check_id, check)
+    if development and (not args.paths or args.staged or args.all or getattr(args, 'ci', False)
+                        or getattr(args, 'checks', None) is not None or getattr(args, 'aggregate_members', None)
+                        or args.stage != 'local' or boundary != 'integration' or record_preparation or require_preparation):
+        findings.append({'code': 'development-selection-context-invalid'})
     all_rule_inputs = [ref for check in checks.values() if isinstance(check, dict) for rule in check.get('focused_prerequisites', []) if isinstance(rule, dict) for ref in rule.get('inputs', []) if isinstance(ref, str)]
     _, graph_findings = verification_dependencies(checks, sorted(checks), all_rule_inputs)
     findings += graph_findings
@@ -690,7 +698,8 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         if len(item['catalog_entries']) > 1 and any(entry.get('members') for entry in item['catalog_entries'].values()):
             findings.append({'code': 'verification-aggregate-alias-ambiguous', 'check_id': item['check_id']})
     def required(item: dict) -> bool:
-        return STAGES[item['stage']] <= STAGES[args.stage] and BOUNDARIES[item['boundary']] <= BOUNDARIES[boundary]
+        return (STAGES[item['stage']] <= STAGES[args.stage] and BOUNDARIES[item['boundary']] <= BOUNDARIES[boundary]
+                and (not development or execution_policy.development_check(item)))
     runtime_identities: dict[str, dict] = {}
     runtime_window = RuntimeIdentityWindow(root)
     def reset_runtime_identities() -> None:
@@ -726,7 +735,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         # may contain it. Exclude that incidental file at both boundaries;
         # declared consumers still fingerprint the whole catalog normally.
         if not item['catalog_input']: item['references'].discard(catalog_ref)
-        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py'})
+        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py'})
         for review in item['review_bindings'].values():
             for entry in review: item['references'].update([source['path'] for source in entry['sources']] + entry['tests'] + entry.get('definitions', []))
         if parent_binding:
@@ -834,7 +843,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             item.update(status='passed', exit_code=0, evidence_source='trusted-worktree-cache', executed_revision=proof.get('executed_revision', proof.get('source_revision')))
             if item.get('reused_from_worktree') and cache:
                 cache.save({**item, 'references': sorted(item['references'])})
-        elif not required_now: item['status'] = 'deferred'; item['reason'] = 'required-before-' + (item['boundary'] if BOUNDARIES[item['boundary']] > BOUNDARIES[boundary] else item['stage'])
+        elif not required_now:
+            item['status'] = 'deferred'
+            item['reason'] = 'integration-pending' if development else 'required-before-' + (item['boundary'] if BOUNDARIES[item['boundary']] > BOUNDARIES[boundary] else item['stage'])
         elif args.execute_local and item['stage'] == 'local' and execution_preflight_passed:
             # Receipt-only checks share one window, but cannot authorize a new
             # command from that snapshot. Remeasure its prerequisites and own
@@ -932,11 +943,19 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         preparation_status = 'recorded'
     report['preparation_status'] = preparation_status
     report['boundary'] = boundary
+    if development and not findings and args.execute_local:
+        report['verdict'] = 'partial'
+    report['execution_policy'] = execution_policy.execution_view(results, checks, development=development, explicit=explicit_checks is not None)
     if explicit_checks is not None:
         report['selection_mode'] = 'explicit-checks'
         report['requested_check_ids'] = explicit_checks
     if args.evidence: report['evidence_import_status'] = 'rejected-untrusted-report'
     if cache:
+        if args.execute_local:
+            try: report['run_report_path'] = execution_policy.retain_run(root, report)
+            except (OSError, ValueError):
+                report['findings'].append({'code': 'test-run-retention-unavailable'})
+                report['verdict'] = 'gap'
         report['local_report_path'] = str(cache.directory / 'latest-report.json')
         cache.save_report(report)
     return report
@@ -952,6 +971,7 @@ def main() -> int:
     mode.add_argument('--staged', action='store_true')
     mode.add_argument('--all', action='store_true')
     mode.add_argument('--ci', action='store_true', help='Select the PR diff from BASE_SHA/HEAD_SHA, or all inputs for manual CI.')
+    mode.add_argument('--inventory', action='store_true', help='Read-only feedback declaration inventory; no proof or execution.')
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--catalog', type=Path)
     parser.add_argument('--stage', choices=STAGES, default='local')
@@ -963,7 +983,13 @@ def main() -> int:
     parser.add_argument('--evidence', type=Path)
     parser.add_argument('--reuse-from-worktree', type=Path, help='Revalidate receipts from a registered worktree of this repository; reports are never accepted.')
     parser.add_argument('--json', action='store_true')
+    parser.add_argument('--development', action='store_true', help='Path-scoped local feedback only; full integration obligations remain pending.')
+    parser.add_argument('--explain', action='store_true', help='Render a readable selection summary instead of JSON.')
     args = parser.parse_args()
+    if args.development and (not args.paths or args.stage != 'local' or args.boundary != 'integration' or args.record_preparation or args.require_preparation):
+        parser.error('--development requires --paths at the local integration boundary, without preparation')
+    if args.inventory and (args.execute_local or args.development or args.record_preparation or args.require_preparation):
+        parser.error('--inventory is read-only')
     if args.record_preparation and args.require_preparation:
         parser.error('--record-preparation and --require-preparation are mutually exclusive')
     if args.require_preparation and not args.staged:
@@ -986,10 +1012,16 @@ def main() -> int:
                 args.paths = [path for path in git(args.root.resolve(), 'diff', '--name-only', '--no-renames', '-z', base, head).split('\0') if path]
             else:
                 args.all = True
-        report = plan(args)
+        if args.inventory:
+            catalog = coverage.document(args.catalog or args.root / 'scripts/repo/check-selection/checks.yml')
+            if catalog.get('schema') != 'repo/check-catalog/v1' or not isinstance(catalog.get('checks'), dict):
+                raise ValueError('check-catalog-invalid')
+            report = execution_policy.inventory(catalog['checks'])
+        else:
+            report = plan(args)
     except (OSError, ValueError, TypeError, ImportError, subprocess.SubprocessError) as error:
         report = {'schema': 'repo/check-selection-report/v1', 'verdict': 'gap', 'findings': [{'code': 'selection-input-or-runtime-invalid', 'error_type': safe_runtime_error_type(error)}]}
-    print(json.dumps(report, sort_keys=True))
+    print(execution_policy.render(report) if args.explain else json.dumps(report, sort_keys=True))
     return 1 if report['findings'] else 0
 
 if __name__ == '__main__':

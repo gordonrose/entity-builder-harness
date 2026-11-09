@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.accepted-release-and-recovery
-version: 4
+version: 5
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-25"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -30,6 +30,13 @@ digest, target workload identity, private verification result, evidence
 reference, acceptance time, and enough retained identity to restore the same
 package. The image source revision and the commit that records acceptance are
 separate facts.
+
+A first isolated scope without accepted custody follows only the optional
+[initial-release policy](require-health-failure-and-recovery-declaration.md#first-release-without-an-accepted-image)
+when it is declared and its eligibility is established. Do not invent an
+accepted predecessor or interpret missing/broken custody as an initial release.
+Once the first version is accepted, the ordinary immutable restoration and
+compatibility requirements below apply to every update.
 
 Before an existing runtime is changed, retain its accepted record unchanged.
 Use the governed release-succession control to archive every accepted record

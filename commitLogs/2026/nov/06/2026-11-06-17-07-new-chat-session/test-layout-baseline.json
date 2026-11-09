@@ -1,0 +1,1338 @@
+{
+  "schema": "product-test-layout-baseline/v1",
+  "files": [
+    {
+      "old": "packages/core/tests/audit-runtime.test.ts",
+      "next": "packages/core/tests/audit/unit/audit-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "e96cf98e27fdfcf656dc3552ebb7c67cbbe1fff33937c58d552ff0315bd91f14",
+      "expected": "e9b1ddbef28a856b7e30f6b5fecb4416a20d33352ad006ca24d31efa7b5bd7b8"
+    },
+    {
+      "old": "packages/core/tests/audit-types.test.ts",
+      "next": "packages/core/tests/audit/type-level/audit-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "7e2bd52bad71a1c83344b339cd7c1d6fe0bd2cdf7080193bdc906414d249069a",
+      "expected": "b480e7de3c4dc20bf62526493e79e2968cb8fe4d9c5fc12364672105ae0c0090"
+    },
+    {
+      "old": "packages/core/tests/authn-runtime.test.ts",
+      "next": "packages/core/tests/authn/unit/authn-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "5b43da00fb909205fda998ec938cb998b3d54f3f8b7e6e6dd80864003ab49b69",
+      "expected": "17a6bcf90bed19cd453e1f46a1c2e4b06d41249a6869ac0366f8d763ae04a8f5"
+    },
+    {
+      "old": "packages/core/tests/authn-types.test.ts",
+      "next": "packages/core/tests/authn/type-level/authn-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "5d0a57348fb381ba2f49c9fcc22d274c7b4b05d179ea43d19a063318ecaf4dcb",
+      "expected": "dd9e2d637074b0a90a4c80ee4c594271c662b968392b2d12bf706b713dd5bfe1"
+    },
+    {
+      "old": "packages/core/tests/authz-runtime.test.ts",
+      "next": "packages/core/tests/authz/unit/authz-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "027db6806b577816ea0af0e5abfeb844493bedc8bd4f24858933522a805a68da",
+      "expected": "9de58748fa239bb2f5964d0238be9ec2425055e879632d70ed41e78aa68ea487"
+    },
+    {
+      "old": "packages/core/tests/authz-types.test.ts",
+      "next": "packages/core/tests/authz/type-level/authz-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "483273995c8af05d765c8bc88a48ca40538867b827981d17574c1a8487241cb4",
+      "expected": "ac08941fe91e399d766f4f883e2cfe6ad8bd9ca16804f4b924297b8688be8731"
+    },
+    {
+      "old": "packages/core/tests/config-runtime.test.ts",
+      "next": "packages/core/tests/config/unit/config-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "9cef96ad002530467cc13d3721c4717337e92b3973bb5af5721d4674e9ef514d",
+      "expected": "87df2ace5da33ea2eff057737d9526a1232c567aefa90f74dca3d691409e64bb"
+    },
+    {
+      "old": "packages/core/tests/config-types.test.ts",
+      "next": "packages/core/tests/config/type-level/config-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "3246c328af979e3c20d4127eefdf810bd0be7985af293ba63839ff99de3bd3b2",
+      "expected": "e53a3092eed36171a4df45cf9904573e5b563ba0bc8262dc28d673686f09efdd"
+    },
+    {
+      "old": "packages/core/tests/core-boundaries.test.mjs",
+      "next": "packages/core/tests/test-infrastructure/static-validation/core-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "packages/core",
+      "before": "de69a4f4144ac22edcf50742f44aae7a2c41f454f6ce13b7122a74b01127c5bc",
+      "expected": "ac892fdb8b2e59c179bee65435e66fc09da5217a5ea3cb293d6d43df7594e4a5"
+    },
+    {
+      "old": "packages/core/tests/diagnostic-delivery-fixture.ts",
+      "next": "packages/core/tests/diagnostics/helpers/diagnostic-delivery-fixture.ts",
+      "type": "helpers",
+      "owner": "packages/core",
+      "before": "e12ada33daaccee79e57f9a3d44683fa6b728edd692fea2ba24afbdfa2fc42d2",
+      "expected": "2dc54cc39402bbb7ae289e9c0bacb5aa87159ba424e73d89872adbcf1c80a733"
+    },
+    {
+      "old": "packages/core/tests/diagnostic-delivery-runtime.test.ts",
+      "next": "packages/core/tests/diagnostics/contract/diagnostic-delivery-runtime.test.ts",
+      "type": "contract",
+      "owner": "packages/core",
+      "before": "064013127dbde6fa21dc167785734a7b1f0cc16e0fa891fc20ee9031ba27ea29",
+      "expected": "1bdd2b32f460e092239e2d30ff3b8e0bc627a53d5549ad44506680617c24e30e"
+    },
+    {
+      "old": "packages/core/tests/diagnostic-delivery-types.test.ts",
+      "next": "packages/core/tests/diagnostics/type-level/diagnostic-delivery-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "22e2aab6a28a864e3ea488c0763112479dc95ea1ada7016ff4aa613f2376832f",
+      "expected": "2643c6d8d201313980640b1a625ec16faa37c2e7a18d5f31a880e2ffe09fbd76"
+    },
+    {
+      "old": "packages/core/tests/diagnostic-record-runtime.test.ts",
+      "next": "packages/core/tests/diagnostics/contract/diagnostic-record-runtime.test.ts",
+      "type": "contract",
+      "owner": "packages/core",
+      "before": "e9f137ed91257cd5d063678e8a8dbad3c2fff04bb774cc301cd1a16e02d21c95",
+      "expected": "3a7249004af3b13e83c019a06d2076c6fa59a9096bcce24ff2d2e9fa671feeee"
+    },
+    {
+      "old": "packages/core/tests/diagnostic-record-types.test.ts",
+      "next": "packages/core/tests/diagnostics/type-level/diagnostic-record-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "390e7cd64ba934487cbe791c60f0a34e65c5ebe36a742dbf3bb809cf778113ab",
+      "expected": "b7e8e1b2a2cb0e0f9ef4594216afa185e34ab65951e90cfddf589894437949f4"
+    },
+    {
+      "old": "packages/core/tests/diagnostics-runtime.test.ts",
+      "next": "packages/core/tests/diagnostics/unit/diagnostics-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "0e62cf06cb18477986ba70bf7b71471595c8b75996b67d8a7c7c9e0569b43481",
+      "expected": "9d5e349db97f546dfff7e0a8833cdf206df7fa49d77f35dbbdc39a690228e78f"
+    },
+    {
+      "old": "packages/core/tests/diagnostics-types.test.ts",
+      "next": "packages/core/tests/diagnostics/type-level/diagnostics-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "55cb9e7dd49c8d4778daf0535532f0e62a38e1d94ea111002dbf911fe54b3149",
+      "expected": "6ec3bb050157ab6fc218bcf024f33e73d684137a7e65594ba288aea17e7b452c"
+    },
+    {
+      "old": "packages/core/tests/events-runtime.test.ts",
+      "next": "packages/core/tests/events/unit/events-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "75c25691ec6a931b1328faa84f4f3d1ced5ff497448a6aa3d498f3bf5c600d68",
+      "expected": "87bad163b821099754484b86347643920b8b328d22ff7ee26db7ba1e4360fc34"
+    },
+    {
+      "old": "packages/core/tests/events-types.test.ts",
+      "next": "packages/core/tests/events/type-level/events-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "fbf26acf6fa8b0df2f2eff3569422db95bccf045514fd045e09a4d5814bcd135",
+      "expected": "cb21490cba1f05857db2092f9e28c2620d92dcc984d08bc8e4be27ab86a71051"
+    },
+    {
+      "old": "packages/core/tests/files-runtime.test.ts",
+      "next": "packages/core/tests/files/unit/files-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "ee9525df2fea1bea46c1d471c926f43f4c635e86a1c7e7d4059235842543c705",
+      "expected": "ad53ca89eeefd9c2cba3c9dacfc57ed820d6513426d78e4b8b945a2583e0fea9"
+    },
+    {
+      "old": "packages/core/tests/files-types.test.ts",
+      "next": "packages/core/tests/files/type-level/files-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "5d8fafa62a8d7cddd9d70b7dc05307f0e1d3831427e9109bda3f1931d7ecef42",
+      "expected": "735d5c368015585b6fb7ebe0147fe022eccf596e58e3b1e7fb6b30c7a4227584"
+    },
+    {
+      "old": "packages/core/tests/foundation-diagnostics-runtime.test.ts",
+      "next": "packages/core/tests/diagnostics/contract/foundation-diagnostics-runtime.test.ts",
+      "type": "contract",
+      "owner": "packages/core",
+      "before": "9be0edeb4c973fbdfa860c640f0bcc9800a17f22b73bdf27cd8896fce578f6e9",
+      "expected": "feff10ad511b3c7ea1c2ca221b0f064574589f08205e8d4e04b48d1db856ed3a"
+    },
+    {
+      "old": "packages/core/tests/foundation-diagnostics-types.test.ts",
+      "next": "packages/core/tests/diagnostics/type-level/foundation-diagnostics-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "f954c00858ddb467267e7aa16dd516801d4c40e2e947cea0d4b979511b99472f",
+      "expected": "0936ad703f2fa4c219d1cc640bebeea1d9804dbee29c768e9b95592a22542511"
+    },
+    {
+      "old": "packages/core/tests/i18n-runtime.test.ts",
+      "next": "packages/core/tests/i18n/unit/i18n-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "e8303588ffc79ab8659234ee728708164059211f5e5e4fd9b4bca96162aa123b",
+      "expected": "82b3e9b48e745cf80875454b1ddfe9ea0fb92d5957a170ee9bfe190011aeaae1"
+    },
+    {
+      "old": "packages/core/tests/i18n-types.test.ts",
+      "next": "packages/core/tests/i18n/type-level/i18n-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "777d16b25f873b58aa1d5ed407ee22bf32c40905d31ad8a7069214149daa7860",
+      "expected": "7ea8e9831a43abd77a84c4bfb6740c47bb9461e47cbae8f7abe4798eac682bc3"
+    },
+    {
+      "old": "packages/core/tests/localization-runtime.test.ts",
+      "next": "packages/core/tests/localization/unit/localization-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "6510aeb09c06c91ee27c92952580950dbcedf79651017c930d5473ec409de2b7",
+      "expected": "cc6fab46e5e1708166248798058d2e9eca43bd267d19ed144498dd025f3ba9db"
+    },
+    {
+      "old": "packages/core/tests/localization-types.test.ts",
+      "next": "packages/core/tests/localization/type-level/localization-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "2c7bd20e07886ac2e8bb678aa093b09f07d24309f53592dc966207eabbb2cd25",
+      "expected": "8925ac0947afa64d40c2a1f639790f47af9425a0e2f0b25aa12dfb092b6a80a2"
+    },
+    {
+      "old": "packages/core/tests/logging-runtime.test.ts",
+      "next": "packages/core/tests/logging/unit/logging-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "5d235dbe6a46b0d35f68ec0d7a0b7b8ca62209dbfd78c2c1640b83efc6ce8008",
+      "expected": "a10cc1572ed4faefb57a859701193bd58b66f13db8c994f4dd5dbb0a1fee9e07"
+    },
+    {
+      "old": "packages/core/tests/logging-types.test.ts",
+      "next": "packages/core/tests/logging/type-level/logging-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "26de5f3c6a091b54dd1193e3b59c1a1fa633ad73288f6fe5ef78e26b5562ca26",
+      "expected": "b145be118c3e1726b8fec7a500643c769d6134ac52d862bb1e2d9ae0f7945d7b"
+    },
+    {
+      "old": "packages/core/tests/monitoring-metric-diagnostics-runtime.test.ts",
+      "next": "packages/core/tests/monitoring/unit/monitoring-metric-diagnostics-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "3ef495deceac5f140a82e941295dd920be47990d3871d5105e77dcba9b7fab87",
+      "expected": "f0ab40c439a528d10472c1ae4feac55387de4825d609a78c428316bf53fa26e7"
+    },
+    {
+      "old": "packages/core/tests/monitoring-runtime.test.ts",
+      "next": "packages/core/tests/monitoring/unit/monitoring-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "c000a471de6b470bbbe912bcc0a42bbdc3866595d327801bfd7a4cc08e798e9a",
+      "expected": "81acdd49f248c2f08293e02ae79db7da3dc713b567e9521b01d22edeabce0cab"
+    },
+    {
+      "old": "packages/core/tests/monitoring-types.test.ts",
+      "next": "packages/core/tests/monitoring/type-level/monitoring-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "4440bdbb85833f67d60dd4aa58020ce06e884b1f4abd9ee668868bd857c5a080",
+      "expected": "9e2c48c12d479777cef85e6407b8b35b4d78d85d0265f438f57db6cac80b1a20"
+    },
+    {
+      "old": "packages/core/tests/persistence-runtime.test.ts",
+      "next": "packages/core/tests/persistence/unit/persistence-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "3ac5bc7ecf2acea47d078fcaf7cfca25e45d9e38c005e081474c7842e10216ea",
+      "expected": "1db0cc1576c922b3b983c5bc7fae25fa0f5e714b14919c387a4e09e14200b743"
+    },
+    {
+      "old": "packages/core/tests/persistence-types.test.ts",
+      "next": "packages/core/tests/persistence/type-level/persistence-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "3f900e6ee423f92fe6a29752c1108e489ed53a9e876ab4815f3ce008372ffceb",
+      "expected": "37adc6aeeb2095c08e9f542893ca2263974eaaef5b2d45c79755c3a16332e095"
+    },
+    {
+      "old": "packages/core/tests/queues-runtime.test.ts",
+      "next": "packages/core/tests/queues/unit/queues-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "7875d68448a39a15ef64e9c950e5c994b286d0d7e6ce7c87b647ef2d643bedc3",
+      "expected": "ddd56732d2c8368995b0b5595e053b2f132e0b4d08a91cb0afe79579f7c23c55"
+    },
+    {
+      "old": "packages/core/tests/queues-types.test.ts",
+      "next": "packages/core/tests/queues/type-level/queues-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "59f2a7dd8b3198a11d642e5051f17fafce3cd71c1b3da9b00d0bd8e5184ec924",
+      "expected": "4bbc8aa2a0857078c23899c80aaa9d98a27dc4f57c1b4b7970fe998ff38cb8f1"
+    },
+    {
+      "old": "packages/core/tests/security-diagnostics-runtime.test.ts",
+      "next": "packages/core/tests/security/unit/security-diagnostics-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "e6ad0c89e2a7ca313876b15b40087039748d86e48a34283699ff01fd23df8369",
+      "expected": "e5b110e72cf5ef72c2b95e399ab406576f5e4688b61484d127c18f669daa670d"
+    },
+    {
+      "old": "packages/core/tests/security-diagnostics-types.test.ts",
+      "next": "packages/core/tests/security/type-level/security-diagnostics-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "78795d5b426e2d70f687451ee95b19d31d75b0bd9e504f7744002f6b083f99a3",
+      "expected": "cde2d6d9df73c1685ba7cc2e97aef345269b60b3874d7ad9ae92b88750a9799f"
+    },
+    {
+      "old": "packages/core/tests/security-runtime.test.ts",
+      "next": "packages/core/tests/security/unit/security-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "bc5ac81d8ba6d1684747b82f0432fdf27112ff8db1e3d2a459da1210e347fe81",
+      "expected": "16d11f5023dad1101c4dff40addf2d900eff90319150d8f64bc381899c3eee39"
+    },
+    {
+      "old": "packages/core/tests/security-types.test.ts",
+      "next": "packages/core/tests/security/type-level/security-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "1f8ed487ec0347c479b071673bf99233a11c735d68953cea3672f2b34b43c9f2",
+      "expected": "a5e36709e578e248df3fbd100309e814c8a4964aae350d675a87899e576cbb0a"
+    },
+    {
+      "old": "packages/core/tests/shared-runtime.test.ts",
+      "next": "packages/core/tests/shared/contract/unit/results-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "4ac87f816d0d787acafb30a4d6717efb892106ff842b5eecf054a40c2f0838a2",
+      "expected": "4976566ef2605b98d34c7b2be6b339ccb169d310ceee9928295817dd793249c2"
+    },
+    {
+      "old": "packages/core/tests/shared-types.test.ts",
+      "next": "packages/core/tests/shared/contract/type-level/results-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "4b6b7675f9c4e28a2eda0be59639da02f17b3c8e7d2e62cecb8da6580d6f125e",
+      "expected": "a06ad79d8d831d9a8c406f7fea572016dcc459bbe3d7dfbc14c9eef2ac1d9558"
+    },
+    {
+      "old": "packages/core/tests/tenancy-runtime.test.ts",
+      "next": "packages/core/tests/tenancy/unit/tenancy-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "c31e0f38aad6a8efcb46c53fcfc0394dc364f0cc3e0721f84d5b622daeabd845",
+      "expected": "5db845db92e4c12624b030ff05ba85bf0ffd076cb309b67fdfebf6e69521fe0d"
+    },
+    {
+      "old": "packages/core/tests/tenancy-types.test.ts",
+      "next": "packages/core/tests/tenancy/type-level/tenancy-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "f8c1d59091d2f899e4a39016f79952156a0a3e455a193bfd697d4c356f30dde3",
+      "expected": "3621d609a30e2c5f4b9553ca1dc8c09308d73ac1bc43e72bd6cdbfff60b5ce5f"
+    },
+    {
+      "old": "packages/core/tests/validation-runtime.test.ts",
+      "next": "packages/core/tests/validation/unit/validation-runtime.test.ts",
+      "type": "unit",
+      "owner": "packages/core",
+      "before": "073402ee9ec9371078d81fbb858a358a5f46cd9ba600ac9c26c531e7db2df7b8",
+      "expected": "1c7980cebb224c9d9eb96596eeb9a22776abb55a9aff18d1f0bc636baf222eb4"
+    },
+    {
+      "old": "packages/core/tests/validation-types.test.ts",
+      "next": "packages/core/tests/validation/type-level/validation-types.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "a3ec20b4f4b73cea50e29ee96f88f09edc7e62847b65d593a99fc3188289cfc6",
+      "expected": "77de715d3c27252297f5371aa4958453de613e2800669a44dd0caacfc8db0707"
+    },
+    {
+      "old": "platform/adapters/aws/auth/cognito/tests/cognito-adapter-boundaries.test.mjs",
+      "next": "platform/adapters/aws/auth/cognito/tests/test-infrastructure/static-validation/cognito-adapter-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/adapters/aws/auth/cognito",
+      "before": "8a173661a1a96998b935a663b3a790a35fafd6f10a285db84dd915b06d8f48a6",
+      "expected": "c6d67ef2e454c2e22836f673558ea7d4f5981db1bb66ae904730f2a69b9d64bf"
+    },
+    {
+      "old": "platform/adapters/aws/auth/cognito/tests/cognito-adapter-runtime.test.ts",
+      "next": "platform/adapters/aws/auth/cognito/tests/contract/cognito-adapter-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/auth/cognito",
+      "before": "95af8a25d30b3287b5ea12433353fd97cc3d2f1740737f6fa071ac7ae3fe0fa6",
+      "expected": "a83734e214e5f4660ebebca892233d1aa7b013567314d8257053967e98ceffc4"
+    },
+    {
+      "old": "platform/adapters/aws/auth/cognito/tests/cognito-adapter-types.test.ts",
+      "next": "platform/adapters/aws/auth/cognito/tests/type-level/cognito-adapter-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/adapters/aws/auth/cognito",
+      "before": "9a388e3afd1e268304a7fa30a6cda870aa927929dc3147cae0aca30fdcefc24e",
+      "expected": "92aedda8af7ef1931ef0416f36ce9d366a879a9d0eeb5d2981b34eff99c32064"
+    },
+    {
+      "old": "platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-boundaries.test.mjs",
+      "next": "platform/adapters/aws/observability/cloudwatch/tests/test-infrastructure/static-validation/cloudwatch-otel-adapter-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/adapters/aws/observability/cloudwatch",
+      "before": "ebbe4907a7eedd8fbbaaf78bd1f3466839e1babb98767d245c8bd6cd99c8ff28",
+      "expected": "171c6d332d26a7ae8d9f5cee4bc372dfba1fec9ef9f80a40913302875d60d1f9"
+    },
+    {
+      "old": "platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-runtime.test.ts",
+      "next": "platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-adapter-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/observability/cloudwatch",
+      "before": "724089498179352b72ee2fa1f524b4b1d24a0bcadced61ba5b7300e00b7161c0",
+      "expected": "ef58e2618110032e78ebf62d3a3c39b48119df85d6929ffcf40b18c09b330aee"
+    },
+    {
+      "old": "platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-lifecycle-runtime.test.ts",
+      "next": "platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-lifecycle-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/observability/cloudwatch",
+      "before": "afa3030ca226b650e8c68f616224278d65413ce982db4bf7c155a682113a5b59",
+      "expected": "b5d050e606f15dab6cb58daee198d372147b695e77d727727ef64f86d691135c"
+    },
+    {
+      "old": "platform/adapters/aws/persistence/dynamodb/tests/dynamodb-persistence-adapter-boundaries.test.mjs",
+      "next": "platform/adapters/aws/persistence/dynamodb/tests/test-infrastructure/static-validation/dynamodb-persistence-adapter-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/adapters/aws/persistence/dynamodb",
+      "before": "78646dfa206c070d587c30dc48ae96805969fece1a534c0af07b341093d94303",
+      "expected": "16aad368512564f7057b3c850ad7fec6e53bc0f7e57b29df67c5a4ed2e69d915"
+    },
+    {
+      "old": "platform/adapters/aws/persistence/dynamodb/tests/dynamodb-persistence-adapter-runtime.test.ts",
+      "next": "platform/adapters/aws/persistence/dynamodb/tests/contract/dynamodb-persistence-adapter-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/persistence/dynamodb",
+      "before": "b15a361d6fc10856a01f2d26dc6d8c030e671846ea91704f78791209eec687b6",
+      "expected": "f1ba4db8bea1f8c08e25acf0db9aaf8d4632e5d1c856c15606afc281ee654b64"
+    },
+    {
+      "old": "platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts",
+      "next": "platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/adapters/aws/persistence/postgresql",
+      "before": "d01acda1506578a69cc21b9e80d21d544bf56b9f73ef5eb58d17947d648f32a8",
+      "expected": "39db58a0fb61a9ec3312ed9376a243f9164058e0cbb241b221f739ffbe641aa8"
+    },
+    {
+      "old": "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-boundaries.test.mjs",
+      "next": "platform/adapters/aws/persistence/postgresql/tests/test-infrastructure/static-validation/postgresql-persistence-adapter-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/adapters/aws/persistence/postgresql",
+      "before": "b5ddef7ff06a0514620307efdf0103d1f221ed141fd8a416c5277269c296efce",
+      "expected": "0cc05a0a17710a1fedf98972845c55c06ae286e3578ffbffd8b356b883ecfd68"
+    },
+    {
+      "old": "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-integration.test.ts",
+      "next": "platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-persistence-adapter-integration.test.ts",
+      "type": "integration",
+      "owner": "platform/adapters/aws/persistence/postgresql",
+      "before": "571c81a8454b55cae05286b793d8142c63fb0600980295c9e7769aa61d68926a",
+      "expected": "18f507b8c35e16b77cf4a2f30a11dd1301d984e61d2b57ae48132055351930d3"
+    },
+    {
+      "old": "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts",
+      "next": "platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/persistence/postgresql",
+      "before": "ae6e1c050f189cb80b2b7e13ba799b660033d7715c3c611f93d6ef41b3c98440",
+      "expected": "21f4313928a8cb23589701e930f401393200d1b0147fdbe45f734d1796b5c14b"
+    },
+    {
+      "old": "platform/adapters/aws/queue/sqs/tests/sqs-adapter-boundaries.test.mjs",
+      "next": "platform/adapters/aws/queue/sqs/tests/test-infrastructure/static-validation/sqs-adapter-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/adapters/aws/queue/sqs",
+      "before": "00030b3f0fa97ff0e98f582c4a22d96a37f002b2cde470a72c40562064af99c0",
+      "expected": "b6bc85d0a52a0d9f3bcbab8660fe9026eeb3b111cf79cef4a49abaa34ee4eb37"
+    },
+    {
+      "old": "platform/adapters/aws/queue/sqs/tests/sqs-adapter-runtime.test.ts",
+      "next": "platform/adapters/aws/queue/sqs/tests/contract/sqs-adapter-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/queue/sqs",
+      "before": "f527a07e2bd73bf28251c86a08a26ec0da69ff92d6181ffbe45e8e9295e53723",
+      "expected": "b38f42a26d7905b3435d99acdc514d60b22f07d9c5d35b2f10858ad9db405c03"
+    },
+    {
+      "old": "platform/adapters/aws/queue/sqs/tests/sqs-configuration-runtime.test.ts",
+      "next": "platform/adapters/aws/queue/sqs/tests/unit/sqs-configuration-runtime.test.ts",
+      "type": "unit",
+      "owner": "platform/adapters/aws/queue/sqs",
+      "before": "93b879617c938b6dd5daa2ee604e89c724c7c5b1a5fd88a2dc34e334d9336749",
+      "expected": "21da2210569f90baae9d089f043210b1190052ef6eb81f7b0e994d9bbbcd02b0"
+    },
+    {
+      "old": "platform/adapters/aws/queue/sqs/tests/sqs-configuration-types.test.ts",
+      "next": "platform/adapters/aws/queue/sqs/tests/type-level/sqs-configuration-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/adapters/aws/queue/sqs",
+      "before": "d87f1f8f06d2fe97daff45703f583cb4f97aa3d6963507a3fd87ea045082ef64",
+      "expected": "89e2610364aeefe15e91c544255850b92453ff84ade59eb0e9f3a2772c3d38c1"
+    },
+    {
+      "old": "platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-boundaries.test.mjs",
+      "next": "platform/adapters/aws/runtime/ecs-fargate/tests/test-infrastructure/static-validation/ecs-fargate-adapter-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/adapters/aws/runtime/ecs-fargate",
+      "before": "dcff0570d957f594ca82cb289390df7204b6d136f9d453d460e01bb1f5c2ef75",
+      "expected": "81e4fa31b7e3ef65ea53a855e8541ab73bb463e7afa8abbd4ce1c45c4fa1675b"
+    },
+    {
+      "old": "platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-runtime.test.ts",
+      "next": "platform/adapters/aws/runtime/ecs-fargate/tests/contract/ecs-fargate-adapter-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/runtime/ecs-fargate",
+      "before": "b9eb0962f8c6c2add7e64abf56a4365c4f9fe736f996ce9526fe2b4c4e0fc5fa",
+      "expected": "800e39a7b3a42fcb27b12e9d9f0b144e6abed171073ee2ee743dd6acf2147200"
+    },
+    {
+      "old": "platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-types.test.ts",
+      "next": "platform/adapters/aws/runtime/ecs-fargate/tests/type-level/ecs-fargate-adapter-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/adapters/aws/runtime/ecs-fargate",
+      "before": "6640dfb8e4053831c4eaaaa2fdce9d9fd676bc56c87fe19df2f4050d440bf8e5",
+      "expected": "0c872483b7f3ba8d65343ee59e6302db96c0b3d8b734420d7200c4a7057b9b8a"
+    },
+    {
+      "old": "platform/adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-boundaries.test.mjs",
+      "next": "platform/adapters/aws/security/dynamodb-rate-limiter/tests/test-infrastructure/static-validation/dynamodb-rate-limiter-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/adapters/aws/security/dynamodb-rate-limiter",
+      "before": "7495c47d5dc5fa2a06e203c8950dc3613227447d2d3624e63fac63533e804845",
+      "expected": "023950d11b2ad2d008af11b3916853eee5668daa1b4b2ee61917a858fe0ceba6"
+    },
+    {
+      "old": "platform/adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-runtime.test.ts",
+      "next": "platform/adapters/aws/security/dynamodb-rate-limiter/tests/contract/dynamodb-rate-limiter-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/adapters/aws/security/dynamodb-rate-limiter",
+      "before": "bc2dd1a4b2edb6d2709bf26fd8d0e9556cf479d0861d75aad443e6286ccd6fb0",
+      "expected": "437c0683eb7100eb11e6667f1df657d59b94a42cbd3cd867f874a99b753b1638"
+    },
+    {
+      "old": "platform/config/tests/configuration-loading-runtime.test.ts",
+      "next": "platform/config/tests/integration/configuration-loading-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/config",
+      "before": "c07dba2b6e342205602bef024ada003aab48ae9ef73e37417c79059174667cd1",
+      "expected": "a79d77ee7d5317da56358e42ce6148d40d461be89f5b3921e4e73657cf378377"
+    },
+    {
+      "old": "platform/config/tests/evidence-runtime.test.ts",
+      "next": "platform/config/tests/integration/evidence-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/config",
+      "before": "9974af1fae45ec3932fdc7c73cb4b58ffcc3158d7dfb80d33ef5e882af4100bd",
+      "expected": "e7153917aae6adca038946d8299167ed2edf7a7b30c8e6f6e3c1455d3e7ccc8d"
+    },
+    {
+      "old": "platform/config/tests/platform-config-boundaries.test.mjs",
+      "next": "platform/config/tests/test-infrastructure/static-validation/platform-config-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/config",
+      "before": "5d3c42f2d80535ad045f104892ef1718e2fe9ce60422d145d40582afa9ed9c21",
+      "expected": "4063d56aae46123c53d637acc29e4459db1fc17b87abc028d420a1ea329ea177"
+    },
+    {
+      "old": "platform/config/tests/platform-config-runtime.test.ts",
+      "next": "platform/config/tests/integration/platform-config-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/config",
+      "before": "047311d4b033ccd9519f1d1cd55ba2e771d0de2b57933e67f126d090b98a8dc3",
+      "expected": "48ab56bd3059e54923d98767415d58a935c98647315f13c764f37781da44347e"
+    },
+    {
+      "old": "platform/config/tests/platform-config-types.test.ts",
+      "next": "platform/config/tests/type-level/platform-config-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/config",
+      "before": "803302847d06d2b0418703919734bfe50bdce6de87f78a0204f384b34ef020a2",
+      "expected": "1d78c52a62dcbe025b246bef555d4dd027cfa2c2e2d27544ebd280407e9e24ca"
+    },
+    {
+      "old": "platform/contracts/tests/diagnostic-context-runtime.test.ts",
+      "next": "platform/contracts/tests/contract/diagnostic-context-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/contracts",
+      "before": "ba9bc28c193efb5d61436efbfcba6dca41b27a0ad3e5fd30bd61544a65dc6915",
+      "expected": "4ad73103fce8180a75c0f1243258e89c6a9ef85a82da5406fb31e6bd3d6d8aba"
+    },
+    {
+      "old": "platform/contracts/tests/platform-contracts-boundaries.test.mjs",
+      "next": "platform/contracts/tests/test-infrastructure/static-validation/platform-contracts-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/contracts",
+      "before": "4f0be975b4d3dbd564889c425b3775c66073679b292283c43f5c029704585978",
+      "expected": "13023f54cc34c1880b0ddd3cf6c1866af755155b79bcc9de551580349c331129"
+    },
+    {
+      "old": "platform/contracts/tests/platform-contracts-runtime.test.ts",
+      "next": "platform/contracts/tests/contract/platform-contracts-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/contracts",
+      "before": "e239ca65df7a2bec078769edd678b2d75f96d0d49d38a3164bb34bff574aac6c",
+      "expected": "4efdce59984f212594c2412f546ff11bc69db0aaaad30353cfc82d7e3c1105f8"
+    },
+    {
+      "old": "platform/contracts/tests/platform-contracts-types.test.ts",
+      "next": "platform/contracts/tests/type-level/platform-contracts-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/contracts",
+      "before": "2ff5b65afd687ad86b523cdc0a0062f5f4f304c4926279dac990dd552a5212d5",
+      "expected": "9e7ff4773e47c65412b25da9ed877461839103e3fffb684299751a799f8f3950"
+    },
+    {
+      "old": "platform/contracts/tests/registration-diagnostics-runtime.test.ts",
+      "next": "platform/contracts/tests/contract/registration-diagnostics-runtime.test.ts",
+      "type": "contract",
+      "owner": "platform/contracts",
+      "before": "f7903da2c37d3335511b1b6315b001b7f3c8efc5c6bf9b4ba85c9d7d44ef3f10",
+      "expected": "f7db88328590fa4d3b41b8bc0422c3ad896b9d178c93b2e538a302c764d3a8f1"
+    },
+    {
+      "old": "platform/health/tests/diagnostics-runtime.test.ts",
+      "next": "platform/health/tests/integration/diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/health",
+      "before": "9e4477bd88d578402639ee4f235335ab84ed297ce49f852cec3a1fbaaf2db210",
+      "expected": "a945a1e12194d3fb344af311edabba235bfb4e30ed50559e24445f1b3b865822"
+    },
+    {
+      "old": "platform/health/tests/platform-health-boundaries.test.mjs",
+      "next": "platform/health/tests/test-infrastructure/static-validation/platform-health-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/health",
+      "before": "3978a1a163a308c133b3055833191b634677f8a95a9fd5cac09375f9f907bf9d",
+      "expected": "fe16e7a1640a1ce66a9bd5d6c83687e7e48b1ccbaabb80395ef7758892376864"
+    },
+    {
+      "old": "platform/health/tests/platform-health-runtime.test.ts",
+      "next": "platform/health/tests/integration/platform-health-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/health",
+      "before": "975f98bbb518c8cd75d35cd598ab1da7fbd1a7e0c12814110763dffbff0058d0",
+      "expected": "222786a444ed9be02c325e087e75832be3274718cb39af8e61b55342d0f5d003"
+    },
+    {
+      "old": "platform/health/tests/platform-health-types.test.ts",
+      "next": "platform/health/tests/type-level/platform-health-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/health",
+      "before": "fd8d80cb011f6ea58fbbeff4232208becfed03fbb16518c793402377ffe3b2b3",
+      "expected": "a2203080855587426bc060d62ff10fd93694680b7d40f86beab905b5e7b2fda6"
+    },
+    {
+      "old": "platform/observability/tests/configuration-runtime.test.ts",
+      "next": "platform/observability/tests/integration/configuration-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/observability",
+      "before": "5233a37fe377a67532f346b0f474dadfb7b70afbd3a78b2b9cb2bd47df1d6ed7",
+      "expected": "7eeefe64820607564fb8064af6dbddc53c2f1ded98b8418e34d124942be64b46"
+    },
+    {
+      "old": "platform/observability/tests/configuration-types.test.ts",
+      "next": "platform/observability/tests/type-level/configuration-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/observability",
+      "before": "299f6e0564af171a87697c19158957ef0239978658a45f1999c97577d68ae8b9",
+      "expected": "019dbd11b8f5c52d73988e17422a07a1c8ec7066517fc1c11ea5217fe8f28a80"
+    },
+    {
+      "old": "platform/observability/tests/diagnostics-runtime.test.ts",
+      "next": "platform/observability/tests/integration/diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/observability",
+      "before": "b8e0ef56650049a0495741eba6e57b8387e09b0d21b664cb3a0bb7bb7923ebe6",
+      "expected": "e7659ce3732bab19fa6e9c305b9948d0614e47b722bb7f58e4a2b5c75ed896e8"
+    },
+    {
+      "old": "platform/observability/tests/metric-diagnostics-runtime.test.ts",
+      "next": "platform/observability/tests/integration/metric-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/observability",
+      "before": "76f4895f6eaa167f92e5f6bce5514f2ea4368c8cd093889f449cb5c3eb12539e",
+      "expected": "a295702457242198149cf805ffcf25ee1d1c45105543c9b1d26ab9bdc597872d"
+    },
+    {
+      "old": "platform/observability/tests/metric-lifecycle-diagnostics-runtime.test.ts",
+      "next": "platform/observability/tests/integration/metric-lifecycle-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/observability",
+      "before": "e4592b27efccea828d433af45fb043d6e4c42cc8b3e1e92a9f89180a64c49985",
+      "expected": "44dc381f15e9f601653a61aeb3a46483c1e9e75e6d9a0e70100a84085de1a2fe"
+    },
+    {
+      "old": "platform/observability/tests/platform-observability-boundaries.test.mjs",
+      "next": "platform/observability/tests/test-infrastructure/static-validation/platform-observability-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/observability",
+      "before": "83c95dc712b7d018b1fb86aa1e93c7c2a1ade26f5960aa6f8a43a92101933af0",
+      "expected": "def274d53fea4a0e35338c32a3fd7545aa9a3c95d729bc6bca5527179934aafb"
+    },
+    {
+      "old": "platform/observability/tests/platform-observability-runtime.test.ts",
+      "next": "platform/observability/tests/integration/platform-observability-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/observability",
+      "before": "0500be4af528585eae1f47d2cf6d591c73575cdc5585555ea7282f294ff29e4b",
+      "expected": "4a4c5f2cfeb9af584f84dce3bc725bf4edfeb7e1f8ce0ad51c19b29bd83dd31b"
+    },
+    {
+      "old": "platform/observability/tests/platform-observability-types.test.ts",
+      "next": "platform/observability/tests/type-level/platform-observability-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/observability",
+      "before": "96c744e6c4b38495ea67d8c8db44089c1d85fb850cf4b19787103d480d18c9b7",
+      "expected": "6de2782eb8ea6bbb76ec1bc12bcc0e6aae964a7ee14e381ec93607a5584a137a"
+    },
+    {
+      "old": "platform/observability/tests/readiness-diagnostics-runtime.test.ts",
+      "next": "platform/observability/tests/integration/readiness-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/observability",
+      "before": "276ec367602b01528a43148be0cd06cb22d3c424d89220e85ff11d1da2014479",
+      "expected": "3aebd61c9cde29416aee3f9f57c27b5ad4bb47654fcbc1c86062f28793686760"
+    },
+    {
+      "old": "platform/observability/tests/security-diagnostics-runtime.test.ts",
+      "next": "platform/observability/tests/integration/security-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/observability",
+      "before": "715859cbcebc00497267554f50f9212f2e0b2c8f9bd59d42032d5464879fe036",
+      "expected": "78c4ba2a9d5036302ddc994102fcd20559f2ac9b208b95d8fe0f8f58942387da"
+    },
+    {
+      "old": "platform/persistence/tests/diagnostic-delivery-runtime.test.ts",
+      "next": "platform/persistence/tests/integration/diagnostic-delivery-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/persistence",
+      "before": "5f863ba66bb34549875c7c0af50cefbf844175263edc7a3bbd1658a861540dcf",
+      "expected": "abd0c9c7d0736d77d8f12c41e73be36561ec5ebda2879a59892e7b31abe295b3"
+    },
+    {
+      "old": "platform/persistence/tests/leasing-configuration-runtime.test.ts",
+      "next": "platform/persistence/tests/integration/leasing-configuration-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/persistence",
+      "before": "bad0ef5dca050dc3e2ee3c88e43a65a59d4b5a8f75912158d85ba8395316caa9",
+      "expected": "7119ef1d9bc00fd2b2d2bcbb83721c9d96be054f3a00c548325168904c64ffc0"
+    },
+    {
+      "old": "platform/persistence/tests/leasing-configuration-types.test.ts",
+      "next": "platform/persistence/tests/type-level/leasing-configuration-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/persistence",
+      "before": "3b7d746c0d3ee6d6d66316dce4de813483859e29ef7c4ec7cddf71fa6ada13f6",
+      "expected": "606ad197b467387cb8bb0e1f8af449184f50bd4d9adecd5dc77a1276b5a2a255"
+    },
+    {
+      "old": "platform/persistence/tests/maintenance-configuration-runtime.test.ts",
+      "next": "platform/persistence/tests/integration/maintenance-configuration-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/persistence",
+      "before": "a3445140618014df9fa5569002b064d0f50ebb991defd065dae79d66f3e4f112",
+      "expected": "9e05306a9e68601d9f5ee04db7f34246d6435b95e3f8e62525c73b549a80c560"
+    },
+    {
+      "old": "platform/persistence/tests/platform-persistence-boundaries.test.mjs",
+      "next": "platform/persistence/tests/test-infrastructure/static-validation/platform-persistence-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/persistence",
+      "before": "251e392428327f6e02623dfb473de73c7fb5452c50c8ae16c6c0352468678fc4",
+      "expected": "c77f0d11846c9e15de77da0bd5a1fcb3e476ce649872bbf38a082fae61f2f911"
+    },
+    {
+      "old": "platform/persistence/tests/platform-persistence-observability-runtime.test.ts",
+      "next": "platform/persistence/tests/integration/platform-persistence-observability-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/persistence",
+      "before": "2b44e9ecbf2d3b4eb99c5fc9b5e06ea4c57f5a319641a8a56e9243160a938a7e",
+      "expected": "20540ea16878853cd412c552bd09d2c791096d7c898ac5f17f5b188b865f16fd"
+    },
+    {
+      "old": "platform/persistence/tests/platform-persistence-observability-types.test.ts",
+      "next": "platform/persistence/tests/type-level/platform-persistence-observability-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/persistence",
+      "before": "9ac46a3652b928bc265878da47989350abff813cb4dc5a284ddde42a1f070727",
+      "expected": "2c9278480dcee54664b4a393b98a2bc70a019a6aacc9d900f2a93f7ec2879d03"
+    },
+    {
+      "old": "platform/persistence/tests/platform-persistence-runtime.test.ts",
+      "next": "platform/persistence/tests/integration/platform-persistence-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/persistence",
+      "before": "3859c966ab6b7e6ce401f75062d438374e571c15970072bbd31663b0c4ea4739",
+      "expected": "d93ff1d5814072943d94bf9bd6a377c8a79e5b794d7195a1c5653d3d2a76bee7"
+    },
+    {
+      "old": "platform/persistence/tests/platform-persistence-types.test.ts",
+      "next": "platform/persistence/tests/type-level/platform-persistence-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/persistence",
+      "before": "954de52bbfc459747726479399af3c6b7deb277c5dfdcf83feee9c4e3583e779",
+      "expected": "94368b58053e8ff92daa5c9539660b0e6a1167b121386ece9ac3b91d17cd224f"
+    },
+    {
+      "old": "platform/runtime/tests/context-diagnostics-runtime.test.ts",
+      "next": "platform/runtime/tests/integration/context-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/runtime",
+      "before": "fcedc48d6f535b8c22e414832dc364b5aed8bb5242354b19c6122567c1b547f2",
+      "expected": "6e6f6668761c905dacf962e448c48496cb5e6db59a84a6db22ead7c4b595fc09"
+    },
+    {
+      "old": "platform/runtime/tests/diagnostics-runtime.test.ts",
+      "next": "platform/runtime/tests/integration/diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/runtime",
+      "before": "ddbf62eb3e52353561f65cb419af61a6fa534d3bbc10647ce07132ad00269887",
+      "expected": "aa8a7de65dff6609c1a756a44d10f2afddd122848d1f5eb2060b94aedef782d3"
+    },
+    {
+      "old": "platform/runtime/tests/lifecycle-diagnostics-runtime.test.ts",
+      "next": "platform/runtime/tests/integration/lifecycle-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/runtime",
+      "before": "fc24b36854533025173ea03d29e351383cc53e95246b012e838dea48a5e7ef12",
+      "expected": "222050bf5797f6057404e787d9a0f51af2c2cd9948e1fb42d523e4708887292f"
+    },
+    {
+      "old": "platform/runtime/tests/lifecycle-diagnostics-types.test.ts",
+      "next": "platform/runtime/tests/type-level/lifecycle-diagnostics-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/runtime",
+      "before": "2eae7841fc080023750e8dd80706204a30734945eb27159691b7c2ea996ce15b",
+      "expected": "0b65bb1ce7605007831b9bec91f23e0fab564d48ff80bbdb04ce8b25d78bdf99"
+    },
+    {
+      "old": "platform/runtime/tests/mount-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/runtime/tests/integration/mount-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/runtime",
+      "before": "514066bda27846fc72e11a721e0b84b824b99cf8a1f810562695bd6ddd4b587a",
+      "expected": "d5f4266249fa149334569b632f1d40f36f6c4be9e9ca621978daf025b7d51f8e"
+    },
+    {
+      "old": "platform/runtime/tests/platform-runtime-boundaries.test.mjs",
+      "next": "platform/runtime/tests/test-infrastructure/static-validation/platform-runtime-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/runtime",
+      "before": "0b217178e002c2bb876b47d1de10c7caf6cf972ff3a5fed88aa6dbc1ef822169",
+      "expected": "980966f954a4264680a98a3d1b4ec9da32f4da9332f6c5d084d299960bc661ba"
+    },
+    {
+      "old": "platform/runtime/tests/platform-runtime-runtime.test.ts",
+      "next": "platform/runtime/tests/integration/platform-runtime-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/runtime",
+      "before": "6466f80917cf503bbaafc78dd2ad95e0f684406581d196141812263d41ae01f5",
+      "expected": "76c58efaece0bc2354c42025f66ce5d64cdfb60a2bb5ef41c920e9ea91b69c86"
+    },
+    {
+      "old": "platform/runtime/tests/platform-runtime-types.test.ts",
+      "next": "platform/runtime/tests/type-level/platform-runtime-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/runtime",
+      "before": "a0c1ff9676ceaaaf86485373b7b580af8120aa89ec95d5b74e9971c4986d1cb6",
+      "expected": "a14c081e03fc1249095ce87091bb1374f8ecba7f96ee5803337d4170d0686e4d"
+    },
+    {
+      "old": "platform/runtime/tests/registration-diagnostics-runtime.test.ts",
+      "next": "platform/runtime/tests/integration/registration-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/runtime",
+      "before": "31ccf7705ea29c279b1b98a3c2e356e32851286641001899a08238e37d5dc0d4",
+      "expected": "47fe1894998f9bb6f24bd88ea7906b4957bb622e7910dd38bbeaa1ba96a43879"
+    },
+    {
+      "old": "platform/security/tests/configuration-predicate-diagnostics-runtime.test.ts",
+      "next": "platform/security/tests/unit/configuration-predicate-diagnostics-runtime.test.ts",
+      "type": "unit",
+      "owner": "platform/security",
+      "before": "5aeaf5b20929633513486b532ee801cfd0f33a48c889b0ece291e8772582fbd7",
+      "expected": "c4943094c31d74ac98f671334a05a0509c947f9bafe714e61b2c95a05f4b7808"
+    },
+    {
+      "old": "platform/security/tests/jwt-configuration-runtime.test.ts",
+      "next": "platform/security/tests/unit/jwt-configuration-runtime.test.ts",
+      "type": "unit",
+      "owner": "platform/security",
+      "before": "434d9d2e095842f42f5ed9d983e9c8832f54330ec9ebb4dd47d73177ff31c89b",
+      "expected": "601b453b51b44aa7a5a18cf852a62f17de7fc4471f7ce1746552edacc5f97ca6"
+    },
+    {
+      "old": "platform/security/tests/jwt-configuration-types.test.ts",
+      "next": "platform/security/tests/type-level/jwt-configuration-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/security",
+      "before": "6ce9c41f92de033ae18d62957b4eb95b09179a96faaa178a0c60a2332ba715bf",
+      "expected": "513f56a0fa0172d9ad169a316a2700f312de8b63acba7914487f36c1ee31fca8"
+    },
+    {
+      "old": "platform/security/tests/platform-security-boundaries.test.mjs",
+      "next": "platform/security/tests/test-infrastructure/static-validation/platform-security-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/security",
+      "before": "180d2b9638762e3fefb13e4a3651fd4dc1cdeb296afd8562eea914e64d7daf20",
+      "expected": "1b1bea622c2f7b22a7b4ea8f0a4f9e963c14b6276eb79f4ae7edd46637bbec63"
+    },
+    {
+      "old": "platform/security/tests/platform-security-runtime.test.ts",
+      "next": "platform/security/tests/integration/platform-security-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/security",
+      "before": "9d7e5a9c14c3a5864928bd5e525c577112432f12decc934b25642e1942f88170",
+      "expected": "bb42ecfc741f6f2f5eb8e034ccd91898d2d329b130971b8d7b87a4910ac538f5"
+    },
+    {
+      "old": "platform/security/tests/platform-security-types.test.ts",
+      "next": "platform/security/tests/type-level/platform-security-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/security",
+      "before": "c828037e1d3ccae3fe002158baabe5855c6fab5c03e71ed4223cd1b4d5627c1c",
+      "expected": "6bcf87dadc4b74c7543adb341cb4eb5df68091c0119b19e655b1cd24cb15184b"
+    },
+    {
+      "old": "platform/security/tests/security-certificates-runtime.test.ts",
+      "next": "platform/security/tests/unit/security-certificates-runtime.test.ts",
+      "type": "unit",
+      "owner": "platform/security",
+      "before": "4ee807f9a2008205c9abfa7a9065f9fbaddbb3c774a8d356ab5b6a76b6e665bb",
+      "expected": "6b48f22e96acf7f25f638bf1e7f4b14559bb9856ce792bf515723c537112cfde"
+    },
+    {
+      "old": "platform/security/tests/security-certificates-types.test.ts",
+      "next": "platform/security/tests/type-level/security-certificates-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/security",
+      "before": "198ce55865cfb6572f0914e867593ff647dc9b3cac7e35eef9c7c8e90230879e",
+      "expected": "6eda28a130c7d6a8fee24d7d4c656fa08dc0ff1648e2e99726433de046a1679d"
+    },
+    {
+      "old": "platform/security/tests/security-operation-diagnostics-runtime.test.ts",
+      "next": "platform/security/tests/unit/security-operation-diagnostics-runtime.test.ts",
+      "type": "unit",
+      "owner": "platform/security",
+      "before": "56402af826f0a14beafd549f17104018637ec06d4dd35348166b107b3a6a6467",
+      "expected": "c3062dbe831befe549e2e31fce9d03c38957096d9293630f67c6fdb370b920d8"
+    },
+    {
+      "old": "platform/security/tests/security-operation-diagnostics-types.test.ts",
+      "next": "platform/security/tests/type-level/security-operation-diagnostics-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/security",
+      "before": "8d167037ab824f2e0078c98ea05cd0a8ad5d949e5ef9789dafc4abc2046783e8",
+      "expected": "21a4484fe738eeb6cc49e536cfabad1d47953df90821209b4e79fc1affeac403"
+    },
+    {
+      "old": "platform/server/tests/builtin-evidence-runtime.test.ts",
+      "next": "platform/server/tests/integration/builtin-evidence-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "4eed68a6744f08efb9d5b33c0fefd7b472eb88f09c3737f0d99ca9ee4f44c97d",
+      "expected": "ce2cf4f5031b2155db0624042a7cc8fd96e1d7d605fd78b4afe935ba679b3483"
+    },
+    {
+      "old": "platform/server/tests/configuration-omissions-runtime.test.ts",
+      "next": "platform/server/tests/integration/configuration-omissions-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "0a09f9c408a18a774f9e5f9540b6302248513263018c09a2e5de66bd0e38dcdf",
+      "expected": "fc52edba7cad7e1715df37164d388a3b725bdfc6b7b7e33edc4af218cd9184d0"
+    },
+    {
+      "old": "platform/server/tests/configuration-runtime.test.ts",
+      "next": "platform/server/tests/integration/configuration-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "4f3d5d5e169352cbe7b902a025b468b106dfd697a1197ed82d45d86e22a25951",
+      "expected": "37f937e94bf7d5e2ee112843b9fc0685a1b966c15cec804561f280094140463c"
+    },
+    {
+      "old": "platform/server/tests/diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "16efca98a60025668a8f8d49543548ed7269f86e4e165c46a0481951b8c09a15",
+      "expected": "ec621a8a3d3485d8dbede795aedeea1364c614e154c94289e781967964ab33ec"
+    },
+    {
+      "old": "platform/server/tests/health-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/health-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "d1fa87cf878302daf54635f7a31f37f2f8ae0f654a87d910f2c5322cb699427b",
+      "expected": "bb7c61d848088b95dd6010220b36627c9fa5e660fa59e07edff8549432c636f7"
+    },
+    {
+      "old": "platform/server/tests/metric-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/metric-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "6244f93d4087643fcb8a5e3bb968cad203cc3f4ff825350b9078f3277d51da26",
+      "expected": "d1bfd278f968e0879e9478b60f0111dbd61cbfc850be004a37453412ae8cd823"
+    },
+    {
+      "old": "platform/server/tests/platform-server-boundaries.test.mjs",
+      "next": "platform/server/tests/test-infrastructure/static-validation/platform-server-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/server",
+      "before": "82d5163d755fc8c15c42660b6aa85a718f628500d5ccd8a971578cbcfd134432",
+      "expected": "e3de7625e8de0adfc6b88d758e6aa241903300a601393a2897267fc58b834c6f"
+    },
+    {
+      "old": "platform/server/tests/platform-server-runtime.test.ts",
+      "next": "platform/server/tests/integration/platform-server-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "70f5a32ab3f2febd281993727765229130ac977a78f32fd9c1383d2cd4d9ebfb",
+      "expected": "e0d7e7f457d4a72c5a8abec7b652f8e942c73e39357d61c0d8f1bf9021f660cc"
+    },
+    {
+      "old": "platform/server/tests/platform-server-types.test.ts",
+      "next": "platform/server/tests/type-level/platform-server-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/server",
+      "before": "24026805419ed5764934702d142a3603263c4b116fcb45c075ed9bfe819d631a",
+      "expected": "e6be054fac99399c12ce15ec0d4cff78205c02158daccce7fc1f7157ec5972ce"
+    },
+    {
+      "old": "platform/server/tests/process-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/process-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "60e0c598a37f0fc65078f1b2194bc9606066d441a3a2c79b5d628fd37eb9bfb3",
+      "expected": "a1033b620fbf563be8c638d3983658f96ce55bad353d9c17f42a8d94eed196cd"
+    },
+    {
+      "old": "platform/server/tests/request-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/request-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "4f065cc958a27a81708721b76a75455dabe743b443a3d1ba928336da9beac4b3",
+      "expected": "207495289c49314502608e008385f16e1bd7067e61974f189641183fd5255b2b"
+    },
+    {
+      "old": "platform/server/tests/request-observation-runtime.test.ts",
+      "next": "platform/server/tests/integration/request-observation-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "c717e045b78a7cbaac51c2efdc7d1735e30192f314fee27f56a4ffdb2e3dcec8",
+      "expected": "0fe78ed0f3799f9086720b122611c247b0a157128a870fb654e11548d8c3c0e9"
+    },
+    {
+      "old": "platform/server/tests/security-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/security-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "2ef392548ae38acb40aee771fdadfd057bf35fc9d26675b2f9b3198d88e72912",
+      "expected": "c2af4fe04240b62d19d6146beb7c7c795117ef9d8d73eb67a6e30de2dee841b8"
+    },
+    {
+      "old": "platform/server/tests/startup-configuration-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/startup-configuration-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "b4e91f9a2461af92e81f3f8ca390beb8c10eeea78b09083f29137f2addb44228",
+      "expected": "2e662365c1a57a42ebfae6e549e2c903579de6a220ad56f88e46973f1f9a6d0a"
+    },
+    {
+      "old": "platform/server/tests/transport-configuration-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/transport-configuration-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "718af6a2c060043658ad24322bc01eb6f0cac1a24aba051e8404f07443f6c9a2",
+      "expected": "e42bc326c672941b3688b1896299b5c943a4b6ad2ce32046ee1dfb0418900c14"
+    },
+    {
+      "old": "platform/server/tests/transport-diagnostics-runtime.test.ts",
+      "next": "platform/server/tests/integration/transport-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/server",
+      "before": "960f1629e53d64598065637446c067da6b18da128caf34e32d26ba2002ce3188",
+      "expected": "d0490e6df40cb88ed5fe6f631bd874c1b5149117b4172ea2a9c2847023bf19ff"
+    },
+    {
+      "old": "platform/server/tests/transport-diagnostics-types.test.ts",
+      "next": "platform/server/tests/type-level/transport-diagnostics-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/server",
+      "before": "8a160652e83a0da18e57e1077b6bcd16e15a59418a3883bdc23774e8c00cc2b0",
+      "expected": "7952193c0cc0c6551617792861244e70b3445e900bd1082848a571183ecd35fe"
+    },
+    {
+      "old": "platform/testing/tests/config-evidence-runtime.test.ts",
+      "next": "platform/testing/tests/integration/config-evidence-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/testing",
+      "before": "dde6a088664596e3f3c7604ccbafc77d169b573e0b0be4816cff5ef773cd4211",
+      "expected": "a792df113abe0ce197ed8a759537126d0003a68c74add15a2713045c1e414a35"
+    },
+    {
+      "old": "platform/testing/tests/diagnostics-runtime.test.ts",
+      "next": "platform/testing/tests/integration/diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/testing",
+      "before": "8710f42a9a535d900a8aa68cc0956082021678c989e1a6b19e48aa93706e3bd3",
+      "expected": "c59d550e32a3d377e4300e61d26059276a0f2f9dc3b2317a2b1c0540c52da68e"
+    },
+    {
+      "old": "platform/testing/tests/mount-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/testing/tests/integration/mount-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/testing",
+      "before": "2b36f592f23d1db19f9e705f86e6428f839c073517075d0f6cab2b3e7933b14f",
+      "expected": "127c03b72cffdf7cdf9c2dad5145963c9fa67c11be6e37bed756037316c65c2f"
+    },
+    {
+      "old": "platform/testing/tests/platform-testing-boundaries.test.mjs",
+      "next": "platform/testing/tests/test-infrastructure/static-validation/platform-testing-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/testing",
+      "before": "c403ce0c9456e6dbd2df1b71945dc283208a689d75d7e90c3ad959cbeb9352bb",
+      "expected": "b61c39a44d66e3ea5883e35585d1f4282a6c997267109406b1ed7bce3b3a5171"
+    },
+    {
+      "old": "platform/testing/tests/platform-testing-runtime.test.ts",
+      "next": "platform/testing/tests/integration/platform-testing-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/testing",
+      "before": "ae8e9d0f878bf782a154f99fa157f5000bafec3bf1c38c731876a24bc5930921",
+      "expected": "565cf4cefd9ab110b43472b757e6bafa7c34e7ef6b028f3cd3fd058b6092db42"
+    },
+    {
+      "old": "platform/testing/tests/platform-testing-types.test.ts",
+      "next": "platform/testing/tests/type-level/platform-testing-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/testing",
+      "before": "659bbb3da9948df8711e62d5053d6881401b611ed6f02ae2df546f842c1ffdf6",
+      "expected": "6d57cbb509caf5dd43e6d3ecf1ff1f503daa8933d711580634108146a38e8151"
+    },
+    {
+      "old": "platform/workers/tests/builtin-evidence-runtime.test.ts",
+      "next": "platform/workers/tests/integration/builtin-evidence-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "a21b87d15d9b3b6af502351e96cca3342af22eea9598eb6ffe5f9b072338afc1",
+      "expected": "5248aaad378a8f0473ab71d915ccaa78a16ffcdd692bef7405c1bac270f83ece"
+    },
+    {
+      "old": "platform/workers/tests/context-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/workers/tests/integration/context-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "44ae2c092287d33023f1281688e391f227660ce40f187a4e0ec7898ddf6b8782",
+      "expected": "aaf3474b01daa3f99b66c9300f5446ce9e59490e4d313a6032a5ea9efdd0e3d1"
+    },
+    {
+      "old": "platform/workers/tests/delivery-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/workers/tests/integration/delivery-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "96f9baacdf0eb27a5f8f7a9a3d4e8115c7ae73ecc0d6b217fa031801c59e220c",
+      "expected": "7c73af2a5e21ce4a6de245bcbee58ffafa65b542c333badc5872985b40d48deb"
+    },
+    {
+      "old": "platform/workers/tests/health-diagnostics-runtime.test.ts",
+      "next": "platform/workers/tests/integration/health-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "2b05ab6dcdc7f48598a312a1babef00f0217974364710e23d4773657161c1773",
+      "expected": "27b816febc5f450efa1992617f09656cff12cda57a7dc4be0d77767a5e494c2e"
+    },
+    {
+      "old": "platform/workers/tests/lifecycle-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/workers/tests/integration/lifecycle-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "4d3943a7853b352e2ee7c67cf25f6aceaa885e9aa4e00edb0e9a3a8f7ff60b8a",
+      "expected": "aaf30ae5b3ad9495d253faba2533251396664f3b5e44f51a82279c2a63d8725d"
+    },
+    {
+      "old": "platform/workers/tests/lifecycle-boundary-diagnostics-types.test.ts",
+      "next": "platform/workers/tests/type-level/lifecycle-boundary-diagnostics-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/workers",
+      "before": "dce641501bd0d146e4dba67d2b9621e0bc2467e4d42de625d148f4e9bde3e46b",
+      "expected": "b973bfa7385bfb9a782f6051e6604176451e1baaa39179630f359f72ca964b0d"
+    },
+    {
+      "old": "platform/workers/tests/metric-diagnostics-runtime.test.ts",
+      "next": "platform/workers/tests/integration/metric-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "7f2b5da4392b2c869e5c398575a7ed49bdced2d16b10d2e9ca2b3c04e31a5f48",
+      "expected": "8f5852f178000b1a726d8fe92da2f236a0c3666aea630be1395397bd2dd2f830"
+    },
+    {
+      "old": "platform/workers/tests/platform-workers-boundaries.test.mjs",
+      "next": "platform/workers/tests/test-infrastructure/static-validation/platform-workers-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "platform/workers",
+      "before": "c079c42b1f48d43a523744a262debf09b9275f1128cf804e200cc356b39c5078",
+      "expected": "d0526d6f2a523ca0ed1548760b3afe3f3e4d3258b44bf99690d2d21a9647eb9d"
+    },
+    {
+      "old": "platform/workers/tests/platform-workers-process-runtime.test.ts",
+      "next": "platform/workers/tests/integration/platform-workers-process-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "ff0909669cf612179764260f8382a30e1beb0f5d5a3553f203b67a2957d025ad",
+      "expected": "638a40e52cc89a98a8825c3ecbecd460f9743abde8aff69b3562b32042becffe"
+    },
+    {
+      "old": "platform/workers/tests/platform-workers-runtime.test.ts",
+      "next": "platform/workers/tests/integration/platform-workers-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "7871efd0b3c3ec65beddccdf36a41b70241493916085c3db516a43cbe773c879",
+      "expected": "2c186fbd38934b233f24bed0a56a953a8847e14c9e1172aad099ef51aecc4f18"
+    },
+    {
+      "old": "platform/workers/tests/platform-workers-types.test.ts",
+      "next": "platform/workers/tests/type-level/platform-workers-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/workers",
+      "before": "6945a1c3c289ae46f90f9ec3ba033e63b1ac6eb4bac301ed20c2a34272477b7d",
+      "expected": "be25ffaeb2ef7bb64e6f0db7dd66aed9efa66ca224b3927fbf3d118f6bb1771d"
+    },
+    {
+      "old": "platform/workers/tests/process-boundary-diagnostics-runtime.test.ts",
+      "next": "platform/workers/tests/integration/process-boundary-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "30cb89e4456d01b28b2c5fd488b9f56a6904b4c284949524cbd8b75b8041e88c",
+      "expected": "110c762405f8d2be2257704714d8cd81f0ce0afc5d087c4ec27677a6e035787c"
+    },
+    {
+      "old": "platform/workers/tests/retry-configuration-runtime.test.ts",
+      "next": "platform/workers/tests/integration/retry-configuration-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "d65fee8be3420952698c26bbc089ece2b2dfb320fd82f8856ee2811f2d0ab49b",
+      "expected": "adde0ec80660c54b7417ff87c13ca8bd86a2f3d9b742db40273febd62ae09424"
+    },
+    {
+      "old": "platform/workers/tests/retry-configuration-types.test.ts",
+      "next": "platform/workers/tests/type-level/retry-configuration-types.test.ts",
+      "type": "type-level",
+      "owner": "platform/workers",
+      "before": "d0f2a20a372f8a88b8bb7a85c6c22c02178481bc0b372149d608a10b774d74ed",
+      "expected": "11f602f75928ac910cb5cfaecd9528373132adde819267babed732ed15540299"
+    },
+    {
+      "old": "platform/workers/tests/startup-configuration-diagnostics-runtime.test.ts",
+      "next": "platform/workers/tests/integration/startup-configuration-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "platform/workers",
+      "before": "f91ad2e365095d4d244e1e612f63ad0c9ab4b49b8b8d9f601bdfd3a003c94f35",
+      "expected": "69a40e39137f3d338f54b01e3ac9f9fd641f67cb74d918c813657f6c9b63d69d"
+    },
+    {
+      "old": "apps/entity-smoke/tests/test-entity-runtime.test.ts",
+      "next": "apps/entity-smoke/tests/test-entity/integration/test-entity-runtime.test.ts",
+      "type": "integration",
+      "owner": "apps/entity-smoke",
+      "before": "6dc2316da8a46877b60be5782a37f558c76826aabdca330a4f284e7a0d88ff3a",
+      "expected": "d1eb671bcac82c698362539ac13d8581ce3e61dc922e13d681f4b3c21d1d2fa8"
+    },
+    {
+      "old": "apps/platform-smoke/tests/configuration-validation-diagnostics-runtime.test.ts",
+      "next": "apps/platform-smoke/tests/integration/configuration-validation-diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "apps/platform-smoke",
+      "before": "6685b96d9c2ea2cb2ec6b86ac0baa085b3342ffa652f28aa859004bad51dc22c",
+      "expected": "a4433e5eafcd4d4f0e189df6bf8bd673587eab549dca8e62fd318ac253aef276"
+    },
+    {
+      "old": "apps/platform-smoke/tests/diagnostics-runtime.test.ts",
+      "next": "apps/platform-smoke/tests/integration/diagnostics-runtime.test.ts",
+      "type": "integration",
+      "owner": "apps/platform-smoke",
+      "before": "64160e122b942530af4441d1ffa93524a8a06667f12441a9e410b811b2234cc2",
+      "expected": "3f8ec3ed1c548fd66fd6c851b357b3b3c39e2ea2e643c09309d64b5a80074bb7"
+    },
+    {
+      "old": "apps/platform-smoke/tests/platform-smoke-boundaries.test.mjs",
+      "next": "apps/platform-smoke/tests/test-infrastructure/static-validation/platform-smoke-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "apps/platform-smoke",
+      "before": "5da2872f63a6cb1f6002d14f7542d556e3f297872c79d8ebb8d675bdf0262357",
+      "expected": "3ae995dd8cf1a82e828266b4ac7c7b4340888423c147a25d343523dcf4adef4f"
+    },
+    {
+      "old": "apps/platform-smoke/tests/platform-smoke-runtime.test.ts",
+      "next": "apps/platform-smoke/tests/integration/platform-smoke-runtime.test.ts",
+      "type": "integration",
+      "owner": "apps/platform-smoke",
+      "before": "f1fa2682b5dd6d09ab27321676318b59c028b1766a1b0d90bb7622f21e214cd7",
+      "expected": "ac5e8ac4d8e9d700a752780c7b61112b47340d50809f63027ae07e8b09577651"
+    },
+    {
+      "old": "apps/platform-smoke/tests/platform-smoke-types.test.ts",
+      "next": "apps/platform-smoke/tests/type-level/platform-smoke-types.test.ts",
+      "type": "type-level",
+      "owner": "apps/platform-smoke",
+      "before": "c6c130d7c85e5fd20d9c6602717922f874e27a2e03b8cc3b78344cd881162e79",
+      "expected": "015c05c42c2abcc25d60dd539ef1e80bcce51a959352d83ecc1a5007c10e9397"
+    },
+    {
+      "old": "products/kanbien-platform/tests/kanbien-platform-boundaries.test.mjs",
+      "next": "products/kanbien-platform/tests/test-infrastructure/static-validation/kanbien-platform-boundaries.test.mjs",
+      "type": "static-validation",
+      "owner": "products/kanbien-platform",
+      "before": "a3397c3454ce82912c7a747723d5e197950d2648e1df0a754e6cfeeda9352350",
+      "expected": "dbb178a6d28af9619c625a937b005da97d84637343282d4f532b9128b33d5a63"
+    },
+    {
+      "old": "products/kanbien-platform/tests/kanbien-platform-runtime.test.ts",
+      "next": "products/kanbien-platform/tests/integration/kanbien-platform-runtime.test.ts",
+      "type": "integration",
+      "owner": "products/kanbien-platform",
+      "before": "0f045cede82cdb1857d60d1842f8f16a76ffe05ec206ad2d466e9ddae03722f7",
+      "expected": "2db0123094b8c6ed878b1488b84d743d95fe99e8c8dc2f89b4b557440ef8e420"
+    },
+    {
+      "old": "products/kanbien-platform/tests/kanbien-platform-types.test.ts",
+      "next": "products/kanbien-platform/tests/type-level/kanbien-platform-types.test.ts",
+      "type": "type-level",
+      "owner": "products/kanbien-platform",
+      "before": "49e9362e4e5fb1a7ceb2c7c958f3d9f3954ed5c25c754d6bb75babab4e9d8643",
+      "expected": "2ab324e0d7fb5ad320d1ccd5b024cda5ce1a582196dce643b32ef6d87924329d"
+    },
+    {
+      "old": "packages/core/tests/compatibility/v0-public-contracts.test.ts",
+      "next": "packages/core/tests/compatibility/type-level/v0-public-contracts.test.ts",
+      "type": "type-level",
+      "owner": "packages/core",
+      "before": "bc0c112ac6bba689c904c4035664dfa74750c80cbd8bcd9b46227978ec98d54e",
+      "expected": "8d3a0a37ad74ac035a08997c7615b87f37b42bf97377d69ab28ab541b996ec82"
+    }
+  ],
+  "shared_before": {
+    "runtime": "import { deepEqual, equal, throws } from \"node:assert/strict\";\nimport {\n  copyJsonValue,\n  err,\n  isErr,\n  isOk,\n  messageDescriptor,\n  messageKey,\n  ok,\n} from \"../../../../src/shared/index\";\nimport { diagnosticDescriptor } from \"../../../../src/diagnostics/index\";\n\n// Time and UUID unit cases now live in shared/time/unit/ and shared/uuid/unit/.\nconst descriptor = messageDescriptor({\n  code: \"VALIDATION_REQUIRED\",\n  defaultMessage: \"Field is required.\",\n  messageKey: \"validation.required\",\n  params: { field: \"email\" },\n});\nequal(descriptor.messageKey, messageKey(\"validation.required\"));\nequal(descriptor.params?.field, \"email\");\n\nconst copiedJson = copyJsonValue({\n  id: \"deal-123\",\n  score: 12,\n  flags: [true, false],\n  nested: { value: null },\n});\ndeepEqual(copiedJson, {\n  id: \"deal-123\",\n  score: 12,\n  flags: [true, false],\n  nested: { value: null },\n});\nthrows(() => copyJsonValue(Number.NaN, \"test JSON value\"), /finite numbers/);\nthrows(() => copyJsonValue(Number.POSITIVE_INFINITY, \"test JSON value\"), /finite numbers/);\nthrows(() => copyJsonValue(new Date() as never, \"test JSON value\"), /plain objects/);\n\nconst success = ok({ enabled: true });\nequal(isOk(success), true);\nif (!isOk(success)) {\n  throw new Error(\"Expected result to be ok.\");\n}\nequal(success.value.enabled, true);\n\nconst failure = err({ code: \"TEST_FAILURE\", defaultMessage: \"Expected failure.\" });\nequal(isErr(failure), true);\nif (!isErr(failure)) {\n  throw new Error(\"Expected result to be err.\");\n}\nequal(failure.error.code, \"TEST_FAILURE\");\nequal(failure.error.defaultMessage, \"Expected failure.\");\n\nconst diagnosticFailure = err({\n  code: \"CSV_IMPORT_INVALID_ROW\",\n  defaultMessage: \"CSV import row is invalid.\",\n  diagnostic: diagnosticDescriptor({\n    failureKind: \"user_input\",\n    failureSource: \"user\",\n    severity: \"warning\",\n    recovery: \"user_correctable\",\n    action: \"ask_user\",\n  }),\n});\nequal(isErr(diagnosticFailure), true);\nif (!isErr(diagnosticFailure)) {\n  throw new Error(\"Expected diagnostic failure to be err.\");\n}\nequal(diagnosticFailure.error.diagnostic?.failureKind, \"user_input\");\nequal(diagnosticFailure.error.diagnostic?.userCorrectable, true);\n\n\nconsole.log(\"packages/core shared runtime test passed.\");\n",
+    "types": "import {\n  correlationId,\n  causationId,\n  entityId,\n  err,\n  isErr,\n  isOk,\n  copyJsonValue,\n  messageDescriptor,\n  messageKey,\n  ok,\n  type CorrelationId,\n  type CausationId,\n  type EntityId,\n  type JsonValue,\n  type MessageDescriptor,\n  type MessageKey,\n  type Result,\n} from \"../../../../src/shared/index\";\nimport { diagnosticDescriptor } from \"../../../../src/diagnostics/index\";\nimport type { CoreError } from \"../../../../src/shared/index\";\n\ntype TenantId = EntityId<\"TenantId\">;\ntype PrincipalId = EntityId<\"PrincipalId\">;\n\nconst tenantId = entityId<\"TenantId\">(\"tenant-123\");\nconst principalId = entityId<\"PrincipalId\">(\"principal-456\");\nconst requestId = correlationId(\"request-789\");\nconst triggerId = causationId(\"event-456\");\n\nconst acceptedTenantId: TenantId = tenantId;\nconst acceptedPrincipalId: PrincipalId = principalId;\nconst acceptedCorrelationId: CorrelationId = requestId;\nconst acceptedCausationId: CausationId = triggerId;\nconst acceptedMessageKey: MessageKey = messageKey(\"validation.required\");\nconst acceptedMessageDescriptor: MessageDescriptor = messageDescriptor({\n  code: \"VALIDATION_REQUIRED\",\n  defaultMessage: \"Field is required.\",\n  messageKey: acceptedMessageKey,\n  params: { field: \"email\", minimum: 1, required: true, optional: null },\n});\nconst acceptedJsonValue: JsonValue = {\n  id: \"deal-123\",\n  flags: [true, false],\n  nested: { value: null },\n};\n\nvoid acceptedTenantId;\nvoid acceptedPrincipalId;\nvoid acceptedCorrelationId;\nvoid acceptedCausationId;\nvoid acceptedMessageKey;\nvoid acceptedMessageDescriptor;\nvoid copyJsonValue(acceptedJsonValue);\n\n// @ts-expect-error JSON values must stay plain and serializable.\nconst rejectedJsonValue: JsonValue = new Date();\nvoid rejectedJsonValue;\n\n// @ts-expect-error message descriptors must keep params JSON-primitive and localization-friendly.\nmessageDescriptor({ code: \"BAD_PARAM\", defaultMessage: \"Bad param.\", params: { nested: { value: \"nope\" } } });\n\n// @ts-expect-error message descriptors require fallback/debug text for untranslated contexts.\nmessageDescriptor({ code: \"MISSING_DEFAULT_MESSAGE\" });\n\n// @ts-expect-error branded IDs with different names must not be interchangeable.\nconst rejectedTenantId: TenantId = principalId;\nvoid rejectedTenantId;\n\n// @ts-expect-error correlation IDs must not be accepted as entity IDs.\nconst rejectedEntityId: EntityId<\"TenantId\"> = requestId;\nvoid rejectedEntityId;\n\n// Time and UUID type-level cases now live in their shared/<theme>/type-level/ groups.\n\nconst success: Result<string> = ok(\"ready\");\nconst failure: Result<string> = err({ code: \"TEST_FAILURE\", defaultMessage: \"Expected failure.\" });\nconst diagnosticFailure: CoreError = {\n  code: \"CSV_IMPORT_INVALID_ROW\",\n  defaultMessage: \"CSV import row is invalid.\",\n  diagnostic: diagnosticDescriptor({\n    failureKind: \"user_input\",\n    failureSource: \"user\",\n    severity: \"warning\",\n    recovery: \"user_correctable\",\n    action: \"ask_user\",\n  }),\n};\n\nif (isOk(success)) {\n  const value: string = success.value;\n  void value;\n}\n\nif (isErr(failure)) {\n  const code: string = failure.error.code;\n  void code;\n}\n\nvoid diagnosticFailure;\n"
+  },
+  "runner_regression_before": "import { deepEqual, equal, match, notEqual } from \"node:assert/strict\";\nimport { spawnSync } from \"node:child_process\";\nimport { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from \"node:fs\";\nimport { tmpdir } from \"node:os\";\nimport { dirname, join, resolve } from \"node:path\";\n\nconst runner = resolve(\"packages/core/tests/run-runtime-tests.mjs\");\n\nfunction fixture(check: (root: string, source: (name: string, compiled?: string) => void, compiled: (name: string, body: string) => void) => void): void {\n  const root = mkdtempSync(join(tmpdir(), \"core-test-runner-\"));\n  const sourceRoot = join(root, \"packages/core/tests\");\n  const compiledRoot = join(root, \".cache/packages-core-runtime/tests\");\n  const write = (file: string, body: string) => {\n    mkdirSync(dirname(file), { recursive: true });\n    writeFileSync(file, body);\n  };\n  const compiled = (name: string, body: string) => write(join(compiledRoot, name), body);\n  const source = (name: string, body?: string) => {\n    write(join(sourceRoot, name), \"export {};\\n\");\n    if (body !== undefined) compiled(name.replace(/\\.ts$/, \".js\"), body);\n  };\n  try {\n    mkdirSync(sourceRoot, { recursive: true });\n    mkdirSync(compiledRoot, { recursive: true });\n    check(root, source, compiled);\n  } finally {\n    rmSync(root, { recursive: true, force: true });\n  }\n}\n\nfunction run(root: string) {\n  return spawnSync(process.execPath, [runner], { cwd: root, encoding: \"utf8\", timeout: 10_000 });\n}\n\nfixture((root, source, compiled) => {\n  source(\"z-runtime.test.ts\", 'console.log(\"last\");');\n  source(\"shared/time/unit/first-runtime.test.ts\", 'console.log(\"nested\");');\n  source(\"first-runtime.test.ts\", 'console.log(\"flat\");');\n  source(\"shared/time/type-level/time-types.test.ts\", \"process.exit(91);\");\n  compiled(\"stale-runtime.test.js\", \"process.exit(92);\");\n  compiled(\"shared/time/unit/retired-runtime.test.js\", \"process.exit(93);\");\n\n  const actual = run(root);\n\n  equal(actual.status, 0, \"flat and nested source-backed cases execute successfully\");\n  deepEqual(actual.stdout.trim().split(/\\r?\\n/), [\"flat\", \"nested\", \"last\"],\n    \"discovery is deterministic, runs each case once, handles duplicate basenames and excludes type-only/stale output\");\n});\n\nfixture((root, source) => {\n  source(\"first-runtime.test.ts\", 'console.log(\"must not run\");');\n  source(\"shared/time/unit/missing-runtime.test.ts\");\n\n  const actual = run(root);\n\n  notEqual(actual.status, 0, \"missing nested compilation fails the runner\");\n  match(actual.stderr, /Compiled Core runtime test unavailable: .*missing-runtime\\.test\\.js/);\n  equal(actual.stdout, \"\", \"missing compilation is detected before other cases execute\");\n});\n\nfixture((root, source) => {\n  source(\"shared/time/unit/a-runtime.test.ts\", 'console.log(\"failed case\"); process.exit(7);');\n  source(\"z-runtime.test.ts\", 'console.log(\"must not run\");');\n\n  const actual = run(root);\n\n  equal(actual.status, 7, \"a nested child failure retains its exact nonzero status\");\n  equal(actual.stdout.trim(), \"failed case\", \"the runner stops after a failed case\");\n});\n\nfixture((root, source, compiled) => {\n  source(\"shared/time/type-level/time-types.test.ts\", \"process.exit(91);\");\n  compiled(\"retired-runtime.test.js\", \"process.exit(92);\");\n\n  const actual = run(root);\n\n  notEqual(actual.status, 0, \"type-only and stale output cannot conceal zero runtime cases\");\n  match(actual.stderr, /No packages\\/core runtime tests found/);\n  equal(actual.stdout, \"\", \"no compiled-only file executes\");\n});\n\nfixture((root, source) => {\n  source(\"actual-runtime.test.ts\", 'console.log(\"must not run\");');\n  symlinkSync(\"actual-runtime.test.ts\", join(root, \"packages/core/tests/alias-runtime.test.ts\"));\n\n  const actual = run(root);\n\n  notEqual(actual.status, 0, \"ambiguous symlink discovery fails rather than silently omitting or duplicating a case\");\n  match(actual.stderr, /Core test discovery does not support symlinks/);\n  equal(actual.stdout, \"\", \"invalid discovery fails before case execution\");\n});\n\nconsole.log(\"packages/core test-runner unit regressions passed.\");\n"
+}

@@ -4,10 +4,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.operational-realization-gate
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -25,6 +25,8 @@
 #   used_by:
 #   - id: deploy.workflow.operational-realization-gate
 #     path: .agentic/04.deploy/workflows/operational-realization-gate.md
+#   - id: deploy.test.entity-smoke.template
+#     path: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/template-test.py
 
 from __future__ import annotations
 
@@ -42,6 +44,7 @@ import yaml
 
 RESULT_SCHEMA = "operational-realization-gate-result/v1"
 CONTRACT_SCHEMA = "operational-realization-contract/v1"
+SERVICE_CONTRACT_SCHEMA = "operational-realization-contract/v2"
 FACTS_SCHEMA = "operational-realization-normalized-facts/v1"
 CHANGE_SCHEMA = "operational-realization-normalized-change-summary/v1"
 GATE_ORDER = (
@@ -212,7 +215,8 @@ def ids(contract: dict[str, Any]) -> tuple[dict[str, set[str]], dict[str, str]]:
     groups: dict[str, set[str]] = {}
     kinds: dict[str, str] = {}
     for field, (kind,) in COMPONENTS.items():
-        values = safe_list(contract.get(field), f"{field}-missing", non_empty=field != "async_channels")
+        optional = field == "async_channels" or contract.get("schema") == SERVICE_CONTRACT_SCHEMA and field in {"connections", "state_stores"}
+        values = safe_list(contract.get(field), f"{field}-missing", non_empty=not optional)
         group: set[str] = set()
         for item in values:
             component = safe_mapping(item, f"{field}-entry-invalid")
@@ -258,7 +262,7 @@ def validate_component_content(contract: dict[str, Any]) -> None:
     for item in safe_list(contract.get("identities"), "identities-missing"):
         identity = safe_mapping(item, "identity-invalid")
         listed_ids(identity.get("permissions"), "identity-permissions-missing")
-    for item in safe_list(contract.get("state_stores"), "state-stores-missing"):
+    for item in safe_list(contract.get("state_stores"), "state-stores-missing", non_empty=contract.get("schema") != SERVICE_CONTRACT_SCHEMA):
         store = safe_mapping(item, "state-store-invalid")
         listed_ids(store.get("semantics"), "state-store-semantics-missing")
     for item in safe_list(contract.get("observability_profiles"), "observability-profiles-missing"):
@@ -294,10 +298,11 @@ def listed_ids(value: Any, code: str, non_empty: bool = True) -> list[str]:
 
 
 def validate_execution_graph(contract: dict[str, Any], groups: dict[str, set[str]], known: dict[str, str]) -> None:
+    service_contract = contract.get("schema") == SERVICE_CONTRACT_SCHEMA
     edges = edge_set(contract, known)
     connections: dict[str, dict[str, Any]] = {}
     channels: dict[str, dict[str, Any]] = {}
-    for item in safe_list(contract.get("connections"), "connections-missing"):
+    for item in safe_list(contract.get("connections"), "connections-missing", non_empty=not service_contract):
         connection = safe_mapping(item, "connection-invalid")
         connection_id = safe_identifier(connection.get("id"), "connection-id-invalid")
         source = safe_identifier(connection.get("source"), "connection-source-missing")
@@ -306,7 +311,8 @@ def validate_execution_graph(contract: dict[str, Any], groups: dict[str, set[str
             raise ContractFailure("connection-references-undeclared-node")
         if known[source] != "execution-unit":
             raise ContractFailure("connection-source-type-invalid")
-        if known[destination] not in {"state-store", "async-channel"}:
+        permitted_destinations = {"state-store", "async-channel", "execution-unit"} if service_contract else {"state-store", "async-channel"}
+        if known[destination] not in permitted_destinations:
             raise ContractFailure("connection-destination-type-invalid")
         if (connection_id, destination) not in edges:
             raise ContractFailure("connection-destination-edge-missing")
@@ -337,16 +343,29 @@ def validate_execution_graph(contract: dict[str, Any], groups: dict[str, set[str
         unit_id = safe_identifier(unit.get("id"), "execution-unit-id-missing")
         for field, group_name in UNIT_REFERENCES.items():
             raw = unit.get(field)
-            references = listed_ids(raw, f"execution-unit-{field}-missing") if field.endswith("s") else [safe_string(raw, f"execution-unit-{field}-missing")]
+            optional = service_contract and field in {"connections", "state_stores"}
+            references = listed_ids(raw, f"execution-unit-{field}-missing", non_empty=not optional) if field.endswith("s") else [safe_string(raw, f"execution-unit-{field}-missing")]
             for reference in references:
                 if reference not in groups[group_name]:
                     raise ContractFailure("execution-unit-references-undeclared-component")
                 if (unit_id, reference) not in edges:
                     raise ContractFailure("undeclared-dependency-edge")
-        unit_connections[unit_id] = set(listed_ids(unit.get("connections"), "execution-unit-connections-missing"))
+        unit_connections[unit_id] = set(listed_ids(unit.get("connections"), "execution-unit-connections-missing", non_empty=not service_contract))
         for connection_id in unit_connections[unit_id]:
             if connections[connection_id]["source"] != unit_id:
                 raise ContractFailure("execution-unit-connection-source-mismatch")
+        if service_contract:
+            # A call to another unit is not direct storage authority. Only an
+            # owned connection to a store can support that store declaration.
+            stores = set(unit["state_stores"])
+            connected_stores = {connections[name]["destination"] for name in unit_connections[unit_id]
+                                if known[connections[name]["destination"]] == "state-store"}
+            if connected_stores - stores:
+                raise ContractFailure("execution-unit-store-connection-unbound")
+            if stores - connected_stores:
+                raise ContractFailure("execution-unit-store-connection-missing")
+            if any(source == unit_id and known[destination] == "state-store" and destination not in stores for source, destination in edges):
+                raise ContractFailure("execution-unit-store-edge-unbound")
         # A unit that only prepares, migrates, verifies, or restores state may
         # correctly use no asynchronous channel. Channel participants remain
         # required to bind the channel below; an empty declaration is not an
@@ -417,7 +436,18 @@ def validate_change_shape(contract: dict[str, Any]) -> None:
         raise ContractFailure("change-summary-not-required")
     allowed = set(listed_ids(shape.get("allowed_operation_classes"), "change-shape-allowed-missing"))
     forbidden = set(listed_ids(shape.get("forbidden_operation_classes"), "change-shape-forbidden-missing"))
-    if not allowed or allowed & forbidden or not {"delete", "replace", "broaden-permission"}.issubset(forbidden):
+    if "disposable_restore_cleanup" in shape:
+        # This is a declaration, not proof of ownership/readback or permission
+        # to execute. The separately governed provider controller must establish
+        # those facts before exposing its single-submission deletion capability.
+        cleanup = shape["disposable_restore_cleanup"]
+        requirements = {"original_readback_required", "positive_ownership_required",
+                        "explicit_execution_approval_required", "preserve_source_and_shared_resources"}
+        if (contract["schema"] != SERVICE_CONTRACT_SCHEMA or not isinstance(cleanup, dict)
+                or set(cleanup) != requirements or any(cleanup[key] is not True for key in requirements)
+                or allowed != {"delete"} or forbidden != {"create", "update", "replace", "broaden-permission"}):
+            raise ContractFailure("change-shape-invalid")
+    elif not allowed or allowed & forbidden or not {"delete", "replace", "broaden-permission"}.issubset(forbidden):
         raise ContractFailure("change-shape-invalid")
 
 
@@ -439,7 +469,7 @@ def validate_gates(contract: dict[str, Any]) -> None:
 def validate_contract(contract: dict[str, Any]) -> str:
     reject_provider_leakage(contract)
     reject_unsafe_value_fields(contract)
-    if contract.get("schema") != CONTRACT_SCHEMA or contract.get("provider_boundary") != "normalized-facts-only":
+    if not isinstance(contract.get("schema"), str) or contract["schema"] not in {CONTRACT_SCHEMA, SERVICE_CONTRACT_SCHEMA} or contract.get("provider_boundary") != "normalized-facts-only":
         raise ContractFailure("contract-schema-or-boundary-invalid")
     identifier = safe_string(contract.get("id"), "contract-id-missing")
     if not SAFE_ID.fullmatch(identifier) or not isinstance(contract.get("version"), int) or contract["version"] < 1:

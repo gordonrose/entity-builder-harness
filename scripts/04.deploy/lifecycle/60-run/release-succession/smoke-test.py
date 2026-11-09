@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.regression
-#   version: 2
+#   version: 4
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -19,7 +19,9 @@
 from __future__ import annotations
 
 import importlib.util
+import copy
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -27,6 +29,9 @@ import tempfile
 from pathlib import Path
 
 import yaml
+
+if not __debug__:
+    raise SystemExit("Release succession fixtures require enabled assertions.")
 
 SCRIPT = Path(__file__).with_name("script.py")
 spec = importlib.util.spec_from_file_location("release_succession", SCRIPT)
@@ -307,6 +312,113 @@ with tempfile.TemporaryDirectory() as temporary:
     write(root / module.CURRENT, current)
     failure("--operation", "validate-current", "--evidence-root", str(root))
 
+with tempfile.TemporaryDirectory(prefix="initial-recovery-policy-") as temporary:
+    module.REPOSITORY_ROOT = Path(temporary)
+    module.EVIDENCE_CLASS = "simulated"
+    scopes = Path(temporary) / "example-target/20-scopes"
+    scope_root = scopes / "example-scope"
+    root = scope_root / "30-release-evidence"
+    root.mkdir(parents=True)
+    contract_path = scope_root / "00-declaration/declaration-contract.yml"
+    policy = {
+        "applicability": "no-current-or-historical-accepted-release",
+        "strategy": "stop-own-scope-workloads-preserve-data",
+        "provider_mutation": "explicit-approved-bounded-control-only",
+        "automatic_replay": "prohibited", "database_reversal": "prohibited",
+        "verification": "owned-workloads-stopped-and-data-preserved",
+        "proof_requirement": "required-before-first-scope-acceptance",
+        "subsequent_releases": "prior-compatible-accepted-image-required",
+    }
+    declaration = {"schema": "deploy/target-scope-contract/v1", "target": "example-target", "scope": "example-scope",
+        "health_recovery": {"declaration_schema": "deploy/health-failure-and-recovery-declaration/v2", "initial_release_recovery": policy}}
+    entry = {"id": "example-scope", "lifecycle": "candidate", "declaration": "example-scope/00-declaration/declaration-contract.yml",
+        "workload_binding": "example-scope/10-workload-binding/workload-binding.yml", "workload_ownership": ["feature-service"]}
+    inventory = {"schema": "deploy/scope-lifecycle-inventory/v1", "target": "example-target", "scopes": [entry]}
+    write(contract_path, declaration); write(scopes / "scope-index.yml", inventory)
+
+    def select(expected: str | None = None, *, extra: tuple[str, ...] = (), evidence: Path = root) -> dict:
+        def snapshot() -> dict:
+            return {str(path.relative_to(Path(temporary))): ("symlink" if path.is_symlink() else "directory" if path.is_dir() else path.read_bytes()) for path in Path(temporary).rglob("*")}
+        before = snapshot()
+        result = subprocess.run(["bash", str(SCRIPT.with_name("script.sh")), "--operation", "select-recovery", "--evidence-root", str(evidence),
+            "--scope-contract", str(contract_path), "--rehearsal-root", temporary, "--json", *extra], cwd=SCRIPT.parents[5], capture_output=True, text=True)
+        value = json.loads(result.stdout)
+        assert "PRIVATE-POLICY-CANARY" not in result.stdout + result.stderr
+        after = snapshot()
+        assert before == after, "recovery selection must not create a lock, directory, receipt or accepted reference"
+        if expected is None:
+            assert result.returncode == 0 and value["verdict"] == "valid", value
+        else:
+            assert result.returncode == 1 and value["findings"] == [{"code": expected}], value
+        return value
+
+    assert select()["facts"]["policy"] == "stop-own-scope-workloads-preserve-data"
+    assert select()["facts"]["accepted_release_id"] == "none"
+    assert select(extra=("--validate-arguments",))["schema"] == "deploy/command-arguments-report/v1"
+    failure("--operation", "select-recovery", "--evidence-root", str(root), "--validate-arguments")
+    for field in policy:
+        invalid = copy.deepcopy(declaration)
+        invalid["health_recovery"]["initial_release_recovery"][field] = "PRIVATE-POLICY-CANARY"
+        write(contract_path, invalid); select("initial-release-recovery-invalid")
+    write(contract_path, {**declaration, "health_recovery": {"declaration_schema": "deploy/health-failure-and-recovery-declaration/v2"}})
+    select("initial-release-recovery-not-declared")
+    write(contract_path, declaration)
+    for amendment in [{"lifecycle": "active"}, {"predecessor": "old-scope"}, {"successor": "next-scope"}, {"declaration": "other/00-declaration/declaration-contract.yml"}]:
+        write(scopes / "scope-index.yml", {**inventory, "scopes": [{**entry, **amendment}]})
+        select("initial-release-recovery-lifecycle-invalid")
+    write(scopes / "scope-index.yml", {**inventory, "scopes": [entry, {"id": "baseline", "workload_ownership": ["feature-service"]}]})
+    select("initial-release-recovery-lifecycle-invalid")
+    write(scopes / "scope-index.yml", inventory)
+    root.rmdir()
+    select("release-recovery-evidence-unavailable", evidence=root)
+    assert not root.exists(), "a failed observation cannot create the missing evidence store"
+    root.mkdir()
+    select("release-recovery-evidence-root-invalid", evidence=Path(temporary))
+    select("release-succession-arguments-invalid", extra=("--expected-predecessor", "none"))
+    legacy_path = root / "accepted-release.yml"
+    write(legacy_path, {"unimported": "PRIVATE-POLICY-CANARY"})
+    select("release-recovery-accepted-history-without-current")
+    legacy_path.unlink()
+    history = root / module.HISTORY_DIRECTORY
+    write(history / "orphan.yml", {"unobserved": "PRIVATE-POLICY-CANARY"})
+    select("release-recovery-accepted-history-without-current")
+    (history / "orphan.yml").unlink(); history.rmdir()
+    (root / module.CURRENT).symlink_to(root / "missing.yml")
+    select("release-recovery-context-unsafe")
+    (root / module.CURRENT).unlink()
+    (root / module.CURRENT).mkdir()
+    select("release-succession-record-unreadable")
+    (root / module.CURRENT).rmdir()
+    write(root / module.CURRENT, {"schema": "PRIVATE-POLICY-CANARY"})
+    select("release-succession-current-invalid")
+    (root / module.CURRENT).unlink()
+    # Actual simulated promotion makes the same declaration select the normal
+    # rollback policy. It is not possible to keep opting into first-release mode.
+    first_candidate = candidate(root, source="6" * 40, image="sha256:" + "6" * 64, configuration="initial", permissions="initial", proof="fixture")
+    (root / module.CURRENT).symlink_to(root / "missing.yml")
+    failure("--operation", "promote", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--expected-predecessor", "none")
+    assert not (root / "missing.yml").exists()
+    (root / module.CURRENT).unlink()
+    # An interrupted *same* first promotion can finish its already-written
+    # immutable archive. This is different from resetting some other history.
+    record, raw = module.document(first_candidate)
+    target, scope, _, identity = module.candidate_identity(record, root)
+    pending_archive = root / module.HISTORY_DIRECTORY / f"{module.release_id(identity)}.yml"
+    write(pending_archive, module.history_record(target=target, scope=scope, identity=identity, source_path=first_candidate.relative_to(root), source_digest=module.sha256_bytes(raw), predecessor=None, legacy=False))
+    select("release-recovery-accepted-history-without-current")
+    assert run("--operation", "promote", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--expected-predecessor", "none") == 0
+    selected = select()["facts"]
+    assert selected["policy"] == "restore-prior-accepted-immutable-release" and selected["accepted_release_id"] == module.current(root)["release_id"]
+    assert selected["compatibility"] == "not-assessed", "history validation is not rollback compatibility proof"
+    # A missing current ref with retained accepted history must be reconciled,
+    # never reinterpreted as an initial scope.
+    (root / module.CURRENT).unlink()
+    select("release-recovery-accepted-history-without-current")
+    before = {path.name: path.read_bytes() for path in history.iterdir()}
+    reset = candidate(root, source="7" * 40, image="sha256:" + "7" * 64, configuration="next", permissions="next", proof="fixture")
+    failure("--operation", "promote", "--evidence-root", str(root), "--candidate-record", str(reset), "--expected-predecessor", "none")
+    assert before == {path.name: path.read_bytes() for path in history.iterdir()} and not (root / module.CURRENT).exists()
+
 # Rehearsal trees must be disjoint from an implementation checkout even when
 # that checkout itself lives below the temporary directory.
 with tempfile.TemporaryDirectory(prefix="succession-implementation-") as directory:
@@ -325,6 +437,40 @@ with tempfile.TemporaryDirectory(prefix="succession-implementation-") as directo
         assert result.returncode == 1 and report["findings"] == [{"code": "release-succession-rehearsal-root-invalid"}], report
         assert legacy.read_bytes() == original
         assert sorted(path.name for path in evidence.iterdir()) == ["accepted-release.yml"]
+
+# The ephemeral own lock must not dirty source custody; ignoring the entire
+# evidence directory would instead hide the records that custody must retain.
+with tempfile.TemporaryDirectory(prefix="succession-ignore-") as directory:
+    repository = Path(directory)
+    original_ignore = (SCRIPT.parents[5] / ".gitignore").read_text()
+    scope = "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/30-release-evidence/"
+    lock = scope + ".release-succession.lock"
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    environment.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL="/dev/null")
+    def git(*arguments):
+        return subprocess.run(["git", "-c", "core.excludesFile=/dev/null", "-C", str(repository), *arguments],
+                              env=environment, capture_output=True, text=True, timeout=10)
+    assert git("init", "--quiet").returncode == 0
+    ignore = repository / ".gitignore"
+    ignore.write_text(original_ignore)
+    assert git("check-ignore", "--no-index", "--", lock).returncode == 0
+    visible = [scope + item for item in ("current-accepted-release.yml", "accepted-release.yml", "release-candidates/release-example.yml",
+        "accepted-releases/release-example.yml", "proof-receipts/entity-smoke-example.json", ".release-succession.lock.extra")]
+    visible += [lock.replace("/entity-smoke/", "/" + name + "/") for name in ("bootstrap-runtime", "core-server-persistence", "entity-smoke-other")]
+    for path in visible:
+        observed = git("check-ignore", "--no-index", "--", path)
+        assert observed.returncode == 1 and observed.stdout == "", "release evidence or unrelated locks must stay visible"
+    # Removing just the owned entry reproduces the dirty-lock outcome; the
+    # positive assertion above would reject that plausible broken declaration.
+    lines = original_ignore.splitlines()
+    assert lines.count(lock) == 1
+    ignore.write_text("\n".join(line for line in lines if line != lock) + "\n")
+    assert git("check-ignore", "--no-index", "--", lock).returncode == 1
+    catalog = yaml.safe_load((SCRIPT.parents[5] / "scripts/repo/check-selection/checks.yml").read_text())
+    unit = catalog["checks"]["release-succession-regression"]
+    assert {".gitignore", "scripts/repo/check-selection/checks.yml"} <= set(unit["inputs"]) and "git" in unit["runtime"]["tools"], "actual consumed ignore rule, catalog and Git runtime must invalidate trusted proof"
+    assert any(".gitignore" in rule["inputs"] and "release-succession-regression" in rule["checks"]
+               for rule in catalog["repository_inputs"]), "input fingerprint binding alone cannot supply impact selection coverage"
 
 print("Release succession regressions passed.")
 

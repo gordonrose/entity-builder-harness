@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 21
+#   version: 22
 #   status: active
 #   created_on: "2026-06-22"
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-09"
 #   layer: 03.product
 #   domain: architecture
 #   disciplines:
@@ -19,7 +19,7 @@
 #     path: docs/03.product/rule-packs/core/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 20
+version: 21
 status: active
 
 source_derivation:
@@ -43,6 +43,7 @@ applies_to:
     - "packages/core/**"
 
 related_rulesets:
+  - .agentic/03.product/tests/core/standards/test-requirements.yml
   - docs/03.product/rules/concerns/package-documentation.yml
   - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
   - docs/06.shared/rules/concerns/ci-quality.yml
@@ -116,74 +117,7 @@ recommended_modules:
     purpose: "In-memory and no-op implementations for local tests and CI."
     consumed_by: "apps, harness, and CI tests"
 
-test_taxonomy:
-  - type: unit
-    role: primary
-    minimum_evidence:
-      - "Exercise accepted, rejected, boundary, and failure cases for core primitives, validation contracts, monitoring signals, security/tenancy helpers, and result/error shapes without runtime dependencies."
-    must_not:
-      - "Do not count downstream app or platform tests as proof of core-owned primitive, validation, security, tenancy, or failure behavior."
-    categories:
-      - id: critical_path
-        should_prove:
-          - "Core primitives, result/error helpers, policies, clocks, context helpers, and small pure functions behave as stable foundations."
-      - id: validation
-        should_prove:
-          - "Validation contracts, error models, config contracts, IDs, and defensive primitives accept and reject expected values."
-      - id: edge_cases
-        should_prove:
-          - "Empty values, boundary identifiers, locale/currency/date variants, pagination boundaries, metric label limits, retry limits, and optional metadata behave intentionally."
-      - id: security_permissions
-        should_prove:
-          - "Authn, authz, tenancy, security, redaction, and audit primitives preserve isolation and defensive defaults."
-      - id: failure_modes
-        should_prove:
-          - "Core error/result shapes and no-op or in-memory testing implementations fail predictably without runtime dependencies."
-  - type: type_level
-    role: primary
-    minimum_evidence:
-      - "Include compile-pass and compile-fail assertions for public exports, generic constraints, branded identifiers, discriminated unions, and invalid contract shapes where TypeScript can express the rule."
-    must_not:
-      - "Do not rely only on runtime tests, snapshots, or successful package builds to prove intended type rejection or inference behavior."
-    categories:
-      - id: compatibility_contracts
-        should_prove:
-          - "Public core entry points, exported types, generic constraints, and inference behavior remain stable for apps, platform, and tests."
-      - id: validation
-        should_prove:
-          - "Compile-time constraints reject invalid contract shapes where TypeScript can express the rule."
-      - id: edge_cases
-        should_prove:
-          - "Optional fields, branded identifiers, discriminated unions, and extension points preserve intended narrowing and exhaustiveness."
-  - type: contract
-    role: primary
-    minimum_evidence:
-      - "Prove ports, policy facts, error states, lifecycle states, and testing implementations remain implementable by platform and consumable by apps without runtime leakage."
-    must_not:
-      - "Do not accept tests that instantiate concrete platform providers, app workflows, cloud SDKs, or product-specific behavior as core contract proof."
-    categories:
-      - id: compatibility_contracts
-        should_prove:
-          - "Ports and contracts remain implementable by platform and consumable by apps without leaking runtime implementations into core."
-      - id: security_permissions
-        should_prove:
-          - "Auth, tenancy, permission, audit, and security contracts preserve the required policy facts across consumers."
-      - id: failure_modes
-        should_prove:
-          - "Contract-defined errors, retries, health statuses, monitoring signals, and lifecycle states are explicit enough for platform implementations and app consumers."
-  - type: integration
-    role: conditional
-    minimum_evidence:
-      - "Exercise in-memory or no-op helpers through realistic app/platform test scenarios while preserving the same public contracts concrete implementations must satisfy."
-    must_not:
-      - "Do not let helper integration tests mask missing unit, type-level, or contract evidence for the core surface itself."
-    categories:
-      - id: use_case_scenarios
-        should_prove:
-          - "In-memory or no-op test implementations support realistic app and platform test scenarios without external services."
-      - id: compatibility_contracts
-        should_prove:
-          - "Core testing helpers exercise the same contracts that concrete platform implementations must satisfy."
+# Canonical test requirements: .agentic/03.product/tests/core/standards/test-requirements.yml
 
 rules:
   - id: core.stable-cross-cutting-only

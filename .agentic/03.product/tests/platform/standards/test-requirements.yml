@@ -1,0 +1,124 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: product.tests.platform.standard.requirements
+#   version: 1
+#   status: active
+#   created_on: "2026-11-06"
+#   updated_on: "2026-11-09"
+#   layer: 03.product
+#   domain: testing
+#   disciplines: [agentic, architecture]
+#   kind: standard
+#   purpose: Own the existing platform testing requirements extracted from the retained architecture layer rules.
+#   portability: {class: required, targets: [llm-workbench, entity-builder, design-system-builder]}
+#   used_by:
+#   - id: harness.architecture.rules.layers.platform
+#     path: docs/03.product/rules/platform/layers/platform.yml
+#   - id: product.tests.readme
+#     path: .agentic/03.product/tests/README.md
+
+id: product.tests.platform.standard.requirements
+title: Platform testing requirements
+version: 1
+status: active
+
+applies_to:
+  paths:
+    - "platform/**"
+
+related_rulesets:
+  - docs/06.shared/rules/concerns/ci-quality.yml
+
+test_taxonomy:
+  - type: unit
+    role: secondary
+    minimum_evidence:
+      - "Exercise deterministic runtime helpers with rejected routes, duplicate registrations, invalid config, denied auth/permission inputs, reserved paths, and safe error output."
+    must_not:
+      - "Do not count app integration tests as proof of platform-owned helper validation, policy normalization, or defensive defaults."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Runtime helper logic, registry validation helpers, error mapping, config parsing, and policy normalization behave deterministically."
+      - id: validation
+        should_prove:
+          - "Invalid routes, jobs, health registrations, config values, auth metadata, and duplicate names are rejected before serving traffic."
+      - id: edge_cases
+        should_prove:
+          - "Reserved paths, duplicate registrations, optional app hooks, empty registries, cancellation signals, and shutdown ordering are handled."
+      - id: security_permissions
+        should_prove:
+          - "Auth parsing, coarse permission decisions, CORS/rate-limit policy helpers, and safe error output preserve defensive defaults."
+  - type: integration
+    role: primary
+    minimum_evidence:
+      - "Mount representative apps and jobs through platform runtime seams, including malformed requests, invalid app identity, unknown permissions, auth failures, tenant propagation, dependency failures, retries, health, logging, and shutdown."
+    must_not:
+      - "Do not accept happy-path mounted-app tests that skip policy enforcement, malformed config, tenant context, resource cleanup, retry/dead-letter, or safe observability output."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "App mounting, route adaptation, middleware ordering, request context creation, job execution, health aggregation, and resource lifecycle work together."
+      - id: use_case_scenarios
+        should_prove:
+          - "Representative mounted apps, jobs, health checks, config schemas, and lifecycle hooks exercise the runtime model."
+      - id: validation
+        should_prove:
+          - "Bad app identity, duplicate routes, unknown permissions, invalid job payloads, invalid config, and malformed requests fail early."
+      - id: security_permissions
+        should_prove:
+          - "Authentication failures, permission failures, tenant context propagation, rate limits, CORS, and reserved platform paths are enforced."
+      - id: failure_modes
+        should_prove:
+          - "App handler errors, dependency failures, job retry/dead-letter behavior, resource cleanup failures, and graceful shutdown paths behave predictably."
+      - id: observability_health
+        should_prove:
+          - "Request IDs, logs, metrics, traces, health output, readiness, liveness, and safe error mapping are emitted consistently."
+  - type: contract
+    role: primary
+    minimum_evidence:
+      - "Assert platform public contracts, registries, testing helpers, auth metadata, retry states, health states, and shutdown states remain compatible with app consumers."
+    must_not:
+      - "Do not use smoke startup or app-owned tests as substitutes for platform mount, registry, policy metadata, lifecycle, or failure-state contracts."
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Public platform contracts, app mount contracts, route/job/health registries, and platform testing helpers remain compatible with apps."
+      - id: security_permissions
+        should_prove:
+          - "Permission declarations, auth requirements, and policy metadata remain compatible with platform enforcement."
+      - id: failure_modes
+        should_prove:
+          - "Contract-level error, lifecycle, retry, health, and shutdown states are explicit for app consumers."
+  - type: smoke
+    role: conditional
+    minimum_evidence:
+      - "Start the target server or worker, mount apps, expose health, emit safe status/log output, and shut down cleanly in the target-like environment."
+    must_not:
+      - "Do not treat startup success as proof of route adaptation, middleware ordering, authz, tenant propagation, retry policy, config validation, or contract compatibility."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Platform server or worker entrypoints can start, mount apps, expose health, and shut down in the target environment."
+      - id: observability_health
+        should_prove:
+          - "Liveness, readiness, logs, and safe runtime status are available after startup."
+
+rules:
+  - id: platform.testing-proves-the-contract
+    title: Platform tests prove app/runtime contracts
+    severity: error
+    summary: >
+      Platform testing should prove that apps can mount, invalid registrations
+      fail early, runtime policies are enforced, health is aggregated, workers
+      process jobs correctly, and secrets are not exposed.
+    must:
+      - "Provide platform/testing/** fakes and helpers for app mount contract tests."
+      - "Test fake app mounting, invalid app identity, duplicate routes, unknown permissions, duplicate jobs, duplicate health checks, auth failures, permission failures, route response wrapping, error mapping, health aggregation, job retry/dead-letter behavior, config parsing, and graceful shutdown."
+      - "Keep reusable platform testing helpers out of production bundles."
+    must_not:
+      - "Do not rely only on app tests to prove platform registry, route, worker, health, security, and config behavior."
+      - "Do not require real external services by default in platform contract tests."
+    agent_guidance: >
+      A platform boundary that is not tested will become a convention. Use
+      fakes and contract tests to keep it executable.

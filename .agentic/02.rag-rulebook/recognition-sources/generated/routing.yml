@@ -25,7 +25,7 @@
 #   - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
 #     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 #   created_on: '2026-06-25'
-#   updated_on: "2026-10-25"
+#   updated_on: '2026-11-09'
 
 schema: rag-rulebook/recognition-source/v1
 source_id: recognition.generated.routing
@@ -53,8 +53,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 143
-  workflow_files: 50
+  term_count: 153
+  workflow_files: 55
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -460,6 +460,18 @@ terms:
   canonical_id: 02.rag-rulebook.workflow.review-recognition-candidates
   evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
   confidence_weight: 1
+- term: .agentic/03.product/entity/workflows/create-entity.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.create-entity
+  evidence_path: .agentic/03.product/entity/workflows/create-entity.md
+  confidence_weight: 1
+- term: .agentic/03.product/feature/workflows/create-feature.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.create-feature
+  evidence_path: .agentic/03.product/feature/workflows/create-feature.md
+  confidence_weight: 1
 - term: .agentic/03.product/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -610,6 +622,12 @@ terms:
   canonical_id: education.workflow.mine-daily-learning-material
   evidence_path: .agentic/education/workflows/mine-daily-learning-material.md
   confidence_weight: 1
+- term: .agentic/shared/testing/workflows/write-and-verify-tests.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: shared.workflow.write-and-verify-tests
+  evidence_path: .agentic/shared/testing/workflows/write-and-verify-tests.md
+  confidence_weight: 1
 - term: .agentic/shared/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -627,6 +645,18 @@ terms:
   match_type: exact
   canonical_id: shared.workflow.change-shared-process
   evidence_path: .agentic/shared/workflows/change-shared-process.md
+  confidence_weight: 1
+- term: .agentic/shared/workflows/maintain-diagnostics-backlog.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: shared.workflow.maintain-diagnostics-backlog
+  evidence_path: .agentic/shared/workflows/maintain-diagnostics-backlog.md
+  confidence_weight: 1
+- term: .agentic/shared/workflows/verify-diagnostic-coverage.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: shared.workflow.verify-diagnostic-coverage
+  evidence_path: .agentic/shared/workflows/verify-diagnostic-coverage.md
   confidence_weight: 1
 - term: bootstrap-chat-workbench-repo.md
   category: workflow-name
@@ -736,6 +766,18 @@ terms:
   canonical_id: education.workflow.create-educational-resource
   evidence_path: .agentic/education/workflows/create-educational-resource.md
   confidence_weight: 1
+- term: create-entity.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.create-entity
+  evidence_path: .agentic/03.product/entity/workflows/create-entity.md
+  confidence_weight: 1
+- term: create-feature.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.create-feature
+  evidence_path: .agentic/03.product/feature/workflows/create-feature.md
+  confidence_weight: 1
 - term: create-layer-ruleset.workflow.md
   category: workflow-name
   match_type: exact
@@ -813,6 +855,12 @@ terms:
   match_type: exact
   canonical_id: aws.workflow.inspect-aws-state
   evidence_path: .agentic/aws/workflows/inspect-aws-state.md
+  confidence_weight: 1
+- term: maintain-diagnostics-backlog.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: shared.workflow.maintain-diagnostics-backlog
+  evidence_path: .agentic/shared/workflows/maintain-diagnostics-backlog.md
   confidence_weight: 1
 - term: migrate-artifact-paths.md
   category: workflow-name
@@ -910,11 +958,23 @@ terms:
   canonical_id: 04.deploy.workflow.verify-accept-or-restore-release
   evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
   confidence_weight: 1
+- term: verify-diagnostic-coverage.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: shared.workflow.verify-diagnostic-coverage
+  evidence_path: .agentic/shared/workflows/verify-diagnostic-coverage.md
+  confidence_weight: 1
 - term: verify-health-failure-and-recovery.md
   category: workflow-name
   match_type: exact
   canonical_id: 04.deploy.workflow.verify-health-failure-and-recovery
   evidence_path: .agentic/04.deploy/60-run/workflows/verify-health-failure-and-recovery.md
+  confidence_weight: 1
+- term: write-and-verify-tests.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: shared.workflow.write-and-verify-tests
+  evidence_path: .agentic/shared/testing/workflows/write-and-verify-tests.md
   confidence_weight: 1
 validation_rules:
 - Generated routing terms must retain evidence paths.

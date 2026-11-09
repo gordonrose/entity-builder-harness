@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: aws.workflows.execute-approved-aws-change
-  version: 2
+  version: 4
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-25"
+  updated_on: "2026-11-09"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -50,6 +50,24 @@ Before running a mutating command, confirm:
   approval uses its recovery allowance without asking again. Deleting the
   source database, backups or unrelated resources remains outside that scope.
 - Capture the result and verification evidence after execution.
+
+## Entity-smoke read-only preflight
+
+For the isolated entity-smoke observation task, apply the provider-owned
+[read-only preflight rule](../standards/operational-realization-applicability.md#entity-smoke-read-only-execution-preflight)
+before supplying task-launch capability. Its adopted ordering allowance does
+not replace the concrete AWS approval required above or admit business writes.
+Require actual probe evidence before proceeding to the later operation; do not
+mark a generic gate passed merely because the exception was selected.
+
+## Entity-smoke disposable restore cleanup
+
+For entity-smoke disposable restore cleanup, use the
+[bounded cleanup rule](../standards/operational-realization-applicability.md#entity-smoke-disposable-restore-cleanup).
+Obtain explicit approval of the concrete owned-resource deletion plan before
+execution. Rule adoption, a compiler pass or previous clone-creation approval
+is not deletion authority. Preserve the original readback/ownership gates and
+single-submission journal; uncertain deletion is reconciled, not retried.
 
 ## Bounded PostgreSQL Repair and Resume
 

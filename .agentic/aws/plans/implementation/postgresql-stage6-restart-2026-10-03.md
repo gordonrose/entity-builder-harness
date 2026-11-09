@@ -4,7 +4,7 @@ id: aws.plan.postgresql-stage6-restart-2026-10-03
 version: 3
 status: draft
 created_on: "2026-10-03"
-updated_on: "2026-10-20"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: persistence.operations
 disciplines:
@@ -125,7 +125,7 @@ to the existing owners, with focused negative tests, before requesting execution
 Evidence for these gaps: the [image wrapper](../../../../scripts/04.deploy/smoke-test-platform-shell-image/script.sh)
 currently rebuilds; the [payload checker](../../../../scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs)
 only checks a missing-CA bootstrap failure; the
-[adapter integration](../../../../platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-integration.test.ts)
+[adapter integration](../../../../platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-persistence-adapter-integration.test.ts)
 uses a superuser pool without TLS; the
 [relational controller](../../../../scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py)
 launches by family and owns restore cleanup after an acknowledged response; the

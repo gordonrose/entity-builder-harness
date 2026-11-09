@@ -1,0 +1,6 @@
+import type { Result } from "@kanbien/core/shared";
+import { testEntityError, type TestEntityError } from "../../contract/errors";
+import type { TestEntity, TestEntityId } from "../../contract/types";
+import { restoreLogicallyDeletedTestEntity } from "../entity";
+import type { TestEntityServiceDependencies } from "./dependencies";
+export async function restoreLogicallyDeletedTestEntityService(id: TestEntityId, deps: TestEntityServiceDependencies): Promise<Result<TestEntity, TestEntityError>> { const current = await deps.repository.get(id); if (current === null) return { ok: false, error: testEntityError("TEST_ENTITY_NOT_FOUND", "The test entity was not found.") }; const next = restoreLogicallyDeletedTestEntity(current, deps.clock); return next.ok ? deps.repository.save(next.value) : next; }

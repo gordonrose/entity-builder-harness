@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.script.build-platform-shell-image.readme
-version: 1
+version: 2
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-10-26"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -50,6 +50,19 @@ configuration and temporarily hides local `@kanbien` workspace links. It proves
 the runtime resolves generated compiled-package shims, rather than silently
 falling back to TypeScript source files. It does not contact AWS or call the
 DynamoDB rate-limit table.
+
+The compiled product includes both `platform-smoke` and `entity-smoke`.
+`platform/server/tsconfig.image.json` compiles their public roots and reachable
+feature code. [prepare-runtime.mjs](prepare-runtime.mjs) creates CommonJS package
+shims pointing at compiled JavaScript. The payload check resolves
+`@kanbien/app-entity-smoke` through that generated shim while workspace links are
+hidden, and requires the compiled app root and feature exports to exist. A
+missing app mapping, shim or compiled target fails local packaging proof.
+
+This establishes package inclusion, not durable feature persistence. The
+entity's PostgreSQL binding, migration executor, target-scoped live checks and
+AWS execution approval are separate feature/deployment requirements. Starting
+the server with its readiness contribution does not prove entity CRUD on AWS.
 
 If `DOCKER_CONFIG` is unset, the script uses
 `.cache/04.deploy/docker-config` so Docker CLI metadata remains writable in

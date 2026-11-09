@@ -5,7 +5,7 @@
 //   version: 4
 //   status: active
 //   created_on: "2026-10-27"
-//   updated_on: "2026-11-04"
+//   updated_on: "2026-11-09"
 //   layer: 06.shared
 //   domain: diagnostics
 //   disciplines: [architecture, security, sre]
@@ -30,6 +30,7 @@ const compiled = resolve(args[1]);
 // Resolve only the reviewed compiled workspace modules, never TypeScript or provider operations.
 const packageSources = {
   "@kanbien/core": "packages/core/src/index.js",
+  "@kanbien/app-entity-smoke": "apps/entity-smoke/src/index.js",
   "@kanbien/app-platform-smoke": "apps/platform-smoke/src/index.js",
   "@kanbien/product-kanbien-platform": "products/kanbien-platform/src/index.js",
   "@kanbien/platform-config": "platform/config/src/index.js",
@@ -97,6 +98,8 @@ const selections = [
   ["platform/persistence/src/maintenance", "platform/persistence/src/maintenance/index.js", "persistenceMaintenanceDiagnosticCatalog", "diagnostics.v1.json", undefined, "contract/reporting"],
   ["platform/adapters/aws/queue/sqs/src/configuration", "platform/adapters/aws/queue/sqs/src/configuration/index.js", "sqsConfigurationDiagnosticCatalog", "diagnostics.v1.json", undefined, "contract/reporting"],
   ["apps/platform-smoke", "apps/platform-smoke/src/diagnostics.js", "platformSmokeDiagnosticCatalog"],
+  ["apps/entity-smoke", "apps/entity-smoke/features/test-entity/contract/diagnostics.js", "testEntityDiagnosticCatalog"],
+  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js", "entitySmokeTargetDiagnosticCatalog", "entity-smoke-target-diagnostics.v1.json"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js", "persistenceTaskConfigurationDiagnosticCatalog"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.js", "persistenceTaskOperationDiagnosticCatalog", "kanbien-core-server-persistence-operation-diagnostics.v1.json", "persistenceTaskFailureContract"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.js", "kanbienPlatformPostgreSqlOperationDiagnosticCatalog", "kanbien-platform-postgresql-operation-diagnostics.v1.json"],

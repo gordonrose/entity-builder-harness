@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.health-failure-and-recovery-declaration.v2
-#   version: 8
+#   version: 10
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -118,6 +118,7 @@ server_mediated_dependency_proof:
     - replace-target-workload
     - read-original-record-through-replacement-workload
   acceptance_record:
+    variant: stable-synthetic-acceptance-record
     required_fields:
       - identity
       - equivalent_repeat
@@ -129,12 +130,24 @@ server_mediated_dependency_proof:
     concurrent_create: exactly-one-record-preserve-original-facts
     conflicting_reuse: reject-conflict-preserve-original-facts
     lost_response_after_commit: reconcile-original-record-before-retry
+  generated_acceptance_record:
+    selection: acceptance_record.identity=generated-feature-record
+    constraint: exact-variant-no-mixed-or-extra-fields
+    required_fields: [identity, equivalent_repeat, concurrent_create, conflicting_reuse, lost_response_after_commit, readback, identifier_collision]
+    identity: generated-feature-record
+    equivalent_repeat: new-record-only-after-explicit-new-attempt
+    concurrent_create: controller-reserves-one-create-per-proof-label
+    conflicting_reuse: reject-preexisting-proof-label
+    lost_response_after_commit: observe-indexed-label-before-new-attempt
+    readback: original-id-and-facts-digest-required-no-recreation
+    identifier_collision: reject-duplicate-id-preserve-original-facts
   cleanup_required_fields: [owner, retention, abandoned_verifier_policy, route, outcome]
   cleanup:
     retention: until-replacement-and-restore-proof-accepted
     abandoned_verifier_policy: retain-for-governed-cleanup
     route: server-mediated-governed-cleanup
     outcome: delete-synthetic-record-only-after-retention
+    generated_record_outcome: logical-delete-synthetic-record-after-retention-purge-separately-governed
 migration_execution:
   applies_to: run-to-completion-task
   required_fields:
@@ -190,8 +203,31 @@ persistence_recovery:
     source_mutation: prohibited
   proof_requirement: required-before-persistence-scope-acceptance
 not_applicable:
+  description: Concerns genuinely inapplicable to the selected workload type; not an initial-release waiver.
   required_fields: [concern, workload_type_basis, scope_basis]
   constraint: concern-must-be-inapplicable-to-the-declared-workload-type
+initial_release_recovery:
+  optional: true
+  constraint: exact-closed-policy-normal-rollback-declaration-retained
+  applicability: no-current-or-historical-accepted-release
+  strategy: stop-own-scope-workloads-preserve-data
+  provider_mutation: explicit-approved-bounded-control-only
+  automatic_replay: prohibited
+  database_reversal: prohibited
+  verification: owned-workloads-stopped-and-data-preserved
+  proof_requirement: required-before-first-scope-acceptance
+  subsequent_releases: prior-compatible-accepted-image-required
+  eligibility_control: scripts/04.deploy/lifecycle/60-run/release-succession/script.sh#select-recovery
+  unchanged_proof_requirements: [original-record-survives-server-replacement, isolated-database-restore]
+  field_guide:
+    - path: health_recovery.initial_release_recovery
+      what: Optional fallback when no accepted image exists for a new independent scope.
+      does: Replaces only the prior-image restoration proof at first acceptance with bounded stop and data-preservation proof.
+      validation: Exact field values; local custody and lifecycle selection must establish eligibility before use. Complete health and target validation remains separate.
+    - path: health_recovery.persistence_recovery.image_rollback
+      what: Retained ordinary compatible accepted-image restoration policy.
+      does: Becomes the required recovery proof on every update after first acceptance.
+      validation: Initial policy cannot remove or weaken this declaration, replacement proof or isolated restore proof.
 legacy_exceptions:
   required_fields:
     - legacy_workload

@@ -1,0 +1,111 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.workload-binding
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [architecture, security, sre]
+#   kind: workload-binding
+#   purpose: Bind each isolated feature executable to its actual private task, configuration and separate dependency authority.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.plan.entity-smoke-core-platform
+#     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
+schema: deploy/workload-binding/v1
+id: kanbien-core-platform-entity-smoke-workload
+target: kanbien-core-platform
+scope: entity-smoke
+status: candidate-not-live
+owner: feature-platform
+program_contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+program_id: kanbien-entity-smoke
+image_contract: infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
+package_identity: runtime-bound-sha256
+provider_workload: isolated-private-feature-fresh-alignment-required
+workloads:
+  - id: entity-smoke-server-service
+    workload_type: long-running-server
+    runtime_class: service
+    provider_reference: FeatureService
+    required_role_actions: { TaskRoleArn: ["rds-db:connect"] }
+    health_signal_mapping: {provider_replacement_signal: liveness, dependency_readiness_effect: block-candidate-acceptance, candidate_acceptance_signals: [liveness, readiness]}
+    execution: {kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts, command_description: node artifacts/kanbien-entity-smoke.main.js}
+  - id: entity-smoke-migration-task
+    workload_type: run-to-completion-task
+    runtime_class: task
+    provider_reference: MigrationTaskDefinition
+    required_role_actions: { TaskRoleArn: ["rds-db:connect"] }
+    execution: {kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-migration.main.ts, command_description: node artifacts/kanbien-entity-smoke-migration.main.js}
+  - id: entity-smoke-administration-task
+    workload_type: run-to-completion-task
+    runtime_class: task
+    provider_reference: AdministrationTaskDefinition
+    required_role_actions: { ExecutionRoleArn: ["secretsmanager:GetSecretValue"] }
+    execution: {kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-administration.main.ts, command_description: node artifacts/kanbien-entity-smoke-administration.main.js}
+  - id: entity-smoke-verifier-task
+    workload_type: run-to-completion-task
+    runtime_class: task
+    provider_reference: VerifierTaskDefinition
+    execution: {kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-verifier.main.ts, command_description: node artifacts/kanbien-entity-smoke-verifier.main.js}
+  - id: entity-smoke-database-proof-task
+    workload_type: run-to-completion-task
+    runtime_class: task
+    provider_reference: DatabaseProofTaskDefinition
+    required_role_actions: { TaskRoleArn: ["rds-db:connect"] }
+    execution: {kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts, command_description: node artifacts/kanbien-entity-smoke-database-proof.main.js}
+  - id: entity-smoke-restore-reader-task
+    workload_type: run-to-completion-task
+    runtime_class: task
+    provider_reference: RestoreReaderTaskDefinition
+    required_role_actions: { TaskRoleArn: ["rds-db:connect"] }
+    execution: {kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts, command_description: node artifacts/kanbien-entity-smoke-database-proof.main.js}
+proposed_provider_binding:
+  configuration_adapter: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/entity-smoke-runtime-configuration.py
+  template: 30-provider-realization/aws/cloudformation/entity-smoke.yml
+  workload_kind: ecs-fargate-private-service-and-separate-completion-tasks
+  immutable_image_reference: repository-at-sha256-digest-only
+  network_placement: selected-private-subnets-no-public-ip
+  workload_identity: separate-runtime-migration-admin-http-verifier-database-proof-and-restored-reader
+  release_verifier: server-mediated-only-no-database-credentials-or-network
+mutation: {status: blocked, allowed_operation: isolated-feature-after-qualified-custody-fresh-alignment-reviewed-plan-and-explicit-approval}
+runtime_requirements:
+  - workload: entity-smoke-server-service
+    declaration_workload: entity-smoke-server
+    required_names: ["NODE_ENV","PLATFORM_SOURCE_COMMIT_SHA","PERSISTENCE_POSTGRES_HOST","PERSISTENCE_POSTGRES_PORT","PERSISTENCE_POSTGRES_DATABASE","PERSISTENCE_POSTGRES_SCHEMA","PERSISTENCE_POSTGRES_CA_PATH","PERSISTENCE_POSTGRES_IAM_REGION","PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","PERSISTENCE_RUNTIME_DATABASE_USERNAME","HOST","PORT","PLATFORM_DEPLOYMENT_EXPOSURE"]
+    secret_names: []
+    identity_required: true
+    command: [artifacts/kanbien-entity-smoke.main.js]
+  - workload: entity-smoke-migration-task
+    declaration_workload: entity-smoke-migration
+    required_names: ["NODE_ENV","PLATFORM_SOURCE_COMMIT_SHA","PERSISTENCE_POSTGRES_HOST","PERSISTENCE_POSTGRES_PORT","PERSISTENCE_POSTGRES_DATABASE","PERSISTENCE_POSTGRES_SCHEMA","PERSISTENCE_POSTGRES_CA_PATH","PERSISTENCE_POSTGRES_IAM_REGION","PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","PERSISTENCE_MIGRATION_DATABASE_USERNAME"]
+    secret_names: []
+    identity_required: true
+    command: [artifacts/kanbien-entity-smoke-migration.main.js]
+  - workload: entity-smoke-administration-task
+    declaration_workload: entity-smoke-administration
+    required_names: ["NODE_ENV","PLATFORM_SOURCE_COMMIT_SHA","PERSISTENCE_POSTGRES_HOST","PERSISTENCE_POSTGRES_PORT","PERSISTENCE_POSTGRES_DATABASE","PERSISTENCE_POSTGRES_SCHEMA","PERSISTENCE_POSTGRES_CA_PATH","PERSISTENCE_RUNTIME_DATABASE_USERNAME","PERSISTENCE_MIGRATION_DATABASE_USERNAME","PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE","PERSISTENCE_ADMINISTRATOR_CREDENTIALS"]
+    secret_names: [PERSISTENCE_ADMINISTRATOR_CREDENTIALS]
+    identity_required: false
+    command: [artifacts/kanbien-entity-smoke-administration.main.js]
+  - workload: entity-smoke-verifier-task
+    declaration_workload: entity-smoke-verifier
+    required_names: ["NODE_ENV","PLATFORM_SOURCE_COMMIT_SHA","ENTITY_SMOKE_VERIFICATION_URL","ENTITY_SMOKE_EXPECTED_SOURCE"]
+    secret_names: []
+    identity_required: false
+    command: [artifacts/kanbien-entity-smoke-verifier.main.js]
+  - workload: entity-smoke-database-proof-task
+    declaration_workload: entity-smoke-database-proof
+    required_names: ["NODE_ENV","PLATFORM_SOURCE_COMMIT_SHA","PERSISTENCE_POSTGRES_HOST","PERSISTENCE_POSTGRES_PORT","PERSISTENCE_POSTGRES_DATABASE","PERSISTENCE_POSTGRES_SCHEMA","PERSISTENCE_POSTGRES_CA_PATH","PERSISTENCE_POSTGRES_IAM_REGION","PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","PERSISTENCE_RUNTIME_DATABASE_USERNAME"]
+    secret_names: []
+    identity_required: true
+    command: [artifacts/kanbien-entity-smoke-database-proof.main.js]
+  - workload: entity-smoke-restore-reader-task
+    declaration_workload: entity-smoke-restore-reader
+    required_names: ["NODE_ENV","PLATFORM_SOURCE_COMMIT_SHA","PERSISTENCE_POSTGRES_HOST","PERSISTENCE_POSTGRES_PORT","PERSISTENCE_POSTGRES_DATABASE","PERSISTENCE_POSTGRES_SCHEMA","PERSISTENCE_POSTGRES_CA_PATH","PERSISTENCE_POSTGRES_IAM_REGION","PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","PERSISTENCE_RUNTIME_DATABASE_USERNAME","ENTITY_SMOKE_DATABASE_PROOF_OPERATION"]
+    secret_names: []
+    identity_required: true
+    command: [artifacts/kanbien-entity-smoke-database-proof.main.js]
+

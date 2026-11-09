@@ -1,0 +1,194 @@
+{
+  "schema": "chat/verification-observation/v1",
+  "purpose": "Informational session observation; not trusted-cache import, package custody, provider proof or acceptance authority.",
+  "observed_on": "2026-11-08",
+  "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+  "working_tree": "dirty",
+  "scope": "Approved realization v2 correction and continued entity-smoke source proof",
+  "coverage": "focused-requested-checks-only; integration and full deployment chain remain pending",
+  "current_checks": [
+    {
+      "check_id": "entity-smoke-composition",
+      "status": "passed",
+      "evidence_source": "local-runner",
+      "evidence_key": "d8f2bfec59c6a9893982287373619fd2022879ce77ae41ab1c55b317183c0980",
+      "input_digest": "306b08f3f2a981a08cd53077320f1ad5760d2a6128c045e2b73e7dc975a51372",
+      "runtime_digest": "163a974057017085865c6e2c78187d19aee725820ccbd4f327c47ab6f7677572",
+      "exit_code": 0,
+      "elapsed_seconds": 47.930512,
+      "report": ".cache/test-runs/20261108T105757Z-f41e8bcb8ee3409989c473b42f2147de/report.json"
+    },
+    {
+      "check_id": "entity-smoke-runtime",
+      "status": "passed",
+      "evidence_source": "trusted-worktree-cache",
+      "evidence_key": "b139dd5f443743c6c523cac22571113b445b02ff59f435c1050d6d5b4a1ca2c7",
+      "input_digest": "eb6cb3cd2a9bcd8cb21b65b8a0fb353334e6d0ce292e9ffddaae547368748295",
+      "runtime_digest": "d65dc1f3b3f35a97e31bc915de08c094a9212231fd76941452f19bc35084f6fb",
+      "exit_code": 0,
+      "report": ".cache/test-runs/20261108T105757Z-f41e8bcb8ee3409989c473b42f2147de/report.json"
+    },
+    {
+      "check_id": "operational-realization-regression",
+      "status": "passed",
+      "evidence_source": "local-runner",
+      "evidence_key": "81f38b1cf3df30680c557bef167b67a4c107374d69249af7f84b0c3985488093",
+      "input_digest": "23b89f662e6fc33f3a46c586a0c3306ba20b4a97dc18cad55b6aaa7bffa51283",
+      "runtime_digest": "64eb7c70b48fa435bf55de26a98449c6ab0c9e3934f510b27ce9e5b9605cbdd8",
+      "exit_code": 0,
+      "elapsed_seconds": 24.629374,
+      "report": ".cache/test-runs/20261108T110012Z-2a5ae2c79c374605bcc17cd717f3904d/report.json"
+    },
+    {
+      "check_id": "shell-candidate-preflight-regression",
+      "status": "passed",
+      "evidence_source": "local-runner",
+      "evidence_key": "5f32755b05cb5bde229aeb771ce9ec7474b6ff79a1c4b7b403afcc9115ece6f5",
+      "input_digest": "ac0155f903f03eb0c3e207b88b151c6982496f34adeae1870aa2a91c3d19a796",
+      "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+      "exit_code": 0,
+      "elapsed_seconds": 9.245061,
+      "report": ".cache/test-runs/20261108T110321Z-433b18ae10404c5998cca505802ee5c3/report.json"
+    },
+    {
+      "check_id": "shell-deployment-reconciliation-check",
+      "status": "passed",
+      "evidence_source": "local-runner",
+      "evidence_key": "89a37fd05e6609d3ee974e7d31e578f5d63fd63e8f3a868b5f15de1633f3e836",
+      "input_digest": "ecdf23dd58aaa9f805bc6e1de919c6a0bb3d2ca778c206efe5d38ddc6a82a841",
+      "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+      "exit_code": 0,
+      "elapsed_seconds": 60.96219,
+      "report": ".cache/test-runs/20261108T110321Z-433b18ae10404c5998cca505802ee5c3/report.json"
+    }
+  ],
+  "reports": [
+    {
+      "path": ".cache/test-runs/20261108T105757Z-f41e8bcb8ee3409989c473b42f2147de/report.json",
+      "sha256": "1ececd313da80c1d8d9649ee751782478290f132e984b3838016136b33f227b8",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "passed",
+      "selection_mode": "explicit",
+      "integration_claim": false,
+      "checks": [
+        {
+          "check_id": "entity-smoke-composition",
+          "status": "passed",
+          "evidence_source": "local-runner",
+          "evidence_key": "d8f2bfec59c6a9893982287373619fd2022879ce77ae41ab1c55b317183c0980",
+          "input_digest": "306b08f3f2a981a08cd53077320f1ad5760d2a6128c045e2b73e7dc975a51372",
+          "runtime_digest": "163a974057017085865c6e2c78187d19aee725820ccbd4f327c47ab6f7677572",
+          "exit_code": 0,
+          "elapsed_seconds": 47.930512
+        },
+        {
+          "check_id": "entity-smoke-runtime",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache",
+          "evidence_key": "b139dd5f443743c6c523cac22571113b445b02ff59f435c1050d6d5b4a1ca2c7",
+          "input_digest": "eb6cb3cd2a9bcd8cb21b65b8a0fb353334e6d0ce292e9ffddaae547368748295",
+          "runtime_digest": "d65dc1f3b3f35a97e31bc915de08c094a9212231fd76941452f19bc35084f6fb",
+          "exit_code": 0
+        },
+        {
+          "check_id": "operational-realization-regression",
+          "status": "passed",
+          "evidence_source": "local-runner",
+          "evidence_key": "9566f738ca065b6201b13040002eb152870b6698a0524176441e825094ddc5bf",
+          "input_digest": "23b89f662e6fc33f3a46c586a0c3306ba20b4a97dc18cad55b6aaa7bffa51283",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "exit_code": 0,
+          "elapsed_seconds": 25.406937
+        }
+      ]
+    },
+    {
+      "path": ".cache/test-runs/20261108T110012Z-2a5ae2c79c374605bcc17cd717f3904d/report.json",
+      "sha256": "92697538892bed8e1a62667264926dd5a3dad88e8d036e440713da85730c69f1",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "passed",
+      "selection_mode": "explicit",
+      "integration_claim": false,
+      "checks": [
+        {
+          "check_id": "operational-realization-regression",
+          "status": "passed",
+          "evidence_source": "local-runner",
+          "evidence_key": "81f38b1cf3df30680c557bef167b67a4c107374d69249af7f84b0c3985488093",
+          "input_digest": "23b89f662e6fc33f3a46c586a0c3306ba20b4a97dc18cad55b6aaa7bffa51283",
+          "runtime_digest": "64eb7c70b48fa435bf55de26a98449c6ab0c9e3934f510b27ce9e5b9605cbdd8",
+          "exit_code": 0,
+          "elapsed_seconds": 24.629374
+        }
+      ]
+    },
+    {
+      "path": ".cache/test-runs/20261108T110321Z-433b18ae10404c5998cca505802ee5c3/report.json",
+      "sha256": "f60eb1cab3458603716b19a8d0300078c0348d82da089be6d042928cb524501a",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "passed",
+      "selection_mode": "explicit",
+      "integration_claim": false,
+      "checks": [
+        {
+          "check_id": "shell-candidate-preflight-regression",
+          "status": "passed",
+          "evidence_source": "local-runner",
+          "evidence_key": "5f32755b05cb5bde229aeb771ce9ec7474b6ff79a1c4b7b403afcc9115ece6f5",
+          "input_digest": "ac0155f903f03eb0c3e207b88b151c6982496f34adeae1870aa2a91c3d19a796",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "exit_code": 0,
+          "elapsed_seconds": 9.245061
+        },
+        {
+          "check_id": "shell-deployment-reconciliation-check",
+          "status": "passed",
+          "evidence_source": "local-runner",
+          "evidence_key": "89a37fd05e6609d3ee974e7d31e578f5d63fd63e8f3a868b5f15de1633f3e836",
+          "input_digest": "ecdf23dd58aaa9f805bc6e1de919c6a0bb3d2ca778c206efe5d38ddc6a82a841",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "exit_code": 0,
+          "elapsed_seconds": 60.96219
+        }
+      ]
+    }
+  ],
+  "observations": {
+    "compiler_cli_cases": 53,
+    "existing_evidence_reuse_cases": 19,
+    "actual_template_negative_cases": 9,
+    "actual_realization_binding_negative_cases": 2,
+    "dependency_preparation_cases": 14,
+    "optimization_guard": "explicit rejection when assertions disabled; PYTHONOPTIMIZE now bound in runtime identity",
+    "metadata": {
+      "verdict": "passed",
+      "files": 16
+    },
+    "relative_links": {
+      "verdict": "passed",
+      "files": 6,
+      "links": 31
+    },
+    "impact_plan": {
+      "verdict": "planned",
+      "findings": []
+    },
+    "diagnostic_adoption": {
+      "verdict": "failed",
+      "prior_batch_findings": 28,
+      "compiler_findings": []
+    }
+  },
+  "limits": [
+    "No actual PostgreSQL engine qualification",
+    "No Docker image build, scan, SBOM or custody qualification",
+    "No AWS reads, mutations or publication",
+    "No live replacement, isolated restore or acceptance proof",
+    "No commit or push"
+  ],
+  "notes": [
+    "The first operational-realization result preceded its cache-input correction; the second report is current for that unit.",
+    "Entity-smoke runtime evidence was reused only through the trusted runner with matching source/runtime inputs.",
+    "The actual draft runtime graph covers the four implemented programs, not the unfinished isolated-restore/acceptance route."
+  ]
+}

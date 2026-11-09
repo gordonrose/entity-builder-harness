@@ -1,0 +1,95 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.entity-smoke.acceptance-route
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-09"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [architecture, security, sre]
+#   kind: deployment-contract
+#   purpose: Connect complete feature proof collection, immutable candidate/current validation and guarded release/scope promotion without provider mutation.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.compiler.acceptance-route
+#     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+schema: deploy/acceptance-route/v1
+target: kanbien-core-platform
+scope: entity-smoke
+program_id: kanbien-entity-smoke
+image_id: kanbien-entity-smoke-image
+inputs_schema: .agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml
+inputs:
+  candidate_receipt: {kind: path, owner: package-custody, example: /tmp/qualified-entity-smoke.json}
+  proof_label: {kind: identifier, owner: entity-smoke-proof, example: entity-smoke-aaaaaaaaaaaaaaaaaaaaaaaa}
+  expected_digest: {kind: identifier, owner: original-record-proof, example: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+outputs:
+  candidate_record: {command: collect, fact: candidate_record, kind: target-evidence-path}
+  current_release_id: {command: current-release, fact: release_id, kind: release-id}
+commands:
+  collect: &collect
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/collect-acceptance.sh, --inputs, '{acceptance_inputs}', --write-candidate, --json]
+    owner: deploy.command.entity-smoke.collect-acceptance
+    effects: [network, writes-files]
+  complete-proof: *collect
+  validate-candidate:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-state.sh, --operation, validate-candidate, --candidate-record, '{candidate_record}', --json]
+    owner: deploy.command.entity-smoke.acceptance-state
+    effects: [read-only]
+  validate-record:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-state.sh, --operation, validate-current, --record, '{accepted_record}', --json]
+    owner: deploy.command.entity-smoke.acceptance-state
+    effects: [read-only]
+  current-release:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-state.sh, --operation, current-release, --json]
+    owner: deploy.command.entity-smoke.acceptance-state
+    effects: [read-only]
+  promote:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/promote-acceptance.sh, --inputs, '{acceptance_inputs}', --candidate-record, '{candidate_record}', --scope-contract, '{scope_contract}', --expected-predecessor, '{current_release_id}', --write, --json]
+    owner: deploy.command.entity-smoke.promote-acceptance
+    effects: [network, writes-files]
+  initialize-legacy:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/release-succession/script.sh, --operation, initialize-legacy, --evidence-root, '{evidence_root}', --legacy-record, '{accepted_record}', --expected-predecessor, none, --json]
+    owner: deploy.command.release-succession
+    effects: [writes-files]
+  promote-release:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/release-succession/script.sh, --operation, promote, --evidence-root, '{evidence_root}', --candidate-record, '{candidate_record}', --expected-predecessor, '{current_release_id}', --json]
+    owner: deploy.command.release-succession
+    effects: [writes-files]
+  validate-current:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/release-succession/script.sh, --operation, validate-current, --evidence-root, '{evidence_root}', --json]
+    owner: deploy.command.release-succession
+    effects: [writes-files]
+  scope-inventory:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh, --target-root, '{target_root}', --json]
+    owner: deploy.command.validate-active-workload-health-recovery
+    effects: [read-only]
+  target-declaration:
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh, --target-root, '{target_directory}', --json]
+    owner: deploy.command.core-platform-target-declaration
+    effects: [read-only]
+proofs:
+  entity-smoke-complete-proof:
+    command: complete-proof
+    proof_type: entity-smoke-complete-acceptance
+    operation: collect
+    result_code: ENTITY_SMOKE_COMPLETE_PROOF_COLLECTED
+    image_role: candidate
+sequence: []
+collector: collect
+candidate_validator: validate-candidate
+accepted_record:
+  source: release-succession-current
+  schema: deploy/release-current-ref/v1
+  schema_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-record-schema.yml
+  path: 30-release-evidence/current-accepted-release.yml
+  validator: validate-record
+promotion: promote
+downstream: [scope-inventory, target-declaration]
+release_succession:
+  candidate_schema: deploy/release-candidate/v1
+  candidate_producer: collect
+  initialize: initialize-legacy
+  promotion: promote-release
+  current_validator: validate-current

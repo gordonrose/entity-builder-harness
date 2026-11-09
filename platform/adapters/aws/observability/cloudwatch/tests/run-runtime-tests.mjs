@@ -1,3 +1,4 @@
+import { accessSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process"; // Run the compiled CommonJS runtime test in a deterministic Node process.
 import { mkdirSync, writeFileSync } from "node:fs"; // Create a local compiled-package shim without modifying the repository source tree.
 import path, { join } from "node:path"; // Build portable runtime and shim paths.
@@ -12,8 +13,25 @@ writePackageShim("@kanbien/core", { // Point the Core workspace package at compi
   "./shared": join(runtimeRoot, "packages/core/src/shared/index.js"), // Map the shared subpath imported by the test.
 }); // Finish the compiled Core package shim.
 
-for (const testFile of ["cloudwatch-otel-adapter-runtime.test.js", "cloudwatch-otel-lifecycle-runtime.test.js"]) {
-  const result = spawnSync(process.execPath, [join(runtimeRoot, "platform/adapters/aws/observability/cloudwatch/tests", testFile)], { stdio: "inherit" });
+const testDirectory = join(runtimeRoot, "platform/adapters/aws/observability/cloudwatch/tests");
+const sourceDirectory = "platform/adapters/aws/observability/cloudwatch/tests";
+function runtimeSources(directory, relativeDirectory = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = join(relativeDirectory, entry.name);
+    if (entry.isSymbolicLink()) throw new Error(`Runtime test discovery does not support symlinks: ${relativePath}`);
+    if (entry.isDirectory()) return runtimeSources(join(directory, entry.name), relativePath);
+    return entry.isFile() && entry.name.endsWith("-runtime.test.ts") ? [relativePath] : [];
+  });
+}
+const testFiles = runtimeSources(sourceDirectory).sort().map((fileName) => fileName.replace(/\.ts$/, ".js"));
+if (testFiles.length === 0) throw new Error(`No runtime tests found in ${sourceDirectory}.`);
+for (const testFile of testFiles) {
+  try { accessSync(join(testDirectory, testFile)); }
+  catch { throw new Error(`Compiled runtime test unavailable: ${testFile}`); }
+}
+
+for (const testFile of testFiles) {
+  const result = spawnSync(process.execPath, [join(testDirectory, testFile)], { stdio: "inherit" });
   if (result.status !== 0) { process.exitCode = result.status ?? 1; break; }
 }
 

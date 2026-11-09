@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.verification
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-10-30"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -43,6 +43,7 @@ case "$2" in
   core) exec npm run core:check ;;
   contracts|config|security|observability|health|persistence|runtime|testing|workers) exec npm run "platform:$2:check" ;;
   smoke-app) exec npm run app:platform-smoke:check ;;
+  entity-smoke) exec npm --ignore-scripts run app:entity-smoke:check ;;
   cloudwatch) exec npm --ignore-scripts run platform:adapter:aws:observability:cloudwatch:check ;;
   ecs-fargate) exec npm --ignore-scripts run platform:adapter:aws:runtime:ecs-fargate:check ;;
   dynamodb-persistence) exec npm --ignore-scripts run platform:adapter:aws:persistence:dynamodb:check ;;

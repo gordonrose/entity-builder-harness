@@ -1,0 +1,150 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: github.workflow.publish-kanbien-core-platform-entity-smoke
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [architecture, security, sre]
+#   kind: ci-workflow
+#   purpose: Hosted Docker qualification, scanning, and immutable publication of the persistence candidate without deployment.
+#   portability: { class: internal, targets: [] }
+#   effects: [network]
+#   used_by:
+#   - id: deploy.plan.entity-smoke-core-platform
+#     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
+name: Publish Kanbien Core Platform Entity Smoke
+on: { workflow_dispatch: {} }
+permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
+concurrency: { group: kanbien-core-platform-entity-smoke-publication, cancel-in-progress: false }
+env:
+  AWS_REGION: eu-west-1
+  AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-entity-smoke-publisher
+  ECR_REPOSITORY: kanbien-core-platform/entity-smoke
+  ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/entity-smoke
+jobs:
+  qualify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: kanbien-core-platform
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - name: Enforce protected main source
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Install script dependencies
+        run: python3 -m pip install PyYAML==6.0.2
+      - name: Enforce delivery-chain registration and contracts
+        run: python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+
+      - name: Qualify declarations and actual candidate payload
+        id: qualification
+        run: |
+          bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/script.sh --json
+          bash scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification
+          bash scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-entity-smoke:qualification --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/entity-smoke/image-contract.yml --input infra/04.deploy/03.product/image/entity-smoke/Dockerfile --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/verify-image.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/capability-negative-test.py --input scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml entity-smoke-server,entity-smoke-migration,entity-smoke-administration,entity-smoke-verifier,entity-smoke-database-proof --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml entity-smoke-restore-reader
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
+      - name: Prove fixed delivery read access
+        id: access
+        run: python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/publication.py --operation reserve
+      - name: Retain pre-publication identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-entity-smoke-reservation-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/entity-smoke-publication-reservation.json
+            ${{ runner.temp }}/qualified-image.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Publish immutable image
+        id: image
+        run: python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/publication.py --operation publish
+      - name: Require clean ECR scan
+        id: scan
+        run: python3 scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py --repository "$ECR_REPOSITORY" --image-digest "${{ steps.image.outputs.digest }}" --report "$RUNNER_TEMP/ecr-scan.json"
+      - name: Generate SBOM
+        id: sbom
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.ECR_URI }}@${{ steps.image.outputs.digest }}
+          format: spdx-json
+          output-file: ${{ runner.temp }}/entity-smoke.sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Attest image provenance
+        id: provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
+      - name: Attest image SBOM
+        id: sbom-attestation
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          sbom-path: ${{ runner.temp }}/entity-smoke.sbom.spdx.json
+          push-to-registry: true
+          create-storage-record: false
+      - name: Write and validate safe package-custody receipt
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          QUALIFICATION_OUTCOME: ${{ steps.qualification.outcome }}
+          ACCESS_OUTCOME: ${{ steps.access.outcome }}
+          PUBLICATION_OUTCOME: ${{ steps.image.outcome }}
+          SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          SBOM_OUTCOME: ${{ steps.sbom.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
+          SBOM_ATTESTATION_OUTCOME: ${{ steps.sbom-attestation.outcome }}
+        run: |
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py --target kanbien-core-platform --environment-class private-feature-candidate --provider-region-alias aws-eu-west-1 --candidate kanbien-entity-smoke-candidate --package-contract kanbien-entity-smoke-image --program kanbien-entity-smoke --scan-check ecr_scan --sbom "$RUNNER_TEMP/entity-smoke.sbom.spdx.json" --output "$RUNNER_TEMP/package-custody-receipt.json"
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/package-custody-receipt.json" --expected-target kanbien-core-platform --expected-candidate kanbien-entity-smoke-candidate --expected-package-contract kanbien-entity-smoke-image --expected-program kanbien-entity-smoke --json
+      - name: Upload safe package-custody evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-entity-smoke-package-custody-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/package-custody-receipt.json
+            ${{ runner.temp }}/entity-smoke.sbom.spdx.json
+            ${{ runner.temp }}/qualified-image.json
+            ${{ runner.temp }}/ecr-scan.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+      - name: Record package-custody summary
+        run: |
+          {
+            echo '## Kanbien core platform entity-smoke package custody'
+            echo "- Source revision: $GITHUB_SHA"
+            echo "- Immutable image digest: ${{ steps.image.outputs.digest }}"
+            echo "- Scanned AMD64 manifest: ${{ steps.scan.outputs.scan_digest }}"
+            echo "- ECR scan: ${{ steps.scan.outputs.verdict }}"
+            echo "- Receipt: github-actions-run:$GITHUB_RUN_ID"
+            echo '- Deployment: not performed by this workflow.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain safe failed-operation evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-entity-smoke-failed-operation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/entity-smoke-publication-reservation.json
+            ${{ runner.temp }}/entity-smoke-publication-invoked.json
+            ${{ runner.temp }}/entity-smoke-publication-operation.json
+          if-no-files-found: ignore
+          overwrite: false
+          retention-days: 30

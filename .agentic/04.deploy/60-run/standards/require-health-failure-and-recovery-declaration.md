@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.health-failure-and-recovery-declaration
-version: 9
+version: 11
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-25"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -72,6 +72,19 @@ the original record, concurrent creation preserves one fact set, conflicting
 reuse is rejected without overwrite, and cleanup stays server-mediated until
 the replacement and restore proof boundary is accepted.
 
+The default `stable-synthetic-acceptance-record` variant retains those exact
+idempotent fixed-ID semantics. A feature with generated IDs instead declares
+the complete `generated-feature-record` variant from the schema. Its controller
+reserves one create per proof label and rejects an existing label; repeated or
+uncertain work is observed through indexed lookup before a separately authorised
+new attempt. Readback requires the original ID and facts digest and must never
+recreate missing data. Duplicate generated IDs must fail without overwriting
+facts. After replacement and restore acceptance, cleanup logically deletes only
+the owned proof record through the application; hard purge remains separately
+governed. Declaring this variant is not evidence that controller reservation,
+reconciliation or cleanup has actually occurred. Both variants retain the same
+private-route and no-direct-dependency boundaries.
+
 A run-to-completion task that changes dependency structure must declare
 `migration_execution`: one executor, bounded lock and execution waits, an
 ordered immutable/checksummed manifest, transaction boundary, an interruption
@@ -94,11 +107,42 @@ is compatible with the resulting schema, and recovery-point restoration to a
 new isolated database verified by an isolated application. Database reversal is
 not an image rollback, and a restore rehearsal must not mutate its source.
 
+## First release without an accepted image
+
+A genuinely new isolated scope may additionally declare the closed
+`initial_release_recovery` policy from the v2 schema. It applies only while the
+scope has no current, historical or legacy accepted release. Its failure path
+stops only the scope's own workloads through an explicitly approved bounded
+provider control, preserving database data and migration history. It never
+changes other scopes, reverses database structure or authorises automatic replay.
+Uncertain operations must be observed before a new attempt.
+
+For that first acceptance, proof of bounded stop/data preservation takes the
+place of impossible prior-image restoration proof. Original-record readback
+after runtime replacement and isolated database restoration remain mandatory.
+The normal compatible-image rollback declaration stays in place for all
+subsequent releases; the optional initial policy is not a permanent opt-out.
+
+Scopes declaring this optional policy use release-succession's read-only
+`select-recovery` operation against the canonical scope declaration/evidence
+directory before selecting recovery. It allows the initial policy only for an
+independently owned candidate without a
+predecessor or accepted custody. A valid current accepted record selects normal
+restoration instead. Missing current state with retained history, malformed or
+unavailable observations must block and be reconciled, not mean "new scope".
+The report is a local policy observation, not rollback compatibility, live
+failure proof or mutation authority. Revalidate it and fresh target alignment
+at the owned execution boundary; no provider action is safe merely because the
+repository says no image was accepted. Missing bounded stop/verification or
+acceptance controls block the stage that needs them.
+
 It must also name the orchestrator decision for an unhealthy workload, prohibit
-automatic replay of uncertain work, retain an immutable accepted release for
-restoration, and require verification after restoration. Automatic task
+automatic replay of uncertain work, retain an immutable accepted release once
+one exists for restoration, and require verification after restoration. Automatic task
 replacement does not authorise automatic release rollback, data replay, or
 repeating an uncertain external operation.
+
+## Proof and retained scope safety
 
 Proof is separately declared for local, package, and live operation. A live
 proof may be `deferred` only with a safe reason, accountable owner, concrete

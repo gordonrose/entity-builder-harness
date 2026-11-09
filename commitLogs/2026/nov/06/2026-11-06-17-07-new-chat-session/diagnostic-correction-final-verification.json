@@ -1,0 +1,626 @@
+{
+  "schema": "diagnostic-correction-verification/v1",
+  "recorded_at": "2026-11-07T10:36:23Z",
+  "scope": "Correct feature diagnostic namespace, preserve actual validation reason and review 23 unreviewed feature/app/product sources",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-11-06-17-07-new-chat-session-1937001871",
+  "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+  "impact": {
+    "verdict": "gap",
+    "findings": [
+      {
+        "check_id": "platform-shell-payload",
+        "code": "required-check-failed"
+      },
+      {
+        "check_id": "kanbien-platform-runtime",
+        "check_ids": [
+          "platform-shell-payload"
+        ],
+        "code": "verification-prerequisite-not-passed"
+      },
+      {
+        "check_id": "platform-server-runtime",
+        "check_ids": [
+          "platform-shell-payload"
+        ],
+        "code": "verification-prerequisite-not-passed"
+      },
+      {
+        "check_id": "shell-package-source",
+        "check_ids": [
+          "kanbien-platform-runtime",
+          "platform-server-runtime",
+          "platform-shell-payload"
+        ],
+        "code": "verification-prerequisite-not-passed"
+      }
+    ],
+    "checks": [
+      {
+        "id": "check-selection-mechanics",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "check-selection-repository-contracts",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "cloudwatch-observability-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "core-dependency-boundary",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "core-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "deployment-operation-diagnostics-regression",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "diagnostic-adoption",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "diagnostic-catalog-readers",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "dynamodb-persistence-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "ecs-fargate-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-shell-payload",
+        "status": "failed",
+        "exit_code": 1
+      },
+      {
+        "id": "kanbien-platform-runtime",
+        "status": "blocked"
+      },
+      {
+        "id": "module-index-structure-regression",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "module-index-structure",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "persistence-composition",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-config-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-contracts-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-health-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-observability-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-persistence-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-runtime-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-security-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-server-runtime",
+        "status": "blocked"
+      },
+      {
+        "id": "platform-smoke-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-testing-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "platform-workers-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "postgresql-connection-diagnostics",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "security-cognito-diagnostics",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "security-shared-rate-limit-diagnostics",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-artifact-store-policy",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-candidate-preflight-regression",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-deployment-reconciliation-policy-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-drift-detection-boundary-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-infrastructure-policy",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-ingress-smoke-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-metric-coverage-policy-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-negative-authz-client-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-negative-authz-smoke-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-persistence-admission-probe-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-persistence-delivery-proof-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-persistence-smoke-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-persistence-write-client-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-postgresql-reference-regression",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-postgresql-relational-smoke-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-rate-limit-smoke-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-synthetic-scheduler-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-worker-smoke-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-infrastructure",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-package-source",
+        "status": "blocked"
+      },
+      {
+        "id": "shell-postgresql-live-boundary-check",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-publication",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-release-evidence-regression",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "sqs-queue-runtime",
+        "status": "passed",
+        "exit_code": 0
+      },
+      {
+        "id": "shell-image-smoke",
+        "status": "deferred"
+      },
+      {
+        "id": "shell-runtime-alignment",
+        "status": "deferred"
+      },
+      {
+        "id": "shell-ingress-smoke",
+        "status": "deferred"
+      },
+      {
+        "id": "shell-postgresql-relational-smoke",
+        "status": "deferred"
+      }
+    ],
+    "execution_summary": {
+      "deferred_check_ids": [
+        "shell-image-smoke",
+        "shell-ingress-smoke",
+        "shell-postgresql-relational-smoke",
+        "shell-runtime-alignment"
+      ],
+      "elapsed_seconds": 1488.968525,
+      "executed_check_ids": [
+        "check-selection-mechanics",
+        "check-selection-repository-contracts",
+        "cloudwatch-observability-runtime",
+        "core-dependency-boundary",
+        "core-runtime",
+        "deployment-operation-diagnostics-regression",
+        "dynamodb-persistence-runtime",
+        "ecs-fargate-runtime",
+        "module-index-structure-regression",
+        "persistence-composition",
+        "platform-config-runtime",
+        "platform-contracts-runtime",
+        "platform-health-runtime",
+        "platform-observability-runtime",
+        "platform-persistence-runtime",
+        "platform-runtime-runtime",
+        "platform-security-runtime",
+        "platform-shell-payload",
+        "platform-smoke-runtime",
+        "platform-testing-runtime",
+        "platform-workers-runtime",
+        "postgresql-connection-diagnostics",
+        "security-cognito-diagnostics",
+        "security-shared-rate-limit-diagnostics",
+        "shell-artifact-store-policy",
+        "shell-candidate-preflight-regression",
+        "shell-deployment-reconciliation-policy-check",
+        "shell-drift-detection-boundary-check",
+        "shell-infrastructure",
+        "shell-infrastructure-policy",
+        "shell-ingress-smoke-check",
+        "shell-metric-coverage-policy-check",
+        "shell-negative-authz-client-check",
+        "shell-negative-authz-smoke-check",
+        "shell-persistence-admission-probe-check",
+        "shell-persistence-delivery-proof-check",
+        "shell-persistence-smoke-check",
+        "shell-persistence-write-client-check",
+        "shell-postgresql-live-boundary-check",
+        "shell-postgresql-reference-regression",
+        "shell-postgresql-relational-smoke-check",
+        "shell-publication",
+        "shell-rate-limit-smoke-check",
+        "shell-release-evidence-regression",
+        "shell-synthetic-scheduler-check",
+        "shell-worker-smoke-check",
+        "sqs-queue-runtime"
+      ],
+      "execution_seconds": 1362.758063,
+      "invalidated_checks": [
+        {
+          "check_id": "check-selection-repository-contracts",
+          "reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "cloudwatch-observability-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "core-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "dynamodb-persistence-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "ecs-fargate-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "module-index-structure-regression",
+          "reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ]
+        },
+        {
+          "check_id": "platform-config-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-contracts-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-health-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-observability-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-persistence-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-runtime-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-security-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-smoke-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-testing-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "platform-workers-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "postgresql-connection-diagnostics",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "security-cognito-diagnostics",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "security-shared-rate-limit-diagnostics",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        },
+        {
+          "check_id": "sqs-queue-runtime",
+          "reasons": [
+            "runtime-identity-changed"
+          ]
+        }
+      ],
+      "reused_check_ids": [
+        "diagnostic-adoption",
+        "diagnostic-catalog-readers",
+        "module-index-structure"
+      ],
+      "selected_check_ids": [
+        "check-selection-mechanics",
+        "check-selection-repository-contracts",
+        "cloudwatch-observability-runtime",
+        "core-dependency-boundary",
+        "core-runtime",
+        "deployment-operation-diagnostics-regression",
+        "diagnostic-adoption",
+        "diagnostic-catalog-readers",
+        "dynamodb-persistence-runtime",
+        "ecs-fargate-runtime",
+        "kanbien-platform-runtime",
+        "module-index-structure",
+        "module-index-structure-regression",
+        "persistence-composition",
+        "platform-config-runtime",
+        "platform-contracts-runtime",
+        "platform-health-runtime",
+        "platform-observability-runtime",
+        "platform-persistence-runtime",
+        "platform-runtime-runtime",
+        "platform-security-runtime",
+        "platform-server-runtime",
+        "platform-shell-payload",
+        "platform-smoke-runtime",
+        "platform-testing-runtime",
+        "platform-workers-runtime",
+        "postgresql-connection-diagnostics",
+        "security-cognito-diagnostics",
+        "security-shared-rate-limit-diagnostics",
+        "shell-artifact-store-policy",
+        "shell-candidate-preflight-regression",
+        "shell-deployment-reconciliation-policy-check",
+        "shell-drift-detection-boundary-check",
+        "shell-image-smoke",
+        "shell-infrastructure",
+        "shell-infrastructure-policy",
+        "shell-ingress-smoke",
+        "shell-ingress-smoke-check",
+        "shell-metric-coverage-policy-check",
+        "shell-negative-authz-client-check",
+        "shell-negative-authz-smoke-check",
+        "shell-package-source",
+        "shell-persistence-admission-probe-check",
+        "shell-persistence-delivery-proof-check",
+        "shell-persistence-smoke-check",
+        "shell-persistence-write-client-check",
+        "shell-postgresql-live-boundary-check",
+        "shell-postgresql-reference-regression",
+        "shell-postgresql-relational-smoke",
+        "shell-postgresql-relational-smoke-check",
+        "shell-publication",
+        "shell-rate-limit-smoke-check",
+        "shell-release-evidence-regression",
+        "shell-runtime-alignment",
+        "shell-synthetic-scheduler-check",
+        "shell-worker-smoke-check",
+        "sqs-queue-runtime"
+      ],
+      "timings": {
+        "command_execution_seconds": 1362.758063,
+        "fingerprinting_seconds": 21.022797,
+        "other_seconds": 1.363312,
+        "planning_seconds": 11.541005,
+        "receipt_validation_seconds": 1.32685,
+        "runtime_identity_seconds": 90.956658
+      }
+    }
+  },
+  "focused": {
+    "verdict": "passed",
+    "checks": [
+      {
+        "id": "diagnostic-adoption",
+        "status": "passed"
+      },
+      {
+        "id": "diagnostic-catalog-readers",
+        "status": "passed"
+      },
+      {
+        "id": "kanbien-platform-runtime",
+        "status": "passed"
+      },
+      {
+        "id": "module-index-structure",
+        "status": "passed"
+      }
+    ],
+    "elapsed_seconds": 128.860004
+  },
+  "review_gate": {
+    "verdict": "passed",
+    "findings": [],
+    "sources_reviewed": 23,
+    "feature_partial": 19,
+    "mount_partial": 1,
+    "composition_support": 3,
+    "adopted_count": 134,
+    "remaining_debt": "DIAG-015"
+  },
+  "direct_proof": {
+    "entity_smoke_runtime": "passed; compilation and three test files executed",
+    "entity_smoke_typecheck": "passed",
+    "image_typecheck": {
+      "exit_code": 2,
+      "code": "TS2307",
+      "module": "@kanbien/app-entity-smoke",
+      "consumer": "products/kanbien-platform/src/product.manifest.ts",
+      "compiler": "platform/server/tsconfig.image.json"
+    },
+    "image_shim_source_review": "entity-smoke package absent from prepare-runtime.mjs; not corrected"
+  },
+  "authorization_limits": {
+    "deployment_sources_changed": false,
+    "aws_mutations": false,
+    "commits": false,
+    "pushes": false
+  },
+  "overall_passed": false
+}

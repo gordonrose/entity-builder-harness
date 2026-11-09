@@ -25,7 +25,7 @@ writePackageShim("@kanbien/platform-observability", { ".": join(runtimeRoot, "pl
 
 const result = spawnSync(
   process.execPath,
-  [join(runtimeRoot, "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-integration.test.js")],
+  [join(runtimeRoot, "platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-persistence-adapter-integration.test.js")],
   { stdio: "inherit", env: process.env },
 );
 

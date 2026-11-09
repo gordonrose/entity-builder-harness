@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: apps/platform-smoke/tests/configuration-validation-diagnostics-runtime.test.ts -->
+<!-- course-file: apps/platform-smoke/tests/integration/configuration-validation-diagnostics-runtime.test.ts -->
 
 ### configuration-validation-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../apps/platform-smoke/tests/configuration-validation-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 74 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../apps/platform-smoke/tests/integration/configuration-validation-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 74 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for the sample app owns its feature meaning.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-smoke-runtime`, `diagnostic-catalog-readers`.
 
 <!-- course-source-sha256: before=absent after=6685b96d9c2ea2cb2ec6b86ac0baa085b3342ffa652f28aa859004bad51dc22c -->
 
-<!-- course-file: apps/platform-smoke/tests/diagnostics-runtime.test.ts -->
+<!-- course-file: apps/platform-smoke/tests/unit/diagnostics-runtime.test.ts -->
 
 ### diagnostics-runtime.test.ts
 
-[Open current source](../../../../../apps/platform-smoke/tests/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 14 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../apps/platform-smoke/tests/unit/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 14 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for the sample app owns its feature meaning.
 
@@ -92,11 +92,11 @@ Owning registered proof: `platform-smoke-runtime`, `diagnostic-catalog-readers`.
 
 <!-- course-source-sha256: before=absent after=64160e122b942530af4441d1ffa93524a8a06667f12441a9e410b811b2234cc2 -->
 
-<!-- course-file: apps/platform-smoke/tests/platform-smoke-runtime.test.ts -->
+<!-- course-file: apps/platform-smoke/tests/integration/platform-smoke-runtime.test.ts -->
 
 ### platform-smoke-runtime.test.ts
 
-[Open current source](../../../../../apps/platform-smoke/tests/platform-smoke-runtime.test.ts) · **Snapshot:** modified existing file; 218 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../apps/platform-smoke/tests/integration/platform-smoke-runtime.test.ts) · **Snapshot:** modified existing file; 218 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for the sample app owns its feature meaning.
 
@@ -116,11 +116,11 @@ Owning registered proof: `platform-smoke-runtime`, `diagnostic-catalog-readers`.
 
 <!-- course-source-sha256: before=fa99972bb2d226bcbfd723a15c5e984feca46ba7be3b8a8e79a20681863b79f4 after=f1fa2682b5dd6d09ab27321676318b59c028b1766a1b0d90bb7622f21e214cd7 -->
 
-<!-- course-file: apps/platform-smoke/tests/platform-smoke-types.test.ts -->
+<!-- course-file: apps/platform-smoke/tests/type-level/platform-smoke-types.test.ts -->
 
 ### platform-smoke-types.test.ts
 
-[Open current source](../../../../../apps/platform-smoke/tests/platform-smoke-types.test.ts) · **Snapshot:** modified existing file; 18 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../apps/platform-smoke/tests/type-level/platform-smoke-types.test.ts) · **Snapshot:** modified existing file; 18 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for the sample app owns its feature meaning.
 

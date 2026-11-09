@@ -1,0 +1,216 @@
+{
+  "kind": "verification-summary",
+  "recorded_at_utc": "2026-11-07T00:40:45.976Z",
+  "scope": "remaining Core/Platform/app/product test-layout migration",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-11-06-17-07-new-chat-session-1937001871",
+  "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+  "overall_passed": false,
+  "checks": [
+    {
+      "id": "check-selection-repository-contracts",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "cloudwatch-observability-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "local-runner"
+    },
+    {
+      "id": "core-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "diagnostic-catalog-readers",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "dynamodb-persistence-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "ecs-fargate-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "kanbien-platform-runtime",
+      "status": "failed",
+      "exit_code": 1,
+      "evidence_source": "local-runner"
+    },
+    {
+      "id": "platform-config-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-contracts-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-health-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-observability-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-persistence-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-runtime-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-security-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-server-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "local-runner"
+    },
+    {
+      "id": "platform-smoke-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-testing-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "platform-workers-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "postgresql-connection-diagnostics",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "security-cognito-diagnostics",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "security-shared-rate-limit-diagnostics",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    },
+    {
+      "id": "sqs-queue-runtime",
+      "status": "passed",
+      "exit_code": 0,
+      "evidence_source": "trusted-worktree-cache"
+    }
+  ],
+  "path_validation": {
+    "original_paths": 166,
+    "confirmed": 166,
+    "supplementary_confirmed": 6
+  },
+  "preservation": {
+    "moved_paths": 166,
+    "owners": 21,
+    "old_paths_remaining": [],
+    "missing_destinations": [],
+    "pure_moves_matching": 162,
+    "pure_move_mismatches": [],
+    "shared": {
+      "statements_before": 56,
+      "statements_after": 56,
+      "statements_equal": true,
+      "negative_types_before": 5,
+      "negative_types_after": 5
+    },
+    "cloudwatch": {
+      "head_matches_baseline": true,
+      "assertions_before": 149,
+      "assertions_after": 149,
+      "assertions_equal": true
+    },
+    "active_old_references": [],
+    "active_files_scanned": 2642,
+    "suites": 198,
+    "runtime_files": 125,
+    "type_level_files": 52,
+    "boundary_files": 20,
+    "passed": true
+  },
+  "metadata_headers_passed": 64,
+  "whitespace_passed": true,
+  "entity_smoke_direct_proof": "passed; unchanged inputs; see session log",
+  "disposable_postgresql_proof": "passed with engine/directory cleanup; unchanged inputs; see session log",
+  "diagnostic_adoption": {
+    "verdict": "failed",
+    "preexisting_feature_review_findings": 23,
+    "new_migration_findings": 0
+  },
+  "impact_plan": {
+    "verdict": "planned",
+    "findings": [],
+    "broader_aggregate_container_deploy_live_checks_executed": false
+  },
+  "product_blocker": {
+    "source": "apps/entity-smoke/features/test-entity/contract/diagnostics.ts",
+    "owner": "entity-smoke.test-entity",
+    "definition_codes": [
+      "test-entity.validation-failed"
+    ],
+    "validation": {
+      "ok": false,
+      "code": "PLATFORM_CONTRACT_MALFORMED_DIAGNOSTIC_CATALOG",
+      "diagnostic_record": {
+        "schema": "core/diagnostic-record/v1",
+        "code": "platform-contracts.registration-rejected",
+        "definitionVersion": 1,
+        "detail": {
+          "registration": "diagnostic-catalog",
+          "field": "definitions",
+          "condition": "ownership-mismatch",
+          "phase": "definitions",
+          "effect": "rejected"
+        }
+      }
+    },
+    "production_changed": false,
+    "feature_correction_authorisation": "requested-pending"
+  },
+  "production_changes_made": false,
+  "commit_push_deploy_or_aws_mutation": false
+}

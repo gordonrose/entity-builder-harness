@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.support
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-04"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -149,9 +149,10 @@ class FixtureSupport(unittest.TestCase):
         write(self.contract_path, self.contract); write(self.catalog_path, self.catalog)
 
 
-    def run_plan(self, *, paths=None, checks=None, task_paths=None, all_inputs=False, stage='local', boundary='integration', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False, reuse_from_worktree=None):
+    def run_plan(self, *, paths=None, checks=None, task_paths=None, all_inputs=False, stage='local', boundary='integration', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False, reuse_from_worktree=None, development=False):
         args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, record_preparation=record_preparation, require_preparation=require_preparation, evidence=evidence, json=True)
         args.checks = checks
+        args.development = development
         args.task_paths = task_paths
         if all_inputs: args.all, args.paths = True, []
         if checks is not None: args.paths = []
@@ -184,7 +185,7 @@ class FixtureSupport(unittest.TestCase):
     def prepare_selector_cli(self):
         # Real selector/cache/inventory processes in a disposable Git root; only
         # HEAD and the staged path list are fixture identities, with no commits.
-        for relative in ('scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
+        for relative in ('scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)

@@ -1,0 +1,106 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.fixture.realization-private-service.v2
+#   version: 1
+#   status: active
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: fixture
+#   purpose: Describe a private verifier calling a feature server without direct storage or inherited database permissions.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.test.realization-service-graph
+#     path: scripts/04.deploy/operational-realization-gate/service-graph-test.py
+schema: operational-realization-contract/v2
+id: private-feature-proof
+version: 1
+provider_boundary: normalized-facts-only
+artifacts:
+  - id: verifier-artifact
+    immutable_reference: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    entrypoint: private-verifier
+    assertions: [isolated-runtime-payload, executable-entrypoint]
+  - id: server-artifact
+    immutable_reference: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    entrypoint: private-server
+    assertions: [isolated-runtime-payload, executable-entrypoint]
+identities:
+  - {id: verifier-identity, permissions: [call-private-feature]}
+  - {id: server-identity, permissions: [read-feature-state, write-feature-state]}
+configuration_inputs:
+  - {id: verifier-configuration, required_fields: [private-service-reference], optional_fields: [], sensitivity: internal}
+  - {id: server-configuration, required_fields: [state-reference], optional_fields: [], sensitivity: secret-reference-only}
+connections:
+  - {id: private-call, source: private-verifier, destination: feature-server, transport_security: verified}
+  - {id: state-connection, source: feature-server, destination: feature-store, transport_security: verified}
+state_stores:
+  - {id: feature-store, semantics: [transaction-boundary-reviewed, nullable-facts-retained, logical-delete-with-recovery-window]}
+async_channels: []
+observability_profiles:
+  - {id: safe-proof-observations, required_facts: [outcome-category, operation-identity]}
+recovery_plans:
+  - id: retained-state-recovery
+    entry_condition: prior-attempt-reached-failed-or-stopped-terminal-state
+    cleanup: stop-owned-workloads-retain-record
+    rollback: separately-reviewed-compatible-release-only
+execution_units:
+  - id: private-verifier
+    artifact: verifier-artifact
+    identity: verifier-identity
+    configuration_inputs: [verifier-configuration]
+    connections: [private-call]
+    state_stores: []
+    async_channels: []
+    observability_profile: safe-proof-observations
+    recovery_plan: retained-state-recovery
+  - id: feature-server
+    artifact: server-artifact
+    identity: server-identity
+    configuration_inputs: [server-configuration]
+    connections: [state-connection]
+    state_stores: [feature-store]
+    async_channels: []
+    observability_profile: safe-proof-observations
+    recovery_plan: retained-state-recovery
+edges:
+  - {from: private-verifier, to: verifier-artifact, purpose: executes}
+  - {from: private-verifier, to: verifier-identity, purpose: assumes}
+  - {from: private-verifier, to: verifier-configuration, purpose: reads-configuration}
+  - {from: private-verifier, to: private-call, purpose: connects}
+  - {from: private-call, to: feature-server, purpose: invokes}
+  - {from: private-verifier, to: safe-proof-observations, purpose: emits-safe-observation}
+  - {from: private-verifier, to: retained-state-recovery, purpose: recovers}
+  - {from: feature-server, to: server-artifact, purpose: executes}
+  - {from: feature-server, to: server-identity, purpose: assumes}
+  - {from: feature-server, to: server-configuration, purpose: reads-configuration}
+  - {from: feature-server, to: state-connection, purpose: connects}
+  - {from: state-connection, to: feature-store, purpose: reaches-state}
+  - {from: feature-server, to: feature-store, purpose: persists}
+  - {from: feature-server, to: safe-proof-observations, purpose: emits-safe-observation}
+  - {from: feature-server, to: retained-state-recovery, purpose: recovers}
+lifecycle:
+  states: [prepared, running, succeeded, failed, stopped]
+  terminal_states: [succeeded, failed, stopped]
+  transitions: [{from: prepared, to: running}, {from: running, to: succeeded}, {from: running, to: failed}, {from: running, to: stopped}]
+  retry: {mode: reviewed-recovery-only, requires_new_label: true, maximum_attempts: 1, permitted_from: [failed, stopped]}
+change_shape:
+  reviewed_change_summary_required: true
+  allowed_operation_classes: [create, update]
+  forbidden_operation_classes: [delete, replace, broaden-permission]
+assumptions:
+  - id: explicit-private-service-boundary
+    statement: verifier-calls-server-without-direct-store-relationship
+    required_proof: declared
+    actual_proof: declared
+gates:
+  - {id: source, prerequisites: [], may_mutate_live_target: false, evidence: [source-check]}
+  - {id: artifact, prerequisites: [source], may_mutate_live_target: false, evidence: [artifact-check]}
+  - {id: semantic-integration, prerequisites: [source, artifact], may_mutate_live_target: false, evidence: [semantic-check]}
+  - {id: live-read, prerequisites: [source, artifact, semantic-integration], may_mutate_live_target: false, evidence: [live-read-check]}
+  - {id: change-set, prerequisites: [source, artifact, semantic-integration, live-read], may_mutate_live_target: false, evidence: [change-shape-check]}
+  - {id: execution-preflight, prerequisites: [source, artifact, semantic-integration, live-read, change-set], may_mutate_live_target: false, evidence: [preflight-check]}
+  - {id: controlled-execution, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight], may_mutate_live_target: true, evidence: [controlled-execution-check]}
+  - {id: recovery, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight, controlled-execution], may_mutate_live_target: true, evidence: [recovery-check]}

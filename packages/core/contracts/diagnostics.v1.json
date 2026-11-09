@@ -289,6 +289,53 @@
         }
       },
       {
+        "code": "core.shared.uuid-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-format"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "core.shared.uuid-generation-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "platform",
+          "severity": "error",
+          "recovery": "automation_retryable",
+          "retryable": true,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "enum",
+              "values": [
+                "generation-threw",
+                "generated-value-invalid"
+              ]
+            }
+          }
+        }
+      },
+      {
         "code": "core.shared.json-invalid",
         "version": 1,
         "classification": {

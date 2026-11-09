@@ -80,7 +80,7 @@ safe `diagnostic_context` to internal failure output.
 
 The [safe diagnostic standard](../../.agentic/shared/standards/require-safe-diagnostic-record.md#context-and-consumer-obligations)
 owns the rule; this README explains implementation, not another requirement.
-The [context runtime tests](tests/diagnostic-context-runtime.test.ts) cover missing
+The [context runtime tests](tests/contract/diagnostic-context-runtime.test.ts) cover missing
 and malformed context, retained snapshots and unregistered/misattributed reports.
 
 ### Capability vocabulary

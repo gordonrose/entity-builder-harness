@@ -4,6 +4,7 @@ import {
   platformSmokeWorkItemDeliveryObservabilityProfile,
   type PlatformSmokeAppOptions,
 } from "@kanbien/app-platform-smoke";
+import { entitySmokeApp, entitySmokeAppManifest } from "@kanbien/app-entity-smoke";
 
 export interface KanbienPlatformProductApp {
   readonly appId: string;
@@ -53,11 +54,21 @@ export const kanbienPlatformProductManifest: KanbienPlatformProductManifest = {
       healthChecks: platformSmokeAppManifest.healthChecks,
       requiredConfig: platformSmokeAppManifest.requiredConfig,
     },
+    {
+      appId: entitySmokeAppManifest.appId,
+      packageName: entitySmokeAppManifest.packageName,
+      mountModule: entitySmokeAppManifest.packageName,
+      routeBasePath: entitySmokeAppManifest.routeBasePath,
+      permissions: entitySmokeAppManifest.permissions,
+      jobs: entitySmokeAppManifest.jobs,
+      healthChecks: entitySmokeAppManifest.healthChecks,
+      requiredConfig: entitySmokeAppManifest.requiredConfig,
+    },
   ],
 };
 
 export function createKanbienPlatformApps(options: KanbienPlatformProductOptions = {}) {
-  return [createPlatformSmokeApp(options.platformSmoke)] as const;
+  return [createPlatformSmokeApp(options.platformSmoke), entitySmokeApp] as const;
 }
 
 export const kanbienPlatformApps = createKanbienPlatformApps();

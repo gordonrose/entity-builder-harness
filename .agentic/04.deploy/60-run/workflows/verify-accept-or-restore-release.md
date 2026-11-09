@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-accept-or-restore-release
-version: 4
+version: 5
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-26"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -48,6 +48,42 @@ and the selected provider workflow for concrete commands and authority.
    do not declare the candidate current after restoring the original release.
 
 ## Restore and Verify
+
+### Eligible initial scope
+
+If the scope declares the optional initial-release policy, select its applicable
+recovery through the existing release-succession command:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action \
+  scripts/04.deploy/lifecycle/60-run/release-succession/script.sh \
+  --operation select-recovery --scope-contract <canonical-scope-contract> \
+  --evidence-root <scope>/30-release-evidence --json
+```
+
+Require complete health/declaration and lifecycle validation separately. The
+selector binds the local evidence directory and accepted history; it does not
+inspect AWS, prove rollback compatibility or perform a recovery operation.
+Confirm fresh live alignment and revalidate the selected custody at the owned
+execution boundary, so concurrent acceptance cannot turn an old initial result
+into authority to stop an accepted deployment.
+
+If the selected policy is `stop-own-scope-workloads-preserve-data`, use only the
+approved, labelled provider stop control for this scope. Preserve database data
+and migration history, verify owned workloads stopped and other scopes unchanged,
+and retain the safe terminal receipt. Reconcile an uncertain stop before another
+effect. Stop if that control or proof chain is not implemented. Do not emit an
+accepted release for a failed first deployment. A later attempt still needs its
+own reviewed plan; migrations are observed, not blindly replayed.
+
+First acceptance still requires the separate original-record replacement and
+isolated-database-restore proofs. Only after all applicable proofs pass may its
+verified candidate be promoted with `--expected-predecessor none`; an orphaned
+accepted history is a reconciliation block. Once custody exists, the selector
+chooses the normal compatible-image restoration policy below. The conditional
+policy may remain in the declaration; it cannot be selected for later releases.
+
+### Existing accepted release
 
 1. Revalidate the scope's health, failure, and recovery declaration before
    provider restoration steps; its immutable recovery rule must still match the

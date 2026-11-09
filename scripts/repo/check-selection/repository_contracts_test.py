@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 4
+#   version: 7
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -22,6 +22,85 @@ from test_support import *
 
 class RepositoryContractTests(unittest.TestCase):
     def codes(self, report): return {item["code"] for item in report["findings"]}
+
+    def test_feature_catalog_inputs_invalidate_actual_fingerprints(self):
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        for identity in ('diagnostic-catalog-readers', 'diagnostic-runtime-contracts'):
+            with self.subTest(check=identity), tempfile.TemporaryDirectory(prefix='feature-catalog-inputs-') as directory:
+                root = Path(directory)
+                source = root / 'apps/entity-smoke/features/test-entity/contract/diagnostics.ts'
+                export = root / 'apps/entity-smoke/contracts/diagnostics.v1.json'
+                source.parent.mkdir(parents=True); source.write_text('fixture source v1\n')
+                export.parent.mkdir(parents=True); export.write_text('{"fixture":1}\n')
+                inputs = set(checks[identity]['inputs'])
+                before = selection.fingerprint(root, inputs)
+                source.write_text('fixture source v2\n')
+                changed_source = selection.fingerprint(root, inputs)
+                self.assertNotEqual(before, changed_source, 'consumed feature source must invalidate catalog proof')
+                export.write_text('{"fixture":2}\n')
+                changed_export = selection.fingerprint(root, inputs)
+                self.assertNotEqual(changed_source, changed_export, 'feature export must invalidate catalog proof')
+                (root / 'unrelated.txt').write_text('unrelated fixture input\n')
+                self.assertEqual(changed_export, selection.fingerprint(root, inputs))
+                omitted = inputs - {'apps/entity-smoke'}
+                missing_before = selection.fingerprint(root, omitted)
+                source.write_text('fixture source v3\n')
+                self.assertEqual(missing_before, selection.fingerprint(root, omitted), 'counterexample reproduces omitted-root cache identity')
+                self.assertIn('@kanbien/app-entity-smoke', checks[identity]['runtime']['node_packages'])
+
+    def test_feedback_pilot_binds_real_owners_without_reclassifying_existing_gates(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        checks = catalog['checks']
+        for identity, check in checks.items():
+            self.assertEqual(selection.execution_policy.validate_feedback(identity, check), [], identity)
+        feature = checks['entity-smoke-runtime']
+        self.assertEqual(feature['argv'], ['bash', 'scripts/repo/diagnostic-coverage/verify.sh', '--unit', 'entity-smoke'])
+        self.assertEqual(feature['boundary'], 'integration')
+        self.assertEqual(feature['effects'], ['writes-files'])
+        self.assertTrue(feature['feedback']['development'])
+        self.assertIn('apps/entity-smoke', feature['inputs'])
+        self.assertIn('packages/core', feature['inputs'])
+        self.assertIn('platform/contracts', feature['inputs'])
+        self.assertIn('packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts', feature['inputs'])
+        scripts = json.loads((ROOT / 'package.json').read_text())['scripts']
+        self.assertEqual(scripts['app:entity-smoke:check'], 'npm run app:entity-smoke:typecheck && npm run app:entity-smoke:test')
+        self.assertIn('tsc -p apps/entity-smoke/tsconfig.check.json', scripts['app:entity-smoke:typecheck'])
+        self.assertIn('node apps/entity-smoke/tests/run-runtime-tests.mjs', scripts['app:entity-smoke:test'])
+        self.assertTrue(checks['dynamodb-persistence-runtime']['feedback']['development'])
+        self.assertTrue(checks['postgresql-connection-diagnostics']['feedback']['development'])
+        for identity in ('platform-server-runtime', 'kanbien-platform-runtime', 'platform-shell-payload',
+                         'check-selection-mechanics', 'check-selection-repository-contracts'):
+            self.assertFalse(checks[identity]['feedback']['development'], identity)
+            self.assertEqual(checks[identity]['boundary'], 'integration', identity)
+        self.assertTrue(checks['diagnostic-runtime-contracts']['focused_prerequisites'])
+        self.assertIn('platform-server-runtime', checks['diagnostic-runtime-contracts']['members'])
+        self.assertIn('kanbien-platform-runtime', checks['diagnostic-runtime-contracts']['members'])
+        self.assertNotIn('feedback', checks['core-runtime'])
+
+    def test_migrated_runner_units_bind_shared_fixture_changes(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        fixture = 'packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts'
+        identities = ('core-runtime', 'platform-contracts-runtime', 'platform-config-runtime',
+                      'platform-health-runtime', 'platform-observability-runtime',
+                      'platform-persistence-runtime', 'platform-runtime-runtime',
+                      'platform-security-runtime', 'platform-testing-runtime',
+                      'platform-workers-runtime', 'platform-server-runtime',
+                      'platform-smoke-runtime', 'kanbien-platform-runtime',
+                      'cloudwatch-observability-runtime', 'ecs-fargate-runtime',
+                      'dynamodb-persistence-runtime', 'sqs-queue-runtime',
+                      'security-cognito-diagnostics', 'security-shared-rate-limit-diagnostics',
+                      'postgresql-connection-diagnostics')
+
+        def assert_binding(candidate):
+            for identity in identities:
+                self.assertTrue(any(selection.below(fixture, item)
+                                    for item in candidate['checks'][identity]['inputs']), identity)
+
+        assert_binding(catalog)
+        stale = copy.deepcopy(catalog)
+        stale['checks']['platform-config-runtime']['inputs'].remove(fixture)
+        with self.assertRaises(AssertionError):
+            assert_binding(stale)
 
     def test_imported_diagnostic_fixtures_have_focused_registered_owners(self):
         import re
@@ -176,7 +255,7 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertIn('module-index-structure', selected, ref)
         baseline = json.loads((ROOT / 'scripts/repo/module-structure/legacy.v1.json').read_text())
         self.assertNotIn('packages/core/src/config/index.ts', [row['path'] for row in baseline['legacy']])
-        self.assertIn('module-structure/check.mjs', (ROOT / 'packages/core/tests/core-boundaries.test.mjs').read_text())
+        self.assertIn('module-structure/check.mjs', (ROOT / 'packages/core/tests/test-infrastructure/static-validation/core-boundaries.test.mjs').read_text())
         self.assertIn('scripts/repo/module-structure/check.mjs', checks['core-runtime']['inputs'])
         self.assertTrue(any('scripts/repo/module-structure/check.mjs' in rule['inputs']
                             and 'core-runtime' in rule['checks'] for rule in rules))
@@ -644,7 +723,7 @@ class RepositoryContractTests(unittest.TestCase):
         for paths, expected in [
             (['platform/adapters/aws/persistence/dynamodb/src/transactions.ts'], {'dynamodb-persistence-runtime', 'platform-shell-payload'}),
             (['platform/adapters/aws/queue/sqs/src/worker.ts'], {'sqs-queue-runtime', 'platform-shell-payload'}),
-            (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
+            (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
             (['scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py', '.agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml'], {'restore-connection-diagnostics', 'deployment-operation-diagnostics-regression'}),
         ]:
             args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
@@ -761,6 +840,9 @@ class RepositoryContractTests(unittest.TestCase):
         catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
         owners = {'harness-lifecycle-metadata-regression', 'harness-header-regression', 'chat-session-preparation-regression', 'chat-local-merge-regression', 'chat-main-refresh-regression'}
         cases = [
+            ('apps/entity-smoke/features/test-entity/domain/services/update-test-entity.ts', {'entity-smoke-runtime', 'kanbien-platform-runtime'}, {'check-selection-mechanics'}),
+            ('platform/adapters/aws/persistence/dynamodb/src/index.ts', {'dynamodb-persistence-runtime', 'platform-shell-payload'}, {'check-selection-mechanics'}),
+            ('platform/adapters/aws/persistence/postgresql/src/index.ts', {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics'}, {'check-selection-mechanics'}),
             ('platform/adapters/aws/runtime/ecs-fargate/src/index.ts', {'ecs-fargate-runtime', 'platform-shell-payload', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('platform/server/src/configuration/runtime.ts', {'platform-server-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'check-selection-regression', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('scripts/repo/check-selection/script.py', {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression', *owners}, set()),

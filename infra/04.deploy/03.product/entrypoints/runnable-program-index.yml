@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.entrypoints.runnable-program-index
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -12,7 +12,7 @@
 #   - security
 #   - sre
 #   kind: manifest
-#   purpose: Record the factual runnable-program and package-candidate boundary for the Kanbien core bootstrap server.
+#   purpose: Record the factual runnable-program and package-candidate boundaries for independent Kanbien core-platform programs.
 #   portability:
 #     class: internal
 #     targets: []
@@ -74,6 +74,18 @@ runnable_programs:
     approved_dependencies: [core, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
     observed_dependencies: [core, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
     forbidden_dependencies: [app-platform-smoke, platform-workers, product-kanbien-platform, staging-platform-server, relay, worker]
+  - id: kanbien-entity-smoke
+    source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts
+    entrypoint: artifacts/kanbien-entity-smoke.main.js
+    runtime_executable: node
+    role: http-server
+    configuration_boundary: infra/04.deploy/03.product/entrypoints/entity-smoke/configuration.ts
+    dependency_failure_boundary: infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts
+    local_proof: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
+    owner: 04.deploy/03.product
+    approved_dependencies: [app-entity-smoke, core, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
+    observed_dependencies: [app-entity-smoke, core, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
+    forbidden_dependencies: [app-platform-smoke, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-workers, product-kanbien-platform, staging-platform-server, relay, worker]
 image_contracts:
   - id: kanbien-core-server-image
     program: kanbien-core-server
@@ -85,6 +97,10 @@ image_contracts:
     program: kanbien-core-server-persistence
     command_mode: exec
     command: [node, artifacts/kanbien-core-server-persistence.main.js]
+  - id: kanbien-entity-smoke-image
+    program: kanbien-entity-smoke
+    command_mode: exec
+    command: [node, artifacts/kanbien-entity-smoke.main.js]
 package_candidates:
   - id: kanbien-core-server-candidate
     image_contract: kanbien-core-server-image
@@ -92,8 +108,13 @@ package_candidates:
   - id: kanbien-core-server-persistence-candidate
     image_contract: kanbien-core-server-persistence-image
     immutable_identity_rule: runtime-bound-sha256
+  - id: kanbien-entity-smoke-candidate
+    image_contract: kanbien-entity-smoke-image
+    immutable_identity_rule: runtime-bound-sha256
 candidate_verifications:
   - candidate: kanbien-core-server-candidate
     required_evidence_fields: [package_contract_id, candidate_id, program_id, source_revision, image_digest, release_identity, health_verdict, verification_verdict, checked_at, receipt_reference]
   - candidate: kanbien-core-server-persistence-candidate
+    required_evidence_fields: [package_contract_id, candidate_id, program_id, source_revision, image_digest, release_identity, health_verdict, verification_verdict, checked_at, receipt_reference]
+  - candidate: kanbien-entity-smoke-candidate
     required_evidence_fields: [package_contract_id, candidate_id, program_id, source_revision, image_digest, release_identity, health_verdict, verification_verdict, checked_at, receipt_reference]

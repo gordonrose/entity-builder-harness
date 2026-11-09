@@ -4,7 +4,7 @@ id: product.plan.configuration-reason-selection
 version: 2
 status: active
 created_on: "2026-11-01"
-updated_on: "2026-11-02"
+updated_on: "2026-11-09"
 layer: 03.product
 domain: configuration
 disciplines: [architecture, security, agentic]
@@ -64,10 +64,10 @@ and task/readiness/startup consumers were traced through their existing owners.
 | packages/core/src/config/contract/diagnostics.ts and packages/core/src/diagnostic-catalog.ts | No change: independently explicit Core definitions/catalog assembly, not the growing list. Export byte check. |
 | platform/config/src/diagnostics.ts | Bind fixed private compatibility selection; custom arguments/results remain supported. Real compiled helper injected with grown-name/legacy-array counterexamples. |
 | platform/config/src/index.ts | Existing re-exports remain valid; no new Platform public API. Type/runtime and catalog checks. |
-| platform/config/tests/platform-config-runtime.test.ts | Replace normal extended-list use with explicit selection; keep intentional legacy/default tests and add real-helper growth counterexample. |
-| platform/config/tests/platform-config-types.test.ts | Prove named reasons and existing custom/default calls remain type compatible; relationship declarations unchanged. |
-| packages/core/tests/diagnostic-record-runtime.test.ts | Pin both legacy tuples, new collection/immutability and retained/new-version parsing. |
-| packages/core/tests/config-types.test.ts | Named collection/type readonly and unknown-name counterexamples. |
+| platform/config/tests/integration/platform-config-runtime.test.ts | Replace normal extended-list use with explicit selection; keep intentional legacy/default tests and add real-helper growth counterexample. |
+| platform/config/tests/type-level/platform-config-types.test.ts | Prove named reasons and existing custom/default calls remain type compatible; relationship declarations unchanged. |
+| packages/core/tests/diagnostics/contract/diagnostic-record-runtime.test.ts | Pin both legacy tuples, new collection/immutability and retained/new-version parsing. |
+| packages/core/tests/config/type-level/config-types.test.ts | Named collection/type readonly and unknown-name counterexamples. |
 | platform/adapters/aws/persistence/postgresql/src/config.ts | No body change: ConfigIssueReason union is unchanged; numeric/source classification stays exact. PostgreSQL type check and existing target cases. |
 | platform/adapters/aws/persistence/postgresql/src/credentials.ts | No body change: same union and actual username/password predicates. Target credential fixture and adapter types. |
 | infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts | Explicit local v1 selections for existing definitions, with exact historical enum contents/order. Actual target fixture/catalog export. |

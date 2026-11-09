@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.layer.readme
-version: 3
+version: 4
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-25"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -45,6 +45,7 @@ weaken or replace its approval gates.
 - Lifecycle workflows, standards and schemas: `.agentic/04.deploy/<phase>/`
 - [Current lifecycle routes](lifecycle/README.md): build, package, deploy and run entry points
 - Cross-phase and not-yet-migrated authority: `workflows/`, `standards/`, `schemas/`
+- [Realization contract v2](schemas/operational-realization-contract.v2.guide.md): explicit service calls and workloads without direct storage; existing v1 contracts remain supported.
 - Migration plans: `.agentic/04.deploy/plans/migration/`
 - Future provider adapters: `.agentic/04.deploy/providers/`
 - Current AWS-specific governance: `.agentic/aws/`

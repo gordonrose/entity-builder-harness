@@ -4,7 +4,7 @@ id: product.workflows.readme
 version: 1
 status: active
 created_on: "2026-08-30"
-updated_on: "2026-10-20"
+updated_on: "2026-11-09"
 layer: 03.product
 domain: governance
 disciplines:
@@ -27,3 +27,7 @@ used_by:
 - `untrusted-input-and-bounded-agent-safety.md` - govern changes that add
   untrusted-input interpreter boundaries, LLM/agent/retrieval capability, or
   model-facing tools before implementation proceeds.
+- `../feature/workflows/create-feature.md` - govern real app features and
+  their staged handoff to product composition and deployment proof.
+- `../entity/workflows/create-entity.md` - govern durable entities as features
+  and reserve declarative generation for its own implemented stage.

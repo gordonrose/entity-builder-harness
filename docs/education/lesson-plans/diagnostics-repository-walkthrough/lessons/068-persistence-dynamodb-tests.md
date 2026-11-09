@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/adapters/aws/persistence/dynamodb/tests/dynamodb-persistence-adapter-runtime.test.ts -->
+<!-- course-file: platform/adapters/aws/persistence/dynamodb/tests/contract/dynamodb-persistence-adapter-runtime.test.ts -->
 
 ### dynamodb-persistence-adapter-runtime.test.ts
 
-[Open current source](../../../../../platform/adapters/aws/persistence/dynamodb/tests/dynamodb-persistence-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 388 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/persistence/dynamodb/tests/contract/dynamodb-persistence-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 388 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for dynamodb persistence.
 

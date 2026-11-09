@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.acceptance-route
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [architecture, security, sre]
@@ -162,6 +162,11 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     if record_schema and document(record_schema).get('record_schema') != record.get('schema'): gap('acceptance-route-record-schema-invalid')
     record_path = reference(scope_contract.parent.parent, record.get('path'))
     if record_path is None: gap('acceptance-route-record-path-invalid')
+    if 'source' in record:
+        if record.get('source') != 'release-succession-current': gap('acceptance-route-record-source-unsupported')
+        elif record.get('schema') != 'deploy/release-current-ref/v1' or record.get('path') != '30-release-evidence/current-accepted-release.yml':
+            gap('acceptance-route-current-reference-invalid')
+    elif record.get('schema') == 'deploy/release-current-ref/v1': gap('acceptance-route-current-reference-selector-required')
     succession = route.get('release_succession')
     lifecycle = document(scope_contract.parent.parent.parent / 'scope-index.yml')
     entries = lifecycle.get('scopes', [])

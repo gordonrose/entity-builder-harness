@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -21,6 +21,114 @@ from test_support import *
 
 
 class SelectionTests(FixtureSupport):
+    def declare_development_feedback(self):
+        self.catalog['checks']['local']['feedback'] = {
+            'development': True, 'expected_seconds': 30, 'isolation': 'worktree',
+            'rationale': 'Fast disposable local behavior.'}
+        self.save()
+
+    def test_development_retains_obligations_and_integration_reuses_only_matching_success(self):
+        self.declare_development_feedback()
+        report = self.run_plan(development=True, execute=True)
+        self.assertFalse(report['findings'], report['findings'])
+        self.assertEqual(report['verdict'], 'partial')
+        self.assertEqual(report['execution_policy']['coverage'], 'integration-pending')
+        self.assertEqual(report['execution_summary']['executed_check_ids'], ['local'])
+        self.assertEqual({item['check_id'] for item in report['checks']},
+                         {item['check_id'] for item in self.run_plan()['checks']})
+        self.assertIn('live', report['execution_policy']['pending_check_ids'])
+        self.assertFalse((self.root / 'operations').exists())
+        integrated = self.run_plan(execute=True)
+        self.assertFalse(integrated['findings'], integrated['findings'])
+        self.assertIn('local', integrated['execution_summary']['reused_check_ids'])
+        (self.root / 'src/main.ts').write_text('changed\n')
+        changed = self.run_plan(development=True, execute=True)
+        self.assertIn('local', changed['execution_summary']['executed_check_ids'])
+
+    def test_development_rejects_invalid_feedback_and_gate_contexts(self):
+        self.declare_development_feedback()
+        valid = copy.deepcopy(self.catalog['checks']['local']['feedback'])
+        invalid_values = [None, [], {}, {**valid, 'expected_seconds': True},
+                          {**valid, 'expected_seconds': 0}, {**valid, 'isolation': 'shared'},
+                          {**valid, 'rationale': 'line\nbreak'}, {**valid, 'typo': True}]
+        for value in invalid_values:
+            with self.subTest(value=value):
+                self.catalog['checks']['local']['feedback'] = value
+                self.save()
+                report = self.run_plan(development=True, execute=True)
+                self.assertIn('check-feedback-invalid', self.codes(report))
+                self.assertEqual(report['execution_summary']['executed_check_ids'], [])
+        self.catalog['checks']['local']['feedback'] = valid
+        self.save()
+        for arguments in ({'staged': True}, {'checks': ['local']}, {'record_preparation': True},
+                          {'require_preparation': True}, {'boundary': 'commit'}, {'stage': 'deploy'}):
+            with self.subTest(arguments=arguments):
+                report = self.run_plan(development=True, execute=True, **arguments)
+                self.assertIn('development-selection-context-invalid', self.codes(report))
+                self.assertEqual(report['execution_summary']['executed_check_ids'], [])
+        self.assertFalse((self.root / 'counts').exists())
+
+    def test_development_does_not_bypass_undeclared_prerequisite(self):
+        self.declare_development_feedback()
+        self.check_script('focus', ['read-only', 'writes-files'], 'echo forbidden >> operations\n')
+        self.catalog['checks']['focus'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.catalog['checks']['focus'].pop('feedback')
+        self.catalog['checks']['focus'].update(argv=['bash', 'scripts/focus.sh'], inputs=['scripts/focus.sh'])
+        self.catalog['checks']['local']['focused_prerequisites'] = [{'inputs': ['src'], 'checks': ['focus']}]
+        self.save()
+        report = self.run_plan(development=True, execute=True)
+        self.assertIn('verification-prerequisite-not-passed', self.codes(report))
+        self.assertEqual(self.local_command_result(report)['status'], 'blocked')
+        self.assertEqual(report['execution_summary']['executed_check_ids'], [])
+        self.assertFalse((self.root / 'operations').exists())
+
+    def test_run_observations_are_private_sanitized_and_never_proof(self):
+        self.declare_development_feedback()
+        self.check_script('local', ['read-only', 'writes-files'], 'echo SECRET_CHILD_OUTPUT\necho SECRET_ERROR >&2\n')
+        report = self.run_plan(development=True, execute=True)
+        self.assertFalse(report['findings'], report['findings'])
+        location = self.root / report['run_report_path']
+        contents = location.read_text()
+        saved = json.loads(contents)
+        self.assertFalse(saved['integration_claim'])
+        self.assertIn('historical-observation-only', saved['authority'])
+        self.assertNotIn('SECRET_', contents + location.with_name('summary.txt').read_text())
+        self.assertTrue(all('runtime_identity' not in item for item in saved['checks']))
+        self.assertEqual(location.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(location.parent.stat().st_mode & 0o777, 0o700)
+        second = self.run_plan(development=True, execute=True, evidence=location)
+        self.assertEqual(second['evidence_import_status'], 'rejected-untrusted-report')
+        self.assertNotEqual(second['run_report_path'], report['run_report_path'])
+        self.assertEqual(location.read_text(), contents)
+        self.assertIn('local', second['execution_summary']['reused_check_ids'])
+
+    def test_unsafe_run_directory_is_reported_without_overwriting_check_outcome(self):
+        self.declare_development_feedback()
+        (self.root / '.cache').mkdir()
+        (self.root / 'outside').mkdir()
+        (self.root / '.cache/test-runs').symlink_to(self.root / 'outside', target_is_directory=True)
+        report = self.run_plan(development=True, execute=True)
+        self.assertIn('test-run-retention-unavailable', self.codes(report))
+        self.assertEqual(report['verdict'], 'gap')
+        self.assertEqual(self.local_command_result(report)['status'], 'passed')
+        self.assertEqual(list((self.root / 'outside').iterdir()), [])
+
+    def test_inventory_and_development_cli_are_read_only_until_execution(self):
+        self.declare_development_feedback()
+        self.prepare_selector_cli()
+        command = ['bash', 'scripts/repo/check-selection/script.sh']
+        result = subprocess.run(command + ['--inventory', '--explain'], cwd=self.root,
+                                env=self.cli_environment, capture_output=True, text=True, timeout=40)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Fast disposable local behavior.', result.stdout)
+        self.assertFalse((self.root / '.cache/test-runs').exists())
+        for arguments in (['--staged', '--development'], ['--ci', '--development'],
+                          ['--checks', 'local', '--development'], ['--inventory', '--execute-local']):
+            result = subprocess.run(command + arguments, cwd=self.root, env=self.cli_environment,
+                                    capture_output=True, text=True, timeout=40)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertFalse((self.root / 'counts').exists())
+
     def test_registered_preflight_without_cache_falls_back_to_execution(self):
         subprocess.run(['git', '-C', str(self.root), 'add', '-A'], check=True)
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'fixture baseline'], check=True)
@@ -1181,6 +1289,8 @@ used_by:
     def test_unsupported_requirement_is_gap(self):
         self.requirement['local_proofs'].append('unimplemented-queue-delivery'); self.save()
         self.assertIn('requirement-check-unsupported', self.codes(self.run_plan(execute=True)))
+        self.declare_development_feedback()
+        self.assertIn('requirement-check-unsupported', self.codes(self.run_plan(execute=True, development=True)))
         self.assertFalse((self.root / 'counts').exists())
 
 
@@ -1603,6 +1713,7 @@ used_by:
         for relative in (
             'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py',
             'scripts/repo/check-selection/local_cache.py',
+            'scripts/repo/check-selection/execution_policy.py',
             'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py',
             'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py',
             'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py',
@@ -1612,7 +1723,7 @@ used_by:
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
-        (self.root / '.gitignore').write_text('counts\n')
+        (self.root / '.gitignore').write_text('counts\n.cache/\n')
         (self.root / 'package.json').write_text(json.dumps({'scripts': {'fixture:coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         def command(directory, *argv):
             result = subprocess.run(argv, cwd=directory, capture_output=True, text=True)
@@ -1632,6 +1743,8 @@ used_by:
             command(preflight, 'git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Fixture refresh')
             verified = json.loads(command(preflight, 'bash', 'scripts/repo/check-selection/script.sh', '--paths', 'src/main.ts', '--execute-local', '--json'))
             self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+            self.assertTrue((preflight / verified['run_report_path']).is_file())
+            self.assertEqual(command(preflight, 'git', 'status', '--porcelain'), '')
             output = command(self.root, 'bash', 'scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh', branch)
             applied = json.loads(next(line for line in output.splitlines() if line.startswith('{')))
             self.assertEqual(applied['execution_summary']['executed_check_ids'], [])
@@ -1782,7 +1895,7 @@ used_by:
     def test_real_repository_hook_reuses_local_evidence_without_report_argument(self):
         # Actual source-owned hook, selector, and cache run in an isolated Git
         # worktree. The unrelated revision is simulated without creating commits.
-        for relative in ('scripts/repo/commit-gates/script.sh', 'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
+        for relative in ('scripts/repo/commit-gates/script.sh', 'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
             target = self.root / relative; target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(ROOT / relative, target)
         (self.root / 'package.json').write_text(json.dumps({'scripts': {'fixture:coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         gate = self.root / 'scripts/01.harness/artifact-metadata/generate-index/script.sh'; gate.parent.mkdir(parents=True); gate.write_text('#!/bin/bash\nexit 0\n')

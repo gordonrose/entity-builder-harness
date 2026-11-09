@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.runtime-preparation-diagnostics
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-31"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -39,6 +39,36 @@ spec.loader.exec_module(payload)
 
 
 class PreparationDiagnostics(unittest.TestCase):
+    def test_platform_shell_entity_app_shim_uses_compiled_public_root(self):
+        with tempfile.TemporaryDirectory(prefix="prepare-entity-app-") as temporary:
+            directory = Path(temporary)
+            compiled = directory / '.cache/platform-shell-image-build'
+            target = compiled / 'apps/entity-smoke/src/index.js'
+            target.parent.mkdir(parents=True)
+            target.write_text('exports.marker = "compiled-entity";\n')
+            self.run_preparer('platform-shell', directory)
+            shim = compiled / 'node_modules/@kanbien/app-entity-smoke'
+            manifest = json.loads((shim / 'package.json').read_text())
+            self.assertEqual(manifest['exports'], {'.': './index.js'})
+            probe = 'try { if (require(process.argv[1]).marker !== "compiled-entity") process.exit(2); } catch (error) { process.stdout.write(error.code); process.exit(1); }'
+            result = subprocess.run(['node', '-e', probe, str(shim)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout)
+            target.unlink()
+            missing = subprocess.run(['node', '-e', probe, str(shim)], capture_output=True, text=True)
+            self.assertEqual((missing.returncode, missing.stdout), (1, 'MODULE_NOT_FOUND'))
+
+    def test_platform_shell_entity_shim_failures_keep_safe_package_location(self):
+        for phase, filename in (('shim-write', 'index.js'), ('manifest-write', 'package.json')):
+            with self.subTest(phase=phase), tempfile.TemporaryDirectory(prefix='prepare-entity-failure-') as temporary:
+                directory = Path(temporary)
+                package = directory / '.cache/platform-shell-image-build/node_modules/@kanbien/app-entity-smoke'
+                (package / filename).mkdir(parents=True)
+                location = {'package': '@kanbien/app-entity-smoke'}
+                if phase == 'shim-write': location['export'] = '.'
+                self.run_preparer('platform-shell', directory, phase=phase,
+                                  effect='earlier-writes-possible', location=location)
+                self.assertTrue((package.parent / 'app-platform-smoke/package.json').is_file())
+
     def run_preparer(self, kind, directory, *, arguments=None, phase=None, effect=None, location=None):
         compiled = directory / CANARY
         args = [] if kind == "platform-shell" else ["--compiled-root", str(compiled)]

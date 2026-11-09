@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.workflow.verify-diagnostic-coverage
-version: 16
+version: 17
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-05"
+updated_on: "2026-11-09"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -23,6 +23,13 @@ Use with the owning coding workflow for new services, integrations, capabilities
 features, refactors and executable tooling. The runtime implementation owns
 schemas and meaning. This workflow owns review, adoption and proof selection.
 Follow the [safe diagnostic standard](../standards/require-safe-diagnostic-record.md).
+
+<!-- deterministic-check: allow reason="explains evidence reuse and pending proof boundaries owned by the linked execution standard and registered selector" -->
+Use the [test-execution standard](../testing/standards/test-execution.md) to
+distinguish editing feedback from final integration proof. Reuse matching
+registered evidence; do not rerun the full diagnostic aggregate after every edit.
+Development selection leaves broader diagnostic and integration obligations
+pending. It does not waive source-matched reviews or required final proof.
 
 For confirmed future work found during an agreed diagnostic review, or a request
 to update the Diagnostics backlog, use its

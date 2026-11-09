@@ -1,0 +1,419 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.realization-contract
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [architecture, security, sre]
+#   kind: manifest
+#   purpose: Describe the actual candidate runtime and basic task source graph without claiming package or live acceptance proof.
+#   portability: {class: internal, targets: []}
+#   used_by:
+#   - id: infra.04-deploy.entity-smoke.image.contract
+#     path: infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
+schema: "operational-realization-contract/v2"
+id: "entity-smoke-candidate-runtime"
+version: 1
+provider_boundary: "normalized-facts-only"
+artifacts:
+  - id: feature-database-proof-artifact
+    immutable_reference_mode: runtime-bound-sha256
+    entrypoint: artifacts/kanbien-entity-smoke-database-proof.main.js
+    assertions: [runtime-identity-only, explicit-proof-selection, immutable-qualified-image]
+  -
+    id: "feature-server-artifact"
+    immutable_reference_mode: "runtime-bound-sha256"
+    entrypoint: "artifacts/kanbien-entity-smoke.main.js"
+    assertions: ["public-feature-imports","nonroot-runtime","immutable-qualified-image"]
+  -
+    id: "feature-migration-artifact"
+    immutable_reference_mode: "runtime-bound-sha256"
+    entrypoint: "artifacts/kanbien-entity-smoke-migration.main.js"
+    assertions: ["checksum-bound-migration","explicit-execution-only","immutable-qualified-image"]
+  -
+    id: "feature-administration-artifact"
+    immutable_reference_mode: "runtime-bound-sha256"
+    entrypoint: "artifacts/kanbien-entity-smoke-administration.main.js"
+    assertions: ["fixed-scope-identities","bounded-operation-selection","immutable-qualified-image"]
+  -
+    id: "feature-verifier-artifact"
+    immutable_reference_mode: "runtime-bound-sha256"
+    entrypoint: "artifacts/kanbien-entity-smoke-verifier.main.js"
+    assertions: ["server-mediated-proof-only","no-direct-store-credential","immutable-qualified-image"]
+identities:
+  - id: feature-restore-reader-identity
+    permissions: [read-original-restored-feature-records]
+  - id: feature-database-proof-identity
+    permissions: [read-feature-records, exercise-rolled-back-denied-operations]
+  -
+    id: "feature-runtime-identity"
+    permissions: ["read-feature-records","create-feature-records","update-feature-records"]
+  -
+    id: "feature-migration-identity"
+    permissions: ["change-own-schema","maintain-own-migration-history"]
+  -
+    id: "feature-administration-identity"
+    permissions: ["manage-own-bounded-identities","grant-own-schema-policy","observe-own-migration-state"]
+  -
+    id: "feature-verifier-identity"
+    permissions: ["call-private-feature-only"]
+configuration_inputs:
+  - id: feature-restore-reader-settings
+    required_fields: [isolated-restored-database-reference, runtime-authentication-reference, verified-authority-reference, reserved-proof-label, expected-record-digest]
+    optional_fields: []
+    sensitivity: secret-reference-only
+  - id: feature-database-proof-settings
+    required_fields: [database-reference, runtime-authentication-reference, verified-authority-reference, proof-operation, reserved-proof-label]
+    optional_fields: [expected-record-digest]
+    sensitivity: secret-reference-only
+  -
+    id: "feature-runtime-settings"
+    required_fields: ["database-reference","runtime-authentication-reference","verified-authority-reference","source-revision","private-exposure"]
+    optional_fields: []
+    sensitivity: "secret-reference-only"
+  -
+    id: "feature-migration-settings"
+    required_fields: ["database-reference","migration-authentication-reference","verified-authority-reference","explicit-migration-operation"]
+    optional_fields: []
+    sensitivity: "secret-reference-only"
+  -
+    id: "feature-administration-settings"
+    required_fields: ["database-reference","administrative-credential-reference","verified-authority-reference","bounded-operation"]
+    optional_fields: []
+    sensitivity: "secret-reference-only"
+  -
+    id: "feature-verifier-settings"
+    required_fields: ["private-service-reference","proof-operation","reserved-proof-label","expected-source-revision"]
+    optional_fields: ["expected-record-digest"]
+    sensitivity: "internal"
+connections:
+  - id: feature-restore-reader-storage
+    source: feature-restore-reader
+    destination: feature-restored-record-store
+    transport_security: verified
+  - id: feature-database-proof-storage
+    source: feature-database-proof
+    destination: feature-record-store
+    transport_security: verified
+  -
+    id: "feature-runtime-storage"
+    source: "feature-runtime"
+    destination: "feature-record-store"
+    transport_security: "verified"
+  -
+    id: "feature-migration-storage"
+    source: "feature-migration"
+    destination: "feature-record-store"
+    transport_security: "verified"
+  -
+    id: "feature-administration-storage"
+    source: "feature-administration"
+    destination: "feature-record-store"
+    transport_security: "verified"
+  -
+    id: "feature-verifier-private-call"
+    source: "feature-verifier"
+    destination: "feature-runtime"
+    transport_security: "not-applicable"
+state_stores:
+  - id: feature-restored-record-store
+    semantics: [independent-restored-database-incarnation, snapshot-after-original-record-commit, original-id-and-facts-digest, no-recreation-or-migration, no-source-database-access]
+  -
+    id: "feature-record-store"
+    semantics: ["fixed-own-schema-and-identities","insert-only-creation","update-only-saving","bound-values","checksum-bound-transactional-migration","nullable-attribute-mapping","status-created-time-index","archive-separate-from-logical-delete","bounded-restore-window","purge-eligibility-only"]
+async_channels: []
+observability_profiles:
+  -
+    id: "feature-safe-observations"
+    required_facts: ["operation-identity","safe-result-code","known-or-uncertain-effect","no-input-values"]
+recovery_plans:
+  - id: feature-isolated-restore-cleanup
+    entry_condition: owned-restore-task-terminal-and-proof-receipt-retained
+    cleanup: explicit-owned-temporary-restore-resources-only-after-proof-capture
+    rollback: never-reverse-or-replace-source-database
+  -
+    id: "feature-explicit-recovery"
+    entry_condition: "prior-attempt-reached-failed-or-stopped-terminal-state"
+    cleanup: "stop-own-workloads-preserve-records-and-history"
+    rollback: "first-release-stop-preserve-only-subsequent-compatible-accepted-image-required"
+execution_units:
+  - id: feature-restore-reader
+    artifact: feature-database-proof-artifact
+    identity: feature-restore-reader-identity
+    configuration_inputs: [feature-restore-reader-settings]
+    connections: [feature-restore-reader-storage]
+    state_stores: [feature-restored-record-store]
+    async_channels: []
+    observability_profile: feature-safe-observations
+    recovery_plan: feature-isolated-restore-cleanup
+  - id: feature-database-proof
+    artifact: feature-database-proof-artifact
+    identity: feature-database-proof-identity
+    configuration_inputs: [feature-database-proof-settings]
+    connections: [feature-database-proof-storage]
+    state_stores: [feature-record-store]
+    async_channels: []
+    observability_profile: feature-safe-observations
+    recovery_plan: feature-explicit-recovery
+  -
+    id: "feature-runtime"
+    artifact: "feature-server-artifact"
+    identity: "feature-runtime-identity"
+    configuration_inputs: ["feature-runtime-settings"]
+    connections: ["feature-runtime-storage"]
+    state_stores: ["feature-record-store"]
+    async_channels: []
+    observability_profile: "feature-safe-observations"
+    recovery_plan: "feature-explicit-recovery"
+  -
+    id: "feature-migration"
+    artifact: "feature-migration-artifact"
+    identity: "feature-migration-identity"
+    configuration_inputs: ["feature-migration-settings"]
+    connections: ["feature-migration-storage"]
+    state_stores: ["feature-record-store"]
+    async_channels: []
+    observability_profile: "feature-safe-observations"
+    recovery_plan: "feature-explicit-recovery"
+  -
+    id: "feature-administration"
+    artifact: "feature-administration-artifact"
+    identity: "feature-administration-identity"
+    configuration_inputs: ["feature-administration-settings"]
+    connections: ["feature-administration-storage"]
+    state_stores: ["feature-record-store"]
+    async_channels: []
+    observability_profile: "feature-safe-observations"
+    recovery_plan: "feature-explicit-recovery"
+  -
+    id: "feature-verifier"
+    artifact: "feature-verifier-artifact"
+    identity: "feature-verifier-identity"
+    configuration_inputs: ["feature-verifier-settings"]
+    connections: ["feature-verifier-private-call"]
+    state_stores: []
+    async_channels: []
+    observability_profile: "feature-safe-observations"
+    recovery_plan: "feature-explicit-recovery"
+edges:
+  - {from: feature-restore-reader, to: feature-database-proof-artifact, purpose: executes}
+  - {from: feature-restore-reader, to: feature-restore-reader-identity, purpose: assumes}
+  - {from: feature-restore-reader, to: feature-restore-reader-settings, purpose: reads-configuration}
+  - {from: feature-restore-reader, to: feature-restore-reader-storage, purpose: connects}
+  - {from: feature-restore-reader-storage, to: feature-restored-record-store, purpose: reaches-state}
+  - {from: feature-restore-reader, to: feature-restored-record-store, purpose: direct-storage-access}
+  - {from: feature-restore-reader, to: feature-safe-observations, purpose: reports-safe-result}
+  - {from: feature-restore-reader, to: feature-isolated-restore-cleanup, purpose: recovers}
+  - {from: feature-database-proof, to: feature-database-proof-artifact, purpose: executes}
+  - {from: feature-database-proof, to: feature-database-proof-identity, purpose: assumes}
+  - {from: feature-database-proof, to: feature-database-proof-settings, purpose: reads-configuration}
+  - {from: feature-database-proof, to: feature-database-proof-storage, purpose: connects}
+  - {from: feature-database-proof-storage, to: feature-record-store, purpose: reaches-state}
+  - {from: feature-database-proof, to: feature-record-store, purpose: direct-storage-access}
+  - {from: feature-database-proof, to: feature-safe-observations, purpose: reports-safe-result}
+  - {from: feature-database-proof, to: feature-explicit-recovery, purpose: recovers}
+  -
+    from: "feature-runtime"
+    to: "feature-server-artifact"
+    purpose: "executes"
+  -
+    from: "feature-runtime"
+    to: "feature-runtime-identity"
+    purpose: "assumes"
+  -
+    from: "feature-runtime"
+    to: "feature-runtime-settings"
+    purpose: "reads-configuration"
+  -
+    from: "feature-runtime"
+    to: "feature-runtime-storage"
+    purpose: "connects"
+  -
+    from: "feature-runtime-storage"
+    to: "feature-record-store"
+    purpose: "reaches-state"
+  -
+    from: "feature-runtime"
+    to: "feature-record-store"
+    purpose: "direct-storage-access"
+  -
+    from: "feature-runtime"
+    to: "feature-safe-observations"
+    purpose: "reports-safe-result"
+  -
+    from: "feature-runtime"
+    to: "feature-explicit-recovery"
+    purpose: "recovers"
+  -
+    from: "feature-migration"
+    to: "feature-migration-artifact"
+    purpose: "executes"
+  -
+    from: "feature-migration"
+    to: "feature-migration-identity"
+    purpose: "assumes"
+  -
+    from: "feature-migration"
+    to: "feature-migration-settings"
+    purpose: "reads-configuration"
+  -
+    from: "feature-migration"
+    to: "feature-migration-storage"
+    purpose: "connects"
+  -
+    from: "feature-migration-storage"
+    to: "feature-record-store"
+    purpose: "reaches-state"
+  -
+    from: "feature-migration"
+    to: "feature-record-store"
+    purpose: "direct-storage-access"
+  -
+    from: "feature-migration"
+    to: "feature-safe-observations"
+    purpose: "reports-safe-result"
+  -
+    from: "feature-migration"
+    to: "feature-explicit-recovery"
+    purpose: "recovers"
+  -
+    from: "feature-administration"
+    to: "feature-administration-artifact"
+    purpose: "executes"
+  -
+    from: "feature-administration"
+    to: "feature-administration-identity"
+    purpose: "assumes"
+  -
+    from: "feature-administration"
+    to: "feature-administration-settings"
+    purpose: "reads-configuration"
+  -
+    from: "feature-administration"
+    to: "feature-administration-storage"
+    purpose: "connects"
+  -
+    from: "feature-administration-storage"
+    to: "feature-record-store"
+    purpose: "reaches-state"
+  -
+    from: "feature-administration"
+    to: "feature-record-store"
+    purpose: "direct-storage-access"
+  -
+    from: "feature-administration"
+    to: "feature-safe-observations"
+    purpose: "reports-safe-result"
+  -
+    from: "feature-administration"
+    to: "feature-explicit-recovery"
+    purpose: "recovers"
+  -
+    from: "feature-verifier"
+    to: "feature-verifier-artifact"
+    purpose: "executes"
+  -
+    from: "feature-verifier"
+    to: "feature-verifier-identity"
+    purpose: "assumes"
+  -
+    from: "feature-verifier"
+    to: "feature-verifier-settings"
+    purpose: "reads-configuration"
+  -
+    from: "feature-verifier"
+    to: "feature-verifier-private-call"
+    purpose: "connects"
+  -
+    from: "feature-verifier-private-call"
+    to: "feature-runtime"
+    purpose: "invokes-private-feature"
+  -
+    from: "feature-verifier"
+    to: "feature-safe-observations"
+    purpose: "reports-safe-result"
+  -
+    from: "feature-verifier"
+    to: "feature-explicit-recovery"
+    purpose: "recovers"
+lifecycle:
+  states: ["prepared","running","succeeded","failed","stopped"]
+  terminal_states: ["succeeded","failed","stopped"]
+  transitions:
+    -
+      from: "prepared"
+      to: "running"
+    -
+      from: "running"
+      to: "succeeded"
+    -
+      from: "running"
+      to: "failed"
+    -
+      from: "running"
+      to: "stopped"
+  retry:
+    mode: "reviewed-recovery-only"
+    requires_new_label: true
+    maximum_attempts: 1
+    permitted_from: ["failed","stopped"]
+change_shape:
+  reviewed_change_summary_required: true
+  allowed_operation_classes: ["create","update"]
+  forbidden_operation_classes: ["delete","replace","broaden-permission"]
+assumptions:
+  -
+    id: "feature-private-call-topology"
+    statement: "private-verifier-calls-server-without-direct-storage"
+    required_proof: "declared"
+    actual_proof: "declared"
+  -
+    id: "feature-durable-semantics"
+    statement: "declared-store-semantics-require-real-engine-and-live-proof-before-acceptance"
+    required_proof: "declared"
+    actual_proof: "declared"
+gates:
+  -
+    id: "source"
+    prerequisites: []
+    may_mutate_live_target: false
+    evidence: ["entity-smoke-source-check"]
+  -
+    id: "artifact"
+    prerequisites: ["source"]
+    may_mutate_live_target: false
+    evidence: ["entity-smoke-image-check"]
+  -
+    id: "semantic-integration"
+    prerequisites: ["source","artifact"]
+    may_mutate_live_target: false
+    evidence: ["entity-smoke-real-engine-check"]
+  -
+    id: "live-read"
+    prerequisites: ["source","artifact","semantic-integration"]
+    may_mutate_live_target: false
+    evidence: ["entity-smoke-alignment-check"]
+  -
+    id: "change-set"
+    prerequisites: ["source","artifact","semantic-integration","live-read"]
+    may_mutate_live_target: false
+    evidence: ["entity-smoke-change-shape-check"]
+  -
+    id: "execution-preflight"
+    prerequisites: ["source","artifact","semantic-integration","live-read","change-set"]
+    may_mutate_live_target: false
+    evidence: ["entity-smoke-execution-preflight-check"]
+  -
+    id: "controlled-execution"
+    prerequisites: ["source","artifact","semantic-integration","live-read","change-set","execution-preflight"]
+    may_mutate_live_target: true
+    evidence: ["entity-smoke-controlled-execution-check"]
+  -
+    id: "recovery"
+    prerequisites: ["source","artifact","semantic-integration","live-read","change-set","execution-preflight","controlled-execution"]
+    may_mutate_live_target: true
+    evidence: ["entity-smoke-recovery-check"]
+

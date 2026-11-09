@@ -1,5 +1,5 @@
 import { brand, type Brand } from "../shared/index";
-import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { attachCoreDiagnosticRecord } from "../shared/index";
 import { coreSecurityPrimitiveRecord } from "./diagnostics";
 
 export type SecretString = Brand<string, "SecretString">;

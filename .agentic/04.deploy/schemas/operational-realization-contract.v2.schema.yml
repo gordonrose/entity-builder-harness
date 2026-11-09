@@ -1,0 +1,80 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.operational-realization-contract.v2
+#   version: 2
+#   status: active
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: schema
+#   purpose: Extend the versioned realization graph with synchronous unit calls and explicit absence of direct storage without changing retained v1 admission or proof gates.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operational-realization-gate
+#     path: scripts/04.deploy/operational-realization-gate/script.py
+schema: operational-realization-contract-schema/v2
+contract_schema: operational-realization-contract/v2
+base_schema: .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml
+companion_guide: .agentic/04.deploy/schemas/operational-realization-contract.v2.guide.md
+compatibility:
+  selection: explicit-schema-discriminator
+  v1_admission: unchanged
+  normalized_facts: operational-realization-normalized-facts/v1
+  normalized_change_summary: operational-realization-normalized-change-summary/v1
+  report: operational-realization-gate-result/v1
+  evidence_binding: existing-outgoing-dependency-closure-no-inherited-permissions
+required_top_level: [schema, id, version, provider_boundary, artifacts, identities, configuration_inputs, connections, state_stores, async_channels, observability_profiles, recovery_plans, execution_units, edges, lifecycle, change_shape, assumptions, gates]
+graph_changes:
+  connection_source_kind: execution-unit
+  connection_destination_kinds: [execution-unit, state-store, async-channel]
+  explicit_empty_lists_allowed: [connections, state_stores, execution_units.connections, execution_units.state_stores]
+  omitted_lists_allowed: false
+  direct_store_binding: exact-owned-store-connection-set
+  direct_store_edges: declared-direct-store-only
+bounded_cleanup:
+  selection: change_shape.disposable_restore_cleanup
+  default: delete-remains-forbidden
+  required_true_fields: [original_readback_required, positive_ownership_required, explicit_execution_approval_required, preserve_source_and_shared_resources]
+  additional_fields: forbidden
+  allowed_operation_classes: [delete]
+  forbidden_operation_classes: [create, update, replace, broaden-permission]
+  authority: declaration-only-provider-owned-proof-and-explicit-execution-approval-required
+unchanged_requirements:
+  source_ownership: source-unit-must-own-and-bind-connection
+  destination_edge: explicit-connection-to-destination-edge
+  transport_security: [verified, not-applicable]
+  provider_boundary: normalized-facts-only
+  proof_gates: all-eight-existing-gates-required
+  lifecycle: reviewed-new-label-recovery-only
+  evidence: complete-current-input-bound-component-and-gate-observations
+field_guide:
+  - path: change_shape.disposable_restore_cleanup
+    what: Explicit opt-in for cleanup of a proven disposable restore, never ordinary deletion.
+    does: Admits a delete-only change shape without granting permission or manufacturing ownership/readback proof.
+    validation: v2 only; exact four required_true_fields above must be true, with exact bounded allowed/forbidden classes. Null, false, missing or extra fields reject. All evidence bindings, gate ordering and current normalized change counts remain mandatory. The provider-owned applicability rule and actual controller must require original successful readback, positive ownership, protected source/shared resources and separate concrete execution approval.
+  - path: schema
+    what: Explicit version selection for the extended graph.
+    does: Prevents existing v1 declarations from silently gaining new admission rules.
+    validation: Must equal operational-realization-contract/v2; document version remains its independent positive revision.
+  - path: connections[].destination
+    what: The declared component this connection reaches.
+    does: Allows a private verifier to call a server instead of pretending it connects directly to the server's store.
+    validation: Must resolve to an execution unit, state store or async channel, with a connection-to-destination edge; the source must be the unit owning the connection.
+  - path: execution_units[].state_stores
+    what: Stores this unit accesses directly, not stores hidden behind a called service.
+    does: Separates a caller's direct dependencies from the callee's storage implementation and permissions.
+    validation: An explicit empty list is valid; omission, null and non-list values fail. Every listed store must have an owned direct store connection, and every owned direct store connection must be listed. A direct unit-to-store edge cannot bypass this declaration.
+  - path: execution_units[].connections
+    what: Outgoing connections owned by this unit.
+    does: Allows a service with no outgoing connection while requiring each actual connection to remain explicitly bound.
+    validation: An explicit empty list is valid. Existing source ownership, declared reference and directional-edge checks remain mandatory.
+  - path: state_stores and connections
+    what: The capability's complete store and connection inventories.
+    does: Allows genuinely store-free capabilities without synthetic dependencies.
+    validation: Explicit empty lists are valid in v2; a missing or malformed list is not an empty inventory. Declared components retain all existing content and evidence requirements.
+  - path: normalized-facts.component_evidence
+    what: Input-bound proof of each declared component.
+    does: Carries evidence across caller-to-service-to-store dependencies without copying the callee's permissions into the caller identity.
+    validation: The existing helper hashes the outgoing transitive graph and bound images. Changed callee configuration, identity, connection, store or image invalidates dependent caller evidence; a fixture is not provider proof.

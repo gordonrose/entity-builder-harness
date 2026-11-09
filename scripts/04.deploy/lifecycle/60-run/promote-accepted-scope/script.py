@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.promote-accepted-scope
-#   version: 1
+#   version: 3
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: '2026-10-25'
+#   updated_on: '2026-11-09'
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -68,7 +68,11 @@ def promote(contract_path:Path,root:Path,write=False,simulation=False):
     contained(record_path,root);contained(index_path,root)
     record=route_api.document(record_path)
     if any(record.get(key)!=value for key,value in [('target',contract.get('target')),('scope',contract.get('scope')),('schema',record_contract.get('schema'))]):raise ValueError('scope-promotion-record-subject-invalid')
-    if record.get('evidence_class','live')!=('simulated' if simulation else 'live') or record.get('status')!=('rehearsed' if simulation else 'accepted'):raise ValueError('scope-promotion-evidence-not-accepted')
+    succession_current=record_contract.get('source')=='release-succession-current'
+    if 'source' in record_contract and not succession_current:raise ValueError('scope-promotion-record-source-unsupported')
+    if succession_current:
+        if record_contract.get('schema')!='deploy/release-current-ref/v1' or record_contract.get('path')!='30-release-evidence/current-accepted-release.yml' or record.get('status')!='active':raise ValueError('scope-promotion-current-reference-invalid')
+    elif record.get('evidence_class','live')!=('simulated' if simulation else 'live') or record.get('status')!=('rehearsed' if simulation else 'accepted'):raise ValueError('scope-promotion-evidence-not-accepted')
     validator=record_contract.get('validator');command=commands.get(validator) if isinstance(validator,str) else None
     if not isinstance(command,dict):raise ValueError('scope-promotion-validator-invalid')
     argv=route_api.resolve(command.get('argv'),{'accepted_record':str(record_path),'scope_contract':str(contract_path),'target_root':str(contract_path.parents[2])})
@@ -83,6 +87,7 @@ def promote(contract_path:Path,root:Path,write=False,simulation=False):
         report=json.loads(checked.stdout)
     except (subprocess.TimeoutExpired,json.JSONDecodeError):raise ValueError('scope-promotion-validation-failed') from None
     if checked.returncode or not isinstance(report,dict) or report.get('verdict')!='validated':raise ValueError('scope-promotion-validation-failed')
+    if succession_current and (report.get('target')!=contract.get('target') or report.get('scope')!=contract.get('scope') or report.get('evidence_class')!=('simulated' if simulation else 'live')):raise ValueError('scope-promotion-current-validation-mismatch')
     index=route_api.document(index_path);entries=index.get('scopes');scope=contract.get('scope')
     if not isinstance(entries,list):raise ValueError('scope-promotion-inventory-invalid')
     inventory=inventory_module()
@@ -91,8 +96,11 @@ def promote(contract_path:Path,root:Path,write=False,simulation=False):
     if not isinstance(selected,dict):raise ValueError('scope-promotion-scope-missing')
     if selected.get('lifecycle')=='active':return {'verdict':'already-active','evidence_class':'simulated' if simulation else 'live'}
     predecessor=next((item for item in entries if isinstance(item,dict) and item.get('id')==selected.get('predecessor')),None)
-    if selected.get('lifecycle')!='candidate' or not isinstance(predecessor,dict) or predecessor.get('lifecycle')!='active':raise ValueError('scope-promotion-transition-invalid')
-    selected['lifecycle']='active';predecessor['lifecycle']='accepted-historical';predecessor['successor']=scope
+    if selected.get('lifecycle')!='candidate':raise ValueError('scope-promotion-transition-invalid')
+    if selected.get('predecessor') is not None and (not isinstance(predecessor,dict) or predecessor.get('lifecycle')!='active'):raise ValueError('scope-promotion-transition-invalid')
+    selected['lifecycle']='active'
+    if predecessor is not None:
+        predecessor['lifecycle']='accepted-historical';predecessor['successor']=scope
     if inventory.inspect(index_path.parent,root if simulation else None,index).get('verdict')!='passed':raise ValueError('scope-promotion-proposed-inventory-invalid')
     if write:
         text=index_path.read_text();header=''.join(line+'\n' for line in text.splitlines() if line.startswith('#'))

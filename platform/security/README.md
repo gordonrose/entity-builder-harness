@@ -94,8 +94,8 @@ this is not a universal numeric policy for every module.
 
 The [Platform workflow](../../.agentic/03.product/workflows/platform-runtime-implementation.md)
 owns this reuse instruction and links to the general configuration standard.
-The [predicate fixture](tests/configuration-predicate-diagnostics-runtime.test.ts)
-and [adapter fixture](../adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-runtime.test.ts)
+The [predicate fixture](tests/unit/configuration-predicate-diagnostics-runtime.test.ts)
+and [adapter fixture](../adapters/aws/security/dynamodb-rate-limiter/tests/contract/dynamodb-rate-limiter-runtime.test.ts)
 prove the actual shared calls. Other files' detailed export walkthroughs are
 outside this bounded README update.
 

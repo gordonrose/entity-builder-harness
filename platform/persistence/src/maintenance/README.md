@@ -130,7 +130,7 @@ that a diagnosis is true. The checker and its tests establish which of these
 fifteen failures actually occurred. Source-read exceptions are not relabelled
 as missing content; this module does not fetch secrets or remote configuration.
 
-[Maintenance runtime tests](../../tests/maintenance-configuration-runtime.test.ts)
+[Maintenance runtime tests](../../tests/integration/maintenance-configuration-runtime.test.ts)
 exercise all fifteen failures, defaults, combined problems and value safety.
 [Compiled caller tests](../../../../scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs)
 prove rejection before pool/token/connection work; the

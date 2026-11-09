@@ -4,7 +4,7 @@
   version: 2
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-03"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -60,37 +60,37 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/006-packages-core-tests.md)
 
-- [ ] [packages/core/tests/audit-runtime.test.ts](../../../../packages/core/tests/audit-runtime.test.ts) — modified; before `829f0d536bec`, snapshot `db1dc7c1efe5`.
-- [ ] [packages/core/tests/audit-types.test.ts](../../../../packages/core/tests/audit-types.test.ts) — modified; before `4274801d6291`, snapshot `7e2bd52bad71`.
-- [ ] [packages/core/tests/authn-runtime.test.ts](../../../../packages/core/tests/authn-runtime.test.ts) — modified; before `6c99e72a8ecd`, snapshot `174ae8d2ff58`.
-- [ ] [packages/core/tests/authn-types.test.ts](../../../../packages/core/tests/authn-types.test.ts) — modified; before `6f73c9253083`, snapshot `5d0a57348fb3`.
-- [ ] [packages/core/tests/config-runtime.test.ts](../../../../packages/core/tests/config-runtime.test.ts) — modified; before `5cf6a556da83`, snapshot `fbb162e20f81`.
-- [ ] [packages/core/tests/config-types.test.ts](../../../../packages/core/tests/config-types.test.ts) — modified; before `c9b685ef236c`, snapshot `e03fab581c83`.
-- [ ] [packages/core/tests/diagnostic-record-runtime.test.ts](../../../../packages/core/tests/diagnostic-record-runtime.test.ts) — added; before `absent`, snapshot `0b59205fd3e7`.
-- [ ] [packages/core/tests/diagnostic-record-types.test.ts](../../../../packages/core/tests/diagnostic-record-types.test.ts) — added; before `absent`, snapshot `28d03fa4e417`.
-- [ ] [packages/core/tests/events-runtime.test.ts](../../../../packages/core/tests/events-runtime.test.ts) — modified; before `8092a2d8b910`, snapshot `4e7f023044d4`.
-- [ ] [packages/core/tests/events-types.test.ts](../../../../packages/core/tests/events-types.test.ts) — modified; before `ba17957aefda`, snapshot `fbf26acf6fa8`.
-- [ ] [packages/core/tests/files-runtime.test.ts](../../../../packages/core/tests/files-runtime.test.ts) — modified; before `795670270a75`, snapshot `2711529e5ed9`.
-- [ ] [packages/core/tests/files-types.test.ts](../../../../packages/core/tests/files-types.test.ts) — modified; before `01383bc3b6a2`, snapshot `5d8fafa62a8d`.
-- [ ] [packages/core/tests/foundation-diagnostics-runtime.test.ts](../../../../packages/core/tests/foundation-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `23b71bb75ee7`.
-- [ ] [packages/core/tests/foundation-diagnostics-types.test.ts](../../../../packages/core/tests/foundation-diagnostics-types.test.ts) — added; before `absent`, snapshot `f954c00858dd`.
-- [ ] [packages/core/tests/i18n-runtime.test.ts](../../../../packages/core/tests/i18n-runtime.test.ts) — modified; before `c33bd0267f15`, snapshot `ddcb3da4669f`.
-- [ ] [packages/core/tests/i18n-types.test.ts](../../../../packages/core/tests/i18n-types.test.ts) — modified; before `f4add4391af7`, snapshot `777d16b25f87`.
-- [ ] [packages/core/tests/localization-runtime.test.ts](../../../../packages/core/tests/localization-runtime.test.ts) — modified; before `ec05d5fdb4a8`, snapshot `1108f97ed83e`.
-- [ ] [packages/core/tests/localization-types.test.ts](../../../../packages/core/tests/localization-types.test.ts) — modified; before `b75bcd1bf498`, snapshot `2c7bd20e0788`.
-- [ ] [packages/core/tests/logging-runtime.test.ts](../../../../packages/core/tests/logging-runtime.test.ts) — modified; before `71df9ec476d6`, snapshot `5d235dbe6a46`.
-- [ ] [packages/core/tests/logging-types.test.ts](../../../../packages/core/tests/logging-types.test.ts) — modified; before `183753d5e4da`, snapshot `26de5f3c6a09`.
-- [ ] [packages/core/tests/monitoring-metric-diagnostics-runtime.test.ts](../../../../packages/core/tests/monitoring-metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `3ef495deceac`.
-- [ ] [packages/core/tests/monitoring-runtime.test.ts](../../../../packages/core/tests/monitoring-runtime.test.ts) — modified; before `17f19935a461`, snapshot `c000a471de6b`.
-- [ ] [packages/core/tests/monitoring-types.test.ts](../../../../packages/core/tests/monitoring-types.test.ts) — modified; before `e9b2730cb30f`, snapshot `4440bdbb8583`.
-- [ ] [packages/core/tests/persistence-runtime.test.ts](../../../../packages/core/tests/persistence-runtime.test.ts) — modified; before `a8f302c9dc79`, snapshot `b6f58f413a84`.
-- [ ] [packages/core/tests/persistence-types.test.ts](../../../../packages/core/tests/persistence-types.test.ts) — modified; before `3ccff62e8e28`, snapshot `3f900e6ee423`.
-- [ ] [packages/core/tests/queues-runtime.test.ts](../../../../packages/core/tests/queues-runtime.test.ts) — modified; before `e458bdde5388`, snapshot `459933e58f11`.
-- [ ] [packages/core/tests/queues-types.test.ts](../../../../packages/core/tests/queues-types.test.ts) — modified; before `24d88bf2ce58`, snapshot `59f2a7dd8b31`.
-- [ ] [packages/core/tests/security-diagnostics-runtime.test.ts](../../../../packages/core/tests/security-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `e6ad0c89e2a7`.
-- [ ] [packages/core/tests/security-diagnostics-types.test.ts](../../../../packages/core/tests/security-diagnostics-types.test.ts) — added; before `absent`, snapshot `78795d5b426e`.
-- [ ] [packages/core/tests/tenancy-runtime.test.ts](../../../../packages/core/tests/tenancy-runtime.test.ts) — modified; before `b0d7dae41ebb`, snapshot `52393f855618`.
-- [ ] [packages/core/tests/tenancy-types.test.ts](../../../../packages/core/tests/tenancy-types.test.ts) — modified; before `fe2951951749`, snapshot `f8c1d59091d2`.
+- [ ] [packages/core/tests/audit/unit/audit-runtime.test.ts](../../../../packages/core/tests/audit/unit/audit-runtime.test.ts) — modified; before `829f0d536bec`, snapshot `db1dc7c1efe5`.
+- [ ] [packages/core/tests/audit/type-level/audit-types.test.ts](../../../../packages/core/tests/audit/type-level/audit-types.test.ts) — modified; before `4274801d6291`, snapshot `7e2bd52bad71`.
+- [ ] [packages/core/tests/authn/unit/authn-runtime.test.ts](../../../../packages/core/tests/authn/unit/authn-runtime.test.ts) — modified; before `6c99e72a8ecd`, snapshot `174ae8d2ff58`.
+- [ ] [packages/core/tests/authn/type-level/authn-types.test.ts](../../../../packages/core/tests/authn/type-level/authn-types.test.ts) — modified; before `6f73c9253083`, snapshot `5d0a57348fb3`.
+- [ ] [packages/core/tests/config/unit/config-runtime.test.ts](../../../../packages/core/tests/config/unit/config-runtime.test.ts) — modified; before `5cf6a556da83`, snapshot `fbb162e20f81`.
+- [ ] [packages/core/tests/config/type-level/config-types.test.ts](../../../../packages/core/tests/config/type-level/config-types.test.ts) — modified; before `c9b685ef236c`, snapshot `e03fab581c83`.
+- [ ] [packages/core/tests/diagnostics/contract/diagnostic-record-runtime.test.ts](../../../../packages/core/tests/diagnostics/contract/diagnostic-record-runtime.test.ts) — added; before `absent`, snapshot `0b59205fd3e7`.
+- [ ] [packages/core/tests/diagnostics/type-level/diagnostic-record-types.test.ts](../../../../packages/core/tests/diagnostics/type-level/diagnostic-record-types.test.ts) — added; before `absent`, snapshot `28d03fa4e417`.
+- [ ] [packages/core/tests/events/unit/events-runtime.test.ts](../../../../packages/core/tests/events/unit/events-runtime.test.ts) — modified; before `8092a2d8b910`, snapshot `4e7f023044d4`.
+- [ ] [packages/core/tests/events/type-level/events-types.test.ts](../../../../packages/core/tests/events/type-level/events-types.test.ts) — modified; before `ba17957aefda`, snapshot `fbf26acf6fa8`.
+- [ ] [packages/core/tests/files/unit/files-runtime.test.ts](../../../../packages/core/tests/files/unit/files-runtime.test.ts) — modified; before `795670270a75`, snapshot `2711529e5ed9`.
+- [ ] [packages/core/tests/files/type-level/files-types.test.ts](../../../../packages/core/tests/files/type-level/files-types.test.ts) — modified; before `01383bc3b6a2`, snapshot `5d8fafa62a8d`.
+- [ ] [packages/core/tests/diagnostics/contract/foundation-diagnostics-runtime.test.ts](../../../../packages/core/tests/diagnostics/contract/foundation-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `23b71bb75ee7`.
+- [ ] [packages/core/tests/diagnostics/type-level/foundation-diagnostics-types.test.ts](../../../../packages/core/tests/diagnostics/type-level/foundation-diagnostics-types.test.ts) — added; before `absent`, snapshot `f954c00858dd`.
+- [ ] [packages/core/tests/i18n/unit/i18n-runtime.test.ts](../../../../packages/core/tests/i18n/unit/i18n-runtime.test.ts) — modified; before `c33bd0267f15`, snapshot `ddcb3da4669f`.
+- [ ] [packages/core/tests/i18n/type-level/i18n-types.test.ts](../../../../packages/core/tests/i18n/type-level/i18n-types.test.ts) — modified; before `f4add4391af7`, snapshot `777d16b25f87`.
+- [ ] [packages/core/tests/localization/unit/localization-runtime.test.ts](../../../../packages/core/tests/localization/unit/localization-runtime.test.ts) — modified; before `ec05d5fdb4a8`, snapshot `1108f97ed83e`.
+- [ ] [packages/core/tests/localization/type-level/localization-types.test.ts](../../../../packages/core/tests/localization/type-level/localization-types.test.ts) — modified; before `b75bcd1bf498`, snapshot `2c7bd20e0788`.
+- [ ] [packages/core/tests/logging/unit/logging-runtime.test.ts](../../../../packages/core/tests/logging/unit/logging-runtime.test.ts) — modified; before `71df9ec476d6`, snapshot `5d235dbe6a46`.
+- [ ] [packages/core/tests/logging/type-level/logging-types.test.ts](../../../../packages/core/tests/logging/type-level/logging-types.test.ts) — modified; before `183753d5e4da`, snapshot `26de5f3c6a09`.
+- [ ] [packages/core/tests/monitoring/unit/monitoring-metric-diagnostics-runtime.test.ts](../../../../packages/core/tests/monitoring/unit/monitoring-metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `3ef495deceac`.
+- [ ] [packages/core/tests/monitoring/unit/monitoring-runtime.test.ts](../../../../packages/core/tests/monitoring/unit/monitoring-runtime.test.ts) — modified; before `17f19935a461`, snapshot `c000a471de6b`.
+- [ ] [packages/core/tests/monitoring/type-level/monitoring-types.test.ts](../../../../packages/core/tests/monitoring/type-level/monitoring-types.test.ts) — modified; before `e9b2730cb30f`, snapshot `4440bdbb8583`.
+- [ ] [packages/core/tests/persistence/unit/persistence-runtime.test.ts](../../../../packages/core/tests/persistence/unit/persistence-runtime.test.ts) — modified; before `a8f302c9dc79`, snapshot `b6f58f413a84`.
+- [ ] [packages/core/tests/persistence/type-level/persistence-types.test.ts](../../../../packages/core/tests/persistence/type-level/persistence-types.test.ts) — modified; before `3ccff62e8e28`, snapshot `3f900e6ee423`.
+- [ ] [packages/core/tests/queues/unit/queues-runtime.test.ts](../../../../packages/core/tests/queues/unit/queues-runtime.test.ts) — modified; before `e458bdde5388`, snapshot `459933e58f11`.
+- [ ] [packages/core/tests/queues/type-level/queues-types.test.ts](../../../../packages/core/tests/queues/type-level/queues-types.test.ts) — modified; before `24d88bf2ce58`, snapshot `59f2a7dd8b31`.
+- [ ] [packages/core/tests/security/unit/security-diagnostics-runtime.test.ts](../../../../packages/core/tests/security/unit/security-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `e6ad0c89e2a7`.
+- [ ] [packages/core/tests/security/type-level/security-diagnostics-types.test.ts](../../../../packages/core/tests/security/type-level/security-diagnostics-types.test.ts) — added; before `absent`, snapshot `78795d5b426e`.
+- [ ] [packages/core/tests/tenancy/unit/tenancy-runtime.test.ts](../../../../packages/core/tests/tenancy/unit/tenancy-runtime.test.ts) — modified; before `b0d7dae41ebb`, snapshot `52393f855618`.
+- [ ] [packages/core/tests/tenancy/type-level/tenancy-types.test.ts](../../../../packages/core/tests/tenancy/type-level/tenancy-types.test.ts) — modified; before `fe2951951749`, snapshot `f8c1d59091d2`.
 
 ## L007 — packages/core/src/config
 
@@ -125,9 +125,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/011-platform-config-tests.md)
 
-- [ ] [platform/config/tests/evidence-runtime.test.ts](../../../../platform/config/tests/evidence-runtime.test.ts) — added; before `absent`, snapshot `3e64d578f816`.
-- [ ] [platform/config/tests/platform-config-runtime.test.ts](../../../../platform/config/tests/platform-config-runtime.test.ts) — modified; before `c0324fed6952`, snapshot `d35cf87fcf13`.
-- [ ] [platform/config/tests/platform-config-types.test.ts](../../../../platform/config/tests/platform-config-types.test.ts) — modified; before `1075680e1c6e`, snapshot `bb262c896491`.
+- [ ] [platform/config/tests/integration/evidence-runtime.test.ts](../../../../platform/config/tests/integration/evidence-runtime.test.ts) — added; before `absent`, snapshot `3e64d578f816`.
+- [ ] [platform/config/tests/integration/platform-config-runtime.test.ts](../../../../platform/config/tests/integration/platform-config-runtime.test.ts) — modified; before `c0324fed6952`, snapshot `d35cf87fcf13`.
+- [ ] [platform/config/tests/type-level/platform-config-types.test.ts](../../../../platform/config/tests/type-level/platform-config-types.test.ts) — modified; before `1075680e1c6e`, snapshot `bb262c896491`.
 - [ ] [platform/config/tests/run-runtime-tests.mjs](../../../../platform/config/tests/run-runtime-tests.mjs) — modified; before `3d3b9312a274`, snapshot `6a6c3dfd7478`.
 
 ## L012 — packages/core/src/shared
@@ -260,9 +260,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/026-platform-contracts-tests.md)
 
-- [ ] [platform/contracts/tests/platform-contracts-runtime.test.ts](../../../../platform/contracts/tests/platform-contracts-runtime.test.ts) — modified; before `b1c1949fe36b`, snapshot `62bdc70a38bf`.
-- [ ] [platform/contracts/tests/platform-contracts-types.test.ts](../../../../platform/contracts/tests/platform-contracts-types.test.ts) — modified; before `33cd48c21df0`, snapshot `50604d633dc4`.
-- [ ] [platform/contracts/tests/registration-diagnostics-runtime.test.ts](../../../../platform/contracts/tests/registration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `f7903da2c37d`.
+- [ ] [platform/contracts/tests/contract/platform-contracts-runtime.test.ts](../../../../platform/contracts/tests/contract/platform-contracts-runtime.test.ts) — modified; before `b1c1949fe36b`, snapshot `62bdc70a38bf`.
+- [ ] [platform/contracts/tests/type-level/platform-contracts-types.test.ts](../../../../platform/contracts/tests/type-level/platform-contracts-types.test.ts) — modified; before `33cd48c21df0`, snapshot `50604d633dc4`.
+- [ ] [platform/contracts/tests/contract/registration-diagnostics-runtime.test.ts](../../../../platform/contracts/tests/contract/registration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `f7903da2c37d`.
 - [ ] [platform/contracts/tests/run-runtime-tests.mjs](../../../../platform/contracts/tests/run-runtime-tests.mjs) — modified; before `b404ff35dcbc`, snapshot `aa81015a3d23`.
 
 ## L027 — platform/adapters/aws/runtime/ecs-fargate
@@ -281,9 +281,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/029-runtime-ecs-fargate-tests.md)
 
-- [ ] [platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-boundaries.test.mjs](../../../../platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-boundaries.test.mjs) — modified; before `5cb2f87a073f`, snapshot `dcff0570d957`.
-- [ ] [platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-runtime.test.ts](../../../../platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-runtime.test.ts) — modified; before `12cc1cd72778`, snapshot `b9eb0962f8c6`.
-- [ ] [platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-types.test.ts](../../../../platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-types.test.ts) — added; before `absent`, snapshot `6640dfb8e405`.
+- [ ] [platform/adapters/aws/runtime/ecs-fargate/tests/test-infrastructure/static-validation/ecs-fargate-adapter-boundaries.test.mjs](../../../../platform/adapters/aws/runtime/ecs-fargate/tests/test-infrastructure/static-validation/ecs-fargate-adapter-boundaries.test.mjs) — modified; before `5cb2f87a073f`, snapshot `dcff0570d957`.
+- [ ] [platform/adapters/aws/runtime/ecs-fargate/tests/contract/ecs-fargate-adapter-runtime.test.ts](../../../../platform/adapters/aws/runtime/ecs-fargate/tests/contract/ecs-fargate-adapter-runtime.test.ts) — modified; before `12cc1cd72778`, snapshot `b9eb0962f8c6`.
+- [ ] [platform/adapters/aws/runtime/ecs-fargate/tests/type-level/ecs-fargate-adapter-types.test.ts](../../../../platform/adapters/aws/runtime/ecs-fargate/tests/type-level/ecs-fargate-adapter-types.test.ts) — added; before `absent`, snapshot `6640dfb8e405`.
 - [ ] [platform/adapters/aws/runtime/ecs-fargate/tests/run-runtime-tests.mjs](../../../../platform/adapters/aws/runtime/ecs-fargate/tests/run-runtime-tests.mjs) — modified; before `1e2bc3a149a3`, snapshot `c326b9923157`.
 
 ## L030 — platform/runtime
@@ -314,12 +314,12 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/033-platform-runtime-tests.md)
 
-- [ ] [platform/runtime/tests/context-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/context-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `fcedc48d6f53`.
-- [ ] [platform/runtime/tests/diagnostics-runtime.test.ts](../../../../platform/runtime/tests/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `ddbf62eb3e52`.
-- [ ] [platform/runtime/tests/lifecycle-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/lifecycle-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `ea2da30646fa`.
-- [ ] [platform/runtime/tests/lifecycle-diagnostics-types.test.ts](../../../../platform/runtime/tests/lifecycle-diagnostics-types.test.ts) — added; before `absent`, snapshot `2eae7841fc08`.
-- [ ] [platform/runtime/tests/mount-boundary-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/mount-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `1a3f827e694d`.
-- [ ] [platform/runtime/tests/registration-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/registration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `31ccf7705ea2`.
+- [ ] [platform/runtime/tests/unit/context-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/unit/context-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `fcedc48d6f53`.
+- [ ] [platform/runtime/tests/integration/diagnostics-runtime.test.ts](../../../../platform/runtime/tests/integration/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `ddbf62eb3e52`.
+- [ ] [platform/runtime/tests/integration/lifecycle-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/integration/lifecycle-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `ea2da30646fa`.
+- [ ] [platform/runtime/tests/type-level/lifecycle-diagnostics-types.test.ts](../../../../platform/runtime/tests/type-level/lifecycle-diagnostics-types.test.ts) — added; before `absent`, snapshot `2eae7841fc08`.
+- [ ] [platform/runtime/tests/integration/mount-boundary-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/integration/mount-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `1a3f827e694d`.
+- [ ] [platform/runtime/tests/integration/registration-diagnostics-runtime.test.ts](../../../../platform/runtime/tests/integration/registration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `31ccf7705ea2`.
 
 ## L034 — platform/testing
 
@@ -337,9 +337,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/036-platform-testing-tests.md)
 
-- [ ] [platform/testing/tests/config-evidence-runtime.test.ts](../../../../platform/testing/tests/config-evidence-runtime.test.ts) — added; before `absent`, snapshot `f9c58a991d69`.
-- [ ] [platform/testing/tests/diagnostics-runtime.test.ts](../../../../platform/testing/tests/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `8710f42a9a53`.
-- [ ] [platform/testing/tests/mount-boundary-diagnostics-runtime.test.ts](../../../../platform/testing/tests/mount-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `373aa1183e56`.
+- [ ] [platform/testing/tests/integration/config-evidence-runtime.test.ts](../../../../platform/testing/tests/integration/config-evidence-runtime.test.ts) — added; before `absent`, snapshot `f9c58a991d69`.
+- [ ] [platform/testing/tests/unit/diagnostics-runtime.test.ts](../../../../platform/testing/tests/unit/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `8710f42a9a53`.
+- [ ] [platform/testing/tests/integration/mount-boundary-diagnostics-runtime.test.ts](../../../../platform/testing/tests/integration/mount-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `373aa1183e56`.
 
 ## L037 — platform/server
 
@@ -382,23 +382,23 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/042-platform-server-tests.md)
 
-- [ ] [platform/server/tests/builtin-evidence-runtime.test.ts](../../../../platform/server/tests/builtin-evidence-runtime.test.ts) — added; before `absent`, snapshot `4eed68a6744f`.
-- [ ] [platform/server/tests/configuration-omissions-runtime.test.ts](../../../../platform/server/tests/configuration-omissions-runtime.test.ts) — added; before `absent`, snapshot `0a09f9c408a1`.
-- [ ] [platform/server/tests/configuration-runtime.test.ts](../../../../platform/server/tests/configuration-runtime.test.ts) — added; before `absent`, snapshot `4f3d5d5e1693`.
-- [ ] [platform/server/tests/diagnostics-runtime.test.ts](../../../../platform/server/tests/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `16efca98a600`.
-- [ ] [platform/server/tests/health-diagnostics-runtime.test.ts](../../../../platform/server/tests/health-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `d1fa87cf8783`.
-- [ ] [platform/server/tests/metric-diagnostics-runtime.test.ts](../../../../platform/server/tests/metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `6244f93d4087`.
-- [ ] [platform/server/tests/platform-server-runtime.test.ts](../../../../platform/server/tests/platform-server-runtime.test.ts) — modified; before `de02d2ea1a76`, snapshot `70f5a32ab3f2`.
-- [ ] [platform/server/tests/platform-server-types.test.ts](../../../../platform/server/tests/platform-server-types.test.ts) — modified; before `b2f1b07ab1b6`, snapshot `24026805419e`.
-- [ ] [platform/server/tests/process-boundary-diagnostics-runtime.test.ts](../../../../platform/server/tests/process-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `660ccd044300`.
-- [ ] [platform/server/tests/request-boundary-diagnostics-runtime.test.ts](../../../../platform/server/tests/request-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `b106c0023662`.
-- [ ] [platform/server/tests/request-observation-runtime.test.ts](../../../../platform/server/tests/request-observation-runtime.test.ts) — added; before `absent`, snapshot `e62a8310278d`.
+- [ ] [platform/server/tests/integration/builtin-evidence-runtime.test.ts](../../../../platform/server/tests/integration/builtin-evidence-runtime.test.ts) — added; before `absent`, snapshot `4eed68a6744f`.
+- [ ] [platform/server/tests/unit/configuration-omissions-runtime.test.ts](../../../../platform/server/tests/unit/configuration-omissions-runtime.test.ts) — added; before `absent`, snapshot `0a09f9c408a1`.
+- [ ] [platform/server/tests/integration/configuration-runtime.test.ts](../../../../platform/server/tests/integration/configuration-runtime.test.ts) — added; before `absent`, snapshot `4f3d5d5e1693`.
+- [ ] [platform/server/tests/integration/diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `16efca98a600`.
+- [ ] [platform/server/tests/integration/health-diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/health-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `d1fa87cf8783`.
+- [ ] [platform/server/tests/integration/metric-diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `6244f93d4087`.
+- [ ] [platform/server/tests/integration/platform-server-runtime.test.ts](../../../../platform/server/tests/integration/platform-server-runtime.test.ts) — modified; before `de02d2ea1a76`, snapshot `70f5a32ab3f2`.
+- [ ] [platform/server/tests/type-level/platform-server-types.test.ts](../../../../platform/server/tests/type-level/platform-server-types.test.ts) — modified; before `b2f1b07ab1b6`, snapshot `24026805419e`.
+- [ ] [platform/server/tests/integration/process-boundary-diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/process-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `660ccd044300`.
+- [ ] [platform/server/tests/integration/request-boundary-diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/request-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `b106c0023662`.
+- [ ] [platform/server/tests/integration/request-observation-runtime.test.ts](../../../../platform/server/tests/integration/request-observation-runtime.test.ts) — added; before `absent`, snapshot `e62a8310278d`.
 - [ ] [platform/server/tests/run-runtime-tests.mjs](../../../../platform/server/tests/run-runtime-tests.mjs) — modified; before `5391e040aa6e`, snapshot `5f47db0d7359`.
-- [ ] [platform/server/tests/security-diagnostics-runtime.test.ts](../../../../platform/server/tests/security-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `2ef392548ae3`.
-- [ ] [platform/server/tests/startup-configuration-diagnostics-runtime.test.ts](../../../../platform/server/tests/startup-configuration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `b4e91f9a2461`.
-- [ ] [platform/server/tests/transport-configuration-diagnostics-runtime.test.ts](../../../../platform/server/tests/transport-configuration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `718af6a2c060`.
-- [ ] [platform/server/tests/transport-diagnostics-runtime.test.ts](../../../../platform/server/tests/transport-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `960f1629e53d`.
-- [ ] [platform/server/tests/transport-diagnostics-types.test.ts](../../../../platform/server/tests/transport-diagnostics-types.test.ts) — added; before `absent`, snapshot `8a160652e83a`.
+- [ ] [platform/server/tests/integration/security-diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/security-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `2ef392548ae3`.
+- [ ] [platform/server/tests/integration/startup-configuration-diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/startup-configuration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `b4e91f9a2461`.
+- [ ] [platform/server/tests/unit/transport-configuration-diagnostics-runtime.test.ts](../../../../platform/server/tests/unit/transport-configuration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `718af6a2c060`.
+- [ ] [platform/server/tests/integration/transport-diagnostics-runtime.test.ts](../../../../platform/server/tests/integration/transport-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `960f1629e53d`.
+- [ ] [platform/server/tests/type-level/transport-diagnostics-types.test.ts](../../../../platform/server/tests/type-level/transport-diagnostics-types.test.ts) — added; before `absent`, snapshot `8a160652e83a`.
 
 ## L043 — platform/health
 
@@ -424,9 +424,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/046-platform-health-tests.md)
 
-- [ ] [platform/health/tests/diagnostics-runtime.test.ts](../../../../platform/health/tests/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `9e4477bd88d5`.
-- [ ] [platform/health/tests/platform-health-runtime.test.ts](../../../../platform/health/tests/platform-health-runtime.test.ts) — modified; before `320592b3a152`, snapshot `975f98bbb518`.
-- [ ] [platform/health/tests/platform-health-types.test.ts](../../../../platform/health/tests/platform-health-types.test.ts) — modified; before `6409f41f9464`, snapshot `fd8d80cb011f`.
+- [ ] [platform/health/tests/integration/diagnostics-runtime.test.ts](../../../../platform/health/tests/integration/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `9e4477bd88d5`.
+- [ ] [platform/health/tests/integration/platform-health-runtime.test.ts](../../../../platform/health/tests/integration/platform-health-runtime.test.ts) — modified; before `320592b3a152`, snapshot `975f98bbb518`.
+- [ ] [platform/health/tests/type-level/platform-health-types.test.ts](../../../../platform/health/tests/type-level/platform-health-types.test.ts) — modified; before `6409f41f9464`, snapshot `fd8d80cb011f`.
 
 ## L047 — packages/core/src/security
 
@@ -449,7 +449,7 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/049-auth-cognito-tests.md)
 
-- [ ] [platform/adapters/aws/auth/cognito/tests/cognito-adapter-runtime.test.ts](../../../../platform/adapters/aws/auth/cognito/tests/cognito-adapter-runtime.test.ts) — modified; before `b87b563bedb8`, snapshot `c310a82f1174`.
+- [ ] [platform/adapters/aws/auth/cognito/tests/contract/cognito-adapter-runtime.test.ts](../../../../platform/adapters/aws/auth/cognito/tests/contract/cognito-adapter-runtime.test.ts) — modified; before `b87b563bedb8`, snapshot `c310a82f1174`.
 - [ ] [platform/adapters/aws/auth/cognito/tests/run-runtime-tests.mjs](../../../../platform/adapters/aws/auth/cognito/tests/run-runtime-tests.mjs) — modified; before `fa3aa27f00e0`, snapshot `c3f7ace1d565`.
 
 ## L050 — platform/adapters/aws/security/dynamodb-rate-limiter
@@ -468,7 +468,7 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/052-security-dynamodb-rate-limiter-tests.md)
 
-- [ ] [platform/adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-runtime.test.ts](../../../../platform/adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-runtime.test.ts) — modified; before `30c2e43843ae`, snapshot `6498ec0117ad`.
+- [ ] [platform/adapters/aws/security/dynamodb-rate-limiter/tests/contract/dynamodb-rate-limiter-runtime.test.ts](../../../../platform/adapters/aws/security/dynamodb-rate-limiter/tests/contract/dynamodb-rate-limiter-runtime.test.ts) — modified; before `30c2e43843ae`, snapshot `6498ec0117ad`.
 - [ ] [platform/adapters/aws/security/dynamodb-rate-limiter/tests/run-runtime-tests.mjs](../../../../platform/adapters/aws/security/dynamodb-rate-limiter/tests/run-runtime-tests.mjs) — modified; before `f771db529dd4`, snapshot `baeff4ab64ad`.
 
 ## L053 — platform/security
@@ -502,14 +502,14 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/056-platform-security-tests.md)
 
-- [ ] [platform/security/tests/configuration-predicate-diagnostics-runtime.test.ts](../../../../platform/security/tests/configuration-predicate-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `9e3e614c7f1d`.
-- [ ] [platform/security/tests/platform-security-runtime.test.ts](../../../../platform/security/tests/platform-security-runtime.test.ts) — modified; before `9dec2b26a0d5`, snapshot `656fa494b677`.
-- [ ] [platform/security/tests/platform-security-types.test.ts](../../../../platform/security/tests/platform-security-types.test.ts) — modified; before `54e6f96116b0`, snapshot `347f362a4f07`.
+- [ ] [platform/security/tests/unit/configuration-predicate-diagnostics-runtime.test.ts](../../../../platform/security/tests/unit/configuration-predicate-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `9e3e614c7f1d`.
+- [ ] [platform/security/tests/integration/platform-security-runtime.test.ts](../../../../platform/security/tests/integration/platform-security-runtime.test.ts) — modified; before `9dec2b26a0d5`, snapshot `656fa494b677`.
+- [ ] [platform/security/tests/type-level/platform-security-types.test.ts](../../../../platform/security/tests/type-level/platform-security-types.test.ts) — modified; before `54e6f96116b0`, snapshot `347f362a4f07`.
 - [ ] [platform/security/tests/run-runtime-tests.mjs](../../../../platform/security/tests/run-runtime-tests.mjs) — modified; before `ba1885c92f51`, snapshot `b9d6ee7ae819`.
-- [ ] [platform/security/tests/security-certificates-runtime.test.ts](../../../../platform/security/tests/security-certificates-runtime.test.ts) — added; before `absent`, snapshot `4ee807f9a200`.
-- [ ] [platform/security/tests/security-certificates-types.test.ts](../../../../platform/security/tests/security-certificates-types.test.ts) — added; before `absent`, snapshot `198ce55865cf`.
-- [ ] [platform/security/tests/security-operation-diagnostics-runtime.test.ts](../../../../platform/security/tests/security-operation-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `56402af826f0`.
-- [ ] [platform/security/tests/security-operation-diagnostics-types.test.ts](../../../../platform/security/tests/security-operation-diagnostics-types.test.ts) — added; before `absent`, snapshot `8d167037ab82`.
+- [ ] [platform/security/tests/unit/security-certificates-runtime.test.ts](../../../../platform/security/tests/unit/security-certificates-runtime.test.ts) — added; before `absent`, snapshot `4ee807f9a200`.
+- [ ] [platform/security/tests/type-level/security-certificates-types.test.ts](../../../../platform/security/tests/type-level/security-certificates-types.test.ts) — added; before `absent`, snapshot `198ce55865cf`.
+- [ ] [platform/security/tests/unit/security-operation-diagnostics-runtime.test.ts](../../../../platform/security/tests/unit/security-operation-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `56402af826f0`.
+- [ ] [platform/security/tests/type-level/security-operation-diagnostics-types.test.ts](../../../../platform/security/tests/type-level/security-operation-diagnostics-types.test.ts) — added; before `absent`, snapshot `8d167037ab82`.
 
 ## L057 — packages/core/src/persistence
 
@@ -563,10 +563,10 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/062-platform-persistence-tests.md)
 
-- [ ] [platform/persistence/tests/platform-persistence-observability-runtime.test.ts](../../../../platform/persistence/tests/platform-persistence-observability-runtime.test.ts) — modified; before `d1d7caa8d4d1`, snapshot `deb7caaf5086`.
-- [ ] [platform/persistence/tests/platform-persistence-observability-types.test.ts](../../../../platform/persistence/tests/platform-persistence-observability-types.test.ts) — modified; before `74e9697ea6ef`, snapshot `9ac46a3652b9`.
-- [ ] [platform/persistence/tests/platform-persistence-runtime.test.ts](../../../../platform/persistence/tests/platform-persistence-runtime.test.ts) — modified; before `2e7352906e63`, snapshot `3659d3919357`.
-- [ ] [platform/persistence/tests/platform-persistence-types.test.ts](../../../../platform/persistence/tests/platform-persistence-types.test.ts) — modified; before `5b02a1df9f0d`, snapshot `a51f9b28d725`.
+- [ ] [platform/persistence/tests/integration/platform-persistence-observability-runtime.test.ts](../../../../platform/persistence/tests/integration/platform-persistence-observability-runtime.test.ts) — modified; before `d1d7caa8d4d1`, snapshot `deb7caaf5086`.
+- [ ] [platform/persistence/tests/type-level/platform-persistence-observability-types.test.ts](../../../../platform/persistence/tests/type-level/platform-persistence-observability-types.test.ts) — modified; before `74e9697ea6ef`, snapshot `9ac46a3652b9`.
+- [ ] [platform/persistence/tests/integration/platform-persistence-runtime.test.ts](../../../../platform/persistence/tests/integration/platform-persistence-runtime.test.ts) — modified; before `2e7352906e63`, snapshot `3659d3919357`.
+- [ ] [platform/persistence/tests/type-level/platform-persistence-types.test.ts](../../../../platform/persistence/tests/type-level/platform-persistence-types.test.ts) — modified; before `5b02a1df9f0d`, snapshot `a51f9b28d725`.
 
 ## L063 — platform/adapters/aws/persistence/postgresql
 
@@ -600,9 +600,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/065-persistence-postgresql-tests.md)
 
-- [ ] [platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts](../../../../platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts) — modified; before `0566d3f2097c`, snapshot `d68f6077a049`.
-- [ ] [platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-boundaries.test.mjs](../../../../platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-boundaries.test.mjs) — modified; before `791d2d2b9ccb`, snapshot `e167dff6fe7e`.
-- [ ] [platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts](../../../../platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts) — modified; before `f27f4bb4773e`, snapshot `d05caa067a69`.
+- [ ] [platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts](../../../../platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts) — modified; before `0566d3f2097c`, snapshot `d68f6077a049`.
+- [ ] [platform/adapters/aws/persistence/postgresql/tests/test-infrastructure/static-validation/postgresql-persistence-adapter-boundaries.test.mjs](../../../../platform/adapters/aws/persistence/postgresql/tests/test-infrastructure/static-validation/postgresql-persistence-adapter-boundaries.test.mjs) — modified; before `791d2d2b9ccb`, snapshot `e167dff6fe7e`.
+- [ ] [platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts](../../../../platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts) — modified; before `f27f4bb4773e`, snapshot `d05caa067a69`.
 - [ ] [platform/adapters/aws/persistence/postgresql/tests/run-local-integration-tests.mjs](../../../../platform/adapters/aws/persistence/postgresql/tests/run-local-integration-tests.mjs) — modified; before `ec78ef91e968`, snapshot `b64ca537aa99`.
 - [ ] [platform/adapters/aws/persistence/postgresql/tests/run-runtime-tests.mjs](../../../../platform/adapters/aws/persistence/postgresql/tests/run-runtime-tests.mjs) — modified; before `8be2269fc839`, snapshot `ed8b5eb7196b`.
 
@@ -630,7 +630,7 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/068-persistence-dynamodb-tests.md)
 
-- [ ] [platform/adapters/aws/persistence/dynamodb/tests/dynamodb-persistence-adapter-runtime.test.ts](../../../../platform/adapters/aws/persistence/dynamodb/tests/dynamodb-persistence-adapter-runtime.test.ts) — modified; before `6a6994bf4324`, snapshot `626fa68ebf7d`.
+- [ ] [platform/adapters/aws/persistence/dynamodb/tests/contract/dynamodb-persistence-adapter-runtime.test.ts](../../../../platform/adapters/aws/persistence/dynamodb/tests/contract/dynamodb-persistence-adapter-runtime.test.ts) — modified; before `6a6994bf4324`, snapshot `626fa68ebf7d`.
 - [ ] [platform/adapters/aws/persistence/dynamodb/tests/run-runtime-tests.mjs](../../../../platform/adapters/aws/persistence/dynamodb/tests/run-runtime-tests.mjs) — modified; before `fa2782e9d4b1`, snapshot `d562a59c1677`.
 
 ## L069 — packages/core/src/queues
@@ -671,17 +671,17 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/073-platform-workers-tests.md)
 
-- [ ] [platform/workers/tests/builtin-evidence-runtime.test.ts](../../../../platform/workers/tests/builtin-evidence-runtime.test.ts) — added; before `absent`, snapshot `a21b87d15d9b`.
-- [ ] [platform/workers/tests/context-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/context-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `44ae2c092287`.
-- [ ] [platform/workers/tests/delivery-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/delivery-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `59f52fe03127`.
-- [ ] [platform/workers/tests/health-diagnostics-runtime.test.ts](../../../../platform/workers/tests/health-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `2b05ab6dcdc7`.
-- [ ] [platform/workers/tests/lifecycle-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/lifecycle-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `03d16e67deac`.
-- [ ] [platform/workers/tests/lifecycle-boundary-diagnostics-types.test.ts](../../../../platform/workers/tests/lifecycle-boundary-diagnostics-types.test.ts) — added; before `absent`, snapshot `dce641501bd0`.
-- [ ] [platform/workers/tests/metric-diagnostics-runtime.test.ts](../../../../platform/workers/tests/metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `7f2b5da4392b`.
-- [ ] [platform/workers/tests/platform-workers-runtime.test.ts](../../../../platform/workers/tests/platform-workers-runtime.test.ts) — modified; before `be99b44ad628`, snapshot `7871efd0b3c3`.
-- [ ] [platform/workers/tests/platform-workers-types.test.ts](../../../../platform/workers/tests/platform-workers-types.test.ts) — modified; before `f875680f735a`, snapshot `6945a1c3c289`.
-- [ ] [platform/workers/tests/process-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/process-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `30cb89e4456d`.
-- [ ] [platform/workers/tests/startup-configuration-diagnostics-runtime.test.ts](../../../../platform/workers/tests/startup-configuration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `c3d75f03ff26`.
+- [ ] [platform/workers/tests/integration/builtin-evidence-runtime.test.ts](../../../../platform/workers/tests/integration/builtin-evidence-runtime.test.ts) — added; before `absent`, snapshot `a21b87d15d9b`.
+- [ ] [platform/workers/tests/integration/context-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/integration/context-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `44ae2c092287`.
+- [ ] [platform/workers/tests/integration/delivery-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/integration/delivery-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `59f52fe03127`.
+- [ ] [platform/workers/tests/integration/health-diagnostics-runtime.test.ts](../../../../platform/workers/tests/integration/health-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `2b05ab6dcdc7`.
+- [ ] [platform/workers/tests/integration/lifecycle-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/integration/lifecycle-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `03d16e67deac`.
+- [ ] [platform/workers/tests/type-level/lifecycle-boundary-diagnostics-types.test.ts](../../../../platform/workers/tests/type-level/lifecycle-boundary-diagnostics-types.test.ts) — added; before `absent`, snapshot `dce641501bd0`.
+- [ ] [platform/workers/tests/integration/metric-diagnostics-runtime.test.ts](../../../../platform/workers/tests/integration/metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `7f2b5da4392b`.
+- [ ] [platform/workers/tests/integration/platform-workers-runtime.test.ts](../../../../platform/workers/tests/integration/platform-workers-runtime.test.ts) — modified; before `be99b44ad628`, snapshot `7871efd0b3c3`.
+- [ ] [platform/workers/tests/type-level/platform-workers-types.test.ts](../../../../platform/workers/tests/type-level/platform-workers-types.test.ts) — modified; before `f875680f735a`, snapshot `6945a1c3c289`.
+- [ ] [platform/workers/tests/integration/process-boundary-diagnostics-runtime.test.ts](../../../../platform/workers/tests/integration/process-boundary-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `30cb89e4456d`.
+- [ ] [platform/workers/tests/integration/startup-configuration-diagnostics-runtime.test.ts](../../../../platform/workers/tests/integration/startup-configuration-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `c3d75f03ff26`.
 
 ## L074 — platform/adapters/aws/queue/sqs
 
@@ -703,7 +703,7 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/076-queue-sqs-tests.md)
 
-- [ ] [platform/adapters/aws/queue/sqs/tests/sqs-adapter-runtime.test.ts](../../../../platform/adapters/aws/queue/sqs/tests/sqs-adapter-runtime.test.ts) — modified; before `563c7eb1e4b9`, snapshot `1637677e74f4`.
+- [ ] [platform/adapters/aws/queue/sqs/tests/contract/sqs-adapter-runtime.test.ts](../../../../platform/adapters/aws/queue/sqs/tests/contract/sqs-adapter-runtime.test.ts) — modified; before `563c7eb1e4b9`, snapshot `1637677e74f4`.
 
 ## L077 — platform/observability
 
@@ -743,16 +743,16 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/080-platform-observability-tests.md)
 
-- [ ] [platform/observability/tests/configuration-runtime.test.ts](../../../../platform/observability/tests/configuration-runtime.test.ts) — added; before `absent`, snapshot `5233a37fe377`.
-- [ ] [platform/observability/tests/configuration-types.test.ts](../../../../platform/observability/tests/configuration-types.test.ts) — added; before `absent`, snapshot `299f6e0564af`.
-- [ ] [platform/observability/tests/diagnostics-runtime.test.ts](../../../../platform/observability/tests/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `b88fe2c25312`.
-- [ ] [platform/observability/tests/metric-diagnostics-runtime.test.ts](../../../../platform/observability/tests/metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `06dbbff10e93`.
-- [ ] [platform/observability/tests/metric-lifecycle-diagnostics-runtime.test.ts](../../../../platform/observability/tests/metric-lifecycle-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `e4592b27efcc`.
-- [ ] [platform/observability/tests/platform-observability-runtime.test.ts](../../../../platform/observability/tests/platform-observability-runtime.test.ts) — modified; before `209783bb27e1`, snapshot `c17b96c5dcdd`.
-- [ ] [platform/observability/tests/platform-observability-types.test.ts](../../../../platform/observability/tests/platform-observability-types.test.ts) — modified; before `4c1b14ccf3d9`, snapshot `96c744e6c4b3`.
-- [ ] [platform/observability/tests/readiness-diagnostics-runtime.test.ts](../../../../platform/observability/tests/readiness-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `276ec367602b`.
+- [ ] [platform/observability/tests/integration/configuration-runtime.test.ts](../../../../platform/observability/tests/integration/configuration-runtime.test.ts) — added; before `absent`, snapshot `5233a37fe377`.
+- [ ] [platform/observability/tests/type-level/configuration-types.test.ts](../../../../platform/observability/tests/type-level/configuration-types.test.ts) — added; before `absent`, snapshot `299f6e0564af`.
+- [ ] [platform/observability/tests/integration/diagnostics-runtime.test.ts](../../../../platform/observability/tests/integration/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `b88fe2c25312`.
+- [ ] [platform/observability/tests/integration/metric-diagnostics-runtime.test.ts](../../../../platform/observability/tests/integration/metric-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `06dbbff10e93`.
+- [ ] [platform/observability/tests/integration/metric-lifecycle-diagnostics-runtime.test.ts](../../../../platform/observability/tests/integration/metric-lifecycle-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `e4592b27efcc`.
+- [ ] [platform/observability/tests/integration/platform-observability-runtime.test.ts](../../../../platform/observability/tests/integration/platform-observability-runtime.test.ts) — modified; before `209783bb27e1`, snapshot `c17b96c5dcdd`.
+- [ ] [platform/observability/tests/type-level/platform-observability-types.test.ts](../../../../platform/observability/tests/type-level/platform-observability-types.test.ts) — modified; before `4c1b14ccf3d9`, snapshot `96c744e6c4b3`.
+- [ ] [platform/observability/tests/integration/readiness-diagnostics-runtime.test.ts](../../../../platform/observability/tests/integration/readiness-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `276ec367602b`.
 - [ ] [platform/observability/tests/run-runtime-tests.mjs](../../../../platform/observability/tests/run-runtime-tests.mjs) — modified; before `914ab43e05cc`, snapshot `6a894883e305`.
-- [ ] [platform/observability/tests/security-diagnostics-runtime.test.ts](../../../../platform/observability/tests/security-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `715859cbcebc`.
+- [ ] [platform/observability/tests/integration/security-diagnostics-runtime.test.ts](../../../../platform/observability/tests/integration/security-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `715859cbcebc`.
 
 ## L081 — platform/adapters/aws/observability/cloudwatch
 
@@ -774,9 +774,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/083-observability-cloudwatch-tests.md)
 
-- [ ] [platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-boundaries.test.mjs](../../../../platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-boundaries.test.mjs) — modified; before `ca3593dc7a89`, snapshot `90c2380548e1`.
-- [ ] [platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-runtime.test.ts](../../../../platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-adapter-runtime.test.ts) — modified; before `7ef94c20fd8b`, snapshot `afa01f710833`.
-- [ ] [platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-lifecycle-runtime.test.ts](../../../../platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-lifecycle-runtime.test.ts) — added; before `absent`, snapshot `5d9fc0ed4a94`.
+- [ ] [platform/adapters/aws/observability/cloudwatch/tests/test-infrastructure/static-validation/cloudwatch-otel-adapter-boundaries.test.mjs](../../../../platform/adapters/aws/observability/cloudwatch/tests/test-infrastructure/static-validation/cloudwatch-otel-adapter-boundaries.test.mjs) — modified; before `ca3593dc7a89`, snapshot `90c2380548e1`.
+- [ ] [platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-adapter-runtime.test.ts](../../../../platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-adapter-runtime.test.ts) — modified; before `7ef94c20fd8b`, snapshot `afa01f710833`.
+- [ ] [platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-lifecycle-runtime.test.ts](../../../../platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-lifecycle-runtime.test.ts) — added; before `absent`, snapshot `5d9fc0ed4a94`.
 - [ ] [platform/adapters/aws/observability/cloudwatch/tests/run-runtime-tests.mjs](../../../../platform/adapters/aws/observability/cloudwatch/tests/run-runtime-tests.mjs) — modified; before `fb2f575ac2e8`, snapshot `2e6b4f57516d`.
 
 ## L084 — apps/platform-smoke
@@ -809,10 +809,10 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/088-apps-platform-smoke-tests.md)
 
-- [ ] [apps/platform-smoke/tests/configuration-validation-diagnostics-runtime.test.ts](../../../../apps/platform-smoke/tests/configuration-validation-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `6685b96d9c2e`.
-- [ ] [apps/platform-smoke/tests/diagnostics-runtime.test.ts](../../../../apps/platform-smoke/tests/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `64160e122b94`.
-- [ ] [apps/platform-smoke/tests/platform-smoke-runtime.test.ts](../../../../apps/platform-smoke/tests/platform-smoke-runtime.test.ts) — modified; before `fa99972bb2d2`, snapshot `f1fa2682b5dd`.
-- [ ] [apps/platform-smoke/tests/platform-smoke-types.test.ts](../../../../apps/platform-smoke/tests/platform-smoke-types.test.ts) — modified; before `dc2f08594d7c`, snapshot `c6c130d7c85e`.
+- [ ] [apps/platform-smoke/tests/integration/configuration-validation-diagnostics-runtime.test.ts](../../../../apps/platform-smoke/tests/integration/configuration-validation-diagnostics-runtime.test.ts) — added; before `absent`, snapshot `6685b96d9c2e`.
+- [ ] [apps/platform-smoke/tests/unit/diagnostics-runtime.test.ts](../../../../apps/platform-smoke/tests/unit/diagnostics-runtime.test.ts) — added; before `absent`, snapshot `64160e122b94`.
+- [ ] [apps/platform-smoke/tests/integration/platform-smoke-runtime.test.ts](../../../../apps/platform-smoke/tests/integration/platform-smoke-runtime.test.ts) — modified; before `fa99972bb2d2`, snapshot `f1fa2682b5dd`.
+- [ ] [apps/platform-smoke/tests/type-level/platform-smoke-types.test.ts](../../../../apps/platform-smoke/tests/type-level/platform-smoke-types.test.ts) — modified; before `dc2f08594d7c`, snapshot `c6c130d7c85e`.
 - [ ] [apps/platform-smoke/tests/run-runtime-tests.mjs](../../../../apps/platform-smoke/tests/run-runtime-tests.mjs) — modified; before `22340e26fc3c`, snapshot `201e6fbe3cc9`.
 
 ## L089 — infra/04.deploy/03.product/entrypoints

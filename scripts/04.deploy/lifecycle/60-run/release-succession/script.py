@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.implementation
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -22,10 +22,12 @@ from __future__ import annotations
 import argparse
 import fcntl
 import hashlib
+import importlib.util
 import json
 import os
 import re
 import tempfile
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -43,6 +45,7 @@ CANDIDATE_DIRECTORY = "release-candidates"
 COMPATIBILITY_DIRECTORY = "rollback-compatibility"
 EVIDENCE_DIRECTORIES = frozenset({"proof-receipts", "package-receipts", "observability-receipts", "rollback-compatibility", "proof-applicability"})
 REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+IMPLEMENTATION_ROOT = REPOSITORY_ROOT
 EVIDENCE_CLASS = "live"
 
 
@@ -521,9 +524,86 @@ def history_record(*, target: str, scope: str, identity: dict[str, Any], source_
     }
 
 
+def recovery_policy(root: Path, contract_path: Path) -> dict[str, str]:
+    """Read-only local policy selection, never provider or rollback authority.
+
+    Read the same accepted custody used by promotion. Missing/broken evidence
+    must not turn a subsequent release into an apparently initial deployment.
+    The caller still validates the complete declaration and live target state.
+    """
+    contract_path = contract_path.absolute()
+    contract, _ = document(contract_path)
+    target, scope = contract.get("target"), contract.get("scope")
+    if contract.get("schema") != "deploy/target-scope-contract/v1" or any(not isinstance(value, str) or re.fullmatch(r"[a-z][a-z0-9-]*", value) is None for value in (target, scope)):
+        raise SuccessionFailure("release-recovery-scope-invalid")
+    scope_root = contract_path.parent.parent
+    if (contract_path.name != "declaration-contract.yml" or contract_path.parent.name != "00-declaration"
+            or scope_root.name != scope or scope_root.parent.name != "20-scopes"
+            or scope_root.parent.parent.name != target or not scope_root.is_relative_to(REPOSITORY_ROOT.resolve())
+            or root != scope_root / "30-release-evidence"):
+        raise SuccessionFailure("release-recovery-evidence-root-invalid")
+    # Reject symlinked context instead of observing some other scope's store.
+    for path in [contract_path, *contract_path.parents, root, root / CURRENT, root / HISTORY_DIRECTORY, root / "accepted-release.yml", scope_root.parent / "scope-index.yml"]:
+        if path.is_symlink():
+            raise SuccessionFailure("release-recovery-context-unsafe")
+    if not root.is_dir():
+        raise SuccessionFailure("release-recovery-evidence-unavailable")
+    health = contract.get("health_recovery")
+    if not isinstance(health, dict):
+        raise SuccessionFailure("release-recovery-declaration-invalid")
+    helper_path = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"
+    try:
+        spec = importlib.util.spec_from_file_location("release_recovery_declaration", helper_path)
+        if spec is None or spec.loader is None:
+            raise ImportError()
+        helper = importlib.util.module_from_spec(spec)
+        bytecode = sys.dont_write_bytecode
+        try:
+            sys.dont_write_bytecode = True
+            spec.loader.exec_module(helper)
+        finally:
+            sys.dont_write_bytecode = bytecode
+        codes: list[str] = []
+        helper.check_initial_release_recovery(health, codes)
+    except (OSError, ImportError, SyntaxError, AttributeError, TypeError, ValueError) as error:
+        raise SuccessionFailure("release-recovery-declaration-helper-unavailable") from error
+    if codes:
+        raise SuccessionFailure("initial-release-recovery-invalid")
+    state = current(root)
+    if state is not None:
+        if (state["target"], state["scope"]) != (target, scope):
+            raise SuccessionFailure("release-recovery-accepted-identity-mismatch")
+        return {"target": target, "scope": scope, "policy": "restore-prior-accepted-immutable-release", "accepted_release_id": state["release_id"], "compatibility": "not-assessed"}
+    history = root / HISTORY_DIRECTORY
+    if (root / "accepted-release.yml").exists() or history.exists() and (not history.is_dir() or any(history.iterdir())):
+        raise SuccessionFailure("release-recovery-accepted-history-without-current")
+    if health.get("declaration_schema") != "deploy/health-failure-and-recovery-declaration/v2" or "initial_release_recovery" not in health:
+        raise SuccessionFailure("initial-release-recovery-not-declared")
+    inventory, _ = document(scope_root.parent / "scope-index.yml")
+    entries = inventory.get("scopes")
+    if inventory.get("schema") != "deploy/scope-lifecycle-inventory/v1" or inventory.get("target") != target or not isinstance(entries, list) or any(not isinstance(item, dict) for item in entries):
+        raise SuccessionFailure("initial-release-recovery-lifecycle-invalid")
+    own = [item for item in entries if item.get("id") == scope]
+    if len(own) != 1 or own[0].get("lifecycle") != "candidate" or "predecessor" in own[0] or "successor" in own[0]:
+        raise SuccessionFailure("initial-release-recovery-lifecycle-invalid")
+    if own[0].get("declaration") != f"{scope}/00-declaration/declaration-contract.yml" or own[0].get("workload_binding") != f"{scope}/10-workload-binding/workload-binding.yml":
+        raise SuccessionFailure("initial-release-recovery-lifecycle-invalid")
+    ownership: dict[str, set[str]] = {}
+    for item in entries:
+        identity, workloads = item.get("id"), item.get("workload_ownership")
+        if not isinstance(identity, str) or identity in ownership or not isinstance(workloads, list) or not workloads or any(not isinstance(name, str) or re.fullmatch(r"[a-z][a-z0-9-]*", name) is None for name in workloads) or len(workloads) != len(set(workloads)):
+            raise SuccessionFailure("initial-release-recovery-lifecycle-invalid")
+        ownership[identity] = set(workloads)
+    if any(ownership[scope].intersection(workloads) for identity, workloads in ownership.items() if identity != scope):
+        raise SuccessionFailure("initial-release-recovery-lifecycle-invalid")
+    return {"target": target, "scope": scope, "policy": "stop-own-scope-workloads-preserve-data", "accepted_release_id": "none", "compatibility": "not-applicable-no-accepted-image"}
+
+
 def promote(root: Path, *, target: str, scope: str, identity: dict[str, Any], source_path: Path, source_digest: str, expected_predecessor: str, legacy: bool) -> tuple[str, str]:
     if expected_predecessor == "":
         raise SuccessionFailure("release-succession-expected-predecessor-required")
+    if (root / CURRENT).is_symlink():
+        raise SuccessionFailure("release-succession-current-invalid")
     identifier = release_id(identity)
     state = current(root)
     if state is not None and state["release_id"] == identifier:
@@ -543,6 +623,16 @@ def promote(root: Path, *, target: str, scope: str, identity: dict[str, Any], so
         predecessor = expected_predecessor
     history = root / HISTORY_DIRECTORY / f"{identifier}.yml"
     record = history_record(target=target, scope=scope, identity=identity, source_path=source_path.relative_to(root), source_digest=source_digest, predecessor=predecessor, legacy=legacy)
+    if state is None:
+        # A missing current reference is not permission to reset accepted
+        # history. Only this exact interrupted first promotion may resume.
+        if not legacy and (root / "accepted-release.yml").exists():
+            raise SuccessionFailure("release-succession-accepted-history-without-current")
+        directory = root / HISTORY_DIRECTORY
+        if directory.is_symlink() or directory.exists() and not directory.is_dir():
+            raise SuccessionFailure("release-succession-accepted-history-without-current")
+        if directory.exists() and any(path != history or path.is_symlink() or path.read_bytes() != rendered(record) for path in directory.iterdir()):
+            raise SuccessionFailure("release-succession-accepted-history-without-current")
     immutable_write(history, rendered(record))
     reference = {
         "schema": CURRENT_SCHEMA,
@@ -569,11 +659,12 @@ def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> in
 def main() -> int:
     global REPOSITORY_ROOT, EVIDENCE_CLASS
     parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
-    parser.add_argument("--operation", choices=("initialize-legacy", "promote", "record-compatibility", "validate-candidate", "validate-current"))
+    parser.add_argument("--operation", choices=("initialize-legacy", "promote", "record-compatibility", "validate-candidate", "validate-current", "select-recovery"))
     parser.add_argument("--evidence-root", type=Path)
     parser.add_argument("--legacy-record", type=Path)
     parser.add_argument("--candidate-record", type=Path)
     parser.add_argument("--expected-predecessor")
+    parser.add_argument("--scope-contract", type=Path)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     parser.add_argument("--rehearsal-root", type=Path)
@@ -587,6 +678,11 @@ def main() -> int:
         return report("blocked", "release-succession-arguments-invalid")
     if args.operation in {"record-compatibility", "validate-candidate"} and args.expected_predecessor is not None:
         return report("blocked", "release-succession-arguments-invalid")
+    if args.operation == "select-recovery":
+        if args.scope_contract is None or any(value is not None for value in (args.legacy_record, args.candidate_record, args.expected_predecessor)):
+            return report("blocked", "release-succession-arguments-invalid")
+    elif args.scope_contract is not None:
+        return report("blocked", "release-succession-arguments-invalid")
     if args.validate_arguments:
         print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []})); return 0
     root = args.evidence_root.resolve()
@@ -596,6 +692,8 @@ def main() -> int:
             if not rehearsal.is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.is_relative_to(rehearsal) or rehearsal.is_relative_to(REPOSITORY_ROOT.resolve()) or REPOSITORY_ROOT.resolve().is_relative_to(rehearsal):
                 raise SuccessionFailure("release-succession-rehearsal-root-invalid")
             REPOSITORY_ROOT, EVIDENCE_CLASS = rehearsal, "simulated"
+        if args.operation == "select-recovery":
+            return report("valid", "release-recovery-policy-selected", facts=recovery_policy(root, args.scope_contract))
         if args.operation == "validate-current":
             if args.legacy_record is not None or args.candidate_record is not None or args.expected_predecessor is not None:
                 raise SuccessionFailure("release-succession-arguments-invalid")

@@ -144,7 +144,7 @@ no extra claim checks; the verifier's built-in signature/issuer/time/subject
 checks still run. Explicit null is invalid configuration, not omission.
 
 The [configuration standard](../../../../.agentic/03.product/standards/config-runtime-settings.md#token-verifier-construction)
-owns governance. [Runtime tests](../../tests/jwt-configuration-runtime.test.ts)
+owns governance. [Runtime tests](../../tests/unit/jwt-configuration-runtime.test.ts)
 prove exact failures, actual constructor use, checked snapshots and valid token
 behaviour; type and reader fixtures cover public compatibility and JSON access.
 The JSON asset is public at

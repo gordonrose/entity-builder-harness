@@ -1,6 +1,6 @@
 import { coreConfigDiagnosticCatalog } from "./config/contract/reporting/diagnostics";
 import { diagnosticProcessingDefinition } from "./diagnostics/reporting/processing";
-import { coreSharedDiagnosticDefinitions } from "./shared/diagnostics";
+import { coreSharedDiagnosticDefinitions } from "./shared/index";
 import { coreSecurityDiagnosticDefinitions } from "./security/diagnostics";
 import { coreAuthzDiagnosticDefinitions } from "./authz/diagnostics";
 import { coreAuthnDiagnosticDefinitions } from "./authn/diagnostics";

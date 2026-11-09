@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-active-workload-health-recovery
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -91,6 +91,12 @@ def scope_entry(scope_id: str, lifecycle: str, **extra: str) -> dict[str, Any]:
     return entry
 
 
+def selected_scope(value: dict[str, Any], scope_id: str) -> dict[str, Any]:
+    matches = [item for item in value["scopes"] if item["id"] == scope_id]
+    assert len(matches) == 1
+    return matches[0]
+
+
 def legacy_exception(workload: str) -> dict[str, str]:
     return {
         "status": "retiring-reference-only",
@@ -170,40 +176,104 @@ def main() -> int:
         # persistence scope.  Recreate a minimal active predecessor so this
         # fixture remains a true candidate-to-active transition test.
         shutil.rmtree(target_root / "core-server-persistence")
-        valid["scopes"] = [scope_entry("bootstrap-runtime", "active")]
+        unrelated = {item["id"]: copy.deepcopy(item) for item in valid["scopes"]
+                     if item["id"] not in {"bootstrap-runtime", "core-server-persistence"}}
+        valid["scopes"] = [scope_entry("bootstrap-runtime", "active"), *unrelated.values()]
         copied_scope(target_root, "core-server-persistence")
+
+        def assert_unrelated_preserved(value: dict[str, Any]) -> None:
+            for scope_id, original in unrelated.items():
+                assert selected_scope(value, scope_id) == original
+                assert (target_root / scope_id).is_dir()
 
         candidate = copy.deepcopy(valid)
         candidate["scopes"].append(scope_entry("core-server-persistence", "candidate", predecessor="bootstrap-runtime"))
         write(index_path, candidate)
         expect_success(target_root)
+        assert_unrelated_preserved(index(index_path))
 
         candidate_missing_predecessor = copy.deepcopy(candidate)
-        candidate_missing_predecessor["scopes"][1].pop("predecessor")
+        selected_scope(candidate_missing_predecessor, "core-server-persistence").pop("predecessor")
         write(index_path, candidate_missing_predecessor)
         expect_failure(target_root, "scope-lifecycle-candidate-predecessor-invalid")
 
         duplicate_active = copy.deepcopy(candidate)
-        duplicate_active["scopes"][1].pop("predecessor")
-        duplicate_active["scopes"][1]["lifecycle"] = "active"
+        selected_scope(duplicate_active, "core-server-persistence").pop("predecessor")
+        selected_scope(duplicate_active, "core-server-persistence")["lifecycle"] = "active"
         write(index_path, duplicate_active)
         expect_failure(target_root, "active-workload-ownership-duplicate")
 
         succession = copy.deepcopy(candidate)
-        succession["scopes"][0]["lifecycle"] = "accepted-historical"
-        succession["scopes"][0]["successor"] = "core-server-persistence"
-        succession["scopes"][1]["lifecycle"] = "active"
+        selected_scope(succession, "bootstrap-runtime")["lifecycle"] = "accepted-historical"
+        selected_scope(succession, "bootstrap-runtime")["successor"] = "core-server-persistence"
+        selected_scope(succession, "core-server-persistence")["lifecycle"] = "active"
         write(index_path, succession)
         expect_success(target_root)
+        assert_unrelated_preserved(index(index_path))
 
         invalid_succession = copy.deepcopy(succession)
-        invalid_succession["scopes"][1].pop("predecessor")
+        selected_scope(invalid_succession, "core-server-persistence").pop("predecessor")
         write(index_path, invalid_succession)
         expect_failure(target_root, "scope-lifecycle-transition-invalid")
 
+    independent_candidates()
     print("Active workload health/recovery inventory tests passed.")
     return 0
 
+
+def independent_candidates() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        target_root = Path(directory) / "20-scopes"
+        shutil.copytree(SCOPES, target_root)
+        copied_scope(target_root, "independent-feature")
+        binding_path = target_root / "independent-feature/10-workload-binding/workload-binding.yml"
+        binding = index(binding_path)
+        identities = {item["id"]: "feature-" + item["id"] for item in binding["workloads"]}
+        for item in binding["workloads"]:
+            item["id"] = identities[item["id"]]
+        for item in binding["runtime_requirements"]:
+            item["workload"] = identities[item["workload"]]
+        write(binding_path, binding)
+        contract_path = target_root / "independent-feature/00-declaration/declaration-contract.yml"
+        contract = index(contract_path)
+        for item in contract["health_recovery"]["workloads"]:
+            item["binding"] = identities[item["binding"]]
+        write(contract_path, contract)
+        index_path = target_root / "scope-index.yml"
+        independent = index(index_path)
+        entry = scope_entry("independent-feature", "candidate")
+        entry["workload_ownership"] = list(identities.values())
+        independent["scopes"].append(entry)
+        write(index_path, independent)
+        expect_success(target_root)
+        initial_bytes = index_path.read_bytes()
+
+        linked = copy.deepcopy(independent)
+        linked["scopes"][-1]["successor"] = "core-server-persistence"
+        write(index_path, linked)
+        expect_failure(target_root, "scope-lifecycle-transition-invalid")
+
+        collided = copy.deepcopy(independent)
+        collided["scopes"][-1]["workload_ownership"] = ["core-server-service", "private-release-verifier-task"]
+        original_binding = copy.deepcopy(binding)
+        for item in binding["workloads"]:
+            item["id"] = item["id"].removeprefix("feature-")
+        for item in binding["runtime_requirements"]:
+            item["workload"] = item["workload"].removeprefix("feature-")
+        collided_contract = copy.deepcopy(contract)
+        for item in collided_contract["health_recovery"]["workloads"]:
+            item["binding"] = item["binding"].removeprefix("feature-")
+        write(contract_path, collided_contract)
+        write(binding_path, binding)
+        write(index_path, collided)
+        expect_failure(target_root, "scope-lifecycle-candidate-predecessor-invalid")
+
+        write(binding_path, original_binding)
+        write(index_path, independent)
+        assert index_path.read_bytes() == initial_bytes
+        contract["configuration"].pop("secret_dependencies")
+        write(contract_path, contract)
+        expect_failure(target_root, "scope-lifecycle-secret-dependency-invalid")
 
 if __name__ == "__main__":
     raise SystemExit(main())
