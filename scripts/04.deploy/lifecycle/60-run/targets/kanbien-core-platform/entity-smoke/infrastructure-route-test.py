@@ -341,11 +341,56 @@ assert provider("sts", "get-caller-identity")["Account"] == M.ALIGN.ACCOUNT
 argv, options = observed[-1]
 assert argv[argv.index("--endpoint-url") + 1] == "https://sts.eu-west-1.amazonaws.com" and "--no-verify-ssl" not in argv
 assert options["env"]["AWS_MAX_ATTEMPTS"] == "1" and options["timeout"] == 30
+assert argv[argv.index("--region") + 1] == "eu-west-1"
+for service, operation, endpoint, region in [
+    ("iam", "get-role", "iam.amazonaws.com", "us-east-1"),
+    ("route53", "get-hosted-zone", "route53.amazonaws.com", "us-east-1"),
+    ("budgets", "describe-budget", "budgets.amazonaws.com", "us-east-1"),
+    ("ecr", "describe-repositories", "api.ecr.eu-west-1.amazonaws.com", "eu-west-1"),
+    ("cloudformation", "describe-stacks", "cloudformation.eu-west-1.amazonaws.com", "eu-west-1"),
+]:
+    provider(service, operation)
+    argv, options = observed[-1]
+    assert argv[argv.index("--region") + 1] == region, (service, "incorrect-signing-region")
+    assert argv[argv.index("--endpoint-url") + 1] == "https://" + endpoint
+    assert argv[argv.index("--profile") + 1] == M.ALIGN.PROFILE and "--no-verify-ssl" not in argv
+    assert options["env"]["AWS_MAX_ATTEMPTS"] == "1" and options["timeout"] == 30
+successful_calls = len(observed)
 failed(lambda: provider("ecs", "run-task", cluster=CANARY), "infrastructure-provider-operation-prohibited")
 provider.enable(("cloudformation", "create-change-set"), lambda operation, parameters: None)
 failed(lambda: provider("cloudformation", "create-change-set", StackName="kanbien-staging"), "infrastructure-write-target-invalid")
-assert len(observed) == 1
+assert len(observed) == successful_calls
 M.subprocess.run = old_subprocess
+
+# Actual provider failures retain the finite attempted operation at the final
+# reporter, never provider parameters, native messages or automatic retries.
+old_parse, old_run, old_subprocess = M.parse, M.run, M.subprocess.run
+M.parse = lambda: SimpleNamespace(mode="plan", phase="create", proof_label=F.BINDING["proof_label"], validate_arguments=False)
+M.run = lambda args, selected: selected("route53", "get-hosted-zone", Id=CANARY)
+for scenario, condition in [
+    ("signature", "aws-command-failed"),
+    ("denied", "aws-access-denied"),
+    ("malformed", "infrastructure-provider-response-invalid"),
+    ("wrong-type", "infrastructure-provider-response-invalid"),
+    ("timeout", "infrastructure-provider-observation-unavailable"),
+]:
+    attempts = []
+    def rejected(arguments, **options):
+        attempts.append(arguments)
+        if scenario == "timeout": raise subprocess.TimeoutExpired(arguments, 30, stderr=CANARY)
+        if scenario == "malformed": return SimpleNamespace(returncode=0, stdout=CANARY, stderr=CANARY)
+        if scenario == "wrong-type": return SimpleNamespace(returncode=0, stdout='[]', stderr=CANARY)
+        code = "SignatureDoesNotMatch" if scenario == "signature" else "AccessDenied"
+        return SimpleNamespace(returncode=254, stdout="", stderr="An error occurred (" + code + ") when calling the GetHostedZone operation: " + CANARY)
+    M.subprocess.run = rejected
+    output = io.StringIO()
+    with redirect_stdout(output): status = M.main()
+    failure = json.loads(output.getvalue())
+    assert status == 1 and failure["condition"] == condition and failure["effect"] == "not-started"
+    assert failure["context"]["provider_operation"] == "route53/get-hosted-zone"
+    assert len(attempts) == 1 and CANARY not in output.getvalue() and "SignatureDoesNotMatch" not in output.getvalue()
+assert M.InfrastructureFailure("controlled", provider_operation=(CANARY, "get-hosted-zone")).provider_operation is None
+M.parse, M.run, M.subprocess.run = old_parse, old_run, old_subprocess
 print(json.dumps({"schema": "deploy/entity-smoke-infrastructure-route-fixture/v1", "verdict": "passed", "provider_observation": False,
                   "prerequisites": "controlled-source-custody-alignment-and-policy-responses-not-qualification",
                   "checks": ["actual-generic-gates", "plan-is-not-approval", "changed-plan-rejected", "review-before-execute", "lost-execution-observe-only", "completed-receipt-reconciliation", "no-fictional-runtime-facts", "same-label-ownership", "activation-proof-required", "activation-binds-four-real-collector-receipts", "activation-resume-no-old-zero-count-requirement", "submission-must-match-plan", "missing-gate-observation-rejected", "actual-cli-safe-rejection", "no-provider-on-offline-failure", "fixed-provider-endpoint", "no-automatic-mutation-retry"]}))

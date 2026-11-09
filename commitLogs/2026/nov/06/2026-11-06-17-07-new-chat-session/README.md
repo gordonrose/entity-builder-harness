@@ -3169,3 +3169,240 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
   session log. Proceed with the approved checkpoint and a fresh uninstrumented
   image build/qualification. No push, publication, AWS mutation or accepted-state
   change has occurred. Main publication still needs its concrete authority.
+
+### Corrected immutable image checkpoint and active build — 2026-11-09
+
+- Repair task5210046bbcbe5b46fe15c41de3fc8dc7c46016c6 and bookkeeping
+  c57ee56caca5765bb0c73c42e0e34f37bbb7e354 are local only. The staged gate
+  passed with no findings. Current image source is exactlyc57ee56c.
+- Builder53819 is active; capture repaired-image-build.log under the stable
+  output root. Observe that process before any relaunch. After its success,
+  run the ordinary uninstrumented image qualifier with the existing private
+  TMPDIR .cache/test-runs/entity-smoke-docker.eZgXGNqL. Do not carry the ignored
+  diagnostic preload into qualification. All preceding reservations cleaned up.
+- Do not commit this bookkeeping while image build/qualification is underway:
+  that would change HEAD and invalidate source identity. Session notes alone
+  are explicitly excluded from both builders' clean-source checks.
+- Publication approval requested nonblockingly while local work continues:
+  after actual qualification, fast-forward/push main toc57ee56c, create only
+  kanbien-core-platform/entity-smoke ECR and its repository-limited publisher
+  role in337159794548/eu-west-1, then run the existing protected publication
+  workflow. Template SHA2569ab58d81f14aaab0888f3ce2e2dc58f8b162f9aa1051005dd6dda92506d0d804.
+  No reply/authority has been received yet. No ECS/DB change is included in that
+  proposal. Do not infer push/publication/cloud execution from the local commit.
+
+### Corrected uninstrumented image qualification PASSED — 2026-11-09
+
+- Builder53819 completed0; ordinary qualifier13719 completed0, with NODE_OPTIONS
+  absent and exact HEADc57ee56caca5765bb0c73c42e0e34f37bbb7e354. No host/program
+  diagnostic substitutions were used. Original result:
+  .cache/test-runs/entity-smoke-stable.7wpnDKuN/repaired-image-qualification.log.
+- Actual PostgreSQL18.3 stages all passed: restricted administration/migration;
+  effective denied SQL and packaged lifecycle; replacement and access recovery;
+  independent restored fixture read; checksum rejection preserving source
+  history/record; safe downstream logs. Cleanup was confirmed before success.
+  All five packaged negative-capability cases also passed, including production
+  synthetic-authentication rejection and no administrator access in DB proof.
+- Exact local image ID:
+  sha256:d440777dd789a07386414408ac203ef9bea918648c23cb8c00a61ed763145ea3.
+  Existing qualification.py record/verify completed0 in63442; eight package
+  inputs and two target configuration projections are bound in
+  .cache/test-runs/entity-smoke-stable.7wpnDKuN/repaired-qualified-image.json.
+  Independently matched that image ID and source against the original successful
+  uninstrumented report; no outstanding disposable reservations remain.
+- This is genuine local container proof, NOT RDS IAM authentication, RDS snapshot
+  restore, registry scan/SBOM/provenance, publication, deployment or acceptance.
+  Full original122 local checks and repair45 local checks passed at their actual
+  recorded boundaries; later-stage obligations remain explicit, not counted as
+  passes. No goal completion or accepted-baseline advancement is justified yet.
+- Publication question remains unanswered. Do not push/merge, create publication
+  resources, approve an environment deployment or execute AWS changes without
+  the missing explicit authority. Next action after approval: retain sourcec57,
+  freshly reconcile main and the exact two-resource publication state, execute
+  the approved publication route with its required reviews, then prepare the
+  concrete runtime/proof execution plan from genuine qualified custody. Source
+  remains clean outside this log. Keep HEAD frozen through this source-bound
+  chain; do not checkpoint these notes and silently change the candidate SHA.
+
+### Publication-authority continuation audit 2 — 2026-11-09
+
+- Previous goal turn made concrete progress: committed corrections, completed
+  affected integration and genuine uninstrumented image qualification/binding.
+  It ended at the first occurrence of missing push/publication execution approval.
+- This automatic continuation supplies no approval. Revalidated exact HEADc57,
+  unchanged eight binding inputs and original passing image/negative proof.
+  Only session bookkeeping is dirty. Read-only inspection3160 completed0:
+  origin main remainsff10cf15; account337159794548; own ECR repository and
+  publisher role both remain absent. No outside actor completed publication.
+- No owned process/job remains live to wait on, and required independent local
+  qualification is complete. Registry scan/custody and live deployment/proof
+  depend on authorised publication. Do not rerun passing suites or introduce a
+  substitute publication route merely to manufacture activity.
+- Same authority blocker, second consecutive goal turn including the original
+  request. Leave goal active at this audit; no merge, push, AWS mutation,
+  publication, acceptance or completion claim. Await the exact requested approval.
+
+### Publication-authority continuation audit 3 — 2026-11-09
+
+- Previous continuation was no progress, not a verified wait: it reconfirmed
+  the same missing permission, with no live job or changed next action. This
+  continuation again contains no explicit push/publication execution approval.
+- Read-only98383 completed0: HEAD remainsc57ee56c, origin mainff10cf15,
+  only session notes dirty, original uninstrumented image proof passed and its
+  bound inputs unchanged. No source, registry, cloud or accepted-state change.
+  The preceding fresh account/repository/role inspection remains the retained
+  external prerequisite observation; no approved operation exists to submit.
+- The same genuine authority blocker has now repeated across three consecutive
+  goal turns, including the original publication request. Required independent
+  local work is complete; publication/custody and actual AWS proof cannot be
+  substituted or performed without the requested permission. Blocked threshold
+  satisfied: set the goal blocked on that decision, not complete or paused.
+- Resume requires explicit approval to push sourcec57ee56c to main, create only
+  the named feature ECR repository/publisher role in337159794548/eu-west-1 and
+  run the protected publication workflow. Recheck actual state before those
+  effects. That proposal does not authorise ECS/database execution; prepare its
+  concrete proof plan from genuine published custody. Preserve this frozen
+  source and all existing local evidence; do not rerun successful suites merely
+  because an automatic continuation arrived.
+
+### Explicit publication approval and resumed execution — 2026-11-09
+
+- User answered yes to the concrete proposal: normal fast-forward push of exact
+  frozen source c57ee56caca5765bb0c73c42e0e34f37bbb7e354 to remote main,
+  creation of only the isolated ECR repository and publication-only IAM role
+  in account 337159794548 / eu-west-1, and protected publication workflow.
+  ECS/database execution remains outside this approval.
+- Continued the existing session, not a new chat or worktree. Local source and
+  qualification bindings remain unchanged; only these post-checkpoint session
+  notes are dirty. Retain them rather than discard them or change the frozen
+  candidate. This operation publishes the explicitly selected checkpoint; it
+  does not merge/close the chat or update local main.
+- Fresh STS, ECR, IAM, OIDC and CloudFormation observations confirmed the
+  approved account, existing OIDC provider and absence of the two new resources.
+  The publication template SHA256 still matches
+  9ab58d81f14aaab0888f3ce2e2dc58f8b162f9aa1051005dd6dda92506d0d804.
+- Created and inspected change set entity-smoke-publication-c57ee56c on stack
+  kanbien-core-platform-entity-smoke-publication: exactly two Add actions,
+  FeatureRepository and FeaturePublisherRole, no existing-resource changes.
+  Submitted execution once with its fixed client token; command returned zero.
+  Await terminal stack evidence before declaring resource creation successful.
+- Fetched origin/main: ff10cf15017b809c3a8715d39a168af41d3511e6 is an ancestor
+  of the approved checkpoint. Delivery census passed: 499 entrypoints,
+  six scopes, zero gaps. Existing completed integration/image receipts remain
+  authoritative; no unchanged broad suite was repeated.
+- Submitted the approved exact-SHA normal push once (session 72270), without
+  force, source edits, local-main merge, stash or worktree cleanup. Reconcile
+  its terminal result and remote SHA before publication dispatch.
+- Push session 72270 returned zero: origin/main advanced normally ff10cf15 to
+  exactly c57ee56c. Independent GitHub branch observation confirmed that SHA.
+  Local main and local source checkpoint were not changed.
+- Stack observation 87692 returned CREATE_COMPLETE with exactly the expected
+  feature repository and publisher ARN outputs. Independent ECR read confirmed
+  immutable tags, scan-on-push and AES256; IAM policy read confirmed only global
+  authorization-token access plus the declared own-repository image actions.
+- Dispatched publication once: GitHub Actions run 42717608639, source c57ee56c,
+  workflow_dispatch. Inspected its actual pending kanbien-core-platform gate,
+  confirmed current-user approval eligibility, then approved that exact pending
+  environment under the user's publication authority. Run is in progress at
+  actual payload qualification; no published receipt or AWS runtime proof yet.
+  URL: https://github.com/gordonrose/entity-builder-harness/actions/runs/42717608639.
+- Run 42717608639 completed SUCCESS at 2026-11-09T23:13:10Z. Hosted native
+  qualification, reserved publication, clean ECR scan, SBOM, provenance and
+  SBOM attestations, safe receipt validation and artifact retention all passed.
+  Downloaded the actual custody artifact into
+  .cache/test-runs/entity-smoke-stable.7wpnDKuN/published-custody-42717608639/.
+  Existing custody validator independently returned passed with zero findings.
+  Published image digest:
+  sha256:2dfcb69861779dedc661c7738f7ff4b022d2c2ec9e3eb322eb4cc0eed78cfa7b;
+  source c57ee56caca5765bb0c73c42e0e34f37bbb7e354;
+  receipt github-actions-run:42717608639. This is real registry custody,
+  not AWS runtime/data/restore acceptance.
+- Existing runtime-plan prerequisite selection retained a passing report at
+  .cache/test-runs/20261109T230849Z-10187aa8ebd148098415b9c58af7c31e/report.json:
+  both checks reused trusted matching source/runtime receipts, no findings.
+  An optional jq formatter was absent and caused a final-output broken pipe;
+  inspected the retained report and actual selector completion events rather
+  than rerunning either passing check or treating formatting as test failure.
+- Started the public read-only create planner with that genuine custody receipt
+  and label entity-smoke-c57ee56caca5765bb0c73c42. Runtime AWS execution is not
+  yet authorized; await actual plan before requesting that concrete authority.
+- The public read-only planner returned aws-command-failed/not-started. A
+  diagnostic-only invocation preserving all checks and outcomes identified
+  route53/get-hosted-zone as the failed read. Independent comparisons on the
+  same actual zone proved SignatureDoesNotMatch with the fixed global endpoint
+  signed for eu-west-1; SDK endpoint resolution and explicit us-east-1 signing
+  both succeeded. No DNS or other AWS mutation occurred. AWS's Route53 endpoint
+  reference independently specifies us-east-1 signing for this global endpoint:
+  https://docs.aws.amazon.com/general/latest/gr/r53.html.
+- Bounded repair inventory before editing: the entity-smoke public Provider's
+  fixed global endpoints need their global signing region, while regional
+  endpoints and target resources remain eu-west-1. Its parent adapter is reused
+  by task/replacement/recovery/snapshot/restore callers; all retain the same
+  existing operation guards, profile, TLS endpoints, deadlines and no-retry
+  semantics. No feature, SQL, image payload, template, permission or compiler
+  change is needed. Extend infrastructure-route-test.py to reject the previous
+  global signing region and preserve regional request signing.
+- Diagnostic inventory: existing finite aws-command-failed remains truthful
+  uncertainty, but the real infrastructure reporter lost the attempted API.
+  Attach only a pair selected from the owner's existing READS/WRITES set to
+  InfrastructureFailure and preserve it at main's context; never native errors,
+  parameters, credentials or provider values. Test actual main/provider failure
+  for finite reason plus exact operation, canary exclusion and one call, as well
+  as timeout and malformed responses. No new provider taxonomy or Core catalogue
+  is required. Update only this owner's partial review after full source review;
+  unchanged broader provider-taxonomy debt is not claimed adopted.
+- Independent IAM and Budgets comparisons confirmed the same defect: their
+  explicit global endpoints fail eu-west-1 signing (SignatureDoesNotMatch and
+  InvalidSignatureException respectively) and succeed with us-east-1. The
+  corrected provider keeps all regional targets/resources in eu-west-1.
+- Focused infrastructure-route-test.py completed zero, including existing
+  source/custody/gates/activation/reconciliation cases and the new global versus
+  regional signing matrix, exact final failure-operation context, native canary
+  exclusion, malformed/type/timeout/denial alternatives and one-call assertions.
+  git diff --check passed. This is controlled local proof, not a deployment plan.
+- Consolidated self-review complete for this bounded four-file batch: only
+  public adapter, its existing fixture, its partial diagnostic review and this
+  session record change. Reviewed full route/fixture and parent/subclass
+  consumers. Counterexamples: reverting signing-region selection fails the
+  exact endpoint/region matrix; dropping failure-operation propagation fails
+  the actual main-reporter assertion. No further implementation correction is
+  required for these predicates. No agent is editing in parallel. A separate
+  diagnostic-only actual target read is still running; it does not bypass or
+  claim the later committed-source/plan gates.
+- Asked nonblockingly for explicit approval of the corrected checkpoint push
+  and the same protected publication workflow after checks pass. The previous
+  approval named c57ee56c exactly and is not silently widened to changed source.
+  Local verification and read-only diagnosis continue independently.
+- User explicitly approved publishing the checked correction: local checkpoint,
+  normal main push and same protected workflow after checks pass. No ECS or
+  database execution authority follows. Diagnostic-only corrected target
+  inspection 60798 completed zero with every existing alignment read passing;
+  it did not run the committed-source gate, produce a deployment plan or mutate
+  AWS. Structural adoption and full impact planning passed with no findings.
+  Current selection is 45 local checks plus 13 later-stage obligations; reuse
+  matching trusted receipts and execute only genuinely invalidated checks.
+- Context hygiene: retain real successful c57 publication/custody, exact read
+  comparisons, the bounded adapter/context correction and focused fixture pass;
+  no raw provider values or transient process output is needed. ADR not needed:
+  correcting AWS signature mechanics and safe error attribution does not change
+  deployment architecture, execution authority, policies or lifecycle semantics.
+- Final signing-repair integration 9939 returned zero. Retained report
+  .cache/test-runs/20261109T234530Z-ab29262e4f194815ab628b32e1edbb74/report.json
+  and bounded capture global-signing-integration.json: 45 local passed,
+  13 later-stage deferred, zero findings. Eleven checks executed, 34 reused;
+  elapsed 1207.926151 seconds. This closes the bounded signing/context repair's
+  local integration, not runtime deployment or feature acceptance.
+- A final downstream acceptance review identified a separate existing deadlock
+  before AWS execution: acceptance-route.retain writes canonical proof-receipts
+  and release-candidates, while promotion re-enters gather -> restore/source ->
+  alignment.source_preflight, whose clean check excludes only commitLogs.
+  git check-ignore confirmed neither generated proof/candidate path is ignored;
+  the release-evidence README explicitly says evidence is not exempt. Promotion
+  therefore rejects its own newly generated files. Existing route fixtures use
+  explicit source/gather doubles and do not prove this real Git boundary.
+- Asked for a narrow rule/implementation decision before changing this policy:
+  acceptance may recognize only exact validated collector-owned files while
+  retaining tracked custody, unchanged executable/configuration sources and
+  rejection of foreign/tampered dirt. No blanket ignore, fabricated receipt,
+  source bypass or AWS authority is requested. Preserve the now-verified
+  signing fix independently; do not claim the later acceptance path is complete.

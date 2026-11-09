@@ -53,10 +53,11 @@ WRITES = {("cloudformation", "create-change-set"), ("cloudformation", "execute-c
 
 
 class InfrastructureFailure(Exception):
-    def __init__(self, code, evidence_reference=None):
+    def __init__(self, code, evidence_reference=None, *, provider_operation=None):
         super().__init__(code)
         self.code = code
         self.evidence_reference = evidence_reference
+        self.provider_operation = provider_operation if isinstance(provider_operation, tuple) and all(isinstance(item, str) for item in provider_operation) and provider_operation in READS | WRITES else None
 
 
 def require(value, code):
@@ -117,20 +118,23 @@ class Provider:
     def _invoke(self, service, operation, parameters):
         global_services = {"iam": "iam.amazonaws.com", "route53": "route53.amazonaws.com", "budgets": "budgets.amazonaws.com"}
         hostname = global_services.get(service, ("api.ecr" if service == "ecr" else service) + "." + ALIGN.REGION + ".amazonaws.com")
-        arguments = ["aws", service, operation, "--profile", ALIGN.PROFILE, "--region", ALIGN.REGION,
+        signing_region = "us-east-1" if service in global_services else ALIGN.REGION
+        def failure(code):
+            return InfrastructureFailure(code, provider_operation=(service, operation))
+        arguments = ["aws", service, operation, "--profile", ALIGN.PROFILE, "--region", signing_region,
                      "--endpoint-url", "https://" + hostname, "--output", "json", "--no-paginate", "--no-cli-pager",
                      "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--cli-input-json", json.dumps(parameters)]
         try:
             result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=30,
                                     env={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "AWS_EC2_METADATA_DISABLED": "true"})
-        except (OSError, UnicodeError, subprocess.SubprocessError): raise InfrastructureFailure("infrastructure-provider-observation-unavailable") from None
+        except (OSError, UnicodeError, subprocess.SubprocessError): raise failure("infrastructure-provider-observation-unavailable") from None
         if result.returncode:
             code = RESPONSE.classify_error(service, operation, result.stderr)
             if code == "aws-resource-missing": raise RESOURCE.ResourceMissing()
-            raise InfrastructureFailure(code)
+            raise failure(code)
         try: value = json.loads(result.stdout) if result.stdout.strip() else {}
-        except (ValueError, TypeError): raise InfrastructureFailure("infrastructure-provider-response-invalid") from None
-        require(isinstance(value, dict), "infrastructure-provider-response-invalid")
+        except (ValueError, TypeError): raise failure("infrastructure-provider-response-invalid") from None
+        if not isinstance(value, dict): raise failure("infrastructure-provider-response-invalid")
         return value
 
 
@@ -425,6 +429,8 @@ def main():
             condition = failure.code
         else: condition = "infrastructure-boundary-not-confirmed"
         evidence = failure.evidence_reference if isinstance(failure, InfrastructureFailure) else None
+        if isinstance(failure, InfrastructureFailure) and failure.provider_operation is not None:
+            context = {**context, "provider_operation": "/".join(failure.provider_operation)}
         diagnostics = RESOURCE.EVIDENCE.failure_report(failure) if isinstance(failure, RESOURCE.EVIDENCE.EvidenceFailure) else {}
         print(json.dumps({"schema": "deploy/entity-smoke-infrastructure-report/v1", "target": RESOURCE.CLUSTER, "scope": "entity-smoke", "verdict": "blocked", "condition": condition, "effect": provider.effect, "context": context,
                           **diagnostics, **({"evidence_reference": evidence} if evidence is not None else {})}, sort_keys=True)); return 1
