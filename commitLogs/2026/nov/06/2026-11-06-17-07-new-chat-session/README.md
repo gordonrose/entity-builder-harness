@@ -8,19 +8,19 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-11-06T17:07:07Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-11-09T21:15:42Z
+latest_commit_sha: 6f17203053e61172359b9de2f85c8356e8d69aa3
+chat_duration: 274115s (03:04:08:35)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -75,13 +75,30 @@ new chat session
 
 Initial intent: new chat session
 
+
+### 2026-11-09T21:15:42Z - Commit recorded
+
+Commit: `6f17203053e61172359b9de2f85c8356e8d69aa3`
+
+Message: feat: qualify isolated entity-smoke deployment and governed test boundaries
+
+Summary: Verified feature, Core helpers, test migration/governance and isolated deployment/proof controls. Full local reconciliation passed122 checks; actual image and AWS acceptance remain outstanding. No push.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `6f17203053e61172359b9de2f85c8356e8d69aa3`
+  Time UTC: 2026-11-09T21:15:42Z
+  Message: feat: qualify isolated entity-smoke deployment and governed test boundaries
+  Summary: Verified feature, Core helpers, test migration/governance and isolated deployment/proof controls. Full local reconciliation passed122 checks; actual image and AWS acceptance remain outstanding. No push.
+  ADR impact: covered by session ADR disposition
 
 ## Main Refresh Conflicts
 
@@ -96,12 +113,12 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-11-09T21:15:42Z
+Latest commit SHA: 6f17203053e61172359b9de2f85c8356e8d69aa3
+Chat duration: 274115s (03:04:08:35)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
