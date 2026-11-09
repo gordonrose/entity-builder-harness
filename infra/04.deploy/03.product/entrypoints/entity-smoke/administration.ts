@@ -89,7 +89,8 @@ export async function performEntitySmokeAdministration(pool: PostgreSqlConnectio
       await ensureRdsIamAuthentication(connection, { username: entitySmokeRuntimeUsername });
       // PostgreSQL 16 gives CREATEROLE creators ADMIN but not SET by default.
       // Select only this scope's migration-owner authority, without inheritance.
-      await client.query({ text: 'GRANT entity_smoke_migration TO CURRENT_USER WITH ADMIN TRUE, INHERIT FALSE, SET TRUE' });
+      // Regranting ADMIN to ourself would create a forbidden grantor cycle.
+      await client.query({ text: 'GRANT entity_smoke_migration TO CURRENT_USER WITH INHERIT FALSE, SET TRUE' });
       const schema = await client.query<{ owner: string }>({ text: "SELECT pg_get_userbyid(nspowner) AS owner FROM pg_namespace WHERE nspname = $1", values: [entitySmokeSchema] });
       if (schema.rows.length > 0 && (schema.rows.length !== 1 || schema.rows[0]?.owner !== entitySmokeMigrationUsername)) throw entitySmokeDependencyStateError(operation, "schema-owner", schema.rows.length !== 1 ? "count-mismatch" : "mismatch");
       if (schema.rows.length === 0) {
@@ -103,11 +104,11 @@ export async function performEntitySmokeAdministration(pool: PostgreSqlConnectio
       await client.query({ text: 'REVOKE ALL ON SCHEMA "entity_smoke" FROM entity_smoke_runtime' });
       await client.query({ text: 'GRANT USAGE ON SCHEMA "entity_smoke" TO entity_smoke_runtime' });
     } else {
+      await client.query({ text: 'SET LOCAL ROLE entity_smoke_migration' });
       const manifest = entitySmokeMigrationManifest();
       const history = await client.query<{ checksum: string }>({ text: 'SELECT checksum FROM "entity_smoke".platform_migration_history WHERE migration_id = $1', values: [manifest.migrations[0].id] });
       if (history.rows.length !== 1) throw entitySmokeDependencyStateError(operation, "history-count", "count-mismatch");
       if (history.rows[0]?.checksum !== manifest.migrations[0].checksum) throw entitySmokeDependencyStateError(operation, "history-checksum", "mismatch");
-      await client.query({ text: 'SET LOCAL ROLE entity_smoke_migration' });
       await client.query({ text: 'REVOKE ALL ON "entity_smoke".platform_migration_history FROM entity_smoke_runtime' });
       await client.query({ text: 'REVOKE ALL ON "entity_smoke".test_entity FROM entity_smoke_runtime' });
       await client.query({ text: 'GRANT SELECT, INSERT, UPDATE ON "entity_smoke".test_entity TO entity_smoke_runtime' });
@@ -161,14 +162,30 @@ async function requireNoRuntimeSessions(pool: PostgreSqlConnectionPool, operatio
 async function observePermissions(pool: PostgreSqlConnectionPool, database: string): Promise<void> {
   await requireBoundedExistingRole(pool, { username: entitySmokeRuntimeUsername }, { requireLogin: true });
   await requireBoundedExistingRole(pool, { username: entitySmokeMigrationUsername }, { requireLogin: true });
-  const observed = await pool.query<{ allowed: boolean }>({
-    text: "SELECT has_schema_privilege($1, $2, 'USAGE') AND NOT has_schema_privilege($1, $2, 'CREATE') AND NOT has_database_privilege($1, $3, 'CREATE') AND has_table_privilege($1, 'entity_smoke.test_entity', 'SELECT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'INSERT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'UPDATE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'DELETE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'TRUNCATE') AND NOT has_table_privilege($1, 'entity_smoke.platform_migration_history', 'INSERT, UPDATE, DELETE') AS allowed",
-    values: [entitySmokeRuntimeUsername, entitySmokeSchema, database],
-  });
-  const memberships = await pool.query({ text: "SELECT 1 FROM pg_auth_members m JOIN pg_roles member ON member.oid = m.member JOIN pg_roles role ON role.oid = m.roleid WHERE member.rolname = ANY($1::text[]) AND role.rolname <> 'rds_iam'", values: [[entitySmokeRuntimeUsername, entitySmokeMigrationUsername]] });
-  if (observed.rows.length !== 1) throw entitySmokeDependencyStateError("observe-permissions", "privileges", "count-mismatch");
-  if (observed.rows[0]?.allowed !== true) throw entitySmokeDependencyStateError("observe-permissions", "privileges", "not-confirmed");
-  if (memberships.rows.length !== 0) throw entitySmokeDependencyStateError("observe-permissions", "memberships", "not-confirmed");
+  const client = await pool.connect();
+  let failed = false;
+  try {
+    await client.query({ text: "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY" });
+    await client.query({ text: "SET LOCAL statement_timeout = '30000ms'" });
+    // Resolving the fixed table names requires owner-schema access. Observe
+    // explicit runtime privileges as the owner, never by inheriting its rights.
+    await client.query({ text: 'SET LOCAL ROLE entity_smoke_migration' });
+    const observed = await client.query<{ allowed: boolean }>({
+      text: "SELECT has_schema_privilege($1, $2, 'USAGE') AND NOT has_schema_privilege($1, $2, 'CREATE') AND NOT has_database_privilege($1, $3, 'CREATE') AND has_table_privilege($1, 'entity_smoke.test_entity', 'SELECT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'INSERT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'UPDATE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'DELETE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'TRUNCATE') AND NOT has_table_privilege($1, 'entity_smoke.platform_migration_history', 'INSERT, UPDATE, DELETE') AS allowed",
+      values: [entitySmokeRuntimeUsername, entitySmokeSchema, database],
+    });
+    const memberships = await client.query({ text: "SELECT 1 FROM pg_auth_members m JOIN pg_roles member ON member.oid = m.member JOIN pg_roles role ON role.oid = m.roleid WHERE member.rolname = ANY($1::text[]) AND role.rolname <> 'rds_iam'", values: [[entitySmokeRuntimeUsername, entitySmokeMigrationUsername]] });
+    if (observed.rows.length !== 1) throw entitySmokeDependencyStateError("observe-permissions", "privileges", "count-mismatch");
+    if (observed.rows[0]?.allowed !== true) throw entitySmokeDependencyStateError("observe-permissions", "privileges", "not-confirmed");
+    if (memberships.rows.length !== 0) throw entitySmokeDependencyStateError("observe-permissions", "memberships", "not-confirmed");
+  } catch (cause) { failed = true; throw cause; }
+  finally {
+    try { await client.query({ text: "ROLLBACK" }); }
+    catch (cause) {
+      if (!failed) throw cause;
+      reportEntitySmokeFailure("administration", "not-assessed", cause);
+    } finally { client.release(); }
+  }
 }
 
 /** A separate administrative observer, never a migration replay. The caller

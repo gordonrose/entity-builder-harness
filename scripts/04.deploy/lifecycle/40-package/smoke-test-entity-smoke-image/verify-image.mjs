@@ -139,7 +139,9 @@ try {
     const dataVolume = network + (name === database ? "-source-data" : "-restored-data");
     docker(["run", "--detach", "--rm", "--name", name, "--network", network, "--network-alias", alias, "-e", "POSTGRES_DB=entitysmoke", "-e", "POSTGRES_USER=fixture_root", "-e", "POSTGRES_PASSWORD=" + administratorPassword, "-v", volume + ":/certs:ro", "-v", dataVolume + ":/var/lib/postgresql", postgreSqlImage, "postgres", "-c", "ssl=on", "-c", "ssl_cert_file=/certs/server.crt", "-c", "ssl_key_file=/certs/server.key", "-c", "log_destination=stderr", "-c", "logging_collector=on", "-c", "log_directory=" + postgreSqlData + "/log", "-c", "log_filename=postgresql.log", "-c", "log_min_error_statement=error"]);
     for (let attempt = 0; attempt < 40; attempt++) {
-      const ready = invoke("docker", ["exec", name, "pg_isready", "-U", "fixture_root", "-d", "entitysmoke"], { allowFailure: true });
+      // The image's temporary initialization server accepts Unix sockets;
+      // only TCP readiness establishes that its final server has started.
+      const ready = invoke("docker", ["exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "fixture_root", "-d", "entitysmoke"], { allowFailure: true });
       if (ready.status === 0) {
         if (psql(name, "SHOW server_version_num").trim() !== "180003") fail();
         return;

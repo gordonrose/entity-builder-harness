@@ -3051,3 +3051,103 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
   Proceed with the already approved local checkpoint, then actual immutable
   image build and engine-backed qualification. No push, publication or AWS
   mutation is authorised by this local verification result.
+
+### Actual committed image built; administration qualification failed — 2026-11-09
+
+- Task checkpoint6f17203053e61172359b9de2f85c8356e8d69aa3 and ordinary
+  bookkeeping checkpoint7b3d3e8b90a066b5fe627f6524e6211ca398a306 are local only.
+  Commit preparation passed with no findings and matching proof reuse. The
+  actual image was built successfully from7b3d3e8b; source was clean.
+- Actual qualification37589 failed during restricted-administration. Preserve
+  image-qualification.log under the stable capture root. Cleanup returned
+  confirmed: no cleanup-failure diagnostic and no retained reservation. This
+  failed attempt does not qualify the image or establish an AWS result.
+- Diagnose through the same disposable qualification owner, with a host-only
+  ignored preload trace retaining closed diagnostic codes/enum detail only;
+  no raw child output, credentials or row values. No production source,
+  control outcome or expected assertion is overridden. Diagnostic run34615
+  uses the same private TMPDIR; it is diagnosis, not replacement proof.
+- Fresh read-only checks confirm origin main remainsff10cf15, account337159794548,
+  and the entity-smoke ECR repository/publisher role are both absent. No push,
+  publication, cloud mutation or acceptance has occurred. Continue bounded
+  failure diagnosis/repair and affected verification before publication approval.
+
+### Engine-backed failure inventory and bounded candidate repair — 2026-11-09
+
+- Diagnostic34615 failed before administration; diagnostic84002 reproduced
+  successful administration preflight then bootstrap failure. Diagnostic50711
+  observed Unix-socket readiness0 followed by SQL connection2 during startup.
+  Each original outcome is retained separately; cleanup confirmed each time.
+- Diagnostic65617 used TCP-only initialization observation and reached bootstrap.
+  Its statement15 returned SQLSTATE0LP01. The exact statement is GRANT migration
+  membership TO CURRENT_USER WITH ADMIN TRUE, INHERIT FALSE, SET TRUE. PostgreSQL18
+  source explicitly rejects circular ADMIN self-grants. The creator already has
+  ADMIN authority; omit only the redundant ADMIN TRUE clause, retaining disabled
+  inheritance and required SET access. No superuser/CREATEDB or runtime authority
+  is added. References: PostgreSQL18 sql-grant.html and REL_18_STABLE user.c1640-1699.
+- Diagnostic67579 tests that candidate statement plus TCP-only startup with a
+  host/contained-program observer. It is expressly not immutable-image proof.
+  No tracked operating source has yet changed after checkpoint7b3d3e8b.
+- Planned affected source: entrypoints/entity-smoke/administration.ts and image
+  qualifier verify-image.mjs. Existing access-control-test.mjs will assert the
+  exact noncircular bootstrap grant and rollback on its rejection. Existing
+  qualification-control-test.mjs will exercise TCP initialization through its
+  fake Docker boundary. Retain role bounds, readback, deadlines, no-replay and
+  cleanup behavior; no catalogue/schema change is planned. Re-review those two
+  source predicates and refresh only their source-matched review hashes after
+  behavior proof. Registered owners are entity-smoke-composition and publication
+  contract, with affected integration selected by the existing runner.
+
+- Diagnostic67579 did not apply its candidate because the adapter calls pg with
+  a SQL string, not a statement object. Its original failure is preserved, not
+  evidence against the correction. Diagnostic4476 handles the actual call shape
+  and positively records candidate application: bootstrap passed; migration
+  preflight, application, idempotent replay and unchanged history passed. It then
+  failed grant-runtime with persistence.runtime-permission-denied.
+- Source explanation for the latter: grant-runtime reads migration history
+  before its existing SET LOCAL ROLE, despite deliberately noninherited owner
+  membership. Move that existing role selection before the history read, not
+  add history access to the administrator or enable inheritance. The same
+  administration.ts review/test scope covers role-before-history ordering,
+  failed history checks preventing grants, rollback and no replay.
+- Diagnostic49389 tests both narrow SQL corrections and TCP readiness. No
+  instrumented candidate outcome can qualify the original image; tracked fixes,
+  regression proof, a new source checkpoint and uninstrumented image proof are
+  still required. No AWS/provider publication effect has occurred.
+
+- Diagnostic49389 confirmed bootstrap, migration/replay and corrected runtime
+  grants, then found the administrative permission observer cannot resolve its
+  schema-qualified table names without selecting the noninherited owner. Keep
+  its observation on one read-only transaction/connection, select the already
+  authorised migration owner, then rollback/release before success. Extend the
+  same access-control fixture for body/rollback failure and no retry; do not
+  give runtime or administrator additional privileges.
+- Diagnostic36047 completed0 with all candidate corrections against PostgreSQL18.3:
+  administration/migrations, runtime SQL denials, original record/collision,
+  lifecycle, replacement/access recovery, independent restore, checksum-negative
+  preservation, safe downstream logs and confirmed cleanup. Capability-negative
+  checks also completed0. Its emitted qualification-shaped result is NOT genuine
+  immutable qualification: this attempt used explicit host/program diagnostic
+  substitutions. Retain it only as repair evidence. Implement the identified
+  corrections and regression tests now, then verify an uninstrumented new image.
+
+### Bounded PostgreSQL corrections verified — 2026-11-09
+
+- Implemented four observed corrections only: TCP readiness after initialization;
+  omit circular ADMIN self-grant; select owner before migration-history access;
+  select the existing owner for permission observation on one read-only snapshot
+  with rollback/release. No extra runtime/administrator privileges, inheritance,
+  catalogues or provider authority were added. Full-file diagnostic rereview and
+  exact source hashes updated for administration and qualifier only, retaining
+  partial adoption and explicit live-proof debt.
+- Fresh focused compilation, access-control/preflight caller regressions and the
+  fake-engine startup regression passed. Registered impact run61574 completed0:
+  .cache/test-runs/entity-smoke-stable.7wpnDKuN/repair-integration.json.
+  Verdict passed;45 local checks passed,13 later-stage deferred; no findings or
+  failed/uncertain/blocked checks. Reconciliation elapsed1952.740213 seconds.
+  These are actual registered outcomes; the instrumented candidate remains repair
+  evidence only, not immutable-image qualification.
+- Source is frozen at these five operating/test/review corrections plus this
+  session log. Proceed with the approved checkpoint and a fresh uninstrumented
+  image build/qualification. No push, publication, AWS mutation or accepted-state
+  change has occurred. Main publication still needs its concrete authority.

@@ -27,16 +27,32 @@ const canary = "credential-row-provider-canary";
 try {
   const calls = join(fixture, "calls.jsonl"), fake = join(fixture, "docker");
   writeFileSync(fake, "#!" + process.execPath + "\n" + `
-const fs=require('node:fs'); const [kind,operation,name]=process.argv.slice(2);
-fs.appendFileSync(process.env.ENTITY_SMOKE_FIXTURE_CALLS,JSON.stringify({kind,operation,name})+'\\n');
+const fs=require('node:fs'); const args=process.argv.slice(2); const [kind,operation,name]=args;
+const tcp=args.includes('pg_isready')&&args.includes('-h')&&args.includes('127.0.0.1');
+fs.appendFileSync(process.env.ENTITY_SMOKE_FIXTURE_CALLS,JSON.stringify({kind,operation,name,tcp})+'\\n');
+if(process.env.ENTITY_SMOKE_FIXTURE_STARTUP==='true'){
+  if(kind==='info'){console.log('linux');process.exit(0)}
+  if(kind==='image'&&operation==='inspect'){console.log(JSON.stringify([{Architecture:'amd64',Os:'linux',Id:'sha256:'+'c'.repeat(64),Config:{User:'nonroot',Labels:{'org.opencontainers.image.revision':'b'.repeat(40)},Env:[]}}]));process.exit(0)}
+  if(kind==='exec'&&args.includes('pg_isready')){
+    // Unix readiness would report the temporary initialization server. Only
+    // the final TCP server permits the subsequent SQL version observation.
+    if(tcp)fs.writeFileSync(process.env.ENTITY_SMOKE_FIXTURE_CALLS+'.tcp','ready');
+    process.exit(0);
+  }
+  if(kind==='exec'&&args.includes('SHOW server_version_num')){
+    if(!fs.existsSync(process.env.ENTITY_SMOKE_FIXTURE_CALLS+'.tcp'))process.exit(2);
+    console.log('180003');process.exit(0);
+  }
+  if(kind==='run'||kind==='exec'||operation==='create')process.exit(0);
+}
 if(process.env.ENTITY_SMOKE_FIXTURE_UNOBSERVABLE==='true'){process.stderr.write('${canary}');process.exit(1)}
 if(operation!=='inspect')process.exit(9);
 const messages={container:'No such container: '+name,network:'network '+name+' not found',volume:'get '+name+': no such volume'};
 process.stderr.write('Error response from daemon: '+messages[kind]+'\\n');process.exit(1);
 `, { mode: 0o700 });
-  function run(args, unavailable = false) {
+  function run(args, unavailable = false, startup = false) {
     const result = spawnSync(process.execPath, [verifier, ...args], { encoding: "utf8", timeout: 10_000,
-      env: { ...process.env, PATH: fixture + ":" + process.env.PATH, ENTITY_SMOKE_FIXTURE_CALLS: calls, ENTITY_SMOKE_FIXTURE_UNOBSERVABLE: String(unavailable) } });
+      env: { ...process.env, PATH: fixture + ":" + process.env.PATH, ENTITY_SMOKE_FIXTURE_CALLS: calls, ENTITY_SMOKE_FIXTURE_UNOBSERVABLE: String(unavailable), ENTITY_SMOKE_FIXTURE_STARTUP: String(startup) } });
     assert.equal(result.error, undefined); assert.equal(result.signal, null);
     assert(!(result.stdout + result.stderr).includes(canary));
     return result;
@@ -70,7 +86,20 @@ process.stderr.write('Error response from daemon: '+messages[kind]+'\\n');proces
   assert(existsSync(uncertain.path), "unobservable engine state must preserve the recovery reservation");
   const all = readFileSync(calls, "utf8").trim().split("\n").map(JSON.parse);
   assert(all.every(call => call.operation === "inspect"), "an engine error must not be treated as absence or authorize removal");
-  console.log(JSON.stringify({ verdict: "passed", scope: "entity-smoke-qualification-control", real_engine: false, cases: ["safe-arguments", "reject-unowned-reservation", "exact-absence-cleanup", "cleanup-not-qualification", "unobservable-not-absence", "retain-uncertain-reservation"] }));
+  writeFileSync(join(fixture, 'git'), '#!' + process.execPath + '\n' + `
+const args=process.argv.slice(2);
+if(args[0]==='rev-parse'&&args[1]==='HEAD'){console.log('b'.repeat(40));process.exit(0)}
+if(args[0]==='status')process.exit(0);
+process.exit(2);
+`, { mode: 0o700 });
+  const startup = run([], false, true);
+  assert.equal(startup.status, 1, 'this fake scenario deliberately stops at administration, never claims qualification');
+  const startupFailure = JSON.parse(startup.stderr);
+  assert.equal(startupFailure.phase, 'restricted-administration', 'initialization readiness must reach the final PostgreSQL server before SQL');
+  assert(!startup.stderr.includes('CLEANUP_NOT_CONFIRMED'));
+  const startupCalls = readFileSync(calls, 'utf8').trim().split('\n').map(JSON.parse).slice(all.length);
+  assert(startupCalls.some(call => call.kind === 'exec' && call.tcp), 'the actual qualifier must invoke TCP readiness');
+  console.log(JSON.stringify({ verdict: "passed", scope: "entity-smoke-qualification-control", real_engine: false, cases: ["safe-arguments", "reject-unowned-reservation", "exact-absence-cleanup", "cleanup-not-qualification", "unobservable-not-absence", "retain-uncertain-reservation", "final-tcp-not-initialization-socket"] }));
 } finally {
   for (const path of reservations) rmSync(path, { recursive: true, force: true });
   rmSync(fixture, { recursive: true });
