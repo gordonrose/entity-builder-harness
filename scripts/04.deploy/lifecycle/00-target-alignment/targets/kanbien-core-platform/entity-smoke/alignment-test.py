@@ -235,4 +235,10 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
     finally:
         M.ROOT, M.command = old_root, old_command
 
+# The registered alignment unit also exercises the bounded shared-endpoint
+# repair that must succeed before a real image-delivery alignment can pass.
+repair_spec = importlib.util.spec_from_file_location("entity_image_repair_regression", M.ROOT / M.CONTROLLER_DIRECTORY / "image-delivery-repair-test.py")
+repair_fixture = importlib.util.module_from_spec(repair_spec)
+repair_spec.loader.exec_module(repair_fixture)
+
 print(json.dumps({"schema": "deploy/entity-smoke-alignment-fixture/v1", "verdict": "passed", "negative_cases": len(negatives) + 22, "private_image_policy_negative_cases": 22, "provider_observation": False, "checks": ["private-reference-projection", "actual-engine-boundary", "dependency-incarnation-binding", "no-provider-mutation", "real-git-controller-only-checkpoint", "image-template-runtime-and-custody-input-changes-rejected", "rename-symlink-dirty-untracked-and-nonancestor-rejected"]}))

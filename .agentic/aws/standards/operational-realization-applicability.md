@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 4
+version: 5
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-10"
@@ -21,6 +21,43 @@ The generic [deployment proof standard](../../04.deploy/standards/operational-re
 
 ## Entity-smoke controller-only repair checkpoints
 
+### Approved private image delivery repair
+
+On 2026-11-10 the user explicitly approved adding entity-smoke to the two shared
+ECR endpoint allowlists in account `337159794548`, `eu-west-1`, and one replacement
+read-only probe, preserving existing access, data and the original failed attempt.
+The complete entity-smoke execution/proof approval covers subsequent named phases.
+
+The source guard may additionally accept exactly the foundation template change
+that adds the entity-smoke repository to the image-read Resource lists of
+`EcrApiEndpoint` and `EcrDkrEndpoint`. Compare the entire parsed template against
+the custody checkpoint with only those two substitutions. No other template,
+identity, network, action, principal, parameter or resource change is admitted.
+Application qualification remains bound to the original source/image.
+
+The repair controller compares the deployed foundation with that original
+template, retains resource identities and configuration fingerprints, and
+reviews a CloudFormation update containing exactly two non-replacing endpoint
+PolicyDocument modifications. Preserve parameters and existing access. Reserve
+each submission before sending it; reconcile lost responses without replay.
+Completion requires the original execution token, unchanged resource identities,
+exact repaired template and both actual endpoint policies. This infrastructure
+repair uses source/custody/local-proof/live-read/change-set checks; successful
+image pull cannot be a prerequisite for repairing image delivery. It runs no
+database or business operation.
+
+After that genuine repair receipt, derive one fixed recovery label from the
+original failed-start observation. Verify its retained hash, original reservation,
+no application startup and unchanged task/image/network bindings. The original
+remains terminal. Recovery planning and the later bootstrap consumer use the
+same recovery preflight label. Its ordinary first-five gates, ninety-second
+deadline, terminal success and freshness checks still apply. No caller-selected
+retry count or alternate recovery label is accepted.
+
+The in-place repair preserves the earlier core-server allowlist. Rollback is
+the inverse two-policy update after reconciling the original change; it must not
+delete or replace endpoints, data, snapshots, staging or other resources.
+
 The user adopted this bounded rule on 2026-11-10. A tested, committed repair to
 the isolated entity-smoke deployment controller may reuse its genuinely
 qualified application image and resume its original reserved operation. The
@@ -37,7 +74,8 @@ of the clean current checkout and reject every changed path except:
 
 No caller-supplied path exclusions or alternative source may widen this list.
 Controller changes must remain regular tracked files, not symlinks. Any changed
-application, dependency, image/build/qualification/publication input, template,
+application, dependency, image/build/qualification/publication input, template
+(except the exact private-image repair above),
 runtime configuration, scope declaration, permission or other source requires
 new qualification/custody instead. Existing source-matched reviews and affected
 checks remain mandatory before a repaired checkpoint is used.

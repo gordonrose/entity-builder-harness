@@ -58,6 +58,22 @@ new chat session
 
 ## Decisions Made
 
+- 2026-11-10: user explicitly answered "Approve both changes and continue the
+  full proof" to adding entity-smoke to the two shared ECR endpoint allowlists
+  in account337159794548/eu-west-1 and one replacement read-only probe, preserving
+  existing access/data/original failure. This supersedes the pending approval
+  notes below. The earlier rejected patch changed nothing. The original full
+  named execution/proof chain remains approved.
+- Repair inventory: alignment enforces the exact two-policy source delta;
+  the focused foundation repair controller verifies deployed ownership, entire
+  template, configuration and identities, two non-replacing policy changes,
+  durable single submissions and terminal token/readback. Task preparation
+  validates the original failure and repair receipt, then selects exactly one
+  recovery label shared with bootstrap. Missing/mismatched evidence rejects
+  before dependent effects, with bounded conditions and no native exceptions.
+  Reuse provider/parser/exclusive receipts. Extend existing alignment/task
+  fixtures, complete staged checks, then the actual repair and full proof.
+
 - Preserve the existing accepted scopes and staging. Add only the isolated
   entity-smoke route with PostgreSQL and separate administrative, migration,
   runtime and verifier identities. User-approved recovery/preflight/cleanup
@@ -66,6 +82,22 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- Image-delivery repair consolidated review: whole parsed foundation delta is
+  exactly two repository allowlist additions; actual read-only inspection
+  confirms original live template matches custody source,25 resources and no
+  stack role/notification override. New route uses existing provider, parser,
+  exclusive fsynced retention and finite diagnostic boundaries. Review/execute
+  reserve before I/O; lost responses reconcile the original intent. Terminal
+  token, full template/configuration/resource identity and actual policies are
+  checked before the recovery receipt. Fixed replacement label is bound to the
+  original hash-pinned failed-start observation and retained reservation; later
+  bootstrap selects the same probe. This is a bounded operational correction,
+  not a new architecture; no ADR required. Local alignment, repair and complete
+  task-route fixtures passed, including lost-response no-replay and wider-delta
+  rejection. Actual repair/probe/full acceptance are still pending. Frozen
+  source review remains partial for broad malformed-provider/reporting paths;
+  local fixtures do not establish AWS effectiveness.
 
 - Current continuation: image/custody source remains8f76ed3480e85d60fb60f547f996628c8554504d.
   The user-approved controller-only repair is being checkpointed locally, without

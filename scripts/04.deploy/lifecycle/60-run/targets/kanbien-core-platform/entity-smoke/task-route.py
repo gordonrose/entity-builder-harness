@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -44,6 +44,7 @@ CREDENTIAL = module("entity_smoke_task_route_credential", DIRECTORY / "credentia
 COMPLETION = module("entity_smoke_task_route_completion", DIRECTORY / "task-completion.py")
 HISTORY = module("entity_smoke_task_route_history", DIRECTORY / "recovery-history.py")
 ACCEPTANCE = module("entity_smoke_task_route_acceptance", DIRECTORY / "acceptance-steps.py")
+IMAGE_REPAIR = module("entity_smoke_task_image_repair", DIRECTORY / "image-delivery-repair.py")
 RULE = C.ROOT / ".agentic/aws/standards/operational-realization-applicability.md"
 READS = C.READS | {("ecs", "describe-task-definition"), ("ecs", "list-services"), ("ec2", "describe-security-groups")} | {("iam", name) for name in ("list-role-policies", "list-attached-role-policies", "get-role-policy")}
 READS |= {("rds", "describe-db-snapshots"), ("rds", "list-tags-for-resource")}
@@ -184,6 +185,7 @@ def prepare(args, provider):
     actor = operator(provider, checked["definition"], roles)
     stage_suffix = "" if proof_stage == "baseline" else ":" + proof_stage
     preflight_label = "entity-smoke-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":preflight" + stage_suffix).encode()).hexdigest()[:24]
+    preflight_label = IMAGE_REPAIR.recovery_label({"cache": cache, "binding": binding, "checked": checked}, args, preflight_label)
     actual_operation = ("ready" if args.workload == "verifier" else "preflight") if args.phase == "preflight" else args.operation
     safe = {"schema": "deploy/entity-smoke-task-plan/v1", "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke", "account": C.ALIGN.ACCOUNT, "region": C.ALIGN.REGION,
             "workload": args.workload, "phase": args.phase, "operation": actual_operation, "prepared_operation": args.operation, "proof_stage": proof_stage, "preflight_label": preflight_label,
@@ -338,7 +340,7 @@ def main():
         result = execute(args, provider) if args.execute else plan(args, provider)
         print(json.dumps({"schema": "deploy/entity-smoke-task-report/v1", **result}, sort_keys=True)); return 0
     except Exception as failure:
-        known = (TaskRouteFailure, BINDING.BindingFailure, STEPS.StepFailure, FEATURE.FeatureStepFailure, CREDENTIAL.CredentialFailure, HISTORY.HistoryFailure, ACCEPTANCE.AcceptanceFailure, RUNNER.RunnerFailure, RUNNER.CONTROL.TaskFailure, RUNNER.EVIDENCE.EvidenceFailure, RUNNER.PREFLIGHT.PreflightFailure,
+        known = (IMAGE_REPAIR.C.InfrastructureFailure, IMAGE_REPAIR.C.RESOURCE.CONTROL.TaskFailure, TaskRouteFailure, BINDING.BindingFailure, STEPS.StepFailure, FEATURE.FeatureStepFailure, CREDENTIAL.CredentialFailure, HISTORY.HistoryFailure, ACCEPTANCE.AcceptanceFailure, RUNNER.RunnerFailure, RUNNER.CONTROL.TaskFailure, RUNNER.EVIDENCE.EvidenceFailure, RUNNER.PREFLIGHT.PreflightFailure,
                  C.InfrastructureFailure, C.RESOURCE.ResourceFailure, C.RESOURCE.CONTROL.TaskFailure, C.RESOURCE.EVIDENCE.EvidenceFailure, C.ALIGN.AlignmentFailure, C.GATE.ContractFailure) + RECOVERY.failures()
         condition = failure.code if isinstance(failure, known) else "task-boundary-not-confirmed"
         if isinstance(failure, BINDING.BindingFailure): context.update(field=failure.field, item=failure.item, affected_workload=failure.workload)

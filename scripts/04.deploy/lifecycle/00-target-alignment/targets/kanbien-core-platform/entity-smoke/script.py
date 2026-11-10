@@ -34,6 +34,7 @@ DATABASE = "kanbien-core-platform-persistence"
 REPOSITORY = "kanbien-core-platform/entity-smoke"
 REPOSITORY_URI = ACCOUNT + ".dkr.ecr." + REGION + ".amazonaws.com/" + REPOSITORY
 CONTROLLER_DIRECTORY = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/"
+FOUNDATION = TARGET + "/30-provider-realization/aws/cloudformation/foundation.yml"
 CONTROLLER_REPAIR_FILES = frozenset({
     "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py",
     "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/alignment-test.py",
@@ -141,6 +142,32 @@ def retained_evidence_files(receipt, selection):
     return files
 
 
+def repaired_foundation(original):
+    """Closed semantic delta; preserve every other part of the original template."""
+    import copy
+    result = copy.deepcopy(original)
+    try:
+        for name in ("EcrApiEndpoint", "EcrDkrEndpoint"):
+            resource = result["Resources"][name]
+            require(resource["Type"] == "AWS::EC2::VPCEndpoint", "alignment-foundation-repair-invalid")
+            statements = resource["Properties"]["PolicyDocument"]["Statement"]
+            matches = [row for row in statements if row.get("Resource") == {"Ref": "ExistingRepositoryArn"}]
+            require(len(matches) == 1 and set(matches[0]["Action"]) == {"ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"}, "alignment-foundation-repair-invalid")
+            matches[0]["Resource"] = [{"Ref": "ExistingRepositoryArn"}, {"Fn::Sub": "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke"}]
+    except (KeyError, TypeError): raise AlignmentFailure("alignment-foundation-repair-invalid") from None
+    return result
+
+
+def foundation_sources(source, current):
+    parser = module("entity_smoke_foundation_parser", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
+    try:
+        before = parser.template(command(["git", "show", source + ":" + FOUNDATION]))
+        after = parser.template(command(["git", "show", current + ":" + FOUNDATION]))
+        require(canonical(after) == canonical(repaired_foundation(before)), "alignment-foundation-repair-invalid")
+        return before, after
+    except ValueError: raise AlignmentFailure("alignment-foundation-repair-invalid") from None
+
+
 def source_checkpoint(receipt):
     current = command(["git", "rev-parse", "HEAD"]).strip()
     source = receipt["source_revision"]
@@ -154,7 +181,8 @@ def source_checkpoint(receipt):
         def controller(path):
             relative = path.removeprefix(CONTROLLER_DIRECTORY)
             return path.startswith(CONTROLLER_DIRECTORY) and "/" not in relative and relative.endswith((".py", ".sh"))
-        require(all(path.startswith("commitLogs/") or path in CONTROLLER_REPAIR_FILES or controller(path) for path in paths), "alignment-source-checkpoint-mismatch")
+        require(all(path.startswith("commitLogs/") or path in CONTROLLER_REPAIR_FILES or controller(path) or path == FOUNDATION for path in paths), "alignment-source-checkpoint-mismatch")
+        if FOUNDATION in paths: foundation_sources(source, current)
         checked = [path for path in paths if not path.startswith("commitLogs/")]
         if checked:
             rows = command(["git", "ls-tree", "-z", current, "--", *checked]).split("\0")[:-1]
