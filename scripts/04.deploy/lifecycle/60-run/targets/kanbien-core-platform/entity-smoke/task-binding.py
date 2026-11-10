@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -125,7 +125,8 @@ def task_definition(provider, workload, parameters, resources, snapshot=None, *,
     containers = actual.get("containerDefinitions")
     require(isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict), "task-binding-container-not-confirmed", workload, "container")
     observed, intended = containers[0], expected["containerDefinitions"][0]
-    container_defaults = {"cpu": 0, "mountPoints": [], "volumesFrom": [], "portMappings": [], "secrets": [], "environmentFiles": [], "ulimits": [], "systemControls": [], "dependsOn": [], "privileged": False, "interactive": False, "pseudoTerminal": False, "disableNetworking": False}
+    container_defaults = {"cpu": 0, "mountPoints": [], "volumesFrom": [], "portMappings": [], "secrets": [], "environmentFiles": [], "ulimits": [], "systemControls": [], "dependsOn": [], "privileged": False, "interactive": False, "pseudoTerminal": False, "disableNetworking": False,
+                          "credentialSpecs": [], "dnsSearchDomains": [], "dnsServers": [], "dockerLabels": {}, "dockerSecurityOptions": [], "entryPoint": [], "extraHosts": [], "links": []}
     for key, default in container_defaults.items():
         if key not in intended and key in observed:
             require(same(observed[key], default), "task-binding-container-not-confirmed", workload, "container")
@@ -135,6 +136,10 @@ def task_definition(provider, workload, parameters, resources, snapshot=None, *,
             if key in container: container[key] = sorted_entries(container[key], "name", workload)
         linux = container.get("linuxParameters")
         require(isinstance(linux, dict) and isinstance(linux.get("capabilities"), dict), "task-binding-container-not-confirmed", workload, "container")
+        for key in ("devices", "tmpfs"):
+            if key not in intended["linuxParameters"] and key in linux:
+                require(same(linux[key], []), "task-binding-container-not-confirmed", workload, "container")
+                del linux[key]
         capabilities = linux["capabilities"]
         if capabilities.get("add") == []: del capabilities["add"]
         logging = container.get("logConfiguration", {})

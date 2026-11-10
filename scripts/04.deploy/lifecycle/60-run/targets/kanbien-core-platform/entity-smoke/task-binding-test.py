@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -35,6 +35,7 @@ DIRECTORY = Path(__file__).parent
 M = module("entity_smoke_task_binding_fixture", DIRECTORY / "task-binding.py")
 F = module("entity_smoke_task_binding_source_fixture", DIRECTORY / "deployment-control-test.py")
 CANARY = "private-task-secret-reference-and-provider-canary"
+EMPTY_CONTAINER_DEFAULTS = {"credentialSpecs": [], "dnsSearchDomains": [], "dnsServers": [], "dockerLabels": {}, "dockerSecurityOptions": [], "entryPoint": [], "extraHosts": [], "links": []}
 PARAMETERS = copy.deepcopy(F.PARAMETERS)
 RESOURCES = {}
 for index, (logical, kind) in enumerate(M.DEPLOY.RESOURCE_TYPES.items(), 1):
@@ -61,6 +62,8 @@ class Provider:
         self.task.update(taskDefinitionArn=RESOURCES[M.WORKLOADS[workload] + "TaskDefinition"]["physical_id"], revision=1, status="ACTIVE", compatibilities=["EC2", "FARGATE"], registeredBy="arn:aws:iam::337159794548:role/fixture")
         self.task["volumes"] = []; self.task["placementConstraints"] = []; self.task["enableFaultInjection"] = False
         self.task["containerDefinitions"][0].update(cpu=0, mountPoints=[], volumesFrom=[])
+        self.task["containerDefinitions"][0].update(copy.deepcopy(EMPTY_CONTAINER_DEFAULTS))
+        self.task["containerDefinitions"][0]["linuxParameters"].update(devices=[], tmpfs=[])
         self.roles, self.policies, self.groups = {}, {}, {}
         self.attached, self.paginated, self.encoded = False, False, False
         for logical, resource in M.DEPLOY.source()[1]["Resources"].items():
@@ -139,6 +142,17 @@ def main():
             assert document["Statement"] == [{"Effect": "Allow", "Action": "rds-db:connect", "Resource": "arn:aws:rds-db:eu-west-1:337159794548:dbuser:" + PARAMETERS["DatabaseResourceId"] + "/entity_smoke_" + ("migration" if workload == "migration" else "runtime")}]
         provider.encoded = True
         assert M.inspect(provider, workload, PARAMETERS, RESOURCES) == result, "documented URL-encoded and SDK-decoded policies must agree"
+
+    for key, default in {**EMPTY_CONTAINER_DEFAULTS, "devices": [], "tmpfs": []}.items():
+        for value in ([CANARY] if isinstance(default, list) else {"fixture": CANARY}, None, False, 0, ""):
+            provider = Provider("administration")
+            container = provider.task["containerDefinitions"][0]
+            selected = container["linuxParameters"] if key in {"devices", "tmpfs"} else container
+            selected[key] = value
+            fails(lambda: M.inspect(provider, "administration", PARAMETERS, RESOURCES), "task-binding-container-not-confirmed", "administration")
+    provider = Provider("administration")
+    provider.task["containerDefinitions"][0]["unsupportedFixtureField"] = []
+    fails(lambda: M.inspect(provider, "administration", PARAMETERS, RESOURCES), "task-binding-container-not-confirmed", "administration")
     
     for key, value, code in [("status", "INACTIVE", "task-binding-definition-not-confirmed"), ("revision", True, "task-binding-definition-not-confirmed"),
                              ("cpu", "1024", "task-binding-container-not-confirmed"), ("taskRoleArn", CANARY, "task-binding-definition-not-confirmed"),

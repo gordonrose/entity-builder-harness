@@ -81,6 +81,39 @@ new chat session
 
 ## Activity Log
 
+### 2026-11-10 - Actual task-definition empty-default comparison
+
+- Normal public reconciliation completed the original infrastructure operation
+  es-3c2c14b89afe48e083ad35043a8e2381 and retained receipts/create.json for all
+  thirty resources. No second ExecuteChangeSet occurred. Its fresh plan differs
+  only in controller hash; qualified application source/image remain unchanged.
+- The first administration/bootstrap preflight plan rejected
+  task-binding-container-not-confirmed before any task launch or database write.
+  Actual read-only comparison identifies eight omitted container fields returned
+  as empty arrays/maps and Linux devices/tmpfs returned as empty arrays. The
+  fixture did not model them. Existing exact defaults already normalize other
+  provider-added empty fields. Correct only these known empty representations;
+  non-empty, wrong-type and unknown fields must remain rejected.
+- Owning predicate is task-binding-container-not-confirmed in task-binding.py,
+  preserved by task-route.py's finite workload/container context. Extend the
+  existing task-binding-test.py provider and actual comparison assertions for
+  all five workloads, each non-empty override and wrong-type alternatives;
+  retain sensitive-canary exclusion and exact role/network/image comparisons.
+  Reuse the existing partial task-route review, not a new diagnostic owner.
+  No new permission, template, application contract or ADR is introduced.
+- Final integration started on the prior controller checkpoint before this
+  live comparison failed. Preserve its original report; it cannot close this
+  newly discovered correction. Reuse only unchanged matching evidence and run
+  the affected stable-input checks before this repaired controller is used.
+- Focused binding fixture passed with real-shaped defaults across five workloads
+  and fifty non-empty/wrong-type counterexamples plus unknown-field rejection.
+  The read-only diagnostic comparison of all five actual task/role/network
+  bindings matched after only the proposed neutral normalization; its explicitly
+  non-accepting report cannot substitute for the normal committed public route.
+  Complete source/consumer review found no permission or configuration change:
+  all other immutable definitions, source inputs and exact comparisons remain.
+  Freeze this four-path correction for preparation and registered verification.
+
 ### 2026-11-10 - Initial AWS creation completed; reconcile handoff repair
 
 - Corrective checkpoint d7cc94c4 passed the two exact registered runtime
