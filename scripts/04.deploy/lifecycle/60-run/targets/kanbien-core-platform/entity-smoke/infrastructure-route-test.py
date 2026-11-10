@@ -152,6 +152,26 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
     assert M.run(arguments("execute", approved=plan["plan_sha256"]), provider)["receipt"] == completed["receipt"]
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
+    assert provider.changes == {}  # Executed change-set disappearance is normal.
+    original_tokens = provider.tokens[:]
+    provider.tokens = []
+    failed(lambda: M.run(arguments("execute", approved=plan["plan_sha256"]), provider), "deployment-execution-lineage-not-confirmed")
+    provider.tokens = original_tokens
+    provider.wrong_template = True
+    failed(lambda: M.run(arguments("execute", approved=plan["plan_sha256"]), provider), "deployment-provider-template-mismatch")
+    provider.wrong_template = False
+    journal = root / ".cache/entity-smoke-live" / F.BINDING["proof_label"] / "attempts" / (F.BINDING["proof_label"] + "-deploy-execute-create.json")
+    original_journal = journal.read_bytes()
+    changed_journal = json.loads(original_journal)
+    changed_journal["request"]["parameters_sha256"] = "sha256:" + "0" * 64
+    changed_journal["request_sha256"] = hashlib.sha256(M.RESOURCE.CONTROL.canonical(changed_journal["request"])).hexdigest()
+    journal.write_text(json.dumps(changed_journal))
+    failed(lambda: M.run(arguments("execute", approved=plan["plan_sha256"]), provider), "infrastructure-execution-reservation-mismatch")
+    journal.write_bytes(original_journal)
+    journal.unlink()
+    assert M.run(arguments("execute", approved=plan["plan_sha256"]), provider)["verdict"] == "pending"
+    journal.write_bytes(original_journal)
+    assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
     deployed_tags = provider.stack["Tags"]
     provider.stack["Tags"] = []
     failed(lambda: M.run(arguments("execute", approved=plan["plan_sha256"]), provider), "deployment-ownership-not-confirmed")
@@ -414,7 +434,8 @@ assert len(observed) == successful_calls
 M.subprocess.run = old_subprocess
 
 # Actual provider failures retain the finite attempted operation at the final
-# reporter, never provider parameters, native messages or automatic retries.
+# reporter, never provider parameters or native messages. Only a known read
+# transport timeout gets bounded retries; semantic failures remain single-call.
 old_parse, old_run, old_subprocess = M.parse, M.run, M.subprocess.run
 M.parse = lambda: SimpleNamespace(mode="plan", phase="create", proof_label=F.BINDING["proof_label"], validate_arguments=False)
 M.run = lambda args, selected: selected("route53", "get-hosted-zone", Id=CANARY)
@@ -439,9 +460,42 @@ for scenario, condition in [
     failure = json.loads(output.getvalue())
     assert status == 1 and failure["condition"] == condition and failure["effect"] == "not-started"
     assert failure["context"]["provider_operation"] == "route53/get-hosted-zone"
-    assert len(attempts) == 1 and CANARY not in output.getvalue() and "SignatureDoesNotMatch" not in output.getvalue()
+    assert len(attempts) == (3 if scenario == "timeout" else 1) and CANARY not in output.getvalue() and "SignatureDoesNotMatch" not in output.getvalue()
 assert M.InfrastructureFailure("controlled", provider_operation=(CANARY, "get-hosted-zone")).provider_operation is None
 M.parse, M.run, M.subprocess.run = old_parse, old_run, old_subprocess
+
+# Exact fixed-endpoint timeout text permits up to three read calls only.
+# Success after a timeout is consumed normally, while unknown/foreign messages
+# and every mutation timeout remain one call and never authorize replay.
+old_subprocess = M.subprocess.run
+try:
+    for scenario, expected_calls in (("recover", 2), ("exhaust", 3), ("foreign", 1), ("unknown", 1)):
+        attempts = []
+        def transport(arguments, **options):
+            attempts.append(arguments)
+            assert options["env"]["AWS_MAX_ATTEMPTS"] == "1"
+            if scenario == "recover" and len(attempts) == 2: return SimpleNamespace(returncode=0, stdout='{"observed":true}', stderr="")
+            endpoint = "https://foreign.invalid" if scenario == "foreign" else "https://rds.eu-west-1.amazonaws.com/"
+            error = CANARY if scenario == "unknown" else 'aws: [ERROR]: Connect timeout on endpoint URL: "' + endpoint + '"'
+            return SimpleNamespace(returncode=255, stdout="", stderr=error)
+        M.subprocess.run = transport
+        current = M.Provider()
+        if scenario == "recover": assert current("rds", "describe-db-instances")["observed"] is True
+        else: failed(lambda: current("rds", "describe-db-instances"), "aws-command-failed")
+        assert len(attempts) == expected_calls and current.effect == "not-started"
+    for process_timeout in (False, True):
+        attempts = []
+        def mutation_timeout(arguments, **options):
+            attempts.append(arguments)
+            if process_timeout: raise subprocess.TimeoutExpired(arguments, 30)
+            return SimpleNamespace(returncode=255, stdout="", stderr='aws: [ERROR]: Connect timeout on endpoint URL: "https://cloudformation.eu-west-1.amazonaws.com/"')
+        M.subprocess.run = mutation_timeout
+        current = M.Provider()
+        current.enable(("cloudformation", "create-change-set"), lambda *args: None)
+        failed(lambda: current("cloudformation", "create-change-set", StackName=M.DEPLOY.STACK), "infrastructure-provider-observation-unavailable" if process_timeout else "aws-command-failed")
+        assert len(attempts) == 1 and current.effect == "unknown-reconcile-only"
+finally:
+    M.subprocess.run = old_subprocess
 print(json.dumps({"schema": "deploy/entity-smoke-infrastructure-route-fixture/v1", "verdict": "passed", "provider_observation": False,
                   "prerequisites": "controlled-source-custody-alignment-and-policy-responses-not-qualification",
                   "checks": ["actual-generic-gates", "plan-is-not-approval", "changed-plan-rejected", "review-before-execute", "lost-execution-observe-only", "completed-receipt-reconciliation", "no-fictional-runtime-facts", "same-label-ownership", "activation-proof-required", "activation-binds-four-real-collector-receipts", "activation-resume-no-old-zero-count-requirement", "submission-must-match-plan", "missing-gate-observation-rejected", "actual-cli-safe-rejection", "no-provider-on-offline-failure", "fixed-provider-endpoint", "no-automatic-mutation-retry"]}))

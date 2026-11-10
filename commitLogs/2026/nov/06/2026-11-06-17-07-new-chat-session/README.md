@@ -80,6 +80,57 @@ new chat session
 
 ## Activity Log
 
+### 2026-11-10 - Initial AWS creation completed; reconcile handoff repair
+
+- Committed controller repair0a7499b078f070f1202d6133d10ffd1d9463802f and
+  bookkeeping3f3c81316098000dce3ef15508d9e9da621dbd14 after48 local passes,
+  13 later obligations deferred and the normal staged gate. Actual source-input
+  comparison proves application/dependencies/image/runtime/templates unchanged
+  from qualified8f76. No republish or push of these local repairs occurred.
+- Actual public fresh planner passed with only controller_sha256 changed from
+  the originally approved plan. Controller sha256:056963f6eb702f014989e4e7240d1e896e795d09e01a4c9235de80eda12d28b2;
+  new plan sha256:876aafd4ddf51d17df6550e91ee99a027b10f34a57d8b24ba417e88a77b2f390.
+- The first execute invocation failed a read-only RDS connection timeout before
+  any execution reservation. Confirmed actual database available and resumed.
+  Exactly one execution reservation es-3c2c14b89afe48e083ad35043a8e2381 was then
+  submitted; original review reservation remainses-88b08b1b5c27411aa04e56a209dedacc.
+  The public command returned pending, not success. Actual AWS then reported
+  all thirty own resources CREATE_COMPLETE; desired server count remains zero.
+- Reconciliation hit a separate read timeout, then actual ChangeSetNotFound.
+  Actual ListChangeSets is empty after execution. The public caller incorrectly
+  queries the disappeared executed change set before reading its already retained
+  execution journal. It has not retained create.json, so task preparation stays
+  closed despite completed infrastructure. Do not repeat ExecuteChangeSet.
+- In-scope controller correction: locate and strictly validate the original
+  execution reservation first, then use the existing observe primitive: exact
+  original stack ARN/tags/template/parameters/thirty resource identities, actual
+  original root execution token and zero-count service. Current observation must
+  never fabricate original review timestamps or resubmit an effect. Restore
+  already retains its original review packet; preserve that existing pattern.
+- Also correct transient-read handling within the existing approved controller
+  repair scope: at most three attempts only for declared read operations with
+  exact fixed-endpoint connect/read timeout or process-timeout observations.
+  Mutation calls remain one submission, AWS SDK automatic retries stay disabled,
+  and denial/signature/missing/malformed/unknown responses are not retried.
+  No gate or permission change is required. Existing finite safe caller mapping
+  remains. Planned regressions cover disappearance after executed create and
+  activation, original-token/template/journal rejection, no replay, bounded read
+  recovery/exhaustion and exactly one write attempt on timeout. They are planned,
+  not passing proof yet. Use entity-smoke-composition plus affected integration.
+
+- Those focused public/deployment regressions now pass: executed-change
+  disappearance for create/activation, original token/template/journal rejection,
+  bounded read recovery/exhaustion and single write attempts on timeout. An
+  actual read-only observer verified the original AWS execution token, thirty
+  owned resources and desired zero. It did not write create.json or claim normal
+  route completion. Package/runtime/template source remains unchanged.
+- Apply the existing test-execution boundaries: this is an ongoing corrective
+  checkpoint, not integration completion or acceptance. Run normal commit-boundary
+  impact checks and the exact two registered runtime prerequisites required by
+  the public route. Complete full affected integration on the final stable
+  candidate before promotion/acceptance; do not repeat that broad final boundary
+  after every correction. This remains explicit pending work, not a waiver.
+
 ### 2026-11-10 - Reauthenticated; initial placeholder ownership defect
 
 - AWS SSO expired during the unattended interval. After the user restored sign-in,

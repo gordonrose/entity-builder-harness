@@ -93,6 +93,9 @@ class Provider:
             self.tokens.append(parameters["ClientRequestToken"])
             self.stack.update(Tags=copy.deepcopy(change["Tags"]), Parameters=copy.deepcopy(change["Parameters"]), StackStatus=("UPDATE_IN_PROGRESS" if activate else "CREATE_IN_PROGRESS") if self.delayed else ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"))
             change["ExecutionStatus"] = "EXECUTE_COMPLETE"
+            # The executed change-set API object is not durable completion
+            # evidence. Model its observed disappearance after execution.
+            self.changes.clear()
             if self.lost_execute: raise OSError(CANARY)
             return {}
         if operation == "describe-stack-events":
@@ -173,7 +176,7 @@ if __name__ == "__main__":
         result = create(pending, owner)
         assert result["status"] == "pending"
         pending.stack["StackStatus"] = "CREATE_COMPLETE"
-        original_change = next(iter(pending.changes.values()))["ChangeSetId"]
+        original_change = result["reservation"]["request"]["change_set_arn"]
         assert M.observe(pending, owner, BINDING, PARAMETERS, original_change, STACK_ARN)["status"] == "completed"
         assert sum(op == "execute-change-set" for _, op, _ in pending.calls) == 1
         pending.tokens.clear()

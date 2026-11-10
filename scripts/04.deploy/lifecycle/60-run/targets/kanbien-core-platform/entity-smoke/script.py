@@ -84,7 +84,7 @@ def read_json(path):
 
 
 class Provider:
-    """A single-call, no-retry CLI boundary; read capability is the default.
+    """Single-submission mutations; narrowly bounded transport retries on reads.
 
     A plan hash is not proof of human approval. The invoking agent/operator
     must hold the concrete AWS approval required by the execution workflow.
@@ -124,10 +124,21 @@ class Provider:
         arguments = ["aws", service, operation, "--profile", ALIGN.PROFILE, "--region", signing_region,
                      "--endpoint-url", "https://" + hostname, "--output", "json", "--no-paginate", "--no-cli-pager",
                      "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--cli-input-json", json.dumps(parameters)]
-        try:
-            result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=30,
-                                    env={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "AWS_EC2_METADATA_DISABLED": "true"})
-        except (OSError, UnicodeError, subprocess.SubprocessError): raise failure("infrastructure-provider-observation-unavailable") from None
+        attempts = 3 if (service, operation) in READS else 1
+        for attempt in range(attempts):
+            try:
+                result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=30,
+                                        env={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "AWS_EC2_METADATA_DISABLED": "true"})
+            except subprocess.TimeoutExpired:
+                if attempt + 1 < attempts:
+                    time.sleep(0.1 * (attempt + 1)); continue
+                raise failure("infrastructure-provider-observation-unavailable") from None
+            except (OSError, UnicodeError, subprocess.SubprocessError): raise failure("infrastructure-provider-observation-unavailable") from None
+            transport_timeout = result.returncode != 0 and re.fullmatch(
+                r'aws: \[ERROR\]: (?:Connect|Read) timeout on endpoint URL: "' + re.escape("https://" + hostname) + r'/?"', result.stderr.strip()) is not None
+            if transport_timeout and attempt + 1 < attempts:
+                time.sleep(0.1 * (attempt + 1)); continue
+            break
         if result.returncode:
             code = RESPONSE.classify_error(service, operation, result.stderr)
             if code == "aws-resource-missing": raise RESOURCE.ResourceMissing()
@@ -290,6 +301,19 @@ def activation_prerequisites(provider, path, binding, parameters, cache, store, 
     require(-60 <= (datetime.now(timezone.utc) - previous_stop).total_seconds() <= GATE.CURRENT_EVIDENCE_MAX_AGE_SECONDS, "infrastructure-activation-proof-not-fresh")
 
 
+def read_execution_reservation(store, binding, parameters, activate):
+    """Read the original durable identity without relying on an ephemeral API object."""
+    phase = "deploy-execute-activate" if activate else "deploy-execute-create"
+    path = store.root / (binding["proof_label"] + "-" + phase + ".json")
+    RESOURCE.CONTROL.no_symlinks(path)
+    if not path.exists(): return None
+    value = read_json(path)
+    require(isinstance(value, dict) and isinstance(value.get("request"), dict), "infrastructure-execution-reservation-invalid")
+    original = store.read(phase, value["request"])
+    require(original is not None and all(original["request"].get(key) == item for key, item in DEPLOY.request(binding, parameters, activate).items()), "infrastructure-execution-reservation-mismatch")
+    return original
+
+
 def run(args, provider):
     receipt = ALIGN.read_receipt(args.receipt.absolute())
     ALIGN.source_preflight(receipt)
@@ -310,8 +334,7 @@ def run(args, provider):
     operator = operator_preflight(provider)
     existing_execution = None
     if args.mode == "execute":
-        change = provider("cloudformation", "describe-change-set", StackName=DEPLOY.STACK, ChangeSetName=DEPLOY.change_name(binding, activate))
-        existing_execution = store.read("deploy-execute-activate" if activate else "deploy-execute-create", {**DEPLOY.request(binding, parameters, activate), "change_set_arn": change.get("ChangeSetId"), "stack_arn": change.get("StackId")})
+        existing_execution = read_execution_reservation(store, binding, parameters, activate)
         if existing_execution is not None: provider.effect = "original-operation-reconcile-only"
     book.component("infrastructure-operator"); book.component("control-state-connection"); book.component("intent-connection")
     if activate:
@@ -363,8 +386,15 @@ def run(args, provider):
     if existing_execution is not None:
         review_reservation = store.read(phase, intent)
         require(review_reservation is not None, "infrastructure-reviewed-attempt-required")
-        reviewed = {"status": "reviewed", "facts": DEPLOY.reviewed_change(provider, binding, parameters, review_reservation, activate, executed=True)}
-        require(reviewed["facts"] is not None, "infrastructure-executed-change-unavailable")
+        original = existing_execution["request"]
+        observed_execution = DEPLOY.observe(provider, store, binding, parameters, original["change_set_arn"], original["stack_arn"], activate=activate)
+        if observed_execution["status"] != "completed":
+            return {"verdict": "pending", "phase": args.phase, "plan_sha256": plan_digest, "effect": "original-operation-not-terminal"}
+        # This is a current readback of the original admitted operation, not a
+        # new preview or a restamped historical review. The existing observer
+        # checks the original execution token plus exact deployed state. AWS
+        # need not retain the executed change-set object for that proof.
+        reviewed = {"status": "reviewed", "facts": {"change_set_arn": original["change_set_arn"], "stack_arn": original["stack_arn"], "resource_count": 1 if activate else len(DEPLOY.RESOURCE_TYPES)}}
     else:
         reviewed = DEPLOY.prepare(provider, store, binding, parameters, activate=activate)
     if reviewed["status"] == "pending": return {"verdict": "pending", "phase": args.phase, "plan_sha256": plan_digest, "effect": provider.effect}
@@ -379,7 +409,7 @@ def run(args, provider):
     book.gate("execution-preflight"); book.validate("execution-preflight", reviewed["facts"]["resource_count"], activate)
     if existing_execution is None: provider.enable(("cloudformation", "execute-change-set"), prewrite)
     facts = reviewed["facts"]
-    result = DEPLOY.execute(provider, store, binding, parameters, facts["change_set_arn"], facts["stack_arn"], activate=activate)
+    result = observed_execution if existing_execution is not None else DEPLOY.execute(provider, store, binding, parameters, facts["change_set_arn"], facts["stack_arn"], activate=activate)
     deadline = time.monotonic() + args.wait_seconds
     while result["status"] == "pending" and time.monotonic() < deadline:
         print(json.dumps({"schema": "deploy/entity-smoke-infrastructure-progress/v1", "phase": args.phase, "state": "waiting-for-original-operation"}), flush=True, file=os.sys.stderr)
