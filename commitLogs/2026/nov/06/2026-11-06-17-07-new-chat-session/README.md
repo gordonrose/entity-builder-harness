@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-10T01:22:01Z
-latest_commit_sha: a5dfcef7f53020eeedf2e91c72fe145be9b6326c
-chat_duration: 288894s (03:08:14:54)
+latest_commit_at_utc: 2026-11-10T18:09:09Z
+latest_commit_sha: 0a7499b078f070f1202d6133d10ffd1d9463802f
+chat_duration: 349322s (04:01:02:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -291,6 +291,17 @@ Summary: Corrected the actual AWS CLI zero-retry error grammar at its existing s
 
 ADR impact: No new architecture ADR: preserve existing classifier vocabulary, operation-specific absence, no-retry behavior and AWS authority boundaries.
 
+
+### 2026-11-10T18:09:09Z - Commit recorded
+
+Commit: `0a7499b078f070f1202d6133d10ffd1d9463802f`
+
+Message: fix: resume entity-smoke with verified controller-only repairs
+
+Summary: 48 local checks passed; qualified image/source8f76 retained; actual original placeholder ownership model corrected and bounded controller-only checkpoint rule verified
+
+ADR impact: No new ADR; bounded provider applicability rule in existing standard
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -333,6 +344,13 @@ ADR impact: No new architecture ADR: preserve existing classifier vocabulary, op
   Summary: Corrected the actual AWS CLI zero-retry error grammar at its existing shared classifier. Actual read-only Provider now recognizes the absent first-release stack; this is not a qualified deployment plan. Registered taxonomy/caller units and full affected integration passed73 local checks, executed28/reused45, deferred20 later obligations, zero findings, 1039.709063s. Report .cache/test-runs/20261110T011935Z-bfec40fbfdca44d38ac8b9e57fad9039/report.json; normal staged gate passed. Local checkpoint only. Remote main and genuine qualified publication remain d05bf502 / run42730147437 / image sha256:a9a333be78eacc4123e560214b1cbd78aeba13b0e57f5d643d0959b109199d22. Explicit approval for pushing/publishing this additional parser repair was requested and has not arrived. Do not push or dispatch it yet. Once approved, publish the final bookkeeping checkpoint, validate actual custody, run the real public create planner with a fresh label, then obtain concrete AWS execution approval. No feature ECS, SQL, snapshot, restore cleanup or acceptance has run. Full live proof remains incomplete.
   ADR impact: No new architecture ADR: preserve existing classifier vocabulary, operation-specific absence, no-retry behavior and AWS authority boundaries.
 
+
+- Commit: `0a7499b078f070f1202d6133d10ffd1d9463802f`
+  Time UTC: 2026-11-10T18:09:09Z
+  Message: fix: resume entity-smoke with verified controller-only repairs
+  Summary: 48 local checks passed; qualified image/source8f76 retained; actual original placeholder ownership model corrected and bounded controller-only checkpoint rule verified
+  ADR impact: No new ADR; bounded provider applicability rule in existing standard
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -346,9 +364,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-10T01:22:01Z
-Latest commit SHA: a5dfcef7f53020eeedf2e91c72fe145be9b6326c
-Chat duration: 288894s (03:08:14:54)
+Latest commit at UTC: 2026-11-10T18:09:09Z
+Latest commit SHA: 0a7499b078f070f1202d6133d10ffd1d9463802f
+Chat duration: 349322s (04:01:02:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
