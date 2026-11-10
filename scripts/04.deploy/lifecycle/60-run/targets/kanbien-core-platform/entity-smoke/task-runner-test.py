@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -39,9 +39,10 @@ instant = lambda seconds: (base + timedelta(seconds=seconds)).isoformat()
 
 
 class Provider:
-    def __init__(self, lost=False, running=False, failed=False, offset=0):
+    def __init__(self, lost=False, running=False, failed=False, offset=0, startup_reason=False):
         self.calls, self.remote, self.lost, self.running, self.failed = [], None, lost, running, failed
         self.offset, self.operation = offset, "ready"
+        self.startup_reason = startup_reason
     def __call__(self, service, operation, **parameters):
         self.calls.append((service, operation, parameters))
         if operation == "run-task":
@@ -49,6 +50,10 @@ class Provider:
             self.remote = {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "2" * 32, "taskDefinitionArn": REQUEST["definition"], "startedBy": parameters["startedBy"], "overrides": parameters["overrides"],
                            "lastStatus": "RUNNING", "launchType": "FARGATE", "createdAt": instant(1 + self.offset), "startedAt": instant(2 + self.offset), "stoppedAt": instant(3 + self.offset), "stoppedReason": CANARY,
                            "containers": [{"name": "entity-smoke-verifier", "imageDigest": IMAGE, "exitCode": 1 if self.failed else 0}]}
+            if self.startup_reason is not False:
+                self.remote.update(lastStatus="STOPPED", stopCode="TaskFailedToStart", stoppedReason=self.startup_reason)
+                self.remote.pop("startedAt")
+                self.remote["containers"] = [{"name": "entity-smoke-verifier"}]
             if self.lost: raise OSError(CANARY)
             return {"tasks": [copy.deepcopy(self.remote)]}
         if operation == "list-tasks": return {"taskArns": [self.remote["taskArn"]] if parameters["desiredStatus"] == "STOPPED" else []}
@@ -127,6 +132,22 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-task-runner-") as temporar
     assert len(failure.observations) == 2 and failure.diagnostic["code"] == "entity-smoke-target.proof-failed"
     assert sum(op == "get-log-events" for _, op, _ in broken.calls) == 3
     assert not (root / "failed-receipts").exists()
+    for index, (reason, code) in enumerate((("CannotPullContainerError: 403 Forbidden " + CANARY, "task-image-pull-access-denied"),
+                                          ("CannotPullContainerError: " + CANARY, "task-image-pull-not-confirmed"),
+                                          ("ResourceInitializationError: " + CANARY, "task-provider-startup-not-confirmed"),
+                                          (None, "task-provider-startup-not-confirmed"))):
+        startup = Provider(startup_reason=reason)
+        startup_store = RUNNER.CONTROL.AttemptStore(root / ("startup-attempts-" + str(index)))
+        startup_receipts = root / ("startup-receipts-" + str(index))
+        def observe_startup():
+            return RUNNER.run_owned_task(startup, startup_store, "startup", REQUEST, startup_receipts, clock=lambda: instant(4), monotonic=monotonic, sleep=lambda _seconds: None)
+        fails(observe_startup, code, RUNNER.EVIDENCE.EvidenceFailure)
+        original_failure = startup_store.read("startup", REQUEST)
+        fails(observe_startup, code, RUNNER.EVIDENCE.EvidenceFailure)
+        assert startup_store.read("startup", REQUEST) == original_failure
+        assert sum(operation == "run-task" for _, operation, _ in startup.calls) == 1
+        assert not any(operation == "get-log-events" for _, operation, _ in startup.calls), "a failed start must be explained before nonexistent application logs are requested"
+        assert not startup_receipts.exists(), "failed starts cannot become successful preflight receipts"
     business = copy.deepcopy(REQUEST); business["environment"]["ENTITY_SMOKE_VERIFICATION_OPERATION"] = "create"
     launch = Provider(offset=5); business_store = RUNNER.CONTROL.AttemptStore(root / "business-attempts")
     fails(lambda: RUNNER.run_owned_task(launch, business_store, "create", business, root / "business-receipts"), "task-preflight-receipt-required")

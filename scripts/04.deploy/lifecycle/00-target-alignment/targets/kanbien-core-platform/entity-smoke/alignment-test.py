@@ -57,6 +57,14 @@ def fixture():
         "scan": {"imageScanStatus": {"status": "COMPLETE"}, "imageScanFindings": {"findingSeverityCounts": {"LOW": 2}}},
         "budget": {"Budget": {"BudgetLimit": {"Amount": "100.0", "Unit": "USD"}, "CostFilters": {"TagKeyValue": ["user:Target$kanbien-core-platform"]}}},
     }
+    image_read = {"Effect": "Allow", "Principal": "*", "Action": ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"],
+                  "Resource": ["arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/" + name for name in ("core-server", "entity-smoke")]}
+    for endpoint in data["endpoints"]["VpcEndpoints"]:
+        if endpoint["ServiceName"].endswith((".ecr.api", ".ecr.dkr")):
+            rows = [copy.deepcopy(image_read)]
+            if endpoint["ServiceName"].endswith(".ecr.api"):
+                rows.append({"Effect": "Allow", "Principal": "*", "Action": "ecr:GetAuthorizationToken", "Resource": "*"})
+            endpoint["PolicyDocument"] = {"Version": "2012-10-17", "Statement": rows}
     calls = []
     def provider(service, operation, **parameters):
         calls.append((service, operation, parameters))
@@ -113,6 +121,38 @@ for mutate, code in negatives:
 try: M.aws("ecs", "run-task", cluster=CANARY)
 except M.AlignmentFailure as failure: assert failure.code == "alignment-provider-operation-prohibited"
 else: raise AssertionError("read-only adapter must reject task launch")
+
+for index in (0, 1):
+    for mutation in ("old-repository-only", "missing-action", "wildcard-action", "wildcard-resource", "unknown-condition", "wrong-principal", "missing-policy", "malformed-json", "duplicate-json-key", "wrong-type", "duplicate-resource"):
+        data, calls, provider = fixture()
+        endpoint = data["endpoints"]["VpcEndpoints"][index]
+        row = endpoint["PolicyDocument"]["Statement"][0]
+        if mutation == "old-repository-only": row["Resource"] = row["Resource"][0]
+        if mutation == "missing-action": row["Action"].remove("ecr:BatchGetImage")
+        if mutation == "wildcard-action": row["Action"] = "ecr:*"
+        if mutation == "wildcard-resource": row["Resource"] = "*"
+        if mutation == "unknown-condition": row["Condition"] = {"fixture": CANARY}
+        if mutation == "wrong-principal": row["Principal"] = CANARY
+        if mutation == "missing-policy": endpoint.pop("PolicyDocument")
+        if mutation == "malformed-json": endpoint["PolicyDocument"] = CANARY
+        if mutation == "duplicate-json-key": endpoint["PolicyDocument"] = '{"Version":"2012-10-17","Statement":[],"Statement":[]}'
+        if mutation == "wrong-type": row["Resource"] = [False]
+        if mutation == "duplicate-resource": row["Resource"].append(row["Resource"][0])
+        try: observed(provider)
+        except M.AlignmentFailure as failure:
+            assert failure.code == ("alignment-ecr-api-policy-not-confirmed" if index == 0 else "alignment-ecr-registry-policy-not-confirmed"), (mutation, failure.code)
+            assert CANARY not in str(failure)
+        else: raise AssertionError("the private image route must be checked before launch")
+        assert not any(operation in {"describe-images", "run-task"} for _, operation, _ in calls)
+data, _, provider = fixture()
+for endpoint in data["endpoints"]["VpcEndpoints"][:2]:
+    rows = endpoint["PolicyDocument"]["Statement"]
+    rows.reverse()
+    for row in rows:
+        for key in ("Action", "Resource"):
+            if isinstance(row[key], list): row[key].reverse()
+    endpoint["PolicyDocument"] = json.dumps(endpoint["PolicyDocument"])
+assert observed(provider)[0]["verdict"] == "aligned", "encoded policies and irrelevant ordering must not change route identity"
 
 # Real disposable Git history proves checkpoint classification and the actual
 # dirty-source guard. Only the downstream declaration/inventory responses are
@@ -195,4 +235,4 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
     finally:
         M.ROOT, M.command = old_root, old_command
 
-print(json.dumps({"schema": "deploy/entity-smoke-alignment-fixture/v1", "verdict": "passed", "negative_cases": len(negatives), "provider_observation": False, "checks": ["private-reference-projection", "actual-engine-boundary", "dependency-incarnation-binding", "no-provider-mutation", "real-git-controller-only-checkpoint", "image-template-runtime-and-custody-input-changes-rejected", "rename-symlink-dirty-untracked-and-nonancestor-rejected"]}))
+print(json.dumps({"schema": "deploy/entity-smoke-alignment-fixture/v1", "verdict": "passed", "negative_cases": len(negatives) + 22, "private_image_policy_negative_cases": 22, "provider_observation": False, "checks": ["private-reference-projection", "actual-engine-boundary", "dependency-incarnation-binding", "no-provider-mutation", "real-git-controller-only-checkpoint", "image-template-runtime-and-custody-input-changes-rejected", "rename-symlink-dirty-untracked-and-nonancestor-rejected"]}))

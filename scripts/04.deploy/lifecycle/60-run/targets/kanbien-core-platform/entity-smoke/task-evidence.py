@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -169,6 +169,15 @@ def read_logs(provider, request, task_arn):
     raise EvidenceFailure("task-log-observation-incomplete")
 
 
+def reject_failed_start(task):
+    """Reject explicit provider startup failure before expecting an application."""
+    if task.get("stopCode") != "TaskFailedToStart": return
+    reason = task.get("stoppedReason")
+    if isinstance(reason, str) and len(reason) <= 65536 and reason.startswith("CannotPullContainerError:"):
+        raise EvidenceFailure("task-image-pull-access-denied" if "403 Forbidden" in reason else "task-image-pull-not-confirmed")
+    raise EvidenceFailure("task-provider-startup-not-confirmed")
+
+
 def collect(task, reservation, response, collected_at):
     require(isinstance(reservation, dict) and set(reservation) == {"schema", "operation_id", "request", "request_sha256", "reserved_at"} and reservation.get("schema") == "deploy/entity-smoke-task-reservation/v1" and isinstance(reservation.get("operation_id"), str) and re.fullmatch(r"es-[a-f0-9]{32}", reservation["operation_id"]) is not None, "task-reservation-invalid")
     try:
@@ -177,6 +186,7 @@ def collect(task, reservation, response, collected_at):
     except CONTROL.TaskFailure: raise EvidenceFailure("task-identity-not-confirmed") from None
     require(reservation.get("request_sha256") == hashlib.sha256(CONTROL.canonical(request)).hexdigest(), "task-reservation-input-mismatch")
     require(task.get("lastStatus") == "STOPPED" and task.get("launchType") == "FARGATE", "task-terminal-state-not-confirmed")
+    reject_failed_start(task)
     containers = task.get("containers")
     require(isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict), "task-container-evidence-invalid")
     container = containers[0]

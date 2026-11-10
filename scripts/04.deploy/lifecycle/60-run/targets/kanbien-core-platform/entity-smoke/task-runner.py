@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -171,6 +171,7 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
         require(observed["taskArn"] == current["taskArn"], "task-observation-identity-mismatch", reservation, current)
         current = observed
         if current.get("lastStatus") != "STOPPED": sleep(2)
+    EVIDENCE.reject_failed_start(current)
     progress("collecting-terminal-evidence")
     try: response = EVIDENCE.read_logs(provider, request, current["taskArn"])
     except (EVIDENCE.EvidenceFailure, RunnerFailure): raise

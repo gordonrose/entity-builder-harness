@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -433,6 +433,8 @@ def run():
         old_parse, old_factory, old_execute = M.parse, M.Provider, M.execute
         M.parse = lambda: SimpleNamespace(**{**vars(execute_args), "execute": True, "validate_arguments": False})
         for thrown, effect, expected_code in ((failure, "not-started", "task-binding-policy-not-confirmed"),
+                (M.C.ALIGN.AlignmentFailure("alignment-ecr-api-policy-not-confirmed"), "not-started", "alignment-ecr-api-policy-not-confirmed"),
+                (M.C.ALIGN.AlignmentFailure("alignment-ecr-registry-policy-not-confirmed"), "not-started", "alignment-ecr-registry-policy-not-confirmed"),
                 (M.TaskRouteFailure("task-prerequisite-required", "activation"), "not-started", "task-prerequisite-required"),
                 (M.RUNNER.CONTROL.TaskFailure("task-submission-uncertain-reconcile-required"), "unknown-reconcile-only", "task-submission-uncertain-reconcile-required")):
             guarded.effect = effect
@@ -456,6 +458,41 @@ def run():
         assert status == 1 and rejected["condition"] == "task-unsuccessful-completion" and rejected["observations"] == [bundle]
         assert rejected["diagnostic"] == diagnostic and rejected["related_diagnostics"] == []
         assert CANARY not in output.getvalue(), "the existing activation consumer's own evidence class must not lose its supported meaning"
+        # Exercise the actual provider -> runner -> evidence -> public reporter
+        # path with a task that never starts, including original reconciliation.
+        startup_store = M.RUNNER.CONTROL.AttemptStore(root / "public-startup-attempts")
+        startup_calls, startup_task = [], {}
+        def startup_transport(service, operation, parameters):
+            startup_calls.append(operation)
+            if operation == "run-task":
+                startup_task.update(taskArn="arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "9" * 32,
+                                    taskDefinitionArn=request["definition"], startedBy=parameters["startedBy"], overrides=parameters["overrides"],
+                                    lastStatus="STOPPED", launchType="FARGATE", stopCode="TaskFailedToStart",
+                                    stoppedReason="CannotPullContainerError: 403 Forbidden " + CANARY,
+                                    containers=[{"name": "entity-smoke-administration"}])
+                return {"tasks": [copy.deepcopy(startup_task)]}
+            if operation == "list-tasks": return {"taskArns": [startup_task["taskArn"]] if parameters["desiredStatus"] == "STOPPED" else []}
+            if operation == "describe-tasks": return {"tasks": [copy.deepcopy(startup_task)]}
+            raise AssertionError("a failed start cannot fetch application logs or submit another operation")
+        def startup_factory():
+            selected = old_factory(); selected._invoke = startup_transport
+            return selected
+        def startup_execute(_args, selected):
+            if startup_store.read("startup", request) is None:
+                selected.enable_task(request, startup_store, "startup", lambda: None)
+            else: selected.effect = "original-operation-reconcile-only"
+            return M.RUNNER.run_owned_task(selected, startup_store, "startup", request, root / "public-startup-receipts")
+        M.parse = lambda: SimpleNamespace(**{**vars(probe_args), "execute": True, "validate_arguments": False})
+        M.Provider, M.execute = startup_factory, startup_execute
+        for effect in ("unknown-reconcile-only", "original-operation-reconcile-only"):
+            output = io.StringIO()
+            with redirect_stdout(output): status = M.main()
+            rejected = json.loads(output.getvalue())
+            assert status == 1 and rejected["condition"] == "task-image-pull-access-denied" and rejected["effect"] == effect
+            assert rejected["context"]["workload"] == "administration" and rejected["context"]["operation"] == "bootstrap" and rejected["context"]["phase"] == "preflight"
+            assert CANARY not in output.getvalue() and "Traceback" not in output.getvalue()
+        assert startup_calls.count("run-task") == 1 and "get-log-events" not in startup_calls
+        assert not (root / "public-startup-receipts").exists()
         M.parse, M.Provider, M.execute = old_parse, old_factory, old_execute
         reference = ".cache/test-runs/20261108T000000Z-" + "0" * 32 + "/report.json"
         report = root / reference; report.parent.mkdir(parents=True); report.write_text('{"fixture":true}')

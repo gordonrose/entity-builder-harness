@@ -194,6 +194,38 @@ def database_facts(database, administrator_secret):
             "parameter_group": parameters[0].get("DBParameterGroupName")}
 
 
+def image_delivery_policy(endpoint, api):
+    condition = "alignment-ecr-api-policy-not-confirmed" if api else "alignment-ecr-registry-policy-not-confirmed"
+    value = endpoint.get("PolicyDocument")
+    if isinstance(value, str):
+        require(len(value) <= 65536, condition)
+        def pairs(items):
+            result = {}
+            for key, item in items:
+                if key in result: raise ValueError()
+                result[key] = item
+            return result
+        try: value = json.loads(value, object_pairs_hook=pairs)
+        except (ValueError, TypeError, RecursionError): raise AlignmentFailure(condition) from None
+    require(isinstance(value, dict) and set(value) == {"Version", "Statement"} and value["Version"] == "2012-10-17"
+            and isinstance(value["Statement"], list) and len(value["Statement"]) == (2 if api else 1), condition)
+    observed = []
+    for row in value["Statement"]:
+        require(isinstance(row, dict) and set(row) == {"Effect", "Principal", "Action", "Resource"}
+                and row["Effect"] == "Allow" and row["Principal"] == "*", condition)
+        selected = []
+        for field in ("Action", "Resource"):
+            entries = [row[field]] if isinstance(row[field], str) else row[field]
+            require(isinstance(entries, list) and 1 <= len(entries) <= 3 and all(isinstance(item, str) and 0 < len(item) <= 2048 for item in entries)
+                    and len(set(entries)) == len(entries), condition)
+            selected.append(tuple(sorted(entries)))
+        observed.append(tuple(selected))
+    repositories = tuple(sorted("arn:aws:ecr:" + REGION + ":" + ACCOUNT + ":repository/kanbien-core-platform/" + name for name in ("core-server", "entity-smoke")))
+    expected = [(tuple(sorted(("ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"))), repositories)]
+    if api: expected.append((("ecr:GetAuthorizationToken",), ("*",)))
+    require(len(set(observed)) == len(observed) and set(observed) == set(expected), condition)
+
+
 def inspect(provider, receipt, now):
     caller = provider("sts", "get-caller-identity")
     require(caller.get("Account") == ACCOUNT and isinstance(caller.get("Arn"), str) and caller["Arn"].startswith("arn:aws:sts::" + ACCOUNT + ":assumed-role/"), "alignment-account-not-confirmed")
@@ -226,6 +258,9 @@ def inspect(provider, receipt, now):
     require(len(selected) == 4 and {item.get("ServiceName") for item in selected} == services and all(item.get("VpcId") == outputs["VpcId"] and item.get("State") == "available" and item.get("VpcEndpointType") == "Interface" and item.get("PrivateDnsEnabled") is True and isinstance(item.get("Groups"), list) and len(item["Groups"]) == 1 for item in selected), "alignment-private-delivery-not-confirmed")
     groups = {item["Groups"][0].get("GroupId") for item in selected}
     require(len(groups) == 1 and isinstance(next(iter(groups)), str), "alignment-private-delivery-not-confirmed")
+    for endpoint in selected:
+        if endpoint["ServiceName"].endswith((".ecr.api", ".ecr.dkr")):
+            image_delivery_policy(endpoint, endpoint["ServiceName"].endswith(".ecr.api"))
     prefix = only(provider("ec2", "describe-managed-prefix-lists", Filters=[{"Name": "prefix-list-name", "Values": ["com.amazonaws." + REGION + ".s3"]}]), "PrefixLists")
     require(isinstance(prefix.get("PrefixListId"), str), "alignment-image-layer-route-not-confirmed")
     database = only(provider("rds", "describe-db-instances", DBInstanceIdentifier=DATABASE), "DBInstances")

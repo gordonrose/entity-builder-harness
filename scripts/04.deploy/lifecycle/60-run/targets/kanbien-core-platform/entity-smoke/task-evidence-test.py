@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -99,6 +99,21 @@ for workload, operation in cases:
     assert proof["task"]["completion_duration_seconds"] == 4
     assert CANARY not in json.dumps(proof) and LABEL not in json.dumps(proof)
     assert EVIDENCE.validate_retained(proof, reservation) == proof
+
+for reason, expected in (("CannotPullContainerError: 403 Forbidden " + CANARY, "task-image-pull-access-denied"),
+                         ("CannotPullContainerError: " + CANARY, "task-image-pull-not-confirmed"),
+                         ("ResourceInitializationError: " + CANARY, "task-provider-startup-not-confirmed"),
+                         (None, "task-provider-startup-not-confirmed")):
+    task, reservation, result = fixture("administration", "preflight")
+    task.update(stopCode="TaskFailedToStart", stoppedReason=reason)
+    task.pop("startedAt")
+    task["containers"] = [{"name": "entity-smoke-administration"}]
+    fails(lambda: collect(task, reservation), expected)
+    changed = copy.deepcopy(task); changed["startedBy"] = "es-" + "0" * 32
+    fails(lambda: collect(changed, reservation), "task-identity-not-confirmed")
+task, reservation, result = fixture("administration", "preflight")
+task.update(stopCode="EssentialContainerExited", stoppedReason="CannotPullContainerError: 403 Forbidden " + CANARY)
+assert collect(task, reservation, result)["result"]["code"] == result["code"], "unrelated native text must not replace the authoritative task outcome"
 
 for workload in ["administration", "migration", "database-proof", "restore-reader"]:
     task, reservation, result = fixture(workload, "preflight")

@@ -52,6 +52,10 @@ new chat session
 - Raised: Original read-only administration probe es-4a34dceff456486cb2a33666613d6949 is terminal TaskFailedToStart: CannotPullContainerError with HTTP 403; no startedAt, imageDigest, exitCode or application logs. Both actual foundation ECR endpoint policies permit only core-server and deny entity-smoke.
   Resolution: Root-cause evidence: .cache/test-runs/entity-smoke-stable.7wpnDKuN/runtime-first-probe-terminal-diagnosis.json, runtime-first-probe-pull-diagnosis.json and runtime-private-ecr-policy-diagnosis.json. No SQL/bootstrap ran and no second task was submitted. Required bounded expansion is exactly two foundation endpoint-policy resource allowlists plus one separately journalled read-only startup-recovery probe, retaining the failed original. Protected-baseline change and fresh recovery launch are not covered by the original plan; ask for that concrete authority before implementation/execution. Alignment missed ECR policies; collector misleadingly reported container identity instead of provider startup failure. Both need focused prevention under the approved expansion.
 
+
+- Raised: Independent prevention within the existing controller-only repair approval: inspect both ECR endpoint image-read policies before launch and explain explicit TaskFailedToStart before requesting application logs or checking a pulled image that never existed.
+  Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
+
 ## Decisions Made
 
 - Preserve the existing accepted scopes and staging. Add only the isolated
@@ -86,6 +90,10 @@ new chat session
 
 - Summary: Current controller repair869f7189 and bookkeepingd3a7a0ff are committed; required runtime prerequisites and staged gate passed. Actual infrastructure create receipt retained; server desired zero. First read-only probe failed before application startup because both shared ECR endpoints exclude its qualified repository. Keep original reservations and image8f76/282b unchanged. Do not replay that task or mutate shared foundation without the pending narrow expansion.
   Durable evidence: Original failed probe es-4a34dceff456486cb2a33666613d6949; safe diagnoses in .cache/test-runs/entity-smoke-stable.7wpnDKuN/. Earlier broad integration completed as gap after inputs changed during the live-discovered binding repair, not as behavioral failure or current proof. Its original report remains durable-repair-final-integration.json; full final affected integration remains pending. No active verification or AWS process remains.
+
+
+- Summary: Independent controller diagnostic review is complete. The two ECR checks now carry fixed API-versus-registry conditions through existing reporters. Explicit failed starts are rejected before log collection and image/exit expectations; positive application proof and single-submission rules are unchanged. Existing partial reviews updated after complete producer/runner/consumer review. Initial focused cases passed; final stable-input verification follows preparation. No foundation/recovery policy or launch code was added.
+  Durable evidence: Safe original failed-start observation retained at .cache/entity-smoke-live/entity-smoke-8f76ed3480e85d60fb60f547/diagnostics/startup-failed-es-4a34dceff456486cb2a33666613d6949.json, sha256:da7e03014d1be5c02205da7b536cf9f1a109a4d3372a212229f299fb961dc69b. It records the original exact task/request and failed-start metadata with no raw provider reason or secret, scope_acceptance/current_readiness false; it is not recovery authority or successful preflight proof. Shared foundation changes and one fresh probe remain pending explicit approval. Keep original reservations/image and other scopes unchanged.
 
 ## Activity Log
 
@@ -436,6 +444,20 @@ Resolution: Root-cause evidence: .cache/test-runs/entity-smoke-stable.7wpnDKuN/r
 Summary: Current controller repair869f7189 and bookkeepingd3a7a0ff are committed; required runtime prerequisites and staged gate passed. Actual infrastructure create receipt retained; server desired zero. First read-only probe failed before application startup because both shared ECR endpoints exclude its qualified repository. Keep original reservations and image8f76/282b unchanged. Do not replay that task or mutate shared foundation without the pending narrow expansion.
 
 Durable evidence: Original failed probe es-4a34dceff456486cb2a33666613d6949; safe diagnoses in .cache/test-runs/entity-smoke-stable.7wpnDKuN/. Earlier broad integration completed as gap after inputs changed during the live-discovered binding repair, not as behavioral failure or current proof. Its original report remains durable-repair-final-integration.json; full final affected integration remains pending. No active verification or AWS process remains.
+
+
+### 2026-11-10T19:25:00Z - Issue
+
+Raised: Independent prevention within the existing controller-only repair approval: inspect both ECR endpoint image-read policies before launch and explain explicit TaskFailedToStart before requesting application logs or checking a pulled image that never existed.
+
+Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
+
+
+### 2026-11-10T19:33:38Z - Context hygiene
+
+Summary: Independent controller diagnostic review is complete. The two ECR checks now carry fixed API-versus-registry conditions through existing reporters. Explicit failed starts are rejected before log collection and image/exit expectations; positive application proof and single-submission rules are unchanged. Existing partial reviews updated after complete producer/runner/consumer review. Initial focused cases passed; final stable-input verification follows preparation. No foundation/recovery policy or launch code was added.
+
+Durable evidence: Safe original failed-start observation retained at .cache/entity-smoke-live/entity-smoke-8f76ed3480e85d60fb60f547/diagnostics/startup-failed-es-4a34dceff456486cb2a33666613d6949.json, sha256:da7e03014d1be5c02205da7b536cf9f1a109a4d3372a212229f299fb961dc69b. It records the original exact task/request and failed-start metadata with no raw provider reason or secret, scope_acceptance/current_readiness false; it is not recovery authority or successful preflight proof. Shared foundation changes and one fresh probe remain pending explicit approval. Keep original reservations/image and other scopes unchanged.
 
 ## Sub-Agent Activity
 
