@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -24,6 +24,7 @@ from datetime import datetime, timedelta, timezone
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -126,6 +127,161 @@ def promotion_protocols(base):
             assert progress["effect"] == "accepted-reference-current-scope-transition-reconciliation-required"
 
 
+def source_boundary_protocols(base):
+    """Real Git/filesystem boundary; task/control/custody observers are doubles.
+
+    All generated candidates remain in this disposable fixture, never the repo's
+    live evidence directory and never an AWS acceptance result.
+    """
+    K = STATE.K
+    M = K.C.ALIGN
+    aggregate = module("entity_smoke_source_boundary_primitives", DIRECTORY / "acceptance-aggregate-test.py")
+    packet = aggregate.fixture(K)
+    packet["evidence_class"] = "live"  # Exercised envelope only; primitive owners below are controlled.
+    packet["binding"]["permission_contract_sha256"] = K.C.digest_file(K.C.DEPLOY.SOURCE)
+    root = base / "source-boundary-controlled-proof-not-live"
+    root.mkdir()
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+    def git(*arguments):
+        result = subprocess.run(["git", "-c", "core.hooksPath=" + os.devnull, "-c", "commit.gpgsign=false",
+            "-c", "user.name=Controlled fixture", "-c", "user.email=fixture@example.invalid", *arguments],
+            cwd=root, env=environment, capture_output=True, text=True, check=True)
+        return result.stdout
+    git("init", "--quiet", "--initial-branch", "main")
+    (root / ".gitignore").write_text(".cache/\n")
+    (root / "source.txt").write_text("original source\n")
+    (root / "settings.yml").write_text("original: configuration\n")
+    git("add", "--", ".gitignore", "source.txt", "settings.yml")
+    git("commit", "--quiet", "-m", "controlled fixture source")
+    revision = git("rev-parse", "HEAD").strip()
+    packet["binding"]["source_revision"] = packet["package"]["source_revision"] = revision
+    custody = dict(packet["package"])
+    args = SimpleNamespace(receipt=root / ".cache/controlled-custody.json", proof_label=packet["binding"]["proof_label"], expected_digest=packet["binding"]["record_digest"])
+    cache = root / ".cache/entity-smoke-live" / args.proof_label
+    evidence = root / K.EVIDENCE_ROOT.relative_to(ROOT)
+    def command(arguments, timeout=30):
+        if arguments[0] == "git": return git(*arguments[1:])
+        assert any("declaration-coverage" in part or "inventory-deploy-control" in part for part in arguments)
+        return json.dumps({"verdict": "covered", "findings": []})
+    with patch.object(K.C, "ROOT", root), patch.object(M, "ROOT", root), patch.object(K, "EVIDENCE_ROOT", evidence), \
+         patch.object(K.C, "CONTRACT", root / K.C.CONTRACT.relative_to(ROOT)), \
+         patch.object(K.C.DEPLOY, "SOURCE", root / K.C.DEPLOY.SOURCE.relative_to(ROOT)), \
+         patch.object(K.C, "source_digest", return_value=packet["controller_sha256"]), \
+         patch.object(M, "command", side_effect=command), patch.object(M, "read_receipt", return_value=custody), \
+         patch.object(K.A, "validate_task", side_effect=lambda value, *a, **kw: value), \
+         patch.object(K, "validate_control", return_value=None):
+        M.source_preflight(custody)
+        assert K.retained_source_evidence(args, custody) is None
+        observation = cache / "acceptance-observation.json"
+        K.A.immutable_json(observation, packet)
+        original_observation = observation.read_bytes()
+        material = K.candidate_material(packet)
+        proof, candidate = material["proof"][0], material["candidate"][0]
+        # Crash after the real proof copy and before the real candidate copy.
+        with patch.object(K.S, "immutable_write", side_effect=OSError("private-source-boundary-canary")):
+            try: K.retain(packet, cache)
+            except OSError: pass
+            else: raise AssertionError("controlled interrupted copy did not fail")
+        assert proof.is_file() and not candidate.exists()
+        selection = K.retained_source_evidence(args, custody)
+        rejection(lambda: M.source_preflight(custody), M.AlignmentFailure, "alignment-committed-source-required")
+        M.source_preflight(custody, retained_source_evidence=selection)
+        # Actual collection reconciliation finishes its copy without fresh AWS
+        # observations, rewritten timestamps, or another task/control execution.
+        with patch.object(K, "gather", side_effect=AssertionError("historical collection must not reobserve or execute")):
+            marker, verdict = K.collect(args, object())
+        assert verdict == "retained" and marker["scope_acceptance"] is marker["current_readiness"] is False
+        assert candidate.is_file() and observation.read_bytes() == original_observation
+        assert proof.read_bytes() == material["proof"][1] and candidate.read_bytes() == material["candidate"][1]
+        rejection(lambda: M.source_preflight(custody), M.AlignmentFailure, "alignment-committed-source-required")
+        M.source_preflight(custody, retained_source_evidence=K.retained_source_evidence(args, custody))
+        # Keep every real source-guard link in the fresh gather path. Stop at
+        # its first provider observer, after real Git validation has passed.
+        class AfterSource(Exception): pass
+        with patch.object(K.C, "local_checks", return_value=None), patch.object(M, "inspect", side_effect=AfterSource):
+            try: K.gather(args, object())
+            except AfterSource: pass
+            else: raise AssertionError("fresh gather did not reach its controlled provider boundary")
+        # Separately exercise the final real source recheck after controlled
+        # target/task/control observations, so dropping either forwarding link
+        # reintroduces the original dirty-proof rejection and fails this case.
+        retained = packet["controls"]
+        value = {"cache": cache, "custody": custody, "binding": {key: value for key, value in packet["binding"].items() if key != "record_digest"},
+            "artifact": packet["controller_sha256"], "history": {"prerequisites": {"packets": retained}}, "snapshot": retained["snapshot"],
+            "server": {"definition": packet["runtime"]["definition"]},
+            "parameters": {"DatabaseResourceId": packet["runtime"]["source_resource_id"], "DatabaseName": packet["runtime"]["database_name"]}}
+        cleanup = {"required_after": retained["restore-cleanup"]["facts"]["observed_at"],
+            "reader": {"context": {"binding": packet["restored_binding"]}, "deployed": retained["restore-deployment"]}, "receipt": retained["restore-cleanup"]}
+        (cache / "replacement-receipt.json").write_text(json.dumps(retained["server-replacement"]))
+        running = {"taskArn": packet["runtime"]["task"], "createdAt": packet["runtime"]["created_at"], "startedAt": packet["runtime"]["started_at"], "lastStatus": "RUNNING", "healthStatus": "HEALTHY"}
+        with patch.object(K.D, "source", return_value=value) as source_call, \
+             patch.object(K.S, "recovery_policy", return_value={"policy": "stop-own-scope-workloads-preserve-data", "accepted_release_id": "none"}), \
+             patch.object(K.D, "completed_cleanup", return_value=cleanup), patch.object(K, "task_proofs", return_value=packet["tasks"]), \
+             patch.object(K, "control_proof", side_effect=lambda name, *a: retained[name]), \
+             patch.object(K.C.RESOURCE, "service", return_value={"runningCount": 1, "pendingCount": 0}), \
+             patch.object(K.C.RESOURCE, "running_service_tasks", return_value=[running["taskArn"]]), \
+             patch.object(K.C.RESOURCE, "task", return_value=running), \
+             patch.object(K.T.RECOVERY.STATE.STOP, "artifact_basis", return_value=packet["controller_basis"]), \
+             patch.object(K.C, "now", return_value=packet["runtime"]["observed_at"]):
+            fresh, returned_cache = K.gather(args, object())
+        assert returned_cache == cache and fresh == packet
+        assert source_call.call_args.kwargs == {"retained_source_evidence": selection}
+        for path in (proof, candidate):
+            original = path.read_bytes()
+            for changed in (b"x" * len(original), original + b"\n"):
+                path.write_bytes(changed)
+                rejection(lambda: M.source_preflight(custody, retained_source_evidence=selection), M.AlignmentFailure, "alignment-retained-evidence-changed")
+            path.write_bytes(original)
+        for relative in ("source.txt", "settings.yml", "foreign\nprivate-source-boundary-canary.txt",
+                         str((evidence / "proof-receipts" / ("entity-smoke-" + "f" * 64 + ".json")).relative_to(root)),
+                         str((evidence / "release-candidates" / ("release-" + "f" * 24 + ".yml")).relative_to(root))):
+            path = root / relative
+            existed = path.exists()
+            original = path.read_bytes() if existed else None
+            path.write_text("unapproved change\n")
+            rejection(lambda: M.source_preflight(custody, retained_source_evidence=selection), M.AlignmentFailure, "alignment-committed-source-required")
+            if existed: path.write_bytes(original)
+            else: path.unlink()
+        git("add", "--", str(candidate.relative_to(root)))
+        rejection(lambda: M.source_preflight(custody, retained_source_evidence=selection), M.AlignmentFailure, "alignment-committed-source-required")
+        git("rm", "--cached", "--quiet", "--", str(candidate.relative_to(root)))
+        original = proof.read_bytes()
+        alternate = root / ".cache/controlled-proof.json"; alternate.write_bytes(original)
+        proof.unlink(); proof.symlink_to(alternate)
+        rejection(lambda: M.source_preflight(custody, retained_source_evidence=selection), M.AlignmentFailure, "alignment-retained-evidence-invalid")
+        proof.unlink(); proof.write_bytes(original)
+        for field, value in (("source_revision", "0" * 40), ("image_digest", "sha256:" + "0" * 64), ("receipt_reference", "wrong-receipt")):
+            rejection(lambda: K.retained_source_evidence(args, {**custody, field: value}), K.CollectionFailure, "acceptance-source-evidence-binding-mismatch")
+        with patch.object(K.C, "source_digest", return_value="sha256:" + "0" * 64):
+            rejection(lambda: K.retained_source_evidence(args, custody), K.CollectionFailure, "acceptance-source-evidence-binding-mismatch")
+        invalid = copy.deepcopy(selection)
+        descriptor = next(iter(invalid["files"].values()))
+        invalid["files"] = {"source.txt": descriptor, str(proof.relative_to(root)): descriptor}
+        rejection(lambda: M.source_preflight(custody, retained_source_evidence=invalid), M.AlignmentFailure, "alignment-retained-evidence-invalid")
+        observation.unlink()
+        assert K.retained_source_evidence(args, custody) is None
+        rejection(lambda: M.source_preflight(custody), M.AlignmentFailure, "alignment-committed-source-required")
+        observation.write_bytes(original_observation)
+        for payload, code in ((b"private-source-boundary-canary", "acceptance-collected-proof-unavailable"),
+                              (b'{"native":"private-source-boundary-canary"}', "acceptance-collection-envelope-invalid")):
+            observation.write_bytes(payload)
+            rejection(lambda: K.retained_source_evidence(args, custody), K.CollectionFailure, code)
+        observation.write_bytes(original_observation)
+        # The selected safe cause reaches the actual public collector reporter.
+        proof.write_bytes(b"x" * len(original))
+        argv = ["acceptance-route.py", "--receipt", str(args.receipt), "--proof-label", args.proof_label, "--expected-digest", args.expected_digest, "--write-candidate"]
+        with patch.object(sys, "argv", argv):
+            status, result, raw = report(K.main)
+        assert status == 1 and result["condition"] == "alignment-retained-evidence-changed" and "private-source-boundary-canary" not in raw
+        proof.write_bytes(original)
+        (root / "source.txt").write_text("different committed source\n")
+        git("add", "--", "source.txt"); git("commit", "--quiet", "-m", "controlled different source")
+        rejection(lambda: M.source_preflight(custody, retained_source_evidence=selection), M.AlignmentFailure, "alignment-source-checkpoint-mismatch")
+    print(json.dumps({"schema": "deploy/entity-smoke-acceptance-source-fixture/v1", "verdict": "passed", "git_and_filesystem": "real-disposable-fixture",
+        "proof_primitives": "controlled-not-live-evidence", "candidate_retention": "temporary-fixture-only", "aws_mutation": False}))
+
+
 def run():
     module("entity_smoke_route_aggregate_fixture", DIRECTORY / "acceptance-aggregate-test.py").run(K)
     contract = K.C.CONTRACT.parent / "declaration-contract.yml"
@@ -148,6 +304,7 @@ def run():
             assert expected in {item["code"] for item in observed["findings"]}
     args = K.parse(["--inputs", "/tmp/no-such-entity-smoke-manifest.json", "--write-candidate"])
     assert args.inputs is not None and args.receipt is None
+    rejection(lambda: K.parse(["--inputs", "/tmp/manifest.json", "--write-candidate", "--retained-source-evidence", "private-cli-canary"]), K.CollectionFailure, "acceptance-arguments-invalid")
     rejection(lambda: K.parse(["--inputs", "/tmp/manifest.json", "--write-candidate", "--proof-label", "entity-smoke-" + "a" * 24]), K.CollectionFailure, "acceptance-arguments-invalid")
     # The actual CLI's offline branch must not read its nonexistent manifest.
     with patch.object(sys, "argv", ["acceptance-route.py", "--inputs", "/tmp/no-such-entity-smoke-manifest.json", "--write-candidate", "--validate-arguments"]), patch.object(K, "resolve_inputs", side_effect=AssertionError("offline manifest read")):
@@ -156,6 +313,7 @@ def run():
     with tempfile.TemporaryDirectory(prefix="entity-smoke-acceptance-route-") as temporary:
         base = Path(temporary)
         promotion_protocols(base)
+        source_boundary_protocols(base)
         receipt = base / "qualified.json"; receipt.write_text("{}")
         manifest = base / "inputs.yml"
         values = {"candidate_receipt": str(receipt), "proof_label": "entity-smoke-" + "a" * 24, "expected_digest": "b" * 64}

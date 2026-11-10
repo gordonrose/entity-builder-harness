@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-accept-or-restore-release
-version: 5
+version: 6
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-11-09"
+updated_on: "2026-11-10"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -43,6 +43,26 @@ and the selected provider workflow for concrete commands and authority.
    atomically advancing the current reference. Retain prior release evidence for
    recovery; the image source revision is distinct from the evidence commit.
    Do not directly overwrite an `accepted-release.yml` file.
+   For the approved entity-smoke acceptance route only, recognize the collector's
+   exact generated proof JSON and candidate YAML as evidence additions, not
+   executable-source changes. Derive their paths, byte lengths and hashes from
+   its original validated immutable collection observation, bound to the current
+   qualified source/image/receipt/controller and original record. Admit only those
+   matching untracked additions during acceptance, including reconciliation of a
+   partial copy. Keep HEAD equal to the qualified source; reject changed bytes,
+   symlinks, staged or modified tracked files, unrelated additions and all source
+   or configuration dirt. Ordinary operational callers remain strict. Retain these
+   files for normal evidence validation and the later evidence commit;
+   neither a blanket ignore nor a caller-supplied CLI allowlist is permitted.
+   This classification grants no AWS authority, freshness, successful collection
+   or acceptance: promotion still reobserves the full declared live proof.
+   The [collector](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py)
+   derives the selection; the
+   [source guard](../../../../scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py)
+   enforces exact paths, bytes and Git status. The existing
+   [route fixture](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route-test.py)
+   exercises the actual Git boundary and partial-copy reconciliation separately
+   from its controlled proof prerequisites.
 5. For an approved update/restoration rehearsal, retain the original accepted
    baseline and record candidate proof separately. Continue with restoration;
    do not declare the candidate current after restoring the original release.

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -72,8 +72,9 @@ def parameters(value, snapshot):
     return result
 
 
-def source(args, provider, *, source_proof=True, require_terminal_jobs=True):
-    value = S.context(args, provider, source_proof=source_proof, require_terminal_jobs=require_terminal_jobs)
+def source(args, provider, *, source_proof=True, require_terminal_jobs=True, retained_source_evidence=None):
+    value = S.context(args, provider, source_proof=source_proof, require_terminal_jobs=require_terminal_jobs,
+                      **({"retained_source_evidence": retained_source_evidence} if retained_source_evidence is not None else {}))
     snapshot = S.completed(value, args, provider)
     scope = {"resources": value["resources"]}
     _, other = TASK.RECOVERY.STATE.STOP.B.services(C, provider, scope, {"server": value["server"]["definition"]})

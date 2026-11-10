@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -109,9 +109,36 @@ def read_receipt(path):
     return value
 
 
-def source_preflight(receipt):
+def retained_evidence_files(receipt, selection):
+    require(isinstance(selection, dict) and set(selection) == {"source_revision", "image_digest", "files"}
+            and selection["source_revision"] == receipt["source_revision"] and selection["image_digest"] == receipt["image_digest"], "alignment-retained-evidence-invalid")
+    files = selection["files"]
+    prefix = str(Path(SCOPE).parent.parent / "30-release-evidence") + "/"
+    patterns = [re.escape(prefix) + r"proof-receipts/entity-smoke-[a-f0-9]{64}\.json",
+                re.escape(prefix) + r"release-candidates/release-[a-f0-9]{24}\.yml"]
+    require(isinstance(files, dict) and len(files) == 2
+            and all(sum(isinstance(name, str) and re.fullmatch(pattern, name) is not None for name in files) == 1 for pattern in patterns), "alignment-retained-evidence-invalid")
+    for name, expected in files.items():
+        require(isinstance(expected, dict) and set(expected) == {"sha256", "size_bytes"}
+                and isinstance(expected["sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", expected["sha256"]) is not None
+                and type(expected["size_bytes"]) is int and expected["size_bytes"] > 0, "alignment-retained-evidence-invalid")
+        path = ROOT / name
+        require(not path.is_symlink() and not any(parent.is_symlink() for parent in path.parents), "alignment-retained-evidence-invalid")
+        if not path.exists(): continue
+        try:
+            require(path.is_file() and path.stat().st_size == expected["size_bytes"], "alignment-retained-evidence-changed")
+            with path.open("rb") as stream:
+                observed = "sha256:" + hashlib.file_digest(stream, "sha256").hexdigest()
+            require(observed == expected["sha256"], "alignment-retained-evidence-changed")
+        except OSError: raise AlignmentFailure("alignment-retained-evidence-unavailable") from None
+    return files
+
+
+def source_preflight(receipt, *, retained_source_evidence=None):
     require(command(["git", "rev-parse", "HEAD"]).strip() == receipt["source_revision"], "alignment-source-checkpoint-mismatch")
-    require(not command(["git", "status", "--porcelain", "--untracked-files=all", "--", ".", ":!commitLogs"]).strip(), "alignment-committed-source-required")
+    allowed = {} if retained_source_evidence is None else retained_evidence_files(receipt, retained_source_evidence)
+    status = command(["git", "status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ".", ":!commitLogs"])
+    require(not status or status.endswith("\0") and all(entry.startswith("?? ") and entry[3:] in allowed for entry in status.split("\0")[:-1]), "alignment-committed-source-required")
     coverage = json.loads(command(["bash", "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh", "--scope-contract", SCOPE, "--json"], 60))
     require(coverage.get("verdict") == "covered" and coverage.get("findings") == [], "alignment-declaration-coverage-not-confirmed")
     inventory = json.loads(command(["python3", "-B", "scripts/04.deploy/inventory-deploy-control/script.py", "--delivery", "--check", "--json"], 60))

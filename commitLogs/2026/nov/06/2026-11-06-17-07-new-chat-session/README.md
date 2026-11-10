@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-09T22:34:17Z
-latest_commit_sha: 5210046bbcbe5b46fe15c41de3fc8dc7c46016c6
-chat_duration: 278830s (03:05:27:10)
+latest_commit_at_utc: 2026-11-09T23:53:00Z
+latest_commit_sha: f8c51070
+chat_duration: 283553s (03:06:45:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -97,6 +97,17 @@ Summary: Corrected final TCP readiness, circular ADMIN grant and explicit owner 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-09T23:53:00Z - Commit recorded
+
+Commit: `f8c51070`
+
+Message: fix: sign global AWS inspection requests correctly
+
+Summary: Verified global-service signing and safe operation context; 45 local checks passed, 34 reused and 11 executed. Publication waits for the separately approved acceptance-deadlock correction.
+
+ADR impact: no
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -118,6 +129,13 @@ ADR impact: covered by session ADR disposition
   Summary: Corrected final TCP readiness, circular ADMIN grant and explicit owner selection for history/permission observation; added regressions and source-matched reviews.45 affected local checks passed; uninstrumented image and AWS proof remain pending. No push.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `f8c51070`
+  Time UTC: 2026-11-09T23:53:00Z
+  Message: fix: sign global AWS inspection requests correctly
+  Summary: Verified global-service signing and safe operation context; 45 local checks passed, 34 reused and 11 executed. Publication waits for the separately approved acceptance-deadlock correction.
+  ADR impact: no
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -131,9 +149,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-09T22:34:17Z
-Latest commit SHA: 5210046bbcbe5b46fe15c41de3fc8dc7c46016c6
-Chat duration: 278830s (03:05:27:10)
+Latest commit at UTC: 2026-11-09T23:53:00Z
+Latest commit SHA: f8c51070
+Chat duration: 283553s (03:06:45:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -3406,3 +3424,50 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
   rejection of foreign/tampered dirt. No blanket ignore, fabricated receipt,
   source bypass or AWS authority is requested. Preserve the now-verified
   signing fix independently; do not claim the later acceptance path is complete.
+- Signing repair preserved as approved local task commit f8c51070; staged gate
+  passed and canonical commit recorder completed. It is not pushed yet.
+- User approved the narrow acceptance-deadlock correction before republishing.
+  No AWS authority is added. Inventory before editing: owning verify/accept
+  workflow and release-evidence README; alignment's committed-source guard;
+  optional acceptance-only evidence selection through existing restore/source
+  and snapshot/context; collector's shared deterministic candidate projection
+  and retained-observation validation; existing acceptance-route fixture and
+  source-matched partial reviews. No ignore rule, source/image mismatch,
+  new registry, task mutation or generic compiler change is permitted.
+- The collector's original private immutable acceptance-observation must validate
+  all existing proof protocols and match current source/image/receipt/controller,
+  label and original record. Derive exactly its canonical proof JSON and candidate
+  YAML paths, bytes and hashes from the same projection used by retention. During
+  acceptance only, the existing guard may admit those exact untracked additions;
+  reject altered, staged/modified tracked, symlinked, foreign or extra files.
+  Keep HEAD equal to package source. Default operational callers stay strict.
+  Partial collector writes reconcile from the original observation, never an
+  arbitrary caller allowlist or new timestamp. Promotion still gathers fresh
+  actual proof; recognizing evidence files does not establish current readiness.
+- Diagnostic predicates/tests planned: real disposable Git status before/after
+  actual collector retention and partial-write recovery; exact source/evidence
+  mismatch, malformed selection, hash/size, missing observation and unsafe path
+  failures, source/config and extra-file rejection, safe reporter preservation.
+  Primitive task/control proofs in these fixtures remain explicit doubles;
+  real Git/filesystem behavior is not AWS proof. README skill and its complete
+  canonical procedure/standard/template were read; only the relevant existing
+  ownership paragraph will change, not a whole-folder documentation rewrite.
+- Acceptance correction focused fixture 20446 completed zero after all source
+  edits. It exercises real disposable Git/filesystem behavior, partial-copy
+  recovery through the actual collector, both fresh source guards and strict
+  default callers. Explicit primitive task/control doubles are not AWS proof.
+  One intermediate fixture run exposed a missing controlled deployed-reader
+  observation; corrected the fixture producer, not the production requirement.
+  Tampered hashes/sizes, extra files inside the owned evidence folders, staged
+  evidence, source edits, another HEAD, symlinks, malformed original observation,
+  binding drift and unsupported CLI overrides all reject safely.
+- Consolidated nine-file review complete before registered final verification:
+  owning workflow/README, collector/projection, source guard, optional internal
+  restore/snapshot forwarding, fixture, source-matched partial reviews and this
+  record. No parallel source writers. Keep existing provider/archive/concurrency
+  diagnostic debt explicit. No architecture ADR is needed: this approved repair
+  distinguishes exact collector output from executable source in the existing
+  acceptance owner; it grants no generic dirty-source waiver or AWS authority.
+  README skill influenced only the bounded ownership paragraph and source links.
+  Freeze these task inputs for preparation and affected verification; reuse
+  unchanged trusted checks and retain reports outside tracked source.

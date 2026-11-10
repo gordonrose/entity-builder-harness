@@ -4,7 +4,7 @@ id: infra.04-deploy.entity-smoke.release-evidence.readme
 version: 1
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-09"
+updated_on: "2026-11-10"
 layer: 04.deploy
 domain: deployment.release-evidence
 disciplines: [architecture, security, sre]
@@ -48,8 +48,28 @@ selection instead of being mistaken for an initial release.
 The [verify/accept/restore workflow](../../../../../../../../.agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md)
 requires fresh selection at execution. The bounded controller uses the existing
 `.release-succession.lock` to serialize with normal promotion; that generated
-coordination file is ignored only at this exact scope location. Accepted records
-and other evidence files are not ignored or exempt from committed-source checks.
+coordination file is ignored only at this exact scope location. Evidence is not
+ignored or treated as permission to change executable source.
+
+Collection must write its proof and candidate before promotion can read them.
+During acceptance only, the
+[collector](../../../../../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py)
+therefore derives the exact two file names, byte lengths and hashes from its
+original validated collection observation in the private working cache. The
+[source guard](../../../../../../../../scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py)
+admits those matching untracked additions while keeping the Git checkpoint equal
+to the qualified image source. This also lets an interrupted copy finish from
+the same observation; it never makes that observation current again.
+
+For example, after only the proof JSON was copied, acceptance may finish the
+matching candidate YAML. Changed proof bytes fail with
+`alignment-retained-evidence-changed`; an unrelated file or edited source still
+fails with `alignment-committed-source-required`. Neither file is blanket-exempt:
+foreign paths, symlinks and staged/modified tracked files are rejected. Ordinary
+deployment commands do not select this acceptance-only exception. Promotion
+still requires fresh actual proof; these files are not ignored and must enter the
+later evidence commit. These are source-validation rules, not proof that AWS acceptance
+has run.
 
 When actual required proofs exist, the owning collector will retain a verified
 candidate here and normal succession may promote it with an expected predecessor

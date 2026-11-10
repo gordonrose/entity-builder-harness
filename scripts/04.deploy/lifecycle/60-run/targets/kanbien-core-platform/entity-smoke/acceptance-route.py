@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -214,7 +214,9 @@ def validate_control(name, value, binding):
 
 
 def gather(args, provider):
-    value = D.source(args, provider)
+    evidence = retained_source_evidence(args)
+    source_options = {"retained_source_evidence": evidence} if evidence is not None else {}
+    value = D.source(args, provider, **source_options)
     policy = S.recovery_policy(EVIDENCE_ROOT, C.CONTRACT.parent / "declaration-contract.yml")
     require(policy["policy"] == "stop-own-scope-workloads-preserve-data" and policy["accepted_release_id"] == "none", "acceptance-subsequent-release-proof-required")
     cleanup = D.completed_cleanup(value, args, provider)
@@ -245,7 +247,7 @@ def gather(args, provider):
     validate_packet(packet)
     # Final local/current binding rechecks cannot launch or stop anything.
     require(C.source_digest() == value["artifact"], "acceptance-source-changed-before-retention")
-    C.ALIGN.source_preflight(custody)
+    C.ALIGN.source_preflight(custody, **source_options)
     return packet, value["cache"]
 
 
@@ -301,13 +303,11 @@ def validate_packet(value, *, evidence_class="live"):
     return value
 
 
-def retain(packet, cache, *, root=EVIDENCE_ROOT):
-    validate_packet(packet)
-    require(root == EVIDENCE_ROOT, "acceptance-evidence-root-invalid")
-    require(len(T.RUNNER.CONTROL.canonical(packet)) + 1 <= MAX_PACKET_BYTES, "acceptance-collected-proof-too-large")
-    C.RESOURCE.CONTROL.no_symlinks(root)
-    artifact = A.immutable_json(root / "proof-receipts" / ("entity-smoke-" + A.digest(packet)[7:] + ".json"), packet)
-    proofs = {"entity-smoke-complete-proof": {"path": str(artifact["path"].relative_to(root)), "sha256": artifact["sha256"]}}
+def candidate_material(packet):
+    proof_bytes = T.RUNNER.CONTROL.canonical(packet) + b"\n"
+    require(len(proof_bytes) <= MAX_PACKET_BYTES, "acceptance-collected-proof-too-large")
+    proof_path = EVIDENCE_ROOT / "proof-receipts" / ("entity-smoke-" + A.digest(packet)[7:] + ".json")
+    proofs = {"entity-smoke-complete-proof": {"path": str(proof_path.relative_to(EVIDENCE_ROOT)), "sha256": S.sha256_bytes(proof_bytes)}}
     contracts = {"configuration_contract": {"path": str((C.CONTRACT.parent / "declaration-contract.yml").relative_to(C.ROOT)), "sha256": packet["binding"]["configuration_contract_sha256"]},
                  "permission_contract": {"path": str(C.DEPLOY.SOURCE.relative_to(C.ROOT)), "sha256": packet["binding"]["permission_contract_sha256"]}}
     identity = {"target": TARGET, "scope": SCOPE, "source_revision": packet["binding"]["source_revision"], "image_digest": packet["binding"]["image_digest"],
@@ -315,10 +315,38 @@ def retain(packet, cache, *, root=EVIDENCE_ROOT):
     candidate = {"schema": S.CANDIDATE_SCHEMA, "target": TARGET, "scope": SCOPE, "status": "verified", "evidence_class": "live",
                  "release": {"id": S.release_id(identity), **{key: item for key, item in identity.items() if key not in {"target", "scope"}}},
                  "proof": {"accepted_at": packet["runtime"]["observed_at"], "receipt_count": 1}, "proof_set": proofs}
+    target = EVIDENCE_ROOT / S.CANDIDATE_DIRECTORY / (candidate["release"]["id"] + ".yml")
+    return {"proof": (proof_path, proof_bytes), "candidate": (target, S.rendered(candidate)), "document": candidate}
+
+
+def retained_source_evidence(args, custody=None):
+    observation = C.ROOT / ".cache/entity-smoke-live" / args.proof_label / "acceptance-observation.json"
+    C.RESOURCE.CONTROL.no_symlinks(observation)
+    if not observation.exists(): return None
+    packet = read_packet(observation)
+    custody = C.ALIGN.read_receipt(args.receipt.absolute()) if custody is None else custody
+    binding = packet["binding"]
+    require(binding["source_revision"] == custody["source_revision"] and binding["image_digest"] == custody["image_digest"]
+            and packet["package"]["receipt_reference"] == custody["receipt_reference"] and binding["proof_label"] == args.proof_label
+            and binding["record_digest"] == args.expected_digest and packet["controller_sha256"] == C.source_digest(), "acceptance-source-evidence-binding-mismatch")
+    material = candidate_material(packet)
+    return {"source_revision": custody["source_revision"], "image_digest": custody["image_digest"],
+            "files": {str(path.relative_to(C.ROOT)): {"sha256": S.sha256_bytes(payload), "size_bytes": len(payload)}
+                      for path, payload in (material["proof"], material["candidate"])}}
+
+
+def retain(packet, cache, *, root=None):
+    root = EVIDENCE_ROOT if root is None else root
+    validate_packet(packet)
+    require(root == EVIDENCE_ROOT, "acceptance-evidence-root-invalid")
+    C.RESOURCE.CONTROL.no_symlinks(root)
+    material = candidate_material(packet)
+    artifact = A.immutable_json(material["proof"][0], packet)
+    candidate = material["document"]
     S.candidate_identity(candidate, root)
-    target = root / S.CANDIDATE_DIRECTORY / (candidate["release"]["id"] + ".yml")
+    target, payload = material["candidate"]
     C.RESOURCE.CONTROL.no_symlinks(target)
-    S.immutable_write(target, S.rendered(candidate))
+    S.immutable_write(target, payload)
     marker = {"schema": "deploy/entity-smoke-acceptance-collection/v1", "binding": packet["binding"], "controller_sha256": packet["controller_sha256"],
               "candidate_record": str(target.relative_to(C.ROOT)), "candidate_sha256": C.digest_file(target), "proof_sha256": artifact["sha256"], "scope_acceptance": False, "current_readiness": False}
     A.immutable_json(cache / "acceptance-collection.json", marker)
@@ -332,7 +360,7 @@ def collect(args, provider):
     if observation.exists():
         packet = read_packet(observation)
         custody = C.ALIGN.read_receipt(args.receipt.absolute())
-        C.ALIGN.source_preflight(custody)
+        C.ALIGN.source_preflight(custody, retained_source_evidence=retained_source_evidence(args, custody))
         require(packet["controller_sha256"] == C.source_digest()
                 and packet["binding"]["source_revision"] == custody["source_revision"] and packet["binding"]["image_digest"] == custody["image_digest"]
                 and packet["binding"]["proof_label"] == args.proof_label and packet["binding"]["record_digest"] == args.expected_digest,
