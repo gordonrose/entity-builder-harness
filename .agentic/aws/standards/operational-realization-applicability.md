@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 3
+version: 4
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-09"
+updated_on: "2026-11-10"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -18,6 +18,35 @@ used_by:
 # Provider Operational Realization Applicability
 
 The generic [deployment proof standard](../../04.deploy/standards/operational-realization-gate.md) owns contract and proof semantics. This provider surface owns the following operation-specific applicability and approval conditions.
+
+## Entity-smoke controller-only repair checkpoints
+
+The user adopted this bounded rule on 2026-11-10. A tested, committed repair to
+the isolated entity-smoke deployment controller may reuse its genuinely
+qualified application image and resume its original reserved operation. The
+application custody source remains unchanged; the controller's own committed
+checkpoint and existing `controller_sha256` identify the repaired tooling.
+
+The owning alignment source guard must prove the custody source is an ancestor
+of the clean current checkout and reject every changed path except:
+
+- Python/shell files directly in the entity-smoke `60-run` controller folder;
+- the entity-smoke `00-target-alignment` script and its alignment test;
+- this standard and `scripts/repo/diagnostic-coverage/reviews.v1.json`;
+- normal session records under `commitLogs/`.
+
+No caller-supplied path exclusions or alternative source may widen this list.
+Controller changes must remain regular tracked files, not symlinks. Any changed
+application, dependency, image/build/qualification/publication input, template,
+runtime configuration, scope declaration, permission or other source requires
+new qualification/custody instead. Existing source-matched reviews and affected
+checks remain mandatory before a repaired checkpoint is used.
+
+Every step still requires its fresh exact plan and all existing gates. Recheck
+the original reservation, reviewed change set and exact resource incarnation;
+do not replace their source/image binding, reset journals, resubmit an uncertain
+operation or infer ownership from an untagged placeholder. This source rule
+grants no AWS authority or acceptance and does not apply to other scopes.
 
 ## Entity-smoke read-only execution preflight
 

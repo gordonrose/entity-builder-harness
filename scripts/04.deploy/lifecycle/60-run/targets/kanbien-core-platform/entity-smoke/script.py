@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -322,8 +322,9 @@ def run(args, provider):
         except RESOURCE.ResourceMissing: state = None
         intent = DEPLOY.request(binding, parameters, False)
         if state is not None:
-            require(store.read("deploy-create-change-set", intent) is not None, "infrastructure-existing-stack-not-owned-by-attempt")
-            DEPLOY.exact_stack(state, binding)
+            original_review = store.read("deploy-create-change-set", intent)
+            require(original_review is not None, "infrastructure-existing-stack-not-owned-by-attempt")
+            DEPLOY.initial_stack(provider, state, binding, parameters, original_review, executed=existing_execution is not None)
     book.component("resource-control-state")
     plan = {"schema": "deploy/entity-smoke-infrastructure-plan/v1", "target": RESOURCE.CLUSTER, "scope": "entity-smoke", "account": ALIGN.ACCOUNT, "region": ALIGN.REGION,
             "phase": args.phase, "binding": binding, "operator_sha256": operator, "controller_sha256": artifact, "graph_sha256": digest_file(CONTRACT),

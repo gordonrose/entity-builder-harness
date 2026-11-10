@@ -33,6 +33,13 @@ ACCOUNT, REGION, PROFILE = "337159794548", "eu-west-1", "kanbien-dev"
 DATABASE = "kanbien-core-platform-persistence"
 REPOSITORY = "kanbien-core-platform/entity-smoke"
 REPOSITORY_URI = ACCOUNT + ".dkr.ecr." + REGION + ".amazonaws.com/" + REPOSITORY
+CONTROLLER_DIRECTORY = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/"
+CONTROLLER_REPAIR_FILES = frozenset({
+    "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py",
+    "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/alignment-test.py",
+    ".agentic/aws/standards/operational-realization-applicability.md",
+    "scripts/repo/diagnostic-coverage/reviews.v1.json",
+})
 READS = {
     ("sts", "get-caller-identity"), ("cloudformation", "describe-stacks"),
     ("ec2", "describe-vpcs"), ("ec2", "describe-subnets"), ("ec2", "describe-vpc-endpoints"),
@@ -134,8 +141,29 @@ def retained_evidence_files(receipt, selection):
     return files
 
 
+def source_checkpoint(receipt):
+    current = command(["git", "rev-parse", "HEAD"]).strip()
+    source = receipt["source_revision"]
+    require(all(isinstance(value, str) and re.fullmatch(r"[a-f0-9]{40}", value) is not None for value in (source, current)), "alignment-source-checkpoint-mismatch")
+    if current != source:
+        try: command(["git", "merge-base", "--is-ancestor", source, current])
+        except AlignmentFailure: raise AlignmentFailure("alignment-source-checkpoint-mismatch") from None
+        changed = command(["git", "diff", "--no-renames", "--name-only", "-z", source, current, "--"])
+        require(changed.endswith("\0"), "alignment-source-checkpoint-mismatch")
+        paths = changed.split("\0")[:-1]
+        def controller(path):
+            relative = path.removeprefix(CONTROLLER_DIRECTORY)
+            return path.startswith(CONTROLLER_DIRECTORY) and "/" not in relative and relative.endswith((".py", ".sh"))
+        require(all(path.startswith("commitLogs/") or path in CONTROLLER_REPAIR_FILES or controller(path) for path in paths), "alignment-source-checkpoint-mismatch")
+        checked = [path for path in paths if not path.startswith("commitLogs/")]
+        if checked:
+            rows = command(["git", "ls-tree", "-z", current, "--", *checked]).split("\0")[:-1]
+            require(len(rows) == len(checked) and all(row.startswith(("100644 blob ", "100755 blob ")) for row in rows), "alignment-source-checkpoint-mismatch")
+    return {"package_source_revision": source, "controller_revision": current}
+
+
 def source_preflight(receipt, *, retained_source_evidence=None):
-    require(command(["git", "rev-parse", "HEAD"]).strip() == receipt["source_revision"], "alignment-source-checkpoint-mismatch")
+    source_checkpoint(receipt)
     allowed = {} if retained_source_evidence is None else retained_evidence_files(receipt, retained_source_evidence)
     status = command(["git", "status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ".", ":!commitLogs"])
     require(not status or status.endswith("\0") and all(entry.startswith("?? ") and entry[3:] in allowed for entry in status.split("\0")[:-1]), "alignment-committed-source-required")

@@ -59,6 +59,15 @@ new chat session
 
 ## Context Hygiene
 
+- Current continuation: image/custody source remains8f76ed3480e85d60fb60f547f996628c8554504d.
+  The user-approved controller-only repair is being checkpointed locally, without
+  republishing or changing application/runtime/template inputs. The original
+  unexecuted CREATE change set and reservation remain authoritative. Full AWS
+  execution authority is recorded below; no new routine approval is required.
+  Do not replace journals, label, image or source-data resources. The full live
+  proof and acceptance remain incomplete; preserve the qualified image and all
+  protected baselines. Earlier paragraphs below are historical snapshots.
+
 - Active worktree and branch are the session metadata above; HEAD remains
   ff10cf15017b809c3a8715d39a168af41d3511e6 before the approved checkpoint.
   Preserve the authorised migration, feature, governance and deployment edits.
@@ -70,6 +79,111 @@ new chat session
   image publication has occurred. Retain original attempt journals on failure.
 
 ## Activity Log
+
+### 2026-11-10 - Reauthenticated; initial placeholder ownership defect
+
+- AWS SSO expired during the unattended interval. After the user restored sign-in,
+  STS confirmed account337159794548. Resumed the original review, not a new
+  submission. It rejected `deployment-ownership-not-confirmed`, effect not-started.
+- Actual DescribeStacks shows the original REVIEW_IN_PROGRESS placeholder with
+  empty Tags. Actual DescribeChangeSet shows CREATE_COMPLETE/AVAILABLE, all three
+  correct ownership tags, thirty Add changes, DO_NOTHING, and Description exactly
+  matching original reservation es-88b08b1b5c27411aa04e56a209dedacc. No execution
+  reservation exists. This is a controller/fixture modelling defect, not missing
+  actual change-set ownership or authority to launch another attempt.
+- Affected caller: script.py run/create existing-stack check calls exact_stack
+  before validating the original reviewed change. The fixture incorrectly puts
+  change-set tags onto the provisional stack immediately. Correction must model
+  the actual empty-tag placeholder and establish its exact stack ARN through the
+  original reservation plus fully validated change set; deployed ownership stays
+  strict. Public finite failure reporting and original no-replay behavior remain.
+- Planned assertions: tagless provisional-stack review/resume/execute succeeds
+  only for the original exact change set; wrong stack ARN, ownership tags, token,
+  template or missing reservation rejects; deployed untagged stack still rejects;
+  at most one original create/execute submission. Registered owner is
+  entity-smoke-composition. These new regression assertions have not yet passed.
+- Requested the bounded controller-only source-repair policy decision separately:
+  current source guard requires HEAD equal application custody source. Do not
+  bypass it or run altered tools against old custody pending that decision.
+
+- The user approved the verified controller-only repair path. Adopted the bounded
+  provider rule and exact default-deny source classifier: qualified source must
+  be an ancestor, all net changed paths must be directly owned controller Python/
+  shell files, the two alignment files, the provider standard/review registry or
+  session logs. Changed controller entries must be regular Git blobs. Dirty code
+  still rejects; the existing exact collector-evidence exception is unchanged.
+  Application, dependencies, image/build/publication/qualification, templates,
+  runtime configuration and scope declarations are not admitted changes.
+- Added real disposable Git tests for the exact and repaired checkpoint, twelve
+  prohibited path classes, nonancestor history, rename-hidden application,
+  controller symlink and dirty/untracked source. These passed. Predicate owner is
+  alignment-source-checkpoint-mismatch or existing committed-source-required;
+  retain existing safe public mapping, with no native Git output or path input.
+  Image source remains8f76; the committed repaired controller is separately
+  recorded and its existing controller_sha256 continues to bind every fresh plan.
+- The focused public infrastructure regression first failed on the real-shaped
+  empty-tag placeholder, then passed after correction, including wrong ARN,
+  original token/tag/template and pending-change counterexamples. Deployed
+  untagged stacks still reject. A read-only actual AWS helper diagnosis also
+  validated the original reservation, exact tagged change set and provisional
+  stack ARN with thirty Add resources, effect not-started; it is not qualification
+  or acceptance. The full composition wrapper passed before the additional
+  source-classifier changes; a new stable-input registered run remains required.
+
+- Final stable-input integration completed:48 local passed,13 later-stage
+  obligations deferred,zero findings. Actual report is retained as
+  .cache/test-runs/entity-smoke-stable.7wpnDKuN/controller-repair-integration.json.
+  This verifies the controller repair, not live deployment or acceptance. The
+  staged gate and normal local checkpoint follow; the image need not be rebuilt.
+- ADR disposition: no new application/package/runtime architecture is introduced.
+  This bounded provider execution applicability decision uses the existing
+  separate controller hash, owning standard version4 and source-guard tests.
+  Original image custody remains immutable and does not acquire the controller's
+  revision. The repaired committed controller must still prove fresh plans/gates.
+
+### 2026-11-10 - Qualified 8f76 publication, actual plan and full AWS authority
+
+- User directly instructed completion in response to the precise pending
+  publication request. Normally pushed the checked frozen checkpoint
+  8f76ed3480e85d60fb60f547f996628c8554504d to main and submitted publication once.
+  Run 42779212664 succeeded with actual hosted qualification, immutable image,
+  scan, SBOM, attestations and genuine custody. A watch transport timeout was
+  reconciled against that same confirmed-live run; no second workflow launch.
+- Independently downloaded/validated custody with zero findings. Image:
+  sha256:282b3b2a4dab14df45cc7433c9d52ad30a8a4ea61ba1353d861c487b5251c0ac.
+  Actual ECR scan COMPLETE, empty severity counts. The two exact local runtime
+  prerequisite receipts matched and were reused, not reexecuted. Existing
+  source verification remains 73 local passed, 20 later obligations deferred.
+- AWS read-only validation accepted both actual templates with CAPABILITY_IAM,
+  eighteen main and fourteen restore parameters. The actual public create
+  planner now passes source/custody/local/target/operator/absence/generic gates.
+  Plan sha256:08ca35bf0e9cc16876084d5e8b0da9a7151a9cdaddf2f28f5b41955f2ba9c0fc,
+  profile kanbien-dev, account337159794548, eu-west-1, scope entity-smoke,
+  proof label entity-smoke-8f76ed3480e85d60fb60f547. Thirty owned additions,
+  desired count zero, four database and five endpoint ingress additions;
+  no database/schema changes or source replacement in this initial phase.
+- Protected before-state captured read-only under
+  .cache/test-runs/entity-smoke-stable.7wpnDKuN/protected-baselines-before-8f76.json:
+  core-platform foundation25 and persistence75 resources; staging foundation64
+  and service14, all UPDATE_COMPLETE. Retain only hashes/status/counts, not
+  parameter values or native provider responses. This supplementary comparison
+  is not a substitute for original control gates or final acceptance proof.
+- Asked for actual execution approval of the complete explicitly enumerated AWS
+  chain, not another rule change. User replied EVERYTHING IS APPROVED. This
+  approves the exact initial plan above and the named feature-scoped bootstrap,
+  migration/runtime grants, activation, CRUD/index/lifecycle, replacement,
+  stop/restart preserving data, temporary own-runtime revoke/restore, one source
+  snapshot, one isolated restore/read and conditional deletion of only its
+  positively owned eight-resource clone after successful readback. Every step
+  still requires a fresh exact plan, original single-submission journal and all
+  existing gates. Resolve the concrete clone incarnation and successful original
+  reader before its approved conditional cleanup; do not broaden its targets.
+  Source database, source snapshot, other baselines and staging are protected.
+- Proceed through that full approved chain without new routine approval asks.
+  Reconcile an original uncertain operation, never replay it. This authority
+  does not permit unrelated resources, source-data deletion, fabricated proof or
+  unsupported recovery/gate bypass. Keep source HEAD8f76 frozen; this audit-only
+  session update is permitted by the existing committed-source guard.
 
 ### 2026-11-10 - Corrected publication and actual first-release absence failure
 

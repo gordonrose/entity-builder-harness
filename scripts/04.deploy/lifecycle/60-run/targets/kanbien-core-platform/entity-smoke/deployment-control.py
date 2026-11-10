@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -152,6 +152,22 @@ def reviewed_change(provider, binding, parameters, reservation, activate, *, exe
     return {"change_set_arn": change_arn, "stack_arn": stack_arn, "resource_count": len(actual)}
 
 
+def initial_stack(provider, value, binding, parameters, reservation, *, executed=False):
+    """Bind an unexecuted CREATE placeholder through its original change set.
+
+    CloudFormation does not apply the proposed tags to the provisional stack.
+    Never infer its ownership from an empty tag list or its name alone.
+    """
+    if value.get("StackStatus") != "REVIEW_IN_PROGRESS":
+        exact_stack(value, binding)
+        return
+    if value.get("Tags") != []:
+        exact_tags(value.get("Tags"), binding)
+    facts = reviewed_change(provider, binding, parameters, reservation, False, executed=executed)
+    require(facts is not None, "deployment-change-not-ready")
+    require(value.get("StackName") == STACK and value.get("StackId") == facts["stack_arn"], "deployment-stack-identity-not-confirmed")
+
+
 def prepare(provider, store, binding, parameters, *, activate=False):
     intent = request(binding, parameters, activate)
     reservation, fresh = store.reserve("deploy-activate-change-set" if activate else "deploy-create-change-set", intent)
@@ -182,7 +198,12 @@ def observe(provider, store, binding, parameters, change_arn, stack_arn, *, acti
     reservation = store.read("deploy-execute-activate" if activate else "deploy-execute-create", intent)
     require(reservation is not None, "deployment-execution-reservation-missing")
     value = only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
-    exact_stack(value, binding)
+    if not activate and value.get("StackStatus") == "REVIEW_IN_PROGRESS":
+        review = store.read("deploy-create-change-set", request(binding, parameters, False))
+        require(review is not None, "deployment-review-reservation-missing")
+        initial_stack(provider, value, binding, parameters, review, executed=True)
+    else:
+        exact_stack(value, binding)
     require(value["StackId"] == stack_arn, "deployment-stack-identity-not-confirmed")
     pending = {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"} if activate else {"REVIEW_IN_PROGRESS", "CREATE_IN_PROGRESS"}
     if value.get("StackStatus") in pending: return {"status": "pending", "reservation": reservation}
@@ -213,7 +234,8 @@ def execute(provider, store, binding, parameters, change_arn, stack_arn, *, acti
         facts = reviewed_change(provider, binding, parameters, review, activate)
         require(isinstance(facts, dict) and facts["change_set_arn"] == change_arn and facts["stack_arn"] == stack_arn, "deployment-change-not-ready")
         before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"}) if activate else only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
-        exact_stack(before, binding)
+        if activate: exact_stack(before, binding)
+        else: initial_stack(provider, before, binding, parameters, review)
         require(before["StackId"] == stack_arn and before.get("StackStatus") == ("CREATE_COMPLETE" if activate else "REVIEW_IN_PROGRESS"), "deployment-execution-precondition-not-confirmed")
         try:
             provider("cloudformation", "execute-change-set", StackName=stack_arn, ChangeSetName=change_arn, ClientRequestToken=execution["operation_id"], **({"DisableRollback": True} if activate else {}))

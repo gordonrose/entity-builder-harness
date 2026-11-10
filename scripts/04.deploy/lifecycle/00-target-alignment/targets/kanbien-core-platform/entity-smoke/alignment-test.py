@@ -5,21 +5,25 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
 #   kind: script
 #   purpose: Reject engine, dependency, private delivery, custody and budget misalignment through controlled responses, never cloud proof.
 #   portability: {class: internal, targets: []}
-#   effects: [read-only]
+#   effects: [writes-files]
 #   used_by:
 #   - id: deploy.test.entity-smoke.composition.wrapper
 #     path: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
+import subprocess
+import tempfile
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_ALIGNMENT_ASSERTIONS_DISABLED")
 SPEC = importlib.util.spec_from_file_location("entity_smoke_alignment_test", Path(__file__).with_name("script.py"))
@@ -109,4 +113,86 @@ for mutate, code in negatives:
 try: M.aws("ecs", "run-task", cluster=CANARY)
 except M.AlignmentFailure as failure: assert failure.code == "alignment-provider-operation-prohibited"
 else: raise AssertionError("read-only adapter must reject task launch")
-print(json.dumps({"schema": "deploy/entity-smoke-alignment-fixture/v1", "verdict": "passed", "negative_cases": len(negatives), "provider_observation": False, "checks": ["private-reference-projection", "actual-engine-boundary", "dependency-incarnation-binding", "no-provider-mutation"]}))
+
+# Real disposable Git history proves checkpoint classification and the actual
+# dirty-source guard. Only the downstream declaration/inventory responses are
+# controlled; this is not image qualification or an AWS observation.
+old_root, old_command = M.ROOT, M.command
+with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") as temporary, patch.dict(os.environ, {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}, clear=True):
+    M.ROOT = Path(temporary)
+    def git(*arguments):
+        result = subprocess.run(["git", "-c", "user.name=Controller repair fixture", "-c", "user.email=controller-fixture@example.invalid", *arguments], cwd=M.ROOT, text=True, capture_output=True, check=True)
+        return result.stdout.strip()
+    def write(path, text):
+        destination = M.ROOT / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(text)
+    def commit(message):
+        git("add", "."); git("commit", "--quiet", "-m", message)
+        return git("rev-parse", "HEAD")
+    def rejected_source(call, code="alignment-source-checkpoint-mismatch"):
+        try: call()
+        except M.AlignmentFailure as failure: assert failure.code == code, (failure.code, code)
+        else: raise AssertionError("expected controller-checkpoint rejection")
+    def checked_command(arguments, timeout=30):
+        if arguments[0] == "git": return old_command(arguments, timeout)
+        if arguments[:2] == ["bash", "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh"]: return json.dumps({"verdict": "covered", "findings": []})
+        if arguments[:3] == ["python3", "-B", "scripts/04.deploy/inventory-deploy-control/script.py"]: return json.dumps({"verdict": "covered", "findings": []})
+        raise AssertionError("unexpected checkpoint-fixture command")
+    M.command = checked_command
+    try:
+        git("init", "--quiet", "--initial-branch", "main")
+        controller_path = M.CONTROLLER_DIRECTORY + "script.py"
+        write(controller_path, "original controller\n")
+        write("apps/entity-smoke/fixture.ts", "original application\n")
+        source = commit("qualified application source")
+        custody = {**RECEIPT, "source_revision": source}
+        assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": source}
+        M.source_preflight(custody)
+        write(controller_path, "checked controller correction\n")
+        repair = commit("controller-only correction")
+        assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": repair}
+        M.source_preflight(custody)
+        for path in (
+            "apps/entity-smoke/fixture.ts", "packages/core/src/shared/index.ts", "package-lock.json",
+            "platform/runtime/fixture.ts", "platform/security/fixture.ts",
+            "infra/04.deploy/03.product/image/entity-smoke/Dockerfile",
+            "infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore",
+            "scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh",
+            ".github/workflows/publish-kanbien-core-platform-entity-smoke.yml",
+            M.TARGET + "/30-provider-realization/aws/cloudformation/entity-smoke.yml",
+            M.SCOPE, M.CONTROLLER_DIRECTORY + "nested/not-an-admitted-controller.py",
+        ):
+            write(path, "changed non-controller input\n")
+            commit("out-of-scope input")
+            rejected_source(lambda: M.source_preflight(custody))
+            git("revert", "--no-edit", "HEAD")
+            M.source_preflight(custody)
+        controller_file = M.ROOT / controller_path
+        controller_file.unlink(); controller_file.symlink_to("outside-controller")
+        commit("symlink is not a controller repair")
+        rejected_source(lambda: M.source_checkpoint(custody))
+        controller_file.unlink(); write(controller_path, "checked controller correction\n")
+        commit("restore regular controller")
+        write(controller_path, "uncommitted repair\n")
+        rejected_source(lambda: M.source_preflight(custody), "alignment-committed-source-required")
+        write(controller_path, "checked controller correction\n")
+        write("unrelated-untracked.txt", CANARY)
+        rejected_source(lambda: M.source_preflight(custody), "alignment-committed-source-required")
+        (M.ROOT / "unrelated-untracked.txt").unlink()
+        write("commitLogs/fixture/README.md", "session audit\n")
+        M.source_preflight(custody)
+        git("mv", "apps/entity-smoke/fixture.ts", M.CONTROLLER_DIRECTORY + "moved-application.py")
+        commit("rename cannot hide changed application")
+        rejected_source(lambda: M.source_checkpoint(custody))
+        git("revert", "--no-edit", "HEAD")
+        repaired_head = git("rev-parse", "HEAD")
+        unrelated = git("commit-tree", "HEAD^{tree}", "-m", "same tree without qualified ancestry")
+        git("switch", "--quiet", "--detach", unrelated)
+        rejected_source(lambda: M.source_checkpoint(custody))
+        git("switch", "--quiet", "--detach", repaired_head)
+        M.source_preflight(custody)
+    finally:
+        M.ROOT, M.command = old_root, old_command
+
+print(json.dumps({"schema": "deploy/entity-smoke-alignment-fixture/v1", "verdict": "passed", "negative_cases": len(negatives), "provider_observation": False, "checks": ["private-reference-projection", "actual-engine-boundary", "dependency-incarnation-binding", "no-provider-mutation", "real-git-controller-only-checkpoint", "image-template-runtime-and-custody-input-changes-rejected", "rename-symlink-dirty-untracked-and-nonancestor-rejected"]}))

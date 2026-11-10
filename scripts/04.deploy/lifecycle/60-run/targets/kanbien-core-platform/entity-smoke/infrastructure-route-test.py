@@ -120,6 +120,29 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     reviewed = M.run(arguments("review", approved=plan["plan_sha256"]), provider)
     assert reviewed["verdict"] == "reviewed"
     assert sum(operation == "create-change-set" for _, operation, _ in provider.calls) == 1
+    # AWS leaves the provisional stack untagged until execution. Ownership on
+    # resume must come from the exact original reservation and reviewed change.
+    assert provider.stack["StackStatus"] == "REVIEW_IN_PROGRESS" and provider.stack["Tags"] == []
+    assert M.run(arguments("review", approved=plan["plan_sha256"]), provider)["verdict"] == "reviewed"
+    assert sum(operation == "create-change-set" for _, operation, _ in provider.calls) == 1
+    failed(lambda: M.run(arguments(label="entity-smoke-" + "9" * 24), provider), "infrastructure-existing-stack-not-owned-by-attempt")
+    original_stack_id = provider.stack["StackId"]
+    provider.stack["StackId"] = original_stack_id.replace("11111111-1111", "99999999-9999")
+    failed(lambda: M.run(arguments("review", approved=plan["plan_sha256"]), provider), "deployment-stack-identity-not-confirmed")
+    provider.stack["StackId"] = original_stack_id
+    for field, value, code in (
+        ("Tags", [], "deployment-ownership-not-confirmed"),
+        ("Description", "es-" + "0" * 32, "deployment-change-identity-not-confirmed"),
+        ("Status", "CREATE_IN_PROGRESS", "deployment-change-not-ready"),
+    ):
+        provider.mutate_change = lambda change, field=field, value=value: change.update({field: value})
+        failed(lambda: M.run(arguments("review", approved=plan["plan_sha256"]), provider), code)
+    provider.mutate_change = lambda change: None
+    provider.wrong_template = True
+    failed(lambda: M.run(arguments("review", approved=plan["plan_sha256"]), provider), "deployment-change-template-mismatch")
+    provider.wrong_template = False
+    assert sum(operation == "create-change-set" for _, operation, _ in provider.calls) == 1
+    assert not any(operation == "execute-change-set" for _, operation, _ in provider.calls)
     # Submitted and completed are different states. A lost response may only
     # observe the reserved operation, never submit a second execute request.
     provider.lost_execute = True
@@ -129,6 +152,10 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
     assert M.run(arguments("execute", approved=plan["plan_sha256"]), provider)["receipt"] == completed["receipt"]
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
+    deployed_tags = provider.stack["Tags"]
+    provider.stack["Tags"] = []
+    failed(lambda: M.run(arguments("execute", approved=plan["plan_sha256"]), provider), "deployment-ownership-not-confirmed")
+    provider.stack["Tags"] = deployed_tags
     evidence = sorted(root.rglob("realization/*.json"))
     assert evidence
     for path in evidence:

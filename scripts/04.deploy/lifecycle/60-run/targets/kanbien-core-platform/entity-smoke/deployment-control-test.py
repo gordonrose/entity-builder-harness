@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -73,7 +73,7 @@ class Provider:
                 value["OnStackFailure"] = "DO_NOTHING"
                 assert self.stack is None
                 # A real CREATE review stack has no deployed template yet.
-                self.stack = {"StackName": M.STACK, "StackId": STACK_ARN, "StackStatus": "REVIEW_IN_PROGRESS", "Tags": parameters["Tags"]}
+                self.stack = {"StackName": M.STACK, "StackId": STACK_ARN, "StackStatus": "REVIEW_IN_PROGRESS", "Tags": []}
             self.changes[parameters["ChangeSetName"]] = value
             if self.lost_prepare: raise OSError(CANARY)
             return {}
@@ -91,7 +91,7 @@ class Provider:
             change = matches[0]; activate = change["ChangeSetName"].startswith("entity-smoke-activate-")
             assert (parameters.get("DisableRollback") is True) if activate else "DisableRollback" not in parameters
             self.tokens.append(parameters["ClientRequestToken"])
-            self.stack.update(Parameters=copy.deepcopy(change["Parameters"]), StackStatus=("UPDATE_IN_PROGRESS" if activate else "CREATE_IN_PROGRESS") if self.delayed else ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"))
+            self.stack.update(Tags=copy.deepcopy(change["Tags"]), Parameters=copy.deepcopy(change["Parameters"]), StackStatus=("UPDATE_IN_PROGRESS" if activate else "CREATE_IN_PROGRESS") if self.delayed else ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"))
             change["ExecutionStatus"] = "EXECUTE_COMPLETE"
             if self.lost_execute: raise OSError(CANARY)
             return {}
