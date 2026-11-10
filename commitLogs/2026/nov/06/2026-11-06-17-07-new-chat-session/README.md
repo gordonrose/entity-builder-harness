@@ -48,6 +48,10 @@ new chat session
   classifications are now resolved with bounded annotations, preserving all
   safety and verification obligations. Detailed failures and evidence follow.
 
+
+- Raised: Original read-only administration probe es-4a34dceff456486cb2a33666613d6949 is terminal TaskFailedToStart: CannotPullContainerError with HTTP 403; no startedAt, imageDigest, exitCode or application logs. Both actual foundation ECR endpoint policies permit only core-server and deny entity-smoke.
+  Resolution: Root-cause evidence: .cache/test-runs/entity-smoke-stable.7wpnDKuN/runtime-first-probe-terminal-diagnosis.json, runtime-first-probe-pull-diagnosis.json and runtime-private-ecr-policy-diagnosis.json. No SQL/bootstrap ran and no second task was submitted. Required bounded expansion is exactly two foundation endpoint-policy resource allowlists plus one separately journalled read-only startup-recovery probe, retaining the failed original. Protected-baseline change and fresh recovery launch are not covered by the original plan; ask for that concrete authority before implementation/execution. Alignment missed ECR policies; collector misleadingly reported container identity instead of provider startup failure. Both need focused prevention under the approved expansion.
+
 ## Decisions Made
 
 - Preserve the existing accepted scopes and staging. Add only the isolated
@@ -78,6 +82,10 @@ new chat session
   reuse requires matching actual inputs. Full integration and real packaging
   remain pending; simulations cannot stand in for them. No AWS mutation or
   image publication has occurred. Retain original attempt journals on failure.
+
+
+- Summary: Current controller repair869f7189 and bookkeepingd3a7a0ff are committed; required runtime prerequisites and staged gate passed. Actual infrastructure create receipt retained; server desired zero. First read-only probe failed before application startup because both shared ECR endpoints exclude its qualified repository. Keep original reservations and image8f76/282b unchanged. Do not replay that task or mutate shared foundation without the pending narrow expansion.
+  Durable evidence: Original failed probe es-4a34dceff456486cb2a33666613d6949; safe diagnoses in .cache/test-runs/entity-smoke-stable.7wpnDKuN/. Earlier broad integration completed as gap after inputs changed during the live-discovered binding repair, not as behavioral failure or current proof. Its original report remains durable-repair-final-integration.json; full final affected integration remains pending. No active verification or AWS process remains.
 
 ## Activity Log
 
@@ -414,6 +422,20 @@ Message: fix: normalize empty ECS task-definition defaults
 Summary: Known neutral ECS defaults normalized; five-workload and fifty invalid-override regressions passed; exact runtime prerequisites and staged gate passed; actual infrastructure completion retained; no database task yet; full final integration and live proof pending
 
 ADR impact: No new ADR: correct only provider-response normalization in the existing own-template adapter, preserving all image/runtime/template/permission boundaries
+
+
+### 2026-11-10T19:19:43Z - Issue
+
+Raised: Original read-only administration probe es-4a34dceff456486cb2a33666613d6949 is terminal TaskFailedToStart: CannotPullContainerError with HTTP 403; no startedAt, imageDigest, exitCode or application logs. Both actual foundation ECR endpoint policies permit only core-server and deny entity-smoke.
+
+Resolution: Root-cause evidence: .cache/test-runs/entity-smoke-stable.7wpnDKuN/runtime-first-probe-terminal-diagnosis.json, runtime-first-probe-pull-diagnosis.json and runtime-private-ecr-policy-diagnosis.json. No SQL/bootstrap ran and no second task was submitted. Required bounded expansion is exactly two foundation endpoint-policy resource allowlists plus one separately journalled read-only startup-recovery probe, retaining the failed original. Protected-baseline change and fresh recovery launch are not covered by the original plan; ask for that concrete authority before implementation/execution. Alignment missed ECR policies; collector misleadingly reported container identity instead of provider startup failure. Both need focused prevention under the approved expansion.
+
+
+### 2026-11-10T19:19:44Z - Context hygiene
+
+Summary: Current controller repair869f7189 and bookkeepingd3a7a0ff are committed; required runtime prerequisites and staged gate passed. Actual infrastructure create receipt retained; server desired zero. First read-only probe failed before application startup because both shared ECR endpoints exclude its qualified repository. Keep original reservations and image8f76/282b unchanged. Do not replay that task or mutate shared foundation without the pending narrow expansion.
+
+Durable evidence: Original failed probe es-4a34dceff456486cb2a33666613d6949; safe diagnoses in .cache/test-runs/entity-smoke-stable.7wpnDKuN/. Earlier broad integration completed as gap after inputs changed during the live-discovered binding repair, not as behavioral failure or current proof. Its original report remains durable-repair-final-integration.json; full final affected integration remains pending. No active verification or AWS process remains.
 
 ## Sub-Agent Activity
 
