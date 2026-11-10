@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-09T23:53:00Z
-latest_commit_sha: f8c51070
-chat_duration: 283553s (03:06:45:53)
+latest_commit_at_utc: 2026-11-10T00:40:27Z
+latest_commit_sha: a98e308f831791a137a208d3fcb085f07bd3bdf4
+chat_duration: 286400s (03:07:33:20)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -108,6 +108,17 @@ Summary: Verified global-service signing and safe operation context; 45 local ch
 
 ADR impact: no
 
+
+### 2026-11-10T00:40:27Z - Commit recorded
+
+Commit: `a98e308f831791a137a208d3fcb085f07bd3bdf4`
+
+Message: fix: admit exact collector evidence during feature acceptance
+
+Summary: Approved acceptance source-boundary repair. Real disposable Git and collector fixtures passed; final affected integration passed64 local checks, reused49/executed15, deferred20 later-stage obligations, zero findings, 990.84507s. Retained report: .cache/test-runs/20261110T003825Z-01eb4b8ee20541aaad0503867110710d/report.json. Normal staged gate passed. Signing fix f8c51070 is also checked. Publication of both corrections is approved; no feature ECS, SQL, snapshot, restore, deletion or accepted-state execution has occurred or is authorized yet.
+
+ADR impact: No new architecture ADR: approved correction within the existing acceptance workflow and source guard.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -136,6 +147,13 @@ ADR impact: no
   Summary: Verified global-service signing and safe operation context; 45 local checks passed, 34 reused and 11 executed. Publication waits for the separately approved acceptance-deadlock correction.
   ADR impact: no
 
+
+- Commit: `a98e308f831791a137a208d3fcb085f07bd3bdf4`
+  Time UTC: 2026-11-10T00:40:27Z
+  Message: fix: admit exact collector evidence during feature acceptance
+  Summary: Approved acceptance source-boundary repair. Real disposable Git and collector fixtures passed; final affected integration passed64 local checks, reused49/executed15, deferred20 later-stage obligations, zero findings, 990.84507s. Retained report: .cache/test-runs/20261110T003825Z-01eb4b8ee20541aaad0503867110710d/report.json. Normal staged gate passed. Signing fix f8c51070 is also checked. Publication of both corrections is approved; no feature ECS, SQL, snapshot, restore, deletion or accepted-state execution has occurred or is authorized yet.
+  ADR impact: No new architecture ADR: approved correction within the existing acceptance workflow and source guard.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -149,9 +167,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-09T23:53:00Z
-Latest commit SHA: f8c51070
-Chat duration: 283553s (03:06:45:53)
+Latest commit at UTC: 2026-11-10T00:40:27Z
+Latest commit SHA: a98e308f831791a137a208d3fcb085f07bd3bdf4
+Chat duration: 286400s (03:07:33:20)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
