@@ -71,6 +71,53 @@ new chat session
 
 ## Activity Log
 
+### 2026-11-10 - Corrected publication and actual first-release absence failure
+
+- Approved signing and acceptance repairs were checked, committed and normally
+  pushed to main at frozen d05bf5026b8cf813e17656b98409f4e7a6030ea3. Actual
+  publication run 42730147437 succeeded, including native container qualification,
+  immutable publication, scan, SBOM and attestations. Independently downloaded
+  custody validates with zero findings and source d05bf502; immutable digest
+  sha256:a9a333be78eacc4123e560214b1cbd78aeba13b0e57f5d643d0959b109199d22.
+  Actual ECR scan is COMPLETE with empty severity counts. Runtime prerequisite
+  receipts matched the committed source and were reused, not reexecuted.
+- Public read-only runtime planner 43967 failed before effects with
+  aws-command-failed and safe context cloudformation/describe-stacks. Independent
+  fixed-endpoint reads proved the foundation and dependency stacks available and
+  the feature stack canonically absent. The actual CLI includes the standard
+  `(reached max retries: 0)` decoration; the shared response parser requires
+  `operation:` and misses this form. Safe reproduction confirms the canonical
+  missing-stack reason and ValidationError while the current parser returns
+  aws-command-failed. No ECS task, SQL operation or feature infrastructure change
+  has run. Existing qualified publication is genuine, not runtime acceptance.
+- Bounded correction inventory before edits: shared AWS response classifier,
+  existing recovery taxonomy fixture, actual infrastructure-provider/plan fixture,
+  source-matched partial diagnostic review and this session log. Accept the CLI's
+  optional unsigned retry-count decoration without enabling retries or weakening
+  operation-specific absence/anchored missing-stack checks. Prove ordinary and
+  decorated error codes, malformed/unknown/denied alternatives, real provider
+  absence propagation and initial-plan caller behavior with controlled subprocess
+  responses. Unknown failures must remain uncertain, not authorize creation.
+  The existing whole-file inventory helper remains separately unproved debt.
+  The existing foundation-budget registered wrapper selects one named recovery
+  test, not the whole file; include the new taxonomy case in that same invocation
+  so registered evidence really exercises it. No new check registry is needed.
+  Shared callers select their existing affected checks. This is adapter repair,
+  not a new governance exception or authority to deploy AWS resources.
+- Parser-focused tests passed: all five shared recovery cases, actual
+  infrastructure route fixture and existing budget wrapper with the new named
+  taxonomy case. An intermediate fixture arrangement mixed two plan labels into
+  an existing original-plan gate assertion; moved the independent absence cases
+  after that original assertion, without weakening it or changing production.
+  Shared classification recognizes only the standard optional unsigned retry
+  decoration; denials, malformed/unknown cases, exact canonical absence and
+  operation specificity retain their predicates. No runtime permission or
+  retry setting changes. Complete six-file self-review finished before final
+  preparation; source-matched partial review keeps inventory-helper and native
+  shape debt explicit. No parallel writers or new architecture ADR are needed.
+  Await explicit approval of this additional corrected checkpoint publication;
+  continue authorized local verification, but do not silently push a new source.
+
 ### 2026-11-06T17:07:07Z - Session started
 
 Initial intent: new chat session

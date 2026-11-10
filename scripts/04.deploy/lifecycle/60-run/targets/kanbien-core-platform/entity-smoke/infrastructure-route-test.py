@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -137,6 +137,30 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
         M.GATE.validate_facts(value["facts"], M.GateBook(artifact, root / "unused").contract, "entity-smoke-infrastructure-control", M.GateBook(artifact, root / "unused").known, value["facts"]["gate_evidence"][-1]["gate"])
         assert CANARY not in path.read_text() and "arn:" not in path.read_text()
     assert not any("runtime" in entry["component_id"] for entry in value["facts"]["component_evidence"])
+    # First-release absence must cross the real CLI classifier/provider into
+    # the actual plan caller, including the observed zero-retry CLI decoration.
+    old_cli = M.subprocess.run
+    class CliAbsenceProvider(Provider):
+        def __call__(self, service, operation, **parameters):
+            if (service, operation) == ("cloudformation", "describe-stacks"):
+                return M.Provider()(service, operation, **parameters)
+            return super().__call__(service, operation, **parameters)
+    try:
+        for decoration in ("", " (reached max retries: 0)"):
+            attempts = []
+            def absent_cli(arguments, **options):
+                attempts.append(arguments)
+                assert arguments[1:3] == ["cloudformation", "describe-stacks"]
+                assert json.loads(arguments[arguments.index("--cli-input-json") + 1]) == {"StackName": M.DEPLOY.STACK}
+                assert options["env"]["AWS_MAX_ATTEMPTS"] == "1"
+                return SimpleNamespace(returncode=254, stdout="", stderr="An error occurred (ValidationError) when calling the DescribeStacks operation" + decoration + ": Stack with id " + M.DEPLOY.STACK + " does not exist\n")
+            M.subprocess.run = absent_cli
+            selected = CliAbsenceProvider()
+            actual = M.run(arguments(label="entity-smoke-" + "c" * 24), selected)
+            assert actual["verdict"] == "planned" and actual["plan"]["resource_additions"] == 30 and actual["effect"] == "not-started"
+            assert len(attempts) == 1 and not any(operation in {"create-change-set", "execute-change-set"} for _, operation, _ in selected.calls)
+    finally:
+        M.subprocess.run = old_cli
     # A new proof label does not authorize adopting an existing feature stack.
     failed(lambda: M.run(arguments(label="entity-smoke-" + "1" * 24), provider), "infrastructure-existing-stack-not-owned-by-attempt")
     denied = Provider(); denied.deny_policy = True

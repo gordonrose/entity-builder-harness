@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.foundation-cost-control
 #   disciplines: [security, sre]
@@ -40,7 +40,7 @@ PY
 
 echo "Target-budget provisioning smoke test passed."
 
-python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py" RecoveryCli.test_budget_lost_response_resumes_exact_operation
+python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py" RecoveryCli.test_budget_lost_response_resumes_exact_operation RecoveryCli.test_cli_retry_decoration_preserves_typed_errors_not_retry_authority
 
 python3 -B - "$SCRIPT" <<'PY'
 import contextlib, importlib.util, io, json, subprocess, sys

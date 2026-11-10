@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -37,7 +37,8 @@ MISSING = {
 
 def classify_error(service: str, operation: str, stderr: str) -> str:
     """Never let an unknown error containing 'not found' authorize creation."""
-    match = re.search(r"An error occurred \(([A-Za-z0-9]+)\) when calling the [A-Za-z0-9]+ operation:", stderr)
+    # The CLI can add this decoration even when AWS_MAX_ATTEMPTS is one.
+    match = re.search(r"An error occurred \(([A-Za-z0-9]+)\) when calling the [A-Za-z0-9]+ operation(?: \(reached max retries: [0-9]+\))?:", stderr)
     code = match.group(1) if match else None
     if code in {"AccessDenied", "AccessDeniedException", "UnauthorizedOperation", "UnrecognizedClientException", "InvalidClientTokenId", "ExpiredToken", "ExpiredTokenException"}:
         return "aws-access-denied"

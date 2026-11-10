@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -71,6 +71,32 @@ def fixture_root(root):
  inventory=root/'scripts/04.deploy/inventory-deploy-control/script.py';inventory.parent.mkdir(parents=True);inventory.write_text('print("covered synthetic fixture")\n')
 
 class RecoveryCli(unittest.TestCase):
+ def test_cli_retry_decoration_preserves_typed_errors_not_retry_authority(self):
+  response=load(ROOT/'scripts/04.deploy/shared/provider-adapters/aws/response.py')
+  for decoration in ('',' (reached max retries: 0)',' (reached max retries: 3)'):
+   for service,operation,code,reason,expected in [
+    ('cloudformation','describe-stacks','ValidationError','Stack with id own-fixture does not exist','aws-resource-missing'),
+    ('cloudformation','describe-change-set','ChangeSetNotFoundException','private-canary','aws-resource-missing'),
+    ('rds','describe-db-instances','DBInstanceNotFound','private-canary','aws-resource-missing'),
+    ('rds','describe-db-snapshots','DBSnapshotNotFoundFault','private-canary','aws-resource-missing'),
+    ('iam','get-role-policy','NoSuchEntity','private-canary','aws-resource-missing'),
+    ('budgets','describe-budget','NotFoundException','private-canary','aws-resource-missing'),
+    ('logs','get-log-events','ResourceNotFoundException','private-canary','aws-resource-missing'),
+    ('cloudformation','describe-stacks','AccessDenied','Stack with id own-fixture does not exist','aws-access-denied'),
+    ('cloudformation','describe-stacks','ValidationError','private-canary not found','aws-parameter-invalid'),
+    ('cloudformation','describe-stacks','ValidationError','Stack with id own-fixture does not exist extra-canary','aws-parameter-invalid'),
+    ('cloudformation','describe-stacks','ValidationError','Stack with id own-fixture does not exist\nprivate-canary','aws-parameter-invalid'),
+    ('cloudformation','describe-stacks','UnknownFailure','Stack with id own-fixture does not exist','aws-command-failed'),
+    ('ecs','describe-tasks','ValidationError','Stack with id own-fixture does not exist','aws-parameter-invalid'),
+    ('logs','delete-log-group','ResourceNotFoundException','private-canary','aws-command-failed'),
+   ]:
+    with self.subTest(decoration=decoration,service=service,operation=operation,code=code,reason=reason):
+     error=f'An error occurred ({code}) when calling the Fixture operation{decoration}: {reason}'
+     observed=response.classify_error(service,operation,error)
+     self.assertEqual(observed,expected);self.assertNotIn('canary',observed)
+  for decoration in (' (reached max retries: -1)',' (reached max retries: private-canary)',' (reached max retries: 0) extra'):
+   error=f'An error occurred (ValidationError) when calling the DescribeStacks operation{decoration}: Stack with id own-fixture does not exist'
+   self.assertEqual(response.classify_error('cloudformation','describe-stacks',error),'aws-command-failed')
  def test_log_absence_is_operation_specific(self):
   response=load(ROOT/'scripts/04.deploy/shared/provider-adapters/aws/response.py')
   missing='An error occurred (ResourceNotFoundException) when calling the Fixture operation: private-canary'
