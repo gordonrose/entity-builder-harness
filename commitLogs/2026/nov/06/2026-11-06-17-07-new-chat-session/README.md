@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-10T19:07:05Z
-latest_commit_sha: 869f7189
-chat_duration: 352798s (04:01:59:58)
+latest_commit_at_utc: 2026-11-10T19:49:38Z
+latest_commit_sha: 8cac3e3a
+chat_duration: 355351s (04:02:42:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,10 @@ new chat session
 
 - Summary: Independent controller diagnostic review is complete. The two ECR checks now carry fixed API-versus-registry conditions through existing reporters. Explicit failed starts are rejected before log collection and image/exit expectations; positive application proof and single-submission rules are unchanged. Existing partial reviews updated after complete producer/runner/consumer review. Initial focused cases passed; final stable-input verification follows preparation. No foundation/recovery policy or launch code was added.
   Durable evidence: Safe original failed-start observation retained at .cache/entity-smoke-live/entity-smoke-8f76ed3480e85d60fb60f547/diagnostics/startup-failed-es-4a34dceff456486cb2a33666613d6949.json, sha256:da7e03014d1be5c02205da7b536cf9f1a109a4d3372a212229f299fb961dc69b. It records the original exact task/request and failed-start metadata with no raw provider reason or secret, scope_acceptance/current_readiness false; it is not recovery authority or successful preflight proof. Shared foundation changes and one fresh probe remain pending explicit approval. Keep original reservations/image and other scopes unchanged.
+
+
+- Summary: Checkpoint8cac3e3a closes the independent diagnostic correction; all required commit-boundary and exact runtime checks passed. Original image/custody8f76/282b and initial thirty-resource creation receipt are retained. The first standalone probe is terminal TaskFailedToStart, with no application start, image pull completion or SQL execution. Both actual ECR endpoint policies still exclude entity-smoke. The blocked condition has persisted across the failure turn and two consecutive goal continuations without approval for the requested narrow expansion.
+  Durable evidence: Authority audit re-read the actual complete-chain approval: unused named feature/database/recovery phases remain approved, but preserve their dependencies and single-submission journals. The original plan expressly protects other baselines, and the approved controller-only repair rule requires templates unchanged. Exactly two shared foundation endpoint allowlist changes and one separately journalled new probe therefore remain outside that approval. Do not treat this as missing permission for ordinary read-only diagnosis, reconciliation or the already-approved later chain. Those safe checks and independent prevention are complete; there is no active goal process or dependency-free live phase to advance. Keep full final integration pending until the actual repaired candidate is stable, not as a waiver or completion claim. Pending user decision is recorded; no extra RunTask or baseline mutation is authorized.
 
 ## Activity Log
 
@@ -459,6 +463,24 @@ Summary: Independent controller diagnostic review is complete. The two ECR check
 
 Durable evidence: Safe original failed-start observation retained at .cache/entity-smoke-live/entity-smoke-8f76ed3480e85d60fb60f547/diagnostics/startup-failed-es-4a34dceff456486cb2a33666613d6949.json, sha256:da7e03014d1be5c02205da7b536cf9f1a109a4d3372a212229f299fb961dc69b. It records the original exact task/request and failed-start metadata with no raw provider reason or secret, scope_acceptance/current_readiness false; it is not recovery authority or successful preflight proof. Shared foundation changes and one fresh probe remain pending explicit approval. Keep original reservations/image and other scopes unchanged.
 
+
+### 2026-11-10T19:49:38Z - Commit recorded
+
+Commit: `8cac3e3a`
+
+Message: fix: detect private image delivery and task startup failures
+
+Summary: Final focused alignment/evidence/runner/public-route tests passed; two registered runtime prerequisites passed; staged gate passed with28 checks passed and30 correctly deferred, zero findings. Read-only actual-policy/failed-task predicates and in-memory-only two-policy shape counterexample behaved as reviewed. No foundation policy, application image, SQL state or launch count changed. Full final affected integration and complete live proof remain pending.
+
+ADR impact: No new ADR: preserve existing scoped provider checks and safe diagnostic delivery; no new AWS effect, permission, application/runtime/template or retry authority
+
+
+### 2026-11-10T19:49:39Z - Context hygiene
+
+Summary: Checkpoint8cac3e3a closes the independent diagnostic correction; all required commit-boundary and exact runtime checks passed. Original image/custody8f76/282b and initial thirty-resource creation receipt are retained. The first standalone probe is terminal TaskFailedToStart, with no application start, image pull completion or SQL execution. Both actual ECR endpoint policies still exclude entity-smoke. The blocked condition has persisted across the failure turn and two consecutive goal continuations without approval for the requested narrow expansion.
+
+Durable evidence: Authority audit re-read the actual complete-chain approval: unused named feature/database/recovery phases remain approved, but preserve their dependencies and single-submission journals. The original plan expressly protects other baselines, and the approved controller-only repair rule requires templates unchanged. Exactly two shared foundation endpoint allowlist changes and one separately journalled new probe therefore remain outside that approval. Do not treat this as missing permission for ordinary read-only diagnosis, reconciliation or the already-approved later chain. Those safe checks and independent prevention are complete; there is no active goal process or dependency-free live phase to advance. Keep full final integration pending until the actual repaired candidate is stable, not as a waiver or completion claim. Pending user decision is recorded; no extra RunTask or baseline mutation is authorized.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -522,6 +544,13 @@ Durable evidence: Safe original failed-start observation retained at .cache/enti
   Summary: Known neutral ECS defaults normalized; five-workload and fifty invalid-override regressions passed; exact runtime prerequisites and staged gate passed; actual infrastructure completion retained; no database task yet; full final integration and live proof pending
   ADR impact: No new ADR: correct only provider-response normalization in the existing own-template adapter, preserving all image/runtime/template/permission boundaries
 
+
+- Commit: `8cac3e3a`
+  Time UTC: 2026-11-10T19:49:38Z
+  Message: fix: detect private image delivery and task startup failures
+  Summary: Final focused alignment/evidence/runner/public-route tests passed; two registered runtime prerequisites passed; staged gate passed with28 checks passed and30 correctly deferred, zero findings. Read-only actual-policy/failed-task predicates and in-memory-only two-policy shape counterexample behaved as reviewed. No foundation policy, application image, SQL state or launch count changed. Full final affected integration and complete live proof remain pending.
+  ADR impact: No new ADR: preserve existing scoped provider checks and safe diagnostic delivery; no new AWS effect, permission, application/runtime/template or retry authority
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -535,9 +564,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-10T19:07:05Z
-Latest commit SHA: 869f7189
-Chat duration: 352798s (04:01:59:58)
+Latest commit at UTC: 2026-11-10T19:49:38Z
+Latest commit SHA: 8cac3e3a
+Chat duration: 355351s (04:02:42:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
