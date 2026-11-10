@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-10T18:09:09Z
-latest_commit_sha: 0a7499b078f070f1202d6133d10ffd1d9463802f
-chat_duration: 349322s (04:01:02:02)
+latest_commit_at_utc: 2026-11-10T18:45:02Z
+latest_commit_sha: d7cc94c4
+chat_duration: 351475s (04:01:37:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -62,7 +62,8 @@ new chat session
 - Current continuation: image/custody source remains8f76ed3480e85d60fb60f547f996628c8554504d.
   The user-approved controller-only repair is being checkpointed locally, without
   republishing or changing application/runtime/template inputs. The original
-  unexecuted CREATE change set and reservation remain authoritative. Full AWS
+  CREATE execution completed thirty resources; retain its original reservation
+  and reconcile it without another submission. Full AWS
   execution authority is recorded below; no new routine approval is required.
   Do not replace journals, label, image or source-data resources. The full live
   proof and acceptance remain incomplete; preserve the qualified image and all
@@ -82,6 +83,12 @@ new chat session
 
 ### 2026-11-10 - Initial AWS creation completed; reconcile handoff repair
 
+- Corrective checkpoint d7cc94c4 passed the two exact registered runtime
+  prerequisites and normal staged commit gate. Final affected integration is
+  still required before acceptance. Normal public reconciliation now resumes
+  the original execution journal even when AWS has removed its change set;
+  mutation remains single-submission. Application/runtime/template comparison
+  against qualified8f76 passed. No bootstrap or feature task has run yet.
 - Committed controller repair0a7499b078f070f1202d6133d10ffd1d9463802f and
   bookkeeping3f3c81316098000dce3ef15508d9e9da621dbd14 after48 local passes,
   13 later obligations deferred and the normal staged gate. Actual source-input
@@ -353,6 +360,17 @@ Summary: 48 local checks passed; qualified image/source8f76 retained; actual ori
 
 ADR impact: No new ADR; bounded provider applicability rule in existing standard
 
+
+### 2026-11-10T18:45:02Z - Commit recorded
+
+Commit: `d7cc94c4`
+
+Message: fix: reconcile executed entity-smoke changes from durable custody
+
+Summary: Exact two runtime prerequisites and normal staged gate passed; unchanged qualified image retained; original AWS execution reconciliation repaired without resubmission; full final affected integration and live proof remain pending
+
+ADR impact: No new ADR: preserve original single-submission controller semantics and bound harmless read transport handling; no application/runtime/template or AWS authority change
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -402,6 +420,13 @@ ADR impact: No new ADR; bounded provider applicability rule in existing standard
   Summary: 48 local checks passed; qualified image/source8f76 retained; actual original placeholder ownership model corrected and bounded controller-only checkpoint rule verified
   ADR impact: No new ADR; bounded provider applicability rule in existing standard
 
+
+- Commit: `d7cc94c4`
+  Time UTC: 2026-11-10T18:45:02Z
+  Message: fix: reconcile executed entity-smoke changes from durable custody
+  Summary: Exact two runtime prerequisites and normal staged gate passed; unchanged qualified image retained; original AWS execution reconciliation repaired without resubmission; full final affected integration and live proof remain pending
+  ADR impact: No new ADR: preserve original single-submission controller semantics and bound harmless read transport handling; no application/runtime/template or AWS authority change
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -415,9 +440,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-10T18:09:09Z
-Latest commit SHA: 0a7499b078f070f1202d6133d10ffd1d9463802f
-Chat duration: 349322s (04:01:02:02)
+Latest commit at UTC: 2026-11-10T18:45:02Z
+Latest commit SHA: d7cc94c4
+Chat duration: 351475s (04:01:37:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
