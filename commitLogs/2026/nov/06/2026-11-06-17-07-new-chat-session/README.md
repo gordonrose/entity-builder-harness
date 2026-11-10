@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-10T18:45:02Z
-latest_commit_sha: d7cc94c4
-chat_duration: 351475s (04:01:37:55)
+latest_commit_at_utc: 2026-11-10T19:07:05Z
+latest_commit_sha: 869f7189
+chat_duration: 352798s (04:01:59:58)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -404,6 +404,17 @@ Summary: Exact two runtime prerequisites and normal staged gate passed; unchange
 
 ADR impact: No new ADR: preserve original single-submission controller semantics and bound harmless read transport handling; no application/runtime/template or AWS authority change
 
+
+### 2026-11-10T19:07:05Z - Commit recorded
+
+Commit: `869f7189`
+
+Message: fix: normalize empty ECS task-definition defaults
+
+Summary: Known neutral ECS defaults normalized; five-workload and fifty invalid-override regressions passed; exact runtime prerequisites and staged gate passed; actual infrastructure completion retained; no database task yet; full final integration and live proof pending
+
+ADR impact: No new ADR: correct only provider-response normalization in the existing own-template adapter, preserving all image/runtime/template/permission boundaries
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -460,6 +471,13 @@ ADR impact: No new ADR: preserve original single-submission controller semantics
   Summary: Exact two runtime prerequisites and normal staged gate passed; unchanged qualified image retained; original AWS execution reconciliation repaired without resubmission; full final affected integration and live proof remain pending
   ADR impact: No new ADR: preserve original single-submission controller semantics and bound harmless read transport handling; no application/runtime/template or AWS authority change
 
+
+- Commit: `869f7189`
+  Time UTC: 2026-11-10T19:07:05Z
+  Message: fix: normalize empty ECS task-definition defaults
+  Summary: Known neutral ECS defaults normalized; five-workload and fifty invalid-override regressions passed; exact runtime prerequisites and staged gate passed; actual infrastructure completion retained; no database task yet; full final integration and live proof pending
+  ADR impact: No new ADR: correct only provider-response normalization in the existing own-template adapter, preserving all image/runtime/template/permission boundaries
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -473,9 +491,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-10T18:45:02Z
-Latest commit SHA: d7cc94c4
-Chat duration: 351475s (04:01:37:55)
+Latest commit at UTC: 2026-11-10T19:07:05Z
+Latest commit SHA: 869f7189
+Chat duration: 352798s (04:01:59:58)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
