@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T14:39:15Z
-latest_commit_sha: 731aaa3f331f72637d78f01a81da0de23aa4930e
-chat_duration: 423128s (04:21:32:08)
+latest_commit_at_utc: 2026-11-11T16:15:39Z
+latest_commit_sha: c36b81da6f539e5ddcfd5e9cf78073f272e0e92b
+chat_duration: 428912s (04:23:08:32)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -93,6 +93,77 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- Post-replacement preflight reservation es-9f8bba57dbba435881194887c95894aa
+  at2026-11-11T19:41:36.271629Z has an uncertain RunTask response. Original
+  execute capture finish-task-execute-9b0d06fc61f44e1e91fce52d7e9431fe.json;
+  ordinary no-mutation reconciliation capture
+  finish-task-execute-a03f68f7822640f89d4d9f59a498012c.json reports unresolved.
+  Sessions96139 and89012 are terminal; no continuation is running. ECS has no
+  matching task; CloudTrail currently lists prior proof launches but no matching
+  event, which is not proof of non-submission. Preserve the original journal.
+  Under standing completion authority, add a one-time operator procedure to the
+  AWS standard for this exact read-only ready request: identical original token,
+  region/cluster/parameters, age under45 minutes, exclusive local intent before
+  one additional HTTP request, actual outcome retained, normal controller
+  collection afterward. AWS documents same-token same-parameter single-effect
+  behavior with minimum one-hour token lifetime. No new token/probe or automatic
+  generic retry is allowed. This changes procedure only; runtime/controller code,
+  executable diagnostic predicates, image and task request remain unchanged.
+  Required checks: changed-policy metadata/process gates, original request/hash/
+  plan/source identity, exact ready/count-one selector, age/intent rejection,
+  fresh public planning, then genuine AWS collection. No fabricated receipt.
+
+- Runtime replacement es-f0d1a616253c490bb63e31350adc494e completed;
+  replacement-receipt.json retains plan
+  sha256:97996d8634d490342033e3a0061fffcb103505016ad0d34485b2cf3e7cc38d8c.
+  Original server2818e5f74cf248098bd6e243b8cc090e stopped19:23:23.408Z;
+  successor f2edd7f0af2f42a5a6dd3c89c56ff66e started19:23:05.704Z on2026-11-11.
+  Post-replacement read preflight plan
+  sha256:d0b8993804bbf90a09d7bd575e9498d51d9ebe8e574fb5061e3f2043445f749c
+  is executing. Its first execution failed before submission on an IAM
+  list-attached-role-policies read; the identical request is retrying.
+  Keep sole continuation session96139; do not repeat replacement. Automatic
+  SSO refresh was observed advancing token expiry to20:18:36Z; no token or
+  credential content was exposed. Data survival after replacement still
+  requires its pending original-record read, not merely replacement success.
+
+- Collision es-a06b03754d5d45b1994da62e661d1510 completed at
+  2026-11-11T18:49:45.680Z with ENTITY_SMOKE_IDENTIFIER_COLLISION_PROVEN:
+  identity/read/collision/read passed and original record digest was unchanged.
+  Baseline read preflight es-5d557245abda459ba53c1416522396e0 completed at
+  19:00:01.242Z with ENTITY_SMOKE_HEALTHY. Baseline record read
+  es-1d8340d4ab334795bd4702b5dba1409a completed at19:13:51.657Z with
+  ENTITY_SMOKE_RECORD_RETRIEVED and the original digest
+  6da2c116797d6c43137c84c1603e2f003787d4c183867ec07ff5afeda7a3a593.
+  One IAM read failure before submission was retained and the identical
+  approved request retried; there was one actual record-read task.
+  Replacement planning is now running. Recovery/restore/acceptance remain
+  unproven. The original helper process remains the sole live continuation.
+
+- AWS SSO authentication subsequently restored and STS confirmed account
+  337159794548. Resumed the exact approved chain with controller c36b81da,
+  without repeating activation/create/lifecycle. The separately retained
+  collision renewal probe es-07d93d1048e7455f9308a41cf2969359 passed with
+  ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED, stopped 2026-11-11T18:41:35.453Z.
+  Receipt: task-steps/database-proof-collision-readback-recovery-1-preflight.json
+  under the original proof cache. Collision operation plan
+  sha256:b1717ec28cecbdd1f54460f023846ce1a701d1db88a9b5b2aaef09e9115a3420
+  was admitted; execution is in progress, not yet a completion claim.
+
+- Checkpoint c36b81da6f539e5ddcfd5e9cf78073f272e0e92b passed selected
+  integration (46 passed, 13 deferred, zero findings) and staged checks.
+  Report: .cache/test-runs/20261111T161418Z-8b9bd725fa754eeb85fe782fee0e286a/report.json.
+  Automatic continuation attempted collision preflight planning three times;
+  each failed at sts/get-caller-identity with effect not-started. Direct AWS
+  identity diagnosis confirmed: SSO token expired and refresh failed.
+  No collision or replacement probe was submitted by this continuation.
+  Started AWS SSO login renewal and requested browser authentication, not
+  another approval. After authentication, resume collision and baseline read,
+  then replacement, initial recovery, credential recovery, snapshot, isolated
+  restore/read/cleanup, final read, collection and acceptance promotion.
+  Do not repeat completed activation, create, lifecycle, bootstrap or migration.
+  Source/image and all original task receipts remain unchanged; goal incomplete.
 
 - Activation receipt is retained. Actual original create es-210cf5ae654e4a22a65feeb2fc3b88e7
   passed at14:59Z; original digest6da2c116797d6c43137c84c1603e2f003787d4c183867ec07ff5afeda7a3a593.
@@ -1019,6 +1090,17 @@ Summary: Selected verification and staged gate passed. Actual read-only AWS diag
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T16:15:39Z - Commit recorded
+
+Commit: `c36b81da6f539e5ddcfd5e9cf78073f272e0e92b`
+
+Message: fix(deploy): retain historical task proof and renew unused collision probe
+
+Summary: Focused fixtures, actual retained completion validation, selected integration and staged gate passed. Resume the approved live chain at collision with one fresh evidence-bound probe; do not repeat completed create or lifecycle.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1173,6 +1255,13 @@ ADR impact: covered by session ADR disposition
   Summary: Selected verification and staged gate passed. Actual read-only AWS diagnosis confirms original activation completed; preserve its single execution while retaining the formal receipt and continuing feature proof.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `c36b81da6f539e5ddcfd5e9cf78073f272e0e92b`
+  Time UTC: 2026-11-11T16:15:39Z
+  Message: fix(deploy): retain historical task proof and renew unused collision probe
+  Summary: Focused fixtures, actual retained completion validation, selected integration and staged gate passed. Resume the approved live chain at collision with one fresh evidence-bound probe; do not repeat completed create or lifecycle.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1186,9 +1275,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T14:39:15Z
-Latest commit SHA: 731aaa3f331f72637d78f01a81da0de23aa4930e
-Chat duration: 423128s (04:21:32:08)
+Latest commit at UTC: 2026-11-11T16:15:39Z
+Latest commit SHA: c36b81da6f539e5ddcfd5e9cf78073f272e0e92b
+Chat duration: 428912s (04:23:08:32)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 8
+version: 9
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-11"
@@ -20,6 +20,39 @@ used_by:
 The generic [deployment proof standard](../../04.deploy/standards/operational-realization-gate.md) owns contract and proof semantics. This provider surface owns the following operation-specific applicability and approval conditions.
 
 ## Entity-smoke controller-only repair checkpoints
+
+### Bounded retrieval of an uncertain read-only task submission
+
+For the standing approved entity-smoke proof only, the operator may recover
+the original post-replacement `ready` submission
+`es-9f8bba57dbba435881194887c95894aa` by one identical, client-token-bound
+`RunTask` request. This is not permission for a new reservation, token, task
+definition, command, network, identity, proof label or business operation.
+The original plan is
+`sha256:d0b8993804bbf90a09d7bd575e9498d51d9ebe8e574fb5061e3f2043445f749c`.
+Its original reservation, request hash and failed/reconciliation reports must
+remain intact. A fresh public plan must still admit the exact same request
+through the existing source, custody, configuration, identity and permission
+checks. Preserve all ordinary terminal-evidence and later freshness checks.
+
+This operator procedure uses the documented [ECS RunTask idempotency contract](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_Idempotency.html),
+not absence of a task/audit event as proof of non-submission. Require an age of
+less than 45 minutes from the original reservation immediately before sending;
+the provider's minimum token lifetime is one hour. Use exactly the original
+cluster, region, client token, startedBy and all request parameters. Preserve
+the original count of one and read-only `ready` operation. Reject changed or
+expired inputs; never generate another token or infer success from an empty
+response. The operator must retain an exclusive recovery intent before the
+single additional HTTP request and retain its actual outcome. An existing
+intent prevents another request, including after a lost response.
+
+After this request, use the ordinary task controller to reconcile and collect
+the original reservation. The provider response alone does not pass preflight
+or acceptance. No general automatic mutation retry, replacement probe, journal
+reset, database write, permission change or extension to other operations is
+authorized by this bounded procedure. This exception distinguishes a repeated
+HTTP request with provider-enforced single-effect identity from a new logical
+operation; all other no-replay rules remain unchanged.
 
 ### Approved administrator authentication recovery
 
