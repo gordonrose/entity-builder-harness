@@ -182,6 +182,9 @@ if __name__ == "__main__":
         original_change = result["reservation"]["request"]["change_set_arn"]
         assert M.observe(pending, owner, BINDING, PARAMETERS, original_change, STACK_ARN)["status"] == "completed"
         assert sum(op == "execute-change-set" for _, op, _ in pending.calls) == 1
+        pending.paginated_events = True
+        assert M.observe(pending, owner, BINDING, PARAMETERS, original_change, STACK_ARN)["status"] == "completed"
+        assert sum(op == "execute-change-set" for _, op, _ in pending.calls) == 1
         pending.tokens.clear()
         fails(lambda: M.observe(pending, owner, BINDING, PARAMETERS, original_change, STACK_ARN), "deployment-execution-lineage-not-confirmed")
         no_review = Provider()

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T13:10:29Z
-latest_commit_sha: 2c07550d3ba53a56b1d93a751a6db8907fe9ad0e
-chat_duration: 417802s (04:20:03:22)
+latest_commit_at_utc: 2026-11-11T13:54:20Z
+latest_commit_sha: 903b67a99ebab4ca966ff2b61cf05ece14dd1110
+chat_duration: 420433s (04:20:47:13)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,20 @@ new chat session
 
 ## Context Hygiene
 
+- Checkpoint903b67a9 passed48 selected checks and staged preparation. Its fresh
+  activation permission pair passed and activation es-4ca7d768b533454b88c049d9b747fa40
+  was submitted once at14:11:56Z. Actual AWS root UPDATE_COMPLETE event at14:14:21Z
+  carries that exact token; ECS desired/running1, pending0, rollout complete.
+  Reconciliation incorrectly rejects the event page because older history has a
+  NextToken, despite the matching root event being present. Bounded repair:
+  accept positive exact-token/root lineage on the observed page while retaining
+  missing-token rejection and complete resource-inventory checks. Reconciliation
+  must measure prerequisite freshness at the original retained admission time,
+  not demand new preparation after a completed activation. Plans may inspect
+  the existing execution journal; they never reserve another deployment.
+  Fixtures will prove paginated positive/missing lineage, stale initial admission,
+  delayed original reconciliation, controller-only replan and unchanged execute
+  counts. Existing finite diagnostics remain; no runtime/image/schema changes.
 - Checkpoint2c07550d passed46 selected checks and staged preparation. Activation
   refresh preflight es-ba9ee06476494e17921d5a53edd93879 and permissions operation
   es-99faa4d0ddb74293ac6c7eaec4330cea completed; the real refresh manifest validated.
@@ -964,6 +978,17 @@ Summary: 46 selected local checks passed, zero findings; report 20261111T130737Z
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T13:54:20Z - Commit recorded
+
+Commit: `903b67a99ebab4ca966ff2b61cf05ece14dd1110`
+
+Message: fix(deploy): reconcile count-only activation details and controller refresh
+
+Summary: Count-only AWS detail and controller-generation refresh correction passed selected verification and staged preparation. Existing activation change set remains original; continue approved live proof with the qualified image.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1104,6 +1129,13 @@ ADR impact: covered by session ADR disposition
   Summary: 46 selected local checks passed, zero findings; report 20261111T130737Z-8c1e5b41cd1442d9b35160aa6fe8168c. All eight actual preparation records validate unchanged. Exact expired grant history accepted; separate stopped-service permissions refresh retains originals and real freshness. No image or database grant changes.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `903b67a99ebab4ca966ff2b61cf05ece14dd1110`
+  Time UTC: 2026-11-11T13:54:20Z
+  Message: fix(deploy): reconcile count-only activation details and controller refresh
+  Summary: Count-only AWS detail and controller-generation refresh correction passed selected verification and staged preparation. Existing activation change set remains original; continue approved live proof with the qualified image.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1117,9 +1149,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T13:10:29Z
-Latest commit SHA: 2c07550d3ba53a56b1d93a751a6db8907fe9ad0e
-Chat duration: 417802s (04:20:03:22)
+Latest commit at UTC: 2026-11-11T13:54:20Z
+Latest commit SHA: 903b67a99ebab4ca966ff2b61cf05ece14dd1110
+Chat duration: 420433s (04:20:47:13)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

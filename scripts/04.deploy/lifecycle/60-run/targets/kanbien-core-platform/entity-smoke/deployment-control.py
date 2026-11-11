@@ -215,7 +215,9 @@ def observe(provider, store, binding, parameters, change_arn, stack_arn, *, acti
     value = deployed_stack(provider, binding, parameters)
     require(value["StackId"] == stack_arn and value.get("StackStatus") == ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"), "deployment-execution-not-successful")
     events = provider("cloudformation", "describe-stack-events", StackName=stack_arn)
-    require(isinstance(events, dict) and isinstance(events.get("StackEvents"), list) and not events.get("NextToken") and any(isinstance(event, dict) and event.get("PhysicalResourceId") == stack_arn and event.get("ClientRequestToken") == reservation["operation_id"] for event in events["StackEvents"]), "deployment-execution-lineage-not-confirmed")
+    # A matching root event is positive lineage evidence even when AWS retains
+    # older event pages. This is not a claim that the event inventory is complete.
+    require(isinstance(events, dict) and isinstance(events.get("StackEvents"), list) and any(isinstance(event, dict) and event.get("PhysicalResourceId") == stack_arn and event.get("ClientRequestToken") == reservation["operation_id"] for event in events["StackEvents"]), "deployment-execution-lineage-not-confirmed")
     response = provider("cloudformation", "list-stack-resources", StackName=stack_arn)
     rows = response.get("StackResourceSummaries") if isinstance(response, dict) else None
     require(isinstance(rows, list) and len(rows) == len(RESOURCE_TYPES) and not response.get("NextToken") and all(isinstance(row, dict) and all(isinstance(row.get(key), str) for key in ("LogicalResourceId", "ResourceType", "PhysicalResourceId", "ResourceStatus")) and row["PhysicalResourceId"] and row["ResourceStatus"] in {"CREATE_COMPLETE", "UPDATE_COMPLETE"} for row in rows) and {row["LogicalResourceId"]: row["ResourceType"] for row in rows} == RESOURCE_TYPES, "deployment-resources-not-confirmed")

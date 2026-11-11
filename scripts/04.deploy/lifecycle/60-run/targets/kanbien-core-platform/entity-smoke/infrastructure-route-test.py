@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -274,12 +274,36 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     failed(lambda: M.run(arguments(phase="activate", prerequisites=bad_proof), provider), "infrastructure-activation-completion-contract-mismatch")
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
     activation = arguments(phase="activate", prerequisites=prerequisites)
+    cache = root / ".cache/entity-smoke-live" / F.BINDING["proof_label"]
+    store = M.RESOURCE.ResourceStore(cache / "attempts")
+    active_parameters = {**F.PARAMETERS, "ServerDesiredCount": "1"}
+    real_datetime = M.datetime
+    class Later(datetime):
+        @classmethod
+        def now(cls, tz=None): return datetime.now(tz) + timedelta(hours=2)
+    M.datetime = Later
+    failed(lambda: M.activation_prerequisites(provider, prerequisites, plan["plan"]["binding"], active_parameters, cache, store), "infrastructure-activation-proof-not-fresh")
+    M.datetime = real_datetime
     activation_plan = M.run(activation, provider)
     activation.mode, activation.approved_plan = "review", activation_plan["plan_sha256"]
     assert M.run(activation, provider)["verdict"] == "reviewed"
     activation.mode = "execute"; provider.lost_execute = False
     assert M.run(activation, provider)["verdict"] == "completed"
     assert M.run(activation, provider)["verdict"] == "completed"
+    original_execution = M.read_execution_reservation(store, plan["plan"]["binding"], active_parameters, True)
+    M.datetime = Later
+    M.activation_prerequisites(provider, prerequisites, plan["plan"]["binding"], active_parameters, cache, store, resuming=True, admitted_at=original_execution["reserved_at"])
+    failed(lambda: M.activation_prerequisites(provider, prerequisites, plan["plan"]["binding"], active_parameters, cache, store, resuming=True, admitted_at=Later.now(timezone.utc).isoformat()), "infrastructure-activation-proof-not-fresh")
+    M.datetime = real_datetime
+    provider.paginated_events = True
+    artifact = "sha256:" + "e" * 64
+    activation.mode = "plan"
+    repaired_plan = M.run(activation, provider)
+    assert repaired_plan["plan_sha256"] != activation_plan["plan_sha256"]
+    activation.mode, activation.approved_plan = "execute", repaired_plan["plan_sha256"]
+    assert M.run(activation, provider)["verdict"] == "completed"
+    assert M.read_execution_reservation(store, plan["plan"]["binding"], active_parameters, True) == original_execution
+    provider.paginated_events = False
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 2
     tampered = Provider(); tampered.tamper = True
     args = arguments(label="entity-smoke-" + "3" * 24)

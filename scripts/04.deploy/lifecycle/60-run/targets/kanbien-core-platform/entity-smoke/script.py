@@ -275,7 +275,7 @@ def binding_for(receipt, alignment):
             "dependency_incarnation_sha256": alignment["dependency_incarnation_sha256"]}
 
 
-def activation_prerequisites(provider, path, binding, parameters, cache, store, *, resuming=False):
+def activation_prerequisites(provider, path, binding, parameters, cache, store, *, resuming=False, admitted_at=None):
     require(path is not None, "infrastructure-activation-proof-required")
     previous = read_json(cache / "receipts/create.json")
     transition = TRANSITION.read(SimpleNamespace(**globals()), cache, binding)
@@ -343,7 +343,11 @@ def activation_prerequisites(provider, path, binding, parameters, cache, store, 
             current = RESOURCE.EVIDENCE.collect(task, reservation, logs, retained["collected_at"])
             require(current == retained, "infrastructure-activation-proof-not-confirmed")
         previous_stop = RESOURCE.timestamp(retained["task"]["stopped_at"])
-    require(-60 <= (datetime.now(timezone.utc) - previous_stop).total_seconds() <= GATE.CURRENT_EVIDENCE_MAX_AGE_SECONDS, "infrastructure-activation-proof-not-fresh")
+    # Reconciliation observes an existing submission, not a new admission. Its
+    # immutable reservation supplies the original freshness boundary; never
+    # restamp a proof or require another activation merely because reads failed.
+    reference = RESOURCE.timestamp(admitted_at) if resuming else datetime.now(timezone.utc)
+    require(reference is not None and -60 <= (reference - previous_stop).total_seconds() <= GATE.CURRENT_EVIDENCE_MAX_AGE_SECONDS, "infrastructure-activation-proof-not-fresh")
 
 
 def read_execution_reservation(store, binding, parameters, activate):
@@ -378,12 +382,13 @@ def run(args, provider):
     DEPLOY.parameters_for(binding, parameters, activate)
     operator = operator_preflight(provider)
     existing_execution = None
-    if args.mode == "execute":
+    if args.mode == "execute" or activate:
         existing_execution = read_execution_reservation(store, binding, parameters, activate)
         if existing_execution is not None: provider.effect = "original-operation-reconcile-only"
     book.component("infrastructure-operator"); book.component("control-state-connection"); book.component("intent-connection")
     if activate:
-        activation_prerequisites(provider, args.prerequisites.absolute() if args.prerequisites else None, binding, parameters, cache, store, resuming=existing_execution is not None)
+        activation_prerequisites(provider, args.prerequisites.absolute() if args.prerequisites else None, binding, parameters, cache, store,
+                                 resuming=existing_execution is not None, admitted_at=None if existing_execution is None else existing_execution["reserved_at"])
     else:
         try:
             state = RESOURCE.only(provider("cloudformation", "describe-stacks", StackName=DEPLOY.STACK), "Stacks")
