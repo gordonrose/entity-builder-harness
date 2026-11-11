@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T09:17:52Z
-latest_commit_sha: a41e606f9c4f02bf5f7e140f600570e7b254492b
-chat_duration: 403845s (04:16:10:45)
+latest_commit_at_utc: 2026-11-11T09:40:19Z
+latest_commit_sha: 31b4516a526bc013515ed36b8b19960c2862f332
+chat_duration: 405192s (04:16:33:12)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,19 @@ new chat session
 
 ## Context Hygiene
 
+- Hosted run42997215752 from31b4516a built the image, then failed its
+  provider-administration-model fixture before publication. Actual disposable
+  PostgreSQL18.3 reproduced two model defects: LOGIN SUPERUSER alone leaves
+  rolcreaterole=false, and pg_has_role(superuser,rds_iam,MEMBER)=true even with
+  no membership rows. The membership guard must observe explicit recursive
+  grants (including NOINHERIT), not implicit superuser authorization. Reuse one
+  target-owned SQL predicate between preflight and administration; retain the
+  same diagnostic conditions and rollback behavior. Qualifier declares its
+  fixture's role-management attribute explicitly and checks actual membership;
+  actual HBA denial counterexample remains mandatory. Update source-transition
+  reviewed runtime hashes, source reviews and actual-caller assertions. Prove
+  direct/indirect/absent memberships with real disposable PostgreSQL, then
+  compile/tests and local container qualification before hosted publication.
 - Checkpointa41e606f passed80 local checks, zero findings and staged gate;
   pushed to main. Hosted run42993997115 passed delivery registration but
   composition failed before building/publishing. A disposable depth-one clone
@@ -820,6 +833,17 @@ Summary: Source-transition and exact historical custody passed 80 local checks w
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T09:40:19Z - Commit recorded
+
+Commit: `31b4516a526bc013515ed36b8b19960c2862f332`
+
+Message: test: make image recovery fixture shallow-checkout safe
+
+Summary: 45 selected local checks passed with zero findings; 13 later-stage obligations deferred. Complete disposable shallow-checkout composition passed. Fixture preserves independently pinned historical template hash without Git-history dependency.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -925,6 +949,13 @@ ADR impact: covered by session ADR disposition
   Summary: Source-transition and exact historical custody passed 80 local checks with zero findings; 20 later-stage checks deferred. Staged gate passed. Retains original preparation without replay and bounds five task-definition replacements to stopped feature only.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `31b4516a526bc013515ed36b8b19960c2862f332`
+  Time UTC: 2026-11-11T09:40:19Z
+  Message: test: make image recovery fixture shallow-checkout safe
+  Summary: 45 selected local checks passed with zero findings; 13 later-stage obligations deferred. Complete disposable shallow-checkout composition passed. Fixture preserves independently pinned historical template hash without Git-history dependency.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -938,9 +969,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T09:17:52Z
-Latest commit SHA: a41e606f9c4f02bf5f7e140f600570e7b254492b
-Chat duration: 403845s (04:16:10:45)
+Latest commit at UTC: 2026-11-11T09:40:19Z
+Latest commit SHA: 31b4516a526bc013515ed36b8b19960c2862f332
+Chat duration: 405192s (04:16:33:12)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -96,7 +96,7 @@ process.exit(2);
   const startup = run([], false, true);
   assert.equal(startup.status, 1, 'this fake scenario deliberately stops at administration, never claims qualification');
   const startupFailure = JSON.parse(startup.stderr);
-  assert.equal(startupFailure.phase, 'provider-administration-model', 'initialization readiness must reach the final PostgreSQL server before SQL');
+  assert.equal(startupFailure.phase, 'provider-administration-preflight', 'initialization readiness must reach the final PostgreSQL server before SQL');
   assert(!startup.stderr.includes('CLEANUP_NOT_CONFIRMED'));
   const startupCalls = readFileSync(calls, 'utf8').trim().split('\n').map(JSON.parse).slice(all.length);
   assert(startupCalls.some(call => call.kind === 'exec' && call.tcp), 'the actual qualifier must invoke TCP readiness');

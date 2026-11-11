@@ -21,6 +21,7 @@ import { join, resolve } from "node:path";
 const require = createRequire(import.meta.url);
 const root = resolve(process.argv[2]);
 const { performEntitySmokeAdministration } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/administration.js"));
+const { entitySmokePasswordAuthenticationPredicate } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.js"));
 const { reportEntitySmokeFailure } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js"));
 const canary = "private-session-and-credential-canary";
 function fixture({ sessions = [], terminated = [], state, failAt, widened = false } = {}) {
@@ -117,7 +118,7 @@ function ownedFixture({ rejectHistory = false, rejectObservation = false, reject
     if (text.startsWith('SELECT EXISTS')) return { rows: [boundedFacts] };
     if (text.startsWith('SELECT has_database_privilege')) return { rows: [{ allowed: true }] };
     if (text.startsWith('SELECT pg_has_role')) return { rows: [{ member: true }] };
-    if (text.startsWith('SELECT NOT pg_has_role(session_user')) return { rows: authentication };
+    if (text.startsWith('SELECT NOT EXISTS (WITH RECURSIVE memberships')) return { rows: authentication };
     if (text.startsWith('SELECT pg_get_userbyid')) return { rows: [{ owner: 'entity_smoke_migration' }] };
     if (text.startsWith('SELECT checksum FROM')) {
       assert(selected, 'migration history cannot be read before selecting its noninherited owner');
@@ -146,7 +147,7 @@ for (const operation of ['bootstrap', 'grant-runtime', 'observe-permissions']) {
   assert(test.released());
   assert.equal(test.calls.at(-1).text, operation === 'observe-permissions' ? 'ROLLBACK' : 'COMMIT');
   if (operation === 'bootstrap') assert.equal(test.calls.filter(call => call.text === ownerGrant).length, 0);
-  if (operation !== 'observe-permissions') assert.equal(test.calls.at(-2).text, "SELECT NOT pg_has_role(session_user, 'rds_iam', 'MEMBER') AS allowed");
+  if (operation !== 'observe-permissions') assert.equal(test.calls.at(-2).text, `SELECT ${entitySmokePasswordAuthenticationPredicate} AS allowed`);
   if (operation === 'observe-permissions') {
     assert.equal(test.calls[0].text, 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
     assert(test.calls.every(call => !/^(GRANT|REVOKE|ALTER|CREATE|INSERT|UPDATE|DELETE)\b/.test(call.text)), 'observation must remain read-only');

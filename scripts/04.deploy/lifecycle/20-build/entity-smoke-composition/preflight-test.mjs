@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-11"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -20,7 +20,7 @@ import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 const require = createRequire(import.meta.url);
 const root = resolve(process.argv[2]);
-const { performEntitySmokeDatabasePreflight: preflight } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.js"));
+const { performEntitySmokeDatabasePreflight: preflight, entitySmokePasswordAuthenticationPredicate } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.js"));
 const { reportEntitySmokeFailure } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js"));
 const canary = "private-preflight-user-and-provider-canary";
 const identities = { administration: "core_administrator", migration: "entity_smoke_migration", runtime: "entity_smoke_runtime" };
@@ -48,6 +48,7 @@ for (const identity of Object.keys(identities)) {
   assert.equal(await preflight(test.pool, options(identity)), "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED");
   assert.equal(test.releases(), 1);
   assert.equal(test.statements.at(-1).text, "ROLLBACK");
+  if (identity === "administration") assert(test.statements.some(statement => statement.text.endsWith(`AND ${entitySmokePasswordAuthenticationPredicate} AS allowed`)));
   assert(!test.statements.some(s => /^(?:INSERT|UPDATE|DELETE|CREATE|ALTER|GRANT|REVOKE|COMMIT|TRUNCATE|DROP)\b/.test(s.text)));
 }
 for (const [changes, field, condition] of [

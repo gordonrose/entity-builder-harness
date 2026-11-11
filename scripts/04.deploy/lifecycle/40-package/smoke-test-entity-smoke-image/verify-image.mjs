@@ -156,7 +156,7 @@ try {
   // keep migration/runtime identities restricted and require separate live RDS
   // proof. Never grant rds_iam (even indirectly) to the password administrator.
   // The real HBA matcher below rejects such membership, including NOINHERIT.
-  psql(database, undefined, { input: "CREATE ROLE rds_iam NOLOGIN;\nCREATE ROLE core_administrator LOGIN SUPERUSER;\n" });
+  psql(database, undefined, { input: "CREATE ROLE rds_iam NOLOGIN;\nCREATE ROLE core_administrator LOGIN SUPERUSER CREATEROLE;\n" });
   function password(container, username, value) { psql(container, "\\password " + username, { input: value + "\n" + value + "\n" }); }
   password(database, "core_administrator", administratorPassword);
   writeFileSync(files("pg_hba.conf"), [
@@ -173,13 +173,15 @@ try {
   const base = ["--network", network, "-v", files("ca.crt") + ":/app/assets/rds-eu-west-1-bundle.crt:ro", ...environment({ NODE_ENV: "test", ENTITY_SMOKE_LOCAL_QUALIFICATION_TOKEN: token, PERSISTENCE_POSTGRES_HOST: "postgres", PERSISTENCE_POSTGRES_PORT: "5432", PERSISTENCE_POSTGRES_DATABASE: "entitysmoke", PERSISTENCE_POSTGRES_SCHEMA: "entity_smoke", PERSISTENCE_POSTGRES_CA_PATH: "/app/assets/rds-eu-west-1-bundle.crt", PERSISTENCE_POSTGRES_IAM_REGION: "eu-west-1", PLATFORM_DEPLOYMENT_EXPOSURE: "private" })];
   const authentication = username => environment({ PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: "arn:aws:rds-db:eu-west-1:123456789012:dbuser:db-ABCDEFGHIJKLMNOP/" + username });
   const admin = (operation, resultCode = operation === "preflight" ? "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED" : operation === "observe-migration-state" ? "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED" : "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED") => expected(docker(["run", "--rm", "--name", task, ...base, ...environment({ ENTITY_SMOKE_ADMINISTRATION_OPERATION: operation, PERSISTENCE_RUNTIME_DATABASE_USERNAME: "entity_smoke_runtime", PERSISTENCE_MIGRATION_DATABASE_USERNAME: "entity_smoke_migration", PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE: "arn:aws:secretsmanager:eu-west-1:123456789012:secret:fixture-admin", PERSISTENCE_ADMINISTRATOR_CREDENTIALS: JSON.stringify({ username: "core_administrator", password: administratorPassword }) }), tag, "artifacts/kanbien-entity-smoke-administration.main.js"]), resultCode);
-  phase = "provider-administration-model";
+  phase = "provider-administration-preflight";
   admin("preflight");
+  phase = "provider-administration-bootstrap";
   admin("bootstrap");
   // Fresh process/connection after bootstrap; the former persistent owner
   // grant fails here, rather than being hidden by a reused connection.
+  phase = "provider-administration-reconnection";
   admin("preflight");
-  if (psql(database, "SELECT pg_has_role('core_administrator', 'rds_iam', 'MEMBER')").trim() !== "f") fail();
+  if (psql(database, "WITH RECURSIVE memberships(roleid) AS (SELECT oid FROM pg_roles WHERE rolname = 'core_administrator' UNION SELECT m.roleid FROM pg_auth_members AS m JOIN memberships AS parent ON m.member = parent.roleid) SELECT EXISTS (SELECT 1 FROM memberships JOIN pg_roles AS role ON role.oid = memberships.roleid WHERE role.rolname = 'rds_iam')").trim() !== "f") fail();
   phase = "administrator-authentication-counterexample";
   psql(database, "GRANT entity_smoke_migration TO core_administrator WITH INHERIT FALSE, SET TRUE");
   const deniedAdministrator = invoke("docker", ["exec", "-e", "PGPASSWORD=" + administratorPassword, database, "psql", "-X", "-h", "postgres", "-U", "core_administrator", "-d", "entitysmoke", "-c", "SELECT 1"], { allowFailure: true });

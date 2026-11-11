@@ -245,8 +245,8 @@ def run(C, args, provider):
     changed = C.ALIGN.command(["git", "diff", "--name-only", OLD_SOURCE, receipt["source_revision"], "--", "apps", "packages", "platform", "infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/image", "package.json", "package-lock.json"]).splitlines()
     allowed = {"infra/04.deploy/03.product/entrypoints/entity-smoke/administration.ts", "infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.ts"}
     C.require(set(changed) == allowed, "source-transition-runtime-change-not-approved")
-    fixed = {"administration.ts": "de013885275b5f8190394869b24aeb85adb80288f24e74be70eb99dbedfc52a8",
-             "preflight.ts": "8f1d3a307c86bc4d2afcb1c8b4ce20357be021970dbfc639760ef1a72b26d9b4"}
+    fixed = {"administration.ts": "e00e20c8bfaf1e891e011942f440432ed13be15fc8a4bd6069e56a657c4cb388",
+             "preflight.ts": "307d353bd6797f1c2fef06e620911d045b7f04bd42186b58bc362f9f06958f75"}
     for name, expected in fixed.items():
         body = C.ALIGN.command(["git", "show", receipt["source_revision"] + ":infra/04.deploy/03.product/entrypoints/entity-smoke/" + name])
         C.require(hashlib.sha256(body.encode()).hexdigest() == expected, "source-transition-reviewed-correction-changed")

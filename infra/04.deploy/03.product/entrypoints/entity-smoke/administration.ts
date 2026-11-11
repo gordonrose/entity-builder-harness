@@ -20,7 +20,7 @@ import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, 
 import { ensureBoundedLoginRole, ensureRdsIamAuthentication, requireBoundedExistingRole } from "../kanbien-core-server-persistence-role-credential";
 import { entitySmokeSchema, entitySmokeRuntimeUsername, entitySmokeMigrationUsername, entitySmokeMigrationManifest } from "./postgresql";
 import { entitySmokeConfigurationError, entitySmokeDependencyStateError, entitySmokeDiagnosticCatalogs, reportEntitySmokeFailure } from "./diagnostics";
-import { performEntitySmokeDatabasePreflight } from "./preflight";
+import { entitySmokePasswordAuthenticationPredicate, performEntitySmokeDatabasePreflight } from "./preflight";
 
 export type EntitySmokeAdministrationOperation = "bootstrap" | "grant-runtime" | "observe-permissions" | "observe-migration-state" | "revoke-runtime" | "restore-runtime";
 const operations = new Set(["preflight", "bootstrap", "grant-runtime", "observe-permissions", "observe-migration-state", "revoke-runtime", "restore-runtime"]);
@@ -113,7 +113,7 @@ export async function performEntitySmokeAdministration(pool: PostgreSqlConnectio
       await client.query({ text: 'GRANT SELECT, INSERT, UPDATE ON "entity_smoke".test_entity TO entity_smoke_runtime' });
     }
     const authentication = await client.query<{ allowed: boolean }>({
-      text: "SELECT NOT pg_has_role(session_user, 'rds_iam', 'MEMBER') AS allowed",
+      text: `SELECT ${entitySmokePasswordAuthenticationPredicate} AS allowed`,
     });
     if (authentication.rows.length !== 1 || authentication.rows[0]?.allowed !== true) throw entitySmokeDependencyStateError(operation, "memberships", "not-confirmed");
     await client.query({ text: "COMMIT" });

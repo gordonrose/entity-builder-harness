@@ -25,6 +25,11 @@ type Identity = "administration" | "migration" | "runtime";
 type Field = "configuration" | "identity" | "database" | "authority" | "schema" | "rollback";
 type Condition = "invalid-input" | "count-mismatch" | "wrong-type" | "mismatch" | "not-confirmed";
 
+// Authentication follows explicit membership grants, including NOINHERIT.
+// pg_has_role also treats superusers as implicit members of every role, which
+// is a privilege rule, not an authentication membership observation.
+export const entitySmokePasswordAuthenticationPredicate = "NOT EXISTS (WITH RECURSIVE memberships(roleid) AS (SELECT oid FROM pg_roles WHERE rolname = session_user UNION SELECT m.roleid FROM pg_auth_members AS m JOIN memberships AS parent ON m.member = parent.roleid) SELECT 1 FROM memberships JOIN pg_roles AS role ON role.oid = memberships.roleid WHERE role.rolname = 'rds_iam')";
+
 /** TLS/authentication and destination selection are owned by the same real
  * pool/configuration constructors as the later operation. This observes that
  * connection; it never claims all eventual mutation permissions are proven. */
@@ -62,7 +67,7 @@ export async function performEntitySmokeDatabasePreflight(pool: PostgreSqlConnec
     };
     if (options.identity === "administration") {
       const authority = await client.query<{ allowed: unknown }>({
-        text: "SELECT has_database_privilege(current_user, $1, 'CREATE WITH GRANT OPTION') AND has_database_privilege(current_user, $1, 'CONNECT WITH GRANT OPTION') AND (SELECT rolcreaterole FROM pg_roles WHERE rolname = current_user) AND NOT pg_has_role(current_user, 'rds_iam', 'MEMBER') AS allowed",
+        text: `SELECT has_database_privilege(current_user, $1, 'CREATE WITH GRANT OPTION') AND has_database_privilege(current_user, $1, 'CONNECT WITH GRANT OPTION') AND (SELECT rolcreaterole FROM pg_roles WHERE rolname = current_user) AND ${entitySmokePasswordAuthenticationPredicate} AS allowed`,
         values: [options.database],
       });
       boolean(authority.rows, "authority");
