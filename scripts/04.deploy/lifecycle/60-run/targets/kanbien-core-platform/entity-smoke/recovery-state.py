@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -81,7 +81,7 @@ def context(route, args, provider, custody, *, snapshot=None):
             "callees": {"server": server}, "binding_snapshot": snapshot, "completion_deadlines": deadlines,
             "report": {"plan": {"preflight_label": "entity-smoke-" + "0" * 24}}}
     selected = SimpleNamespace(**{**vars(args), "workload": "verifier", "operation": "read", "phase": "operation", "proof_stage": "server-replacement"})
-    read = route.STEPS.observe_packet(route.dependencies(), base, selected, provider)
+    read = route.STEPS.observe_packet(route.dependencies(), base, selected, provider, historical=True)
     require(read is not None, "recovery-pre-stop-original-read-required")
     require(read["receipt"]["result"].get("record_digest") == args.expected_digest, "recovery-original-digest-mismatch")
     timestamp = route.RUNNER.EVIDENCE.timestamp

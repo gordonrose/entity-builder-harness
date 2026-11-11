@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T13:54:20Z
-latest_commit_sha: 903b67a99ebab4ca966ff2b61cf05ece14dd1110
-chat_duration: 420433s (04:20:47:13)
+latest_commit_at_utc: 2026-11-11T14:39:15Z
+latest_commit_sha: 731aaa3f331f72637d78f01a81da0de23aa4930e
+chat_duration: 423128s (04:21:32:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,25 @@ new chat session
 
 ## Context Hygiene
 
+- Activation receipt is retained. Actual original create es-210cf5ae654e4a22a65feeb2fc3b88e7
+  passed at14:59Z; original digest6da2c116797d6c43137c84c1603e2f003787d4c183867ec07ff5afeda7a3a593.
+  Lifecycle es-ece900aa933549aeb216b73677488f27 passed at15:23Z, including the real
+  recovery window and purge eligibility. Collision preflight es-d8eb01dcede146719f91b8dd16278882
+  passed at15:32Z. Collision itself has no reservation: two IAM policy read failures
+  then incomplete prerequisite log pagination all returned not-started. A separate
+  mutation-prohibited actual planner passed; six IAM role-list and sixty policy
+  reads also passed, so a persistent permission denial is not established.
+  Its probe has now expired without a collision launch. Repair inventory: preserve
+  the five completed current-image task pairs under their exact original controller;
+  permit one separately labelled collision-preflight renewal bound to these exact
+  completed/failure documents, preserving the original probe and all operation keys.
+  Completed predecessor reads use their immutable seventh-gate custody as history,
+  never as current readiness; each next operation still needs a fresh admitted probe.
+  Also share identical task-definition/IAM/security-group observations only within
+  one prepare or one pre-submission guard. Each later phase gets a new cache; task,
+  service, logs, SQL, runtime admission and mutation calls remain uncached. Tests
+  must prove fresh guards, response isolation, no mutation caching, unchanged keys,
+  rejected missing/tampered/uncertain recovery evidence and no duplicate execution.
 - Checkpoint903b67a9 passed48 selected checks and staged preparation. Its fresh
   activation permission pair passed and activation es-4ca7d768b533454b88c049d9b747fa40
   was submitted once at14:11:56Z. Actual AWS root UPDATE_COMPLETE event at14:14:21Z
@@ -989,6 +1008,17 @@ Summary: Count-only AWS detail and controller-generation refresh correction pass
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T14:39:15Z - Commit recorded
+
+Commit: `731aaa3f331f72637d78f01a81da0de23aa4930e`
+
+Message: fix(deploy): reconcile completed activation against original admission
+
+Summary: Selected verification and staged gate passed. Actual read-only AWS diagnosis confirms original activation completed; preserve its single execution while retaining the formal receipt and continuing feature proof.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1136,6 +1166,13 @@ ADR impact: covered by session ADR disposition
   Summary: Count-only AWS detail and controller-generation refresh correction passed selected verification and staged preparation. Existing activation change set remains original; continue approved live proof with the qualified image.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `731aaa3f331f72637d78f01a81da0de23aa4930e`
+  Time UTC: 2026-11-11T14:39:15Z
+  Message: fix(deploy): reconcile completed activation against original admission
+  Summary: Selected verification and staged gate passed. Actual read-only AWS diagnosis confirms original activation completed; preserve its single execution while retaining the formal receipt and continuing feature proof.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1149,9 +1186,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T13:54:20Z
-Latest commit SHA: 903b67a99ebab4ca966ff2b61cf05ece14dd1110
-Chat duration: 420433s (04:20:47:13)
+Latest commit at UTC: 2026-11-11T14:39:15Z
+Latest commit SHA: 731aaa3f331f72637d78f01a81da0de23aa4930e
+Chat duration: 423128s (04:21:32:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

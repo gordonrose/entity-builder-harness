@@ -230,7 +230,12 @@ def run():
             return result
         def one_source_per_preparation(args, selected_provider):
             before = len(binding_source_reads)
+            before_reads = len(provider.observed)
             result = old_prepare(args, selected_provider)
+            configuration = [(service, operation, json.dumps(parameters, sort_keys=True)) for service, operation, parameters in provider.observed[before_reads:]
+                             if (service, operation) in {("ecs", "describe-task-definition"), ("ec2", "describe-security-groups"),
+                                *(('iam', name) for name in ('get-role', 'list-role-policies', 'list-attached-role-policies', 'get-role-policy'))}]
+            assert len(configuration) == len(set(configuration)), "identical configuration reads share only this preparation scope"
             assert len(binding_source_reads) == before + 1, "one fresh binding snapshot per prepared operation, not per prerequisite or process"
             assert M.C.DEPLOY.fingerprint(result["binding_snapshot"]) == binding_source_reads[-1]
             preparation_reads.append(len(binding_source_reads))
@@ -415,6 +420,21 @@ def run():
         original_create["containers"][0]["imageDigest"] = F.BINDING["image_digest"]
         execute_feature("verifier", "observe-create")
         execute_feature("verifier", "lifecycle")
+        # A completed predecessor is history, not a requirement that ECS keep
+        # its stopped task forever. Its exact completion gate remains mandatory.
+        lifecycle_path = cache / "task-steps/verifier-lifecycle-operation.json"
+        lifecycle_packet = M.C.read_json(lifecycle_path)
+        lifecycle_arn = lifecycle_packet["receipt"]["task"]["arn"]
+        expired = provider.remote.pop(lifecycle_arn)
+        historical_args = SimpleNamespace(**{**vars(feature_args), "workload": "database-proof", "operation": "collision", "expected_digest": "1" * 64})
+        try:
+            assert M.plan(historical_args, live)["plan"]["execution_route_available"]
+            completion = M.C.read_json(M.COMPLETION.path(lifecycle_path))
+            gate = root / completion["realization_evidence"]
+            gate_bytes = gate.read_bytes(); gate.write_bytes(b'{}\n')
+            try: fails(lambda: M.plan(historical_args, live), "task-step-completion-gate-changed")
+            finally: gate.write_bytes(gate_bytes)
+        finally: provider.remote[lifecycle_arn] = expired
         wrong_digest = SimpleNamespace(**{**vars(feature_args), "workload": "database-proof", "operation": "collision", "expected_digest": "2" * 64})
         fails(lambda: M.plan(wrong_digest, live), "feature-original-record-digest-mismatch")
         execute_feature("database-proof", "collision", digest="1" * 64)

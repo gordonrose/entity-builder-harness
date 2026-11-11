@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -66,7 +66,7 @@ def original_terminal(route, context, args):
 def observe(route, context, args, workload, operation, digest=None):
     selected = arguments(args, workload, operation)
     selected.expected_digest = digest
-    return route.STEPS.observe_packet(route, checked_context(route, context, workload), selected, context["provider"])
+    return route.STEPS.observe_packet(route, checked_context(route, context, workload), selected, context["provider"], historical=True)
 
 
 def activation(route, context, args):

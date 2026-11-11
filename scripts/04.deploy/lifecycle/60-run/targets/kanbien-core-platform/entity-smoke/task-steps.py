@@ -22,6 +22,11 @@ The owning route supplies its checked context and already gated provider.
 Recovery/record operations remain unavailable until their predecessors are wired.
 """
 import hashlib
+import importlib.util
+from pathlib import Path
+
+_spec = importlib.util.spec_from_file_location("entity_smoke_step_recovery_selection", Path(__file__).with_name("source-transition.py"))
+TRANSITION = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(TRANSITION)
 
 STEPS = (
     ("bootstrap", "administration", "bootstrap", "AdministrationTaskDefinition"),
@@ -78,6 +83,7 @@ def key(args):
 
 def path(context, args):
     suffix = "" if stage(args) == "baseline" else "-" + stage(args)
+    suffix += TRANSITION.preflight_step_suffix(args)
     if stage(args) == "activation":
         generation = activation_generation(args)
         require(context["artifact"] == "sha256:" + generation, "task-activation-controller-mismatch")
@@ -155,7 +161,7 @@ def prerequisites(route, context, args, provider):
         prior_args = SimpleNamespace(**{**vars(args), "workload": workload, "operation": operation, "phase": "operation", "expected_digest": None, "proof_stage": "baseline" if refreshing else stage(args)})
         # Each prior workload has its own checked physical definition/network.
         prior_context = {**context, "checked": route.BINDING.inspect(provider, workload, context["parameters"], context["resources"], context.get("binding_snapshot"))}
-        packet = observe_packet(route, prior_context, prior_args, provider)
+        packet = observe_packet(route, prior_context, prior_args, provider, historical=True)
         if packet is None: raise PrerequisiteMissing(name)
         receipt = packet["receipt"]
         original = route.C.TRANSITION.original_receipt(route.C, context, packet, route.C.read_json(route.COMPLETION.path(path(context, prior_args))))

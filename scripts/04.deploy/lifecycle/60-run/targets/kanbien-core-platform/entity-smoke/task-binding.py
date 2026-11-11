@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -33,6 +33,23 @@ SPEC = importlib.util.spec_from_file_location("entity_smoke_binding_deployment",
 DEPLOY = importlib.util.module_from_spec(SPEC); SPEC.loader.exec_module(DEPLOY)
 ACCOUNT, REGION = DEPLOY.RESOURCE.ACCOUNT, DEPLOY.RESOURCE.REGION
 WORKLOADS = {"server": "Server", "migration": "Migration", "administration": "Administration", "verifier": "Verifier", "database-proof": "DatabaseProof"}
+
+
+def observation_scope(provider):
+    """Reuse identical configuration reads only within one caller-owned phase.
+
+    A pre-submission guard creates a new scope. Runtime state, task results,
+    logs, policy simulation and every mutation always reach the real provider.
+    """
+    selected = {("ecs", "describe-task-definition"), ("ec2", "describe-security-groups"),
+                *(('iam', name) for name in ('get-role', 'list-role-policies', 'list-attached-role-policies', 'get-role-policy'))}
+    observations = {}
+    def observe(service, operation, **parameters):
+        if (service, operation) not in selected: return provider(service, operation, **parameters)
+        key = service, operation, json.dumps(parameters, sort_keys=True, allow_nan=False)
+        if key not in observations: observations[key] = copy.deepcopy(provider(service, operation, **parameters))
+        return copy.deepcopy(observations[key])
+    return observe
 
 
 class BindingFailure(Exception):

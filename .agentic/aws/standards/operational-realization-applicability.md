@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 7
+version: 8
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-11"
@@ -198,6 +198,29 @@ helper availability alone is not enforcement or execution approval. Existing
 source, package, normal business-operation/recovery gates, concrete approval,
 ownership and safe evidence rules remain binding. This rule permits neither
 bootstrap/migration writes nor accepted-release promotion.
+
+### Completed predecessor custody and bounded collision renewal
+
+Completed predecessor tasks may be consumed as historical evidence through
+their original reservation, collected result, completion sidecar and unchanged
+seventh-gate bytes. This is not current readiness or a new permission observation.
+Current target/callee bindings and the next operation's fresh admission remain
+mandatory. Within one preparation or one pre-submission guard, identical task
+definition, IAM role/policy and security-group reads may share an observation.
+Each subsequent phase starts a new observation scope. Never cache task/service
+state, logs, admission, policy simulation or mutation calls across this boundary.
+
+For the current entity-smoke proof only, the controller may renew the successful
+collision preflight `es-d8eb01dcede146719f91b8dd16278882` once after its window
+expires unused. Require the exact hash-pinned original step/completion and the
+retained `task-log-observation-incomplete` not-started response. Before the new
+probe's first reservation, require no collision-operation reservation. Derive
+one fixed recovery label and separate immutable step path; retain the old probe.
+The existing ninety-second read-only request, all first-five gates, genuine
+terminal evidence and unchanged900-second operation admission still apply.
+An uncertain or failed probe cannot be reset by this rule. Completed probes or
+operations are never relaunched, and no business-data operation is authorised
+by the expired receipt itself.
 
 ### Stopped-service activation refresh
 

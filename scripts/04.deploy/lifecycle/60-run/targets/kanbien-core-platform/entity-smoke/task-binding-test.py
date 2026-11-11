@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -111,6 +111,26 @@ def fails(call, code, workload):
 
 
 def main():
+    observed = []
+    value = {"revision": 1, "nested": {"value": 1}}
+    def raw(service, operation, **parameters):
+        observed.append((service, operation, parameters))
+        return value
+    scope = M.observation_scope(raw)
+    first = scope("iam", "get-role", RoleName="owned")
+    first["nested"]["value"] = 99
+    value["revision"] = 2
+    assert scope("iam", "get-role", RoleName="owned") == {"revision": 1, "nested": {"value": 1}}
+    assert len(observed) == 1
+    assert M.observation_scope(raw)("iam", "get-role", RoleName="owned")["revision"] == 2
+    assert len(observed) == 2, "a subsequent guard must not reuse a preparation observation"
+    scope("iam", "get-role", RoleName="other")
+    assert len(observed) == 3
+    for service, operation in (("ecs", "describe-tasks"), ("ecs", "describe-services"), ("logs", "get-log-events"),
+                               ("iam", "simulate-principal-policy"), ("ecs", "run-task")):
+        before = len(observed)
+        scope(service, operation); scope(service, operation)
+        assert len(observed) == before + 2, "runtime observations and mutations are never cached"
     for workload in M.WORKLOADS:
         provider = Provider(workload)
         original_source, reads = M.DEPLOY.source, []

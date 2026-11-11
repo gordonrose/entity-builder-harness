@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -51,7 +51,7 @@ def arguments(args, workload, operation, stage="credential-recovery"):
 def observe(route, context, args, provider, workload, operation, stage="credential-recovery"):
     selected_args = arguments(args, workload, operation, stage)
     checked = route.BINDING.inspect(provider, workload, context["parameters"], context["resources"], context.get("binding_snapshot"))
-    value = route.STEPS.observe_packet(route, {**context, "checked": checked}, selected_args, provider)
+    value = route.STEPS.observe_packet(route, {**context, "checked": checked}, selected_args, provider, historical=True)
     if value is None: raise route.STEPS.PrerequisiteMissing(stage + "-" + operation)
     return value
 

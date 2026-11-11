@@ -37,6 +37,11 @@ TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", 
 # Exact successful grant/permissions custody before controller-only repairs.
 # These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "fccbb75f4b2a73da6ed8582efcdc049bdb3729f9d964383390b62ef7460e77ff": ("ce2a6122c75b8cbe0b5178a57f14ad081dd37b42232df7c863ee66b84e0e78be", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
+    "d0bd1010709a93f6ea9140ef04a3ab072f958e54173a4f380d6414abb621bbe7": ("cf569f98859027efefc6903d526509d4f620336dd93dc77b36d29976a21a7674", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
+    "a16c5478379bd82a66f081d48a3a690850ab1fe5ce1124142ebbbf640b285c46": ("a54d8e4f58e0d6179bc8128a511b551e3c50652e1aacd1a5af2b98c80a4bfd91", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
+    "2bbbbb32aec9a3f67af515523271e40431429b67b2a864f44cad9c9551a2dc96": ("5cdf789860c3a4895a8f42838cacb667d1938685235232caa74c0ac4f7b47163", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
+    "725c8d91dbdeb03ba2af0d7d6986cd99bc5a03c67160830e853edf4a6fddc794": ("6bdafce7582bb9dc7de6c6c40cfc163a3419e17cb7572b2501dfeb345a8eb45b", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
     "e66842a43431dd9a738752263f5520a81640bfb078e9bdeafa4b88d0142993f3": ("78cfaa909d7ee998c4aee92c7d2e9431ad4a427548c3616d2d4e40f0bd6c798a", "d78b850e6f2208fa8d17ce69c160024c479fec33c59b05ae6ced47f13bc269a8"),
     "f1db111a594a4f16a42029dd6ab0542801b9d9e37c55d5d621d8b9875b23ec21": ("c7d3eca3949d61b38907de25aecd57a0e1a30d9f91b53d4f9d49ffc3fd106a27", "d78b850e6f2208fa8d17ce69c160024c479fec33c59b05ae6ced47f13bc269a8"),
     "6bdd329d5e4f0d17927634945e5a4dfe62af8b1f1c63543f6562ed39e8f1c1ff": ("435c4e9c532bfa420ff43259be725cd3b9b73bd78d3425e03bc9427168aa1caa", "cdf63a0df5c0d09263e8be7a083a7c908a4b3bdea7713150292c453e6a1c9bfd"),
@@ -46,6 +51,11 @@ UNSUBMITTED_PREFLIGHT = "es-8c2a5ae0be9e4090b2aa38c324592f46"
 UNSUBMITTED_REPORT = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-7a7e118e3ef9493f98eb24f93fd064f6.json"
 UNSUBMITTED_REPORT_HASH = "sha256:e17a09ab60e17680486e5c6b45dd22602c70a848512c96032e3b188c5b31cd52"
 UNSUBMITTED_RESERVATION_HASH = "sha256:b952cb026b1600eb1ea46cd8e9f37a5e58c9130c604ff8776c90e9149be6ee15"
+COLLISION_PROBE = "es-d8eb01dcede146719f91b8dd16278882"
+COLLISION_PACKET = "sha256:725c8d91dbdeb03ba2af0d7d6986cd99bc5a03c67160830e853edf4a6fddc794"
+COLLISION_COMPLETION = "sha256:6bdafce7582bb9dc7de6c6c40cfc163a3419e17cb7572b2501dfeb345a8eb45b"
+COLLISION_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-fbb4b5379f72404498c8b52029deed90.json"
+COLLISION_FAILURE_HASH = "sha256:fab39feb1d9a14f8cc3512a6b40fca4173a5d5372071e07c52574c9601ac60f4"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -132,7 +142,17 @@ def legacy_context(route, context, args, packet, completion):
     return {**context, "binding": packet["binding"], "checked": checked, "report": report}
 
 
+def collision_recovery(args):
+    return (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "database-proof", "collision", "baseline")
+
+
+def preflight_step_suffix(args):
+    return "-readback-recovery-1" if collision_recovery(args) and args.phase == "preflight" else ""
+
+
 def replacement_label(context, args, original):
+    if collision_recovery(args):
+        return "entity-smoke-" + hashlib.sha256((original + ":" + COLLISION_PROBE + ":readback-recovery-1").encode()).hexdigest()[:24]
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "database-proof", "permissions", "baseline"):
         return "entity-smoke-" + hashlib.sha256((original + ":" + UNSUBMITTED_PREFLIGHT + ":known-not-submitted-recovery-1").encode()).hexdigest()[:24]
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) != (LABEL, "administration", "grant-runtime", "baseline"):
@@ -143,6 +163,34 @@ def replacement_label(context, args, original):
 def recovery_preflight(C, context, args, original):
     selected = replacement_label(context, args, original)
     if selected == original: return original
+    if collision_recovery(args):
+        target = context["cache"] / "task-steps/database-proof-collision-preflight.json"
+        sidecar = target.with_name(target.stem + ".completion.json")
+        C.require(C.digest_file(target) == COLLISION_PACKET and C.digest_file(sidecar) == COLLISION_COMPLETION
+                  and C.digest_file(C.ROOT / COLLISION_FAILURE) == COLLISION_FAILURE_HASH, "task-collision-recovery-evidence-changed")
+        packet, completion, failure = C.read_json(target), C.read_json(sidecar), C.read_json(C.ROOT / COLLISION_FAILURE)
+        reservation, receipt = packet["reservation"], packet["receipt"]
+        request = reservation["request"]
+        C.RESOURCE.EVIDENCE.validate_retained(receipt, reservation)
+        C.require(historical(packet, completion) and packet["binding"] == context["binding"]
+                  and completion["step_sha256"] == COLLISION_PACKET and completion["plan_sha256"] == packet["plan_sha256"]
+                  and C.digest_file(C.ROOT / completion["realization_evidence"]) == completion["realization_evidence_sha256"]
+                  and reservation["operation_id"] == COLLISION_PROBE and request["proof_label"] == original
+                  and request["environment"] == {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": original}
+                  and request["deadline_seconds"] == 90
+                  and failure.get("effect") == "not-started" and failure.get("condition") == "task-log-observation-incomplete"
+                  and all(failure.get("context", {}).get(key) == value for key, value in {"workload": "database-proof", "operation": "collision", "phase": "operation", "proof_stage": "baseline"}.items())
+                  and (C.RESOURCE.timestamp(C.now()) - C.RESOURCE.timestamp(receipt["task"]["stopped_at"])).total_seconds() > 900,
+                  "task-collision-recovery-evidence-invalid")
+        store = C.RESOURCE.CONTROL.AttemptStore(context["cache"] / "task-attempts")
+        C.require(store.read("original-collision-preflight", request) == reservation, "task-collision-recovery-reservation-required")
+        renewed = {**request, "proof_label": selected, "environment": {**request["environment"], "ENTITY_SMOKE_PROOF_LABEL": selected}}
+        if args.phase == "preflight" and store.read("renewed-collision-preflight", renewed) is None:
+            key = "task-" + hashlib.sha256((LABEL + ":database-proof:collision:operation").encode()).hexdigest()[:48]
+            operation_path = context["cache"] / "task-attempts" / (key + ".json")
+            C.RESOURCE.CONTROL.no_symlinks(operation_path)
+            C.require(not operation_path.exists(), "task-collision-recovery-operation-already-reserved")
+        return selected
     if args.workload == "database-proof":
         target = context["cache"] / "task-attempts" / (original + "-database-proof-preflight.json")
         C.require(C.digest_file(target) == UNSUBMITTED_RESERVATION_HASH

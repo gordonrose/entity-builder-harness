@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -107,7 +107,7 @@ def prerequisites(route, context, args, provider):
     if args.workload == "administration":
         selected = SimpleNamespace(**{**vars(args), "workload": "verifier", "operation": "read", "phase": "operation"})
         checked = route.BINDING.inspect(provider, "verifier", context["parameters"], context["resources"], context.get("binding_snapshot"))
-        read = steps.observe_packet(route, {**context, "checked": checked}, selected, provider)
+        read = steps.observe_packet(route, {**context, "checked": checked}, selected, provider, historical=True)
         if read is None: raise steps.PrerequisiteMissing("initial-recovery-original-read")
         require(timestamp(read["receipt"]["task"]["created_at"]) >= timestamp(after)
                 and read["receipt"]["result"].get("record_digest") == args.expected_digest, "recovery-step-original-read-invalid")

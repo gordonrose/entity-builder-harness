@@ -163,6 +163,7 @@ def owned_stack(provider, binding, parameters, cache):
 
 
 def prepare(args, provider):
+    provider = BINDING.observation_scope(provider)
     proof_stage = STEPS.stage(args)
     receipt = C.ALIGN.read_receipt(args.receipt.absolute())
     C.ALIGN.source_preflight(receipt)
@@ -265,18 +266,19 @@ def execute(args, provider):
                 and C.DEPLOY.fingerprint(GRAPH.contract(args.workload, C.GATE, negative=negative)) == safe["graph_sha256"]
                 and C.digest_file(C.ROOT / C.ALIGN.SCOPE) == context["binding"]["configuration_contract_sha256"], "task-source-changed-before-submission")
     def guard():
+        observed = BINDING.observation_scope(provider)
         source_guard()
         C.ALIGN.source_preflight(context["custody"])
-        alignment, parameters, _ = C.ALIGN.inspect(provider, context["custody"], C.now())
+        alignment, parameters, _ = C.ALIGN.inspect(observed, context["custody"], C.now())
         require({**C.binding_for(context["custody"], alignment), "proof_label": args.proof_label} == context["binding"], "task-dependency-changed-before-submission")
-        selected, resources = owned_stack(provider, context["binding"], parameters, context["cache"])
+        selected, resources = owned_stack(observed, context["binding"], parameters, context["cache"])
         binding_snapshot = BINDING.DEPLOY.source()[1]
         require(selected == context["parameters"] and resources == context["resources"]
-                and BINDING.inspect(provider, args.workload, selected, resources, binding_snapshot) == context["checked"], "task-target-changed-before-submission")
-        require({name: BINDING.inspect(provider, name, selected, resources, binding_snapshot) for name in context["callees"]} == context["callees"], "task-callee-changed-before-submission")
+                and BINDING.inspect(observed, args.workload, selected, resources, binding_snapshot) == context["checked"], "task-target-changed-before-submission")
+        require({name: BINDING.inspect(observed, name, selected, resources, binding_snapshot) for name in context["callees"]} == context["callees"], "task-callee-changed-before-submission")
         expected = BINDING.expected_task(args.workload, selected, resources, binding_snapshot)
-        require(operator(provider, request["definition"], [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])]) == safe["operator_sha256"], "task-operator-changed-before-submission")
-        require(STEPS.prerequisites(deps, {**context, "binding_snapshot": binding_snapshot}, args, provider) == context["prerequisites"], "task-prerequisites-changed-before-submission")
+        require(operator(observed, request["definition"], [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])]) == safe["operator_sha256"], "task-operator-changed-before-submission")
+        require(STEPS.prerequisites(deps, {**context, "binding_snapshot": binding_snapshot}, args, observed) == context["prerequisites"], "task-prerequisites-changed-before-submission")
         book.validate("change-set" if args.phase == "preflight" or negative else "execution-preflight", 1)
         source_guard()
     if previous is None:
