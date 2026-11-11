@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -222,6 +222,7 @@ def run(args, provider):
         retained_prefix = str((context["cache"] / (prefix(args) + "-realization")).relative_to(C.ROOT)) + "/controlled-execution-"
         require(isinstance(reference, str) and reference.startswith(retained_prefix) and re.fullmatch(r"[a-f0-9]{32}\.json", reference[len(retained_prefix):])
                 and C.digest_file(C.ROOT / reference) == previous["realization_evidence_sha256"], "replacement-retained-gate-not-confirmed")
+    C.CONTROL_COMPLETION.retain(C, target, phase, TASK.GRAPH.replacement(C.GATE, C.CONTRACT, proof_stage), context["artifact"])
     provider.effect = "original-server-replacement-observed"
     return {"verdict": "completed", "plan_sha256": packet["plan_sha256"], "receipt": str(target.relative_to(C.ROOT)),
             "post_replacement_record_readback": False, "effect": provider.effect}

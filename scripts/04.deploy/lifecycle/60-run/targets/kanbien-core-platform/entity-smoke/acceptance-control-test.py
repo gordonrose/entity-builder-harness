@@ -357,6 +357,14 @@ def control_custody_protocols():
                     "realization_evidence": str(path.relative_to(root)), "realization_evidence_sha256": C.digest_file(path)}
                 if name == "initial-stop":
                     receipt.update(plan_sha256=packet["plan_sha256"], root={**reservation, "key": "root", "request": {"packet": packet}})
+                if name in C.CONTROL_COMPLETION.NAMES:
+                    source = cache / ("failure-receipts/stopped.json" if name == "initial-stop" else ("replacement" if name == "server-replacement" else name) + "-receipt.json")
+                    C.RESOURCE.write_exclusive(source, receipt)
+                    C.CONTROL_COMPLETION.retain(C, source, name, graph, plan["controller_sha256"])
+                    companion = C.CONTROL_COMPLETION.companion(source)
+                    before = companion.read_bytes(); companion.write_bytes(b'{}\n')
+                    try: fails(lambda: M.capture(SimpleNamespace(C=C), A, name, receipt, graph, binding, cache, plan["controller_sha256"]), C.InfrastructureFailure, "control-completion-changed")
+                    finally: companion.write_bytes(before)
                 captured = M.capture(SimpleNamespace(C=C), A, name, receipt, graph, binding, cache, plan["controller_sha256"])
                 assert captured == value
                 malformed = copy.deepcopy(value); malformed["plan"]["native"] = "private-control-plan-canary"

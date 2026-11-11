@@ -24,6 +24,7 @@ TOP = ("initial-restart-plan.json", "initial-restart-receipt.json", "credential-
 GATE_DIRECTORIES = ("task-realization", "failure-realization", "initial-restart-realization", "replacement-realization", "credential-replacement-realization")
 SCHEMA = "deploy/entity-smoke-credential-history/v1"
 TOP += ("source-transition/receipt.json",)
+TOP += ("initial-restart-receipt.completion.json", "credential-replacement-receipt.completion.json", "replacement-receipt.completion.json")
 
 
 class HistoryFailure(Exception):

@@ -399,7 +399,9 @@ def run():
     fails(lambda: denied("ecs", "run-task", cluster=R.C.RESOURCE.CLUSTER), "restart-provider-operation-prohibited")
 
     with scenario() as case:
-        case.transport.task_rows[FD.SERVER]["taskDefinitionArn"] = case.transport.task_rows[FD.SERVER]["taskDefinitionArn"].rsplit(":", 1)[0] + ":2"
+        # A completed stop is closed custody, not an indefinitely retained ECS
+        # task. Planning still checks the current service and database.
+        case.transport.task_rows.pop(FD.SERVER)
         provider = case.restart_capability()
         old_parse, old_factory = R.parse, R.Provider
         R.parse, R.Provider = lambda: case.restart_args, lambda: provider
@@ -407,9 +409,8 @@ def run():
         try:
             with redirect_stdout(output): status = R.main()
         finally: R.parse, R.Provider = old_parse, old_factory
-        rejected = json.loads(output.getvalue())
-        assert status == 1 and rejected["condition"] == "failure-original-task-identity-changed" and rejected["context"]["item"] == "server"
-        assert rejected["effect"] == "not-started" and CANARY not in output.getvalue()
+        observed = json.loads(output.getvalue())
+        assert status == 0 and observed["verdict"] == "planned" and CANARY not in output.getvalue()
         assert not any(op == "update-service" and args["desiredCount"] == 1 for _, op, args in case.transport.observed)
 
     with scenario() as case:
@@ -424,7 +425,7 @@ def run():
             context = old_prepare(*arguments)
             # Drift after planning must be caught by the same full live guard,
             # now before it consumes a durable launch reservation.
-            case.transport.task_rows[FD.SERVER]["taskDefinitionArn"] = case.transport.task_rows[FD.SERVER]["taskDefinitionArn"].rsplit(":", 1)[0] + ":2"
+            R.C.CONTROL_COMPLETION.companion(case.cache / "failure-receipts/stopped.json").write_bytes(b'{}\n')
             return context
         R.TASK.prepare = changed_original_before_guard
         def main_provider():
@@ -439,8 +440,8 @@ def run():
             R.TASK.parse, R.TASK.Provider = old_parse, old_factory
             R.TASK.prepare = old_prepare
         rejected = json.loads(output.getvalue())
-        assert status == 1 and rejected["condition"] == "failure-original-task-identity-changed"
-        assert rejected["context"]["field"] == "prerequisite" and rejected["context"]["item"] == "server" and rejected["effect"] == "not-started"
+        assert status == 1 and rejected["condition"] == "control-completion-changed"
+        assert rejected["context"]["proof_stage"] == "initial-recovery" and rejected["effect"] == "not-started"
         assert CANARY not in output.getvalue() and len(case.transport.jobs.remote) == before
         assert {path.name: path.read_bytes() for path in (case.cache / "task-attempts").glob("*.json")} == attempts_before
 

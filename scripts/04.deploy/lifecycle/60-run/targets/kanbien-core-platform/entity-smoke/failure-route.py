@@ -254,6 +254,7 @@ def run(args, provider):
         C.RESOURCE.CONTROL.no_symlinks(retained_path)
         if retained_path.exists():
             F.validate_receipt(C, C.read_json(retained_path), root, prepared["cache"])
+            C.CONTROL_COMPLETION.read(C, retained_path, "initial-stop", graph(), artifact())
             return {"verdict": "completed", "historical": True, "current_scope_stopped": not current["active_tasks"] and (current["service"] is None or all(current["service"][key] == 0 for key in ("desired_count", "running_count", "pending_count"))),
                     "receipt": str(retained_path.relative_to(C.ROOT)), "plan_sha256": packet["plan_sha256"], "effect": "historical-operation-observed-no-new-stop"}
         provider.enable_stop(root, store, guard)
@@ -269,6 +270,7 @@ def run(args, provider):
                     "realization_evidence": str(evidence.relative_to(C.ROOT)), "realization_evidence_sha256": C.digest_file(evidence), "facts": result["facts"]}
         F.validate_receipt(C, retained, root, prepared["cache"])
         if not C.RESOURCE.write_exclusive(retained_path, retained): require(C.read_json(retained_path) == retained, "failure-receipt-conflict")
+        C.CONTROL_COMPLETION.retain(C, retained_path, "initial-stop", graph(), artifact())
         provider.effect = "owned-workloads-stopped-observed"
         return {"verdict": "completed", "historical": False, "plan_sha256": packet["plan_sha256"], "receipt": str(retained_path.relative_to(C.ROOT)),
                 "realization_evidence": str(evidence.relative_to(C.ROOT)), "independent_data_readback": False, "migration_history_readback": False, "effect": provider.effect}

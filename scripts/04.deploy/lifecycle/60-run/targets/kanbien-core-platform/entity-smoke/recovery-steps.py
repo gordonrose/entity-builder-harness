@@ -72,15 +72,18 @@ def restart(route, context, args, provider, *, require_current=True):
     reservation = C.RESOURCE.ResourceStore(context["cache"] / "attempts").read("start-runtime", request)
     require(reservation is not None, "recovery-step-restart-journal-required")
     STATE.validate_restart(C, value, packet, reservation, context["cache"])
+    owner = C.module("entity_smoke_restart_completion_graph", C.DIRECTORY / "restart-route.py")
+    require(C.CONTROL_COMPLETION.read(C, target, "initial-restart", owner.graph(), STATE.STOP.artifact(C)) == value,
+            "recovery-restart-receipt-changed")
     timestamp = runner.EVIDENCE.timestamp
     require(timestamp(reservation["reserved_at"]) >= timestamp(state["stop"]["facts"]["observed_at"]), "recovery-step-start-predates-stop")
-    server = C.RESOURCE.task(provider, value["server"]["task"], request["definition"], request["binding"]["image_digest"])
     if require_current:
+        server = C.RESOURCE.task(provider, value["server"]["task"], request["definition"], request["binding"]["image_digest"])
         service = C.RESOURCE.service(provider, request["definition"], 1)
         require(server.get("lastStatus") == "RUNNING" and server.get("healthStatus") == "HEALTHY" and service.get("runningCount") == 1 and service.get("pendingCount") == 0
                 and C.RESOURCE.running_service_tasks(provider) == [server["taskArn"]], "recovery-step-runtime-not-confirmed")
-    require(timestamp(server.get("createdAt")) == timestamp(value["server"]["created_at"])
-            and timestamp(server.get("startedAt")) == timestamp(value["server"]["started_at"]), "recovery-step-runtime-time-changed")
+        require(timestamp(server.get("createdAt")) == timestamp(value["server"]["created_at"])
+                and timestamp(server.get("startedAt")) == timestamp(value["server"]["started_at"]), "recovery-step-runtime-time-changed")
     after = max(reservation["reserved_at"], value["server"]["started_at"], key=timestamp)
     return {"state": state, "restart": value, "reservation": reservation, "required_after": after,
             "packets": {"initial-stop": state["stop"], "initial-restart": value}}

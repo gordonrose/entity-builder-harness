@@ -131,7 +131,9 @@ def replacement(route, context, args, provider, prior):
     reservation = store.read("credential-replacement", request)
     require(reservation is not None, "credential-replacement-journal-required")
     require(C.RESOURCE.timestamp(reservation["reserved_at"]) >= C.RESOURCE.timestamp(prior["required_after"]), "credential-replacement-predates-restore")
-    actual = C.RESOURCE.replace_runtime(provider, store, request["binding"], request["definition"], request["original_task"], credential_recovery=True)
+    require(C.CONTROL_COMPLETION.read(C, path, "credential-replacement", route.GRAPH.replacement(C.GATE, C.CONTRACT, "credential-recovery"), context["artifact"]) == value,
+            "credential-replacement-receipt-changed")
+    actual = C.CONTROL_COMPLETION.successor(C, provider, value)
     require(actual.get("status") == "completed" and actual == value["result"], "credential-replacement-not-confirmed")
     reference = value["realization_evidence"]
     root = str((context["cache"] / "credential-replacement-realization").relative_to(C.ROOT)) + "/controlled-execution-"

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 9
+version: 10
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-11"
@@ -232,7 +232,7 @@ source, package, normal business-operation/recovery gates, concrete approval,
 ownership and safe evidence rules remain binding. This rule permits neither
 bootstrap/migration writes nor accepted-release promotion.
 
-### Completed predecessor custody and bounded collision renewal
+### Completed predecessor custody and bounded readback renewal
 
 Completed predecessor tasks may be consumed as historical evidence through
 their original reservation, collected result, completion sidecar and unchanged
@@ -242,6 +242,18 @@ mandatory. Within one preparation or one pre-submission guard, identical task
 definition, IAM role/policy and security-group reads may share an observation.
 Each subsequent phase starts a new observation scope. Never cache task/service
 state, logs, admission, policy simulation or mutation calls across this boundary.
+
+Completed replacement, stop and restart controls likewise retain an exclusive
+completion companion linking their canonical receipt, original plan and actual
+seven-gate evidence. Historical readers validate those unchanged bytes, graph,
+controller, reservation and recorded facts without depending on ECS retaining
+stopped predecessor records. They must still observe the current successor,
+service and dependency state wherever the next operation requires them. A
+companion is written only by the successful control producer, never synthesized
+by a historical reader. The exact pre-companion server-replacement receipt
+`sha256:fefc8e5561299b9e5cb63e41f820fae3a250f1bf3452bbf01f24eb72580b83e6`
+may use its pinned original controller and actual seven-gate evidence; this
+does not admit any other missing companion or restamp historical observations.
 
 For the current entity-smoke proof only, the controller may renew the successful
 collision preflight `es-d8eb01dcede146719f91b8dd16278882` once after its window
@@ -254,6 +266,17 @@ terminal evidence and unchanged900-second operation admission still apply.
 An uncertain or failed probe cannot be reset by this rule. Completed probes or
 operations are never relaunched, and no business-data operation is authorised
 by the expired receipt itself.
+
+The same bounded renewal applies to the completed post-replacement ready probe
+`es-9f8bba57dbba435881194887c95894aa`. Require its exact step/completion hashes,
+original reservation, and the retained `resource-observation-not-confirmed`
+not-started response from the unsubmitted server-replacement read. That response
+followed expiry of the already-stopped predecessor's ECS record. Require no
+read-operation reservation before the renewal's first reservation. Derive one
+fixed recovery label and separate path; preserve the original probe and its
+one-time token-retrieval evidence. The renewal is a new read-only observation,
+not another request under that consumed recovery intent. All preceding bounds,
+fresh gates, actual terminal proof and 900-second admission remain mandatory.
 
 ### Stopped-service activation refresh
 

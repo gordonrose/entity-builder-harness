@@ -112,7 +112,7 @@ def replacement(route, context, args, base, digest):
             and plan.get("target") == C.RESOURCE.CLUSTER and plan.get("scope") == "entity-smoke" and type(plan.get("maximum_task_stops")) is int and plan["maximum_task_stops"] == 1
             and all(plan.get(key) is False for key in ("database_mutation", "task_launch", "automatic_retry", "post_replacement_record_readback"))
             and plan.get("binding") == request["binding"] and plan.get("request_sha256") == C.DEPLOY.fingerprint(request)
-            and plan.get("controller_sha256") == context["artifact"]
+            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("server-replacement", C.CONTROL_COMPLETION.document(receipt), context["artifact"])
             and plan.get("configuration_sha256") == C.DEPLOY.fingerprint({"parameters": context["parameters"], "resources": context["resources"], "server": context["callees"]["server"]}), "feature-replacement-binding-mismatch")
     active = context["cache"] / "replacement-plan.json"
     approved = context["cache"] / "replacement-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")
@@ -128,7 +128,9 @@ def replacement(route, context, args, base, digest):
             and route.RUNNER.EVIDENCE.timestamp(reservation["reserved_at"]) >= route.RUNNER.EVIDENCE.timestamp(baseline_read["receipt"]["task"]["stopped_at"]), "feature-replacement-order-invalid")
     # The checked existing journal makes this observation-only: the helper must
     # not be allowed to reserve a fresh stop from a supplied receipt alone.
-    current = C.RESOURCE.replace_runtime(provider, store, request["binding"], request["definition"], request["original_task"])
+    require(C.CONTROL_COMPLETION.read(C, path, "server-replacement", route.GRAPH.replacement(C.GATE, C.CONTRACT, "baseline"), context["artifact"]) == receipt,
+            "feature-replacement-receipt-changed")
+    current = C.CONTROL_COMPLETION.successor(C, provider, receipt)
     require(current.get("status") == "completed" and current == receipt["result"], "feature-replacement-not-confirmed")
     reference = receipt["realization_evidence"]
     prefix = str((context["cache"] / "replacement-realization").relative_to(C.ROOT)) + "/controlled-execution-"

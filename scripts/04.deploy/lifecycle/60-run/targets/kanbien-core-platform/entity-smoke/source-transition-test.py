@@ -218,6 +218,56 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-collision-renewal-") as te
     assert store.read("renewed", renewed_request) == renewed
     assert all(path.read_bytes() == data for path, data in original_bytes.items())
 
+# The replacement read has its own closed selection and original ready proof.
+with tempfile.TemporaryDirectory(prefix="entity-smoke-replacement-renewal-") as temporary, ExitStack() as patches:
+    root = Path(temporary); cache = root / "proof"
+    patches.enter_context(patch.object(C, "ROOT", root))
+    task, reservation, result = EF.fixture("verifier", "ready")
+    request = reservation["request"]
+    request["deadline_seconds"] = 90
+    request["environment"]["ENTITY_SMOKE_EXPECTED_SOURCE"] = request["source_revision"]
+    reservation["request_sha256"] = M.hashlib.sha256(EF.EVIDENCE.CONTROL.canonical(request)).hexdigest()
+    task["overrides"] = EF.EVIDENCE.CONTROL.overrides(request)
+    binding = {key: request[key] for key in ("source_revision", "image_digest", "configuration_contract_sha256", "permission_contract_sha256", "dependency_incarnation_sha256")}
+    binding["proof_label"] = M.LABEL
+    packet = {"schema": "deploy/entity-smoke-task-step/v1", "binding": binding, "plan_sha256": "sha256:" + "8" * 64,
+              "reservation": reservation, "receipt": EF.collect(task, reservation, result)}
+    target = cache / "task-steps/verifier-read-server-replacement-preflight.json"
+    C.RESOURCE.write_exclusive(target, packet)
+    gate = root / "controlled-gate.json"; C.RESOURCE.write_exclusive(gate, {"controlled_original_gate": True})
+    completion = {"step_sha256": C.digest_file(target), "plan_sha256": packet["plan_sha256"],
+                  "realization_evidence": "controlled-gate.json", "realization_evidence_sha256": C.digest_file(gate)}
+    sidecar = target.with_name(target.stem + ".completion.json"); C.RESOURCE.write_exclusive(sidecar, completion)
+    failure_path = root / "not-started.json"
+    failure = {"effect": "not-started", "condition": "resource-observation-not-confirmed",
+               "context": {"workload": "verifier", "operation": "read", "phase": "operation", "proof_stage": "server-replacement"}}
+    C.RESOURCE.write_exclusive(failure_path, failure)
+    for name, value in {"REPLACEMENT_PROBE": reservation["operation_id"], "REPLACEMENT_PACKET": C.digest_file(target),
+                        "REPLACEMENT_COMPLETION": C.digest_file(sidecar), "REPLACEMENT_FAILURE": "not-started.json",
+                        "REPLACEMENT_FAILURE_HASH": C.digest_file(failure_path),
+                        "CONTROLLER_REPAIR_PINS": {M.document(packet): (M.document(completion), "f" * 64)}}.items():
+        patches.enter_context(patch.object(M, name, value))
+    store = C.RESOURCE.CONTROL.AttemptStore(cache / "task-attempts")
+    original_path = store.path_for("original", request); C.RESOURCE.write_exclusive(original_path, reservation)
+    selected_args = SimpleNamespace(proof_label=M.LABEL, workload="verifier", operation="read", proof_stage="server-replacement", phase="preflight")
+    context = {"cache": cache, "binding": binding}; original_label = request["proof_label"]
+    selected = M.recovery_preflight(C, context, selected_args, original_label)
+    assert selected != original_label and selected == M.recovery_preflight(C, context, selected_args, original_label)
+    assert M.readback_recovery(SimpleNamespace(**{**vars(selected_args), "proof_stage": "initial-recovery"})) is None
+    for changed in (target, sidecar, failure_path):
+        saved = changed.read_bytes(); changed.write_bytes(b'{}\n')
+        try: fails(lambda: M.recovery_preflight(C, context, selected_args, original_label), "task-replacement-read-recovery-evidence-changed")
+        finally: changed.write_bytes(saved)
+    with patch.object(C, "now", return_value=packet["receipt"]["task"]["stopped_at"]):
+        fails(lambda: M.recovery_preflight(C, context, selected_args, original_label), "task-replacement-read-recovery-evidence-invalid")
+    failure_path.write_text(C.json.dumps({**failure, "effect": "unknown-reconcile-only"}))
+    with patch.object(M, "REPLACEMENT_FAILURE_HASH", C.digest_file(failure_path)):
+        fails(lambda: M.recovery_preflight(C, context, selected_args, original_label), "task-replacement-read-recovery-evidence-invalid")
+    failure_path.write_text(C.json.dumps(failure, sort_keys=True, separators=(",", ":")) + "\n")
+    key = "task-" + M.hashlib.sha256((M.LABEL + ":verifier:read:operation:server-replacement").encode()).hexdigest()[:48]
+    C.RESOURCE.write_exclusive(cache / "task-attempts" / (key + ".json"), {"existing_operation": True})
+    fails(lambda: M.recovery_preflight(C, context, selected_args, original_label), "task-replacement-read-recovery-operation-already-reserved")
+
 # Run the complete public coordinator with retained single-submission intent.
 # Source/identity/alignment are controlled prerequisites; real file retention,
 # change review and generic gate validation remain exercised.

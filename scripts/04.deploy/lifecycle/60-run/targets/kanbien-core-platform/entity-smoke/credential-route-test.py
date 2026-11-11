@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -247,6 +247,9 @@ with scenario() as case:
     fails(lambda: RP.run(case.replacement_args, case.replacement_provider()), "resource-submission-uncertain-reconcile-only")
     replaced = RP.run(case.replacement_args, case.replacement_provider())
     assert replaced["verdict"] == "completed"
+    # Both the closed restart and replacement must survive ECS expiry of the
+    # now-stopped restart server, while checking the current successor live.
+    case.transport.task_rows.pop(I.RECOVERED)
     copied_read = selected(case, "verifier", "read")
     fails(lambda: task(case, "verifier", "read"), "task-preflight-receipt-required")
     assert not T.STEPS.path({"cache": case.cache}, copied_read).exists(), "pre-restoration readiness is not fresh recovered readiness"

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -124,13 +124,18 @@ def capture(route, A, name, receipt, graph, binding, cache, controller):
     else:
         reservation, packet = receipt["result"]["reservation"], receipt["packet"]
     plan = packet["plan"]
-    require(plan.get("controller_sha256") == controller, "acceptance-control-current-source-mismatch", name)
+    expected_controller = route.C.CONTROL_COMPLETION.controller(name, A.document_digest(receipt), controller)
+    require(plan.get("controller_sha256") == expected_controller, "acceptance-control-current-source-mismatch", name)
     reference = receipt.get("realization_evidence")
     prefix = str((cache / (SELECTIONS[name][1] + "-realization")).relative_to(route.C.ROOT)) + "/controlled-execution-"
     require(isinstance(reference, str) and reference.startswith(prefix) and re.fullmatch(r"[a-f0-9]{32}\.json", reference[len(prefix):]), "acceptance-control-gate-reference-invalid", name)
     path = route.C.ROOT / reference
     route.C.RESOURCE.CONTROL.no_symlinks(path)
     require(route.C.digest_file(path) == receipt["realization_evidence_sha256"], "acceptance-control-original-gate-changed", name)
+    if name in route.C.CONTROL_COMPLETION.NAMES:
+        source = cache / ("failure-receipts/stopped.json" if name == "initial-stop" else ("replacement" if name == "server-replacement" else name) + "-receipt.json")
+        require(route.C.CONTROL_COMPLETION.read(route.C, source, name, graph, controller) == receipt,
+                "acceptance-control-completion-changed", name)
     request_digest = reservation["request_sha256"]
     if isinstance(request_digest, str) and re.fullmatch(r"[a-f0-9]{64}", request_digest): request_digest = "sha256:" + request_digest
     value = {"schema": SCHEMA, "plan": plan, "graph": graph, "gate": route.C.read_json(path), "reservation": {
@@ -186,6 +191,7 @@ def validate_connections(A, value):
         require(control["operation_id"] not in attempts, "acceptance-proof-attempt-reused", name)
         attempts.add(control["operation_id"])
         expected = A.digest(basis) if name in {"initial-stop", "initial-restart"} else value["controller_sha256"]
+        expected = A.C.CONTROL_COMPLETION.controller(name, control["source_receipt_document_sha256"], expected)
         require(plan(name)["controller_sha256"] == expected and plan(name)["package_custody_reference"] == value["package"]["receipt_reference"], "acceptance-control-source-attribution-mismatch", name)
     prefix = ("bootstrap", "migration", "grant-runtime", "baseline-permissions", "original-record", "lifecycle", "collision", "baseline-read")
     previous = None

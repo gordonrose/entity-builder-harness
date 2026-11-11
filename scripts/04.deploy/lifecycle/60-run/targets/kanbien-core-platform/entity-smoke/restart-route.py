@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -154,6 +154,7 @@ def run(args, provider):
         if target.exists():
             require(previous is not None, "restart-original-reservation-required")
             STATE.validate_restart(C, C.read_json(target), packet, previous, state["cache"])
+            C.CONTROL_COMPLETION.read(C, target, "initial-restart", graph(), STATE.STOP.artifact(C))
             return {"verdict": "completed", "historical": True, "receipt": str(target.relative_to(C.ROOT)), "effect": "historical-operation-observed-no-new-start"}
         def guard():
             current = prepare(args, provider)
@@ -184,6 +185,7 @@ def run(args, provider):
                    "independent_data_readback": False, "migration_history_readback": False}
         STATE.validate_restart(C, receipt, packet, result["reservation"], state["cache"])
         if not C.RESOURCE.write_exclusive(target, receipt): require(C.read_json(target) == receipt, "restart-receipt-conflict")
+        C.CONTROL_COMPLETION.retain(C, target, "initial-restart", graph(), STATE.STOP.artifact(C))
         provider.effect = "initial-runtime-restart-observed"
         return {"verdict": "completed", "historical": False, "receipt": str(target.relative_to(C.ROOT)), "independent_data_readback": False, "migration_history_readback": False, "effect": provider.effect}
 

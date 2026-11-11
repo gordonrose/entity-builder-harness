@@ -49,9 +49,12 @@ def stopped(route, args, provider, custody):
     C.RESOURCE.CONTROL.no_symlinks(target)
     require(target.is_file(), "recovery-stop-receipt-required")
     receipt = STOP.F.validate_receipt(C, C.read_json(target), root, cache)
+    require(C.CONTROL_COMPLETION.read(C, target, "initial-stop", STOP.graph(), STOP.artifact(C)) == receipt,
+            "recovery-stop-receipt-changed")
     current = STOP.B.inspect(C, STOP.RESTORE, provider, custody, args.proof_label, cache)
     STOP.F.verify_scope_bindings(C, packet["intent"], current)
-    require(STOP.F.terminal_tasks(C, provider, packet["intent"]) == receipt["facts"]["terminal_tasks"], "recovery-original-stop-not-terminal")
+    # Terminal task facts belong to the completed stop, whose receipt/gates are
+    # closed above. Current service/database bindings are still read below.
     require(current["service"] is not None, "recovery-feature-service-required")
     require(current["database"].get("state") == "same-incarnation", "recovery-source-database-incarnation-not-confirmed")
     return {"cache": cache, "root": root, "stop": receipt, "scope": current, "policy": policy}

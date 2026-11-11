@@ -37,6 +37,11 @@ TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", 
 # Exact successful grant/permissions custody before controller-only repairs.
 # These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "ec4a2353fd182ffa6ea8379e09af5de537da99b12023fec6dc2caca477faf873": ("0b1d384938cb232bb25e2bc1ac2eeee783f0eac08f690a994c016dfa85ad8ad7", "8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"),
+    "87662ce19ee938ed333b87f93bdbe9ae3e8945c5c5f9cbc3f731dffb4d1512b2": ("33b827867da2c170a4b0e1099ee7186ba790f625202fba2cf0190ef9267ed0f6", "8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"),
+    "24e4623c020bedf999b968d289a12232a1693b721e71f68089a68da48243fccf": ("8785f7165f2b205509b1fd7fcd11d9245fde37c7bc6d3a1907221769fae95230", "8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"),
+    "3803b6162189d6b3e168833c9c6579700eb8ce4a899a5fc4218c811a2a125cb3": ("cc124a43eea82f9c3b9ab2529dab923639cbd4eb619b76d3291f98747470a91e", "8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"),
+    "18edb5427b0e6883152f4583e3b22dcc4449a5af274e721004cb20ffd7311d8e": ("606887188a43b4581696ee9924d789aa878a2e2acf9ba46e942fa24dd2a3cbd1", "8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"),
     "fccbb75f4b2a73da6ed8582efcdc049bdb3729f9d964383390b62ef7460e77ff": ("ce2a6122c75b8cbe0b5178a57f14ad081dd37b42232df7c863ee66b84e0e78be", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
     "d0bd1010709a93f6ea9140ef04a3ab072f958e54173a4f380d6414abb621bbe7": ("cf569f98859027efefc6903d526509d4f620336dd93dc77b36d29976a21a7674", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
     "a16c5478379bd82a66f081d48a3a690850ab1fe5ce1124142ebbbf640b285c46": ("a54d8e4f58e0d6179bc8128a511b551e3c50652e1aacd1a5af2b98c80a4bfd91", "3e8b6d53bd794833c308e6ebb318def7442d56017932900f78304ce4539ca9a9"),
@@ -56,6 +61,11 @@ COLLISION_PACKET = "sha256:725c8d91dbdeb03ba2af0d7d6986cd99bc5a03c67160830e853ed
 COLLISION_COMPLETION = "sha256:6bdafce7582bb9dc7de6c6c40cfc163a3419e17cb7572b2501dfeb345a8eb45b"
 COLLISION_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-fbb4b5379f72404498c8b52029deed90.json"
 COLLISION_FAILURE_HASH = "sha256:fab39feb1d9a14f8cc3512a6b40fca4173a5d5372071e07c52574c9601ac60f4"
+REPLACEMENT_PROBE = "es-9f8bba57dbba435881194887c95894aa"
+REPLACEMENT_PACKET = "sha256:18edb5427b0e6883152f4583e3b22dcc4449a5af274e721004cb20ffd7311d8e"
+REPLACEMENT_COMPLETION = "sha256:606887188a43b4581696ee9924d789aa878a2e2acf9ba46e942fa24dd2a3cbd1"
+REPLACEMENT_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-48877f792d464fedbca502de7a93a70a.json"
+REPLACEMENT_FAILURE_HASH = "sha256:093022ee1b8b513b9f9517ad4e30d2d30a0bdb5770f59be97bc28abc29d33348"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -146,13 +156,26 @@ def collision_recovery(args):
     return (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "database-proof", "collision", "baseline")
 
 
+def readback_recovery(args):
+    if collision_recovery(args):
+        return {"probe": COLLISION_PROBE, "packet": COLLISION_PACKET, "completion": COLLISION_COMPLETION,
+                "failure": COLLISION_FAILURE, "failure_hash": COLLISION_FAILURE_HASH,
+                "path": "task-steps/database-proof-collision-preflight.json", "condition": "task-log-observation-incomplete", "prefix": "task-collision-recovery"}
+    if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "verifier", "read", "server-replacement"):
+        return {"probe": REPLACEMENT_PROBE, "packet": REPLACEMENT_PACKET, "completion": REPLACEMENT_COMPLETION,
+                "failure": REPLACEMENT_FAILURE, "failure_hash": REPLACEMENT_FAILURE_HASH,
+                "path": "task-steps/verifier-read-server-replacement-preflight.json", "condition": "resource-observation-not-confirmed", "prefix": "task-replacement-read-recovery"}
+    return None
+
+
 def preflight_step_suffix(args):
-    return "-readback-recovery-1" if collision_recovery(args) and args.phase == "preflight" else ""
+    return "-readback-recovery-1" if readback_recovery(args) is not None and args.phase == "preflight" else ""
 
 
 def replacement_label(context, args, original):
-    if collision_recovery(args):
-        return "entity-smoke-" + hashlib.sha256((original + ":" + COLLISION_PROBE + ":readback-recovery-1").encode()).hexdigest()[:24]
+    recovery = readback_recovery(args)
+    if recovery is not None:
+        return "entity-smoke-" + hashlib.sha256((original + ":" + recovery["probe"] + ":readback-recovery-1").encode()).hexdigest()[:24]
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "database-proof", "permissions", "baseline"):
         return "entity-smoke-" + hashlib.sha256((original + ":" + UNSUBMITTED_PREFLIGHT + ":known-not-submitted-recovery-1").encode()).hexdigest()[:24]
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) != (LABEL, "administration", "grant-runtime", "baseline"):
@@ -163,33 +186,36 @@ def replacement_label(context, args, original):
 def recovery_preflight(C, context, args, original):
     selected = replacement_label(context, args, original)
     if selected == original: return original
-    if collision_recovery(args):
-        target = context["cache"] / "task-steps/database-proof-collision-preflight.json"
+    recovery = readback_recovery(args)
+    if recovery is not None:
+        target = context["cache"] / recovery["path"]
         sidecar = target.with_name(target.stem + ".completion.json")
-        C.require(C.digest_file(target) == COLLISION_PACKET and C.digest_file(sidecar) == COLLISION_COMPLETION
-                  and C.digest_file(C.ROOT / COLLISION_FAILURE) == COLLISION_FAILURE_HASH, "task-collision-recovery-evidence-changed")
-        packet, completion, failure = C.read_json(target), C.read_json(sidecar), C.read_json(C.ROOT / COLLISION_FAILURE)
+        C.require(C.digest_file(target) == recovery["packet"] and C.digest_file(sidecar) == recovery["completion"]
+                  and C.digest_file(C.ROOT / recovery["failure"]) == recovery["failure_hash"], recovery["prefix"] + "-evidence-changed")
+        packet, completion, failure = C.read_json(target), C.read_json(sidecar), C.read_json(C.ROOT / recovery["failure"])
         reservation, receipt = packet["reservation"], packet["receipt"]
         request = reservation["request"]
+        environment = {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": original} if args.workload == "database-proof" else {
+            "ENTITY_SMOKE_VERIFICATION_OPERATION": "ready", "ENTITY_SMOKE_PROOF_LABEL": original, "ENTITY_SMOKE_EXPECTED_SOURCE": context["binding"]["source_revision"]}
         C.RESOURCE.EVIDENCE.validate_retained(receipt, reservation)
         C.require(historical(packet, completion) and packet["binding"] == context["binding"]
-                  and completion["step_sha256"] == COLLISION_PACKET and completion["plan_sha256"] == packet["plan_sha256"]
+                  and completion["step_sha256"] == recovery["packet"] and completion["plan_sha256"] == packet["plan_sha256"]
                   and C.digest_file(C.ROOT / completion["realization_evidence"]) == completion["realization_evidence_sha256"]
-                  and reservation["operation_id"] == COLLISION_PROBE and request["proof_label"] == original
-                  and request["environment"] == {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": original}
+                  and reservation["operation_id"] == recovery["probe"] and request["proof_label"] == original and request["environment"] == environment
                   and request["deadline_seconds"] == 90
-                  and failure.get("effect") == "not-started" and failure.get("condition") == "task-log-observation-incomplete"
-                  and all(failure.get("context", {}).get(key) == value for key, value in {"workload": "database-proof", "operation": "collision", "phase": "operation", "proof_stage": "baseline"}.items())
+                  and failure.get("effect") == "not-started" and failure.get("condition") == recovery["condition"]
+                  and all(failure.get("context", {}).get(key) == value for key, value in {"workload": args.workload, "operation": args.operation, "phase": "operation", "proof_stage": getattr(args, "proof_stage", "baseline")}.items())
                   and (C.RESOURCE.timestamp(C.now()) - C.RESOURCE.timestamp(receipt["task"]["stopped_at"])).total_seconds() > 900,
-                  "task-collision-recovery-evidence-invalid")
+                  recovery["prefix"] + "-evidence-invalid")
         store = C.RESOURCE.CONTROL.AttemptStore(context["cache"] / "task-attempts")
-        C.require(store.read("original-collision-preflight", request) == reservation, "task-collision-recovery-reservation-required")
+        C.require(store.read("original-readback-preflight", request) == reservation, recovery["prefix"] + "-reservation-required")
         renewed = {**request, "proof_label": selected, "environment": {**request["environment"], "ENTITY_SMOKE_PROOF_LABEL": selected}}
-        if args.phase == "preflight" and store.read("renewed-collision-preflight", renewed) is None:
-            key = "task-" + hashlib.sha256((LABEL + ":database-proof:collision:operation").encode()).hexdigest()[:48]
+        if args.phase == "preflight" and store.read("renewed-readback-preflight", renewed) is None:
+            suffix = "" if getattr(args, "proof_stage", "baseline") == "baseline" else ":" + args.proof_stage
+            key = "task-" + hashlib.sha256((LABEL + ":" + args.workload + ":" + args.operation + ":operation" + suffix).encode()).hexdigest()[:48]
             operation_path = context["cache"] / "task-attempts" / (key + ".json")
             C.RESOURCE.CONTROL.no_symlinks(operation_path)
-            C.require(not operation_path.exists(), "task-collision-recovery-operation-already-reserved")
+            C.require(not operation_path.exists(), recovery["prefix"] + "-operation-already-reserved")
         return selected
     if args.workload == "database-proof":
         target = context["cache"] / "task-attempts" / (original + "-database-proof-preflight.json")

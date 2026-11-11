@@ -47,6 +47,7 @@ RESPONSE = module("entity_smoke_public_response", ROOT / "scripts/04.deploy/shar
 GATE = module("entity_smoke_public_gate", ROOT / "scripts/04.deploy/operational-realization-gate/script.py")
 CONTRACT = ROOT / ALIGN.TARGET / "20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml"
 TRANSITION = module("entity_smoke_source_transition", DIRECTORY / "source-transition.py")
+CONTROL_COMPLETION = module("entity_smoke_control_completion", DIRECTORY / "control-completion.py")
 READS = ALIGN.READS | {("cloudformation", operation) for operation in ("describe-change-set", "get-template", "list-stack-resources", "describe-stack-events", "validate-template")} | {
     ("iam", "get-role"), ("iam", "simulate-principal-policy"), ("ecs", "describe-services"), ("ecs", "describe-tasks"),
     ("ecs", "list-tasks"), ("logs", "get-log-events"),

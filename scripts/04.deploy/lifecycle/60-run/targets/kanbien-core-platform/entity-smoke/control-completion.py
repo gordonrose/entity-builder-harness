@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.library.entity-smoke.control-completion
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-11"
+#   updated_on: "2026-11-11"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [security, sre]
+#   kind: script
+#   purpose: Close actual completed control receipts and validate historical custody separately from the current successor without requiring expired ECS predecessor records.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   effects: [read-only, writes-files]
+#   used_by:
+#   - id: deploy.command.entity-smoke.infrastructure.implementation
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py
+import hashlib
+import json
+import re
+from types import SimpleNamespace
+
+NAMES = {"server-replacement": "replacement", "credential-replacement": "credential-replacement", "initial-stop": "failure", "initial-restart": "initial-restart"}
+# Exact already-completed receipt predating companion retention. Never fabricate
+# a companion or attribute this old observation to the repaired controller.
+LEGACY = {("server-replacement", "sha256:fefc8e5561299b9e5cb63e41f820fae3a250f1bf3452bbf01f24eb72580b83e6"):
+          "sha256:8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"}
+
+
+def document(value):
+    return "sha256:" + hashlib.sha256((json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest()
+
+
+def controller(name, receipt_digest, current):
+    return LEGACY.get((name, receipt_digest), current)
+
+
+def companion(path):
+    return path.with_name(path.stem + ".completion.json")
+
+
+def checked(C, path, name, graph, current):
+    C.require(name in NAMES, "control-completion-selection-invalid")
+    value = C.read_json(path)
+    C.require(isinstance(value, dict), "control-completion-receipt-invalid")
+    digest = document(value)
+    C.require(C.digest_file(path) == digest, "control-completion-receipt-not-canonical")
+    packet = value.get("root", {}).get("request", {}).get("packet") if name == "initial-stop" else value.get("packet")
+    C.require(isinstance(packet, dict) and isinstance(packet.get("plan"), dict), "control-completion-plan-required")
+    plan = packet["plan"]
+    C.require(packet.get("plan_sha256") == C.DEPLOY.fingerprint(plan)
+              and plan.get("controller_sha256") == controller(name, digest, current)
+              and plan.get("graph_sha256") == C.DEPLOY.fingerprint(graph), "control-completion-source-or-plan-mismatch")
+    cache = path.parent.parent if name == "initial-stop" else path.parent
+    prefix = str((cache / (NAMES[name] + "-realization")).relative_to(C.ROOT)) + "/controlled-execution-"
+    reference = value.get("realization_evidence")
+    C.require(isinstance(reference, str) and reference.startswith(prefix)
+              and re.fullmatch(r"[a-f0-9]{32}\.json", reference[len(prefix):]), "control-completion-gate-reference-invalid")
+    gate_path = C.ROOT / reference
+    C.require(C.digest_file(gate_path) == value.get("realization_evidence_sha256"), "control-completion-gate-changed")
+    gate = C.read_json(gate_path)
+    C.GATE.validate_contract(graph)
+    completion = C.module("entity_smoke_closed_control_gate", C.DIRECTORY / "task-completion.py")
+    completion.validate_gate(SimpleNamespace(C=C, STEPS=SimpleNamespace(require=C.require)), graph, gate,
+                             packet["plan_sha256"], {graph["artifacts"][0]["id"]: plan["controller_sha256"]})
+    closed = {"schema": "deploy/entity-smoke-control-completion/v1", "name": name, "receipt_sha256": digest,
+              "plan_sha256": packet["plan_sha256"], "realization_evidence_sha256": value["realization_evidence_sha256"]}
+    return value, closed
+
+
+def retain(C, path, name, graph, current):
+    value, closed = checked(C, path, name, graph, current)
+    target = companion(path)
+    if not C.RESOURCE.write_exclusive(target, closed):
+        C.require(C.read_json(target) == closed, "control-completion-conflict")
+    return value
+
+
+def read(C, path, name, graph, current):
+    value, closed = checked(C, path, name, graph, current)
+    if (name, closed["receipt_sha256"]) not in LEGACY:
+        target = companion(path)
+        C.RESOURCE.CONTROL.no_symlinks(target)
+        C.require(target.is_file(), "control-completion-required")
+        C.require(C.read_json(target) == closed, "control-completion-changed")
+    return value
+
+
+def successor(C, provider, receipt):
+    """Use only after read() validates the original completed receipt/gates."""
+    request, result = receipt["packet"]["request"], receipt["result"]
+    reservation, facts = result["reservation"], result["facts"]
+    C.require(result.get("status") == "completed" and reservation.get("request") == request
+              and isinstance(facts, dict) and set(facts) == {"original_task", "successor_task", "predecessor_stopped_at", "successor_started_at"}
+              and facts["original_task"] == request["original_task"] and facts["successor_task"] != facts["original_task"], "control-completion-replacement-facts-invalid")
+    timestamp = C.RESOURCE.timestamp
+    C.require(timestamp(facts["predecessor_stopped_at"]) >= timestamp(reservation["reserved_at"]), "control-completion-predecessor-time-invalid")
+    actual = C.RESOURCE.task(provider, facts["successor_task"], request["definition"], request["binding"]["image_digest"])
+    service = C.RESOURCE.service(provider, request["definition"], 1)
+    C.require(actual.get("lastStatus") == "RUNNING" and actual.get("healthStatus") == "HEALTHY"
+              and service.get("runningCount") == 1 and service.get("pendingCount") == 0
+              and C.RESOURCE.running_service_tasks(provider) == [facts["successor_task"]]
+              and timestamp(actual.get("startedAt")) == timestamp(facts["successor_started_at"])
+              and timestamp(actual.get("startedAt")) >= timestamp(actual.get("createdAt")) >= timestamp(reservation["reserved_at"]),
+              "control-completion-current-successor-not-confirmed")
+    return result

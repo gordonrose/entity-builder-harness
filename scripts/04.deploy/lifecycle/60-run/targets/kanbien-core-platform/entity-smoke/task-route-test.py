@@ -483,6 +483,21 @@ def run():
         assert baseline_probe["plan"]["preflight_label"] != later_probe["plan"]["preflight_label"]
         staged_read.approved_plan = M.plan(staged_read, live)["plan_sha256"]
         fails(lambda: M.execute(staged_read, live), "task-preflight-receipt-required")
+        # ECS may expire the stopped predecessor. Completed custody and the
+        # current healthy successor must suffice without another stop.
+        provider.server_states.pop(F.TASK)
+        completion_path = M.C.CONTROL_COMPLETION.companion(cache / "replacement-receipt.json")
+        completion_bytes = completion_path.read_bytes()
+        completion_path.write_bytes(b'{}\n')
+        fails(lambda: M.plan(staged_read, live), "control-completion-changed")
+        completion_path.write_bytes(completion_bytes)
+        completion_path.rename(completion_path.with_suffix(".saved"))
+        try: fails(lambda: M.plan(staged_read, live), "control-completion-required")
+        finally: completion_path.with_suffix(".saved").rename(completion_path)
+        successor = provider.server_states[replacement_receipt["result"]["facts"]["successor_task"]]
+        successor["healthStatus"] = "UNHEALTHY"
+        fails(lambda: M.plan(staged_read, live), "deployment-service-not-steady")
+        successor["healthStatus"] = "HEALTHY"
         execute_feature("verifier", "read", digest="1" * 64, stage="server-replacement")
         staged_packet_path = cache / "task-steps/verifier-read-server-replacement-operation.json"
         staged_bytes = staged_packet_path.read_bytes()
@@ -494,7 +509,7 @@ def run():
         staged_packet_path.write_bytes(staged_bytes)
         gate_path = root / replacement_receipt["realization_evidence"]
         gate_bytes = gate_path.read_bytes(); gate_path.write_text('{"native":"' + CANARY + '"}')
-        fails(lambda: M.plan(staged_read, live), "feature-replacement-gate-evidence-changed")
+        fails(lambda: M.plan(staged_read, live), "control-completion-gate-changed")
         gate_path.write_bytes(gate_bytes)
         assert sum(op == "stop-task" for _, op, _ in provider.observed) == 1
         # Closed provider capability rejects substitutions before any transport, and

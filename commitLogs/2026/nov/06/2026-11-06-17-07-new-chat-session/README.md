@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T16:15:39Z
-latest_commit_sha: c36b81da6f539e5ddcfd5e9cf78073f272e0e92b
-chat_duration: 428912s (04:23:08:32)
+latest_commit_at_utc: 2026-11-11T20:10:40Z
+latest_commit_sha: 0cf52723959916f17f2bab65bee1385f85da4dc6
+chat_duration: 443013s (05:03:03:33)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -93,6 +93,37 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- Checkpoint0cf52723 passed seven selected checks and staged gates. Its one-time
+  exact-token recovery returned task72ccbcf43b73438a9bde84907c7108cf for original
+  reservation es-9f8bba57dbba435881194887c95894aa; ordinary controller collection
+  then completed the server-replacement preflight. Original-token recovery
+  intent/outcome are retained; do not repeat that HTTP request. Post-replacement
+  record-read plan6c2591f4194569c517511cf5a7d1b1d0d38e848ac400b7058f44627624b0ab88
+  failed not-started with resource-observation-not-confirmed. Actual ECS read
+  now reports original2818e5f74cf248098bd6e243b8cc090e MISSING and successor
+  f2edd7f0af2f42a5a6dd3c89c56ff66e RUNNING/HEALTHY. Replacement was already
+  conclusively completed; ECS expired its stopped predecessor history.
+  Session29597 is terminal. No AWS continuation is running.
+- Repair inventory: add closed control-completion companions using existing
+  exclusive/hash/gate primitives for replacement, stop and restart; retain the
+  exact pre-existing replacement receipt/controller as historical custody, never
+  restamp it. Producers retain companions only after actual completion; consumers
+  verify receipt/plan/seven-gate linkage and current live successor/service while
+  not querying expired predecessors. Apply the same distinction to historical
+  stop/restart consumers and credential replacement, including acceptance/history.
+  Preserve exact completed current-image task pairs under their original8db4387e
+  controller. Extend the existing evidence-bound readback-preflight renewal to
+  this unsubmitted server-replacement read: old successful preflight, exact
+  not-started failure, original journal and absent operation reservation required;
+  one deterministic new probe identity, no uncertain replay or stale admission.
+  New diagnostics belong to existing controller boundaries: missing/tampered
+  completion, mismatched plan/gate/controller, invalid historical facts, wrong
+  live successor, changed renewal evidence or an already-reserved operation.
+  Tests must remove expired tasks after real fixture completion, reject changed
+  receipts/companions/gates/successors and preserve mutation counts; fixtures are
+  not AWS proof. Update owning diagnostic reviews and selected verification once
+  source is frozen. No runtime/image/schema/baseline/staging changes are needed.
 
 - Post-replacement preflight reservation es-9f8bba57dbba435881194887c95894aa
   at2026-11-11T19:41:36.271629Z has an uncertain RunTask response. Original
@@ -1101,6 +1132,17 @@ Summary: Focused fixtures, actual retained completion validation, selected integ
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T20:10:40Z - Commit recorded
+
+Commit: `0cf52723959916f17f2bab65bee1385f85da4dc6`
+
+Message: docs(deploy): bound original-token recovery for the read-only proof
+
+Summary: Selected policy verification and staged gates passed. Controller fingerprint and immutable image are unchanged. Retain one exact-token ready response recovery within the original 45-minute window; ordinary proof collection remains mandatory.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1262,6 +1304,13 @@ ADR impact: covered by session ADR disposition
   Summary: Focused fixtures, actual retained completion validation, selected integration and staged gate passed. Resume the approved live chain at collision with one fresh evidence-bound probe; do not repeat completed create or lifecycle.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `0cf52723959916f17f2bab65bee1385f85da4dc6`
+  Time UTC: 2026-11-11T20:10:40Z
+  Message: docs(deploy): bound original-token recovery for the read-only proof
+  Summary: Selected policy verification and staged gates passed. Controller fingerprint and immutable image are unchanged. Retain one exact-token ready response recovery within the original 45-minute window; ordinary proof collection remains mandatory.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1275,9 +1324,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T16:15:39Z
-Latest commit SHA: c36b81da6f539e5ddcfd5e9cf78073f272e0e92b
-Chat duration: 428912s (04:23:08:32)
+Latest commit at UTC: 2026-11-11T20:10:40Z
+Latest commit SHA: 0cf52723959916f17f2bab65bee1385f85da4dc6
+Chat duration: 443013s (05:03:03:33)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
