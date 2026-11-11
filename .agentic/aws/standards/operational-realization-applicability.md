@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 6
+version: 7
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-11"
@@ -202,8 +202,12 @@ bootstrap/migration writes nor accepted-release promotion.
 ### Stopped-service activation refresh
 
 The standing entity-smoke completion authority permits one separately reserved
-`activation`-stage database-proof preflight and `permissions` operation while the
-owned service remains stopped. Require successful retained baseline permissions
+`activation`-stage database-proof preflight and `permissions` operation per
+verified controller checkpoint while the owned service remains stopped. Derive
+the identity and immutable output paths from its actual controller hash, never
+caller input or a time bucket. A genuine checked controller repair may need a
+new fresh observation; prior refreshes remain unchanged and are not replayed.
+Require successful retained baseline permissions
 first. This refresh uses the same qualified runtime-only program and existing
 rolled-back denial probes, not administrator grants or business-data changes.
 Keep the original baseline attempts, receipts and manifest unchanged. A separate

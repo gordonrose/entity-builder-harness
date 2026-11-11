@@ -349,11 +349,17 @@ def run():
         original_permissions = (cache / "task-steps/database-proof-permissions-operation.json").read_bytes()
         for phase in ("preflight", "operation"):
             refresh_args.phase = phase
+            refresh_args.activation_generation = "caller-cannot-select-generation"
             live = M.Provider(); live._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
             refresh_args.approved_plan = M.plan(refresh_args, live)["plan_sha256"]
+            assert refresh_args.activation_generation == "sha256:" + "f" * 64
             refreshed = M.execute(refresh_args, live)
             assert refreshed["verdict"] == "completed"
-        assert refreshed["activation_prerequisites"].endswith("activation-refresh-prerequisites.json")
+        assert refreshed["activation_prerequisites"].endswith("activation-refresh-" + "f" * 64 + "-prerequisites.json")
+        next_controller = SimpleNamespace(**{**vars(refresh_args), "activation_generation": "sha256:" + "a" * 64})
+        assert M.STEPS.key(next_controller) != M.STEPS.key(refresh_args)
+        assert M.STEPS.path({"cache": cache, "artifact": next_controller.activation_generation}, next_controller) != M.STEPS.path({"cache": cache, "artifact": refresh_args.activation_generation}, refresh_args)
+        fails(lambda: M.STEPS.path({"cache": cache, "artifact": refresh_args.activation_generation}, next_controller), "task-activation-controller-mismatch")
         assert (cache / "task-steps/activation-prerequisites.json").read_bytes() == original_manifest
         assert (cache / "task-steps/database-proof-permissions-operation.json").read_bytes() == original_permissions
         assert sum(op == "run-task" for _, op, _ in provider.observed) == before + 10

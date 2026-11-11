@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -69,6 +69,9 @@ class Provider:
                      "Tags": parameters["Tags"], "Parameters": parameters["Parameters"], "Changes": [{"ResourceChange": {"LogicalResourceId": name, "ResourceType": kind, "Action": "Add"}} for name, kind in M.RESOURCE_TYPES.items()]}
             if activate:
                 value["Changes"] = [{"ResourceChange": {"LogicalResourceId": "FeatureService", "ResourceType": "AWS::ECS::Service", "Action": "Modify", "Replacement": "False", "Scope": ["Properties"], "Details": [{"Target": {"Attribute": "Properties", "Name": "DesiredCount", "RequiresRecreation": "Never"}, "ChangeSource": "ParameterReference", "CausingEntity": "ServerDesiredCount"}]}}]
+                details = value["Changes"][0]["ResourceChange"]["Details"]
+                details[0]["Evaluation"] = "Static"
+                details.append({"Target": copy.deepcopy(details[0]["Target"]), "Evaluation": "Dynamic", "ChangeSource": "DirectModification"})
             else:
                 value["OnStackFailure"] = "DO_NOTHING"
                 assert self.stack is None
@@ -188,6 +191,26 @@ if __name__ == "__main__":
         create(count_only, owner)
         count_only.mutate_change = lambda change: change["Changes"][0]["ResourceChange"]["Details"][0]["Target"].update(Name="TaskDefinition")
         fails(lambda: M.prepare(count_only, owner, BINDING, active, activate=True), "deployment-activation-not-count-only")
+        assert sum(op == "execute-change-set" for _, op, _ in count_only.calls) == 1
+        # Real AWS emits two evaluations of the same count property, not two
+        # independent resource changes. Keep the legacy single-entry shape too.
+        count_only.mutate_change = lambda change: None
+        assert M.prepare(count_only, owner, BINDING, active, activate=True)["status"] == "reviewed"
+        def details_of(change): return change["Changes"][0]["ResourceChange"]["Details"]
+        for mutation in (
+            lambda rows: rows[1]["Target"].update(Name="TaskDefinition"),
+            lambda rows: rows[1].update(Evaluation="Static"),
+            lambda rows: rows[1].update(CausingEntity="ServerDesiredCount"),
+            lambda rows: rows[0].update(CausingEntity="OtherParameter"),
+            lambda rows: rows[0].update(Evaluation=[CANARY]),
+            lambda rows: rows.append(copy.deepcopy(rows[0])),
+            lambda rows: rows.pop(0),
+        ):
+            count_only.mutate_change = lambda change, mutation=mutation: mutation(details_of(change))
+            fails(lambda: M.prepare(count_only, owner, BINDING, active, activate=True), "deployment-activation-not-count-only")
+        count_only.mutate_change = lambda change: details_of(change).pop()
+        assert M.prepare(count_only, owner, BINDING, active, activate=True)["status"] == "reviewed"
+        assert sum(op == "create-change-set" for _, op, _ in count_only.calls) == 2
         assert sum(op == "execute-change-set" for _, op, _ in count_only.calls) == 1
         missing, owner = Provider(lost_prepare=True), store("missing-after-loss")
         fails(lambda: M.prepare(missing, owner, BINDING, PARAMETERS), "deployment-change-submission-uncertain-reconcile-only")

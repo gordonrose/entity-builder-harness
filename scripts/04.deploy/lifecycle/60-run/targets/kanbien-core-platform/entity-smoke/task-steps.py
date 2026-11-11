@@ -63,13 +63,25 @@ def stage(args):
     return value
 
 
+def activation_generation(args):
+    value = getattr(args, "activation_generation", None)
+    require(isinstance(value, str) and value.startswith("sha256:") and len(value) == 71
+            and all(character in "0123456789abcdef" for character in value[7:]), "task-activation-controller-required")
+    return value[7:]
+
+
 def key(args):
     suffix = "" if stage(args) == "baseline" else ":" + stage(args)
+    if stage(args) == "activation": suffix += ":" + activation_generation(args)
     return "task-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":" + args.phase + suffix).encode()).hexdigest()[:48]
 
 
 def path(context, args):
     suffix = "" if stage(args) == "baseline" else "-" + stage(args)
+    if stage(args) == "activation":
+        generation = activation_generation(args)
+        require(context["artifact"] == "sha256:" + generation, "task-activation-controller-mismatch")
+        suffix += "-" + generation
     return context["cache"] / "task-steps" / (args.workload + "-" + args.operation + suffix + "-" + args.phase + ".json")
 
 
@@ -176,7 +188,7 @@ def manifest(route, context, args, provider, prerequisites, packet):
     if stage(args) not in {"baseline", "activation"}: return None
     if (args.workload, args.operation, args.phase) != ("database-proof", "permissions", "operation"): return None
     value = {**prerequisites["packets"], "permissions": {"reservation": packet["reservation"], "receipt": packet["receipt"]}}
-    target = context["cache"] / "task-steps" / ("activation-refresh-prerequisites.json" if stage(args) == "activation" else "activation-prerequisites.json")
+    target = context["cache"] / "task-steps" / ("activation-refresh-" + activation_generation(args) + "-prerequisites.json" if stage(args) == "activation" else "activation-prerequisites.json")
     if not route.C.RESOURCE.write_exclusive(target, value): require(route.C.read_json(target) == value, "task-activation-manifest-conflict")
     # The existing real activation consumer remains authoritative; do not invent
     # a second interpretation or mark activation itself complete here.

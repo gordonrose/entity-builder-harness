@@ -168,6 +168,7 @@ def prepare(args, provider):
     C.ALIGN.source_preflight(receipt)
     C.local_checks()
     artifact = C.source_digest()
+    if proof_stage == "activation": args.activation_generation = artifact
     cache = C.ROOT / ".cache/entity-smoke-live" / args.proof_label
     C.filesystem_preflight(cache)
     declaration = GRAPH.contract(args.workload, C.GATE, negative=CREDENTIAL.negative(args))
@@ -184,6 +185,7 @@ def prepare(args, provider):
     roles = [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])]
     actor = operator(provider, checked["definition"], roles)
     stage_suffix = "" if proof_stage == "baseline" else ":" + proof_stage
+    if proof_stage == "activation": stage_suffix += ":" + artifact
     preflight_label = "entity-smoke-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":preflight" + stage_suffix).encode()).hexdigest()[:24]
     preflight_label = IMAGE_REPAIR.recovery_label({"cache": cache, "binding": binding, "checked": checked}, args, preflight_label)
     preflight_label = C.TRANSITION.recovery_preflight(C, {"cache": cache, "binding": binding}, args, preflight_label)

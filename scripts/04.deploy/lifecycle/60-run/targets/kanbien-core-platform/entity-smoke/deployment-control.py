@@ -143,7 +143,12 @@ def reviewed_change(provider, binding, parameters, reservation, activate, *, exe
         actual[resource["LogicalResourceId"]] = resource.get("ResourceType")
         if activate:
             details = resource.get("Details")
-            require(resource.get("Scope") == ["Properties"] and isinstance(details, list) and len(details) == 1 and isinstance(details[0], dict) and details[0].get("Target") == {"Attribute": "Properties", "Name": "DesiredCount", "RequiresRecreation": "Never"} and details[0].get("ChangeSource") == "ParameterReference" and details[0].get("CausingEntity") == "ServerDesiredCount", "deployment-activation-not-count-only")
+            target = {"Attribute": "Properties", "Name": "DesiredCount", "RequiresRecreation": "Never"}
+            require(resource.get("Scope") == ["Properties"] and isinstance(details, list) and len(details) in {1, 2}
+                    and all(isinstance(row, dict) and row.get("Target") == target for row in details), "deployment-activation-not-count-only")
+            parameter = [row for row in details if row.get("ChangeSource") == "ParameterReference" and row.get("CausingEntity") == "ServerDesiredCount" and row.get("Evaluation") in (None, "Static")]
+            dynamic = [row for row in details if row.get("ChangeSource") == "DirectModification" and row.get("Evaluation") == "Dynamic" and "CausingEntity" not in row]
+            require(len(parameter) == 1 and len(dynamic) == len(details) - 1, "deployment-activation-not-count-only")
     require(actual == expected, "deployment-change-resource-set-invalid")
     change_arn, stack_arn = value.get("ChangeSetId"), value.get("StackId")
     require(isinstance(change_arn, str) and re.fullmatch(r"arn:aws:cloudformation:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":changeSet/" + name + r"/[A-Za-z0-9-]+", change_arn) is not None and isinstance(stack_arn, str) and re.fullmatch(r"arn:aws:cloudformation:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":stack/" + STACK + r"/[A-Za-z0-9-]+", stack_arn) is not None, "deployment-change-identity-not-confirmed")
