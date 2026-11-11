@@ -129,11 +129,11 @@ class Provider:
             return InfrastructureFailure(code, provider_operation=(service, operation))
         arguments = ["aws", service, operation, "--profile", ALIGN.PROFILE, "--region", signing_region,
                      "--endpoint-url", "https://" + hostname, "--output", "json", "--no-paginate", "--no-cli-pager",
-                     "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--cli-input-json", json.dumps(parameters)]
+                     "--cli-connect-timeout", "10", "--cli-read-timeout", "20", "--cli-input-json", json.dumps(parameters)]
         attempts = 3 if (service, operation) in READS else 1
         for attempt in range(attempts):
             try:
-                result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=30,
+                result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=40,
                                         env={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "AWS_EC2_METADATA_DISABLED": "true"})
             except subprocess.TimeoutExpired:
                 if attempt + 1 < attempts:

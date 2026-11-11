@@ -213,6 +213,30 @@ def run():
         assert len(case.transport.jobs.remote) == 6, "two historical and four separately admitted recovery jobs only"
         for path in case.cache.rglob("*.json"): assert CANARY not in path.read_text()
 
+        # A checked controller repair preserves exact prior controls, but does
+        # not remove their producer companions or permit a second restart.
+        owner = R.TASK.RECOVERY.STATE.STOP
+        completion = R.C.CONTROL_COMPLETION
+        original_artifact, original_pins = owner.artifact, completion.REPAIRS
+        old_controller = original_artifact(R.C)
+        pins = {**original_pins}
+        for name, relative in (("initial-stop", "failure-receipts/stopped.json"), ("initial-restart", "initial-restart-receipt.json")):
+            pins[(name, completion.document(R.C.read_json(case.cache / relative)))] = old_controller
+        owner.artifact = lambda *args: "sha256:" + "e" * 64
+        try:
+            fails(lambda: R.TASK.plan(history_args, case.restart_capability()), "recovery-stop-source-or-custody-changed")
+            completion.REPAIRS = pins
+            assert R.TASK.plan(history_args, case.restart_capability())["plan"]["execution_route_available"]
+            for relative in ("failure-receipts/stopped.json", "initial-restart-receipt.json"):
+                companion = completion.companion(case.cache / relative)
+                saved = companion.read_bytes(); companion.write_bytes(b'{}\n')
+                try: fails(lambda: R.TASK.plan(history_args, case.restart_capability()), "control-completion-changed")
+                finally: companion.write_bytes(saved)
+            assert len(case.transport.jobs.remote) == 6
+            assert sum(op == "update-service" and args["desiredCount"] == 1 for _, op, args in case.transport.observed) == 1
+        finally:
+            owner.artifact, completion.REPAIRS = original_artifact, original_pins
+
     for missing, code in (("failure-receipts/stopped.json", "recovery-stop-receipt-required"),
                           ("task-steps/verifier-read-server-replacement-operation.json", "recovery-pre-stop-original-read-required")):
         with scenario() as case:

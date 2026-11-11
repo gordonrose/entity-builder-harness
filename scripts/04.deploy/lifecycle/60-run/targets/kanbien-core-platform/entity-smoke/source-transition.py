@@ -37,6 +37,9 @@ TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", 
 # Exact successful grant/permissions custody before controller-only repairs.
 # These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "cc54216f376d48a61d7819e4bc8f01020ab9cefc853f0a73d7bb1cc85b2caa0e": ("8c1b2c14bf88bb17c71a5417c3639ab761c9484d787421cf3b87013823ecbeb5", "4efd5bafb39ecea7173f3a6622b6a7d37d1dadc5d4d9bb12e19dd190ed490091"),
+    "9743ae4553d93a135b9433f0676f9abd45cd0e499fe2a8f8912ea571de71dbae": ("b35f2942fc879ec357de2f074c77621e51d32d783238418670bee8230998ccd1", "4efd5bafb39ecea7173f3a6622b6a7d37d1dadc5d4d9bb12e19dd190ed490091"),
+    "64b4810e796333e67039af4130be627046063b342ee0ea9f3f7602e26ecb5501": ("c2c00a42e398a9bcf02b1c1558a4d3064ff90e1680372a770337fd4dea4b41a6", "4efd5bafb39ecea7173f3a6622b6a7d37d1dadc5d4d9bb12e19dd190ed490091"),
     "fecb3d313f7d157f59fb90012339fea8bd4ea1a7dc785ee489acce87797bbac3": ("f46b3076bdbe0abf011f37c1df8a84c602c1510cf603ac3bdd38a9ee4542d5a0", "7730ae5eb2e8e72c75cb4bbc7bfa100250582345c1fa9ead29713a20de0e8f15"),
     "4dc28dca67cd3a33a8bf53077c818fcf97a873d9648ff07c821eca8ac81895c5": ("b17cf62b770e0de7767103f3e003bf8c5488df74f2b22e475eaa5dd5b314c8f0", "7730ae5eb2e8e72c75cb4bbc7bfa100250582345c1fa9ead29713a20de0e8f15"),
     "ec4a2353fd182ffa6ea8379e09af5de537da99b12023fec6dc2caca477faf873": ("0b1d384938cb232bb25e2bc1ac2eeee783f0eac08f690a994c016dfa85ad8ad7", "8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"),
@@ -68,6 +71,11 @@ REPLACEMENT_PACKET = "sha256:18edb5427b0e6883152f4583e3b22dcc4449a5af274e721004c
 REPLACEMENT_COMPLETION = "sha256:606887188a43b4581696ee9924d789aa878a2e2acf9ba46e942fa24dd2a3cbd1"
 REPLACEMENT_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-48877f792d464fedbca502de7a93a70a.json"
 REPLACEMENT_FAILURE_HASH = "sha256:093022ee1b8b513b9f9517ad4e30d2d30a0bdb5770f59be97bc28abc29d33348"
+HISTORY_PROBE = "es-bea613cae49e429697a780cd3d5de244"
+HISTORY_PACKET = "sha256:64b4810e796333e67039af4130be627046063b342ee0ea9f3f7602e26ecb5501"
+HISTORY_COMPLETION = "sha256:c2c00a42e398a9bcf02b1c1558a4d3064ff90e1680372a770337fd4dea4b41a6"
+HISTORY_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-ba3f7a648fce4dafbab63285797f2402.json"
+HISTORY_FAILURE_HASH = "sha256:d51de3649c43f77651463e667bb907195d407e2743cf1c6d5e8a1c5b2875b5f7"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -159,6 +167,10 @@ def collision_recovery(args):
 
 
 def readback_recovery(args):
+    if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "administration", "observe-migration-state", "initial-recovery"):
+        return {"probe": HISTORY_PROBE, "packet": HISTORY_PACKET, "completion": HISTORY_COMPLETION,
+                "failure": HISTORY_FAILURE, "failure_hash": HISTORY_FAILURE_HASH,
+                "path": "task-steps/administration-observe-migration-state-initial-recovery-preflight.json", "condition": "preflight-observation-not-fresh", "prefix": "task-history-read-recovery"}
     if collision_recovery(args):
         return {"probe": COLLISION_PROBE, "packet": COLLISION_PACKET, "completion": COLLISION_COMPLETION,
                 "failure": COLLISION_FAILURE, "failure_hash": COLLISION_FAILURE_HASH,
@@ -199,6 +211,7 @@ def recovery_preflight(C, context, args, original):
         request = reservation["request"]
         environment = {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": original} if args.workload == "database-proof" else {
             "ENTITY_SMOKE_VERIFICATION_OPERATION": "ready", "ENTITY_SMOKE_PROOF_LABEL": original, "ENTITY_SMOKE_EXPECTED_SOURCE": context["binding"]["source_revision"]}
+        if args.workload == "administration": environment = {"ENTITY_SMOKE_ADMINISTRATION_OPERATION": "preflight"}
         C.RESOURCE.EVIDENCE.validate_retained(receipt, reservation)
         C.require(historical(packet, completion) and packet["binding"] == context["binding"]
                   and completion["step_sha256"] == recovery["packet"] and completion["plan_sha256"] == packet["plan_sha256"]
@@ -211,7 +224,9 @@ def recovery_preflight(C, context, args, original):
                   recovery["prefix"] + "-evidence-invalid")
         store = C.RESOURCE.CONTROL.AttemptStore(context["cache"] / "task-attempts")
         C.require(store.read("original-readback-preflight", request) == reservation, recovery["prefix"] + "-reservation-required")
-        renewed = {**request, "proof_label": selected, "environment": {**request["environment"], "ENTITY_SMOKE_PROOF_LABEL": selected}}
+        renewed_environment = dict(request["environment"])
+        if "ENTITY_SMOKE_PROOF_LABEL" in renewed_environment: renewed_environment["ENTITY_SMOKE_PROOF_LABEL"] = selected
+        renewed = {**request, "proof_label": selected, "environment": renewed_environment}
         if args.phase == "preflight" and store.read("renewed-readback-preflight", renewed) is None:
             suffix = "" if getattr(args, "proof_stage", "baseline") == "baseline" else ":" + args.proof_stage
             key = "task-" + hashlib.sha256((LABEL + ":" + args.workload + ":" + args.operation + ":operation" + suffix).encode()).hexdigest()[:48]

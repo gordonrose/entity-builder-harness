@@ -435,7 +435,7 @@ provider = M.Provider()
 assert provider("sts", "get-caller-identity")["Account"] == M.ALIGN.ACCOUNT
 argv, options = observed[-1]
 assert argv[argv.index("--endpoint-url") + 1] == "https://sts.eu-west-1.amazonaws.com" and "--no-verify-ssl" not in argv
-assert options["env"]["AWS_MAX_ATTEMPTS"] == "1" and options["timeout"] == 30
+assert options["env"]["AWS_MAX_ATTEMPTS"] == "1" and options["timeout"] == 40
 assert argv[argv.index("--region") + 1] == "eu-west-1"
 for service, operation, endpoint, region in [
     ("iam", "get-role", "iam.amazonaws.com", "us-east-1"),
@@ -449,7 +449,7 @@ for service, operation, endpoint, region in [
     assert argv[argv.index("--region") + 1] == region, (service, "incorrect-signing-region")
     assert argv[argv.index("--endpoint-url") + 1] == "https://" + endpoint
     assert argv[argv.index("--profile") + 1] == M.ALIGN.PROFILE and "--no-verify-ssl" not in argv
-    assert options["env"]["AWS_MAX_ATTEMPTS"] == "1" and options["timeout"] == 30
+    assert options["env"]["AWS_MAX_ATTEMPTS"] == "1" and options["timeout"] == 40
 successful_calls = len(observed)
 failed(lambda: provider("ecs", "run-task", cluster=CANARY), "infrastructure-provider-operation-prohibited")
 provider.enable(("cloudformation", "create-change-set"), lambda operation, parameters: None)
@@ -473,7 +473,7 @@ for scenario, condition in [
     attempts = []
     def rejected(arguments, **options):
         attempts.append(arguments)
-        if scenario == "timeout": raise subprocess.TimeoutExpired(arguments, 30, stderr=CANARY)
+        if scenario == "timeout": raise subprocess.TimeoutExpired(arguments, 40, stderr=CANARY)
         if scenario == "malformed": return SimpleNamespace(returncode=0, stdout=CANARY, stderr=CANARY)
         if scenario == "wrong-type": return SimpleNamespace(returncode=0, stdout='[]', stderr=CANARY)
         code = "SignatureDoesNotMatch" if scenario == "signature" else "AccessDenied"
@@ -498,6 +498,8 @@ try:
         def transport(arguments, **options):
             attempts.append(arguments)
             assert options["env"]["AWS_MAX_ATTEMPTS"] == "1"
+            assert arguments[arguments.index("--cli-connect-timeout") + 1] == "10"
+            assert arguments[arguments.index("--cli-read-timeout") + 1] == "20" and options["timeout"] == 40
             if scenario == "recover" and len(attempts) == 2: return SimpleNamespace(returncode=0, stdout='{"observed":true}', stderr="")
             endpoint = "https://foreign.invalid" if scenario == "foreign" else "https://rds.eu-west-1.amazonaws.com/"
             error = CANARY if scenario == "unknown" else 'aws: [ERROR]: Connect timeout on endpoint URL: "' + endpoint + '"'
@@ -511,7 +513,8 @@ try:
         attempts = []
         def mutation_timeout(arguments, **options):
             attempts.append(arguments)
-            if process_timeout: raise subprocess.TimeoutExpired(arguments, 30)
+            assert arguments[arguments.index("--cli-connect-timeout") + 1] == "10" and options["timeout"] == 40
+            if process_timeout: raise subprocess.TimeoutExpired(arguments, 40)
             return SimpleNamespace(returncode=255, stdout="", stderr='aws: [ERROR]: Connect timeout on endpoint URL: "https://cloudformation.eu-west-1.amazonaws.com/"')
         M.subprocess.run = mutation_timeout
         current = M.Provider()

@@ -26,6 +26,14 @@ NAMES = {"server-replacement": "replacement", "credential-replacement": "credent
 # a companion or attribute this old observation to the repaired controller.
 LEGACY = {("server-replacement", "sha256:fefc8e5561299b9e5cb63e41f820fae3a250f1bf3452bbf01f24eb72580b83e6"):
           "sha256:8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"}
+# Completed under the preceding checked controller. Unlike LEGACY, these
+# always require their producer-written companion and original seven gates.
+REPAIRS = {
+    ("initial-stop", "sha256:00b9f317659a999ff0d3eaa27dc109319d1ba34ba30a0a8f3613e4612b4f2e7f"):
+        "sha256:8528955470b87a617667f2c1a502e356b7e831e5a65101358a83b323493d3b2e",
+    ("initial-restart", "sha256:f3e0823c12b19c1ab9ebcc19f4021c5fc9adceaaba6d2f58f6a037a4cc172726"):
+        "sha256:8528955470b87a617667f2c1a502e356b7e831e5a65101358a83b323493d3b2e",
+}
 
 
 def document(value):
@@ -33,7 +41,7 @@ def document(value):
 
 
 def controller(name, receipt_digest, current):
-    return LEGACY.get((name, receipt_digest), current)
+    return (LEGACY | REPAIRS).get((name, receipt_digest), current)
 
 
 def companion(path):

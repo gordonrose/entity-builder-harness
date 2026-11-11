@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T21:18:47Z
-latest_commit_sha: ec21375f8677e130b028ee04eb6c2d07121fbfef
-chat_duration: 447100s (05:04:11:40)
+latest_commit_at_utc: 2026-11-11T22:07:20Z
+latest_commit_sha: 24a3d9a52cca85e5fa42ad97d0724014cd2e5f81
+chat_duration: 450013s (05:05:00:13)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -93,6 +93,50 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- Continuation33491 is now terminal. Initial-recovery readiness and original
+  record read both succeeded; operationes-c99251e6bd3b4fef854b671f2a0e793f returned
+  ENTITY_SMOKE_RECORD_RETRIEVED with original digest6da2c116797d6c43137c84c1603e2f003787d4c183867ec07ff5afeda7a3a593.
+  Migration-history preflightes-bea613cae49e429697a780cd3d5de244 succeeded, but
+  repeated ECS/IAM observation failures consumed its900-second window before
+  operation admission. Exact final not-started capture is
+  finish-task-execute-ba3f7a648fce4dafbab63285797f2402.json,
+  conditionpreflight-observation-not-fresh; the history operation is unsubmitted.
+  Repair inventory under standing completion authority: extend the existing
+  exact evidence-bound renewal to this one administration preflight, retaining
+  its step/completion/gates and absence of operation reservation; support its
+  closed administration environment without changing90/900-second bounds.
+  Preserve the three newly completed task pairs and actual stop/restart receipts
+  under their original controllers, still requiring their completion companions
+  and seven gates. Update recovery consumers to use that same exact historical
+  controller selection, not current-source attribution. Extend existing source
+  transition/restart fixtures for missing/tampered evidence, wrong operation,
+  stale/fresh alternatives, existing reservation and no replay. The observed
+  connection timeouts also justify a bounded10-second connection/40-second
+  subprocess budget, retaining20-second reads, three read attempts and exactly
+  one mutation attempt; prove those exact budgets in the existing adapter fixture.
+  Update the owning applicability paragraph, source-matched partial diagnostic
+  reviews and affected checks before commit/resumption. No image, runtime,
+  data, schema, permission, baseline or staging change is intended.
+
+- Checkpoint24a3d9a5 passed full affected integration:46 local passed,
+  zero findings,13 later-stage deferred; staged gates passed. Actual stop/preserve
+  completed under plan43f9d96bc981a1dc06d35da3fb81200c638e56d675a0b64d58c467e8328dca5d,
+  capture finish-failure-stop-5d8f76d903dc4b739f1eb2824d1c00e2 and
+  failure-receipts/stopped.json. Actual restart completed under
+  plan4de4fccf112f74c5fe5b1ba6e62b845a28f80b578c18ed5e2e60e502f4d1ef51,
+  capture finish-restart-81c56c1b692b4c7982dac22574f5749d and
+  initial-restart-receipt.json. Both closed control-completion companions are
+  retained by their producers. Direct AWS counts observed0/0/0 after stop and
+  1/1/0 after restart. Repeated provider-read failures were reconciled against
+  original reservations/plans, never replayed; read-only diagnosis exposed ECS
+  endpoint connection timeouts. Diagnostic process78907 terminated143 before
+  completion; no process remains from it. Sessions81132,13663,5765,81863 are
+  terminal. Continuation33491 is active on initial-recovery verifier preflight,
+  then original record/migration history, credential recovery, snapshot, isolated
+  restore/read/cleanup, final read and collector. It does not promote acceptance;
+  promotion must follow collection promptly. No credential revoke, snapshot or
+  restore has occurred yet. Do not repeat completed stop/restart/replacement.
 
 - Checkpointec21375f passed full affected local integration (46 passed, zero
   findings, 13 later-stage deferred) and commit gates. Actual renewed readiness
@@ -1174,6 +1218,17 @@ Summary: Historical control repair: actual replacement receipt and five original
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T22:07:20Z - Commit recorded
+
+Commit: `24a3d9a52cca85e5fa42ad97d0724014cd2e5f81`
+
+Message: fix(deploy): bind failure recovery to completed image transition
+
+Summary: Recovery binding now consumes the completed qualified source transition while preserving original creation lineage. Focused failure suite, feature composition, staged gates and full affected integration passed: 46 local passed, 13 later-stage deferred, zero findings. Actual read-only inventory confirmed 30 owned resources, service 1/1/0 and unchanged source database incarnation. No stop/revoke/snapshot/restore had yet occurred. Resume only initial-recovery onward; do not repeat replacement/readback.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1349,6 +1404,13 @@ ADR impact: covered by session ADR disposition
   Summary: Historical control repair: actual replacement receipt and five original task/gate pairs validate without provider calls or rewritten evidence. Full affected local integration passed 46 checks with zero findings; 13 later-stage checks deferred. Composition passed, including expired predecessor and tampered companion coverage. Evidence: .cache/test-runs/entity-smoke-stable.7wpnDKuN/historical-controls-integration.json and historical-controls-composition.json. Qualified source96b755b9 and image4a0b522f remain unchanged. Resume the unsubmitted post-replacement read with one bounded fresh readiness probe, then remaining recovery/restore/acceptance; no replay of completed replacement.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `24a3d9a52cca85e5fa42ad97d0724014cd2e5f81`
+  Time UTC: 2026-11-11T22:07:20Z
+  Message: fix(deploy): bind failure recovery to completed image transition
+  Summary: Recovery binding now consumes the completed qualified source transition while preserving original creation lineage. Focused failure suite, feature composition, staged gates and full affected integration passed: 46 local passed, 13 later-stage deferred, zero findings. Actual read-only inventory confirmed 30 owned resources, service 1/1/0 and unchanged source database incarnation. No stop/revoke/snapshot/restore had yet occurred. Resume only initial-recovery onward; do not repeat replacement/readback.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1362,9 +1424,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T21:18:47Z
-Latest commit SHA: ec21375f8677e130b028ee04eb6c2d07121fbfef
-Chat duration: 447100s (05:04:11:40)
+Latest commit at UTC: 2026-11-11T22:07:20Z
+Latest commit SHA: 24a3d9a52cca85e5fa42ad97d0724014cd2e5f81
+Chat duration: 450013s (05:05:00:13)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

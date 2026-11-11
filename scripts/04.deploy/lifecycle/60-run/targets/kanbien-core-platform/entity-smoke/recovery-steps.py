@@ -64,7 +64,8 @@ def restart(route, context, args, provider, *, require_current=True):
     C.RESOURCE.validate_request("start-runtime", request)
     require(request["binding"] == {**context["binding"], "record_digest": args.expected_digest} and request["definition"] == state["server"]["definition"]
             and plan.get("binding") == request["binding"] and plan.get("request_sha256") == C.DEPLOY.fingerprint(request)
-            and plan.get("controller_sha256") == STATE.STOP.artifact(C) and plan.get("policy_sha256") == C.DEPLOY.fingerprint(state["policy"])
+            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("initial-restart", C.CONTROL_COMPLETION.document(value), STATE.STOP.artifact(C))
+            and plan.get("policy_sha256") == C.DEPLOY.fingerprint(state["policy"])
             and plan.get("stop_sha256") == C.DEPLOY.fingerprint(state["stop"]) and plan.get("original_read_sha256") == C.DEPLOY.fingerprint(state["read"])
             and plan.get("configuration_sha256") == C.DEPLOY.fingerprint({"parameters": state["scope"]["parameters"], "resources": state["scope"]["resources"], "server": state["server"]}), "recovery-step-restart-binding-mismatch")
     for path in (context["cache"] / "initial-restart-plan.json", context["cache"] / "initial-restart-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):

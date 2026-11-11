@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 10
+version: 11
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-11"
@@ -277,6 +277,19 @@ fixed recovery label and separate path; preserve the original probe and its
 one-time token-retrieval evidence. The renewal is a new read-only observation,
 not another request under that consumed recovery intent. All preceding bounds,
 fresh gates, actual terminal proof and 900-second admission remain mandatory.
+
+For this same proof, permit one renewal of the successful migration-history
+preflight `es-bea613cae49e429697a780cd3d5de244` after provider-read failures
+exhausted its unused window. Require its exact original step/completion/gate
+custody, original reservation and hash-pinned `preflight-observation-not-fresh`
+not-started response, plus absence of the history-operation reservation before
+renewal. Select one deterministic label and separate immutable preflight path;
+keep administration's closed read-only environment unchanged. All90-second,
+first-five-gate, terminal-evidence and900-second admission bounds above remain.
+Preserve completed stop/restart and initial-recovery tasks under their exact
+original controller hashes. Their producer-written completion companions and
+seven-gate evidence remain mandatory; this is not a missing-companion exception
+or permission to repeat either control or a completed business operation.
 
 ### Stopped-service activation refresh
 

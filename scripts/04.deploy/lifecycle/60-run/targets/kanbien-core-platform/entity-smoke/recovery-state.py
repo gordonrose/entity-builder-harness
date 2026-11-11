@@ -43,12 +43,13 @@ def stopped(route, args, provider, custody):
     packet = STOP.validate_packet(root["request"]["packet"])
     STOP.F.validate_intent(C, packet["intent"], STOP.B.MAX_TASKS)
     policy = STOP.policy(C)
-    require(packet["plan"].get("policy_sha256") == C.DEPLOY.fingerprint(policy)
-            and packet["plan"].get("controller_sha256") == STOP.artifact(C), "recovery-stop-source-or-custody-changed")
+    require(packet["plan"].get("policy_sha256") == C.DEPLOY.fingerprint(policy), "recovery-stop-source-or-custody-changed")
     target = cache / "failure-receipts/stopped.json"
     C.RESOURCE.CONTROL.no_symlinks(target)
     require(target.is_file(), "recovery-stop-receipt-required")
     receipt = STOP.F.validate_receipt(C, C.read_json(target), root, cache)
+    require(packet["plan"].get("controller_sha256") == C.CONTROL_COMPLETION.controller(
+        "initial-stop", C.CONTROL_COMPLETION.document(receipt), STOP.artifact(C)), "recovery-stop-source-or-custody-changed")
     require(C.CONTROL_COMPLETION.read(C, target, "initial-stop", STOP.graph(), STOP.artifact(C)) == receipt,
             "recovery-stop-receipt-changed")
     current = STOP.B.inspect(C, STOP.RESTORE, provider, custody, args.proof_label, cache)
