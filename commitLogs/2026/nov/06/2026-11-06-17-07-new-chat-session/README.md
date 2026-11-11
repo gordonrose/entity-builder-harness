@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T20:10:40Z
-latest_commit_sha: 0cf52723959916f17f2bab65bee1385f85da4dc6
-chat_duration: 443013s (05:03:03:33)
+latest_commit_at_utc: 2026-11-11T21:18:47Z
+latest_commit_sha: ec21375f8677e130b028ee04eb6c2d07121fbfef
+chat_duration: 447100s (05:04:11:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -93,6 +93,26 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- Checkpointec21375f passed full affected local integration (46 passed, zero
+  findings, 13 later-stage deferred) and commit gates. Actual renewed readiness
+  es-2a33c014addc45b88295c410803e359b and post-replacement original-record read
+  es-2905f8b61788408cbdfbc1e15303dc6b completed under controller7730ae5e.
+  The original digest matches. Session49290 is terminal: the subsequent
+  failure-stop plan rejected before mutation with failure-qualified-binding-mismatch
+  (capture finish-failure-stop-ed18a659e66f47b1a41027c352ea12ef).
+  Root cause: failure-binding.main_scope still compares qualified current image
+  to original creation binding, ignoring the completed source transition that
+  normal task ownership already consumes. Repair inventory: reuse TRANSITION.read
+  for current binding and exact successor resources while checking original
+  creation parameters/lineage against original binding; preserve partial-failure
+  behavior without a transition and reject missing/wrong transition or resource
+  drift. The same owner serves stop/restart and later recovery consumers. Add
+  connected controlled stop fixtures and actual read-only main-scope observation;
+  retain two exact new successful task/completion pairs under7730ae5e, never
+  replay readback or replacement. Update existing diagnostic owners and affected
+  verification before another controller checkpoint. No AWS execution is running,
+  no stop/revoke/snapshot/restore has occurred, and no runtime/image change is needed.
 
 - Checkpoint0cf52723 passed seven selected checks and staged gates. Its one-time
   exact-token recovery returned task72ccbcf43b73438a9bde84907c7108cf for original
@@ -1143,6 +1163,17 @@ Summary: Selected policy verification and staged gates passed. Controller finger
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T21:18:47Z - Commit recorded
+
+Commit: `ec21375f8677e130b028ee04eb6c2d07121fbfef`
+
+Message: fix(deploy): retain completed control proof after ECS history expires
+
+Summary: Historical control repair: actual replacement receipt and five original task/gate pairs validate without provider calls or rewritten evidence. Full affected local integration passed 46 checks with zero findings; 13 later-stage checks deferred. Composition passed, including expired predecessor and tampered companion coverage. Evidence: .cache/test-runs/entity-smoke-stable.7wpnDKuN/historical-controls-integration.json and historical-controls-composition.json. Qualified source96b755b9 and image4a0b522f remain unchanged. Resume the unsubmitted post-replacement read with one bounded fresh readiness probe, then remaining recovery/restore/acceptance; no replay of completed replacement.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1311,6 +1342,13 @@ ADR impact: covered by session ADR disposition
   Summary: Selected policy verification and staged gates passed. Controller fingerprint and immutable image are unchanged. Retain one exact-token ready response recovery within the original 45-minute window; ordinary proof collection remains mandatory.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `ec21375f8677e130b028ee04eb6c2d07121fbfef`
+  Time UTC: 2026-11-11T21:18:47Z
+  Message: fix(deploy): retain completed control proof after ECS history expires
+  Summary: Historical control repair: actual replacement receipt and five original task/gate pairs validate without provider calls or rewritten evidence. Full affected local integration passed 46 checks with zero findings; 13 later-stage checks deferred. Composition passed, including expired predecessor and tampered companion coverage. Evidence: .cache/test-runs/entity-smoke-stable.7wpnDKuN/historical-controls-integration.json and historical-controls-composition.json. Qualified source96b755b9 and image4a0b522f remain unchanged. Resume the unsubmitted post-replacement read with one bounded fresh readiness probe, then remaining recovery/restore/acceptance; no replay of completed replacement.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1324,9 +1362,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T20:10:40Z
-Latest commit SHA: 0cf52723959916f17f2bab65bee1385f85da4dc6
-Chat duration: 443013s (05:03:03:33)
+Latest commit at UTC: 2026-11-11T21:18:47Z
+Latest commit SHA: ec21375f8677e130b028ee04eb6c2d07121fbfef
+Chat duration: 447100s (05:04:11:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

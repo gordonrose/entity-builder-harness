@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -28,6 +28,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from types import SimpleNamespace
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_FAILURE_ROUTE_ASSERTIONS_DISABLED")
 
@@ -222,6 +223,45 @@ def planned(case):
 
 
 def run():
+    # The transition owner validates its receipt/gates independently. Here its
+    # controlled result is consumed by the actual failure alignment and route;
+    # source qualification/provider observations remain explicit fixture inputs.
+    with scenario() as case:
+        after = {**case.binding, "source_revision": "9" * 40, "image_digest": "sha256:" + "8" * 64}
+        case.custody.update(source_revision=after["source_revision"], image_digest=after["image_digest"])
+        for row in case.transport.stack["Parameters"]:
+            if row["ParameterKey"] == "SourceRevision": row["ParameterValue"] = after["source_revision"]
+            if row["ParameterKey"] == "ImageDigest": row["ParameterValue"] = after["image_digest"]
+        for row in case.transport.resources:
+            if row["LogicalResourceId"] in M.C.TRANSITION.TASK_DEFINITIONS:
+                row["PhysicalResourceId"] = row["PhysicalResourceId"].rsplit(":", 1)[0] + ":2"
+        for value in case.transport.bindings.values():
+            value.task["taskDefinitionArn"] = value.task["taskDefinitionArn"].rsplit(":", 1)[0] + ":2"
+            value.task["containerDefinitions"][0]["image"] = F.PARAMETERS["ImageRepositoryUri"] + "@" + after["image_digest"]
+        for row in case.transport.task_rows.values(): row["taskDefinitionArn"] = row["taskDefinitionArn"].rsplit(":", 1)[0] + ":2"
+        original_service = case.transport.service
+        case.transport.service = lambda: {**original_service(), "taskDefinition": BF.RESOURCES["ServerTaskDefinition"]["physical_id"].rsplit(":", 1)[0] + ":2"}
+        transition = {"plan": {"previous_binding": case.binding, "stack_arn": case.transport.stack["StackId"]},
+                      "resources": {row["LogicalResourceId"]: {"type": row["ResourceType"], "physical_id": row["PhysicalResourceId"]} for row in case.transport.resources}}
+        original = M.B.original_reservation(M.C, case.cache, "deploy-execute-create")
+        fails(lambda: M.run(case.args, case.capability()), "failure-qualified-binding-mismatch")
+        def completed_transition(C, cache, binding):
+            assert cache == case.cache and binding == after
+            return transition
+        with patch.object(M.C.TRANSITION, "read", side_effect=completed_transition):
+            result = M.run(case.args, case.capability())
+            assert result["verdict"] == "planned" and result["plan"]["binding"] == after
+            transition["plan"]["previous_binding"] = {**case.binding, "source_revision": "0" * 40}
+            fails(lambda: M.run(case.args, case.capability()), "failure-qualified-binding-mismatch")
+            transition["plan"]["previous_binding"] = case.binding
+            transition["plan"]["stack_arn"] += "-foreign"
+            fails(lambda: M.run(case.args, case.capability()), "failure-qualified-binding-mismatch")
+            transition["plan"]["stack_arn"] = case.transport.stack["StackId"]
+            transition["resources"]["ServerTaskDefinition"]["physical_id"] += "-foreign"
+            fails(lambda: M.run(case.args, case.capability()), "failure-transition-resources-not-confirmed")
+        assert M.B.original_reservation(M.C, case.cache, "deploy-execute-create") == original
+        assert not any(op in {"stop-task", "update-service"} for _, op, _ in case.transport.observed)
+
     with scenario() as case:
         result = planned(case)
         before = copy.deepcopy(case.transport.other)

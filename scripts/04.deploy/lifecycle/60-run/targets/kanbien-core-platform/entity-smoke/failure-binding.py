@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -85,10 +85,14 @@ def stack_resources(C, provider, stack, expected):
 def main_scope(C, provider, receipt, label, cache):
     creation = original_reservation(C, cache, "deploy-execute-create")
     request = creation["request"]
-    binding = request["binding"]
+    original_binding = request["binding"]
     expected = {"source_revision": receipt["source_revision"], "image_digest": receipt["image_digest"], "proof_label": label,
                 "configuration_contract_sha256": C.digest_file(C.ROOT / C.ALIGN.SCOPE), "permission_contract_sha256": C.digest_file(C.DEPLOY.SOURCE)}
-    require(all(binding.get(key) == value for key, value in expected.items()), "failure-qualified-binding-mismatch")
+    binding = {**original_binding, **expected}
+    transition = C.TRANSITION.read(C, cache, binding)
+    require(original_binding == binding or transition is not None
+            and transition["plan"]["previous_binding"] == original_binding
+            and transition["plan"]["stack_arn"] == request["stack_arn"], "failure-qualified-binding-mismatch")
     stack = C.RESOURCE.only(provider("cloudformation", "describe-stacks", StackName=request["stack_arn"]), "Stacks")
     C.DEPLOY.exact_stack(stack, binding)
     require(stack.get("StackId") == request["stack_arn"] and stack.get("StackStatus") in TERMINAL_STACKS, "failure-stack-writer-not-terminal")
@@ -98,12 +102,14 @@ def main_scope(C, provider, receipt, label, cache):
     parameters = {row["ParameterKey"]: row["ParameterValue"] for row in rows}
     require(len(parameters) == len(rows) and parameters.get("ServerDesiredCount") in {"0", "1"}, "failure-parameters-not-confirmed")
     C.DEPLOY.parameters_for(binding, parameters, parameters["ServerDesiredCount"] == "1")
-    initial = C.DEPLOY.request(binding, {**parameters, "ServerDesiredCount": "0"}, False)
+    initial = C.DEPLOY.request(original_binding, {**parameters, "ServerDesiredCount": "0",
+        "SourceRevision": original_binding["source_revision"], "ImageDigest": original_binding["image_digest"]}, False)
     require(all(request.get(key) == value for key, value in initial.items()), "failure-creation-input-mismatch")
     template = provider("cloudformation", "get-template", StackName=stack["StackId"], TemplateStage="Original")
     require(isinstance(template, dict) and C.DEPLOY.CF.templates_equal(template.get("TemplateBody"), C.DEPLOY.source()[0]), "failure-template-not-confirmed")
     lineage(C, provider, stack["StackId"], creation)
     resources = stack_resources(C, provider, stack, C.DEPLOY.RESOURCE_TYPES)
+    require(transition is None or resources == transition["resources"], "failure-transition-resources-not-confirmed")
     physical_service = resources.get("FeatureService", {}).get("physical_id")
     service_arn = "arn:aws:ecs:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT + ":service/" + C.RESOURCE.CLUSTER + "/" + C.RESOURCE.SERVICE
     require(physical_service is None or physical_service in {C.RESOURCE.SERVICE, service_arn}, "failure-service-resource-not-confirmed")
