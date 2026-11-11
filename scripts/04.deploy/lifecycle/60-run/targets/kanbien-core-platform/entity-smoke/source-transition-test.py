@@ -128,6 +128,33 @@ label = M.replacement_label({}, args, "original")
 assert label != "original" and M.replacement_label({}, args, "original") == label
 assert M.replacement_label({}, SimpleNamespace(**{**vars(args), "operation": "bootstrap"}), "original") == "original"
 
+# Controlled non-submission history: absence is never authority. Both exact
+# original documents and the validated attempt-store identity are required.
+probe_args = SimpleNamespace(proof_label=M.LABEL, workload="database-proof", operation="permissions", proof_stage="baseline")
+probe_request = {**after, "proof_label": "original", "environment": {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": "original"}}
+probe_reservation = {"operation_id": M.UNSUBMITTED_PREFLIGHT, "request": probe_request}
+probe_failure = {"effect": "not-started", "condition": "aws-command-failed"}
+probe_context = {"cache": Path("/controlled/task-cache"), "binding": after}
+probe_target = probe_context["cache"] / "task-attempts/original-database-proof-preflight.json"
+probe_report = C.ROOT / M.UNSUBMITTED_REPORT
+documents = {probe_target: probe_reservation, probe_report: probe_failure}
+hashes = {probe_target: M.UNSUBMITTED_RESERVATION_HASH, probe_report: M.UNSUBMITTED_REPORT_HASH}
+with patch.object(C, "read_json", side_effect=lambda path: documents[path]), \
+     patch.object(C, "digest_file", side_effect=lambda path: hashes[path]), \
+     patch.object(C.RESOURCE.CONTROL, "AttemptStore", return_value=SimpleNamespace(read=lambda key, request: probe_reservation)):
+    selected = M.recovery_preflight(C, probe_context, probe_args, "original")
+    assert selected != "original" and selected == M.replacement_label(None, probe_args, "original")
+    for target in (probe_target, probe_report):
+        original_hash = hashes[target]; hashes[target] = "sha256:" + "0" * 64
+        fails(lambda: M.recovery_preflight(C, probe_context, probe_args, "original"), "task-unsubmitted-recovery-evidence-changed")
+        hashes[target] = original_hash
+    probe_failure["effect"] = "unknown-reconcile-only"
+    fails(lambda: M.recovery_preflight(C, probe_context, probe_args, "original"), "task-unsubmitted-recovery-evidence-invalid")
+    probe_failure["effect"] = "not-started"
+    with patch.object(C.RESOURCE.CONTROL, "AttemptStore", return_value=SimpleNamespace(read=lambda key, request: None)):
+        fails(lambda: M.recovery_preflight(C, probe_context, probe_args, "original"), "task-unsubmitted-recovery-evidence-invalid")
+assert M.replacement_label(None, SimpleNamespace(**{**vars(probe_args), "proof_stage": "credential-recovery"}), "original") == "original"
+
 # Run the complete public coordinator with retained single-submission intent.
 # Source/identity/alignment are controlled prerequisites; real file retention,
 # change review and generic gate validation remain exercised.

@@ -223,6 +223,7 @@ def run():
         start = len(provider.observed)
         old_prepare, old_binding_source = M.prepare, M.BINDING.DEPLOY.source
         binding_source_reads = []
+        preparation_reads = []
         def read_binding_source():
             result = old_binding_source()
             binding_source_reads.append(M.C.DEPLOY.fingerprint(result[1]))
@@ -232,16 +233,18 @@ def run():
             result = old_prepare(args, selected_provider)
             assert len(binding_source_reads) == before + 1, "one fresh binding snapshot per prepared operation, not per prerequisite or process"
             assert M.C.DEPLOY.fingerprint(result["binding_snapshot"]) == binding_source_reads[-1]
+            preparation_reads.append(len(binding_source_reads))
             return result
         M.BINDING.DEPLOY.source, M.prepare = read_binding_source, one_source_per_preparation
         provider_class, old_enable_task = M.Provider, M.Provider.enable_task
         def fresh_source_at_guard(self, request, selected_store, key, guard):
             if guard.__module__ != M.__name__:
                 return old_enable_task(self, request, selected_store, key, guard)
+            assert len(binding_source_reads) == preparation_reads[-1] + 1, "fresh binding recheck precedes reservation"
             def checked_guard():
                 before = len(binding_source_reads)
                 guard()
-                assert len(binding_source_reads) == before + 1, "actual provider guard reads a fresh snapshot, not the preparation snapshot"
+                assert len(binding_source_reads) == before, "submission guard has no fallible provider read after reservation"
             return old_enable_task(self, request, selected_store, key, checked_guard)
         provider_class.enable_task = fresh_source_at_guard
         for workload, operation in (("administration", "bootstrap"), ("migration", "apply"), ("database-proof", "permissions"), ("verifier", "create")):
@@ -285,6 +288,16 @@ def run():
             assert planned["plan"]["execution_route_available"] is True
             execute_args.approved_plan = planned["plan_sha256"]
             if number == 0:
+                original_inspect = M.C.ALIGN.inspect
+                reads = []
+                def fail_second_read(*arguments):
+                    reads.append(True)
+                    if len(reads) == 2: raise M.C.InfrastructureFailure("aws-command-failed", provider_operation=("ecs", "describe-task-definition"))
+                    return original_inspect(*arguments)
+                M.C.ALIGN.inspect = fail_second_read
+                try: fails(lambda: M.execute(execute_args, live), "aws-command-failed")
+                finally: M.C.ALIGN.inspect = original_inspect
+                assert not (cache / "task-attempts").exists() and live.effect == "not-started"
                 provider.lost_next = True
                 fails(lambda: M.execute(execute_args, live), "task-submission-uncertain-reconcile-required")
                 assert live.effect == "unknown-reconcile-only"

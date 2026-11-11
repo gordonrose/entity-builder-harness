@@ -21,6 +21,7 @@ import hashlib
 import importlib.util
 from pathlib import Path
 import re
+from types import SimpleNamespace
 
 
 def module(name, path):
@@ -81,9 +82,7 @@ def preflight_label(binding, stage, workload, operation):
     # requires the original failure and actual repair receipt before recovery.
     if (binding["proof_label"], workload, operation, stage) == (T.IMAGE_REPAIR.LABEL, "administration", "bootstrap", "baseline"):
         return "entity-smoke-" + hashlib.sha256((original + ":" + T.IMAGE_REPAIR.FAILURE_ID + ":image-delivery-recovery-1").encode()).hexdigest()[:24]
-    if (binding["proof_label"], workload, operation, stage) == (C.TRANSITION.LABEL, "administration", "grant-runtime", "baseline"):
-        return "entity-smoke-" + hashlib.sha256((original + ":" + C.TRANSITION.FAILED_PREFLIGHT + ":administrator-authentication-recovery-1").encode()).hexdigest()[:24]
-    return original
+    return C.TRANSITION.replacement_label(None, SimpleNamespace(proof_label=binding["proof_label"], workload=workload, operation=operation, proof_stage=stage), original)
 
 
 def validate_gate(graph, gate, plan_sha256, artifacts, counts, *, item, family="task"):

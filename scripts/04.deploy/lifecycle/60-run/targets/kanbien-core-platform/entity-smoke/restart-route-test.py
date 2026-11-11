@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -419,27 +419,30 @@ def run():
             value = R.TASK.Provider(); value._invoke = lambda service, operation, parameters: case.transport(service, operation, **parameters)
             return value
         selected.approved_plan = R.TASK.plan(selected, provider())["plan_sha256"]
-        old_parse, old_factory, old_enable = R.TASK.parse, R.TASK.Provider, R.TASK.Provider.enable_task
-        def changed_original_at_guard(self, request, store, key, guard):
-            def changed():
-                case.transport.task_rows[FD.SERVER]["taskDefinitionArn"] = case.transport.task_rows[FD.SERVER]["taskDefinitionArn"].rsplit(":", 1)[0] + ":2"
-                guard()
-            return old_enable(self, request, store, key, changed)
-        old_factory.enable_task = changed_original_at_guard
+        old_parse, old_factory, old_prepare = R.TASK.parse, R.TASK.Provider, R.TASK.prepare
+        def changed_original_before_guard(*arguments):
+            context = old_prepare(*arguments)
+            # Drift after planning must be caught by the same full live guard,
+            # now before it consumes a durable launch reservation.
+            case.transport.task_rows[FD.SERVER]["taskDefinitionArn"] = case.transport.task_rows[FD.SERVER]["taskDefinitionArn"].rsplit(":", 1)[0] + ":2"
+            return context
+        R.TASK.prepare = changed_original_before_guard
         def main_provider():
             value = old_factory(); value._invoke = lambda service, operation, parameters: case.transport(service, operation, **parameters)
             return value
         R.TASK.parse, R.TASK.Provider = lambda: selected, main_provider
         output = io.StringIO(); before = len(case.transport.jobs.remote)
+        attempts_before = {path.name: path.read_bytes() for path in (case.cache / "task-attempts").glob("*.json")}
         try:
             with redirect_stdout(output): status = R.TASK.main()
         finally:
             R.TASK.parse, R.TASK.Provider = old_parse, old_factory
-            old_factory.enable_task = old_enable
+            R.TASK.prepare = old_prepare
         rejected = json.loads(output.getvalue())
         assert status == 1 and rejected["condition"] == "failure-original-task-identity-changed"
         assert rejected["context"]["field"] == "prerequisite" and rejected["context"]["item"] == "server" and rejected["effect"] == "not-started"
         assert CANARY not in output.getvalue() and len(case.transport.jobs.remote) == before
+        assert {path.name: path.read_bytes() for path in (case.cache / "task-attempts").glob("*.json")} == attempts_before
 
     with tempfile.TemporaryDirectory(prefix="entity-smoke-restart-cli-") as temporary:
         root = Path(temporary); marker = root / "aws-called"

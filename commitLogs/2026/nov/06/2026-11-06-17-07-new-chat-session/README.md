@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T10:15:11Z
-latest_commit_sha: 96b755b9e4d9f591b7183c86041b17d22881d51f
-chat_duration: 407284s (04:17:08:04)
+latest_commit_at_utc: 2026-11-11T11:35:30Z
+latest_commit_sha: 9623b9e5a51337f199bee05cfb8b3f84340e841a
+chat_duration: 412103s (04:18:28:23)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,27 @@ new chat session
 
 ## Context Hygiene
 
+- Pre-reservation integration report20261111T120031Z-b08497f14f824560991abde5eddb9b4c
+  had45 passes, one composition failure and13 deferred checks. The exact restart
+  fixture injected drift at the former post-reservation guard. Moved its injection
+  between preparation and the unchanged full live guard; preserve prerequisite/server
+  reporter context before reservation. Updated focused restart test passed with
+  original attempt bytes and remote task count unchanged. Do not claim the failed
+  integration passed; rerun affected verification against this final frozen batch.
+- Checkpoint9623b9e5 passed46 selected local checks and the staged gate. Live
+  permissions preflight planning passed, but the late provider guard returned
+  aws-command-failed/not-started after reserving es-8c2a5ae0be9e4090b2aa38c324592f46.
+  Its preserved public failure is finish-task-execute-7a7e118e3ef9493f98eb24f93fd064f6.json;
+  subsequent read-only reconciliation found no task and refused replay.
+  Repair inventory: move the same full target/operator/prerequisite checks before
+  reservation, retain immediate local source/contract checks and exact payload
+  validation at submission. A read failure must leave no reservation and preserve
+  its safe provider operation. Unknown submitted effects still reconcile only.
+  One replacement read-only permissions probe is selected from the exact retained
+  failed reservation/report hashes, never by absence alone; preserve both originals.
+  Connect that same deterministic label to acceptance. Tests cover failure before
+  reservation, unchanged fresh binding checks, source drift and lost-launch no replay.
+  No new image, database mutation, permissions or resource scope is introduced.
 - Source96b755b9 passed46 selected local checks, staged gate, complete actual
   local PostgreSQL18.3 image qualification and negative capabilities. Hosted
   run43003314301 qualified/published image4a0b522f6e2b969ddfb7f79ece7a38583de6e0ad57f84ec1e4bbc056703ab858.
@@ -877,6 +898,17 @@ Summary: 46 selected local checks passed, zero findings, 13 later-stage deferred
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T11:35:30Z - Commit recorded
+
+Commit: `9623b9e5a51337f199bee05cfb8b3f84340e841a`
+
+Message: fix: apply bounded retries to task provider reads
+
+Summary: 46 selected local checks passed, zero findings; original six live preparation packets validated without provider calls. Same qualified image and templates retained. Mutations remain single-submission; fresh controller hash governs subsequent plans.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -996,6 +1028,13 @@ ADR impact: covered by session ADR disposition
   Summary: 46 selected local checks passed, zero findings, 13 later-stage deferred. Actual PostgreSQL18.3 source-predicate proof covers absent/direct/indirect NOINHERIT/SET FALSE and revoked membership; compiled callers pass. Staged gate passed. Local real-image qualification precedes push/publication.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `9623b9e5a51337f199bee05cfb8b3f84340e841a`
+  Time UTC: 2026-11-11T11:35:30Z
+  Message: fix: apply bounded retries to task provider reads
+  Summary: 46 selected local checks passed, zero findings; original six live preparation packets validated without provider calls. Same qualified image and templates retained. Mutations remain single-submission; fresh controller hash governs subsequent plans.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1009,9 +1048,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T10:15:11Z
-Latest commit SHA: 96b755b9e4d9f591b7183c86041b17d22881d51f
-Chat duration: 407284s (04:17:08:04)
+Latest commit at UTC: 2026-11-11T11:35:30Z
+Latest commit SHA: 9623b9e5a51337f199bee05cfb8b3f84340e841a
+Chat duration: 412103s (04:18:28:23)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

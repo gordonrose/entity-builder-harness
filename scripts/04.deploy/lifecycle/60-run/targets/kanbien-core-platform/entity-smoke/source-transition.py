@@ -40,6 +40,10 @@ CONTROLLER_REPAIR_PINS = {
     "6bdd329d5e4f0d17927634945e5a4dfe62af8b1f1c63543f6562ed39e8f1c1ff": ("435c4e9c532bfa420ff43259be725cd3b9b73bd78d3425e03bc9427168aa1caa", "cdf63a0df5c0d09263e8be7a083a7c908a4b3bdea7713150292c453e6a1c9bfd"),
     "02a2ecd3110ff3fdf71d2b482be3f60d586674240c4727d53dd5edd4796619ec": ("8ae4f77b9f669e1220f498e4b98e5c7f659e06f7d5f619d259c290a817f7ba4e", "cdf63a0df5c0d09263e8be7a083a7c908a4b3bdea7713150292c453e6a1c9bfd"),
 }
+UNSUBMITTED_PREFLIGHT = "es-8c2a5ae0be9e4090b2aa38c324592f46"
+UNSUBMITTED_REPORT = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-7a7e118e3ef9493f98eb24f93fd064f6.json"
+UNSUBMITTED_REPORT_HASH = "sha256:e17a09ab60e17680486e5c6b45dd22602c70a848512c96032e3b188c5b31cd52"
+UNSUBMITTED_RESERVATION_HASH = "sha256:b952cb026b1600eb1ea46cd8e9f37a5e58c9130c604ff8776c90e9149be6ee15"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -127,6 +131,8 @@ def legacy_context(route, context, args, packet, completion):
 
 
 def replacement_label(context, args, original):
+    if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "database-proof", "permissions", "baseline"):
+        return "entity-smoke-" + hashlib.sha256((original + ":" + UNSUBMITTED_PREFLIGHT + ":known-not-submitted-recovery-1").encode()).hexdigest()[:24]
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) != (LABEL, "administration", "grant-runtime", "baseline"):
         return original
     return "entity-smoke-" + hashlib.sha256((original + ":" + FAILED_PREFLIGHT + ":administrator-authentication-recovery-1").encode()).hexdigest()[:24]
@@ -135,6 +141,19 @@ def replacement_label(context, args, original):
 def recovery_preflight(C, context, args, original):
     selected = replacement_label(context, args, original)
     if selected == original: return original
+    if args.workload == "database-proof":
+        target = context["cache"] / "task-attempts" / (original + "-database-proof-preflight.json")
+        C.require(C.digest_file(target) == UNSUBMITTED_RESERVATION_HASH
+                  and C.digest_file(C.ROOT / UNSUBMITTED_REPORT) == UNSUBMITTED_REPORT_HASH, "task-unsubmitted-recovery-evidence-changed")
+        reservation, failure = C.read_json(target), C.read_json(C.ROOT / UNSUBMITTED_REPORT)
+        request = reservation["request"]
+        C.require(reservation["operation_id"] == UNSUBMITTED_PREFLIGHT and request["proof_label"] == original
+                  and all(request.get(key) == value for key, value in context["binding"].items() if key != "proof_label")
+                  and request["environment"] == {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": original}
+                  and failure.get("effect") == "not-started" and failure.get("condition") == "aws-command-failed"
+                  and C.RESOURCE.CONTROL.AttemptStore(context["cache"] / "task-attempts").read("original-unsubmitted-preflight", request) == reservation,
+                  "task-unsubmitted-recovery-evidence-invalid")
+        return selected
     C.require(read(C, context["cache"], context["binding"]) is not None, "source-transition-replacement-preflight-recovery-required")
     target = context["cache"] / "task-attempts" / (original + "-administration-preflight.json")
     previous = C.read_json(target)

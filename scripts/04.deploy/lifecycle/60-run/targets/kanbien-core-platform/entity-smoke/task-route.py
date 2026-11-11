@@ -258,9 +258,12 @@ def execute(args, provider):
     else:
         runner.PREFLIGHT.validate_launch(request)
 
-    def guard():
+    def source_guard():
         require(C.source_digest() == context["artifact"] and C.digest_file(RULE) == safe["preflight_rule_sha256"]
-                and C.DEPLOY.fingerprint(GRAPH.contract(args.workload, C.GATE, negative=negative)) == safe["graph_sha256"], "task-source-changed-before-submission")
+                and C.DEPLOY.fingerprint(GRAPH.contract(args.workload, C.GATE, negative=negative)) == safe["graph_sha256"]
+                and C.digest_file(C.ROOT / C.ALIGN.SCOPE) == context["binding"]["configuration_contract_sha256"], "task-source-changed-before-submission")
+    def guard():
+        source_guard()
         C.ALIGN.source_preflight(context["custody"])
         alignment, parameters, _ = C.ALIGN.inspect(provider, context["custody"], C.now())
         require({**C.binding_for(context["custody"], alignment), "proof_label": args.proof_label} == context["binding"], "task-dependency-changed-before-submission")
@@ -273,9 +276,13 @@ def execute(args, provider):
         require(operator(provider, request["definition"], [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])]) == safe["operator_sha256"], "task-operator-changed-before-submission")
         require(STEPS.prerequisites(deps, {**context, "binding_snapshot": binding_snapshot}, args, provider) == context["prerequisites"], "task-prerequisites-changed-before-submission")
         book.validate("change-set" if args.phase == "preflight" or negative else "execution-preflight", 1)
-        require(C.source_digest() == context["artifact"] and C.digest_file(RULE) == safe["preflight_rule_sha256"]
-                and C.digest_file(C.ROOT / C.ALIGN.SCOPE) == context["binding"]["configuration_contract_sha256"], "task-source-changed-before-submission")
-    if previous is None: provider.enable_task(request, store, key, guard)
+        source_guard()
+    if previous is None:
+        # A failed read proves non-submission and must not consume the durable
+        # attempt. After these fresh checks only local admission/reservation and
+        # the immediate source/exact-payload guard precede the single RunTask.
+        guard()
+        provider.enable_task(request, store, key, source_guard)
     else: provider.effect = "original-operation-reconcile-only"
     def progress(value):
         print(json.dumps({"schema": "deploy/entity-smoke-task-progress/v1", "phase": value["phase"], "operation_id": value["operation_id"]}), file=C.os.sys.stderr, flush=True)
@@ -350,7 +357,7 @@ def main():
         if isinstance(failure, TaskRouteFailure) and failure.item is not None: context.update(item=failure.item)
         if isinstance(failure, ACCEPTANCE.AcceptanceFailure): context.update(failure.context)
         recovery_item = RECOVERY.failure_item(failure)
-        if recovery_item is not None: context["item"] = recovery_item
+        if recovery_item is not None: context.update(field="prerequisite", item=recovery_item)
         if isinstance(failure, RUNNER.CONTROL.SubmissionNotStarted) and failure.field is not None:
             context.update(field=failure.field, item=failure.item)
             if failure.workload is not None: context.update(affected_workload=failure.workload)
