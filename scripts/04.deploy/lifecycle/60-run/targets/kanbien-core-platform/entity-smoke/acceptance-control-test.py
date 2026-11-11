@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -173,30 +173,34 @@ def collection_protocols():
     finally: K.collect, K.Provider, sys.argv = original_collect, original_provider, original_argv
 
 
-def archive_protocols():
+def archive_protocols(*, bootstrap=False, proof_label=None):
     """Actual local task collector and gate producer, controlled input only."""
     A, T = K.A, K.A.T
     C = T.C
     binding = {"source_revision": "b" * 40, "image_digest": "sha256:" + "c" * 64,
         "configuration_contract_sha256": "sha256:" + "d" * 64, "permission_contract_sha256": "sha256:" + "e" * 64,
         "dependency_incarnation_sha256": "sha256:" + "f" * 64, "proof_label": "entity-smoke-" + "a" * 24, "record_digest": "1" * 64}
-    label = A.preflight_label(binding, "acceptance", "verifier", "read")
+    if proof_label is not None: binding["proof_label"] = proof_label
+    stage, workload, operation, name = ("baseline", "administration", "bootstrap", "bootstrap") if bootstrap else ("acceptance", "verifier", "read", "final-read")
+    label = A.preflight_label(binding, stage, workload, operation)
     request = {**{key: item for key, item in binding.items() if key not in {"proof_label", "record_digest"}},
-        "workload": "verifier", "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-entity-smoke-verifier:1",
+        "workload": workload, "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-entity-smoke-" + workload + ":1",
         "proof_label": label, "security_group": "sg-" + "a" * 17, "subnets": ["subnet-" + "b" * 17], "deadline_seconds": 90,
         "environment": {"ENTITY_SMOKE_VERIFICATION_OPERATION": "ready", "ENTITY_SMOKE_PROOF_LABEL": label, "ENTITY_SMOKE_EXPECTED_SOURCE": binding["source_revision"]}}
+    if bootstrap: request["environment"] = {"ENTITY_SMOKE_ADMINISTRATION_OPERATION": "preflight"}
     reservation = {"schema": "deploy/entity-smoke-task-reservation/v1", "operation_id": "es-" + "2" * 32,
         "request": request, "request_sha256": hashlib.sha256(T.RUNNER.CONTROL.canonical(request)).hexdigest(), "reserved_at": "2026-11-09T02:30:00Z"}
     stamp = "2026-11-09T02:30:01Z"
     task = {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "3" * 32,
         "taskDefinitionArn": request["definition"], "startedBy": reservation["operation_id"], "overrides": T.RUNNER.CONTROL.overrides(request),
         "lastStatus": "STOPPED", "launchType": "FARGATE", "createdAt": stamp, "startedAt": stamp, "stoppedAt": stamp,
-        "containers": [{"name": "entity-smoke-verifier", "imageDigest": binding["image_digest"], "exitCode": 0}]}
+        "containers": [{"name": "entity-smoke-" + workload, "imageDigest": binding["image_digest"], "exitCode": 0}]}
     result = {"schema": "deploy/entity-smoke-task-proof/v1", "verdict": "passed", "operation": "ready", "code": "ENTITY_SMOKE_HEALTHY",
         "source_revision": binding["source_revision"], "proof_label_sha256": hashlib.sha256(label.encode()).hexdigest(),
         "steps": ["release", "liveness", "readiness"], "checked_at": stamp}
+    if bootstrap: result = {"verdict": "passed", "code": "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED", "operation": "preflight"}
     receipt = T.RUNNER.EVIDENCE.collect(task, reservation, {"events": [{"message": json.dumps(result)}]}, stamp)
-    graph = T.GRAPH.contract("verifier", C.GATE)
+    graph = T.GRAPH.contract(workload, C.GATE)
     artifact, plan = "sha256:" + "4" * 64, "sha256:" + "5" * 64
     expected = {row["id"]: artifact if row["id"] == T.GRAPH.CONTROLLER_SOURCE else binding["image_digest"] for row in graph["artifacts"]}
     packet = {"schema": "deploy/entity-smoke-task-step/v1", "plan_sha256": plan,
@@ -204,7 +208,7 @@ def archive_protocols():
     with tempfile.TemporaryDirectory(prefix="entity-smoke-task-archive-") as temporary:
         root = Path(temporary)
         book = C.GateBook(artifact, root, contract=graph, artifact_bindings=expected)
-        for name in book.known: book.component(name)
+        for component in book.known: book.component(component)
         book.bind_plan(plan)
         for gate in C.GATE.GATE_ORDER[:7]: book.gate(gate)
         produced = book.validate("controlled-execution", 1)
@@ -212,9 +216,23 @@ def archive_protocols():
         completion = {"schema": "deploy/entity-smoke-task-completion/v1", "step_sha256": A.document_digest(packet), "plan_sha256": plan,
             "realization_evidence": ".cache/entity-smoke-live/" + binding["proof_label"] + "/task-realization/" + produced.name,
             "realization_evidence_sha256": A.document_digest(gate)}
-        value = {"schema": A.SCHEMA, "name": "final-read", "stage": "acceptance", "phase": "preflight", "requested_operation": "read",
+        value = {"schema": A.SCHEMA, "name": name, "stage": stage, "phase": "preflight", "requested_operation": operation,
             "controller_sha256": artifact, "collection_binding": binding, "graph": graph, "packet": packet, "completion": completion, "gate": gate, "admission": None}
         assert A.validate_task(value, binding) is value
+        if bootstrap and proof_label == T.IMAGE_REPAIR.LABEL:
+            original = "entity-smoke-" + hashlib.sha256((proof_label + ":administration:bootstrap:preflight").encode()).hexdigest()[:24]
+            assert label != original
+            # A perfectly formed successful receipt with the old identity must
+            # still reject; collection must select the approved recovery task.
+            invalid = copy.deepcopy(value)
+            old_reservation = invalid["packet"]["reservation"]
+            old_reservation["request"]["proof_label"] = original
+            old_reservation["request_sha256"] = hashlib.sha256(T.RUNNER.CONTROL.canonical(old_reservation["request"])).hexdigest()
+            old_task = copy.deepcopy(task)
+            old_task["overrides"] = T.RUNNER.CONTROL.overrides(old_reservation["request"])
+            invalid["packet"]["receipt"] = T.RUNNER.EVIDENCE.collect(old_task, old_reservation, {"events": [{"message": json.dumps(result)}]}, stamp)
+            invalid["completion"]["step_sha256"] = A.document_digest(invalid["packet"])
+            fails(lambda: A.validate_task(invalid, binding), A.EvidenceFailure, "acceptance-task-request-selection-mismatch")
         old_source = C.source_digest
         try:
             C.source_digest = lambda: (_ for _ in ()).throw(AssertionError("historical read must not inspect today's source"))
@@ -347,6 +365,8 @@ def control_custody_protocols():
 def run():
     collection_protocols()
     archive_protocols()
+    archive_protocols(bootstrap=True)
+    archive_protocols(bootstrap=True, proof_label=K.T.IMAGE_REPAIR.LABEL)
     control_custody_protocols()
     base = ["--receipt", "/tmp/acceptance-controlled-receipt.json", "--proof-label", "entity-smoke-" + "a" * 24,
             "--workload", "verifier", "--operation", "read", "--proof-stage", "acceptance", "--expected-digest", "b" * 64]

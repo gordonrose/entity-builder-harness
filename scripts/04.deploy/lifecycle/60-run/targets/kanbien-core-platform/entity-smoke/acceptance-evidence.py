@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -76,7 +76,12 @@ def document_digest(value):
 
 def preflight_label(binding, stage, workload, operation):
     suffix = "" if stage == "baseline" else ":" + stage
-    return "entity-smoke-" + hashlib.sha256((binding["proof_label"] + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
+    original = "entity-smoke-" + hashlib.sha256((binding["proof_label"] + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
+    # Historical selection only, not launch authority: the public task route
+    # requires the original failure and actual repair receipt before recovery.
+    if (binding["proof_label"], workload, operation, stage) == (T.IMAGE_REPAIR.LABEL, "administration", "bootstrap", "baseline"):
+        return "entity-smoke-" + hashlib.sha256((original + ":" + T.IMAGE_REPAIR.FAILURE_ID + ":image-delivery-recovery-1").encode()).hexdigest()[:24]
+    return original
 
 
 def validate_gate(graph, gate, plan_sha256, artifacts, counts, *, item, family="task"):

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-10"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -142,6 +142,13 @@ with tempfile.TemporaryDirectory(prefix="entity-image-recovery-") as temporary:
         fails(lambda: M.recovery_label(context, args, original), "infrastructure-input-unavailable")
         M.retain("receipt.json", {"schema": "deploy/entity-smoke-image-delivery-receipt/v1", "plan_sha256": M.fingerprint(plan), "execution_sha256": M.fingerprint(execution), "terminal_token_confirmed": True, "source_revision": SOURCE, "image_digest": binding["image_digest"]})
         recovery = M.recovery_label(context, args, original)
+        acceptance_spec = importlib.util.spec_from_file_location("image_repair_acceptance_label_fixture", Path(__file__).with_name("acceptance-evidence.py"))
+        acceptance = importlib.util.module_from_spec(acceptance_spec); acceptance_spec.loader.exec_module(acceptance)
+        assert acceptance.preflight_label(binding, "baseline", "administration", "bootstrap") == recovery
+        for stage, workload, operation in (("credential-recovery", "administration", "bootstrap"), ("baseline", "administration", "grant-runtime"), ("baseline", "migration", "apply")):
+            suffix = "" if stage == "baseline" else ":" + stage
+            ordinary = "entity-smoke-" + C.hashlib.sha256((M.LABEL + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
+            assert acceptance.preflight_label(binding, stage, workload, operation) == ordinary
         assert recovery != original and M.recovery_label(context, SimpleNamespace(**{**vars(args), "phase": "operation"}), original) == recovery
         assert store.path_for("recovery", {**request, "proof_label": recovery}) != store.path_for("original", request)
         assert store.path_for("original", request).read_bytes() == original_bytes

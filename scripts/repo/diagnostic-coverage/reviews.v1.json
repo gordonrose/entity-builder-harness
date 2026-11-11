@@ -240,6 +240,7 @@
       ],
       "tests": [
         "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-aggregate-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair-test.py",
         "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route-test.py",
         "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.py",
         "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-route-test.py",
@@ -252,7 +253,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evidence.py",
-          "sha256": "8c137104e9de4f5127f6378c6c2c820ea491cc15951ea17eca38435aef9d286e"
+          "sha256": "3bedad2f819d4fdac0bbdcae55fd4a313e1bd9c0ea06bef22d6be774eb6db2b2"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py",

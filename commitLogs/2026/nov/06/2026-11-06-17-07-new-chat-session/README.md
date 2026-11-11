@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-10T19:49:38Z
-latest_commit_sha: 8cac3e3a
-chat_duration: 355351s (04:02:42:31)
+latest_commit_at_utc: 2026-11-10T23:50:16Z
+latest_commit_sha: 70f528c1
+chat_duration: 369789s (04:06:43:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -82,6 +82,32 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- 2026-11-11 continuation: the unchanged repair planner now passes, with exactly
+  two endpoint modifications and no replacements/deletions. The earlier local
+  timeout remains retained; bounded profiling observed metadata parsing rather
+  than AWS activity. No timeout/check bypass or provider mutation was used.
+  Before execution, consumer review found acceptance-evidence.preflight_label
+  still selecting the failed original bootstrap probe. Correct only this exact
+  approved label selection for the known proof/workload/operation/stage; the
+  same helper is consumed by capture, request validation and operation admission.
+  Existing actual receipt/gate/identity checks remain required. Extend the real
+  local archive fixture for recovered bootstrap, ordinary bootstrap and rejection
+  of the failed original label. No new diagnostic vocabulary, AWS authority or
+  architecture decision is needed. Refresh only the existing partial collector
+  review after source review and focused proof; retain the earlier integration
+  run and revalidate any inputs affected by this correction.
+- Recovery-label correction consolidated review complete: inspected the complete
+  historical validator, real capture/context and operation-admission consumers.
+  The only executable change is the exact known bootstrap preflight selection;
+  no historical time, identity, result, gate or admission validation is removed.
+  acceptance-control-test and image-delivery-repair-test both passed. Real local
+  task/evidence/GateBook archives accept ordinary and recovered probes and reject
+  the original identity even with a newly valid receipt/hash. The existing guarded
+  repair fixture confirms both producer and collector derive the same identity;
+  unrelated workload/operation/stage cases retain ordinary selection. No live
+  receipt is constructed by these tests. Source-matched collector review remains
+  partial, with existing malformed/concurrency and live-proof debt unchanged.
 
 - Image-delivery repair consolidated review: whole parsed foundation delta is
   exactly two repository allowlist additions; actual read-only inspection
@@ -513,6 +539,17 @@ Summary: Checkpoint8cac3e3a closes the independent diagnostic correction; all re
 
 Durable evidence: Authority audit re-read the actual complete-chain approval: unused named feature/database/recovery phases remain approved, but preserve their dependencies and single-submission journals. The original plan expressly protects other baselines, and the approved controller-only repair rule requires templates unchanged. Exactly two shared foundation endpoint allowlist changes and one separately journalled new probe therefore remain outside that approval. Do not treat this as missing permission for ordinary read-only diagnosis, reconciliation or the already-approved later chain. Those safe checks and independent prevention are complete; there is no active goal process or dependency-free live phase to advance. Keep full final integration pending until the actual repaired candidate is stable, not as a waiver or completion claim. Pending user decision is recorded; no extra RunTask or baseline mutation is authorized.
 
+
+### 2026-11-10T23:50:16Z - Commit recorded
+
+Commit: `70f528c1`
+
+Message: fix: restore private image delivery for entity-smoke
+
+Summary: Approved two-endpoint source delta and durable repair route; fixed replacement preflight provenance. Staged gate passed. Registered prerequisite recheck passed after all isolated fixtures passed; preserve the original aggregate failure as unexplained, not a successful run. Actual AWS repair and full proof pending.
+
+ADR impact: No ADR: bounded operational repair within existing deployment architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -583,6 +620,13 @@ Durable evidence: Authority audit re-read the actual complete-chain approval: un
   Summary: Final focused alignment/evidence/runner/public-route tests passed; two registered runtime prerequisites passed; staged gate passed with28 checks passed and30 correctly deferred, zero findings. Read-only actual-policy/failed-task predicates and in-memory-only two-policy shape counterexample behaved as reviewed. No foundation policy, application image, SQL state or launch count changed. Full final affected integration and complete live proof remain pending.
   ADR impact: No new ADR: preserve existing scoped provider checks and safe diagnostic delivery; no new AWS effect, permission, application/runtime/template or retry authority
 
+
+- Commit: `70f528c1`
+  Time UTC: 2026-11-10T23:50:16Z
+  Message: fix: restore private image delivery for entity-smoke
+  Summary: Approved two-endpoint source delta and durable repair route; fixed replacement preflight provenance. Staged gate passed. Registered prerequisite recheck passed after all isolated fixtures passed; preserve the original aggregate failure as unexplained, not a successful run. Actual AWS repair and full proof pending.
+  ADR impact: No ADR: bounded operational repair within existing deployment architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -596,9 +640,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-10T19:49:38Z
-Latest commit SHA: 8cac3e3a
-Chat duration: 355351s (04:02:42:31)
+Latest commit at UTC: 2026-11-10T23:50:16Z
+Latest commit SHA: 70f528c1
+Chat duration: 369789s (04:06:43:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
