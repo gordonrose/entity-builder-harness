@@ -7,7 +7,7 @@
 #   version: 5
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -436,7 +436,15 @@ def validate_change_shape(contract: dict[str, Any]) -> None:
         raise ContractFailure("change-summary-not-required")
     allowed = set(listed_ids(shape.get("allowed_operation_classes"), "change-shape-allowed-missing"))
     forbidden = set(listed_ids(shape.get("forbidden_operation_classes"), "change-shape-forbidden-missing"))
-    if "disposable_restore_cleanup" in shape:
+    if "immutable_definition_refresh" in shape:
+        refresh = shape["immutable_definition_refresh"]
+        requirements = {"owned_task_definitions_only", "stopped_workload_required", "unchanged_permissions_and_storage",
+                        "qualified_image_required", "original_preparation_retained"}
+        if (contract["schema"] != SERVICE_CONTRACT_SCHEMA or "disposable_restore_cleanup" in shape
+                or not isinstance(refresh, dict) or set(refresh) != requirements or any(refresh[key] is not True for key in requirements)
+                or allowed != {"update", "replace"} or forbidden != {"create", "delete", "broaden-permission"}):
+            raise ContractFailure("change-shape-invalid")
+    elif "disposable_restore_cleanup" in shape:
         # This is a declaration, not proof of ownership/readback or permission
         # to execute. The separately governed provider controller must establish
         # those facts before exposing its single-submission deletion capability.

@@ -23,6 +23,30 @@ The generic [deployment proof standard](../../04.deploy/standards/operational-re
 
 ### Approved administrator authentication recovery
 
+The standing completion authority also permits the corrected qualified image
+to replace only the five owned entity-smoke task definitions and update the
+stopped service's task-definition reference. The owning `source-transition.py`
+route requires desired/running/pending counts zero, unchanged deployment template,
+permission/storage/network configuration and migration inputs, and the exact
+reviewed administrator correction. It retains prior creation, original four
+preparation step/completion pairs, successful password recovery and temporary
+permission removal. Those historical steps retain their real source/image and
+controller; later operations use the newly qualified image. No bootstrap or
+migration replay is admitted. A new, deterministic grant-preflight label retains
+the original failed attempt separately. Acceptance includes the source transition.
+
+<!-- deterministic-check: allow reason="source-transition.py enforces exact change shape, single submissions and terminal readback; this paragraph describes that bounded owner" -->
+The v2 `immutable_definition_refresh` declaration is not general replacement
+permission: only the closed owned-definition/stopped-workload/unchanged-storage-
+and-permissions/qualified-image/original-preparation conditions apply. Exact
+CloudFormation review must contain five task-definition replacements and one
+non-replacing service-reference update, with no other changes. Each submission
+is reserved once; uncertain results reconcile by original identity. Completion
+requires the original execution token, unchanged non-definition identities and
+readback of the successor definitions. Generic source, operator, realization and
+terminal-evidence gates remain required. Controller/schema validation changes
+are controller-only inputs, not a reason to rebuild an unchanged qualified image.
+
 On 2026-11-11 the user approved completing this proof, including the bounded
 administrator recovery, corrected image publication and replacement preflight,
 and expressly superseded repeated approval requirements for this goal.

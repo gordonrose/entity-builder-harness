@@ -28,6 +28,7 @@ import subprocess
 import time
 import uuid
 import yaml
+from types import SimpleNamespace
 
 
 def module(name, path):
@@ -45,6 +46,7 @@ ALIGN = module("entity_smoke_public_alignment", ROOT / "scripts/04.deploy/lifecy
 RESPONSE = module("entity_smoke_public_response", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
 GATE = module("entity_smoke_public_gate", ROOT / "scripts/04.deploy/operational-realization-gate/script.py")
 CONTRACT = ROOT / ALIGN.TARGET / "20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml"
+TRANSITION = module("entity_smoke_source_transition", DIRECTORY / "source-transition.py")
 READS = ALIGN.READS | {("cloudformation", operation) for operation in ("describe-change-set", "get-template", "list-stack-resources", "describe-stack-events", "validate-template")} | {
     ("iam", "get-role"), ("iam", "simulate-principal-policy"), ("ecs", "describe-services"), ("ecs", "describe-tasks"),
     ("ecs", "list-tasks"), ("logs", "get-log-events"),
@@ -273,13 +275,24 @@ def binding_for(receipt, alignment):
 def activation_prerequisites(provider, path, binding, parameters, cache, store, *, resuming=False):
     require(path is not None, "infrastructure-activation-proof-required")
     previous = read_json(cache / "receipts/create.json")
-    require(isinstance(previous, dict) and set(previous) == {"schema", "binding", "result"} and previous["schema"] == "deploy/entity-smoke-infrastructure-receipt/v1" and previous["binding"] == binding
+    transition = TRANSITION.read(SimpleNamespace(**globals()), cache, binding)
+    creation_binding = transition["plan"]["previous_binding"] if transition else binding
+    require(isinstance(previous, dict) and set(previous) == {"schema", "binding", "result"} and previous["schema"] == "deploy/entity-smoke-infrastructure-receipt/v1" and previous["binding"] == creation_binding
             and isinstance(previous["result"], dict) and previous["result"].get("status") == "completed" and isinstance(previous["result"].get("reservation"), dict)
             and isinstance(previous["result"]["reservation"].get("request"), dict) and isinstance(previous["result"].get("facts"), dict)
             and isinstance(previous["result"]["facts"].get("resources"), dict), "infrastructure-create-receipt-invalid")
     execution = previous["result"]["reservation"]["request"]
-    require(all(execution.get(key) == value for key, value in DEPLOY.request(binding, {**parameters, "ServerDesiredCount": "0"}, False).items()), "infrastructure-create-receipt-binding-mismatch")
-    if resuming:
+    require(all(execution.get(key) == value for key, value in DEPLOY.request(creation_binding, {**parameters, "ServerDesiredCount": "0", "SourceRevision": creation_binding["source_revision"], "ImageDigest": creation_binding["image_digest"]}, False).items()), "infrastructure-create-receipt-binding-mismatch")
+    if transition:
+        require(store.read("deploy-execute-create", execution) == previous["result"]["reservation"], "infrastructure-create-reservation-not-confirmed")
+        created = previous["result"]
+        current = DEPLOY.deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "1" if resuming else "0"})
+        require(current["StackId"] == created["facts"]["stack_arn"] and current.get("StackStatus") in {"UPDATE_COMPLETE", "UPDATE_IN_PROGRESS"}, "infrastructure-transition-state-not-confirmed")
+        response = provider("cloudformation", "list-stack-resources", StackName=current["StackId"])
+        rows = response.get("StackResourceSummaries")
+        require(isinstance(rows, list) and len(rows) == len(DEPLOY.RESOURCE_TYPES) and not response.get("NextToken")
+                and {row["LogicalResourceId"]: {"type": row["ResourceType"], "physical_id": row["PhysicalResourceId"]} for row in rows} == transition["resources"], "infrastructure-transition-resources-changed")
+    elif resuming:
         require(store.read("deploy-execute-create", execution) == previous["result"]["reservation"], "infrastructure-create-reservation-not-confirmed")
         created = previous["result"]
         response = provider("cloudformation", "list-stack-resources", StackName=created["facts"]["stack_arn"])
@@ -302,16 +315,29 @@ def activation_prerequisites(provider, path, binding, parameters, cache, store, 
         require(isinstance(entry, dict) and set(entry) == {"reservation", "receipt"}, "infrastructure-activation-proof-invalid")
         reservation, receipt = entry["reservation"], entry["receipt"]
         retained = RESOURCE.EVIDENCE.validate_retained(receipt, reservation)
-        require(retained["workload"] == workload and retained["operation"] == operation and all(reservation["request"].get(key) == value for key, value in binding.items())
-                and retained["task"]["definition"] == created["facts"]["resources"][logical]["physical_id"], "infrastructure-activation-proof-binding-mismatch")
+        original = False
+        if name in {"bootstrap", "migration"}:
+            step = cache / "task-steps" / (workload + "-" + operation + "-operation.json")
+            completion_path = step.with_name(step.stem + ".completion.json")
+            if step.is_file() and completion_path.is_file():
+                packet, completion = read_json(step), read_json(completion_path)
+                original = TRANSITION.historical(packet, completion)
+                if original:
+                    require(packet["reservation"] == reservation and packet["receipt"] == receipt and packet["binding"] == creation_binding
+                            and digest_file(ROOT / completion["realization_evidence"]) == completion["realization_evidence_sha256"], "infrastructure-original-preparation-changed")
+        selected_binding = creation_binding if original else binding
+        resources = transition["resources"] if transition and not original else created["facts"]["resources"]
+        require(retained["workload"] == workload and retained["operation"] == operation and all(reservation["request"].get(key) == value for key, value in selected_binding.items())
+                and retained["task"]["definition"] == resources[logical]["physical_id"], "infrastructure-activation-proof-binding-mismatch")
         completion = workloads["entity-smoke-" + workload]["completion"]
         require(retained["task"]["completion_duration_seconds"] <= completion["deadline_seconds"] and reservation["request"]["deadline_seconds"] <= completion["deadline_seconds"]
                 and retained["result"]["code"] == completion["success"]["result_code"], "infrastructure-activation-completion-contract-mismatch")
         require(previous_stop is None or RESOURCE.timestamp(retained["task"]["created_at"]) >= previous_stop, "infrastructure-activation-proof-order-invalid")
-        task = RESOURCE.only(provider("ecs", "describe-tasks", cluster=RESOURCE.CLUSTER, tasks=[retained["task"]["arn"]]), "tasks")
-        logs = RESOURCE.EVIDENCE.read_logs(provider, reservation["request"], retained["task"]["arn"])
-        current = RESOURCE.EVIDENCE.collect(task, reservation, logs, retained["collected_at"])
-        require(current == retained, "infrastructure-activation-proof-not-confirmed")
+        if not original:
+            task = RESOURCE.only(provider("ecs", "describe-tasks", cluster=RESOURCE.CLUSTER, tasks=[retained["task"]["arn"]]), "tasks")
+            logs = RESOURCE.EVIDENCE.read_logs(provider, reservation["request"], retained["task"]["arn"])
+            current = RESOURCE.EVIDENCE.collect(task, reservation, logs, retained["collected_at"])
+            require(current == retained, "infrastructure-activation-proof-not-confirmed")
         previous_stop = RESOURCE.timestamp(retained["task"]["stopped_at"])
     require(-60 <= (datetime.now(timezone.utc) - previous_stop).total_seconds() <= GATE.CURRENT_EVIDENCE_MAX_AGE_SECONDS, "infrastructure-activation-proof-not-fresh")
 

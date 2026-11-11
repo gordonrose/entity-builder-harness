@@ -81,6 +81,8 @@ def preflight_label(binding, stage, workload, operation):
     # requires the original failure and actual repair receipt before recovery.
     if (binding["proof_label"], workload, operation, stage) == (T.IMAGE_REPAIR.LABEL, "administration", "bootstrap", "baseline"):
         return "entity-smoke-" + hashlib.sha256((original + ":" + T.IMAGE_REPAIR.FAILURE_ID + ":image-delivery-recovery-1").encode()).hexdigest()[:24]
+    if (binding["proof_label"], workload, operation, stage) == (C.TRANSITION.LABEL, "administration", "grant-runtime", "baseline"):
+        return "entity-smoke-" + hashlib.sha256((original + ":" + C.TRANSITION.FAILED_PREFLIGHT + ":administrator-authentication-recovery-1").encode()).hexdigest()[:24]
     return original
 
 
@@ -126,11 +128,15 @@ def validate_task(value, collection_binding, *, expected_binding=None):
     require(isinstance(packet, dict) and set(packet) == {"schema", "plan_sha256", "binding", "reservation", "receipt"}
             and packet["schema"] == "deploy/entity-smoke-task-step/v1", "acceptance-task-packet-invalid", name)
     parent = {key: item for key, item in collection_binding.items() if key != "record_digest"}
+    legacy = C.TRANSITION.historical(packet, value["completion"])
+    if legacy and packet["binding"] != parent:
+        C.TRANSITION.compatible(C, packet["binding"], parent)
+        expected_binding = packet["binding"]
     expected_binding = parent if expected_binding is None else expected_binding
     C.RESOURCE.validate_binding(expected_binding, record_required=False)
     require(packet["binding"] == expected_binding, "acceptance-task-binding-mismatch", name)
     # The clone reader alone has a distinct incarnation and permission contract.
-    require(all(expected_binding[key] == parent[key] for key in parent if name != "restore-read" or key not in {"permission_contract_sha256", "dependency_incarnation_sha256"})
+    require(legacy or all(expected_binding[key] == parent[key] for key in parent if name != "restore-read" or key not in {"permission_contract_sha256", "dependency_incarnation_sha256"})
             and (name == "restore-read" or expected_binding == parent), "acceptance-task-parent-mismatch", name)
     reservation, receipt = packet["reservation"], packet["receipt"]
     checked = T.RUNNER.EVIDENCE.validate_retained(receipt, reservation)
@@ -157,7 +163,7 @@ def validate_task(value, collection_binding, *, expected_binding=None):
     require(isinstance(completion["realization_evidence"], str) and re.fullmatch(
         r"\.cache/entity-smoke-live/" + re.escape(parent["proof_label"]) + r"/task-realization/controlled-execution-[a-f0-9]{32}\.json",
         completion["realization_evidence"]), "acceptance-task-gate-reference-invalid", name)
-    expected = {row["id"]: value["controller_sha256"] if row["id"] == T.GRAPH.CONTROLLER_SOURCE else parent["image_digest"] for row in graph["artifacts"]}
+    expected = {row["id"]: value["controller_sha256"] if row["id"] == T.GRAPH.CONTROLLER_SOURCE else expected_binding["image_digest"] for row in graph["artifacts"]}
     validate_gate(graph, gate, packet["plan_sha256"], expected,
                   {"create": 1, "update": 0, "delete": 0, "replace": 0, "broaden-permission": 0}, item=name)
     admission = value["admission"]

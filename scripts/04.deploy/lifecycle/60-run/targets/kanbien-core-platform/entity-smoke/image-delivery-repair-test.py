@@ -145,10 +145,13 @@ with tempfile.TemporaryDirectory(prefix="entity-image-recovery-") as temporary:
         acceptance_spec = importlib.util.spec_from_file_location("image_repair_acceptance_label_fixture", Path(__file__).with_name("acceptance-evidence.py"))
         acceptance = importlib.util.module_from_spec(acceptance_spec); acceptance_spec.loader.exec_module(acceptance)
         assert acceptance.preflight_label(binding, "baseline", "administration", "bootstrap") == recovery
-        for stage, workload, operation in (("credential-recovery", "administration", "bootstrap"), ("baseline", "administration", "grant-runtime"), ("baseline", "migration", "apply")):
+        for stage, workload, operation in (("credential-recovery", "administration", "bootstrap"), ("baseline", "migration", "apply")):
             suffix = "" if stage == "baseline" else ":" + stage
             ordinary = "entity-smoke-" + C.hashlib.sha256((M.LABEL + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
             assert acceptance.preflight_label(binding, stage, workload, operation) == ordinary
+        grant_original = "entity-smoke-" + C.hashlib.sha256((M.LABEL + ":administration:grant-runtime:preflight").encode()).hexdigest()[:24]
+        grant_args = SimpleNamespace(proof_label=M.LABEL, workload="administration", operation="grant-runtime", proof_stage="baseline")
+        assert acceptance.preflight_label(binding, "baseline", "administration", "grant-runtime") == C.TRANSITION.replacement_label({}, grant_args, grant_original)
         assert recovery != original and M.recovery_label(context, SimpleNamespace(**{**vars(args), "phase": "operation"}), original) == recovery
         assert store.path_for("recovery", {**request, "proof_label": recovery}) != store.path_for("original", request)
         assert store.path_for("original", request).read_bytes() == original_bytes

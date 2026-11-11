@@ -30,6 +30,7 @@ NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/access-control-test.mjs "$entity_smoke_build"
 node scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-observation-test.mjs
 node scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-recovery-test.mjs
+python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/source-transition-test.py
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/preflight-test.mjs "$entity_smoke_build"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/database-proof-test.mjs "$entity_smoke_build"
 node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/dependency-test.mjs

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -174,7 +174,7 @@ def prepare(provider, store, binding, parameters, *, activate=False):
     if fresh:
         if activate:
             before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"})
-            require(before.get("StackStatus") == "CREATE_COMPLETE", "deployment-activation-precondition-not-confirmed")
+            require(before.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "deployment-activation-precondition-not-confirmed")
         else:
             try: provider("cloudformation", "describe-stacks", StackName=STACK)
             except RESOURCE.ResourceMissing: pass
@@ -236,7 +236,7 @@ def execute(provider, store, binding, parameters, change_arn, stack_arn, *, acti
         before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"}) if activate else only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
         if activate: exact_stack(before, binding)
         else: initial_stack(provider, before, binding, parameters, review)
-        require(before["StackId"] == stack_arn and before.get("StackStatus") == ("CREATE_COMPLETE" if activate else "REVIEW_IN_PROGRESS"), "deployment-execution-precondition-not-confirmed")
+        require(before["StackId"] == stack_arn and before.get("StackStatus") in ({"CREATE_COMPLETE", "UPDATE_COMPLETE"} if activate else {"REVIEW_IN_PROGRESS"}), "deployment-execution-precondition-not-confirmed")
         try:
             provider("cloudformation", "execute-change-set", StackName=stack_arn, ChangeSetName=change_arn, ClientRequestToken=execution["operation_id"], **({"DisableRollback": True} if activate else {}))
         except RESOURCE.SubmissionNotStarted: raise

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T01:17:54Z
-latest_commit_sha: HEAD
-chat_duration: 375047s (04:08:10:47)
+latest_commit_at_utc: 2026-11-11T08:28:06Z
+latest_commit_sha: 5f9936a3
+chat_duration: 400859s (04:15:20:59)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -93,6 +93,35 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- Publication42987273754 failed before build because the standalone recovery
+  program was missing a delivery consumer. Source-transition now references
+  and verifies both exact recovery programs; delivery inventory has zero gaps.
+  Full integration exposed one controlled acceptance fixture whose top-level
+  Git revision differed from its nested task bindings. Constructing the fixture
+  with its real disposable revision also preserves predecessor hashes; the
+  actual route fixture now passes without weakening historical custody checks.
+  Source-transition integration is being rerun against the corrected stable set.
+- Correction checkpoint5f9936a3 passed45 local checks with13 later-stage
+  obligations deferred and passed its staged gate. Pushed normally to main;
+  hosted qualification/publication42987273754 is running. No new AWS feature
+  task has been launched after administrator recovery.
+- Next bounded change: refresh only five entity-smoke task definitions and the
+  stopped service reference from the original qualified image to the corrected
+  qualified image. Preserve schema, migration, roles, network, baseline services
+  and all original bootstrap/migration receipts. The original four step/completion
+  pairs remain pinned to their real image/controller, never relabelled or rerun.
+- Diagnostic review inventory for this repair: source-transition owns exact
+  source/package compatibility, prior creation/recovery custody, stopped state,
+  change-set properties/identities, durable submission, terminal event and
+  resource readback checks. Reuse existing source/alignment, provider, exclusive
+  intent, task completion and gate validation. Safe condition codes distinguish
+  rejected binding/change/receipt from unknown provider outcome; uncertain writes
+  reconcile only. Tests cover changed source/contracts/resources/history, wrong
+  approval hash, lost review/execute responses and no replay. Generic gate gains
+  only a closed v2 immutable-definition refresh declaration; ordinary replacement
+  remains forbidden. Acceptance must include the transition and genuine old
+  preparation evidence. This implements existing standing completion authority.
 
 - Actual administrator recovery completed: taska2a802a8bf684e05bdc6c7c65136e21a
   exited successfully with original qualified image. Fresh password reconnection,
@@ -760,6 +789,17 @@ Summary: Correct IAM aggregate-response handling for task, snapshot and failure-
 
 ADR impact: No ADR: bounded controller-only defect correction and existing immutable evidence preservation; deployment scope and authority unchanged.
 
+
+### 2026-11-11T08:28:06Z - Commit recorded
+
+Commit: `5f9936a3`
+
+Message: fix: preserve password administration across feature bootstrap
+
+Summary: Closed the administrator authentication regression; 45 affected local checks passed, 13 later-stage checks deferred. Actual AWS fixed-role recovery and temporary-access cleanup completed; image qualification and remaining live acceptance are outstanding.
+
+ADR impact: No new application architecture; repairs the existing role separation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -851,6 +891,13 @@ ADR impact: No ADR: bounded controller-only defect correction and existing immut
   Summary: Correct IAM aggregate-response handling for task, snapshot and failure-stop callers; retain only the exact genuine bootstrap receipts under their original controller. Registered composition, acceptance and dependency checks plus the commit gate passed. No image, IAM policy or application change.
   ADR impact: No ADR: bounded controller-only defect correction and existing immutable evidence preservation; deployment scope and authority unchanged.
 
+
+- Commit: `5f9936a3`
+  Time UTC: 2026-11-11T08:28:06Z
+  Message: fix: preserve password administration across feature bootstrap
+  Summary: Closed the administrator authentication regression; 45 affected local checks passed, 13 later-stage checks deferred. Actual AWS fixed-role recovery and temporary-access cleanup completed; image qualification and remaining live acceptance are outstanding.
+  ADR impact: No new application architecture; repairs the existing role separation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -864,9 +911,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T01:17:54Z
-Latest commit SHA: HEAD
-Chat duration: 375047s (04:08:10:47)
+Latest commit at UTC: 2026-11-11T08:28:06Z
+Latest commit SHA: 5f9936a3
+Chat duration: 400859s (04:15:20:59)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

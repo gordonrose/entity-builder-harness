@@ -29,14 +29,14 @@ from unittest.mock import patch
 if not __debug__: raise SystemExit("ENTITY_SMOKE_AGGREGATE_ASSERTIONS_DISABLED")
 
 
-def fixture(K):
+def fixture(K, source_revision=None):
     """Only connection-protocol inputs, not valid standalone gate archives."""
     A = K.A
     origin = datetime(2026, 11, 9, tzinfo=timezone.utc)
     stamp = lambda seconds: (origin + timedelta(seconds=seconds)).isoformat()
     basis = K.T.RECOVERY.STATE.STOP.artifact_basis(K.C)
     declaration = str((K.C.CONTRACT.parent / "declaration-contract.yml").relative_to(K.C.ROOT))
-    binding = {"source_revision": "a" * 40, "image_digest": "sha256:" + "c" * 64,
+    binding = {"source_revision": source_revision or "a" * 40, "image_digest": "sha256:" + "c" * 64,
         "configuration_contract_sha256": basis["custody_sources"][declaration], "permission_contract_sha256": "sha256:" + "e" * 64,
         "dependency_incarnation_sha256": A.digest({"resource_id": "db-CONTROLLEDORIGINAL", "database": "controlled_database", "schema": "entity_smoke"}),
         "proof_label": "entity-smoke-" + "a" * 24, "record_digest": "b" * 64}
@@ -58,7 +58,7 @@ def fixture(K):
             receipt = {"task": {"arn": arn(counter), "definition": definition(workload), "created_at": stamp(at),
                 "started_at": stamp(at), "stopped_at": stamp(at + 1)}, "collected_at": stamp(at + 2), "result": {"record_digest": binding["record_digest"]}}
             pair[phase] = {"name": name, "stage": stage, "phase": phase, "requested_operation": operations[0],
-                "controller_sha256": basis["controller"], "packet": {"reservation": reservation, "receipt": receipt}, "admission": None}
+                "controller_sha256": basis["controller"], "packet": {"binding": child if name == "restore-read" else {key: item for key, item in binding.items() if key != "record_digest"}, "reservation": reservation, "receipt": receipt}, "admission": None}
         if "preflight" in pair:
             before = pair["preflight"]["packet"]
             pair["operation"]["admission"] = {"preflight": {"reservation": before["reservation"], "receipt": before["receipt"]}, "required_after": stamp(start[name])}

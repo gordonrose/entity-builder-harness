@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -96,6 +96,39 @@ def main():
         run(root, LEGACY)
         upgraded = copy.deepcopy(LEGACY); upgraded["schema"] = OWNER.SERVICE_CONTRACT_SCHEMA
         run(root, upgraded)
+        refresh = copy.deepcopy(CONTRACT)
+        refresh["change_shape"] = {
+            "reviewed_change_summary_required": True,
+            "allowed_operation_classes": ["update", "replace"],
+            "forbidden_operation_classes": ["create", "delete", "broaden-permission"],
+            "immutable_definition_refresh": {key: True for key in (
+                "owned_task_definitions_only", "stopped_workload_required", "unchanged_permissions_and_storage",
+                "qualified_image_required", "original_preparation_retained")}}
+        assert set(refresh["change_shape"]["immutable_definition_refresh"]) == set(schema["bounded_definition_refresh"]["required_true_fields"])
+        run(root, refresh)
+        for field in refresh["change_shape"]["immutable_definition_refresh"]:
+            for invalid in (None, False, 1, CANARY):
+                changed = copy.deepcopy(refresh); changed["change_shape"]["immutable_definition_refresh"][field] = invalid
+                run(root, changed, "change-shape-invalid")
+        for invalid in (None, False, [], {}, CANARY):
+            changed = copy.deepcopy(refresh); changed["change_shape"]["immutable_definition_refresh"] = invalid
+            run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(refresh); changed["change_shape"].pop("immutable_definition_refresh")
+        run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(LEGACY); changed["change_shape"] = copy.deepcopy(refresh["change_shape"])
+        run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(refresh); changed["change_shape"]["immutable_definition_refresh"]["extra"] = True
+        run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(refresh); changed["change_shape"]["disposable_restore_cleanup"] = {}
+        run(root, changed, "change-shape-invalid")
+        for operation in ("create", "delete", "broaden-permission"):
+            changed = copy.deepcopy(refresh)
+            changed["change_shape"]["allowed_operation_classes"].append(operation)
+            changed["change_shape"]["forbidden_operation_classes"].remove(operation)
+            run(root, changed, "change-shape-invalid")
+        refresh_facts, refresh_summary = observations(refresh)
+        refresh_summary["operation_counts"].update(create=0, update=1, replace=5)
+        run(root, refresh, facts=refresh_facts, summary=refresh_summary)
         cleanup = copy.deepcopy(CONTRACT)
         cleanup["change_shape"] = {
             "reviewed_change_summary_required": True,

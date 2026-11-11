@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -36,6 +36,10 @@ REPOSITORY_URI = ACCOUNT + ".dkr.ecr." + REGION + ".amazonaws.com/" + REPOSITORY
 CONTROLLER_DIRECTORY = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/"
 FOUNDATION = TARGET + "/30-provider-realization/aws/cloudformation/foundation.yml"
 CONTROLLER_REPAIR_FILES = frozenset({
+    "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh",
+    "scripts/04.deploy/operational-realization-gate/script.py",
+    "scripts/04.deploy/operational-realization-gate/service-graph-test.py",
+    ".agentic/04.deploy/schemas/operational-realization-contract.v2.schema.yml",
     "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py",
     "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/alignment-test.py",
     ".agentic/aws/standards/operational-realization-applicability.md",

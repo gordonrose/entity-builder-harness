@@ -129,8 +129,10 @@ def operator(provider, definition, roles):
 
 def owned_stack(provider, binding, parameters, cache):
     retained = C.read_json(cache / "receipts/create.json")
+    transition = C.TRANSITION.read(C, cache, binding)
+    creation_binding = transition["plan"]["previous_binding"] if transition else binding
     require(isinstance(retained, dict) and set(retained) == {"schema", "binding", "result"} and retained.get("schema") == "deploy/entity-smoke-infrastructure-receipt/v1"
-            and retained.get("binding") == binding and isinstance(retained.get("result"), dict) and retained["result"].get("status") == "completed", "task-created-infrastructure-required")
+            and retained.get("binding") == creation_binding and isinstance(retained.get("result"), dict) and retained["result"].get("status") == "completed", "task-created-infrastructure-required")
     current = C.RESOURCE.only(provider("cloudformation", "describe-stacks", StackName=C.DEPLOY.STACK), "Stacks")
     C.DEPLOY.exact_stack(current, binding)
     rows = current.get("Parameters")
@@ -142,7 +144,7 @@ def owned_stack(provider, binding, parameters, cache):
     creation = retained["result"].get("reservation")
     require(isinstance(creation, dict) and isinstance(creation.get("request"), dict), "task-creation-reservation-required")
     creation_request = creation["request"]
-    expected_creation = C.DEPLOY.request(binding, {**parameters, "ServerDesiredCount": "0"}, False)
+    expected_creation = C.DEPLOY.request(creation_binding, {**parameters, "ServerDesiredCount": "0", "SourceRevision": creation_binding["source_revision"], "ImageDigest": creation_binding["image_digest"]}, False)
     require(all(creation_request.get(key) == value for key, value in expected_creation.items()), "task-creation-reservation-mismatch")
     control_store = C.RESOURCE.ResourceStore(cache / "attempts")
     require(control_store.read("deploy-execute-create", creation_request) == creation, "task-creation-reservation-not-retained")
@@ -153,7 +155,8 @@ def owned_stack(provider, binding, parameters, cache):
     require(isinstance(resources, list) and len(resources) == len(C.DEPLOY.RESOURCE_TYPES) and not response.get("NextToken")
             and all(isinstance(row, dict) and all(isinstance(row.get(key), str) and row[key] for key in ("LogicalResourceId", "ResourceType", "PhysicalResourceId")) for row in resources), "task-infrastructure-not-confirmed")
     observed = {row["LogicalResourceId"]: {"type": row["ResourceType"], "physical_id": row["PhysicalResourceId"]} for row in resources}
-    require(len(observed) == len(resources) and isinstance(retained["result"].get("facts"), dict) and retained["result"]["facts"].get("resources") == observed
+    expected_resources = transition["resources"] if transition else retained["result"]["facts"].get("resources")
+    require(len(observed) == len(resources) and isinstance(retained["result"].get("facts"), dict) and expected_resources == observed
             and retained["result"]["facts"].get("stack_arn") == actual["StackId"], "task-infrastructure-lineage-not-confirmed")
     return selected, observed
 
@@ -182,6 +185,7 @@ def prepare(args, provider):
     stage_suffix = "" if proof_stage == "baseline" else ":" + proof_stage
     preflight_label = "entity-smoke-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":preflight" + stage_suffix).encode()).hexdigest()[:24]
     preflight_label = IMAGE_REPAIR.recovery_label({"cache": cache, "binding": binding, "checked": checked}, args, preflight_label)
+    preflight_label = C.TRANSITION.recovery_preflight(C, {"cache": cache, "binding": binding}, args, preflight_label)
     actual_operation = ("ready" if args.workload == "verifier" else "preflight") if args.phase == "preflight" else args.operation
     safe = {"schema": "deploy/entity-smoke-task-plan/v1", "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke", "account": C.ALIGN.ACCOUNT, "region": C.ALIGN.REGION,
             "workload": args.workload, "phase": args.phase, "operation": actual_operation, "prepared_operation": args.operation, "proof_stage": proof_stage, "preflight_label": preflight_label,

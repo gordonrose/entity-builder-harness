@@ -244,6 +244,8 @@ def gather(args, provider):
               "tasks": tasks, "controls": controls, "restored_binding": cleanup["reader"]["context"]["binding"],
               "runtime": {"task": running["taskArn"], "definition": server["definition"], "created_at": running["createdAt"], "started_at": running["startedAt"],
                           "source_resource_id": value["parameters"]["DatabaseResourceId"], "database_name": value["parameters"]["DatabaseName"], "observed_at": C.now()}}
+    transition = C.TRANSITION.read(C, value["cache"], value["binding"])
+    if transition is not None: packet["source_transition"] = transition
     validate_packet(packet)
     # Final local/current binding rechecks cannot launch or stop anything.
     require(C.source_digest() == value["artifact"], "acceptance-source-changed-before-retention")
@@ -252,10 +254,12 @@ def gather(args, provider):
 
 
 def validate_packet(value, *, evidence_class="live"):
-    require(isinstance(value, dict) and set(value) == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256", "controller_basis", "package", "tasks", "controls", "restored_binding", "runtime"}
+    require(isinstance(value, dict) and set(value) - {"source_transition"} == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256", "controller_basis", "package", "tasks", "controls", "restored_binding", "runtime"}
             and value["schema"] == SCHEMA and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
             "acceptance-collection-envelope-invalid")
     binding = C.RESOURCE.validate_binding(value["binding"])
+    transition = value.get("source_transition")
+    if "source_transition" in value: C.TRANSITION.validate(C, transition, {key: item for key, item in binding.items() if key != "record_digest"})
     require(isinstance(value["controller_sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", value["controller_sha256"]), "acceptance-controller-source-invalid")
     package = value["package"]
     require(isinstance(package, dict) and set(package) == {"source_revision", "image_digest", "receipt_reference", "program_id", "package_contract_id"}
@@ -273,6 +277,8 @@ def validate_packet(value, *, evidence_class="live"):
             controller = T.IMAGE_REPAIR.completed_bootstrap_controller(task.get("packet"), task.get("completion"), value["controller_sha256"])
             require(task.get("controller_sha256") == controller, "acceptance-task-attribution-mismatch", name)
             A.validate_task(task, binding, expected_binding=value["restored_binding"] if name == "restore-read" else None)
+            if name != "restore-read" and task["packet"]["binding"]["source_revision"] != binding["source_revision"]:
+                require(transition is not None and task["packet"]["binding"] == transition["plan"]["previous_binding"] and C.TRANSITION.historical(task["packet"], task["completion"]), "acceptance-source-transition-required", name)
             operation_id = task["packet"]["reservation"]["operation_id"]
             require(operation_id not in operations, "acceptance-task-reused-across-proofs", name)
             operations.add(operation_id)

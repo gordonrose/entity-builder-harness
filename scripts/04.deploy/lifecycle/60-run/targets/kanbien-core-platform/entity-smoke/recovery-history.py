@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -23,6 +23,7 @@ DIRECTORIES = ("attempts", "receipts", "failure-attempts", "failure-receipts", "
 TOP = ("initial-restart-plan.json", "initial-restart-receipt.json", "credential-replacement-plan.json", "credential-replacement-receipt.json", "replacement-plan.json", "replacement-receipt.json")
 GATE_DIRECTORIES = ("task-realization", "failure-realization", "initial-restart-realization", "replacement-realization", "credential-replacement-realization")
 SCHEMA = "deploy/entity-smoke-credential-history/v1"
+TOP += ("source-transition/receipt.json",)
 
 
 class HistoryFailure(Exception):

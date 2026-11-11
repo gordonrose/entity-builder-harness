@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -98,6 +98,9 @@ def observe_packet(route, context, args, provider, *, completion_required=True, 
     runner.CONTROL.no_symlinks(target)
     if not target.exists(): return None
     value = C.read_json(target)
+    if completion_required and route.COMPLETION.path(target).is_file():
+        legacy = C.TRANSITION.legacy_context(route, context, args, value, C.read_json(route.COMPLETION.path(target)))
+        if legacy is not None: context, historical = legacy, True
     require(isinstance(value, dict) and set(value) == {"schema", "plan_sha256", "binding", "reservation", "receipt"}
             and value["schema"] == "deploy/entity-smoke-task-step/v1" and value["binding"] == context["binding"], "task-step-binding-mismatch")
     require(isinstance(value["plan_sha256"], str) and route.re.fullmatch(r"sha256:[a-f0-9]{64}", value["plan_sha256"]), "task-step-plan-invalid")
@@ -140,7 +143,8 @@ def prerequisites(route, context, args, provider):
         packet = observe_packet(route, prior_context, prior_args, provider)
         if packet is None: raise PrerequisiteMissing(name)
         receipt = packet["receipt"]
-        require(receipt["task"]["definition"] == context["resources"][logical]["physical_id"]
+        original = route.C.TRANSITION.original_receipt(route.C, context, packet, route.C.read_json(route.COMPLETION.path(path(context, prior_args))))
+        require((original or receipt["task"]["definition"] == context["resources"][logical]["physical_id"])
                 and route.RUNNER.EVIDENCE.timestamp(receipt["task"]["created_at"]) >= route.RUNNER.EVIDENCE.timestamp(previous_stop), "task-step-order-invalid")
         previous_stop = receipt["task"]["stopped_at"]
         packets[name] = {"reservation": packet["reservation"], "receipt": receipt}

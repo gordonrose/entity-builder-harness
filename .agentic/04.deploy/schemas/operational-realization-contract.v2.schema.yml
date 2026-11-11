@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -41,6 +41,14 @@ bounded_cleanup:
   allowed_operation_classes: [delete]
   forbidden_operation_classes: [create, update, replace, broaden-permission]
   authority: declaration-only-provider-owned-proof-and-explicit-execution-approval-required
+bounded_definition_refresh:
+  selection: change_shape.immutable_definition_refresh
+  default: replacement-remains-forbidden
+  required_true_fields: [owned_task_definitions_only, stopped_workload_required, unchanged_permissions_and_storage, qualified_image_required, original_preparation_retained]
+  additional_fields: forbidden
+  allowed_operation_classes: [update, replace]
+  forbidden_operation_classes: [create, delete, broaden-permission]
+  authority: declaration-only-exact-provider-review-and-standing-execution-authority-required
 unchanged_requirements:
   source_ownership: source-unit-must-own-and-bind-connection
   destination_edge: explicit-connection-to-destination-edge

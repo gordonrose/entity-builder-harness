@@ -41,10 +41,9 @@ fingerprint = C.DEPLOY.fingerprint
 
 
 def completed_bootstrap_controller(packet, completion, current):
-    def document(value): return "sha256:" + C.hashlib.sha256(C.RESOURCE.CONTROL.canonical(value) + b"\n").hexdigest()
-    if BOOTSTRAP_COMPLETIONS.get(document(packet)) == document(completion):
+    if BOOTSTRAP_COMPLETIONS.get("sha256:" + C.TRANSITION.document(packet)) == "sha256:" + C.TRANSITION.document(completion):
         return BOOTSTRAP_CONTROLLER
-    return current
+    return C.TRANSITION.controller(packet, completion, current)
 
 
 def cache(): return C.ROOT / ".cache/entity-smoke-live" / LABEL / "image-delivery-repair"

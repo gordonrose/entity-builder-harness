@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -136,9 +136,6 @@ def source_boundary_protocols(base):
     K = STATE.K
     M = K.C.ALIGN
     aggregate = module("entity_smoke_source_boundary_primitives", DIRECTORY / "acceptance-aggregate-test.py")
-    packet = aggregate.fixture(K)
-    packet["evidence_class"] = "live"  # Exercised envelope only; primitive owners below are controlled.
-    packet["binding"]["permission_contract_sha256"] = K.C.digest_file(K.C.DEPLOY.SOURCE)
     root = base / "source-boundary-controlled-proof-not-live"
     root.mkdir()
     environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
@@ -155,7 +152,11 @@ def source_boundary_protocols(base):
     git("add", "--", ".gitignore", "source.txt", "settings.yml")
     git("commit", "--quiet", "-m", "controlled fixture source")
     revision = git("rev-parse", "HEAD").strip()
-    packet["binding"]["source_revision"] = packet["package"]["source_revision"] = revision
+    # Construct one consistently bound release, including predecessor hashes;
+    # this source-boundary fixture does not exercise historical transitions.
+    packet = aggregate.fixture(K, source_revision=revision)
+    packet["evidence_class"] = "live"  # Exercised envelope only; primitive owners below are controlled.
+    packet["binding"]["permission_contract_sha256"] = K.C.digest_file(K.C.DEPLOY.SOURCE)
     custody = dict(packet["package"])
     args = SimpleNamespace(receipt=root / ".cache/controlled-custody.json", proof_label=packet["binding"]["proof_label"], expected_digest=packet["binding"]["record_digest"])
     cache = root / ".cache/entity-smoke-live" / args.proof_label

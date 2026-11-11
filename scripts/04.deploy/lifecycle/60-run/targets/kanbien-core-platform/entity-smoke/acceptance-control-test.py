@@ -240,6 +240,27 @@ def archive_protocols(*, bootstrap=False, proof_label=None):
                     assert T.IMAGE_REPAIR.completed_bootstrap_controller(changed_packet, changed_completion, context["artifact"]) == context["artifact"]
                 with patch.object(T.IMAGE_REPAIR, "BOOTSTRAP_COMPLETIONS", {}):
                     fails(lambda: T.COMPLETION.read(T.dependencies(), context, selected, step), T.STEPS.StepFailure, "task-step-completion-artifacts-mismatch")
+            # A qualified source transition retains old preparation custody and
+            # must not query an expired ECS task or relabel its image as current.
+            store = T.RUNNER.CONTROL.AttemptStore(cache / "task-attempts")
+            C.RESOURCE.write_exclusive(store.path_for(T.STEPS.key(selected), request), reservation)
+            T.RUNNER.retain(T.RUNNER.receipt_path(cache / "task-receipts", request, reservation), receipt, reservation)
+            successor = {**binding, "source_revision": "a" * 40, "image_digest": "sha256:" + "9" * 64}
+            current_context = {**context, "binding": {key: item for key, item in successor.items() if key != "record_digest"},
+                               "checked": {"definition": request["definition"].removesuffix(":1") + ":2"}}
+            pins = {C.TRANSITION.document(packet): (C.TRANSITION.document(completion), artifact.removeprefix("sha256:"))}
+            with patch.object(C, "ROOT", root), patch.object(C, "source_digest", return_value=context["artifact"]), \
+                 patch.object(C.TRANSITION, "PINS", pins), patch.object(C.TRANSITION, "OLD_SOURCE", binding["source_revision"]), \
+                 patch.object(T.IMAGE_REPAIR.C.TRANSITION, "PINS", pins), \
+                 patch.object(C.TRANSITION, "OLD_IMAGE", binding["image_digest"]), patch.object(C.TRANSITION, "LABEL", binding["proof_label"]), \
+                 patch.object(C.TRANSITION, "read", return_value={"plan": {"previous_binding": packet["binding"]}}):
+                def expired_provider(*args, **kwargs): raise AssertionError("historical preparation must not query or replay AWS")
+                retained = T.STEPS.observe_packet(T.dependencies(), current_context, selected, expired_provider)
+                assert retained == packet and retained["binding"]["image_digest"] != successor["image_digest"]
+                captured = A.capture_task(T, current_context, selected, expired_provider, "bootstrap", successor)
+                assert captured["packet"] == packet and captured["collection_binding"] == successor and captured["controller_sha256"] == artifact
+                with patch.object(C.TRANSITION, "PINS", {}):
+                    fails(lambda: T.STEPS.observe_packet(T.dependencies(), current_context, selected, expired_provider), T.STEPS.StepFailure, "task-step-binding-mismatch")
         if bootstrap and proof_label == T.IMAGE_REPAIR.LABEL:
             original = "entity-smoke-" + hashlib.sha256((proof_label + ":administration:bootstrap:preflight").encode()).hexdigest()[:24]
             assert label != original
