@@ -319,7 +319,7 @@ def parse(arguments=None):
     parser.add_argument("--workload", choices=tuple(GRAPH.ROOT_UNITS), required=True)
     parser.add_argument("--operation", required=True)
     parser.add_argument("--phase", choices=("preflight", "operation"), default="operation")
-    parser.add_argument("--proof-stage", choices=("baseline", "server-replacement", "initial-recovery", "credential-recovery", "acceptance"), default="baseline")
+    parser.add_argument("--proof-stage", choices=("baseline", "activation", "server-replacement", "initial-recovery", "credential-recovery", "acceptance"), default="baseline")
     parser.add_argument("--expected-digest")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")

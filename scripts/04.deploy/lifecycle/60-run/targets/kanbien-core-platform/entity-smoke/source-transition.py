@@ -34,9 +34,11 @@ PINS = {
     "b7f6b2db5eaef57d82088aee602102a4283698bc60dc817a4df44ffe06c69da5": ("0390d89072d1a0a0493d662d9cf06d9931c0ddbeb1dc3a4928ed2bbed07e4311", "20373db2f9f42a0a63f5948c14d587343161b4666f225f32818a937300a742c8"),
 }
 TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", "Administration", "Verifier", "DatabaseProof")}
-# Exact successful preflight/grant custody before the controller-only read
-# retry repair. These already use the current qualified image, not OLD_IMAGE.
+# Exact successful grant/permissions custody before controller-only repairs.
+# These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "e66842a43431dd9a738752263f5520a81640bfb078e9bdeafa4b88d0142993f3": ("78cfaa909d7ee998c4aee92c7d2e9431ad4a427548c3616d2d4e40f0bd6c798a", "d78b850e6f2208fa8d17ce69c160024c479fec33c59b05ae6ced47f13bc269a8"),
+    "f1db111a594a4f16a42029dd6ab0542801b9d9e37c55d5d621d8b9875b23ec21": ("c7d3eca3949d61b38907de25aecd57a0e1a30d9f91b53d4f9d49ffc3fd106a27", "d78b850e6f2208fa8d17ce69c160024c479fec33c59b05ae6ced47f13bc269a8"),
     "6bdd329d5e4f0d17927634945e5a4dfe62af8b1f1c63543f6562ed39e8f1c1ff": ("435c4e9c532bfa420ff43259be725cd3b9b73bd78d3425e03bc9427168aa1caa", "cdf63a0df5c0d09263e8be7a083a7c908a4b3bdea7713150292c453e6a1c9bfd"),
     "02a2ecd3110ff3fdf71d2b482be3f60d586674240c4727d53dd5edd4796619ec": ("8ae4f77b9f669e1220f498e4b98e5c7f659e06f7d5f619d259c290a817f7ba4e", "cdf63a0df5c0d09263e8be7a083a7c908a4b3bdea7713150292c453e6a1c9bfd"),
 }

@@ -57,6 +57,7 @@ def stage(args):
     allowed["credential-recovery"] = {("administration", value) for value in ("observe-permissions", "revoke-runtime", "restore-runtime")} | {("verifier", "unready"), ("verifier", "read"), ("database-proof", "permissions")}
     allowed["isolated-restore"] = {("restore-reader", "restore-read")}
     allowed["acceptance"] = {("verifier", "read")}
+    allowed["activation"] = {("database-proof", "permissions")}
     require(value in allowed and (allowed[value] is None or (args.workload, args.operation) in allowed[value]), "task-proof-stage-not-supported")
     require(not (value == "credential-recovery" and args.operation == "unready") or args.phase == "operation", "task-unready-preflight-phase-prohibited")
     return value
@@ -136,8 +137,10 @@ def prerequisites(route, context, args, provider):
     created = route.C.read_json(context["cache"] / "receipts/create.json")
     previous_stop = created["result"]["reservation"]["reserved_at"]
     packets = {}
+    refreshing = stage(args) == "activation"
+    if refreshing: require(context["parameters"]["ServerDesiredCount"] == "0", "task-activation-refresh-requires-stopped-service")
     for name, workload, operation, logical in STEPS[:index]:
-        prior_args = SimpleNamespace(**{**vars(args), "workload": workload, "operation": operation, "phase": "operation", "expected_digest": None})
+        prior_args = SimpleNamespace(**{**vars(args), "workload": workload, "operation": operation, "phase": "operation", "expected_digest": None, "proof_stage": "baseline" if refreshing else stage(args)})
         # Each prior workload has its own checked physical definition/network.
         prior_context = {**context, "checked": route.BINDING.inspect(provider, workload, context["parameters"], context["resources"], context.get("binding_snapshot"))}
         packet = observe_packet(route, prior_context, prior_args, provider)
@@ -148,7 +151,14 @@ def prerequisites(route, context, args, provider):
                 and route.RUNNER.EVIDENCE.timestamp(receipt["task"]["created_at"]) >= route.RUNNER.EVIDENCE.timestamp(previous_stop), "task-step-order-invalid")
         previous_stop = receipt["task"]["stopped_at"]
         packets[name] = {"reservation": packet["reservation"], "receipt": receipt}
-    return {"required_after": previous_stop, "packets": packets}
+    result = {"required_after": previous_stop, "packets": packets}
+    if refreshing:
+        original_args = SimpleNamespace(**{**vars(args), "proof_stage": "baseline", "phase": "operation", "expected_digest": None})
+        original = observe_packet(route, context, original_args, provider, historical=True)
+        if original is None: raise PrerequisiteMissing("baseline-permissions")
+        require(route.RUNNER.EVIDENCE.timestamp(original["receipt"]["task"]["created_at"]) >= route.RUNNER.EVIDENCE.timestamp(previous_stop), "task-step-order-invalid")
+        result.update(required_after=original["receipt"]["task"]["stopped_at"], original_permissions_sha256=route.C.DEPLOY.fingerprint(original))
+    return result
 
 
 def retain(route, context, args, reservation, receipt):
@@ -163,10 +173,10 @@ def retain(route, context, args, reservation, receipt):
 
 
 def manifest(route, context, args, provider, prerequisites, packet):
-    if stage(args) != "baseline": return None
+    if stage(args) not in {"baseline", "activation"}: return None
     if (args.workload, args.operation, args.phase) != ("database-proof", "permissions", "operation"): return None
     value = {**prerequisites["packets"], "permissions": {"reservation": packet["reservation"], "receipt": packet["receipt"]}}
-    target = context["cache"] / "task-steps/activation-prerequisites.json"
+    target = context["cache"] / "task-steps" / ("activation-refresh-prerequisites.json" if stage(args) == "activation" else "activation-prerequisites.json")
     if not route.C.RESOURCE.write_exclusive(target, value): require(route.C.read_json(target) == value, "task-activation-manifest-conflict")
     # The existing real activation consumer remains authoritative; do not invent
     # a second interpretation or mark activation itself complete here.

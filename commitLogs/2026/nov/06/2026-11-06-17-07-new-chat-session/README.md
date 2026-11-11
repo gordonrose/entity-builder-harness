@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T11:35:30Z
-latest_commit_sha: 9623b9e5a51337f199bee05cfb8b3f84340e841a
-chat_duration: 412103s (04:18:28:23)
+latest_commit_at_utc: 2026-11-11T12:24:34Z
+latest_commit_sha: b5900d8ac1f81a3a91131cc7aadbcd7e9ecfe771
+chat_duration: 415047s (04:19:17:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,22 @@ new chat session
 
 ## Context Hygiene
 
+- AWS permissions operation es-1579fa61ae5f43228239bbfc59c09c8a passed on task
+  9b2a75b1ab174144846b3668154fa8f1 at12:43:41Z; its actual source-owned result
+  is ENTITY_SMOKE_EFFECTIVE_PRIVILEGES_PROVEN. Its completed step and gate are
+  retained. Activation-manifest validation then queried the expired administrator
+  task; actual read-only diagnosis returned ECS tasks=[]/MISSING. This is not a
+  failed SQL proof and does not authorize repeating grants, migration or bootstrap.
+  Repair inventory: activation consumes the exact already pinned original grant
+  evidence as history, checking its current-image binding separately from older
+  bootstrap/migration bindings. Pin the two newly completed permissions documents
+  to their actual controller. Add one bounded activation-stage runtime-only
+  preflight/permissions refresh after retained baseline permission success and only
+  while stopped. Its separate immutable manifest supplies genuinely fresh effective
+  permission evidence; never restamp old tasks or relax the900-second window.
+  Existing task admission, private bindings, no replay and all gates remain.
+  Tests cover missing originals, disallowed workload/stage, stopped requirement,
+  separate reservation/manifest, archive tampering and absent historical ECS tasks.
 - Pre-reservation integration report20261111T120031Z-b08497f14f824560991abde5eddb9b4c
   had45 passes, one composition failure and13 deferred checks. The exact restart
   fixture injected drift at the former post-reservation guard. Moved its injection
@@ -909,6 +925,17 @@ Summary: 46 selected local checks passed, zero findings; original six live prepa
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T12:24:34Z - Commit recorded
+
+Commit: `b5900d8ac1f81a3a91131cc7aadbcd7e9ecfe771`
+
+Message: fix: validate task preconditions before reserving launch
+
+Summary: 46 selected local checks passed with zero findings; final report 20261111T122151Z-9a53ed7dea6049d7abd32b95975358e3. Failed original preflight preserved; exactly bounded replacement label shared with acceptance. Full provider checks precede reservation; immediate source and payload guards remain. Restart drift rejected with unchanged attempts and no launch.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1035,6 +1062,13 @@ ADR impact: covered by session ADR disposition
   Summary: 46 selected local checks passed, zero findings; original six live preparation packets validated without provider calls. Same qualified image and templates retained. Mutations remain single-submission; fresh controller hash governs subsequent plans.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `b5900d8ac1f81a3a91131cc7aadbcd7e9ecfe771`
+  Time UTC: 2026-11-11T12:24:34Z
+  Message: fix: validate task preconditions before reserving launch
+  Summary: 46 selected local checks passed with zero findings; final report 20261111T122151Z-9a53ed7dea6049d7abd32b95975358e3. Failed original preflight preserved; exactly bounded replacement label shared with acceptance. Full provider checks precede reservation; immediate source and payload guards remain. Restart drift rejected with unchanged attempts and no launch.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1048,9 +1082,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T11:35:30Z
-Latest commit SHA: 9623b9e5a51337f199bee05cfb8b3f84340e841a
-Chat duration: 412103s (04:18:28:23)
+Latest commit at UTC: 2026-11-11T12:24:34Z
+Latest commit SHA: b5900d8ac1f81a3a91131cc7aadbcd7e9ecfe771
+Chat duration: 415047s (04:19:17:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -326,6 +326,42 @@ def run():
                 assert all(set(pair) == {"reservation", "receipt"} for pair in manifest.values())
             live = M.Provider(); live._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
         assert sum(op == "run-task" for _, op, _ in provider.observed) == before + 8, "exactly four probes and four operations, including lost-response reconciliation"
+        # Activation accepts exact completed grant custody even after ECS has
+        # aged out that task; fresh permissions remain an actual observation.
+        grant_path = cache / "task-steps/administration-grant-runtime-operation.json"
+        grant_packet = M.C.read_json(grant_path)
+        grant_completion = M.C.read_json(M.COMPLETION.path(grant_path))
+        old_pins = M.C.TRANSITION.CONTROLLER_REPAIR_PINS
+        M.C.TRANSITION.CONTROLLER_REPAIR_PINS = {**old_pins, M.C.TRANSITION.document(grant_packet): (M.C.TRANSITION.document(grant_completion), "f" * 64)}
+        def expired_grant(service, operation, **parameters):
+            assert not (operation == "describe-tasks" and grant_packet["receipt"]["task"]["arn"] in parameters.get("tasks", [])), "historical grant must not query expired ECS state"
+            return provider(service, operation, **parameters)
+        try:
+            M.C.activation_prerequisites(expired_grant, cache / "task-steps/activation-prerequisites.json", binding, F.PARAMETERS, cache, store)
+            gate_path = root / grant_completion["realization_evidence"]
+            gate_bytes = gate_path.read_bytes(); gate_path.write_bytes(b'{}\n')
+            try: fails(lambda: M.C.activation_prerequisites(expired_grant, cache / "task-steps/activation-prerequisites.json", binding, F.PARAMETERS, cache, store), "infrastructure-original-preparation-changed")
+            finally: gate_path.write_bytes(gate_bytes)
+        finally: M.C.TRANSITION.CONTROLLER_REPAIR_PINS = old_pins
+
+        refresh_args = SimpleNamespace(**{**vars(execute_args), "proof_stage": "activation"})
+        original_manifest = (cache / "task-steps/activation-prerequisites.json").read_bytes()
+        original_permissions = (cache / "task-steps/database-proof-permissions-operation.json").read_bytes()
+        for phase in ("preflight", "operation"):
+            refresh_args.phase = phase
+            live = M.Provider(); live._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
+            refresh_args.approved_plan = M.plan(refresh_args, live)["plan_sha256"]
+            refreshed = M.execute(refresh_args, live)
+            assert refreshed["verdict"] == "completed"
+        assert refreshed["activation_prerequisites"].endswith("activation-refresh-prerequisites.json")
+        assert (cache / "task-steps/activation-prerequisites.json").read_bytes() == original_manifest
+        assert (cache / "task-steps/database-proof-permissions-operation.json").read_bytes() == original_permissions
+        assert sum(op == "run-task" for _, op, _ in provider.observed) == before + 10
+        fails(lambda: M.STEPS.stage(SimpleNamespace(proof_stage="activation", workload="administration", operation="grant-runtime")), "task-proof-stage-not-supported")
+        missing_original = cache / "task-steps/database-proof-permissions-operation.json"
+        missing_original.rename(missing_original.with_suffix(".saved"))
+        try: assert M.plan(refresh_args, live)["plan"]["pending_prerequisite"] == "baseline-permissions"
+        finally: missing_original.with_suffix(".saved").rename(missing_original)
         feature_args = SimpleNamespace(**{**vars(execute_args), "workload": "verifier", "operation": "create", "phase": "preflight"})
         unavailable = M.plan(feature_args, live)
         assert unavailable["plan"]["execution_route_available"] is False and unavailable["plan"]["pending_prerequisite"] == "activation"
@@ -338,6 +374,7 @@ def run():
         review = M.C.DEPLOY.prepare(provider, store, binding, active_parameters, activate=True)
         activated = M.C.DEPLOY.execute(provider, store, binding, active_parameters, review["facts"]["change_set_arn"], review["facts"]["stack_arn"], activate=True)
         M.C.RESOURCE.write_exclusive(cache / "receipts/activate.json", {"schema": "deploy/entity-smoke-infrastructure-receipt/v1", "binding": binding, "result": activated})
+        fails(lambda: M.plan(refresh_args, live), "task-activation-refresh-requires-stopped-service")
         def execute_feature(workload, operation, *, digest=None, missing_result=False, stage="baseline"):
             selected = SimpleNamespace(**{**vars(feature_args), "workload": workload, "operation": operation, "expected_digest": digest, "proof_stage": stage})
             for phase in ("preflight", "operation"):

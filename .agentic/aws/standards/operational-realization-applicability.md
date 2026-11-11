@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 5
+version: 6
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-11"
@@ -198,6 +198,25 @@ helper availability alone is not enforcement or execution approval. Existing
 source, package, normal business-operation/recovery gates, concrete approval,
 ownership and safe evidence rules remain binding. This rule permits neither
 bootstrap/migration writes nor accepted-release promotion.
+
+### Stopped-service activation refresh
+
+The standing entity-smoke completion authority permits one separately reserved
+`activation`-stage database-proof preflight and `permissions` operation while the
+owned service remains stopped. Require successful retained baseline permissions
+first. This refresh uses the same qualified runtime-only program and existing
+rolled-back denial probes, not administrator grants or business-data changes.
+Keep the original baseline attempts, receipts and manifest unchanged. A separate
+activation manifest combines their validated preparation history with the actual
+fresh permissions result. All existing gates, private bindings, ninety-second
+preflight bound, operation deadline and 900-second freshness checks remain.
+
+Activation may consume exact pinned completed administrator grant custody when
+the old ECS task is no longer retained. Verify the original packet, completion,
+gate hash, source/image, reservation, operation, order and resource incarnation;
+absence alone proves nothing. Fresh permissions still require a current task/log
+observation. No restamping, repeated grant/migration, uncertain submission replay,
+additional image or broader resource permission is admitted.
 
 ### Expected-unready recovery observation
 

@@ -319,17 +319,18 @@ def activation_prerequisites(provider, path, binding, parameters, cache, store, 
         reservation, receipt = entry["reservation"], entry["receipt"]
         retained = RESOURCE.EVIDENCE.validate_retained(receipt, reservation)
         original = False
-        if name in {"bootstrap", "migration"}:
+        selected_binding = binding
+        if name in {"bootstrap", "migration", "grant-runtime"}:
             step = cache / "task-steps" / (workload + "-" + operation + "-operation.json")
             completion_path = step.with_name(step.stem + ".completion.json")
             if step.is_file() and completion_path.is_file():
                 packet, completion = read_json(step), read_json(completion_path)
                 original = TRANSITION.historical(packet, completion)
                 if original:
-                    require(packet["reservation"] == reservation and packet["receipt"] == receipt and packet["binding"] == creation_binding
+                    selected_binding = creation_binding if name in {"bootstrap", "migration"} else binding
+                    require(packet["reservation"] == reservation and packet["receipt"] == receipt and packet["binding"] == selected_binding
                             and digest_file(ROOT / completion["realization_evidence"]) == completion["realization_evidence_sha256"], "infrastructure-original-preparation-changed")
-        selected_binding = creation_binding if original else binding
-        resources = transition["resources"] if transition and not original else created["facts"]["resources"]
+        resources = transition["resources"] if transition and selected_binding == binding else created["facts"]["resources"]
         require(retained["workload"] == workload and retained["operation"] == operation and all(reservation["request"].get(key) == value for key, value in selected_binding.items())
                 and retained["task"]["definition"] == resources[logical]["physical_id"], "infrastructure-activation-proof-binding-mismatch")
         completion = workloads["entity-smoke-" + workload]["completion"]
