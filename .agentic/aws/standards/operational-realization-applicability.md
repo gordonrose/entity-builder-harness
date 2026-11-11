@@ -4,7 +4,7 @@ id: aws.standard.operational-realization-applicability
 version: 5
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-10"
+updated_on: "2026-11-11"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -20,6 +20,43 @@ used_by:
 The generic [deployment proof standard](../../04.deploy/standards/operational-realization-gate.md) owns contract and proof semantics. This provider surface owns the following operation-specific applicability and approval conditions.
 
 ## Entity-smoke controller-only repair checkpoints
+
+### Approved administrator authentication recovery
+
+On 2026-11-11 the user approved completing this proof, including the bounded
+administrator recovery, corrected image publication and replacement preflight,
+and expressly superseded repeated approval requirements for this goal.
+This standing authority does not turn failed checks into successful evidence.
+
+For the failed grant preflight `es-cfa256731b854baeb1e1427fd94cb01f`, permit a
+separately journalled diagnostic/recovery operation against the existing source
+database `kanbien-core-platform-persistence` in account `337159794548`,
+`eu-west-1`. First use the existing migration task's restricted IAM identity
+for a SELECT-only role-catalogue observation. A controller-owned fixed Node
+program may be passed as an exact command override to the existing qualified
+image for this repair only; bind its bytes/hash, original task definition,
+private network, source and image in the retained plan before submission.
+This is separately reviewed operational code, not application qualification
+or ordinary feature acceptance. No arbitrary SQL, command or endpoint input
+is permitted. Retain one exclusive launch reservation per declared operation;
+uncertain submissions reconcile the original task and never replay.
+
+If required, temporary IAM access may connect only as `core_migration` on
+source resource `db-7WRBSPURYQBIABAABNWAWNFVOQ`, using the feature's isolated
+task role and private administration network. Observe exact role/grantor edges
+before removing only feature-introduced memberships. Preserve other grants,
+role attributes, data and migration history. Roll back unconfirmed SQL changes;
+verify a fresh administrator password connection and remove temporary IAM
+access after terminal task reconciliation. Do not rotate credentials or alter
+the source database's authentication configuration. Subsequent application
+changes require new qualification/publication and explicit historical custody
+linkage, never relabelled old receipts or replayed bootstrap/migration.
+
+Record the safe cause, failed attempt, actual repair result, restored access,
+temporary-access cleanup and regression proof in the existing session/evidence
+owners. The remaining named deployment/recovery/restore/acceptance chain stays
+approved. Plans, ownership, data protection and truthful evidence remain required;
+another human approval is not a prerequisite for these already approved steps.
 
 ### Approved private image delivery repair
 

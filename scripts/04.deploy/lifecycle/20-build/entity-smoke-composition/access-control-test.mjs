@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-11"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -100,24 +100,24 @@ await assert.rejects(() => performEntitySmokeAdministration({ connect: async () 
 assert(bootstrapReleased);
 assert.equal(bootstrapStatements.at(-1).text, "ROLLBACK");
 
-// Model the restricted creator: PostgreSQL already gives it ADMIN on the
-// created owner, but rejects granting ADMIN back to itself with SQLSTATE0LP01.
+// Model the actual RDS administrator, whose owner-selection authority does
+// not require membership in the IAM-authenticated migration login.
 const boundedFacts = { exists: true, can_login: true, superuser: false, create_role: false, create_database: false, replication: false, bypass_rls: false, inherit: false };
 const ownerGrant = 'GRANT entity_smoke_migration TO CURRENT_USER WITH INHERIT FALSE, SET TRUE';
-function ownedFixture({ rejectGrant = false, rejectHistory = false, rejectObservation = false, rejectRollback = false } = {}) {
+function ownedFixture({ rejectHistory = false, rejectObservation = false, rejectRollback = false, authentication = [{ allowed: true }] } = {}) {
   const calls = []; let selected = false, released = false;
   const client = { async query(statement) {
     calls.push(statement);
     const text = statement.text;
     if (text.startsWith('GRANT entity_smoke_migration TO CURRENT_USER')) {
-      assert.equal(text, ownerGrant, 'bootstrap must not create a circular ADMIN self-grant');
-      if (rejectGrant) throw Object.assign(new Error(canary), { code: '0LP01' });
+      assert.fail('bootstrap must never make the password administrator an IAM-role member');
     }
     if (text === 'SET LOCAL ROLE entity_smoke_migration') selected = true;
     if (text === 'ROLLBACK' && rejectRollback) throw new Error(canary);
     if (text.startsWith('SELECT EXISTS')) return { rows: [boundedFacts] };
     if (text.startsWith('SELECT has_database_privilege')) return { rows: [{ allowed: true }] };
     if (text.startsWith('SELECT pg_has_role')) return { rows: [{ member: true }] };
+    if (text.startsWith('SELECT NOT pg_has_role(session_user')) return { rows: authentication };
     if (text.startsWith('SELECT pg_get_userbyid')) return { rows: [{ owner: 'entity_smoke_migration' }] };
     if (text.startsWith('SELECT checksum FROM')) {
       assert(selected, 'migration history cannot be read before selecting its noninherited owner');
@@ -145,14 +145,14 @@ for (const operation of ['bootstrap', 'grant-runtime', 'observe-permissions']) {
   assert.equal(await performEntitySmokeAdministration(test.pool, operation, 'entityfixture'), 'ENTITY_SMOKE_ADMINISTRATION_CONFIRMED');
   assert(test.released());
   assert.equal(test.calls.at(-1).text, operation === 'observe-permissions' ? 'ROLLBACK' : 'COMMIT');
-  if (operation === 'bootstrap') assert.equal(test.calls.filter(call => call.text === ownerGrant).length, 1);
+  if (operation === 'bootstrap') assert.equal(test.calls.filter(call => call.text === ownerGrant).length, 0);
+  if (operation !== 'observe-permissions') assert.equal(test.calls.at(-2).text, "SELECT NOT pg_has_role(session_user, 'rds_iam', 'MEMBER') AS allowed");
   if (operation === 'observe-permissions') {
     assert.equal(test.calls[0].text, 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
     assert(test.calls.every(call => !/^(GRANT|REVOKE|ALTER|CREATE|INSERT|UPDATE|DELETE)\b/.test(call.text)), 'observation must remain read-only');
   }
 }
 for (const [operation, options] of [
-  ['bootstrap', { rejectGrant: true }],
   ['grant-runtime', { rejectHistory: true }],
   ['observe-permissions', { rejectObservation: true }],
   ['observe-permissions', { rejectRollback: true }],
@@ -164,5 +164,13 @@ for (const [operation, options] of [
   assert.equal(test.calls.filter(call => call.text === 'ROLLBACK').length, 1, 'rollback or failed operation cannot be retried');
   assert(!test.calls.some(call => call.text === 'COMMIT'));
   if (operation === 'grant-runtime') assert(!test.calls.some(call => call.text.startsWith('GRANT SELECT')), 'failed history verification must prevent runtime grants');
+}
+for (const operation of ['bootstrap', 'grant-runtime']) for (const authentication of [[], [{ allowed: false }], [{ allowed: canary }], [{ allowed: true }, { allowed: true }]]) {
+  const test = ownedFixture({ authentication });
+  await assert.rejects(() => performEntitySmokeAdministration(test.pool, operation, 'entityfixture'), error => {
+    assert.deepEqual(error.diagnosticRecord.detail, { operation, field: 'memberships', condition: 'not-confirmed', effect: 'unknown' }); return true;
+  });
+  assert.equal(test.calls.at(-1).text, 'ROLLBACK');
+  assert(!test.calls.some(call => call.text === 'COMMIT'));
 }
 console.log("Entity-smoke access-control fixtures passed; controlled SQL responses, not effective PostgreSQL/RDS privilege proof.");

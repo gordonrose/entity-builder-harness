@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-11"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -62,7 +62,7 @@ export async function performEntitySmokeDatabasePreflight(pool: PostgreSqlConnec
     };
     if (options.identity === "administration") {
       const authority = await client.query<{ allowed: unknown }>({
-        text: "SELECT has_database_privilege(current_user, $1, 'CREATE WITH GRANT OPTION') AND has_database_privilege(current_user, $1, 'CONNECT WITH GRANT OPTION') AND (SELECT rolcreaterole FROM pg_roles WHERE rolname = current_user) AS allowed",
+        text: "SELECT has_database_privilege(current_user, $1, 'CREATE WITH GRANT OPTION') AND has_database_privilege(current_user, $1, 'CONNECT WITH GRANT OPTION') AND (SELECT rolcreaterole FROM pg_roles WHERE rolname = current_user) AND NOT pg_has_role(current_user, 'rds_iam', 'MEMBER') AS allowed",
         values: [options.database],
       });
       boolean(authority.rows, "authority");

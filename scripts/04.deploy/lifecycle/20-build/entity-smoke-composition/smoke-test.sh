@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -28,6 +28,8 @@ node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-run
 node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --compiled-root "$entity_smoke_build"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/runtime-test.mjs "$entity_smoke_build"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/access-control-test.mjs "$entity_smoke_build"
+node scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-observation-test.mjs
+node scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-recovery-test.mjs
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/preflight-test.mjs "$entity_smoke_build"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/database-proof-test.mjs "$entity_smoke_build"
 node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/dependency-test.mjs

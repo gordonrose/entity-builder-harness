@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-11"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -151,19 +151,42 @@ try {
     fail();
   }
   await startDatabase(database, "postgres");
-  // The administrator needs grant authority only on this disposable database
-  // to give/revoke the migration owner's temporary schema-creation privilege.
-  // It still has no superuser/CREATEDB/replication/bypass-RLS authority.
-  psql(database, undefined, { input: "CREATE ROLE rds_iam NOLOGIN;\nCREATE ROLE core_administrator LOGIN CREATEROLE INHERIT;\nGRANT CREATE, CONNECT ON DATABASE entitysmoke TO core_administrator WITH GRANT OPTION;\nGRANT pg_signal_backend TO core_administrator;\nGRANT rds_iam TO core_administrator WITH ADMIN OPTION, INHERIT FALSE, SET TRUE;\n" });
+  // PostgreSQL cannot reproduce RDS's privileged non-superuser administrator.
+  // Model its role-management/SET ROLE authority with a fixture-only superuser;
+  // keep migration/runtime identities restricted and require separate live RDS
+  // proof. Never grant rds_iam (even indirectly) to the password administrator.
+  // The real HBA matcher below rejects such membership, including NOINHERIT.
+  psql(database, undefined, { input: "CREATE ROLE rds_iam NOLOGIN;\nCREATE ROLE core_administrator LOGIN SUPERUSER;\n" });
   function password(container, username, value) { psql(container, "\\password " + username, { input: value + "\n" + value + "\n" }); }
   password(database, "core_administrator", administratorPassword);
+  writeFileSync(files("pg_hba.conf"), [
+    "local all all trust",
+    "hostssl all entity_smoke_migration,entity_smoke_runtime 0.0.0.0/0 scram-sha-256",
+    "hostssl all +rds_iam 0.0.0.0/0 reject",
+    "hostssl all all 0.0.0.0/0 scram-sha-256",
+    "host all all 0.0.0.0/0 reject", "",
+  ].join("\n"), { mode: 0o600 });
+  docker(["cp", files("pg_hba.conf"), database + ":" + postgreSqlData + "/pg_hba.conf"]);
+  docker(["exec", "--user", "root", database, "chmod", "644", postgreSqlData + "/pg_hba.conf"]);
+  if (psql(database, "SELECT pg_reload_conf()").trim() !== "t") fail();
   const environment = (values) => Object.entries(values).flatMap(([name, value]) => ["-e", name + "=" + value]);
   const base = ["--network", network, "-v", files("ca.crt") + ":/app/assets/rds-eu-west-1-bundle.crt:ro", ...environment({ NODE_ENV: "test", ENTITY_SMOKE_LOCAL_QUALIFICATION_TOKEN: token, PERSISTENCE_POSTGRES_HOST: "postgres", PERSISTENCE_POSTGRES_PORT: "5432", PERSISTENCE_POSTGRES_DATABASE: "entitysmoke", PERSISTENCE_POSTGRES_SCHEMA: "entity_smoke", PERSISTENCE_POSTGRES_CA_PATH: "/app/assets/rds-eu-west-1-bundle.crt", PERSISTENCE_POSTGRES_IAM_REGION: "eu-west-1", PLATFORM_DEPLOYMENT_EXPOSURE: "private" })];
   const authentication = username => environment({ PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: "arn:aws:rds-db:eu-west-1:123456789012:dbuser:db-ABCDEFGHIJKLMNOP/" + username });
   const admin = (operation, resultCode = operation === "preflight" ? "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED" : operation === "observe-migration-state" ? "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED" : "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED") => expected(docker(["run", "--rm", "--name", task, ...base, ...environment({ ENTITY_SMOKE_ADMINISTRATION_OPERATION: operation, PERSISTENCE_RUNTIME_DATABASE_USERNAME: "entity_smoke_runtime", PERSISTENCE_MIGRATION_DATABASE_USERNAME: "entity_smoke_migration", PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE: "arn:aws:secretsmanager:eu-west-1:123456789012:secret:fixture-admin", PERSISTENCE_ADMINISTRATOR_CREDENTIALS: JSON.stringify({ username: "core_administrator", password: administratorPassword }) }), tag, "artifacts/kanbien-entity-smoke-administration.main.js"]), resultCode);
-  phase = "restricted-administration";
+  phase = "provider-administration-model";
   admin("preflight");
   admin("bootstrap");
+  // Fresh process/connection after bootstrap; the former persistent owner
+  // grant fails here, rather than being hidden by a reused connection.
+  admin("preflight");
+  if (psql(database, "SELECT pg_has_role('core_administrator', 'rds_iam', 'MEMBER')").trim() !== "f") fail();
+  phase = "administrator-authentication-counterexample";
+  psql(database, "GRANT entity_smoke_migration TO core_administrator WITH INHERIT FALSE, SET TRUE");
+  const deniedAdministrator = invoke("docker", ["exec", "-e", "PGPASSWORD=" + administratorPassword, database, "psql", "-X", "-h", "postgres", "-U", "core_administrator", "-d", "entitysmoke", "-c", "SELECT 1"], { allowFailure: true });
+  if (deniedAdministrator.status !== 2 || !deniedAdministrator.stderr.includes("pg_hba.conf rejects connection")) fail();
+  psql(database, "REVOKE entity_smoke_migration FROM core_administrator");
+  admin("preflight");
+  mark("password-administrator-membership-isolation");
   password(database, "entity_smoke_runtime", token); password(database, "entity_smoke_migration", token);
   phase = "migration";
   admin("observe-migration-state", "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED");
@@ -174,7 +197,8 @@ try {
   expected(docker(["run", "--rm", "--name", task, ...base, ...authentication("entity_smoke_migration"), ...environment({ PERSISTENCE_MIGRATION_DATABASE_USERNAME: "entity_smoke_migration", ENTITY_SMOKE_MIGRATION_OPERATION: "apply" }), tag, "artifacts/kanbien-entity-smoke-migration.main.js"]), "ENTITY_SMOKE_MIGRATION_ALREADY_APPLIED");
   if (historyFacts() !== originalHistory) fail();
   admin("observe-migration-state"); admin("grant-runtime"); admin("observe-permissions");
-  mark("restricted-administration-and-migration");
+  admin("preflight");
+  mark("provider-administration-model-and-restricted-migration");
   const runtime = [...base, ...authentication("entity_smoke_runtime"), ...environment({ PERSISTENCE_RUNTIME_DATABASE_USERNAME: "entity_smoke_runtime" })];
   expected(docker(["run", "--rm", "--name", task, ...runtime, ...environment({ ENTITY_SMOKE_DATABASE_PROOF_OPERATION: "preflight", ENTITY_SMOKE_PROOF_LABEL: label }), tag, "artifacts/kanbien-entity-smoke-database-proof.main.js"]), "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED");
   phase = "effective-privileges";
@@ -236,7 +260,7 @@ try {
   }
   mark("safe-downstream-logs");
   qualification = { schema: "deploy/entity-smoke-image-qualification/v1", verdict: "passed", source_revision: source,
-    local_image_id: image.Id, engine_version: "18.3", stages, evidence_class: "container-qualification", aws_observation: false, rds_iam_authentication_proven: false, rds_snapshot_restore_proven: false };
+    local_image_id: image.Id, engine_version: "18.3", stages, administrator_model: "fixture-superuser-not-rds-role-authority", evidence_class: "container-qualification", aws_observation: false, rds_iam_authentication_proven: false, rds_snapshot_restore_proven: false };
 } catch {
   process.exitCode = 1;
   console.error(JSON.stringify({ schema: "deploy/entity-smoke-image-qualification/v1", verdict: "failed", code: "ENTITY_SMOKE_IMAGE_PROOF_NOT_CONFIRMED", phase, effect: temporary || owned.containers.length || owned.networks.length ? "disposable-effects-possible" : "not-started", ...(temporary === undefined ? {} : { resource_reservation_id: basename(temporary) }) }));

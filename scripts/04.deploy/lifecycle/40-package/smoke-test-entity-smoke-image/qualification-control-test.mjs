@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-11"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -43,7 +43,8 @@ if(process.env.ENTITY_SMOKE_FIXTURE_STARTUP==='true'){
     if(!fs.existsSync(process.env.ENTITY_SMOKE_FIXTURE_CALLS+'.tcp'))process.exit(2);
     console.log('180003');process.exit(0);
   }
-  if(kind==='run'||kind==='exec'||operation==='create')process.exit(0);
+  if(kind==='exec'&&args.includes('SELECT pg_reload_conf()')){console.log('t');process.exit(0)}
+  if(kind==='run'||kind==='exec'||kind==='cp'||operation==='create')process.exit(0);
 }
 if(process.env.ENTITY_SMOKE_FIXTURE_UNOBSERVABLE==='true'){process.stderr.write('${canary}');process.exit(1)}
 if(operation!=='inspect')process.exit(9);
@@ -95,7 +96,7 @@ process.exit(2);
   const startup = run([], false, true);
   assert.equal(startup.status, 1, 'this fake scenario deliberately stops at administration, never claims qualification');
   const startupFailure = JSON.parse(startup.stderr);
-  assert.equal(startupFailure.phase, 'restricted-administration', 'initialization readiness must reach the final PostgreSQL server before SQL');
+  assert.equal(startupFailure.phase, 'provider-administration-model', 'initialization readiness must reach the final PostgreSQL server before SQL');
   assert(!startup.stderr.includes('CLEANUP_NOT_CONFIRMED'));
   const startupCalls = readFileSync(calls, 'utf8').trim().split('\n').map(JSON.parse).slice(all.length);
   assert(startupCalls.some(call => call.kind === 'exec' && call.tcp), 'the actual qualifier must invoke TCP readiness');

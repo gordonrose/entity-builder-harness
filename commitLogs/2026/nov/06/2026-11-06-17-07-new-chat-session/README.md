@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T00:33:47Z
+latest_commit_at_utc: 2026-11-11T01:17:54Z
 latest_commit_sha: HEAD
-chat_duration: 372400s (04:07:26:40)
+chat_duration: 375047s (04:08:10:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -58,6 +58,17 @@ new chat session
 
 ## Decisions Made
 
+- 2026-11-11: user explicitly directs completion of the full proof and
+  overrides repository/plan requirements for repeated approval. This supersedes
+  earlier pending/no-push notes for this goal. Approved recovery includes
+  bounded temporary administrator access, removal of feature-introduced IAM
+  membership followed by removal of temporary access, the tested application
+  and qualification correction, commit/push/qualified image publication,
+  one separately retained replacement grant preflight, and the remaining
+  deployment/proof/acceptance chain. Do not ask again for these actions.
+  Preserve data, baseline services, original failed attempts and completed
+  bootstrap/migration evidence; approval is not proof of successful execution.
+
 - 2026-11-10: user explicitly answered "Approve both changes and continue the
   full proof" to adding entity-smoke to the two shared ECR endpoint allowlists
   in account337159794548/eu-west-1 and one replacement read-only probe, preserving
@@ -82,6 +93,132 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- Actual administrator recovery completed: taska2a802a8bf684e05bdc6c7c65136e21a
+  exited successfully with original qualified image. Fresh password reconnection,
+  removal of exactly the feature-added membership, preservation of other role
+  edges and unchanged migration history were all observed. RDS's non-superuser
+  administrator successfully selected the migration role without membership.
+  Temporary policy EntitySmokeAdministratorRecovery20261111 was removed; all
+  original inline policies were re-read and matched. Evidence:
+  .cache/entity-smoke-live/entity-smoke-8f76ed3480e85d60fb60f547/administrator-recovery/validated/.
+  No source data/schema/history/password change or original task replay occurred.
+- Permanent correction inventory: administration.ts removes the unnecessary
+  persistent owner grant and checks session-user IAM nonmembership before COMMIT;
+  preflight.ts rejects that membership through its existing authority diagnostic.
+  Missing/multiple/nonboolean/false observations use existing memberships failure
+  and roll back. The actual-caller access fixtures cover these cases and reject
+  the former grant. The image qualifier explicitly models RDS administrative
+  powers with a fixture-only PostgreSQL superuser, never claims that fixture
+  establishes RDS authority, and uses the actual HBA group matcher to reject
+  indirect IAM membership even with INHERIT false. Fresh password connections
+  are required after bootstrap/grants; the deliberately injected old membership
+  must reject a new connection, then fixture cleanup restores the original state.
+  Restricted migration/runtime and all existing lifecycle/recovery checks remain.
+  No new architecture ADR: this restores the existing password-administration /
+  IAM-runtime separation; it does not introduce a new administrative role model.
+  Focused source/caller tests and structural diagnostic adoption passed; complete
+  registered verification, corrected immutable publication and source-transition
+  custody remain pending. Full live proof and acceptance are not complete.
+
+- Catalogue observation task72455d9eb68543e0a77be4cf311c28e1 completed
+  successfully with the original image and no SQL writes. Its exact safe result
+  confirms only one feature-added administrator edge, granted by rdsadmin:
+  entity_smoke_migration -> core_migration, ADMIN false, INHERIT false, SET true.
+  Both feature identities have rds_iam; administrator has rds_superuser.
+  Administrator IAM MEMBER=true, USAGE=false, SET=true. This disproves the
+  assumption that NOINHERIT protects password authentication on this RDS engine.
+- Reviewed recovery plan
+  sha256:50cdebf1afca052cba2f87a01ad4ff7e05d8078106246509026db659a74e83ba
+  uses a45-minute expiring rds-db:connect permission for only the source's
+  core_migration login on the existing feature migration task role. It launches
+  one fixed repair command in the existing private administrator task, then
+  removes only that inline policy after terminal reconciliation. SQL compares
+  all four observed edges, removes only the feature membership, checks exact
+  remaining edges and tests owner selection inside a rolled-back savepoint.
+  Commit precedes a genuinely new password connection. No password reset,
+  record/schema/history write, task-definition change or baseline deployment.
+  Programme sha256:f01ca9388da3f9a55aba35e310c97050f4b3a10dfe7a6a0999a4b76e81f7d1bf;
+  operator sha256:0020b3a8e6909afbe7e21d869c8160151f39dde6177d4a11a46815c0ebaed832.
+  Both actual-caller fixtures passed. Tests distinguish precondition mismatch,
+  revoke failure, unexpectedly retained membership, successful/denied owner
+  selection, uncertain commit and failed post-commit reconnection; no retry or
+  sensitive provider/credential output. Original unexecuted proposal is retained
+  separately; its replacement supplies IAM simulation's explicit clock context.
+
+- 2026-11-11 approved recovery now proceeds without repeated approval. Fresh
+  AWS reads confirmed the source available/deletion-protected, both baseline
+  services at1/1 and feature at0/0. Before changing any permission, a fixed
+  SELECT-only catalogue observer uses the existing migration IAM identity,
+  original qualified image, private migration network and exact source resource.
+  Reviewed plan sha256:8b021fcf9d1e43c99c1a96193d95ce8a063d4bd50c77cf48507f91ba2a8983ff
+  binds program sha256:98f4e513d81880502511f85ac6fae3b8c8b239fd6cbfbcb9d0e21a9947bb2cd0.
+  Programme tests passed configuration/credential/connect/query rejection,
+  read-only SQL, verified TLS, fixed username, safe grantor projection and
+  sensitive-canary exclusion. The operator rechecks account/source incarnation,
+  exact task definition/image/source/role/private placement, effective IAM
+  simulation and stopped feature before exclusive launch reservation. It never
+  changes database state or permissions; retained intents prohibit relaunch.
+  Diagnostic boundaries are fixed safe phases with no native exception values;
+  actual task/image/exit/log evidence is required, not simulated success.
+  Existing migration/bootstrap evidence is unchanged. This operation is a
+  separate diagnosis, not ordinary preflight, image qualification or acceptance.
+
+- 2026-11-11 live blocker after successful migration: the grant-runtime
+  preflight attempt es-cfa256731b854baeb1e1427fd94cb01f failed terminally;
+  task d1b1968cd141421d82a3e1f1fe730ed6 exited1 with EssentialContainerExited
+  at2026-11-11T01:37:26.718Z. Preserve its original reservation; no grant
+  operation, permissions pair, activation or replacement probe was launched.
+  Capture task-execute-44242704a4c74b92ae90eee92c0eea54 initially reported
+  task-unsuccessful-completion. Later original-task/log read found the actual
+  catalogue-valid persistence.credential-rejected v2 diagnostic: pool_connect,
+  authentication_rejected, recognized, readiness, effect not-assessed.
+- Read-only RDS logs for01:36-01:38UTC confirm one PAM authentication failure
+  for core_migration and a matched pg_hba.conf +rds_iam/pam rule. Source
+  entity-smoke/administration.ts bootstrap persists GRANT
+  entity_smoke_migration TO CURRENT_USER WITH INHERIT FALSE, SET TRUE;
+  that migration identity belongs to rds_iam. PostgreSQL authentication group
+  matching includes indirect membership, independent of ordinary privilege
+  inheritance. Thus the feature's administrator membership changes the shared
+  administrator's login method. This is a real application/authentication defect,
+  not a controller-only correction or justification for rotating a password.
+- Missed-check gap: verify-image.mjs creates a local rds_iam role and grants it
+  directly to its restricted administrator, but its local password-auth fixture
+  does not reproduce RDS's +rds_iam authentication precedence. Genuine previous
+  image qualification did not prove this provider-specific reconnection boundary.
+  Primary references: AWS RDS database-authentication.html and PostgreSQL18
+  auth-pg-hba-conf.html; direct read evidence remains distinct from inference.
+- Safe post-failure observation: source database available with deletion
+  protection enabled; bootstrap-runtime, core-server-persistence and
+  observability-collector each desired1/running1/pending0; entity-smoke remains
+  desired0/running0/pending0. No data, source snapshot or baseline was deleted.
+  No shared-administrator recovery, IAM grant, image change/publication or new
+  preflight has been executed. Existing approval protects shared baselines;
+  the current explicit exception only covers two ECR policies and one already
+  completed bootstrap recovery probe. Shared-administrator recovery and a
+  changed application image need an expanded governed recovery boundary, not
+  use of the controller-only source exception or replay of completed migration.
+
+- 2026-11-11 continuation: operator/custody correction is committed locally as
+  bca08d9f after registered composition, acceptance and dependency checks and
+  the staged commit gate passed. Full affected local integration also passed:
+  .cache/test-runs/20261111T013047Z-168fca04faea41f090a67496c1cd2412/report.json
+  records63 passed,20 later-stage deferred and zero findings. No push, image,
+  application, template or IAM change accompanies this correction.
+- Actual migration preflight es-b3df03020b514443bc1089a303436ac1 passed;
+  migration operation es-d24e6d9bb1144d36aec1310f65327188 completed with
+  ENTITY_SMOKE_MIGRATION_APPLIED, collected2026-11-11T01:29:06.438311+00:00.
+  Both original step/completion pairs are retained under the existing proof
+  label. Never replay bootstrap, migration or the earlier failed image probe.
+- The next grant-runtime preflight plan returned aws-command-failed before
+  reservation/submission (capture task-plan-cc26c0ee54b44f84bb217cc8c5e7af7a).
+  An unchanged full read-only planner with a read-only operation observer then
+  passed; the original failure cause remains unestablished, not declared fixed.
+  Fresh plan sha256:ff50103cc71158c90ef7fd27d5dd08ec0fb9f471bb7d2ab485263c83629cdb51
+  is now executing through the public task route, followed only on success by
+  grant-runtime operation and the permission proof pair. No policy/source
+  relaxation or mutation retry was used. Service activation and the remaining
+  feature/recovery/restore/acceptance proof are still pending.
 
 - 2026-11-11 actual progress: checkpoint6ed1ce907af985ca0499f6d98d2d5019ee286cd1
   passed all affected local integration checks (report
@@ -612,6 +749,17 @@ Summary: Exact known bootstrap recovery identity is shared by historical capture
 
 ADR impact: No ADR: bounded controller compatibility correction.
 
+
+### 2026-11-11T01:17:54Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix: check operator permissions per resource and retain bootstrap custody
+
+Summary: Correct IAM aggregate-response handling for task, snapshot and failure-stop callers; retain only the exact genuine bootstrap receipts under their original controller. Registered composition, acceptance and dependency checks plus the commit gate passed. No image, IAM policy or application change.
+
+ADR impact: No ADR: bounded controller-only defect correction and existing immutable evidence preservation; deployment scope and authority unchanged.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -696,6 +844,13 @@ ADR impact: No ADR: bounded controller compatibility correction.
   Summary: Exact known bootstrap recovery identity is shared by historical capture and validation; real archive, guarded-route identity and registered feature checks passed; no image or AWS changes.
   ADR impact: No ADR: bounded controller compatibility correction.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-11-11T01:17:54Z
+  Message: fix: check operator permissions per resource and retain bootstrap custody
+  Summary: Correct IAM aggregate-response handling for task, snapshot and failure-stop callers; retain only the exact genuine bootstrap receipts under their original controller. Registered composition, acceptance and dependency checks plus the commit gate passed. No image, IAM policy or application change.
+  ADR impact: No ADR: bounded controller-only defect correction and existing immutable evidence preservation; deployment scope and authority unchanged.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -709,9 +864,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T00:33:47Z
+Latest commit at UTC: 2026-11-11T01:17:54Z
 Latest commit SHA: HEAD
-Chat duration: 372400s (04:07:26:40)
+Chat duration: 375047s (04:08:10:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

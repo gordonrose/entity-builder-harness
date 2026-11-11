@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-11"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -87,10 +87,9 @@ export async function performEntitySmokeAdministration(pool: PostgreSqlConnectio
       await ensureBoundedLoginRole(connection, { username: entitySmokeRuntimeUsername });
       await ensureRdsIamAuthentication(connection, { username: entitySmokeMigrationUsername });
       await ensureRdsIamAuthentication(connection, { username: entitySmokeRuntimeUsername });
-      // PostgreSQL 16 gives CREATEROLE creators ADMIN but not SET by default.
-      // Select only this scope's migration-owner authority, without inheritance.
-      // Regranting ADMIN to ourself would create a forbidden grantor cycle.
-      await client.query({ text: 'GRANT entity_smoke_migration TO CURRENT_USER WITH INHERIT FALSE, SET TRUE' });
+      // RDS's administrator can select this owner without membership. A
+      // persistent grant would make the password administrator an indirect
+      // rds_iam member, including WITH INHERIT FALSE, and break its next login.
       const schema = await client.query<{ owner: string }>({ text: "SELECT pg_get_userbyid(nspowner) AS owner FROM pg_namespace WHERE nspname = $1", values: [entitySmokeSchema] });
       if (schema.rows.length > 0 && (schema.rows.length !== 1 || schema.rows[0]?.owner !== entitySmokeMigrationUsername)) throw entitySmokeDependencyStateError(operation, "schema-owner", schema.rows.length !== 1 ? "count-mismatch" : "mismatch");
       if (schema.rows.length === 0) {
@@ -113,6 +112,10 @@ export async function performEntitySmokeAdministration(pool: PostgreSqlConnectio
       await client.query({ text: 'REVOKE ALL ON "entity_smoke".test_entity FROM entity_smoke_runtime' });
       await client.query({ text: 'GRANT SELECT, INSERT, UPDATE ON "entity_smoke".test_entity TO entity_smoke_runtime' });
     }
+    const authentication = await client.query<{ allowed: boolean }>({
+      text: "SELECT NOT pg_has_role(session_user, 'rds_iam', 'MEMBER') AS allowed",
+    });
+    if (authentication.rows.length !== 1 || authentication.rows[0]?.allowed !== true) throw entitySmokeDependencyStateError(operation, "memberships", "not-confirmed");
     await client.query({ text: "COMMIT" });
     return "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED";
   } catch (cause) {
