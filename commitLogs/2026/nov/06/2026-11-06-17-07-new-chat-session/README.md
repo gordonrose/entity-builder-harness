@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T08:28:06Z
-latest_commit_sha: 5f9936a3
-chat_duration: 400859s (04:15:20:59)
+latest_commit_at_utc: 2026-11-11T09:17:52Z
+latest_commit_sha: a41e606f9c4f02bf5f7e140f600570e7b254492b
+chat_duration: 403845s (04:16:10:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,15 @@ new chat session
 
 ## Context Hygiene
 
+- Checkpointa41e606f passed80 local checks, zero findings and staged gate;
+  pushed to main. Hosted run42993997115 passed delivery registration but
+  composition failed before building/publishing. A disposable depth-one clone
+  reproduced the exact cause: image-delivery-repair-test.py used git show on
+  the original commit absent in shallow checkout. The fixture now reconstructs
+  only the two known policy entries and verifies the complete old template
+  against its independently observed original canonical hash. Production
+  recovery/source validation is unchanged; no AWS effect occurred. A clean
+  shallow-checkout composition rerun and scoped registered checks prove the fix.
 - Publication42987273754 failed before build because the standalone recovery
   program was missing a delivery consumer. Source-transition now references
   and verifies both exact recovery programs; delivery inventory has zero gaps.
@@ -800,6 +809,17 @@ Summary: Closed the administrator authentication regression; 45 affected local c
 
 ADR impact: No new application architecture; repairs the existing role separation.
 
+
+### 2026-11-11T09:17:52Z - Commit recorded
+
+Commit: `a41e606f9c4f02bf5f7e140f600570e7b254492b`
+
+Message: fix: retain preparation custody through qualified image recovery
+
+Summary: Source-transition and exact historical custody passed 80 local checks with zero findings; 20 later-stage checks deferred. Staged gate passed. Retains original preparation without replay and bounds five task-definition replacements to stopped feature only.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -898,6 +918,13 @@ ADR impact: No new application architecture; repairs the existing role separatio
   Summary: Closed the administrator authentication regression; 45 affected local checks passed, 13 later-stage checks deferred. Actual AWS fixed-role recovery and temporary-access cleanup completed; image qualification and remaining live acceptance are outstanding.
   ADR impact: No new application architecture; repairs the existing role separation.
 
+
+- Commit: `a41e606f9c4f02bf5f7e140f600570e7b254492b`
+  Time UTC: 2026-11-11T09:17:52Z
+  Message: fix: retain preparation custody through qualified image recovery
+  Summary: Source-transition and exact historical custody passed 80 local checks with zero findings; 20 later-stage checks deferred. Staged gate passed. Retains original preparation without replay and bounds five task-definition replacements to stopped feature only.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -911,9 +938,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T08:28:06Z
-Latest commit SHA: 5f9936a3
-Chat duration: 400859s (04:15:20:59)
+Latest commit at UTC: 2026-11-11T09:17:52Z
+Latest commit SHA: a41e606f9c4f02bf5f7e140f600570e7b254492b
+Chat duration: 403845s (04:16:10:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

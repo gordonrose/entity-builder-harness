@@ -29,7 +29,18 @@ spec = importlib.util.spec_from_file_location("image_repair_fixture", Path(__fil
 M = importlib.util.module_from_spec(spec); spec.loader.exec_module(M)
 C = M.C
 SOURCE = "8f76ed3480e85d60fb60f547f996628c8554504d"
-BEFORE = C.DEPLOY.CF.template(C.ALIGN.command(["git", "show", SOURCE + ":" + C.ALIGN.FOUNDATION]))
+BEFORE = C.DEPLOY.CF.template((C.ROOT / C.ALIGN.FOUNDATION).read_text())
+# Reconstruct the exact pinned pre-repair fixture without requiring Git
+# history in hosted shallow checkouts. This hash was independently obtained
+# from SOURCE's original template, not from the reconstruction under test.
+for endpoint in ("EcrApiEndpoint", "EcrDkrEndpoint"):
+    statements = BEFORE["Resources"][endpoint]["Properties"]["PolicyDocument"]["Statement"]
+    matches = [row for row in statements if row.get("Resource") == [
+        {"Ref": "ExistingRepositoryArn"},
+        {"Fn::Sub": "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke"}]]
+    assert len(matches) == 1
+    matches[0]["Resource"] = {"Ref": "ExistingRepositoryArn"}
+assert C.DEPLOY.fingerprint(BEFORE) == "sha256:aef24b28801c4ada9c405ec908d7c7151d12bb5f854d3734883f8da02b0b8997"
 AFTER = C.ALIGN.repaired_foundation(BEFORE)
 assert C.DEPLOY.CF.templates_equal(AFTER, (C.ROOT / C.ALIGN.FOUNDATION).read_text())
 
