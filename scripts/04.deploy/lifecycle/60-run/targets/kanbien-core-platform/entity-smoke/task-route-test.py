@@ -595,4 +595,60 @@ def run():
                       "prerequisites": "controlled-source-custody-local-proof-and-target-responses-not-qualification", "checks": ["actual-selected-graph-and-generic-gates", "all-reachable-callees-retained", "deployed-resource-lineage", "exact-task-role-network-binding", "preflight-and-business-plan-binding", "no-sixth-gate-before-probe", "planning-no-write-capability", "actual-offline-cli", "actual-execute-provider-runner-collector", "lost-launch-no-replay", "four-ordered-prerequisites-and-activation-consumer", "changed-prerequisite-rejected", "exact-reserved-payload", "known-prewrite-versus-unknown-effect-reporter", "named-missing-prerequisite", "activated-feature-prerequisites", "uncertain-create-observed-never-replayed", "terminal-qualified-original-before-observer", "lifecycle-digest-cannot-replace-original", "collision-and-original-read", "selected-primary-diagnostic-preserved", "public-replacement-requires-baseline-read", "lost-stop-reconciles-original-not-successor", "separate-post-replacement-ready-and-read", "baseline-receipt-substitution-rejected", "changed-replacement-gate-rejected", "replacement-exact-payload", "replacement-public-main-preserves-guard-context", "no-original-record-recreation"]}))
 
 
-if __name__ == "__main__": run()
+def transport_read_protocols():
+    """Actual task provider transport, controlled CLI responses; never AWS."""
+    original_run, original_parse, original_plan = M.C.subprocess.run, M.parse, M.plan
+    try:
+        reads = {("ecs", "describe-task-definition"), ("ecs", "list-services"), ("ec2", "describe-security-groups"),
+                 ("iam", "list-role-policies"), ("iam", "list-attached-role-policies"), ("iam", "get-role-policy"),
+                 ("rds", "describe-db-snapshots"), ("rds", "list-tags-for-resource")}
+        assert reads <= M.READS == M.C.READS
+        for service, operation in sorted(reads):
+            endpoint = "https://iam.amazonaws.com/" if service == "iam" else "https://" + service + ".eu-west-1.amazonaws.com/"
+            for scenario, count in (("recover", 2), ("exhaust", 3), ("process-timeout", 3), ("denied", 1), ("foreign", 1)):
+                attempts = []
+                def transport(arguments, **options):
+                    attempts.append(arguments)
+                    assert options["env"]["AWS_MAX_ATTEMPTS"] == "1"
+                    if scenario == "recover" and len(attempts) == 2: return SimpleNamespace(returncode=0, stdout='{"observed":true}', stderr="")
+                    if scenario == "process-timeout": raise subprocess.TimeoutExpired(arguments, 30, stderr=CANARY)
+                    error = 'aws: [ERROR]: Connect timeout on endpoint URL: "' + ("https://foreign.invalid/" if scenario == "foreign" else endpoint) + '"'
+                    if scenario == "denied": error = "An error occurred (AccessDenied) when calling the Read operation: " + CANARY
+                    return SimpleNamespace(returncode=255, stdout="", stderr=error)
+                M.C.subprocess.run = transport
+                provider = M.Provider()
+                if scenario == "recover": assert provider(service, operation)["observed"] is True
+                else:
+                    try: provider(service, operation)
+                    except M.C.InfrastructureFailure as failure:
+                        assert failure.provider_operation == (service, operation)
+                        assert failure.code == ("aws-access-denied" if scenario == "denied" else "infrastructure-provider-observation-unavailable" if scenario == "process-timeout" else "aws-command-failed")
+                    else: raise AssertionError("expected read failure")
+                assert len(attempts) == count and provider.effect == "not-started"
+        # Transport never retries RunTask, even for the same endpoint timeout.
+        for process_timeout in (False, True):
+            attempts = []
+            def mutation_transport(arguments, **options):
+                attempts.append(arguments)
+                if process_timeout: raise subprocess.TimeoutExpired(arguments, 30)
+                return SimpleNamespace(returncode=255, stdout="", stderr='aws: [ERROR]: Connect timeout on endpoint URL: "https://ecs.eu-west-1.amazonaws.com/"')
+            M.C.subprocess.run = mutation_transport
+            try: M.Provider()._invoke("ecs", "run-task", {})
+            except M.C.InfrastructureFailure: pass
+            else: raise AssertionError("expected mutation transport failure")
+            assert len(attempts) == 1
+        M.parse = lambda: SimpleNamespace(workload="database-proof", operation="permissions", phase="preflight", proof_stage="baseline", proof_label="entity-smoke-" + "a" * 24, validate_arguments=False, execute=False)
+        def denied_plan(*args): raise M.C.InfrastructureFailure("aws-command-failed", provider_operation=("ecs", "describe-task-definition"))
+        M.plan = denied_plan
+        output = io.StringIO()
+        with redirect_stdout(output): result = M.main()
+        reported = json.loads(output.getvalue())
+        assert result == 1 and reported["context"]["provider_operation"] == "ecs/describe-task-definition" and reported["effect"] == "not-started" and CANARY not in output.getvalue()
+    finally:
+        M.C.subprocess.run, M.parse, M.plan = original_run, original_parse, original_plan
+    print("ENTITY_SMOKE_TASK_READ_TRANSPORT_PROTOCOLS_PASSED")
+
+
+if __name__ == "__main__":
+    transport_read_protocols()
+    run()

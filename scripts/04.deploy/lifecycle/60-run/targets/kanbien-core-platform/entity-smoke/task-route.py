@@ -46,8 +46,9 @@ HISTORY = module("entity_smoke_task_route_history", DIRECTORY / "recovery-histor
 ACCEPTANCE = module("entity_smoke_task_route_acceptance", DIRECTORY / "acceptance-steps.py")
 IMAGE_REPAIR = module("entity_smoke_task_image_repair", DIRECTORY / "image-delivery-repair.py")
 RULE = C.ROOT / ".agentic/aws/standards/operational-realization-applicability.md"
-READS = C.READS | {("ecs", "describe-task-definition"), ("ecs", "list-services"), ("ec2", "describe-security-groups")} | {("iam", name) for name in ("list-role-policies", "list-attached-role-policies", "get-role-policy")}
-READS |= {("rds", "describe-db-snapshots"), ("rds", "list-tags-for-resource")}
+# Share the actual read vocabulary with transport retry and safe diagnosis.
+# Mutation admission remains exclusively in this route's guarded RunTask path.
+READS = C.READS
 EFFECTS = {
     "preflight": "read-only-connection-observation", "ready": "read-only-http-observation", "unready": "read-only-http-observation",
     "observe-permissions": "read-only-permission-observation", "observe-migration-state": "read-only-migration-observation",
@@ -343,6 +344,8 @@ def main():
         known = (IMAGE_REPAIR.C.InfrastructureFailure, IMAGE_REPAIR.C.RESOURCE.CONTROL.TaskFailure, TaskRouteFailure, BINDING.BindingFailure, STEPS.StepFailure, FEATURE.FeatureStepFailure, CREDENTIAL.CredentialFailure, HISTORY.HistoryFailure, ACCEPTANCE.AcceptanceFailure, RUNNER.RunnerFailure, RUNNER.CONTROL.TaskFailure, RUNNER.EVIDENCE.EvidenceFailure, RUNNER.PREFLIGHT.PreflightFailure,
                  C.InfrastructureFailure, C.RESOURCE.ResourceFailure, C.RESOURCE.CONTROL.TaskFailure, C.RESOURCE.EVIDENCE.EvidenceFailure, C.ALIGN.AlignmentFailure, C.GATE.ContractFailure) + RECOVERY.failures()
         condition = failure.code if isinstance(failure, known) else "task-boundary-not-confirmed"
+        if isinstance(failure, C.InfrastructureFailure) and failure.provider_operation is not None:
+            context["provider_operation"] = "/".join(failure.provider_operation)
         if isinstance(failure, BINDING.BindingFailure): context.update(field=failure.field, item=failure.item, affected_workload=failure.workload)
         if isinstance(failure, TaskRouteFailure) and failure.item is not None: context.update(item=failure.item)
         if isinstance(failure, ACCEPTANCE.AcceptanceFailure): context.update(failure.context)

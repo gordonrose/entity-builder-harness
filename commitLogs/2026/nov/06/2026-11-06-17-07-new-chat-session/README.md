@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T09:40:19Z
-latest_commit_sha: 31b4516a526bc013515ed36b8b19960c2862f332
-chat_duration: 405192s (04:16:33:12)
+latest_commit_at_utc: 2026-11-11T10:15:11Z
+latest_commit_sha: 96b755b9e4d9f591b7183c86041b17d22881d51f
+chat_duration: 407284s (04:17:08:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -94,6 +94,28 @@ new chat session
 
 ## Context Hygiene
 
+- Source96b755b9 passed46 selected local checks, staged gate, complete actual
+  local PostgreSQL18.3 image qualification and negative capabilities. Hosted
+  run43003314301 qualified/published image4a0b522f6e2b969ddfb7f79ece7a38583de6e0ad57f84ec1e4bbc056703ab858.
+  Source transitiond346a42470a572b484e4ca3afb5acad8a4da39a9f2f60f0cd0ba84ae0cf98fbc
+  completed on AWS: five new task definitions, stopped service reference, all
+  other owned resources unchanged. Original preparation was not replayed.
+  Administrator preflight task5079e02751dd4f9da0eab613a4f73eaa passed;
+  grant operationes-99e69a07a8814a2e9e94af13fcbe7c17 completed and retained.
+- Current controller repair inventory: real read-only traces established
+  Connect timeouts on IAM list-attached-role-policies and ECS describe-task-definition.
+  Their task-level READS were omitted from the shared adapter's bounded retry
+  set. Centralize the already-declared read-only operations in the shared
+  vocabulary; keep three transport attempts, one mutation attempt, endpoint
+  checks, time bounds and SDK retries disabled. Preserve the finite failed
+  operation in task CLI diagnostics. Pin the two new completed administrator
+  receipt/completion pairs to their actual controllercdf63a0d, without editing
+  their bytes, dates or image. No runtime/image/template/permission changes;
+  resume using the same qualified image under the controller-only repair rule.
+  Fixtures must prove read recovery/exhaustion, denial/foreign-error single
+  calls, task mutation no-replay and exact historical preservation. Permissions
+  planning has not submitted a database-proof task; full live acceptance remains
+  incomplete. Every failed public response is retained in the private capture root.
 - Hosted run42997215752 from31b4516a built the image, then failed its
   provider-administration-model fixture before publication. Actual disposable
   PostgreSQL18.3 reproduced two model defects: LOGIN SUPERUSER alone leaves
@@ -844,6 +866,17 @@ Summary: 45 selected local checks passed with zero findings; 13 later-stage obli
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T10:15:11Z - Commit recorded
+
+Commit: `96b755b9e4d9f591b7183c86041b17d22881d51f`
+
+Message: fix: distinguish authentication grants from implicit role privileges
+
+Summary: 46 selected local checks passed, zero findings, 13 later-stage deferred. Actual PostgreSQL18.3 source-predicate proof covers absent/direct/indirect NOINHERIT/SET FALSE and revoked membership; compiled callers pass. Staged gate passed. Local real-image qualification precedes push/publication.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -956,6 +989,13 @@ ADR impact: covered by session ADR disposition
   Summary: 45 selected local checks passed with zero findings; 13 later-stage obligations deferred. Complete disposable shallow-checkout composition passed. Fixture preserves independently pinned historical template hash without Git-history dependency.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `96b755b9e4d9f591b7183c86041b17d22881d51f`
+  Time UTC: 2026-11-11T10:15:11Z
+  Message: fix: distinguish authentication grants from implicit role privileges
+  Summary: 46 selected local checks passed, zero findings, 13 later-stage deferred. Actual PostgreSQL18.3 source-predicate proof covers absent/direct/indirect NOINHERIT/SET FALSE and revoked membership; compiled callers pass. Staged gate passed. Local real-image qualification precedes push/publication.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -969,9 +1009,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T09:40:19Z
-Latest commit SHA: 31b4516a526bc013515ed36b8b19960c2862f332
-Chat duration: 405192s (04:16:33:12)
+Latest commit at UTC: 2026-11-11T10:15:11Z
+Latest commit SHA: 96b755b9e4d9f591b7183c86041b17d22881d51f
+Chat duration: 407284s (04:17:08:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

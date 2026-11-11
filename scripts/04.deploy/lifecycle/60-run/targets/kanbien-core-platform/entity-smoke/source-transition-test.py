@@ -115,6 +115,14 @@ legacy = M.legacy_context(route, context, None, packet, completion)
 assert legacy["checked"]["definition"] == "old-definition" and legacy["binding"] == before
 assert M.legacy_context(route, context, None, packet, {"gate": "wrong"}) is None
 M.PINS = old_pins
+# A controller-only correction retains the current image and exact original
+# gate bytes; it must not depend on an image-transition observation.
+with patch.object(M, "CONTROLLER_REPAIR_PINS", {pin: (M.document(completion), "f" * 64)}), \
+     patch.object(M, "read", side_effect=AssertionError("same-image history must not read a transition")):
+    assert M.controller(packet, completion, "current") == "sha256:" + "f" * 64
+    assert M.legacy_context(route, context, None, packet, completion)["binding"] == before
+    assert M.controller({**packet, "changed": True}, completion, "current") == "current"
+    assert M.controller(packet, {**completion, "changed": True}, "current") == "current"
 args = SimpleNamespace(proof_label=M.LABEL, workload="administration", operation="grant-runtime", proof_stage="baseline")
 label = M.replacement_label({}, args, "original")
 assert label != "original" and M.replacement_label({}, args, "original") == label

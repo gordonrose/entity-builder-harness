@@ -50,6 +50,9 @@ TRANSITION = module("entity_smoke_source_transition", DIRECTORY / "source-transi
 READS = ALIGN.READS | {("cloudformation", operation) for operation in ("describe-change-set", "get-template", "list-stack-resources", "describe-stack-events", "validate-template")} | {
     ("iam", "get-role"), ("iam", "simulate-principal-policy"), ("ecs", "describe-services"), ("ecs", "describe-tasks"),
     ("ecs", "list-tasks"), ("logs", "get-log-events"),
+    ("ecs", "describe-task-definition"), ("ecs", "list-services"), ("ec2", "describe-security-groups"),
+    ("iam", "list-role-policies"), ("iam", "list-attached-role-policies"), ("iam", "get-role-policy"),
+    ("rds", "describe-db-snapshots"), ("rds", "list-tags-for-resource"),
 }
 WRITES = {("cloudformation", "create-change-set"), ("cloudformation", "execute-change-set")}
 

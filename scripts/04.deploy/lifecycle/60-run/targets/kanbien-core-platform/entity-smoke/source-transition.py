@@ -34,6 +34,12 @@ PINS = {
     "b7f6b2db5eaef57d82088aee602102a4283698bc60dc817a4df44ffe06c69da5": ("0390d89072d1a0a0493d662d9cf06d9931c0ddbeb1dc3a4928ed2bbed07e4311", "20373db2f9f42a0a63f5948c14d587343161b4666f225f32818a937300a742c8"),
 }
 TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", "Administration", "Verifier", "DatabaseProof")}
+# Exact successful preflight/grant custody before the controller-only read
+# retry repair. These already use the current qualified image, not OLD_IMAGE.
+CONTROLLER_REPAIR_PINS = {
+    "6bdd329d5e4f0d17927634945e5a4dfe62af8b1f1c63543f6562ed39e8f1c1ff": ("435c4e9c532bfa420ff43259be725cd3b9b73bd78d3425e03bc9427168aa1caa", "cdf63a0df5c0d09263e8be7a083a7c908a4b3bdea7713150292c453e6a1c9bfd"),
+    "02a2ecd3110ff3fdf71d2b482be3f60d586674240c4727d53dd5edd4796619ec": ("8ae4f77b9f669e1220f498e4b98e5c7f659e06f7d5f619d259c290a817f7ba4e", "cdf63a0df5c0d09263e8be7a083a7c908a4b3bdea7713150292c453e6a1c9bfd"),
+}
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -49,7 +55,7 @@ def document(value):
 
 
 def controller(packet, completion, current):
-    pinned = PINS.get(document(packet))
+    pinned = (PINS | CONTROLLER_REPAIR_PINS).get(document(packet))
     return "sha256:" + pinned[1] if pinned and document(completion) == pinned[0] else current
 
 
