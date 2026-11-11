@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -147,6 +147,21 @@ class Provider:
         except (ValueError, TypeError): raise failure("infrastructure-provider-response-invalid") from None
         if not isinstance(value, dict): raise failure("infrastructure-provider-response-invalid")
         return value
+
+
+def operator_resources_allowed(provider, role, action, resources, *, context=None):
+    """Confirm each exact resource; IAM batches return aggregate action rows."""
+    if not isinstance(resources, list) or not resources or not all(isinstance(item, str) for item in resources) or len(set(resources)) != len(resources): return False
+    for resource in resources:
+        parameters = {"PolicySourceArn": role, "ActionNames": [action], "ResourceArns": [resource]}
+        if context is not None: parameters["ContextEntries"] = context
+        value = provider("iam", "simulate-principal-policy", **parameters)
+        rows = value.get("EvaluationResults") if isinstance(value, dict) else None
+        if not (isinstance(rows, list) and len(rows) == 1 and value.get("IsTruncated") is False
+                and isinstance(rows[0], dict) and rows[0].get("EvalActionName") == action
+                and rows[0].get("EvalDecision") == "allowed" and not rows[0].get("MissingContextValues")
+                and rows[0].get("EvalResourceName") == resource): return False
+    return True
 
 
 def local_checks():

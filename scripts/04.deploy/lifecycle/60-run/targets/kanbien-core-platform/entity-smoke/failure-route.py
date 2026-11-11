@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -126,12 +126,9 @@ def operator(provider, selected):
     if selected["service"] is not None: operations.append(("ecs:UpdateService", [selected["service"]["arn"]]))
     for action, resources in operations:
         if not resources: continue
-        result = provider("iam", "simulate-principal-policy", PolicySourceArn=role["Arn"], ActionNames=[action], ResourceArns=resources,
-                          ContextEntries=[{"ContextKeyName": "ecs:cluster", "ContextKeyValues": ["arn:aws:ecs:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT + ":cluster/" + C.RESOURCE.CLUSTER], "ContextKeyType": "string"}])
-        rows = result.get("EvaluationResults") if isinstance(result, dict) else None
-        require(isinstance(rows, list) and len(rows) == len(resources) and result.get("IsTruncated") is False
-                and all(isinstance(row, dict) and row.get("EvalActionName") == action and row.get("EvalDecision") == "allowed" and not row.get("MissingContextValues") for row in rows)
-                and {row.get("EvalResourceName") for row in rows} == set(resources), "failure-operator-policy-preflight-not-confirmed", "service" if action == "ecs:UpdateService" else "tasks")
+        require(C.operator_resources_allowed(provider, role["Arn"], action, resources, context=[
+            {"ContextKeyName": "ecs:cluster", "ContextKeyValues": ["arn:aws:ecs:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT + ":cluster/" + C.RESOURCE.CLUSTER], "ContextKeyType": "string"}]),
+            "failure-operator-policy-preflight-not-confirmed", "service" if action == "ecs:UpdateService" else "tasks")
     return C.DEPLOY.fingerprint({"account": caller["Account"], "role": role["Arn"]})
 
 

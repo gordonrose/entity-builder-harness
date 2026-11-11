@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -143,7 +143,61 @@ def fails(call, code):
     else: raise AssertionError("expected bounded task-plan rejection")
 
 
+def operator_protocols():
+    definition = "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-entity-smoke-migration:1"
+    roles = ["arn:aws:iam::337159794548:role/ControlledExecution", "arn:aws:iam::337159794548:role/ControlledTask"]
+    calls = []
+    altered = {"mutate": None, "resource": roles[-1]}
+    def provider(service, operation, **parameters):
+        if operation == "get-caller-identity": return {"Account": M.C.ALIGN.ACCOUNT, "Arn": "arn:aws:sts::337159794548:assumed-role/ApprovedOperator/fixture"}
+        if operation == "get-role": return {"Role": {"RoleName": "ApprovedOperator", "Arn": "arn:aws:iam::337159794548:role/ApprovedOperator"}}
+        assert (service, operation) == ("iam", "simulate-principal-policy")
+        assert len(parameters["ResourceArns"]) == 1, "do not assume one top-level IAM result per resource in a batch"
+        resource, action = parameters["ResourceArns"][0], parameters["ActionNames"][0]
+        calls.append((action, resource))
+        result = {"IsTruncated": False, "EvaluationResults": [{"EvalActionName": action, "EvalResourceName": resource, "EvalDecision": "allowed",
+                   "ResourceSpecificResults": [{"EvalResourceName": resource, "EvalResourceDecision": "allowed"}]}]}
+        if resource == altered["resource"] and altered["mutate"] is not None: altered["mutate"](result)
+        return result
+    M.operator(provider, definition, roles)
+    assert calls == [("ecs:RunTask", definition), *(('iam:PassRole', role) for role in roles)]
+    for mutate in (lambda v: v["EvaluationResults"][0].update(EvalDecision="implicitDeny"),
+                   lambda v: v["EvaluationResults"][0].update(MissingContextValues=["controlled-context"]),
+                   lambda v: v["EvaluationResults"][0].update(EvalResourceName=roles[0]),
+                   lambda v: v["EvaluationResults"][0].update(EvalActionName="iam:GetRole"),
+                   lambda v: v.update(IsTruncated=True), lambda v: v.update(EvaluationResults=[])):
+        calls.clear(); altered["mutate"] = mutate
+        fails(lambda: M.operator(provider, definition, roles), "task-operator-policy-preflight-not-confirmed")
+        assert calls[-1] == ("iam:PassRole", roles[-1])
+    altered["mutate"] = None; calls.clear()
+    M.operator(provider, definition, roles[:1])
+    assert len(calls) == 2
+    for resources in ([], [roles[0], roles[0]], [None]):
+        assert M.C.operator_resources_allowed(provider, roles[0], "iam:PassRole", resources) is False
+    snapshot = module("operator_snapshot_fixture", DIRECTORY / "snapshot-route.py")
+    failure = module("operator_failure_fixture", DIRECTORY / "failure-route.py")
+    snapshot_name = "kanbien-core-platform-entity-smoke-" + "a" * 24
+    calls.clear(); snapshot.actor(provider, snapshot_name)
+    prefix = "arn:aws:rds:eu-west-1:337159794548:"
+    assert calls == [("rds:CreateDBSnapshot", prefix + "db:" + M.C.RESOURCE.SOURCE_DATABASE), ("rds:CreateDBSnapshot", prefix + "snapshot:" + snapshot_name)]
+    denied_snapshot = calls[-1][1]
+    tasks = ["arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + character * 32 for character in ("1", "2")]
+    service = "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-core-platform/kanbien-core-platform-entity-smoke"
+    selected = {"task_stops": {task: {} for task in tasks}, "service": {"arn": service}}
+    calls.clear(); failure.operator(provider, selected)
+    assert calls == [("ecs:StopTask", task) for task in tasks] + [("ecs:UpdateService", service)]
+    for invoke, resource, code in ((lambda: snapshot.actor(provider, snapshot_name), denied_snapshot, "snapshot-operator-policy-preflight-not-confirmed"),
+                                   (lambda: failure.operator(provider, selected), tasks[-1], "failure-operator-policy-preflight-not-confirmed")):
+        altered.update(resource=resource, mutate=lambda value: value["EvaluationResults"][0].update(EvalDecision="implicitDeny"))
+        calls.clear()
+        try: invoke()
+        except Exception as error: assert getattr(error, "code", None) == code
+        else: raise AssertionError("later-resource denial ignored")
+        assert calls[-1][1] == resource
+
+
 def run():
+    operator_protocols()
     original = {name: getattr(M.C, name) for name in ("ROOT", "source_digest", "digest_file", "local_checks")}
     old_read, old_source, old_inspect = M.C.ALIGN.read_receipt, M.C.ALIGN.source_preflight, M.C.ALIGN.inspect
     with tempfile.TemporaryDirectory(prefix="entity-smoke-task-plan-") as temporary:

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -269,7 +269,9 @@ def validate_packet(value, *, evidence_class="live"):
         phases = {"operation"} if name == "credential-unready" else {"preflight", "operation"}
         require(isinstance(pair, dict) and set(pair) == phases, "acceptance-task-phases-incomplete", name)
         for phase, task in pair.items():
-            require(isinstance(task, dict) and task.get("name") == name and task.get("phase") == phase and task.get("controller_sha256") == value["controller_sha256"], "acceptance-task-attribution-mismatch", name)
+            require(isinstance(task, dict) and task.get("name") == name and task.get("phase") == phase, "acceptance-task-attribution-mismatch", name)
+            controller = T.IMAGE_REPAIR.completed_bootstrap_controller(task.get("packet"), task.get("completion"), value["controller_sha256"])
+            require(task.get("controller_sha256") == controller, "acceptance-task-attribution-mismatch", name)
             A.validate_task(task, binding, expected_binding=value["restored_binding"] if name == "restore-read" else None)
             operation_id = task["packet"]["reservation"]["operation_id"]
             require(operation_id not in operations, "acceptance-task-reused-across-proofs", name)

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-10"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -29,8 +29,22 @@ LABEL = "entity-smoke-8f76ed3480e85d60fb60f547"
 ENDPOINTS = {"EcrApiEndpoint", "EcrDkrEndpoint"}
 FAILURE_ID = "es-4a34dceff456486cb2a33666613d6949"
 FAILURE_HASH = "sha256:da7e03014d1be5c02205da7b536cf9f1a109a4d3372a212229f299fb961dc69b"
+# Actual completed bootstrap at checkpoint6ed1ce90, before the operator repair.
+# This recognises only the original immutable documents, never arbitrary history.
+BOOTSTRAP_CONTROLLER = "sha256:ae545968c53e005e223320e805967c95209b7a96d764257e3b537cb4adce9903"
+BOOTSTRAP_COMPLETIONS = {
+    "sha256:54e1f8035f6c1cf1404ce685193d0e5e141bee0856ee726afe239581f93c8cb3": "sha256:9c66ffe83e80692c301e98c7bd89b158c4b675e58c1e011eee7ebb3f48778c30",
+    "sha256:c048875837a67e77371278a31ee77600e53f7b8633c1dffcfd51445576f916f4": "sha256:2e77bb18ed5b82574a04d69e4b4b5df522c5749edf4670c35bf104e78a2982f1",
+}
 require = C.require
 fingerprint = C.DEPLOY.fingerprint
+
+
+def completed_bootstrap_controller(packet, completion, current):
+    def document(value): return "sha256:" + C.hashlib.sha256(C.RESOURCE.CONTROL.canonical(value) + b"\n").hexdigest()
+    if BOOTSTRAP_COMPLETIONS.get(document(packet)) == document(completion):
+        return BOOTSTRAP_CONTROLLER
+    return current
 
 
 def cache(): return C.ROOT / ".cache/entity-smoke-live" / LABEL / "image-delivery-repair"

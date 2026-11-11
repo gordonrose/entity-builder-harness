@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -116,6 +116,21 @@ def run(K):
         with patch.object(K.C, "source_digest", side_effect=AssertionError("historical source lookup")), patch.object(A.C, "source_digest", side_effect=AssertionError("historical archive lookup")), patch.object(K.C, "digest_file", side_effect=AssertionError("historical file lookup")), patch.object(A.C, "digest_file", side_effect=AssertionError("historical archive file lookup")):
             assert K.validate_packet(value, evidence_class="simulated") is value
         assert len([item for item in calls if item[1] == "control"]) == 7 and len(calls) == 44
+        previous = copy.deepcopy(value)
+        pinned = {}
+        for phase, entry in previous["tasks"]["bootstrap"].items():
+            entry["controller_sha256"] = "sha256:" + "7" * 64
+            entry["completion"] = {"fixture": "original-completion-" + phase}
+            pinned[A.document_digest(entry["packet"])] = A.document_digest(entry["completion"])
+        with patch.object(K.T.IMAGE_REPAIR, "BOOTSTRAP_COMPLETIONS", pinned), patch.object(K.T.IMAGE_REPAIR, "BOOTSTRAP_CONTROLLER", "sha256:" + "7" * 64):
+            assert K.validate_packet(previous, evidence_class="simulated") is previous
+            for selection, changed in (("bootstrap", "completion"), ("migration", "controller")):
+                invalid = copy.deepcopy(previous)
+                if changed == "completion": invalid["tasks"][selection]["operation"]["completion"]["fixture"] = "changed"
+                else: invalid["tasks"][selection]["operation"]["controller_sha256"] = "sha256:" + "7" * 64
+                try: K.validate_packet(invalid, evidence_class="simulated")
+                except K.CollectionFailure as failure: assert (failure.code, failure.item) == ("acceptance-task-attribution-mismatch", selection)
+                else: raise AssertionError("unrecognised historical controller attribution accepted")
         def task(v, name, phase="operation"): return v["tasks"][name][phase]
         def plan(v, name): return v["controls"][name]["custody"]["plan"]
         zero = "sha256:" + "0" * 64

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-10T23:50:16Z
-latest_commit_sha: 70f528c1
-chat_duration: 369789s (04:06:43:09)
+latest_commit_at_utc: 2026-11-11T00:33:47Z
+latest_commit_sha: HEAD
+chat_duration: 372400s (04:07:26:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -82,6 +82,57 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- 2026-11-11 actual progress: checkpoint6ed1ce907af985ca0499f6d98d2d5019ee286cd1
+  passed all affected local integration checks (report
+  .cache/test-runs/20261111T005009Z-2b83eeb1978c47fc8d1a0c14bbbf2d07/report.json).
+  The approved two-endpoint repair completed, preserving all25 foundation
+  resources/configuration and existing access; its original plan is
+  sha256:276230fcd7608e9f017febc6d19391f1765a8da10913b21ed854bbcf65a87be8.
+  Actual replacement preflight es-5083dc33754b439aa14a249e16499ae2 and bootstrap
+  es-bfd7c5d7ab054cc1ba68cc809e9c5d48 both completed successfully. Original failed
+  attempt remains unchanged. Evidence is under the existing proof-label cache.
+- Migration planning stopped before launch at operator-policy preflight.
+  Actual read-only IAM observation shows RunTask allowed and both PassRole
+  resources allowed in one aggregate EvaluationResults row containing two
+  ResourceSpecificResults. The controller wrongly expects two top-level rows.
+  Correct its existing owner to simulate each exact resource individually;
+  preserve exact action/resource, allowed, missing-context and pagination checks.
+  No IAM change or new task authority is needed. Extend the actual operator
+  fixture for one/two roles and independent second-role denial/malformed results.
+- This controller repair must not invalidate or replay completed bootstrap.
+  Extend the existing known image-repair owner with the exact document hashes
+  of the two original bootstrap step/completion pairs and their actual6ed1ce90
+  controller hash. Only those immutable documents may retain that historical
+  controller attribution; every other task still requires the current controller.
+  Connect completion reading, archive capture and final aggregate attribution;
+  keep original gates, binding/image/source, admissions, timestamps, actual
+  receipts and no-replay checks. Test altered step/completion hashes, wrong task,
+  unrelated prior controllers and actual caller wiring. This is bounded original
+  evidence preservation under the approved controller-only repair, not a new
+  proof registry, fabricated pass, fresh readiness claim or permissions waiver.
+- Operator/custody repair consolidated review complete before preparation.
+  Focused operator tests pass; actual AWS single-resource simulations confirm
+  RunTask and both PassRole resources allowed. Real archive/completion/capture
+  and aggregate fixtures pass. Both genuine bootstrap step/completion pairs
+  validate against their original gate/controller and remain byte-identical.
+  Reviewed prerequisite readers, recovery-history closure, archive capture,
+  aggregate attribution and control siblings: only exact bootstrap documents
+  receive historical attribution; current controller remains required for all
+  new tasks, controls and final collection. Existing finite mismatch conditions
+  and partial-review debt remain. No IAM/template/runtime/image change or ADR
+  is needed. Freeze this correction, run registered checks, checkpoint locally
+  and resume at migration preflight; never rerun bootstrap or the failed probe.
+- Extended consumer inventory before final verification found the same batched
+  response assumption in snapshot (always two resources) and bounded failure
+  stop (potentially several tasks). Reopen preparation for this same correction;
+  use one common controller helper for exact per-resource simulation, preserving
+  each caller's context and existing finite failure code. Replacement and restore
+  already query individual resources; infrastructure uses multiple actions for
+  one resource and is unaffected. Add actual caller regressions for snapshot and
+  failure-stop, with denied later resources and no mutation capability. This
+  closes the confirmed semantic defect across the remaining named proof chain,
+  without adding permissions, changing effects or creating another IAM registry.
 
 - 2026-11-11 continuation: the unchanged repair planner now passes, with exactly
   two endpoint modifications and no replacements/deletions. The earlier local
@@ -550,6 +601,17 @@ Summary: Approved two-endpoint source delta and durable repair route; fixed repl
 
 ADR impact: No ADR: bounded operational repair within existing deployment architecture.
 
+
+### 2026-11-11T00:33:47Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix: retain the approved recovery probe through acceptance
+
+Summary: Exact known bootstrap recovery identity is shared by historical capture and validation; real archive, guarded-route identity and registered feature checks passed; no image or AWS changes.
+
+ADR impact: No ADR: bounded controller compatibility correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -627,6 +689,13 @@ ADR impact: No ADR: bounded operational repair within existing deployment archit
   Summary: Approved two-endpoint source delta and durable repair route; fixed replacement preflight provenance. Staged gate passed. Registered prerequisite recheck passed after all isolated fixtures passed; preserve the original aggregate failure as unexplained, not a successful run. Actual AWS repair and full proof pending.
   ADR impact: No ADR: bounded operational repair within existing deployment architecture.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-11-11T00:33:47Z
+  Message: fix: retain the approved recovery probe through acceptance
+  Summary: Exact known bootstrap recovery identity is shared by historical capture and validation; real archive, guarded-route identity and registered feature checks passed; no image or AWS changes.
+  ADR impact: No ADR: bounded controller compatibility correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -640,9 +709,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-10T23:50:16Z
-Latest commit SHA: 70f528c1
-Chat duration: 369789s (04:06:43:09)
+Latest commit at UTC: 2026-11-11T00:33:47Z
+Latest commit SHA: HEAD
+Chat duration: 372400s (04:07:26:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

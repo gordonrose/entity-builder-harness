@@ -192,7 +192,7 @@ def capture_task(route, context, args, provider, name, collection_binding, *, hi
         selected = route.RUNNER.UNREADY.path_for(context["cache"] / "task-receipts", packet["reservation"]) if name == "credential-unready" else route.RUNNER.PREFLIGHT.admission_path(context["cache"] / "task-receipts", packet["reservation"])
         admission = route.C.read_json(selected)
     value = {"schema": SCHEMA, "name": name, "stage": args.proof_stage, "phase": args.phase, "requested_operation": args.operation,
-             "controller_sha256": context["artifact"], "collection_binding": collection_binding,
+             "controller_sha256": T.IMAGE_REPAIR.completed_bootstrap_controller(packet, completion, context["artifact"]), "collection_binding": collection_binding,
              "graph": route.GRAPH.contract(args.workload, route.C.GATE, negative=name == "credential-unready"),
              "packet": packet, "completion": completion, "gate": gate, "admission": admission}
     return validate_task(value, collection_binding, expected_binding=context["binding"])

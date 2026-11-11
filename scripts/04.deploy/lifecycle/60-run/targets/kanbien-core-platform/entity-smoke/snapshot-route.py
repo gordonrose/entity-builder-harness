@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-11"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -74,11 +74,7 @@ def actor(provider, snapshot):
             and role["Arn"].startswith("arn:aws:iam::" + C.ALIGN.ACCOUNT + ":role/") and role["Arn"].endswith("/" + role_name), "snapshot-operator-not-confirmed")
     prefix = "arn:aws:rds:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT + ":"
     resources = [prefix + "db:" + C.RESOURCE.SOURCE_DATABASE, prefix + "snapshot:" + snapshot]
-    result = provider("iam", "simulate-principal-policy", PolicySourceArn=role["Arn"], ActionNames=["rds:CreateDBSnapshot"], ResourceArns=resources)
-    rows = result.get("EvaluationResults") if isinstance(result, dict) else None
-    require(isinstance(rows, list) and len(rows) == len(resources) and result.get("IsTruncated") is False
-            and all(isinstance(row, dict) and row.get("EvalActionName") == "rds:CreateDBSnapshot" and row.get("EvalDecision") == "allowed" and not row.get("MissingContextValues") for row in rows)
-            and {row.get("EvalResourceName") for row in rows} == set(resources), "snapshot-operator-policy-preflight-not-confirmed")
+    require(C.operator_resources_allowed(provider, role["Arn"], "rds:CreateDBSnapshot", resources), "snapshot-operator-policy-preflight-not-confirmed")
     return C.DEPLOY.fingerprint({"account": caller["Account"], "role": role["Arn"]})
 
 

@@ -29,6 +29,7 @@ import subprocess
 import sys
 import tempfile
 from types import SimpleNamespace
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_ACCEPTANCE_ASSERTIONS_DISABLED")
 
@@ -207,7 +208,8 @@ def archive_protocols(*, bootstrap=False, proof_label=None):
         "binding": {key: item for key, item in binding.items() if key != "record_digest"}, "reservation": reservation, "receipt": receipt}
     with tempfile.TemporaryDirectory(prefix="entity-smoke-task-archive-") as temporary:
         root = Path(temporary)
-        book = C.GateBook(artifact, root, contract=graph, artifact_bindings=expected)
+        cache = root / ".cache/entity-smoke-live" / binding["proof_label"]
+        book = C.GateBook(artifact, cache / "task-realization", contract=graph, artifact_bindings=expected)
         for component in book.known: book.component(component)
         book.bind_plan(plan)
         for gate in C.GATE.GATE_ORDER[:7]: book.gate(gate)
@@ -219,6 +221,25 @@ def archive_protocols(*, bootstrap=False, proof_label=None):
         value = {"schema": A.SCHEMA, "name": name, "stage": stage, "phase": "preflight", "requested_operation": operation,
             "controller_sha256": artifact, "collection_binding": binding, "graph": graph, "packet": packet, "completion": completion, "gate": gate, "admission": None}
         assert A.validate_task(value, binding) is value
+        if bootstrap:
+            step = cache / "task-steps/administration-bootstrap-preflight.json"
+            C.RESOURCE.write_exclusive(step, packet)
+            C.RESOURCE.write_exclusive(T.COMPLETION.path(step), completion)
+            selected = SimpleNamespace(workload=workload, operation=operation, proof_stage=stage, phase="preflight", proof_label=binding["proof_label"])
+            context = {"cache": cache, "binding": packet["binding"], "artifact": "sha256:" + "9" * 64}
+            # Controlled predecessor identities exercise real completion and
+            # capture paths; these fixtures are not the pinned live documents.
+            with patch.object(T.IMAGE_REPAIR, "BOOTSTRAP_COMPLETIONS", {A.document_digest(packet): A.document_digest(completion)}), \
+                 patch.object(T.IMAGE_REPAIR, "BOOTSTRAP_CONTROLLER", artifact), patch.object(C, "ROOT", root), \
+                 patch.object(C, "source_digest", return_value=context["artifact"]):
+                assert T.COMPLETION.read(T.dependencies(), context, selected, step) == completion
+                with patch.object(T.STEPS, "observe_packet", return_value=packet), patch.object(T.STEPS, "path", return_value=step):
+                    captured = A.capture_task(T, context, selected, object(), "bootstrap", binding)
+                    assert captured["controller_sha256"] == artifact and captured["completion"] == completion
+                for changed_packet, changed_completion in (({**packet, "native": "changed"}, completion), (packet, {**completion, "native": "changed"})):
+                    assert T.IMAGE_REPAIR.completed_bootstrap_controller(changed_packet, changed_completion, context["artifact"]) == context["artifact"]
+                with patch.object(T.IMAGE_REPAIR, "BOOTSTRAP_COMPLETIONS", {}):
+                    fails(lambda: T.COMPLETION.read(T.dependencies(), context, selected, step), T.STEPS.StepFailure, "task-step-completion-artifacts-mismatch")
         if bootstrap and proof_label == T.IMAGE_REPAIR.LABEL:
             original = "entity-smoke-" + hashlib.sha256((proof_label + ":administration:bootstrap:preflight").encode()).hexdigest()[:24]
             assert label != original
