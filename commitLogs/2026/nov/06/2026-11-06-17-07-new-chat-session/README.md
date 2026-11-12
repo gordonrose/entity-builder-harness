@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T15:32:23Z
-latest_commit_sha: 5fdf5efd
-chat_duration: 512716s (05:22:25:16)
+latest_commit_at_utc: 2026-11-12T17:02:55Z
+latest_commit_sha: f3b6afbd
+chat_duration: 518148s (05:23:55:48)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2104,6 +2104,17 @@ Summary: Reused the bounded unused-probe renewal for es-02963945 after the exact
 
 ADR impact: No ADR: bounded renewal through existing owner; no runtime, image, database or infrastructure change.
 
+
+### 2026-11-12T17:02:55Z - Commit recorded
+
+Commit: `f3b6afbd`
+
+Message: test(deploy): retain accepted entity-smoke proof and retrospective
+
+Summary: Live AWS release release-53798ef563be4ce9a8c5b2f0 accepted at 2026-11-12T16:00:21Z. Retained four immutable acceptance files containing 37 real task and seven control archives; entity-smoke active. Original-record digest, lifecycle/index, replacement, stop-preserve/restart, credential failure/recovery, isolated snapshot restore/readback and owned clone cleanup proved; source database/snapshot and other baselines preserved. Current accepted-state validation passed with zero findings, including after fixture repairs. Full retrospective records delivery, architecture, governance, verification, approval and communication failures and unproved limits. Five local fixture corrections isolate copied live acceptance and simulated accepted-reader behavior; reviewed persistence fixture hash updated without operational source changes. Final staged gate passed 38 checks, zero findings. Final affected integration passed 69 checks (65 reused, four executed), 20 separately staged checks deferred, zero findings, 142.295892 seconds. Focused payload/provider regressions passed in 122.931506 seconds; selector regression passed in 608.259798 seconds. Reports retained in .cache/test-runs/entity-smoke-stable.7wpnDKuN/acceptance-final-{integration,focused,selector}.json. Four evidence hashes unchanged. No AWS effects performed for post-acceptance repairs; no push or merge. The accepted feature path is proved; a clean unattended repeat, fast emergency delivery, subsequent-image rollback, hard purge, DynamoDB feature parity and staging retirement are not claimed.
+
+ADR impact: No new ADR: retained acceptance and bounded fixture isolation follow existing deployment/testing governance; retrospective recommendations are future work, not silently implemented redesign.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2349,6 +2360,13 @@ ADR impact: No ADR: bounded renewal through existing owner; no runtime, image, d
   Summary: Reused the bounded unused-probe renewal for es-02963945 after the exact not-started freshness failure; preserved original collector custody and the unsubmitted read identity. Actual custody audit passed without provider calls. Focused checks passed in603.542874 seconds, selector in674.796094 seconds; final integration46 local instances passed, all reused,13 later-stage obligations deferred, no findings,47.799648 seconds. Staged gates passed. Captures: .cache/test-runs/entity-smoke-stable.7wpnDKuN/final-renewal-{focused,selector,integration}.json. Continue the renewed ready probe, same final read, collection and promotion without replaying prior proof.
   ADR impact: No ADR: bounded renewal through existing owner; no runtime, image, database or infrastructure change.
 
+
+- Commit: `f3b6afbd`
+  Time UTC: 2026-11-12T17:02:55Z
+  Message: test(deploy): retain accepted entity-smoke proof and retrospective
+  Summary: Live AWS release release-53798ef563be4ce9a8c5b2f0 accepted at 2026-11-12T16:00:21Z. Retained four immutable acceptance files containing 37 real task and seven control archives; entity-smoke active. Original-record digest, lifecycle/index, replacement, stop-preserve/restart, credential failure/recovery, isolated snapshot restore/readback and owned clone cleanup proved; source database/snapshot and other baselines preserved. Current accepted-state validation passed with zero findings, including after fixture repairs. Full retrospective records delivery, architecture, governance, verification, approval and communication failures and unproved limits. Five local fixture corrections isolate copied live acceptance and simulated accepted-reader behavior; reviewed persistence fixture hash updated without operational source changes. Final staged gate passed 38 checks, zero findings. Final affected integration passed 69 checks (65 reused, four executed), 20 separately staged checks deferred, zero findings, 142.295892 seconds. Focused payload/provider regressions passed in 122.931506 seconds; selector regression passed in 608.259798 seconds. Reports retained in .cache/test-runs/entity-smoke-stable.7wpnDKuN/acceptance-final-{integration,focused,selector}.json. Four evidence hashes unchanged. No AWS effects performed for post-acceptance repairs; no push or merge. The accepted feature path is proved; a clean unattended repeat, fast emergency delivery, subsequent-image rollback, hard purge, DynamoDB feature parity and staging retirement are not claimed.
+  ADR impact: No new ADR: retained acceptance and bounded fixture isolation follow existing deployment/testing governance; retrospective recommendations are future work, not silently implemented redesign.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2362,9 +2380,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T15:32:23Z
-Latest commit SHA: 5fdf5efd
-Chat duration: 512716s (05:22:25:16)
+Latest commit at UTC: 2026-11-12T17:02:55Z
+Latest commit SHA: f3b6afbd
+Chat duration: 518148s (05:23:55:48)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
