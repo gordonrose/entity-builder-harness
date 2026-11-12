@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T12:32:02Z
-latest_commit_sha: 2a6e1410913f8993d2cce9709fa853750f6523e6
-chat_duration: 501895s (05:19:24:55)
+latest_commit_at_utc: 2026-11-12T13:23:07Z
+latest_commit_sha: 9c1ae3e7
+chat_duration: 504960s (05:20:16:00)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,18 @@ new chat session
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
 ## Decisions Made
+
+- Checkpoint9c1ae3e7 passed the full affected local checks, but the actual public
+  planner e0bd1801 rejected alignment-source-checkpoint-mismatch before AWS I/O.
+  Actual Git comparison identifies exactly two omitted controller-only files:
+  shared/provider-adapters/aws/response.py and its recovery-test.py. The controller
+  source digest already binds response.py; the repair allowlist omitted it.
+  This is my missed integration boundary, not an AWS failure. Add exactly those
+  two paths, extend the existing real-Git checkpoint fixture to admit committed
+  versions while rejecting dirt and an unrelated adapter sibling, and retain all
+  application/image/template/permission/ancestry restrictions. No new permission,
+  publication or AWS mutation is needed. Validate the actual source checkpoint
+  offline before resuming; preserve e0bd1801 as the failed not-started report.
 
 - Cleanup observer correction consolidated review: the shared classifier now
   recognizes only the exact EC2 describe-security-groups and IAM get-role missing
@@ -1660,6 +1672,17 @@ Summary: Cleanup correction passed capability alternatives, connected restore an
 
 ADR impact: No new architecture decision: implement existing approved bounded controller repair, preserve exact historical custody and never overwrite or replay the unused cleanup intent; one-off pins and duplicate normalization remain design debt.
 
+
+### 2026-11-12T13:23:07Z - Commit recorded
+
+Commit: `9c1ae3e7`
+
+Message: fix(deploy): reconcile completed restore cleanup from original custody
+
+Summary: Shared typed EC2/IAM absence plus original-plan observer reconciliation passed connected regression, offline exact custody and staged gates. Registered focused checks passed in316.123271 seconds; four dependent units passed in620.126560 seconds; final affected integration passed74 entries (73 unique IDs),7 executed67 reused,20 later-stage deferred,zero findings in367.346967 seconds. Source/image/template/SQL/permissions and original evidence remain unchanged. Clone already DELETE_COMPLETE; resume only read-only cleanup reconciliation, final original-record read and actual acceptance. Full retrospective remains required.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1877,6 +1900,13 @@ ADR impact: No new architecture decision: implement existing approved bounded co
   Summary: Cleanup correction passed capability alternatives, connected restore and actual corrected-plan preparation, diagnostic review, preparation, staged gates, registered composition288.061227 seconds and four dependent units597.902543 seconds. Final impact report .cache/test-runs/20261112T123141Z-afb0d384ae004f58bddb9b50aea9a10c/report.json passed47.897609 seconds with46 reused entries representing45 unique local check IDs,13 later-stage deferred,zero findings. Preserve successful reader task4a74462f/preflight and32b61783/original-digest read, original cleanup failuree00dd39c and immutable unused plan. Resume cleanup only; no image/template/SQL/permission change or task replay. Incorrect comma-separated focused-check invocation was rejected before execution and corrected; include in retrospective.
   ADR impact: No new architecture decision: implement existing approved bounded controller repair, preserve exact historical custody and never overwrite or replay the unused cleanup intent; one-off pins and duplicate normalization remain design debt.
 
+
+- Commit: `9c1ae3e7`
+  Time UTC: 2026-11-12T13:23:07Z
+  Message: fix(deploy): reconcile completed restore cleanup from original custody
+  Summary: Shared typed EC2/IAM absence plus original-plan observer reconciliation passed connected regression, offline exact custody and staged gates. Registered focused checks passed in316.123271 seconds; four dependent units passed in620.126560 seconds; final affected integration passed74 entries (73 unique IDs),7 executed67 reused,20 later-stage deferred,zero findings in367.346967 seconds. Source/image/template/SQL/permissions and original evidence remain unchanged. Clone already DELETE_COMPLETE; resume only read-only cleanup reconciliation, final original-record read and actual acceptance. Full retrospective remains required.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1890,9 +1920,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T12:32:02Z
-Latest commit SHA: 2a6e1410913f8993d2cce9709fa853750f6523e6
-Chat duration: 501895s (05:19:24:55)
+Latest commit at UTC: 2026-11-12T13:23:07Z
+Latest commit SHA: 9c1ae3e7
+Chat duration: 504960s (05:20:16:00)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -193,7 +193,14 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
         repair = commit("controller-only correction")
         assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": repair}
         M.source_preflight(custody)
+        for path in ("scripts/04.deploy/shared/provider-adapters/aws/response.py", "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py"):
+            write(path, "checked controller response correction\n")
+            rejected_source(lambda: M.source_preflight(custody), "alignment-committed-source-required")
+            repair = commit("shared response controller-only correction")
+            assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": repair}
+            M.source_preflight(custody)
         for path in (
+            "scripts/04.deploy/shared/provider-adapters/aws/foreign-adapter.py",
             "apps/entity-smoke/fixture.ts", "packages/core/src/shared/index.ts", "package-lock.json",
             "platform/runtime/fixture.ts", "platform/security/fixture.ts",
             "infra/04.deploy/03.product/image/entity-smoke/Dockerfile",
