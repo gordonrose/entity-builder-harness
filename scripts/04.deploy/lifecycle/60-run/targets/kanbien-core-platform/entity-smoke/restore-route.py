@@ -255,7 +255,8 @@ def completed_cleanup(value, args, provider):
     plan = packet["plan"]
     require(packet["request"] == expected and plan.get("phase") == "cleanup" and plan.get("binding") == value["restore_binding"]
             and plan.get("target") == C.RESOURCE.CLUSTER and plan.get("scope") == "entity-smoke"
-            and plan.get("request_sha256") == C.DEPLOY.fingerprint(expected) and plan.get("controller_sha256") == value["artifact"]
+            and plan.get("request_sha256") == C.DEPLOY.fingerprint(expected)
+            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("restore-cleanup", C.digest_file(path), value["artifact"])
             and plan.get("snapshot_sha256") == C.digest_file(value["cache"] / "snapshot-receipt.json")
             and plan.get("history_sha256") == C.digest_file(value["cache"] / "credential-history.json")
             and plan.get("configuration_sha256") == C.DEPLOY.fingerprint(value["restore_parameters"])

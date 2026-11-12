@@ -179,6 +179,9 @@ def validate_connections(A, value):
                 later(receipt(name, "preflight")["task"]["created_at"], floor, name)
                 later(tasks[name]["operation"]["admission"]["required_after"], floor, name)
     attempts, jobs, actors = set(), set(), {}
+    transition = value.get("source_transition")
+    if transition is not None:
+        A.C.TRANSITION.validate(A.C, transition, {key: item for key, item in binding.items() if key != "record_digest"})
     for name, pair in tasks.items():
         workload = A.TASKS[name][1]
         for task in pair.values():
@@ -187,7 +190,16 @@ def validate_connections(A, value):
             require(attempt not in attempts and arn not in jobs, "acceptance-proof-attempt-reused", name)
             attempts.add(attempt); jobs.add(arn)
             request = selected["reservation"]["request"]
-            actor = (request["definition"], request["security_group"], tuple(sorted(request["subnets"])))
+            definition = request["definition"]
+            if transition is not None and selected["binding"] == transition["plan"]["previous_binding"]:
+                logical = {"administration": "AdministrationTaskDefinition", "migration": "MigrationTaskDefinition",
+                           "database-proof": "DatabaseProofTaskDefinition", "verifier": "VerifierTaskDefinition"}.get(workload)
+                require(logical is not None and A.C.TRANSITION.historical(selected, task["completion"])
+                        and definition == transition["plan"]["resources"][logical]["physical_id"], "acceptance-transition-actor-invalid", name, field="definition")
+                # Compare only the declared old/new definition identities. The
+                # original request stays unchanged; private networks still match.
+                definition = transition["resources"][logical]["physical_id"]
+            actor = (definition, request["security_group"], tuple(sorted(request["subnets"])))
             if workload in actors:
                 for field, before, after in zip(("definition", "security_group", "subnets"), actors[workload], actor):
                     require(before == after, "acceptance-workload-binding-drift", name, field=field)

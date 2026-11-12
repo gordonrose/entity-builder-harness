@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -37,6 +38,8 @@ TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", 
 # Exact successful grant/permissions custody before controller-only repairs.
 # These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "625fa6adfb7c585a6df84f6b645e7fe430f2317c246e75eb5e21c3931b83d489": ("e5428c0a242c063e34ecafa59477bf325fdf7c506f45095e62d82b011552ae41", "2f07f14b598ee22cfd9b1ab8980ef990f06ed43d1301bda848bf75934daa9f4c"),
+    "b82bc6487a8a3d24024aeeb4ef8fd21d931d25dc9a94d2dfb6c0100ad6dba689": ("c8b7d8d9043dac48de128c8d6bc6483fadc06dd7d53222e2beabdc9d725e86fc", "2f07f14b598ee22cfd9b1ab8980ef990f06ed43d1301bda848bf75934daa9f4c"),
     "f86edfe5bb0a57bc58a28a659b86f1377800c8472fe0f9a2327f7c8ed9440607": ("ed3f465366f0ed09287e4f3e5d0a7d4770164c3ae3da58949abf3a75b33a121d", "1a4f5abbf42a6771fa410981768887cd5f9ebdb02031d046dcad8c8119ad6457"),
     "a12aaa5258ec59d35496c9fe26f1334d105cd90fb666d674865052b7818f43e1": ("dbe4ad4be0dae5ce91174dd302e0ed2bf074c31a69477f359ebe262e5160b59d", "1a4f5abbf42a6771fa410981768887cd5f9ebdb02031d046dcad8c8119ad6457"),
     "612094606ecf7473081c093246a7ae61c7d2df9ffbd72693f7d7deb9c5ff67d9": ("c8731dc47b6aa65aec390a130e7aa8c0a6e088271d895a3197bbbe49c81af09b", "e022fa391f24fa326a4ba5b9b6193fff7c587045525fb758e3935b7394cbad9b"),
@@ -113,6 +116,14 @@ CLEANUP_RECONCILE = {
 }
 CLEANUP_RECONCILE_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-restore-4fda0a72ead942ef8a495cbb57349a39.json"
 CLEANUP_RECONCILE_FAILURE_HASH = "sha256:02e58b3158189a30bf9acd40aad57902d152b15db22c36f1c01d7e9219775022"
+ACCEPTANCE_REFRESH_LABEL = LABEL
+ACCEPTANCE_REFRESH_CONTROLLER = "sha256:2f07f14b598ee22cfd9b1ab8980ef990f06ed43d1301bda848bf75934daa9f4c"
+ACCEPTANCE_REFRESH_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-collect-acceptance-3d5f9bd455ba4b30865c7717172f550c.json"
+ACCEPTANCE_REFRESH_FAILURE_HASH = "sha256:ade8a64f7e28862eb00d2430fd4b5cf8dd98ce54780a6cc463acc654f131cc81"
+ACCEPTANCE_REFRESH_INPUTS = {
+    "preflight": ("task-steps/verifier-read-acceptance-preflight.json", "sha256:625fa6adfb7c585a6df84f6b645e7fe430f2317c246e75eb5e21c3931b83d489", "sha256:e5428c0a242c063e34ecafa59477bf325fdf7c506f45095e62d82b011552ae41"),
+    "operation": ("task-steps/verifier-read-acceptance-operation.json", "sha256:b82bc6487a8a3d24024aeeb4ef8fd21d931d25dc9a94d2dfb6c0100ad6dba689", "sha256:c8b7d8d9043dac48de128c8d6bc6483fadc06dd7d53222e2beabdc9d725e86fc"),
+}
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -288,11 +299,14 @@ def readback_recovery(args):
 
 
 def preflight_step_suffix(args):
+    if acceptance_refresh(args): return "-collector-recovery-1"
     if restore_reader_recovery(args) and args.phase == "preflight": return "-connection-recovery-1"
     return "-readback-recovery-1" if readback_recovery(args) is not None and args.phase == "preflight" else ""
 
 
 def replacement_label(context, args, original):
+    if acceptance_refresh(args):
+        return "entity-smoke-" + hashlib.sha256((original + ":collector-recovery-1").encode()).hexdigest()[:24]
     if restore_reader_recovery(args):
         return "entity-smoke-" + hashlib.sha256((original + ":" + RESTORE_PROBE + ":connection-recovery-1").encode()).hexdigest()[:24]
     recovery = readback_recovery(args)
@@ -307,6 +321,63 @@ def replacement_label(context, args, original):
 
 def restore_reader_recovery(args):
     return (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (RESTORE_LABEL, "restore-reader", "restore-read", "isolated-restore")
+
+
+def acceptance_refresh(args):
+    return (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (ACCEPTANCE_REFRESH_LABEL, "verifier", "read", "acceptance")
+
+
+def acceptance_refresh_preflight(C, context, args, original, *, current_time):
+    """One fresh ready/read pair after the pinned collector failure; no replay."""
+    C.require(acceptance_refresh(args), "acceptance-refresh-selection-invalid")
+    failure_path = C.ROOT / ACCEPTANCE_REFRESH_FAILURE
+    C.require(C.digest_file(failure_path) == ACCEPTANCE_REFRESH_FAILURE_HASH, "acceptance-refresh-failure-changed")
+    failure = C.read_json(failure_path)
+    C.require(failure.get("schema") == "deploy/entity-smoke-acceptance-report/v1" and failure.get("verdict") == "blocked"
+              and failure.get("condition") == "source-transition-binding-incompatible"
+              and failure.get("effect") == "no-provider-mutation-no-scope-promotion"
+              and failure.get("context") == {"proof_label_sha256": hashlib.sha256(args.proof_label.encode()).hexdigest(), "stage": "acceptance-collection"},
+              "acceptance-refresh-failure-invalid")
+    runner = C.module("entity_smoke_acceptance_refresh_runner", C.DIRECTORY / "task-runner.py")
+    graph = C.module("entity_smoke_acceptance_refresh_graph", C.DIRECTORY / "task-graph.py")
+    completion_owner = C.module("entity_smoke_acceptance_refresh_completion", C.DIRECTORY / "task-completion.py")
+    declaration = graph.contract("verifier", C.GATE)
+    artifacts = {row["id"]: ACCEPTANCE_REFRESH_CONTROLLER if row["id"] == graph.CONTROLLER_SOURCE else context["binding"]["image_digest"] for row in declaration["artifacts"]}
+    store = runner.CONTROL.AttemptStore(context["cache"] / "task-attempts")
+    packets = {}
+    for phase, (relative, packet_hash, completion_hash) in ACCEPTANCE_REFRESH_INPUTS.items():
+        path = context["cache"] / relative
+        companion = completion_owner.path(path)
+        C.require(C.digest_file(path) == packet_hash and C.digest_file(companion) == completion_hash, "acceptance-refresh-original-custody-changed")
+        packet, closed = C.read_json(path), C.read_json(companion)
+        request, reservation = packet["reservation"]["request"], packet["reservation"]
+        key = "task-" + hashlib.sha256((args.proof_label + ":verifier:read:" + phase + ":acceptance").encode()).hexdigest()[:48]
+        label = original if phase == "preflight" else args.proof_label
+        environment = {"ENTITY_SMOKE_VERIFICATION_OPERATION": "ready" if phase == "preflight" else "read", "ENTITY_SMOKE_PROOF_LABEL": label,
+                       "ENTITY_SMOKE_EXPECTED_SOURCE": context["binding"]["source_revision"]}
+        if phase == "operation": environment["ENTITY_SMOKE_EXPECTED_DIGEST"] = args.expected_digest
+        C.require(packet["binding"] == context["binding"] and store.read(key, request) == reservation
+                  and request["proof_label"] == label and request["workload"] == "verifier"
+                  and request["environment"] == environment,
+                  "acceptance-refresh-original-binding-invalid")
+        C.require(runner.EVIDENCE.validate_retained(packet["receipt"], reservation) == packet["receipt"], "acceptance-refresh-original-result-invalid")
+        reference = closed["realization_evidence"]
+        prefix = str((context["cache"] / "task-realization").relative_to(C.ROOT)) + "/controlled-execution-"
+        C.require(isinstance(reference, str) and reference.startswith(prefix) and re.fullmatch(r"[a-f0-9]{32}\.json", reference[len(prefix):])
+                  and closed["step_sha256"] == packet_hash and closed["plan_sha256"] == packet["plan_sha256"], "acceptance-refresh-original-completion-invalid")
+        gate_path = C.ROOT / reference
+        C.require(C.digest_file(gate_path) == closed["realization_evidence_sha256"], "acceptance-refresh-original-gate-changed")
+        completion_owner.validate_gate(SimpleNamespace(C=C, STEPS=SimpleNamespace(require=C.require)), declaration, C.read_json(gate_path), packet["plan_sha256"], artifacts)
+        packets[phase] = packet
+    before, result = packets["preflight"], packets["operation"]
+    runner.PREFLIGHT.read_admission(context["cache"] / "task-receipts", result["reservation"])
+    admission = C.read_json(runner.PREFLIGHT.admission_path(context["cache"] / "task-receipts", result["reservation"]))
+    C.require(admission["preflight"]["reservation"] == before["reservation"] and admission["preflight"]["receipt"] == before["receipt"]
+              and result["receipt"]["result"].get("code") == "ENTITY_SMOKE_RECORD_RETRIEVED"
+              and result["receipt"]["result"].get("record_digest") == args.expected_digest, "acceptance-refresh-original-read-required")
+    C.require((C.RESOURCE.timestamp(current_time) - C.RESOURCE.timestamp(result["receipt"]["collected_at"])).total_seconds() > 900,
+              "acceptance-refresh-original-read-not-expired")
+    return replacement_label(context, args, original)
 
 
 def restore_reader_preflight(C, context, deployed, original):
@@ -357,6 +428,7 @@ def restore_reader_preflight(C, context, deployed, original):
 
 
 def recovery_preflight(C, context, args, original):
+    if acceptance_refresh(args): return acceptance_refresh_preflight(C, context, args, original, current_time=C.now())
     selected = replacement_label(context, args, original)
     if selected == original: return original
     recovery = readback_recovery(args)

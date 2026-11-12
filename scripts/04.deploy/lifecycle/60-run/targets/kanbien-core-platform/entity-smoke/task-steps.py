@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -77,6 +77,7 @@ def activation_generation(args):
 
 def key(args):
     suffix = "" if stage(args) == "baseline" else ":" + stage(args)
+    if TRANSITION.acceptance_refresh(args): suffix += ":collector-recovery-1"
     if stage(args) == "activation": suffix += ":" + activation_generation(args)
     return "task-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":" + args.phase + suffix).encode()).hexdigest()[:48]
 

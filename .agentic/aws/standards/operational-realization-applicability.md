@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 15
+version: 16
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-12"
@@ -359,6 +359,24 @@ source/image/request/readback/ownership bindings remain unchanged. Acceptance
 retains the explicit original-plan reference; new observation gates do not
 replace or restamp the original pre-execution evidence. No resource recreation,
 second deletion or additional AWS mutation is authorized by this correction.
+
+### Final read refresh after collector correction
+
+Standing completion authority permits one new read-only ready/read pair after
+collector failure3d5f9bd4. Require its exact failed report and the original
+successful final pair es-9d61f2ff/es-8bf4dc8a, their original admissions, attempt
+journals, completion companions and seven-gate custody. The original successful
+read must have expired; it remains valid historical evidence, not a failed task.
+<!-- deterministic-check: allow reason="source-transition.acceptance_refresh_preflight validates the pinned original custody and expiry; task-steps uses one separate fixed key/path family and the ordinary route retains fresh admission and single-submission checks" -->
+Use one fixed collector-recovery identity for the new pair. Preserve the original
+keys, receipts, timestamps, source/image, record digest, runtime permissions and
+cleanup. Reconcile only the same new reservations after uncertain responses;
+there is no third pair or new business-data mutation. Keep normal first-five
+gates, ninety-second ready completion, successful fresh admission, terminal read
+evidence and final nine-hundred-second acceptance freshness. Historical cleanup
+may use its exact original receipt/controller/seven-gate custody; a controller
+repair must not repeat deletion or restamp cleanup. This is fresh observation
+under the existing approved proof, not replay of the completed original tasks.
 
 ### Stopped-service activation refresh
 

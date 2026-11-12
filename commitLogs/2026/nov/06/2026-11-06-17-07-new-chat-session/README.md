@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T13:23:07Z
-latest_commit_sha: 9c1ae3e7
-chat_duration: 504960s (05:20:16:00)
+latest_commit_at_utc: 2026-11-12T13:39:33Z
+latest_commit_sha: 986cc4fe
+chat_duration: 505946s (05:20:32:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,51 @@ new chat session
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
 ## Decisions Made
+
+- Collector correction review,2026-11-12: reviewed archive binding versus
+  controller provenance, validated source-transition actor mapping, retained
+  cleanup controller selection, and one fixed fresh ready/read pair. Original
+  packets, journals, admissions, gate bytes and failure evidence stay immutable;
+  no cleanup, migration, permission or restore operation is replayed. Negative
+  tests cover clone binding, old/new definition and network drift, custody
+  tampering, nonexpired reads and lost-response single submission. The actual
+  offline assembly of37 task archives and7 control archives now passes all
+  aggregate checks; original final-read freshness correctly rejects. This audit
+  made two provider reads and no writes; it is not accepted live proof. Complete
+  registered verification before checkpoint and the fresh observation pair.
+  No ADR: this repairs provenance/connection checks in existing owners, without
+  changing application, image, infrastructure or database contracts. The eventual
+  retrospective must include these missed collector cases and repeated local
+  execution mistakes, including another avoidable ledger patch formatting error.
+
+- Collector correction inventory,2026-11-12: final ready/read tasks completed
+  with original digest6da2c116 (es-9d61f2ff,46.263seconds; es-8bf4dc8a,40.086).
+  Collector3d5f9bd4 then rejected source-transition-binding-incompatible. The
+  archive validator conflates a pinned historical controller with an old image:
+  the restored reader has the current image but a legitimately distinct clone
+  incarnation/permission binding. Apply source-transition compatibility only
+  when source/image differs; same-image historical clone readers must still
+  satisfy their exact expected binding and permitted parent differences. Extend
+  actual archive fixtures with pinned controller provenance; inspect all actual
+  retained task/control archives offline before another live acceptance attempt.
+  Correcting the collector changes its controller hash. Preserve completed
+  cleanup3c82ef1c under its original2f07f14b controller through the existing
+  exact receipt selector; never rerun deletion or restamp the receipt. Because
+  final-read freshness will expire during checked repair, add exactly one fresh
+  ready/read observation pair with separate keys/paths. Require the exact failed
+  collector report, original successful final pair/companions/seven-gate custody,
+  original admissions/journals, same binding/digest and expired original read.
+  Keep all originals; new probes/read tasks remain read-only, single-submission,
+  normally gated and fresh. No third pair, new image, migration, permission,
+  snapshot, restore or cleanup is authorized. This bounded repair is covered by
+  standing completion authority; do not ask again. The extra cycle is my missed
+  image-versus-controller/clone integration case, not a data or AWS restore fault.
+  The full offline assembly then exposed the corresponding aggregate comparison:
+  it requires one task-definition ARN per workload even across the validated
+  five-definition image transition. Normalize only exact pinned old definitions
+  through that transition's declared old/new map for comparison; preserve all
+  original requests and require identical security groups/subnets. Unknown old
+  definitions, unpinned tasks, unrelated resources or network drift still reject.
 
 - Checkpoint9c1ae3e7 passed the full affected local checks, but the actual public
   planner e0bd1801 rejected alignment-source-checkpoint-mismatch before AWS I/O.
@@ -1683,6 +1728,17 @@ Summary: Shared typed EC2/IAM absence plus original-plan observer reconciliation
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-12T13:39:33Z - Commit recorded
+
+Commit: `986cc4fe`
+
+Message: fix(deploy): classify shared response repairs as controller-only
+
+Summary: Closed my omitted source-checkpoint boundary for exactly shared AWS response.py and recovery-test.py; actual Git checkpoint and four real read-only deleted-role/security-group observations pass. Real-Git regression and staged gates passed. Registered feature/acceptance/payload batch passed482.368946 seconds with unchanged persistence composition reused; parallel selector passed652.312283 seconds. Final integration passed45 entries (44 unique local IDs),all reused,13 deferred,zero findings in47.720782 seconds. No AWS mutation occurred in failed e0bd1801 plan. Resume original cleanup observation then final read/collector/promotion; retrospective must include this avoidable extra repair cycle.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1907,6 +1963,13 @@ ADR impact: covered by session ADR disposition
   Summary: Shared typed EC2/IAM absence plus original-plan observer reconciliation passed connected regression, offline exact custody and staged gates. Registered focused checks passed in316.123271 seconds; four dependent units passed in620.126560 seconds; final affected integration passed74 entries (73 unique IDs),7 executed67 reused,20 later-stage deferred,zero findings in367.346967 seconds. Source/image/template/SQL/permissions and original evidence remain unchanged. Clone already DELETE_COMPLETE; resume only read-only cleanup reconciliation, final original-record read and actual acceptance. Full retrospective remains required.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `986cc4fe`
+  Time UTC: 2026-11-12T13:39:33Z
+  Message: fix(deploy): classify shared response repairs as controller-only
+  Summary: Closed my omitted source-checkpoint boundary for exactly shared AWS response.py and recovery-test.py; actual Git checkpoint and four real read-only deleted-role/security-group observations pass. Real-Git regression and staged gates passed. Registered feature/acceptance/payload batch passed482.368946 seconds with unchanged persistence composition reused; parallel selector passed652.312283 seconds. Final integration passed45 entries (44 unique local IDs),all reused,13 deferred,zero findings in47.720782 seconds. No AWS mutation occurred in failed e0bd1801 plan. Resume original cleanup observation then final read/collector/promotion; retrospective must include this avoidable extra repair cycle.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1920,9 +1983,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T13:23:07Z
-Latest commit SHA: 9c1ae3e7
-Chat duration: 504960s (05:20:16:00)
+Latest commit at UTC: 2026-11-12T13:39:33Z
+Latest commit SHA: 986cc4fe
+Chat duration: 505946s (05:20:32:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

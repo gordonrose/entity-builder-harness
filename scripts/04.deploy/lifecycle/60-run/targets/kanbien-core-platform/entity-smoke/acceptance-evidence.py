@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -128,14 +128,15 @@ def validate_task(value, collection_binding, *, expected_binding=None):
             and packet["schema"] == "deploy/entity-smoke-task-step/v1", "acceptance-task-packet-invalid", name)
     parent = {key: item for key, item in collection_binding.items() if key != "record_digest"}
     legacy = C.TRANSITION.historical(packet, value["completion"])
-    if legacy and packet["binding"] != parent:
+    source_transition = legacy and any(packet["binding"].get(key) != parent[key] for key in ("source_revision", "image_digest"))
+    if source_transition:
         C.TRANSITION.compatible(C, packet["binding"], parent)
         expected_binding = packet["binding"]
     expected_binding = parent if expected_binding is None else expected_binding
     C.RESOURCE.validate_binding(expected_binding, record_required=False)
     require(packet["binding"] == expected_binding, "acceptance-task-binding-mismatch", name)
     # The clone reader alone has a distinct incarnation and permission contract.
-    require(legacy or all(expected_binding[key] == parent[key] for key in parent if name != "restore-read" or key not in {"permission_contract_sha256", "dependency_incarnation_sha256"})
+    require(source_transition or all(expected_binding[key] == parent[key] for key in parent if name != "restore-read" or key not in {"permission_contract_sha256", "dependency_incarnation_sha256"})
             and (name == "restore-read" or expected_binding == parent), "acceptance-task-parent-mismatch", name)
     reservation, receipt = packet["reservation"], packet["receipt"]
     checked = T.RUNNER.EVIDENCE.validate_retained(receipt, reservation)

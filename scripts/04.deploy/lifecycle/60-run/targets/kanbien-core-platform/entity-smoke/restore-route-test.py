@@ -19,6 +19,7 @@
 import copy
 import hashlib
 from contextlib import redirect_stdout
+from datetime import datetime, timedelta, timezone
 import importlib.util
 import io
 import json
@@ -509,6 +510,18 @@ def run(case, snapshot_args, S, T, canary):
                 assert [row["gate"] for row in archived["gate"]["facts"]["gate_evidence"]] == list(C.GATE.GATE_ORDER[:7])
                 assert archived["collection_binding"] == collection_binding
                 archives[name][phase] = archived
+                if name == "restore-read":
+                    pin = C.TRANSITION.document(archived["packet"])
+                    previous_pin = C.TRANSITION.CONTROLLER_REPAIR_PINS.get(pin)
+                    C.TRANSITION.CONTROLLER_REPAIR_PINS[pin] = (C.TRANSITION.document(archived["completion"]), archived["controller_sha256"][7:])
+                    try:
+                        assert K.A.validate_task(archived, collection_binding, expected_binding=context["binding"]) is archived
+                        try: K.A.validate_task(archived, collection_binding, expected_binding=value["binding"])
+                        except K.A.EvidenceFailure as failure: assert failure.code == "acceptance-task-binding-mismatch"
+                        else: raise AssertionError("a controller pin cannot waive the clone binding")
+                    finally:
+                        if previous_pin is None: C.TRANSITION.CONTROLLER_REPAIR_PINS.pop(pin)
+                        else: C.TRANSITION.CONTROLLER_REPAIR_PINS[pin] = previous_pin
         assert archives["restore-read"]["operation"]["packet"]["binding"]["dependency_incarnation_sha256"] != collection_binding["dependency_incarnation_sha256"]
         assert archives["final-read"]["operation"]["packet"]["binding"]["dependency_incarnation_sha256"] == collection_binding["dependency_incarnation_sha256"]
         assert archives["restore-read"]["operation"]["packet"]["receipt"]["task"]["arn"] != archives["final-read"]["operation"]["packet"]["receipt"]["task"]["arn"]
@@ -519,7 +532,7 @@ def run(case, snapshot_args, S, T, canary):
             assert archived["custody"]["plan"] == receipt["packet"]["plan"]
             assert archived["operation_id"] == receipt["result"]["reservation"]["operation_id"]
             assert [row["gate"] for row in archived["custody"]["gate"]["facts"]["gate_evidence"]] == list(C.GATE.GATE_ORDER[:7])
-            if name in {"snapshot", "restore-deployment"}:
+            if name in {"snapshot", "restore-deployment", "restore-cleanup"}:
                 pin = (name, K.A.document_digest(receipt))
                 C.CONTROL_COMPLETION.REPAIRS[pin] = receipt["packet"]["plan"]["controller_sha256"]
                 try:
@@ -562,6 +575,66 @@ def run(case, snapshot_args, S, T, canary):
         assert completion_path.read_bytes() == completion_bytes
         assert capture_final()["packet"] == final_packet
         assert len(original_transport.jobs.remote) == 2 and sum(operation == "delete-stack" for _, operation, _ in clone.calls) == 1
+        # The actual failed-collection recovery consumes original immutable
+        # packets, journals, admissions and seven-gate companions. Only the
+        # expiry clock is controlled; all new task gates use the normal clock.
+        transition = C.TRANSITION
+        original_paths, refresh_inputs = {}, {}
+        for phase in ("preflight", "operation"):
+            selected = SimpleNamespace(**{**vars(final), "phase": phase})
+            path = T.STEPS.path(final_context, selected)
+            companion = T.COMPLETION.path(path)
+            original_paths[path], original_paths[companion] = path.read_bytes(), companion.read_bytes()
+            refresh_inputs[phase] = (str(path.relative_to(value["cache"])), C.digest_file(path), C.digest_file(companion))
+        failure_path = value["cache"] / "controlled-collector-failure.json"
+        failure_path.write_text(json.dumps({"schema": "deploy/entity-smoke-acceptance-report/v1", "verdict": "blocked",
+            "condition": "source-transition-binding-incompatible", "effect": "no-provider-mutation-no-scope-promotion",
+            "context": {"proof_label_sha256": hashlib.sha256(final.proof_label.encode()).hexdigest(), "stage": "acceptance-collection"}}))
+        changes = {"ACCEPTANCE_REFRESH_LABEL": final.proof_label, "ACCEPTANCE_REFRESH_CONTROLLER": value["artifact"],
+            "ACCEPTANCE_REFRESH_FAILURE": str(failure_path.relative_to(C.ROOT)), "ACCEPTANCE_REFRESH_FAILURE_HASH": C.digest_file(failure_path),
+            "ACCEPTANCE_REFRESH_INPUTS": refresh_inputs}
+        original_key = T.STEPS.key(final)
+        for key, replacement in changes.items():
+            overrides.append((transition, key, getattr(transition, key))); setattr(transition, key, replacement)
+        overrides.append((T.STEPS.TRANSITION, "ACCEPTANCE_REFRESH_LABEL", T.STEPS.TRANSITION.ACCEPTANCE_REFRESH_LABEL))
+        T.STEPS.TRANSITION.ACCEPTANCE_REFRESH_LABEL = final.proof_label
+        before = archives["final-read"]["preflight"]["packet"]["reservation"]["request"]["proof_label"]
+        future = (C.RESOURCE.timestamp(final_packet["receipt"]["collected_at"]) + timedelta(seconds=901)).isoformat()
+        expiry_check = transition.acceptance_refresh_preflight
+        check = lambda: expiry_check(C, final_context, final, before, current_time=future)
+        assert check() == transition.replacement_label(final_context, final, before)
+        fails(lambda: expiry_check(C, final_context, final, before, current_time=C.now()), "acceptance-refresh-original-read-not-expired")
+        for path, content in original_paths.items():
+            path.write_bytes(content + b"\n")
+            try: fails(check, "acceptance-refresh-original-custody-changed")
+            finally: path.write_bytes(content)
+        failed_bytes = failure_path.read_bytes(); failure_path.write_bytes(failed_bytes + b"\n")
+        try: fails(check, "acceptance-refresh-failure-changed")
+        finally: failure_path.write_bytes(failed_bytes)
+        gate_path = case.root / completion["realization_evidence"]
+        gate_bytes = gate_path.read_bytes(); gate_path.write_bytes(gate_bytes + b"\n")
+        try: fails(check, "acceptance-refresh-original-gate-changed")
+        finally: gate_path.write_bytes(gate_bytes)
+        assert T.STEPS.key(final) != original_key and T.STEPS.path(final_context, final) not in original_paths
+        transition.acceptance_refresh_preflight = lambda C, context, args, original, **kw: expiry_check(C, context, args, original, current_time=future)
+        try:
+            for phase in ("preflight", "operation"):
+                final.phase = phase
+                refreshed_plan = T.plan(final, provider(T))
+                final.approved_plan = refreshed_plan["plan_sha256"]
+                if phase == "operation":
+                    original_transport.jobs.lost_next = True
+                    fails(lambda: T.execute(final, provider(T)), "task-submission-uncertain-reconcile-required")
+                assert T.execute(final, provider(T))["verdict"] == "completed"
+                refreshed_context = T.prepare(final, provider(T))
+                refreshed = K.A.capture_task(T, refreshed_context, final, provider(T), "final-read", collection_binding, historical=False)
+                assert refreshed["packet"]["binding"] == final_context["binding"]
+            assert T.execute(final, provider(T))["verdict"] == "completed"
+            assert len(original_transport.jobs.remote) == 4, "one fresh pair, no third pair or lost-response replay"
+            K.A.fresh_final(refreshed, captured_cleanup["required_after"], C.now())
+            assert all(path.read_bytes() == content for path, content in original_paths.items())
+            assert cleanup_path.read_bytes() == cleanup_bytes and sum(operation == "delete-stack" for _, operation, _ in clone.calls) == 1
+        finally: transition.acceptance_refresh_preflight = expiry_check
     finally: T.ACCEPTANCE.restore_owner = previous_restore_owner
     for path in case.cache.rglob("*.json"): assert canary not in path.read_text()
     for owner, key, old in reversed(overrides): setattr(owner, key, old)

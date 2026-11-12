@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -116,6 +116,37 @@ def run(K):
         with patch.object(K.C, "source_digest", side_effect=AssertionError("historical source lookup")), patch.object(A.C, "source_digest", side_effect=AssertionError("historical archive lookup")), patch.object(K.C, "digest_file", side_effect=AssertionError("historical file lookup")), patch.object(A.C, "digest_file", side_effect=AssertionError("historical archive file lookup")):
             assert K.validate_packet(value, evidence_class="simulated") is value
         assert len([item for item in calls if item[1] == "control"]) == 7 and len(calls) == 44
+        # A prevalidated transition may change exact task-definition revisions,
+        # never private networks or an unrecognised historical actor. Primitive
+        # transition validation is explicit here; its own fixture proves custody.
+        transitioned = copy.deepcopy(value)
+        old_binding = {key: item for key, item in value["binding"].items() if key != "record_digest"}
+        old_binding.update(source_revision="1" * 40, image_digest="sha256:" + "2" * 64)
+        old_resources, new_resources = {}, {}
+        for name, logical in (("bootstrap", "AdministrationTaskDefinition"), ("migration", "MigrationTaskDefinition")):
+            for entry in transitioned["tasks"][name].values():
+                request = entry["packet"]["reservation"]["request"]
+                new_resources[logical] = {"physical_id": request["definition"]}
+                request["definition"] = request["definition"].removesuffix(":1") + ":7"
+                old_resources[logical] = {"physical_id": request["definition"]}
+                entry["packet"]["binding"] = old_binding
+                entry["completion"] = {"fixture": "pinned-original"}
+        transition = {"plan": {"previous_binding": old_binding, "resources": old_resources}, "resources": new_resources}
+        transitioned["source_transition"] = transition
+        with patch.object(A.C.TRANSITION, "validate", return_value=transition), patch.object(A.C.TRANSITION, "historical", return_value=True):
+            M.validate_connections(A, transitioned)
+            for field, replacement, condition in (("definition", "foreign-definition", "acceptance-transition-actor-invalid"),
+                    ("security_group", "sg-" + "d" * 17, "acceptance-workload-binding-drift"),
+                    ("subnets", ["subnet-" + "d" * 17], "acceptance-workload-binding-drift")):
+                invalid = copy.deepcopy(transitioned)
+                invalid["tasks"]["bootstrap"]["operation"]["packet"]["reservation"]["request"][field] = replacement
+                try: M.validate_connections(A, invalid)
+                except M.ControlFailure as failure: assert failure.code == condition
+                else: raise AssertionError("transition cannot waive " + field)
+            with patch.object(A.C.TRANSITION, "historical", return_value=False):
+                try: M.validate_connections(A, transitioned)
+                except M.ControlFailure as failure: assert failure.code == "acceptance-transition-actor-invalid"
+                else: raise AssertionError("unpinned historical actor accepted")
         previous = copy.deepcopy(value)
         pinned = {}
         for phase, entry in previous["tasks"]["bootstrap"].items():

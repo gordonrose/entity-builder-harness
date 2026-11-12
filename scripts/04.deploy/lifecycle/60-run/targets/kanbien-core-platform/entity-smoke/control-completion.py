@@ -29,6 +29,8 @@ LEGACY = {("server-replacement", "sha256:fefc8e5561299b9e5cb63e41f820fae3a250f1b
 # Completed under a preceding checked controller. NAMES retain their producer
 # companions; snapshot/restore readers retain their own original seven gates.
 REPAIRS = {
+    ("restore-cleanup", "sha256:3c82ef1c8e22aa04bfc4c9824224fc2113c166cbc387a17640f158217d72e443"):
+        "sha256:2f07f14b598ee22cfd9b1ab8980ef990f06ed43d1301bda848bf75934daa9f4c",
     ("snapshot", "sha256:fe3c3e880906ce0a3aacb44105a27af2297a1e2ff1b08d84d69b8d67365d57b9"):
         "sha256:26de3e49221e6c9f653d7743218f7022c58d00ace899a71635758e07ff05d23e",
     ("restore-deployment", "sha256:dd92ab0e3ecb16d9ea5db41070ccc96ff12e75fddb6fc36e8dedd1951a3a2be1"):
