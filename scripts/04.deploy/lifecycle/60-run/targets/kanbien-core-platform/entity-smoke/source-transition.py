@@ -37,6 +37,8 @@ TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", 
 # Exact successful grant/permissions custody before controller-only repairs.
 # These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "f86edfe5bb0a57bc58a28a659b86f1377800c8472fe0f9a2327f7c8ed9440607": ("ed3f465366f0ed09287e4f3e5d0a7d4770164c3ae3da58949abf3a75b33a121d", "1a4f5abbf42a6771fa410981768887cd5f9ebdb02031d046dcad8c8119ad6457"),
+    "a12aaa5258ec59d35496c9fe26f1334d105cd90fb666d674865052b7818f43e1": ("dbe4ad4be0dae5ce91174dd302e0ed2bf074c31a69477f359ebe262e5160b59d", "1a4f5abbf42a6771fa410981768887cd5f9ebdb02031d046dcad8c8119ad6457"),
     "612094606ecf7473081c093246a7ae61c7d2df9ffbd72693f7d7deb9c5ff67d9": ("c8731dc47b6aa65aec390a130e7aa8c0a6e088271d895a3197bbbe49c81af09b", "e022fa391f24fa326a4ba5b9b6193fff7c587045525fb758e3935b7394cbad9b"),
     "05af75adfe08f3678dd6226494a436779806c3642ce2d6408b850fa3feaa4284": ("10e7a3a35ed89ee94bc1632704f942ba21bcb567553b0f88a10c2676993bdf9f", "e022fa391f24fa326a4ba5b9b6193fff7c587045525fb758e3935b7394cbad9b"),
     "c0af84a06e80fc03010c60c8bf8abe49980d1790e1a034996a22778378dc36d1": ("23f50cc110485a0af00bca7024a73658b05c0630ca4d3bebbe0088a767c5c06b", "e022fa391f24fa326a4ba5b9b6193fff7c587045525fb758e3935b7394cbad9b"),
@@ -99,6 +101,10 @@ RESTORE_PROBE = "es-7718c551963245a899c9f1421dc84d5c"
 RESTORE_LABEL = LABEL
 RESTORE_FAILURE = "diagnostics/restore-reader-preflight-" + RESTORE_PROBE + ".json"
 RESTORE_FAILURE_HASH = "sha256:6e9ffd437275f3e23f308587ef2483ad069686afea8843f21d98fc70bb050ae0"
+CLEANUP_LABEL = LABEL
+CLEANUP_PLAN_HASH = "sha256:3950b70bb6eb1de7c130f4a9e2ebd1e3fc978a954d2777f12195ec612305eaff"
+CLEANUP_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-restore-e00dd39c9de542d1900bcbc4b7007789.json"
+CLEANUP_FAILURE_HASH = "sha256:240ca1fe8a0572f0f79c9bda55ae5bd9118ecdc44c91f27d1a7012c066a5e553"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -111,6 +117,32 @@ RECOVERY_PROGRAMS = {
 
 def document(value):
     return hashlib.sha256((json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest()
+
+
+def cleanup_plan_path(C, cache, packet, store):
+    """Keep the rejected unsubmitted plan; select only its controller repair."""
+    original = cache / "restore-cleanup-plan.json"
+    C.RESOURCE.CONTROL.no_symlinks(original)
+    if not original.exists() or C.read_json(original) == packet: return original
+    if packet["plan"]["binding"]["proof_label"] != CLEANUP_LABEL: return original
+    C.require(C.digest_file(original) == CLEANUP_PLAN_HASH, "restore-cleanup-repair-original-plan-changed")
+    before = C.read_json(original)
+    retained = cache / "restore-cleanup-plans" / (before["plan_sha256"].removeprefix("sha256:") + ".json")
+    C.require(C.digest_file(retained) == CLEANUP_PLAN_HASH, "restore-cleanup-repair-original-plan-changed")
+    failure_path = C.ROOT / CLEANUP_FAILURE
+    C.require(C.digest_file(failure_path) == CLEANUP_FAILURE_HASH, "restore-cleanup-repair-failure-changed")
+    failure = C.read_json(failure_path)
+    C.require(failure.get("schema") == "deploy/entity-smoke-restore-report/v1" and failure.get("verdict") == "blocked"
+              and failure.get("effect") == "not-started" and failure.get("condition") == "restore-reader-task-definition-not-confirmed"
+              and failure.get("context") == {"mode": "execute", "phase": "cleanup", "proof_label_sha256": hashlib.sha256(CLEANUP_LABEL.encode()).hexdigest()},
+              "restore-cleanup-repair-not-unsubmitted")
+    adjusted = {**before, "plan": {**before["plan"], "controller_sha256": packet["plan"]["controller_sha256"]}, "plan_sha256": packet["plan_sha256"]}
+    C.require(adjusted == packet and packet["plan_sha256"] == C.DEPLOY.fingerprint(packet["plan"]), "restore-cleanup-repair-intent-changed")
+    corrected = cache / "restore-cleanup-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")
+    C.RESOURCE.CONTROL.no_symlinks(corrected)
+    if not corrected.exists():
+        C.require(store.read("delete-restore", packet["request"]) is None, "restore-cleanup-repair-already-reserved")
+    return corrected
 
 
 def controller(packet, completion, current):

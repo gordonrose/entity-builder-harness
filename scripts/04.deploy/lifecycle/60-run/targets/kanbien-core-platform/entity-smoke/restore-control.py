@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -238,7 +238,10 @@ def validate_reader(provider, binding, parameters, resources, database, reservat
     require(isinstance(environment, list) and all(isinstance(item, dict) and isinstance(item.get("name"), str) and isinstance(item.get("value"), str) for item in environment), "restore-reader-task-definition-not-confirmed")
     env = {item["name"]: item["value"] for item in environment}
     expected = {"NODE_ENV": "production", "PLATFORM_SOURCE_COMMIT_SHA": binding["source_revision"], "ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "restore-read", "PERSISTENCE_POSTGRES_HOST": database.get("Endpoint", {}).get("Address"), "PERSISTENCE_POSTGRES_PORT": "5432", "PERSISTENCE_POSTGRES_DATABASE": parameters["RestoredDatabaseName"], "PERSISTENCE_POSTGRES_SCHEMA": "entity_smoke", "PERSISTENCE_POSTGRES_CA_PATH": "/app/assets/rds-eu-west-1-bundle.crt", "PERSISTENCE_POSTGRES_IAM_REGION": RESOURCE.REGION, "PERSISTENCE_RUNTIME_DATABASE_USERNAME": "entity_smoke_runtime", "PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE": "arn:aws:rds-db:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":dbuser:" + database["DbiResourceId"] + "/entity_smoke_runtime", "PLATFORM_DEPLOYMENT_EXPOSURE": "private"}
-    require(len(env) == len(environment) and env == expected and container.get("name") == "entity-smoke-restore-reader" and container.get("command") == ["artifacts/kanbien-entity-smoke-database-proof.main.js"] and container.get("image") == parameters["ImageRepositoryUri"] + "@" + binding["image_digest"] and not container.get("secrets") and container.get("readonlyRootFilesystem") is True and container.get("privileged", False) is False and not container.get("entryPoint") and container.get("linuxParameters", {}).get("capabilities") == {"drop": ["ALL"]}, "restore-reader-task-definition-not-confirmed")
+    # ECS includes an empty add list; it grants no capability. Match the same
+    # bounded default accepted by task-binding, without accepting nonempty adds.
+    capabilities = container.get("linuxParameters", {}).get("capabilities")
+    require(len(env) == len(environment) and env == expected and container.get("name") == "entity-smoke-restore-reader" and container.get("command") == ["artifacts/kanbien-entity-smoke-database-proof.main.js"] and container.get("image") == parameters["ImageRepositoryUri"] + "@" + binding["image_digest"] and not container.get("secrets") and container.get("readonlyRootFilesystem") is True and container.get("privileged", False) is False and not container.get("entryPoint") and capabilities in ({"drop": ["ALL"]}, {"drop": ["ALL"], "add": []}), "restore-reader-task-definition-not-confirmed")
     return retained
 
 

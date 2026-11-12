@@ -157,9 +157,10 @@ def reader(value, args, provider):
     require(step["receipt"]["result"].get("record_digest") == args.expected_digest, "restore-reader-original-digest-mismatch")
     plan_path = value["cache"] / "restore-reader-plans" / (step["plan_sha256"].removeprefix("sha256:") + ".json")
     plan = C.read_json(plan_path)
+    completion = C.read_json(TASK.COMPLETION.path(TASK.STEPS.path(child, selected)))
     require(isinstance(plan, dict) and C.DEPLOY.fingerprint(plan) == step["plan_sha256"] and plan.get("phase") == "operation" and plan.get("binding") == child["binding"]
             and plan.get("parent_deployment_sha256") == C.digest_file(value["cache"] / "restore-deploy-receipt.json")
-            and plan.get("request_sha256") == C.DEPLOY.fingerprint(step["reservation"]["request"]) and plan.get("controller_sha256") == value["artifact"]
+            and plan.get("request_sha256") == C.DEPLOY.fingerprint(step["reservation"]["request"]) and plan.get("controller_sha256") == C.TRANSITION.controller(step, completion, value["artifact"])
             and plan.get("graph_sha256") == C.DEPLOY.fingerprint(TASK.GRAPH.contract("restore-reader", C.GATE)), "restore-reader-original-plan-mismatch")
     return {"context": child, "step": step, "deployed": deployed}
 
@@ -265,10 +266,11 @@ def completed_cleanup(value, args, provider):
             and all(plan.get(key) is False for key in ("task_launch", "source_mutation", "automatic_retry", "scope_acceptance")), "restore-cleanup-binding-mismatch")
     # Validate the exact bounded cleanup graph, not a generic deletion waiver.
     require(plan.get("graph_sha256") == C.DEPLOY.fingerprint(graph("cleanup")), "restore-cleanup-graph-mismatch")
-    for retained in (value["cache"] / "restore-cleanup-plan.json", value["cache"] / "restore-cleanup-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):
+    store = R.ResourceStore(value["cache"] / "attempts")
+    active = C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store)
+    for retained in (active, value["cache"] / "restore-cleanup-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):
         R.CONTROL.no_symlinks(retained)
         require(C.read_json(retained) == packet, "restore-cleanup-plan-not-retained")
-    store = R.ResourceStore(value["cache"] / "attempts")
     reservation = store.read("delete-restore", expected)
     require(reservation is not None, "restore-cleanup-journal-required")
     result = receipt["result"]
@@ -303,6 +305,7 @@ def prepare(args, provider, *, source_proof=True):
     packet = {"schema": "deploy/entity-smoke-restore-plan-packet/v1", "plan": safe, "request": request, "plan_sha256": digest}
     prefix = "restore-" + args.phase
     active, retained = value["cache"] / (prefix + "-plan.json"), value["cache"] / (prefix + "-plans") / (digest.removeprefix("sha256:") + ".json")
+    if args.phase == "cleanup": active = C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store)
     if not R.write_exclusive(retained, packet): require(C.read_json(retained) == packet, "restore-plan-retention-conflict")
     R.CONTROL.no_symlinks(active)
     require(not active.exists() or C.read_json(active) == packet, "restore-original-plan-binding-changed")

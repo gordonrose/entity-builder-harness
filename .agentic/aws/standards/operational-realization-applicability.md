@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 13
+version: 14
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-12"
@@ -326,6 +326,21 @@ write, database replacement or cleanup before successful original-record read.
 The completed snapshot and clone deployment retain their exact original
 controller/receipt/gate hashes through the existing control-custody selector;
 all request, incarnation, plan, graph and live ownership checks remain required.
+
+### Unsubmitted restore-cleanup plan correction
+
+<!-- deterministic-check: allow reason="the source-transition cleanup_plan_path and connected restore fixtures enforce the exact unsubmitted failure, immutable original plan and controller-only replacement; this paragraph records standing repair authority" -->
+Before the first restore deletion submission, a checked controller-only fix may
+supersede the exact cleanup plan rejected by the empty ECS capability-list
+comparison. The source-transition owner binds the original not-started failure
+and both unchanged copies of its original plan. Retain those files; select a
+new immutable indexed plan differing only in controller identity and its derived
+plan hash. Require no deletion reservation before first retaining that corrected
+plan. Existing reservations subsequently reconcile, never resubmit. Preserve the
+successful reader packets, companions and gates under their actual original
+controller. Require fresh gates and unchanged image, template, permissions,
+ownership, source snapshot, original record and exact deletion request. This
+adds no new resources or deletion authority beyond the approved clone cleanup.
 
 ### Stopped-service activation refresh
 

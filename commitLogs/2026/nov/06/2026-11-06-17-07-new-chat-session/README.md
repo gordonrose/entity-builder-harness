@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T09:52:47Z
-latest_commit_sha: b6455bfb2922bf39cf1cab836c37f359d5add89f
-chat_duration: 492340s (05:16:45:40)
+latest_commit_at_utc: 2026-11-12T11:35:22Z
+latest_commit_sha: 5aeab94d
+chat_duration: 498495s (05:18:28:15)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,43 @@ new chat session
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
 ## Decisions Made
+
+- Cleanup correction consolidated review: all eight scoped files and the
+  snapshot/reader/task-completion/acceptance consumers were inspected. Original
+  task pairs select1a4f5abb; original rejected cleanup plan3950b70b and report
+  240ca1fe remain immutable. The corrected indexed plan differs only by the
+  current controller and derived plan hash; first retention rejects a deletion
+  reservation, and repeated calls cannot supply another deletion capability.
+  Actual offline custody/selection passed with zero provider calls or writes.
+  Capability alternatives and structural diagnostic check passed. Connected
+  regression and registered final verification remain pending. The first fixture
+  run failed on my factory setup ordering, now fixed. Two ledger patch attempts
+  failed without changes because of line-boundary/hunk-order mistakes; the third
+  applied only the three reviewed owners. These are additional assistant errors
+  for the requested retrospective, not AWS delays. No new ADR: this implements
+  existing bounded repair authority; one-off repair pins remain design debt.
+
+- Cleanup correction inventory,2026-11-12: live replacement preflight4a74462f
+  passed and read32b61783 returned the original6da2c116 digest. Cleanup report
+  e00dd39c failed before reservation/submission: AWS's harmless capabilities.add
+  empty list fails restore-control's duplicated exact dictionary comparison,
+  although task-binding already normalizes that shape. Accept only the two
+  equivalent drop-ALL/no-add shapes; keep nonempty/null/malformed/unknown fields
+  rejected through the existing restore-reader-task-definition-not-confirmed
+  condition. Extend actual cleanup and connected caller fixtures, not a
+  permissive schema. No image/template/SQL/permission mutation is needed.
+  Preserve both completed reader packets/companions under their original
+  controller and preserve the failed cleanup plan/report. A separately indexed
+  corrected cleanup plan may differ only by its controller hash, with absence
+  of a deletion reservation required before first retention; original plans
+  are not overwritten and an existing corrected reservation only reconciles.
+  Use the existing approved controller-repair authority and exact source checks.
+  Predicate tests cover capability alternatives, original-plan/report tamper,
+  changed intent, pre-existing reservation and one deletion through acceptance.
+  Tests are planned until executed. The same coarse cleanup diagnostic remains
+  partial debt; no invented connection root cause or successful cleanup claim.
+  Assistant update error: a filename filter missed the actual read reservation;
+  corrected publicly from its receipt (reserved11:52:14, stopped11:55:25).
 
 - Restore-preflight repair self-review complete for the eight scoped paths:
   provider applicability, exact source-transition recovery selection, original
@@ -1567,6 +1604,17 @@ Summary: History retention repair passed connected credential/source-change/no-r
 
 ADR impact: No new architecture decision: bounded correction to existing history capacity and original-completion reconciliation. Directory-wide history capture and exact historical source pins remain explicit design debt, not a claimed mature reusable release system.
 
+
+### 2026-11-12T11:35:22Z - Commit recorded
+
+Commit: `5aeab94d`
+
+Message: fix(deploy): recover the failed restore preflight without replay
+
+Summary: Restore-probe recovery passed registered composition287.207557 seconds, staged gates and46 local integration checks598.482078 seconds:4 executed42 reused13 later-stage deferred,zero findings. Report .cache/test-runs/20261112T113501Z-c0f8906d7dc346b7afde07e1554a6227/report.json. Retain exact original failed probe and original completed snapshot/clone custody; permit one separate read-only probe, then actual restored-record read, owned clone cleanup, final source read, collection and promotion. No image/template/SQL/permission changes. Full evidence-backed retrospective remains required.
+
+ADR impact: No new architecture decision: bounded existing controller-only repair and one terminal read-only probe recovery; exact one-off pins remain acknowledged design debt.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1770,6 +1818,13 @@ ADR impact: No new architecture decision: bounded correction to existing history
   Summary: History retention repair passed connected credential/source-change/no-replay and public reporter fixtures, exact512/513 capacity boundaries, original-custody/plan drift assertions, registered composition261.780565 seconds, staged gates and all46 integration checks in588.15649 seconds:4 executed42 reused13 later-stage deferred,zero findings. Real closure is259 dependencies, not a failed database task. Four actual new completed task/gate pairs validate offline under e022fa39. Reports history-retention-* under .cache/test-runs/entity-smoke-stable.7wpnDKuN. Resume only final permissions operation reconciliation to retain original history; no RunTask, preflight, revoke or replacement replay. Then snapshot, isolated restore/read/owned cleanup, fresh final read, collect and promote. Full failure retrospective remains required; four completed task reservations to stops totaled167.866 seconds within26m11s of elapsed inter-task sequence, exposing controller overhead.
   ADR impact: No new architecture decision: bounded correction to existing history capacity and original-completion reconciliation. Directory-wide history capture and exact historical source pins remain explicit design debt, not a claimed mature reusable release system.
 
+
+- Commit: `5aeab94d`
+  Time UTC: 2026-11-12T11:35:22Z
+  Message: fix(deploy): recover the failed restore preflight without replay
+  Summary: Restore-probe recovery passed registered composition287.207557 seconds, staged gates and46 local integration checks598.482078 seconds:4 executed42 reused13 later-stage deferred,zero findings. Report .cache/test-runs/20261112T113501Z-c0f8906d7dc346b7afde07e1554a6227/report.json. Retain exact original failed probe and original completed snapshot/clone custody; permit one separate read-only probe, then actual restored-record read, owned clone cleanup, final source read, collection and promotion. No image/template/SQL/permission changes. Full evidence-backed retrospective remains required.
+  ADR impact: No new architecture decision: bounded existing controller-only repair and one terminal read-only probe recovery; exact one-off pins remain acknowledged design debt.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1783,9 +1838,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T09:52:47Z
-Latest commit SHA: b6455bfb2922bf39cf1cab836c37f359d5add89f
-Chat duration: 492340s (05:16:45:40)
+Latest commit at UTC: 2026-11-12T11:35:22Z
+Latest commit SHA: 5aeab94d
+Chat duration: 498495s (05:18:28:15)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -216,6 +216,24 @@ def run():
         provider, owner = Provider(), store("wrong-reader"); prepare(provider, owner); deployment = execute(provider, owner); provider.wrong_reader_host = True
         fails(lambda: cleanup(provider, owner, deployment["facts"]), "restore-reader-task-definition-not-confirmed")
         assert not any(op == "delete-stack" for _, op, _ in provider.calls)
+        for index, capabilities in enumerate([{"drop": ["ALL"], "add": []}, {"drop": ["ALL"], "add": ["SYS_ADMIN"]},
+                                               {"drop": ["ALL"], "add": None}, {"drop": []}, {"drop": ["ALL"], "unknown": []}, None]):
+            provider, owner = Provider(), store("capabilities-" + str(index))
+            prepare(provider, owner); deployment = execute(provider, owner)
+            def observed(service, operation, **parameters):
+                result = provider(service, operation, **parameters)
+                if operation == "describe-task-definition" and not provider.deleted:
+                    result["taskDefinition"]["containerDefinitions"][0]["linuxParameters"]["capabilities"] = capabilities
+                return result
+            call = lambda: M.cleanup_restore(observed, owner, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, provider.reader_receipt)
+            if index == 0:
+                assert call()["status"] == "completed"
+                assert sum(op == "delete-stack" for _, op, _ in provider.calls) == 1
+            else:
+                fails(call, "restore-reader-task-definition-not-confirmed")
+                assert not any(op == "delete-stack" for _, op, _ in provider.calls)
+                intent = M.cleanup_identity(BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, provider.reader_receipt)[3]
+                assert owner.read("delete-restore", intent) is None
         provider, owner = Provider(), store("nonterminal-reader"); prepare(provider, owner); deployment = execute(provider, owner); provider.task["lastStatus"] = "STOPPING"
         fails(lambda: cleanup(provider, owner, deployment["facts"]), "restore-reader-terminal-state-not-confirmed")
         assert not any(op == "delete-stack" for _, op, _ in provider.calls)

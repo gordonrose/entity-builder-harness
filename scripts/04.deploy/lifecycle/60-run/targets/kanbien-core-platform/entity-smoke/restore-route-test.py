@@ -64,6 +64,7 @@ def run(case, snapshot_args, S, T, canary):
     inputs = {**F.PARAMETERS, "PrivateSubnetIds": value["parameters"]["PrivateSubnetIds"], "DatabaseSecurityGroupId": F.PHYSICAL["RestoreDatabaseSecurityGroup"]}
     task_definition = T.BINDING.expected_task("restore-reader", inputs, resources, view, prefix="RestoreReader")
     task_definition.update(taskDefinitionArn=F.DEFINITION, revision=1, status="ACTIVE", compatibilities=["FARGATE"])
+    task_definition["containerDefinitions"][0]["linuxParameters"]["capabilities"]["add"] = []
     roles, policies, groups = {}, {}, {}
     for name, resource in view["Resources"].items():
         if resource["Type"] == "AWS::IAM::Role":
@@ -293,6 +294,21 @@ def run(case, snapshot_args, S, T, canary):
     assert read_packet["receipt"]["result"]["record_digest"] == snapshot_args.expected_digest
     assert read_packet["reservation"]["request"]["dependency_incarnation_sha256"] != case.binding["dependency_incarnation_sha256"]
     assert read_packet["reservation"]["request"]["permission_contract_sha256"] == C.digest_file(D.RESTORE.SOURCE)
+    # Completed clone-reader proof belongs to the original controller, including
+    # its separately retained plan. A successor cannot restamp it or rerun jobs.
+    task_pins = {}
+    for selected_phase in ("preflight", "operation"):
+        selected_args = reader_args(selected_phase)
+        step_path = T.STEPS.path(value, selected_args)
+        step = C.read_json(step_path); completion = C.read_json(T.COMPLETION.path(step_path))
+        task_pins[C.TRANSITION.document(step)] = (C.TRANSITION.document(completion), value["artifact"][7:])
+    C.CONTROL_COMPLETION.REPAIRS.update(pins)
+    C.TRANSITION.CONTROLLER_REPAIR_PINS.update(task_pins)
+    try:
+        assert D.reader(changed_context, root_args, provider(D))["step"] == read_packet
+    finally:
+        for pin in pins: C.CONTROL_COMPLETION.REPAIRS.pop(pin)
+        for pin in task_pins: C.TRANSITION.CONTROLLER_REPAIR_PINS.pop(pin)
     # A declaration never substitutes for original reader custody or ownership.
     read_path = case.root / read_result["receipt"]
     read_bytes = read_path.read_bytes()
@@ -313,6 +329,64 @@ def run(case, snapshot_args, S, T, canary):
         original_transport.task_rows.pop(arn)
     original_transport.jobs.remote.clear(); original_transport.jobs.results.clear()
     planned(D, cleanup_args); cleanup_args.mode = "execute"
+    # Retain an actual public not-started response from the old comparison,
+    # then derive the corrected plan without overwriting the original or
+    # granting any submission/replay capability to this selector.
+    original_validation = D.RESTORE.validate_reader
+    old_parse, old_provider = D.parse, D.Provider
+    D.RESTORE.validate_reader = lambda *a, **kw: D.RESTORE.require(False, "restore-reader-task-definition-not-confirmed")
+    provider_for_cleanup = provider(D); output = io.StringIO()
+    D.parse, D.Provider = lambda: cleanup_args, lambda: provider_for_cleanup
+    try:
+        with redirect_stdout(output): failed_status = D.main()
+    finally:
+        D.RESTORE.validate_reader = original_validation
+        D.parse, D.Provider = old_parse, old_provider
+    failure_report = json.loads(output.getvalue())
+    assert failed_status == 1 and failure_report["condition"] == "restore-reader-task-definition-not-confirmed" and failure_report["effect"] == "not-started"
+    failed_plan_path = value["cache"] / "restore-cleanup-plan.json"
+    failed_plan_bytes = failed_plan_path.read_bytes(); failed_plan = C.read_json(failed_plan_path)
+    repaired_plan = copy.deepcopy(failed_plan)
+    repaired_plan["plan"]["controller_sha256"] = changed_context["artifact"]
+    repaired_plan["plan_sha256"] = C.DEPLOY.fingerprint(repaired_plan["plan"])
+    failure_report_path = value["cache"] / "cleanup-failure-fixture.json"
+    C.RESOURCE.write_exclusive(failure_report_path, failure_report)
+    repair_values = {"CLEANUP_LABEL": root_args.proof_label, "CLEANUP_PLAN_HASH": C.digest_file(failed_plan_path),
+                     "CLEANUP_FAILURE": str(failure_report_path.relative_to(C.ROOT)), "CLEANUP_FAILURE_HASH": C.digest_file(failure_report_path)}
+    saved_repair_values = {key: getattr(C.TRANSITION, key) for key in repair_values}
+    for key, item in repair_values.items(): setattr(C.TRANSITION, key, item)
+    store = D.R.ResourceStore(value["cache"] / "attempts")
+    try:
+        selected_path = C.TRANSITION.cleanup_plan_path(C, value["cache"], repaired_plan, store)
+        assert selected_path != failed_plan_path and not selected_path.exists() and failed_plan_path.read_bytes() == failed_plan_bytes
+        original_source = D.source
+        C.CONTROL_COMPLETION.REPAIRS.update(pins); C.TRANSITION.CONTROLLER_REPAIR_PINS.update(task_pins)
+        D.source = lambda *a, **kw: changed_context
+        try:
+            replanned = D.prepare(SimpleNamespace(**{**vars(cleanup_args), "mode": "plan", "approved_plan": None}), provider(D))
+            assert replanned["packet"] == repaired_plan and replanned["active"] == selected_path
+            assert C.read_json(selected_path) == repaired_plan and failed_plan_path.read_bytes() == failed_plan_bytes
+        finally:
+            D.source = original_source
+            for pin in pins: C.CONTROL_COMPLETION.REPAIRS.pop(pin)
+            for pin in task_pins: C.TRANSITION.CONTROLLER_REPAIR_PINS.pop(pin)
+        selected_path.unlink()
+        changed_intent = copy.deepcopy(repaired_plan); changed_intent["plan"]["resource_count"] += 1
+        fails(lambda: C.TRANSITION.cleanup_plan_path(C, value["cache"], changed_intent, store), "restore-cleanup-repair-intent-changed")
+        reserved = SimpleNamespace(read=lambda *a: {"operation_id": "existing-operation"})
+        fails(lambda: C.TRANSITION.cleanup_plan_path(C, value["cache"], repaired_plan, reserved), "restore-cleanup-repair-already-reserved")
+        C.RESOURCE.write_exclusive(selected_path, repaired_plan)
+        assert C.TRANSITION.cleanup_plan_path(C, value["cache"], repaired_plan, reserved) == selected_path
+        selected_path.unlink()
+        original_failure_bytes = failure_report_path.read_bytes(); failure_report_path.write_text("{}")
+        try: fails(lambda: C.TRANSITION.cleanup_plan_path(C, value["cache"], repaired_plan, store), "restore-cleanup-repair-failure-changed")
+        finally: failure_report_path.write_bytes(original_failure_bytes)
+        failed_plan_path.write_text("{}")
+        try: fails(lambda: C.TRANSITION.cleanup_plan_path(C, value["cache"], repaired_plan, store), "restore-cleanup-repair-original-plan-changed")
+        finally: failed_plan_path.write_bytes(failed_plan_bytes)
+    finally:
+        for key, item in saved_repair_values.items(): setattr(C.TRANSITION, key, item)
+    assert not any(operation == "delete-stack" for _, operation, _ in clone.calls)
     approved = cleanup_args.approved_plan
     cleanup_args.approved_plan = "sha256:" + "0" * 64
     fails(lambda: D.run(cleanup_args, provider(D)), "restore-approved-plan-mismatch")
