@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.connected-restore-route
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -82,6 +82,8 @@ def run(case, snapshot_args, S, T, canary):
     groups[F.PHYSICAL["RestoreDatabaseSecurityGroup"]]["IpPermissions"] = [BF.permission({"IpProtocol": "tcp", "FromPort": 5432, "ToPort": 5432, "DestinationSecurityGroupId": reader_group})]
 
     class Transport:
+        fail_reader = False
+
         def __call__(self, service, operation, **parameters):
             clone_stack = parameters.get("StackName") in {F.STACK, F.STACK_ARN}
             try:
@@ -113,7 +115,15 @@ def run(case, snapshot_args, S, T, canary):
                     if operation == "list-attached-role-policies": return {"AttachedPolicies": [], "IsTruncated": False}
                     if operation == "list-role-policies": return {"PolicyNames": list(policies[name]), "IsTruncated": False}
                     if operation == "get-role-policy": return {"RoleName": name, "PolicyName": parameters["PolicyName"], "PolicyDocument": copy.deepcopy(policies[name][parameters["PolicyName"]])}
-                return original_call(service, operation, **parameters)
+                result = original_call(service, operation, **parameters)
+                if operation == "run-task" and self.fail_reader and parameters["taskDefinition"] == F.DEFINITION:
+                    for task in result["tasks"]:
+                        arn = task["taskArn"]
+                        for row in (task, original_transport.jobs.remote[arn], original_transport.task_rows[arn]): row["containers"][0]["exitCode"] = 1
+                        original_transport.jobs.results[arn.rsplit("/", 1)[1]] = {"verdict": "failed", "code": "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED",
+                            "diagnostic": {"schema": "core/diagnostic-record/v1", "code": "persistence.unclassified-failure", "definitionVersion": 2,
+                                "detail": {"phase": "pool_connect", "classification": "unknown", "codeStatus": "absent", "operation": "readiness", "effect": "not-assessed"}}, "related_diagnostics": []}
+                return result
             except F.R.ResourceMissing: raise C.RESOURCE.ResourceMissing() from None
 
     transport = Transport()
@@ -146,6 +156,23 @@ def run(case, snapshot_args, S, T, canary):
     assert D.run(root_args, provider(D))["verdict"] == "completed"
     assert sum(operation == "execute-change-set" for _, operation, _ in clone.calls) == 1
     clone.lost = None
+    # A checked controller successor consumes the unchanged snapshot/clone
+    # custody only through exact pins; it cannot create either resource again.
+    changed_context = {**value, "artifact": "sha256:" + "e" * 64}
+    snapshot_path = value["cache"] / "snapshot-receipt.json"
+    deployment_path = value["cache"] / "restore-deploy-receipt.json"
+    original_controls = {path: path.read_bytes() for path in (snapshot_path, deployment_path)}
+    fails(lambda: S.completed(changed_context, root_args, original_transport), "snapshot-completed-binding-mismatch")
+    fails(lambda: D.deployment(changed_context, root_args, provider(D)), "restore-deployment-binding-mismatch")
+    pins = {(name, C.digest_file(path)): C.read_json(path)["packet"]["plan"]["controller_sha256"]
+            for name, path in (("snapshot", snapshot_path), ("restore-deployment", deployment_path))}
+    C.CONTROL_COMPLETION.REPAIRS.update(pins)
+    try:
+        assert S.completed(changed_context, root_args, original_transport) == C.read_json(snapshot_path)
+        assert D.deployment(changed_context, root_args, provider(D)) == C.read_json(deployment_path)
+        assert all(path.read_bytes() == content for path, content in original_controls.items())
+    finally:
+        for pin in pins: C.CONTROL_COMPLETION.REPAIRS.pop(pin)
     cleanup_args = SimpleNamespace(**{**vars(root_args), "mode": "plan", "phase": "cleanup", "approved_plan": None})
     fails(lambda: D.run(cleanup_args, provider(D)), "restore-reader-completion-required")
     read_args = reader_args("operation")
@@ -180,15 +207,87 @@ def run(case, snapshot_args, S, T, canary):
     failure = fails(lambda: Y.run(reader_args("preflight"), provider(Y)), "task-binding-network-not-confirmed")
     assert failure.item == "database-ingress"
     db_group["IpPermissions"].pop()
+    # A terminal failed clone probe remains negative evidence. Its one explicitly
+    # selected successor uses the real route/runner, not a successful stub.
+    failed_args = reader_args("preflight")
+    failed_context, _ = Y.prepare(failed_args, provider(Y))
+    planned(Y, failed_args); failed_args.mode = "execute"; transport.fail_reader = True
+    observed_failure = fails(lambda: Y.run(failed_args, provider(Y)), "task-unsuccessful-completion")
+    transport.fail_reader = False
+    original_request = T.STEPS.request(T.dependencies(), failed_context, failed_args)
+    original_reservation = T.RUNNER.CONTROL.AttemptStore(value["cache"] / "task-attempts").read(T.STEPS.key(failed_args), original_request)
+    original_task = next(task for task in original_transport.task_rows.values() if task.get("startedBy") == original_reservation["operation_id"])
+    failed_path = value["cache"] / "task-attempts" / (original_request["proof_label"] + "-restore-reader-preflight.json")
+    failed_bytes = failed_path.read_bytes()
+    failure_report = {"condition": observed_failure.code, "effect": "unknown-reconcile-only", "context": {"mode": "execute", "phase": "preflight", "workload": "restore-reader"}, **T.RUNNER.EVIDENCE.failure_report(observed_failure)}
+    failure_report_path = value["cache"] / "diagnostics/fixture-restore-failure-report.json"
+    C.RESOURCE.write_exclusive(failure_report_path, failure_report)
+    failure_path = value["cache"] / "diagnostics/fixture-restore-failure.json"
+    negative = {"schema": "deploy/entity-smoke-restore-reader-failure/v1", "scope_acceptance": False, "current_readiness": False,
+        "condition": observed_failure.code, "observed_at": max(C.RESOURCE.timestamp(C.now()), C.RESOURCE.timestamp(original_task["stoppedAt"])).isoformat(), "reservation_path": str(failed_path.relative_to(C.ROOT)), "reservation_sha256": C.digest_file(failed_path),
+        "failure_path": str(failure_report_path.relative_to(C.ROOT)), "failure_sha256": C.digest_file(failure_report_path),
+        "deployment_sha256": C.digest_file(value["cache"] / "restore-deploy-receipt.json"),
+        "task": {"arn": original_task["taskArn"], "operation_id": original_reservation["operation_id"], "created_at": original_task["createdAt"],
+            "started_at": original_task["startedAt"], "stopped_at": original_task["stoppedAt"], "exit_code": 1, "image_digest": original_request["image_digest"]},
+        **T.RUNNER.EVIDENCE.failure_report(observed_failure)}
+    C.RESOURCE.write_exclusive(failure_path, negative)
+    negative_bytes = failure_path.read_bytes()
+    overrides = []
+    for owner in (C.TRANSITION, T.STEPS.TRANSITION):
+        for key, item in {"RESTORE_LABEL": root_args.proof_label, "RESTORE_PROBE": original_reservation["operation_id"], "RESTORE_FAILURE": str(failure_path.relative_to(value["cache"])), "RESTORE_FAILURE_HASH": C.digest_file(failure_path)}.items():
+            overrides.append((owner, key, getattr(owner, key))); setattr(owner, key, item)
+    new_context, _ = Y.prepare(reader_args("preflight"), provider(Y))
+    assert new_context["report"]["plan"]["preflight_label"] != original_request["proof_label"]
+    assert "connection-recovery-1" in str(T.STEPS.path(new_context, reader_args("preflight")))
+    failure_path.write_bytes(negative_bytes + b"\n")
+    try: fails(lambda: Y.prepare(reader_args("preflight"), provider(Y)), "restore-reader-recovery-evidence-changed")
+    finally: failure_path.write_bytes(negative_bytes)
+    failed_path.write_bytes(failed_bytes + b"\n")
+    try: fails(lambda: Y.prepare(reader_args("preflight"), provider(Y)), "restore-reader-recovery-reservation-changed")
+    finally: failed_path.write_bytes(failed_bytes)
+    operation_path = value["cache"] / "task-attempts" / (T.STEPS.key(reader_args("operation")) + ".json")
+    operation_path.write_text("{}")
+    try: fails(lambda: Y.prepare(reader_args("preflight"), provider(Y)), "restore-reader-recovery-operation-already-reserved")
+    finally: operation_path.unlink()
+    for mutate, code in (
+        (lambda v: v.update(deployment_sha256="sha256:" + "0" * 64), "restore-reader-recovery-evidence-invalid"),
+        (lambda v: v["task"].update(exit_code=0), "restore-reader-recovery-terminal-required"),
+        (lambda v: v["diagnostic"]["detail"].update(phase="query"), "restore-reader-recovery-diagnostic-invalid")):
+        changed = copy.deepcopy(negative); mutate(changed)
+        failure_path.write_bytes(C.RESOURCE.CONTROL.canonical(changed) + b"\n")
+        old_hash = C.TRANSITION.RESTORE_FAILURE_HASH
+        C.TRANSITION.RESTORE_FAILURE_HASH = C.digest_file(failure_path)
+        try: fails(lambda: C.TRANSITION.restore_reader_preflight(C, new_context, new_context["deployed"], original_request["proof_label"]), code)
+        finally:
+            failure_path.write_bytes(negative_bytes); C.TRANSITION.RESTORE_FAILURE_HASH = old_hash
+    wrong_clone = {**new_context, "binding": {**new_context["binding"], "dependency_incarnation_sha256": "sha256:" + "0" * 64}}
+    fails(lambda: C.TRANSITION.restore_reader_preflight(C, wrong_clone, new_context["deployed"], original_request["proof_label"]), "restore-reader-recovery-original-request-mismatch")
+    assert len(original_transport.jobs.remote) == before_jobs + 1
     probe_args = reader_args("preflight")
     planned(Y, probe_args); probe_args.mode = "execute"; original_transport.jobs.lost_next = True
     fails(lambda: Y.run(probe_args, provider(Y)), "task-submission-uncertain-reconcile-required")
+    recovered_context, _ = Y.prepare(probe_args, provider(Y))
+    recovered_request = T.STEPS.request(T.dependencies(), recovered_context, probe_args)
+    recovered_reservation = recovered_context["store"].read(T.STEPS.key(probe_args), recovered_request)
+    recovered_task = next(task for task in original_transport.task_rows.values() if task.get("startedBy") == recovered_reservation["operation_id"])
+    recovered_id = recovered_task["taskArn"].rsplit("/", 1)[1]
+    # Controlled negative observation branch: repeated failure admits no third
+    # launch. Restore the fixture's original success for downstream tests only.
+    saved_result = original_transport.jobs.results[recovered_id]
+    recovered_task["containers"][0]["exitCode"] = 1
+    original_transport.jobs.results[recovered_id] = original_transport.jobs.results[original_task["taskArn"].rsplit("/", 1)[1]]
+    try:
+        for _ in range(2): fails(lambda: Y.run(probe_args, provider(Y)), "task-unsuccessful-completion")
+        assert len(original_transport.jobs.remote) == before_jobs + 2
+    finally:
+        recovered_task["containers"][0]["exitCode"] = 0; original_transport.jobs.results[recovered_id] = saved_result
     assert Y.run(probe_args, provider(Y))["verdict"] == "completed"
     planned_read = reader_args("operation"); planned(Y, planned_read); planned_read.mode = "execute"; original_transport.jobs.lost_next = True
     fails(lambda: Y.run(planned_read, provider(Y)), "task-submission-uncertain-reconcile-required")
     read_result = Y.run(planned_read, provider(Y))
     assert read_result["verdict"] == "completed"
-    assert len(original_transport.jobs.remote) == before_jobs + 2
+    assert len(original_transport.jobs.remote) == before_jobs + 3
+    assert failed_path.read_bytes() == failed_bytes and failure_path.read_bytes() == negative_bytes
     assert Y.run(planned_read, provider(Y))["historical"] is True
     read_packet = C.read_json(case.root / read_result["receipt"])
     assert read_packet["receipt"]["result"]["record_digest"] == snapshot_args.expected_digest
@@ -292,6 +391,13 @@ def run(case, snapshot_args, S, T, canary):
             assert archived["custody"]["plan"] == receipt["packet"]["plan"]
             assert archived["operation_id"] == receipt["result"]["reservation"]["operation_id"]
             assert [row["gate"] for row in archived["custody"]["gate"]["facts"]["gate_evidence"]] == list(C.GATE.GATE_ORDER[:7])
+            if name in {"snapshot", "restore-deployment"}:
+                pin = (name, K.A.document_digest(receipt))
+                C.CONTROL_COMPLETION.REPAIRS[pin] = receipt["packet"]["plan"]["controller_sha256"]
+                try:
+                    historical = K.control_proof(name, receipt, collection_binding, value["cache"], "sha256:" + "e" * 64)
+                    assert historical["custody"]["plan"] == receipt["packet"]["plan"]
+                finally: C.CONTROL_COMPLETION.REPAIRS.pop(pin)
             if name == "restore-cleanup":
                 assert archived["custody"]["gate"]["change_summary"]["operation_counts"] == {"create": 0, "update": 0, "delete": 8, "replace": 0, "broaden-permission": 0}
                 assert archived["facts"]["absence_observed"] is True and archived["facts"]["source_mutation"] is False
@@ -324,6 +430,7 @@ def run(case, snapshot_args, S, T, canary):
         assert len(original_transport.jobs.remote) == 2 and sum(operation == "delete-stack" for _, operation, _ in clone.calls) == 1
     finally: T.ACCEPTANCE.restore_owner = previous_restore_owner
     for path in case.cache.rglob("*.json"): assert canary not in path.read_text()
+    for owner, key, old in reversed(overrides): setattr(owner, key, old)
     print(json.dumps({"schema": "deploy/entity-smoke-connected-restore-fixture/v1", "verdict": "passed", "provider_observation": False,
                       "cases": ["actual-owned-clone-review-execute", "lost-review-and-execute-no-replay", "reader-required-before-cleanup", "separate-real-protocol-preflight", "source-host-role-network-denial", "actual-reader-main-reason", "clone-incarnation-and-permission-binding", "original-digest-read", "lost-preflight-and-read-no-replay", "historical-read-not-current-readiness", "expired-reader-cleanup-custody", "missing-original-reader-and-foreign-ownership-denied", "changed-resource-and-wrong-approval-denied", "lost-cleanup-one-delete", "owned-absence-and-baselines", "read-only-completed-cleanup", "missing-cleanup-blocks-final-task", "distinct-final-probe-and-original-record-read", "lost-final-read-no-replay", "original-reader-and-final-four-phase-archives", "original-snapshot-restore-cleanup-control-archives", "missing-or-altered-original-completion-denied", "original-task-and-cleanup-gate-bytes-required", "archive-handoff-has-no-new-effect"]}))
 

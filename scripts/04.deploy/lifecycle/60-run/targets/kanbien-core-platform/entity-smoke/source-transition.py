@@ -95,6 +95,10 @@ CREDENTIAL_PACKET = "sha256:a23a9a795be66bd18b81df262fdaec8cf8422537d78a331277ca
 CREDENTIAL_COMPLETION = "sha256:d4e600bedd72727da84d4a25df06c68cafe58ff10ca591034701307bdd6d38f0"
 CREDENTIAL_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-plan-7200236746314bd1a6128b0fc985cc15.json"
 CREDENTIAL_FAILURE_HASH = "sha256:aa23ea2ce53e67eed66b5fa0990490a0d4dffd12c3292cb49da91b06140e4d1f"
+RESTORE_PROBE = "es-7718c551963245a899c9f1421dc84d5c"
+RESTORE_LABEL = LABEL
+RESTORE_FAILURE = "diagnostics/restore-reader-preflight-" + RESTORE_PROBE + ".json"
+RESTORE_FAILURE_HASH = "sha256:6e9ffd437275f3e23f308587ef2483ad069686afea8843f21d98fc70bb050ae0"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -206,10 +210,13 @@ def readback_recovery(args):
 
 
 def preflight_step_suffix(args):
+    if restore_reader_recovery(args) and args.phase == "preflight": return "-connection-recovery-1"
     return "-readback-recovery-1" if readback_recovery(args) is not None and args.phase == "preflight" else ""
 
 
 def replacement_label(context, args, original):
+    if restore_reader_recovery(args):
+        return "entity-smoke-" + hashlib.sha256((original + ":" + RESTORE_PROBE + ":connection-recovery-1").encode()).hexdigest()[:24]
     recovery = readback_recovery(args)
     if recovery is not None:
         return "entity-smoke-" + hashlib.sha256((original + ":" + recovery["probe"] + ":readback-recovery-1").encode()).hexdigest()[:24]
@@ -218,6 +225,57 @@ def replacement_label(context, args, original):
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) != (LABEL, "administration", "grant-runtime", "baseline"):
         return original
     return "entity-smoke-" + hashlib.sha256((original + ":" + FAILED_PREFLIGHT + ":administrator-authentication-recovery-1").encode()).hexdigest()[:24]
+
+
+def restore_reader_recovery(args):
+    return (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (RESTORE_LABEL, "restore-reader", "restore-read", "isolated-restore")
+
+
+def restore_reader_preflight(C, context, deployed, original):
+    """One new read-only observation, never a retry of the failed reservation."""
+    args = SimpleNamespace(proof_label=context["binding"]["proof_label"], workload="restore-reader", operation="restore-read", proof_stage="isolated-restore")
+    if not restore_reader_recovery(args): return original
+    path = context["cache"] / RESTORE_FAILURE
+    C.require(C.digest_file(path) == RESTORE_FAILURE_HASH, "restore-reader-recovery-evidence-changed")
+    failure = C.read_json(path)
+    C.require(isinstance(failure, dict) and failure.get("schema") == "deploy/entity-smoke-restore-reader-failure/v1"
+              and failure.get("scope_acceptance") is False and failure.get("current_readiness") is False
+              and failure.get("condition") == "task-unsuccessful-completion"
+              and failure.get("deployment_sha256") == C.digest_file(context["cache"] / "restore-deploy-receipt.json"), "restore-reader-recovery-evidence-invalid")
+    reservation_path = context["cache"] / "task-attempts" / (original + "-restore-reader-preflight.json")
+    C.require(failure.get("reservation_path") == str(reservation_path.relative_to(C.ROOT))
+              and C.digest_file(reservation_path) == failure.get("reservation_sha256"), "restore-reader-recovery-reservation-changed")
+    reservation = C.read_json(reservation_path)
+    expected = {**context["binding"], **context["checked"], "workload": "restore-reader", "proof_label": original,
+                "environment": {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": original}, "deadline_seconds": 90}
+    # checked can contain inspection-only facts; the request has just these bindings.
+    expected = {key: value for key, value in expected.items() if key in {"source_revision", "image_digest", "configuration_contract_sha256", "permission_contract_sha256", "dependency_incarnation_sha256", "definition", "security_group", "subnets", "workload", "proof_label", "environment", "deadline_seconds"}}
+    store = C.RESOURCE.CONTROL.AttemptStore(context["cache"] / "task-attempts")
+    C.require(reservation.get("operation_id") == RESTORE_PROBE and reservation.get("request") == expected
+              and store.read("original-restore-preflight", expected) == reservation, "restore-reader-recovery-original-request-mismatch")
+    task = failure.get("task", {})
+    timestamp = C.RESOURCE.timestamp
+    C.require(task.get("operation_id") == RESTORE_PROBE and task.get("exit_code") == 1
+              and task.get("image_digest") == expected["image_digest"]
+              and timestamp(deployed["observed_at"]) <= timestamp(task.get("created_at")) <= timestamp(task.get("started_at")) <= timestamp(task.get("stopped_at")) <= timestamp(failure.get("observed_at"))
+              and (timestamp(task["stopped_at"]) - timestamp(task["created_at"])).total_seconds() <= 90, "restore-reader-recovery-terminal-required")
+    original_failure = C.ROOT / failure["failure_path"]
+    C.require(C.digest_file(original_failure) == failure.get("failure_sha256"), "restore-reader-recovery-report-changed")
+    report = C.read_json(original_failure)
+    C.require(report.get("condition") == "task-unsuccessful-completion" and report.get("effect") == "unknown-reconcile-only"
+              and all(report.get("context", {}).get(key) == value for key, value in {"mode": "execute", "phase": "preflight", "workload": "restore-reader"}.items()), "restore-reader-recovery-report-invalid")
+    bundle = C.RESOURCE.EVIDENCE.failure_bundle({"verdict": "failed", "code": "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED", "diagnostic": failure["diagnostic"], "related_diagnostics": failure["related_diagnostics"]})
+    C.require(all(report.get(key) == value for key, value in bundle.items())
+              and bundle["diagnostic"]["code"] == "persistence.unclassified-failure"
+              and bundle["diagnostic"]["detail"] == {"phase": "pool_connect", "classification": "unknown", "codeStatus": "absent", "operation": "readiness", "effect": "not-assessed"}, "restore-reader-recovery-diagnostic-invalid")
+    selected = replacement_label(context, args, original)
+    renewed = {**expected, "proof_label": selected, "environment": {**expected["environment"], "ENTITY_SMOKE_PROOF_LABEL": selected}}
+    if store.read("replacement-restore-preflight", renewed) is None:
+        key = "task-" + hashlib.sha256((args.proof_label + ":restore-reader:restore-read:operation:isolated-restore").encode()).hexdigest()[:48]
+        operation_path = context["cache"] / "task-attempts" / (key + ".json")
+        C.RESOURCE.CONTROL.no_symlinks(operation_path)
+        C.require(not operation_path.exists(), "restore-reader-recovery-operation-already-reserved")
+    return selected
 
 
 def recovery_preflight(C, context, args, original):

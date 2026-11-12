@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -105,7 +105,8 @@ def deployment(value, args, provider, *, observe=True):
             and isinstance(packet["plan"], dict) and packet["plan_sha256"] == C.DEPLOY.fingerprint(packet["plan"]), "restore-deployment-plan-invalid")
     request = RESTORE.request(value["restore_binding"], value["restore_parameters"])
     require(packet["request"] == request and packet["plan"].get("phase") == "deploy" and packet["plan"].get("binding") == value["restore_binding"]
-            and packet["plan"].get("request_sha256") == C.DEPLOY.fingerprint(request) and packet["plan"].get("controller_sha256") == value["artifact"]
+            and packet["plan"].get("request_sha256") == C.DEPLOY.fingerprint(request)
+            and packet["plan"].get("controller_sha256") == C.CONTROL_COMPLETION.controller("restore-deployment", C.digest_file(path), value["artifact"])
             and packet["plan"].get("snapshot_sha256") == C.digest_file(value["cache"] / "snapshot-receipt.json"), "restore-deployment-binding-mismatch")
     for path in (value["cache"] / "restore-deploy-plan.json", value["cache"] / "restore-deploy-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):
         require(C.read_json(path) == packet, "restore-deployment-plan-not-retained")
@@ -140,6 +141,7 @@ def reader_context(value, deployed):
              "dependency_incarnation_sha256": C.DEPLOY.fingerprint({"resource_id": facts["restored_resource_id"], "database": p["RestoredDatabaseName"], "schema": "entity_smoke"})}
     checked = {"definition": facts["resources"]["RestoreReaderTaskDefinition"]["physical_id"], "security_group": facts["resources"]["RestoreReaderSecurityGroup"]["physical_id"], "subnets": value["parameters"]["PrivateSubnetIds"].split(",")}
     probe_label = "entity-smoke-" + hashlib.sha256((parent["proof_label"] + ":restore-reader:restore-read:preflight:isolated-restore").encode()).hexdigest()[:24]
+    probe_label = C.TRANSITION.restore_reader_preflight(C, {**value, "binding": child, "checked": checked}, deployed, probe_label)
     return {**value, "binding": child, "checked": checked, "report": {"plan": {"preflight_label": probe_label}}, "required_after": deployed["observed_at"], "deployed": deployed}
 
 

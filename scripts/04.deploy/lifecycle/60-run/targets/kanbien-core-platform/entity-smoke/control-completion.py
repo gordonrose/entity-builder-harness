@@ -26,9 +26,13 @@ NAMES = {"server-replacement": "replacement", "credential-replacement": "credent
 # a companion or attribute this old observation to the repaired controller.
 LEGACY = {("server-replacement", "sha256:fefc8e5561299b9e5cb63e41f820fae3a250f1bf3452bbf01f24eb72580b83e6"):
           "sha256:8db4387e1bd8c592883644ea91a155272c70e42d2e17eb740756b40772862c8d"}
-# Completed under the preceding checked controller. Unlike LEGACY, these
-# always require their producer-written companion and original seven gates.
+# Completed under a preceding checked controller. NAMES retain their producer
+# companions; snapshot/restore readers retain their own original seven gates.
 REPAIRS = {
+    ("snapshot", "sha256:fe3c3e880906ce0a3aacb44105a27af2297a1e2ff1b08d84d69b8d67365d57b9"):
+        "sha256:26de3e49221e6c9f653d7743218f7022c58d00ace899a71635758e07ff05d23e",
+    ("restore-deployment", "sha256:dd92ab0e3ecb16d9ea5db41070ccc96ff12e75fddb6fc36e8dedd1951a3a2be1"):
+        "sha256:26de3e49221e6c9f653d7743218f7022c58d00ace899a71635758e07ff05d23e",
     ("credential-replacement", "sha256:f414b14961fd75cdac1194d83cff8f7f5572f33e16f3940f72d124b5cf0dda61"):
         "sha256:73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76",
     ("initial-stop", "sha256:00b9f317659a999ff0d3eaa27dc109319d1ba34ba30a0a8f3613e4612b4f2e7f"):

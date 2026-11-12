@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T08:46:56Z
-latest_commit_sha: c0154a64342060f3457a0a42ecc12485be83c201
-chat_duration: 488389s (05:15:39:49)
+latest_commit_at_utc: 2026-11-12T09:52:47Z
+latest_commit_sha: b6455bfb2922bf39cf1cab836c37f359d5add89f
+chat_duration: 492340s (05:16:45:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,109 @@ new chat session
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
 ## Decisions Made
+
+- Restore-preflight repair self-review complete for the eight scoped paths:
+  provider applicability, exact source-transition recovery selection, original
+  control selector, snapshot/restore readers, connected restore fixture, partial
+  diagnostic ledger and this session record. Qualified image/template/SQL and
+  all original AWS evidence remain unchanged. Actual negative observation and
+  snapshot/restore receipt pins validate offline with zero provider calls.
+  Exploratory connected credential/restore fixture70731 passed, including the
+  original failed probe, one successor, tamper/clone/terminal/diagnostic and
+  existing-read rejection, failed successor without third launch, lost-response
+  reconciliation, historical control custody and cleanup/final acceptance readers.
+  Captures restore-probe-recovery-focused-3.log and diagnostics.log retain the
+  pass; diagnostic structural review has zero findings. Two earlier fixture
+  failures came from comparing second/fractional timestamps lexically; corrected
+  with parsed instants, not relaxed production checks. A metadata patch first
+  missed an existing date and changed nothing. A ledger serialization temporarily
+  reformatted20 unrelated owners; restored their original formatting unchanged.
+  One overbroad log-tail command also exposed huge minified reports; subsequent
+  inspection uses bounded JSON projections. These are assistant overhead and
+  belong in the retrospective. Reprepare final frozen bytes, use registered
+  affected verification and checkpoint before the single approved new probe.
+
+- 2026-11-12: restore deployment completed, receipt40d60d96 observed10:45:36Z;
+  actual CloudFormation CREATE_COMPLETE10:42:52.769Z. Restricted clone preflight
+  es-7718c551963245a899c9f1421dc84d5c then failed, not the clone creation.
+  Task5a341d43a9684dfca1bdd9a493855b29 used the qualified4a0b522f image,
+  created10:53:37.493Z, started10:53:51.708Z, stopped10:54:22.151Z, exit1.
+  Public failure2067fc67 preserves persistence.unclassified-failure,
+  pool_connect/codeStatus absent. Original negative observation was collected
+  through the existing exact task/log validator without another launch:
+  diagnostics/restore-reader-preflight-es-7718c551963245a899c9f1421dc84d5c.json,
+  sha256:6e9ffd437275f3e23f308587ef2483ad069686afea8843f21d98fc70bb050ae0.
+  Its acceptance/readiness flags are false. Runner39964 ended; no reader
+  operation, clone cleanup or acceptance occurred. Source and snapshot remain.
+  Read-only diagnosis confirms endpoint/port/identity/incarnation bindings,
+  IAM authentication enabled, symmetric5432 reader/clone SG rules and allowing
+  subnet ACLs. PostgreSQL records client connection reset10:54:05Z; no observed
+  authentication rejection or OOM. Clone has about100MiB free/150MiB swap,
+  but source uses the same micro class; insufficient evidence to blame memory
+  or resize. Exact driver cause remains unknown; do not call it proven timeout.
+  One erroneous VPC-ID filter and an initial timezone-dependent metrics filter
+  returned empty observations; corrected using actual subnet IDs and UTC dates.
+- Bounded repair inventory under standing completion authority: source-transition
+  owns exactly one new read-only restore-preflight label/path, admitted only by
+  the pinned original terminal failure, reservation and same clone deployment.
+  No original operation reset, speculative image/template change, broad retries,
+  database writes or second replacement probe. Existing90-second and fresh
+  admission gates remain. restore-route reader context and acceptance's shared
+  label selection consume it. Preserve original completed snapshot/deployment
+  through control-completion's exact historical controller selector, with all
+  original request/plan/gate/resource checks, not new creates or restamping.
+  Update the provider rule, existing connected restore/source-transition tests
+  and affected partial diagnostic reviews. Counterexamples: altered negative
+  observation, different request/clone, already-reserved read, renewed failure,
+  changed historical gate/source, and replay after response loss must reject.
+  Successful new readback would establish recovery, not explain the first fault.
+
+- 2026-11-12T10:38Z: isolated restore uses the original approved plan
+  18c09a20ffbd046104505e77293fdfb98cd66e0760aa44fc929b760cbc700386.
+  Original change-set reservation es-37e9335d37f84cb7972606a89ff4155f
+  was recorded10:19:28.370795Z. Review observation051dbc8a failed with
+  aws-command-failed and original-restore-operation-reconcile-only; retained
+  that response and resumed the SAME plan/journal, without another create.
+  Review completed in capture finish-restore-38dcad8a000f4546bd93503cfb4f00b5.
+  Execute reservation es-65f747a868fc454987591cc5e387b56c was recorded
+  10:32:24.646248Z. Native CloudFormation shows the clone database creation
+  initiated10:34:18.294Z, network/reader-access resources complete, and the
+  private PostgreSQL clone still creating. Public pending captures ce0e1a55
+  and1602abe5 belong to this same operation. Runner39964 continues original
+  restore observation, reader, owned cleanup, final read and collection;
+  promotion remains required afterwards. Source DB/snapshot are protected.
+  No executable/configuration edits or new image publication during this run.
+  Retrospective inventory: the scope-specific live-control directory currently
+  contains52 non-test Python/shell files with8923 lines and19 test files with
+  6364 lines, including metadata/comments. These are code-volume observations,
+  not a claim that all lines are unnecessary or a quantified runtime profile.
+
+- 2026-11-12: checked history repair checkpoint b6455bfb uses controller
+  sha256:26de3e49221e6c9f653d7743218f7022c58d00ace899a71635758e07ff05d23e.
+  Actual permission reconciliation completed without task replay: capture
+  finish-task-execute-af2f365b7fdd4273a9d96817ec8509c3 reports reused=true and
+  original-task-completion-observed. credential-history.json retains259 exact
+  dependencies, original e022fa39 controller, original plan d0ecb50f and original
+  completed_at09:20:40.251703Z. The reconciliation plan61928e17 differs from that
+  original safe plan only in controller_sha256. No old proof was restamped.
+- Source snapshot proof completed: snapshot-receipt.json, plan
+  7670baec85f8d865b0fac8dc7248985adef0677af50542fc1c07644723ea42ef,
+  capture finish-snapshot-15f18a75bec8466eae97ec2b7f7c8d77. AWS snapshot
+  kanbien-core-platform-entity-smoke-8f76ed3480e85d60fb60f547 was created
+  2026-11-12T10:06:38.514Z and observed available100percent. Original source
+  kanbien-core-platform-persistence remains deletion-protected, same resource
+  db-7WRBSPURYQBIABAABNWAWNFVOQ, returned to available after backing-up.
+  First planning read failed not-started (050f0ad0 capture), no reservation;
+  the next plan succeeded. Creation returned pending (2c33844a capture). Its
+  subsequent observation rejected the normal source backing-up state with
+  alignment-dependency-not-available (435440a7 capture). Waited using read-only
+  AWS observations, then reconciled the SAME original plan/reservation after
+  availability returned. No second snapshot create and no source/code change.
+  Runner39369 now continues isolated restore/read/owned cleanup/final read/collect;
+  promotion remains a separate required final action. Source snapshot is protected.
+  Retrospective must include this ordinary pending-state handling defect as well
+  as the measured167.866 seconds across four task reservation-to-stop intervals
+  versus26m11s elapsed between first reservation and final stop.
 
 - 2026-11-12T09:21Z: actual final credential permission task
   es-665c4cca43a74513808647afda100d5d passed
@@ -1453,6 +1556,17 @@ Summary: Credential ready renewal and original-controller recovery custody passe
 
 ADR impact: No new architecture decision: narrow use of the existing approved controller repair and deterministic unused-probe renewal; one-off source pins remain explicit design debt for the retrospective.
 
+
+### 2026-11-12T09:52:47Z - Commit recorded
+
+Commit: `b6455bfb2922bf39cf1cab836c37f359d5add89f`
+
+Message: fix(deploy): reconcile completed credential history without task replay
+
+Summary: History retention repair passed connected credential/source-change/no-replay and public reporter fixtures, exact512/513 capacity boundaries, original-custody/plan drift assertions, registered composition261.780565 seconds, staged gates and all46 integration checks in588.15649 seconds:4 executed42 reused13 later-stage deferred,zero findings. Real closure is259 dependencies, not a failed database task. Four actual new completed task/gate pairs validate offline under e022fa39. Reports history-retention-* under .cache/test-runs/entity-smoke-stable.7wpnDKuN. Resume only final permissions operation reconciliation to retain original history; no RunTask, preflight, revoke or replacement replay. Then snapshot, isolated restore/read/owned cleanup, fresh final read, collect and promote. Full failure retrospective remains required; four completed task reservations to stops totaled167.866 seconds within26m11s of elapsed inter-task sequence, exposing controller overhead.
+
+ADR impact: No new architecture decision: bounded correction to existing history capacity and original-completion reconciliation. Directory-wide history capture and exact historical source pins remain explicit design debt, not a claimed mature reusable release system.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1649,6 +1763,13 @@ ADR impact: No new architecture decision: narrow use of the existing approved co
   Summary: Credential ready renewal and original-controller recovery custody passed focused source/credential fixtures, registered composition, staged gates and all46 local integration checks with zero findings:6 executed40 reused13 later-stage deferred; integration624.124278 seconds. Actual ten task pairs and credential replacement completion/seven-gate custody validate offline, with no provider calls or evidence rewrites. Renew only the unused ready probe, then finish credential original read/permissions, snapshot, isolated restore/read/cleanup and final acceptance. Full evidence-backed failure retrospective remains a required final deliverable. Reports: credential-renewal-* in .cache/test-runs/entity-smoke-stable.7wpnDKuN.
   ADR impact: No new architecture decision: narrow use of the existing approved controller repair and deterministic unused-probe renewal; one-off source pins remain explicit design debt for the retrospective.
 
+
+- Commit: `b6455bfb2922bf39cf1cab836c37f359d5add89f`
+  Time UTC: 2026-11-12T09:52:47Z
+  Message: fix(deploy): reconcile completed credential history without task replay
+  Summary: History retention repair passed connected credential/source-change/no-replay and public reporter fixtures, exact512/513 capacity boundaries, original-custody/plan drift assertions, registered composition261.780565 seconds, staged gates and all46 integration checks in588.15649 seconds:4 executed42 reused13 later-stage deferred,zero findings. Real closure is259 dependencies, not a failed database task. Four actual new completed task/gate pairs validate offline under e022fa39. Reports history-retention-* under .cache/test-runs/entity-smoke-stable.7wpnDKuN. Resume only final permissions operation reconciliation to retain original history; no RunTask, preflight, revoke or replacement replay. Then snapshot, isolated restore/read/owned cleanup, fresh final read, collect and promote. Full failure retrospective remains required; four completed task reservations to stops totaled167.866 seconds within26m11s of elapsed inter-task sequence, exposing controller overhead.
+  ADR impact: No new architecture decision: bounded correction to existing history capacity and original-completion reconciliation. Directory-wide history capture and exact historical source pins remain explicit design debt, not a claimed mature reusable release system.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1662,9 +1783,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T08:46:56Z
-Latest commit SHA: c0154a64342060f3457a0a42ecc12485be83c201
-Chat duration: 488389s (05:15:39:49)
+Latest commit at UTC: 2026-11-12T09:52:47Z
+Latest commit SHA: b6455bfb2922bf39cf1cab836c37f359d5add89f
+Chat duration: 492340s (05:16:45:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

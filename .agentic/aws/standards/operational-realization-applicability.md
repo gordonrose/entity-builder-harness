@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 12
+version: 13
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-12"
@@ -304,6 +304,28 @@ and actual companions/gates; this permits neither replay nor restamping them.
 Current qualified successor, identity, permission and dependency checks remain
 mandatory. This extends the existing bounded renewal only, not retry authority
 for other operations, images or scopes.
+
+### Terminal restore-reader preflight recovery
+
+The standing completion authority permits exactly one separately reserved
+read-only recovery probe for failed restore preflight
+`es-7718c551963245a899c9f1421dc84d5c`. The existing source-transition owner
+requires the pinned original negative observation, request journal, public
+failure report and completed clone binding. Preserve the original exit1,
+diagnostic, timestamps and image identity; no failure becomes successful proof.
+The connection cause remains unclassified, not a proven timeout or permission
+failure. A successful new observation establishes recovery only.
+
+Use one deterministic recovery label and separate immutable step path, the same
+qualified program, clone, runtime identity, network and ninety-second bound.
+Require no original-record read reservation before reserving the new probe.
+Retain first-five gates, actual terminal success and fresh900-second admission.
+An uncertain or failed recovery probe cannot acquire a third label or replay
+either reservation. This permits no permission/image/template change, business
+write, database replacement or cleanup before successful original-record read.
+The completed snapshot and clone deployment retain their exact original
+controller/receipt/gate hashes through the existing control-custody selector;
+all request, incarnation, plan, graph and live ownership checks remain required.
 
 ### Stopped-service activation refresh
 
