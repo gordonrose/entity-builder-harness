@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.failure-route
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -183,7 +183,11 @@ def scenario(*, partial=False, transport_factory=Transport):
         scope.parent.mkdir(parents=True)
         scope.write_bytes((REAL_ROOT / M.C.ALIGN.SCOPE).read_bytes())
         inventory = scope.parent.parent.parent / "scope-index.yml"
-        inventory.write_bytes((REAL_ROOT / M.C.ALIGN.SCOPE).parent.parent.parent.joinpath("scope-index.yml").read_bytes())
+        lifecycle = M.C.yaml.safe_load((REAL_ROOT / M.C.ALIGN.SCOPE).parent.parent.parent.joinpath("scope-index.yml").read_text())
+        # This scenario constructs a first release without accepted evidence;
+        # the canonical repository may already have completed that release.
+        next(row for row in lifecycle["scopes"] if row["id"] == "entity-smoke")["lifecycle"] = "candidate"
+        inventory.write_text(M.C.yaml.safe_dump(lifecycle, sort_keys=False))
         evidence = scope.parent.parent / "30-release-evidence"; evidence.mkdir()
         M.C.ROOT, M.SUCCESSION.REPOSITORY_ROOT = root, root
         M.C.local_checks, M.C.source_digest = lambda: None, lambda: "sha256:" + "f" * 64

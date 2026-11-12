@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T14:50:02Z
-latest_commit_sha: 1a91e7a6
-chat_duration: 510175s (05:21:42:55)
+latest_commit_at_utc: 2026-11-12T15:32:23Z
+latest_commit_sha: 5fdf5efd
+chat_duration: 512716s (05:22:25:16)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -26,6 +26,36 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 ## Initial Intent
 
 new chat session
+
+## Accepted result — 2026-11-12
+
+The entity-smoke AWS proof is accepted. Release
+`release-53798ef563be4ce9a8c5b2f0` was promoted at
+`2026-11-12T16:00:21.321458Z`; the scope index now marks entity-smoke active.
+The canonical current reference is
+`infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/30-release-evidence/current-accepted-release.yml`.
+Its accepted record, candidate and immutable proof are alongside it. The proof
+contains 37 actual task archives and seven control archives, not fixture results.
+
+- Qualified application source: `96b755b9e4d9f591b7183c86041b17d22881d51f`.
+- Published image: `sha256:4a0b522f6e2b969ddfb7f79ece7a38583de6e0ad57f84ec1e4bbc056703ab858`.
+- Execution controller checkpoint: `5fdf5efd`; controller digest
+  `sha256:497950c22452a186d470de7416f2a79ed14eb5f374aad631314c1bf1918413ff`.
+- Final original-record read: `es-8f60a7cea45741c3ae0d5b24bc1e616d`,
+  collected at15:53:19Z, with digest
+  `6da2c116797d6c43137c84c1603e2f003787d4c183867ec07ff5afeda7a3a593`.
+- Successful collection: `finish-collect-acceptance-f42b62f1104c4da1acdf7ef710b50df4`.
+- Successful promotion: `finish-promote-acceptance-e66a8b19bdd844febed5349cbb972903`.
+  Both reports are under `.cache/test-runs/entity-smoke-stable.7wpnDKuN/`.
+
+Post-promotion current-release validation, active-scope health/recovery inventory
+and target declaration validation passed with no findings. The state reader's
+`current_readiness: false` means it validates retained custody without making a
+new live-health claim; promotion itself returned `current_readiness: true`.
+The source database and source snapshot remain protected. The positively owned
+eight-resource restore clone was deleted after successful original-digest readback.
+The other baselines and staging were not retired. Earlier incomplete-status notes
+below are historical incident records, not the current acceptance verdict.
 
 ## Session Log
 
@@ -43,10 +73,10 @@ new chat session
 
 ## Issues Raised
 
-- Full live proof is not complete. Earlier local passes do not establish an
-  actual qualified image, AWS execution or accepted release. The four prose
-  classifications are now resolved with bounded annotations, preserving all
-  safety and verification obligations. Detailed failures and evidence follow.
+- Resolved on2026-11-12: full live proof was previously incomplete despite local
+  passes. Actual qualification, publication, execution, collection and acceptance
+  now have separate retained evidence, summarized above. The incident history
+  remains below rather than being rewritten as an uninterrupted successful run.
 
 
 - Raised: Original read-only administration probe es-4a34dceff456486cb2a33666613d6949 is terminal TaskFailedToStart: CannotPullContainerError with HTTP 403; no startedAt, imageDigest, exitCode or application logs. Both actual foundation ECR endpoint policies permit only core-server and deny entity-smoke.
@@ -408,6 +438,289 @@ new chat session
   rules and local checkpoint permission are recorded in the timeline and plan.
 - Complete the existing goal; do not expand the framework. Publication and
   provider mutation still require concrete approval. No push is authorised.
+
+## Deployment retrospective — 2026-11-12
+
+### Assessment and accountability
+
+This was an unacceptable delivery process. The simple entity was not the cause
+of the multi-day delay. I developed and debugged too much of the deployment
+controller while simultaneously trying to use it for first acceptance. I missed
+integration cases, repeatedly repaired one failure at a time, ran costly checks
+after those repairs, and allowed the resulting delays to invalidate admission
+evidence. I also gave progress explanations that did not consistently distinguish
+local verification, packaging, execution, collection and accepted release state.
+
+The requested controls had legitimate purposes: protect existing data, limit
+permissions, avoid replaying uncertain operations, bind the deployed image and
+retain genuine proof. My implementation made those controls brittle and expensive.
+That is not an excuse to blame the user for asking for governance, or AWS for all
+the elapsed time. A safe deployment path should handle its expected transitions
+without repeated source patches or repeated approval conversations.
+
+The final accepted result is real. It does not erase the delivery failure, and
+it does not establish that this is now a streamlined, unattended deployment
+system suitable for an emergency. There was substantial manual investigation,
+controller repair and continuation during this run. A clean repeat has not
+been demonstrated.
+
+### What failed and why it mattered
+
+1. **I did not establish the complete smallest public path early enough.**
+   Feature code, local tests, packaging, provider planning, execution and final
+   acceptance were treated as progressively connected pieces. Packaging lacked
+   the entity-smoke compiler mapping/runtime shim; the feature diagnostic owner
+   identifier also needed correction. The full command chain should have been
+   exercised before long live qualification. Local success was not evidence that
+   its final packaging or acceptance consumer worked.
+
+2. **I introduced circular or contradictory governance boundaries.**
+   The administrator/runtime-login assumption conflicted with separate
+   least-privilege proof tasks. Launching the prerequisite read-only ECS probe was
+   itself a governed mutation. Expected-unready recovery and owned clone cleanup
+   lacked usable routes. The collector produced files that the promotion source
+   guard then rejected as dirt. These were workflow design gaps, not reasons the
+   requested entity was inherently difficult. The relevant concrete corrections
+   are implemented, but discovering them serially during deployment was my error.
+
+3. **I coupled identities that should have been distinguished.**
+   Application image identity, deployment-controller identity, test source,
+   historical proof and current readiness were repeatedly conflated. Early tool
+   fixes required another image publication even without application changes.
+   Later controller-only repairs needed exact historical-custody exceptions.
+   The controller digest still includes its Python/shell test files: changing a
+   fixture changes controller identity. That remains a design problem, not a
+   desirable template for future features.
+
+4. **Provider fixtures did not sufficiently represent real AWS responses.**
+   Global API signing, empty ECS capability/default fields, asynchronous control
+   state and typed absent-resource errors all exposed gaps. For cleanup, EC2's
+   `InvalidGroup.NotFound` and IAM's missing-role responses were not correctly
+   recognized; deletion had completed while its evidence retention failed.
+   Fixes now distinguish those exact absent states from denial/unknown failure.
+   The tests should have covered those real response forms before live execution.
+
+5. **Private image delivery was not checked end to end.**
+   Existing ECR endpoint policies allowed the old repository but not entity-smoke.
+   The first task could not pull its image and returned HTTP403. Role permission
+   checks alone were insufficient. The initial diagnostic also focused on absent
+   container/image evidence instead of the actual startup failure. Two narrowly
+   approved endpoint allowlist changes and connected startup diagnostics were
+   needed. This was a missed deployment dependency.
+
+6. **The PostgreSQL administration/authentication assumptions were wrong.**
+   The implementation did not correctly separate password administration,
+   IAM-authenticated roles and explicit membership from implicit privileges.
+   This required real role observation, bounded repair, removal of temporary
+   access and a newly qualified application image. Commits `5f9936a3` and
+   `96b755b9` record those corrections. Basic authentication and permission
+   semantics should have been settled before attempting the full proof chain.
+
+7. **Historical evidence was repeatedly treated like a fresh provider query.**
+   Completed tasks aged out of ECS history; controller repairs changed hashes;
+   history retention bounds and original completion companions were mishandled.
+   Successful operations then appeared unusable even though their immutable
+   receipts existed. The resulting fixes preserve original custody rather than
+   rerun migrations, replacement, stop/restart or deletion. Those distinctions
+   should have been part of the first state model, including interrupted runs.
+
+8. **The acceptance assembly missed combinations of otherwise valid proofs.**
+   The collector interpreted a historical-controller pin as an image transition,
+   rejecting the current-image clone reader's legitimate database/permission
+   binding. The aggregate also required one task-definition ARN across a declared
+   old/new image transition. Both are fixed in `1a91e7a6`. An audit of all actual
+   37 task and seven control archives exposed the second bug before another
+   collection attempt. That whole-assembly audit should have happened earlier,
+   before spending the freshness window on a new final read.
+
+9. **The controller could consume its own freshness allowance.**
+   On12 November, ready probe `es-02963945` passed at14:59. The read executor
+   first rejected an incomplete task-history observation before submission.
+   A new read-only observation passed; resuming the same unsubmitted plan then
+   failed because the15-minute probe window had expired during repeated checks.
+   `5fdf5efd` adds one bounded renewal through the existing unused-probe mechanism.
+   It does not extend timestamps or repeat a read. This is a tactical repair;
+   the underlying cost and resilience of the controller remain unsatisfactory.
+
+10. **Read-only observation failures cost entire command cycles.**
+    Several `ecs/describe-task-definition` reads failed before submission and
+    subsequently passed. The last final-read planner needed its bounded retry;
+    an independent read confirmed the verifier definition was ACTIVE. The exact
+    causes of those failures are not established. Likewise, the first clone
+    probe's uncoded `pool_connect` failure is not proven to be a timeout, IAM
+    problem or database resource shortage. I should not substitute guesses for
+    missing diagnosis. Bounded read recovery and better safe failure context are
+    still needed at the responsible provider boundary.
+
+11. **I accumulated incident-specific controller code.**
+    At checkpoint `5fdf5efd`, the target-specific controller folder contains71
+    Python/shell files and15,945 lines:51 implementation files/9,178 lines and20
+    test files/6,767 lines. Not every line is unnecessary, and this is not the
+    size of the feature itself. It is evidence of how much machinery accumulated
+    around one smoke feature, including hard-coded incident hashes and recovery
+    identities. Copying that machinery for each future feature would be wrong.
+
+12. **Verification was too expensive and too easily invalidated.**
+    Organizing tests into owners/types did not solve broad dependency selection,
+    controller/test identity coupling or slow composed fixtures. Registered
+    evidence reuse does work, but each new repair often invalidated an expensive
+    batch before reuse was possible. Passing many local checks did not establish
+    that the missing real-provider or cross-identity case had been covered.
+
+13. **Approval handling and communication amplified the delay.**
+    Repeated requests after broad completion authority, and repeated “remaining”
+    explanations without a reliable end-to-end state, forced the user to manage
+    the work. Some genuinely new shared-foundation authority needed a decision;
+    that does not justify repeatedly asking about already-approved operations.
+    I should have maintained one clear authority record, distinguished changed
+    scope from implementation repair, and reported completed versus unproved
+    outcomes precisely. Earlier explanations also introduced confusion about
+    diagnostics already present and did not faithfully start from the established
+    Kanbien feature layout. Those were avoidable communication errors.
+
+14. **Credential lifetime and execution visibility were poorly planned.**
+    Work repeatedly outlasted interactive credentials. Polling AWS does not make
+    an expiring login session permanent; this needed expiry-aware planning, not
+    a keepalive assumption. [AWS documents session renewal and expiry](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso-concepts.html).
+    The temporary continuation helper also buffered child
+    progress until command completion. A durable repo command should expose its
+    current phase, original reservation, elapsed time and remaining work without
+    requiring repeated ad-hoc inspection. The current run required too much
+    assistant-mediated continuation to qualify as unattended automation.
+
+15. **I made avoidable local execution mistakes too.**
+    These included guessed file paths, overlarge/minified report dumps, failed
+    patches caused by mismatched JSON indentation, looking in the control journal
+    rather than the task journal when inferring progress, and an inconsistent
+    synthetic proof-label update caught by a fixture. The first post-acceptance
+    health-inventory command was also pointed at the target directory rather
+    than its `20-scopes` directory; the correctly scoped command passed. These
+    were my errors, not deployment failures or reasons to change safety rules.
+
+16. **Post-acceptance test isolation was incomplete.**
+    The target-declaration regression copied the newly active feature's live
+    acceptance into a temporary target. Its canonical owner correctly rejected
+    that copied record, masking unrelated negative cases. This was a fixture
+    defect, not failed live persistence. I also described a staged gate as passed
+    before checking its final exit status; that status claim was premature.
+    The bounded correction keeps the real accepted target positive check, makes
+    only the copied feature an unaccepted candidate, and validates the clean
+    copied baseline before negative mutations. Production readers, error codes
+    and immutable live evidence remain unchanged. The inventory for this repair
+    is the existing target-declaration shell test and this session record;
+    regression assertions still require their original specific failure codes.
+    No runtime diagnostic definition or adoption owner changes are needed.
+    The same stable-state audit also exposed a missing collector-image fixture
+    dependency, an older persistence test's missing simulated accepted-reader
+    response for the now-active feature, and a first-release recovery fixture
+    inheriting the real active lifecycle. These are test setup corrections:
+    explicitly construct the candidate scenario and required dependencies, and
+    keep real canonical acceptance independently validated. Inventory extends
+    to persistence controller-regression, persistence acceptance-route rehearsal
+    and entity-smoke failure-route fixtures; no operational controller changes.
+    The persistence regression is also source-censused in its existing partial
+    diagnostic review. I initially missed that review dependency. Reviewing the
+    exact additional simulated accepted-reader response and all42 passing
+    controller cases supports updating only its hash; production definitions,
+    disclosure controls and remaining debt are unchanged. The interrupted
+    integration run is not passing evidence. Final verification must use this
+    complete frozen batch, including the corrected review record.
+    That run passed65 checks and failed the persistence payload and provider
+    regressions. The payload fixture contained another copied-scope setup I had
+    missed. Its actual
+    compilation/import proof and13 negative payload/source cases passed; its
+    repaired-declaration stage assertion was masked by unrelated copied live
+    acceptance. The existing payload fixture now explicitly constructs that
+    unrelated feature as a candidate while retaining real persistence validators
+    and the original must-advance/must-not-build assertions. Adjacent qualification
+    fixtures do not contain this scope-copy pattern. No production source changes.
+    The provider regression then passed unchanged with captured output:42
+    controller, five provider-CLI and19 verifier-operation tests passed. The
+    failed registered run did not retain child output, so its exact cause is
+    unknown; a subsequent registered pass is required rather than assuming a
+    timing explanation or silently counting the failed run as successful.
+
+### What the timings actually show
+
+| Observation | Measured duration |
+| --- | --- |
+| Successful isolated-reader preflight / read | 42.737s / 45.588s |
+| First final ready / read, before collector correction | 46.263s / 40.086s |
+| Accepted final renewed ready / original-record read | 39.558s / 44.249s |
+| Collector-correction four-check batch / selector regression | 618.608s / 694.144s, run in parallel |
+| Its final integration | 85.008s;64 passed instances,63 reused |
+| Final-renewal four-check batch / selector regression | 603.543s / 674.796s, run in parallel |
+| Its final integration | 47.800s;46 passed instances, all reused |
+
+The last successful probe was reserved at15:41:26Z; the final read was reserved
+at15:52:29Z. The read completed at15:53:14Z and acceptance was promoted at16:00:21Z.
+These task runtimes are tens of seconds, while their surrounding admission,
+observation, collection and repair cycles took minutes or much longer. The
+isolated database restoration itself also required real provider time; its
+recorded database-creation to stack-completion interval was about8m35s.
+
+There is not enough complete timing instrumentation to truthfully assign every
+minute of the multi-day run to a single cause. Nor is there a verified billing
+or token-cost total here. The commit sequence, retained failures and measured
+task/check durations do establish that repeated implementation repair and
+controller/verification overhead were substantial causes. Calling this simply
+“AWS taking days to run a smoke test” would be misleading.
+
+### What is established, and what is not
+
+The accepted proof establishes the selected private PostgreSQL-backed feature
+path: qualified/published image, deployed runtime, original-record persistence,
+feature lifecycle/index behavior, effective runtime permission checks, server
+replacement, first-release stop/restart with data/history preservation, expected
+unready behavior after scoped credential revocation and recovery, isolated
+snapshot restore/readback, and positively owned clone cleanup. The canonical
+accepted record is the authority, not a count of local passing tests.
+
+It does not establish a clean unattended repeat, fast emergency deployment,
+complete maturity for every future feature/service, actual hard-purge execution,
+live DynamoDB feature qualification, subsequent-release prior-image rollback,
+staging feature parity or staging retirement. Application auth/authz, tenancy,
+internet-facing access and logging/telemetry were excluded from this work rather
+than silently proved. This result is a demonstrated feature path, not a blanket
+claim that the deployment system is now operationally mature.
+
+### Changes needed to prevent a repeat
+
+These are recommendations, not additional work silently added to this goal.
+
+1. Separate routine feature deployment from first-time platform/recovery
+   qualification. Define the minimum complete public path and its acceptance
+   evidence before implementation; do not rediscover its connections live.
+2. Replace incident-specific source branches with a small, resumable controller
+   state model: durable attempt identities, explicit effect certainty, bounded
+   read recovery, unused-probe renewal and immutable history. Unknown mutations
+   must reconcile, never blindly replay. Test interruption at every transition.
+3. Distinguish application image, executable controller, verification tests,
+   historical proof and fresh health identities. Test-only edits should not
+   invalidate an unchanged execution controller. Historical success should not
+   require a new live query against expired ECS task history.
+4. Inspect immutable inputs once per appropriate phase and recheck the volatile
+   facts needed immediately before the effect. Measure provider request counts
+   and wall time. Freshness budgets must accommodate the actual admission path;
+   moving the probe close to consumption is preferable to restamping old proof.
+5. Extend provider/assembly fixtures with real response forms and mixed history:
+   defaults, absence versus denial, pagination/partial observations, old/new image
+   definitions, clone bindings, expired tasks, lost replies and collector-to-
+   promotion handoff. Validate the whole retained assembly before a fresh read.
+6. Make fast owner-level checks independently registered and narrow their actual
+   inputs. Keep complete affected integration at stable checkpoints and reuse
+   matching evidence. Track and address duration regressions; advisory estimates
+   alone have not delivered the promised feedback loop. No nightly scheduler is
+   needed to make this improvement.
+7. Provide one durable repo continuation command with streamed safe progress,
+   phase/attempt timings, credential-expiry awareness and a single authority
+   record. Report one precise blocker and its known effect, not vague failure or
+   repeated approval prompts. Do not present local validation as live acceptance.
+
+The priority before copying this into another feature is to simplify and prove
+the repeatable delivery path, not add another layer of governance or another
+target-specific controller framework. Finishing the proof is the outcome; the
+process used to reach it is not the standard to preserve.
 
 ## Context Hygiene
 
@@ -1780,6 +2093,17 @@ Summary: Corrected controller/image/clone evidence distinction, exact transition
 
 ADR impact: No ADR: repairs existing evidence attribution and bounded observation owners; application, image and infrastructure contracts unchanged.
 
+
+### 2026-11-12T15:32:23Z - Commit recorded
+
+Commit: `5fdf5efd`
+
+Message: fix(deploy): renew the unused final acceptance probe
+
+Summary: Reused the bounded unused-probe renewal for es-02963945 after the exact not-started freshness failure; preserved original collector custody and the unsubmitted read identity. Actual custody audit passed without provider calls. Focused checks passed in603.542874 seconds, selector in674.796094 seconds; final integration46 local instances passed, all reused,13 later-stage obligations deferred, no findings,47.799648 seconds. Staged gates passed. Captures: .cache/test-runs/entity-smoke-stable.7wpnDKuN/final-renewal-{focused,selector,integration}.json. Continue the renewed ready probe, same final read, collection and promotion without replaying prior proof.
+
+ADR impact: No ADR: bounded renewal through existing owner; no runtime, image, database or infrastructure change.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2018,6 +2342,13 @@ ADR impact: No ADR: repairs existing evidence attribution and bounded observatio
   Summary: Corrected controller/image/clone evidence distinction, exact transition actor mapping and historical cleanup selection. Connected negative and no-replay fixtures passed. Registered focused checks passed in 618.607713 seconds; selector regression in 694.143996 seconds; final integration 64 local instances passed, 63 reused, one executed, 20 later-stage obligations deferred, no findings, in 85.008356 seconds. Captures: .cache/test-runs/entity-smoke-stable.7wpnDKuN/collector-repair-{focused,selector,integration}.json. Actual 37-task/seven-control audit passed except appropriately expired final freshness. Next: only one fresh ready/read pair, real collection and acceptance promotion; never replay cleanup.
   ADR impact: No ADR: repairs existing evidence attribution and bounded observation owners; application, image and infrastructure contracts unchanged.
 
+
+- Commit: `5fdf5efd`
+  Time UTC: 2026-11-12T15:32:23Z
+  Message: fix(deploy): renew the unused final acceptance probe
+  Summary: Reused the bounded unused-probe renewal for es-02963945 after the exact not-started freshness failure; preserved original collector custody and the unsubmitted read identity. Actual custody audit passed without provider calls. Focused checks passed in603.542874 seconds, selector in674.796094 seconds; final integration46 local instances passed, all reused,13 later-stage obligations deferred, no findings,47.799648 seconds. Staged gates passed. Captures: .cache/test-runs/entity-smoke-stable.7wpnDKuN/final-renewal-{focused,selector,integration}.json. Continue the renewed ready probe, same final read, collection and promotion without replaying prior proof.
+  ADR impact: No ADR: bounded renewal through existing owner; no runtime, image, database or infrastructure change.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2031,9 +2362,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T14:50:02Z
-Latest commit SHA: 1a91e7a6
-Chat duration: 510175s (05:21:42:55)
+Latest commit at UTC: 2026-11-12T15:32:23Z
+Latest commit SHA: 5fdf5efd
+Chat duration: 512716s (05:22:25:16)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

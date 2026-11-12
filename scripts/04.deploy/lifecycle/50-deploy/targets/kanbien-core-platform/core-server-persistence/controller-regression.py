@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 8
+#   version: 9
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-06"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -455,7 +455,7 @@ class ControllerRegression(unittest.TestCase):
                     with patch.object(sys,'argv',['active','--target-root',str(target),'--json']),contextlib.redirect_stdout(io.StringIO()):
                         code=active.main()
                     return subprocess.CompletedProcess(command,code,stdout='',stderr='')
-                if '/validate-accepted-release/script.sh' in script:
+                if '/validate-accepted-release/script.sh' in script or script.endswith('/entity-smoke/acceptance-state.sh'):
                     return subprocess.CompletedProcess(command,0,stdout=json.dumps({'verdict':'validated'}),stderr='')
                 relevant='--scope-contract' in command and '/core-server-persistence/' in command[command.index('--scope-contract')+1]
                 for key in counts:

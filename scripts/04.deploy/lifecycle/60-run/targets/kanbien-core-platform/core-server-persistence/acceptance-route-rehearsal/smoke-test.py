@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.persistence-acceptance-route.impl
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -160,6 +160,12 @@ def full_route():
     initial=hashes();fixtures=load(RUN/'acceptance-route-rehearsal/controller-fixtures.py','controller_fixtures')
     with tempfile.TemporaryDirectory(prefix='acceptance-route-rehearsal-') as directory:
         root=Path(directory);shutil.copytree(ROOT/TARGET,root/TARGET)
+        # This rehearsal owns only persistence acceptance. Do not claim that a
+        # copied unrelated live feature receipt is accepted in a simulated root.
+        index=root/TARGET/'20-scopes/scope-index.yml'
+        inventory=yaml.safe_load(index.read_text())
+        next(scope for scope in inventory['scopes'] if scope['id']=='entity-smoke')['lifecycle']='candidate'
+        index.write_text(yaml.safe_dump(inventory,sort_keys=False))
         shutil.copytree(ROOT/'.agentic/04.deploy/60-run/schemas',root/'.agentic/04.deploy/60-run/schemas')
         shutil.copytree(ROOT/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector',root/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector')
         # The whole target clone includes unrelated candidate scopes. Supply

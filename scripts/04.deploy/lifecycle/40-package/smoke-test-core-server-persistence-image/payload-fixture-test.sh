@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-image-payload-fixture
-#   version: 4
+#   version: 5
 #   status: draft
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -162,6 +162,12 @@ provider = Path('scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platfor
 for name in ('proof-receipts.py', 'ecs-task-evidence.py'):
     shutil.copy2(root / provider / name, fixture / provider / name)
 import yaml
+# This package fixture owns persistence, not the unrelated live feature proof.
+# Keep that copied feature a candidate instead of claiming portable acceptance.
+index = fixture / scopes / 'scope-index.yml'
+inventory = yaml.safe_load(index.read_text())
+next(scope for scope in inventory['scopes'] if scope['id'] == 'entity-smoke')['lifecycle'] = 'candidate'
+index.write_text(yaml.safe_dump(inventory, sort_keys=False))
 original = contract.read_text()
 invalid = yaml.safe_load(original); invalid['health_recovery'] = {}
 contract.write_text(yaml.safe_dump(invalid, sort_keys=False))

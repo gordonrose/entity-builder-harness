@@ -2290,7 +2290,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
-          "sha256": "237df2de6e7d4b50f9f965f114461b6c98cff808c6c10aca2908d7b399bf21ac"
+          "sha256": "e691f35a440be960e608d86734f66a0af6dbb7540eebcf3a41b512f1730c0e85"
         },
         {
           "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py",
