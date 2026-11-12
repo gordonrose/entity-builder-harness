@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -29,6 +29,8 @@ MISSING = {
     ("rds", "describe-db-instances"): {"DBInstanceNotFound", "DBInstanceNotFoundFault"},
     ("rds", "describe-db-snapshots"): {"DBSnapshotNotFound", "DBSnapshotNotFoundFault"},
     ("iam", "get-role-policy"): {"NoSuchEntity", "NoSuchEntityException"},
+    ("iam", "get-role"): {"NoSuchEntity", "NoSuchEntityException"},
+    ("ec2", "describe-security-groups"): {"InvalidGroup.NotFound"},
     ("budgets", "describe-budget"): {"NotFoundException"},
     ("logs", "filter-log-events"): {"ResourceNotFoundException"},
     ("logs", "get-log-events"): {"ResourceNotFoundException"},
@@ -38,7 +40,7 @@ MISSING = {
 def classify_error(service: str, operation: str, stderr: str) -> str:
     """Never let an unknown error containing 'not found' authorize creation."""
     # The CLI can add this decoration even when AWS_MAX_ATTEMPTS is one.
-    match = re.search(r"An error occurred \(([A-Za-z0-9]+)\) when calling the [A-Za-z0-9]+ operation(?: \(reached max retries: [0-9]+\))?:", stderr)
+    match = re.search(r"An error occurred \(([A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*)\) when calling the [A-Za-z0-9]+ operation(?: \(reached max retries: [0-9]+\))?:", stderr)
     code = match.group(1) if match else None
     if code in {"AccessDenied", "AccessDeniedException", "UnauthorizedOperation", "UnrecognizedClientException", "InvalidClientTokenId", "ExpiredToken", "ExpiredTokenException"}:
         return "aws-access-denied"

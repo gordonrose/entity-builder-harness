@@ -267,7 +267,7 @@ def completed_cleanup(value, args, provider):
     # Validate the exact bounded cleanup graph, not a generic deletion waiver.
     require(plan.get("graph_sha256") == C.DEPLOY.fingerprint(graph("cleanup")), "restore-cleanup-graph-mismatch")
     store = R.ResourceStore(value["cache"] / "attempts")
-    active = C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store)
+    active = C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store, graph("cleanup"))
     for retained in (active, value["cache"] / "restore-cleanup-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):
         R.CONTROL.no_symlinks(retained)
         require(C.read_json(retained) == packet, "restore-cleanup-plan-not-retained")
@@ -296,16 +296,18 @@ def prepare(args, provider, *, source_proof=True):
         deployed = deployment(value, args, provider)
         BINDING.inspect(C, TASK.BINDING, RESTORE, provider, value["restore_binding"], value["restore_parameters"], deployed["result"]["facts"], value["parameters"]["PrivateSubnetIds"].split(","))
     declaration = graph(args.phase)
+    reconciliation = C.TRANSITION.cleanup_reconciliation(C, value["cache"], value["restore_binding"], request, store, declaration) if args.phase == "cleanup" else None
     safe = {"schema": "deploy/entity-smoke-restore-plan/v1", "phase": args.phase, "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke", "binding": value["restore_binding"],
             "request_sha256": C.DEPLOY.fingerprint(request), "controller_sha256": value["artifact"], "graph_sha256": C.DEPLOY.fingerprint(declaration), "operator_sha256": actor(provider, value["restore_binding"], args.phase),
             "snapshot_sha256": C.digest_file(value["cache"] / "snapshot-receipt.json"), "history_sha256": C.digest_file(value["cache"] / "credential-history.json"),
             "configuration_sha256": C.DEPLOY.fingerprint(value["restore_parameters"]), "template_sha256": C.digest_file(RESTORE.SOURCE), "package_custody_reference": value["custody"]["receipt_reference"],
             "reader_sha256": None if captured is None else C.DEPLOY.fingerprint(captured["step"]), "resource_count": len(RESTORE.RESOURCE_TYPES), "task_launch": False, "source_mutation": False, "automatic_retry": False, "scope_acceptance": False}
+    if reconciliation is not None: safe["reconciles_plan_sha256"] = reconciliation
     digest = C.DEPLOY.fingerprint(safe)
     packet = {"schema": "deploy/entity-smoke-restore-plan-packet/v1", "plan": safe, "request": request, "plan_sha256": digest}
     prefix = "restore-" + args.phase
     active, retained = value["cache"] / (prefix + "-plan.json"), value["cache"] / (prefix + "-plans") / (digest.removeprefix("sha256:") + ".json")
-    if args.phase == "cleanup": active = C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store)
+    if args.phase == "cleanup": active = C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store, declaration)
     if not R.write_exclusive(retained, packet): require(C.read_json(retained) == packet, "restore-plan-retention-conflict")
     R.CONTROL.no_symlinks(active)
     require(not active.exists() or C.read_json(active) == packet, "restore-original-plan-binding-changed")
@@ -355,7 +357,11 @@ def run(args, provider):
         prepared["effect_request"] = {**packet["request"], "change_set_arn": facts["change_set_arn"], "stack_arn": facts["stack_arn"]}
     else: prepared["effect_request"] = packet["request"]
     effect_request = prepared["effect_request"]
-    if store.read(phase, effect_request) is None: provider.enable_restore(phase, store, effect_request, lambda: payload(prepared, phase), guard)
+    reconciling_cleanup = "reconciles_plan_sha256" in packet["plan"]
+    if reconciling_cleanup:
+        require(phase == "delete-restore" and store.read(phase, effect_request) is not None, "restore-cleanup-reconciliation-journal-required")
+        provider.effect = "original-restore-operation-reconcile-only"
+    elif store.read(phase, effect_request) is None: provider.enable_restore(phase, store, effect_request, lambda: payload(prepared, phase), guard)
     else: provider.effect = "original-restore-operation-reconcile-only"
     deadline = time.monotonic() + args.wait_seconds
     while True:
@@ -363,7 +369,10 @@ def run(args, provider):
         elif phase == "execute-restore": result = RESTORE.execute_restore(adapted(provider), store, value["restore_binding"], value["restore_parameters"], effect_request["change_set_arn"], effect_request["stack_arn"])
         else:
             captured = prepared["captured"]
-            result = RESTORE.cleanup_restore(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"], captured["step"]["reservation"], captured["step"]["receipt"], historical_reader=True)
+            if reconciling_cleanup:
+                result = RESTORE.observe_cleanup(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"], captured["step"]["reservation"], captured["step"]["receipt"])
+            else:
+                result = RESTORE.cleanup_restore(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"], captured["step"]["reservation"], captured["step"]["receipt"], historical_reader=True)
         if result["status"] in {"completed", "reviewed"}: break
         if time.monotonic() >= deadline: return {"verdict": "pending", "plan_sha256": packet["plan_sha256"], "effect": "original-restore-operation-not-terminal"}
         time.sleep(2)

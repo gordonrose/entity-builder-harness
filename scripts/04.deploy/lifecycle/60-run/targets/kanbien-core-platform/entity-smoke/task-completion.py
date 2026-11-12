@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -45,13 +45,15 @@ def read(route, context, args, step):
     return value
 
 
-def validate_gate(route, declaration, retained, plan_sha256, expected):
-    """Validate captured seventh-gate custody without restamping it as fresh.
+def validate_gate(route, declaration, retained, plan_sha256, expected, *, through="controlled-execution"):
+    """Validate captured sixth/seventh-gate custody without restamping freshness.
 
     Current task completion supplies current source bindings; historical receipt
     readers supply the immutable bindings captured with their selected graph.
     """
     C, require = route.C, route.STEPS.require
+    require(through in {"execution-preflight", "controlled-execution"}, "task-step-completion-stage-invalid")
+    count = C.GATE.GATE_ORDER.index(through) + 1
     require(isinstance(retained, dict) and set(retained) == {"plan_sha256", "facts", "change_summary"}
             and retained["plan_sha256"] == plan_sha256, "task-step-completion-gate-plan-mismatch")
     facts = retained["facts"]
@@ -59,7 +61,7 @@ def validate_gate(route, declaration, retained, plan_sha256, expected):
     require(isinstance(facts, dict) and facts.get("schema") == C.GATE.FACTS_SCHEMA and facts.get("contract_id") == declaration["id"], "task-step-completion-contract-mismatch")
     gates, components, artifacts = (facts.get(name) for name in ("gate_evidence", "component_evidence", "artifact_bindings"))
     require(isinstance(gates, list) and all(isinstance(row, dict) for row in gates)
-            and [row.get("gate") for row in gates] == list(C.GATE.GATE_ORDER[:7]), "task-step-completion-gates-incomplete")
+            and [row.get("gate") for row in gates] == list(C.GATE.GATE_ORDER[:count]), "task-step-completion-gates-incomplete")
     require(isinstance(components, list) and len(components) == len(known) and all(isinstance(row, dict) for row in components)
             and {row.get("component_id") for row in components} == set(known), "task-step-completion-components-incomplete")
     require(isinstance(artifacts, list) and len(artifacts) == len(expected) and all(isinstance(row, dict) for row in artifacts)

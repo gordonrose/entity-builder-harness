@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -80,6 +80,15 @@ class RecoveryCli(unittest.TestCase):
     ('rds','describe-db-instances','DBInstanceNotFound','private-canary','aws-resource-missing'),
     ('rds','describe-db-snapshots','DBSnapshotNotFoundFault','private-canary','aws-resource-missing'),
     ('iam','get-role-policy','NoSuchEntity','private-canary','aws-resource-missing'),
+    ('iam','get-role','NoSuchEntity','private-canary','aws-resource-missing'),
+    ('iam','get-role','NoSuchEntityException','private-canary','aws-resource-missing'),
+    ('ec2','describe-security-groups','InvalidGroup.NotFound','private-canary','aws-resource-missing'),
+    ('ec2','delete-security-group','InvalidGroup.NotFound','private-canary','aws-command-failed'),
+    ('iam','delete-role','NoSuchEntity','private-canary','aws-command-failed'),
+    ('ec2','describe-security-groups','Unknown.NotFound','private-canary','aws-command-failed'),
+    ('ec2','describe-security-groups','InvalidGroup..NotFound','private-canary','aws-command-failed'),
+    ('ec2','describe-security-groups','UnauthorizedOperation','private-canary not found','aws-access-denied'),
+    ('iam','get-role','AccessDenied','private-canary not found','aws-access-denied'),
     ('budgets','describe-budget','NotFoundException','private-canary','aws-resource-missing'),
     ('logs','get-log-events','ResourceNotFoundException','private-canary','aws-resource-missing'),
     ('cloudformation','describe-stacks','AccessDenied','Stack with id own-fixture does not exist','aws-access-denied'),

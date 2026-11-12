@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 14
+version: 15
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-12"
@@ -341,6 +341,24 @@ successful reader packets, companions and gates under their actual original
 controller. Require fresh gates and unchanged image, template, permissions,
 ownership, source snapshot, original record and exact deletion request. This
 adds no new resources or deletion authority beyond the approved clone cleanup.
+
+### Submitted restore-cleanup observation correction
+
+The same standing controller-repair authority covers observation-only completion
+of deletion `es-f520734ffbff43bf94a1670990bbcd54`. Preserve its exact original
+plan836a81ad, request journal, pre-execution six-gate evidence and failed absence
+observation. Correct only operation-specific EC2/IAM missing-resource mappings;
+denial, malformed and unknown failures remain uncertainty, never absence.
+<!-- deterministic-check: allow reason="source-transition.cleanup_reconciliation validates the pinned original custody, restore-route calls only observe_cleanup, and the acceptance reader validates its explicit original-plan reference" -->
+A checked successor may produce an observer-only plan with its own controller
+identity and `reconciles_plan_sha256` naming the original execution plan. The
+existing restore route must require the original reservation and must not enable
+a mutation capability, reserve a new operation or call cleanup execution. It
+may only validate actual absence and retain new observer evidence. Original
+source/image/request/readback/ownership bindings remain unchanged. Acceptance
+retains the explicit original-plan reference; new observation gates do not
+replace or restamp the original pre-execution evidence. No resource recreation,
+second deletion or additional AWS mutation is authorized by this correction.
 
 ### Stopped-service activation refresh
 

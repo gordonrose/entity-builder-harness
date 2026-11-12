@@ -105,6 +105,14 @@ CLEANUP_LABEL = LABEL
 CLEANUP_PLAN_HASH = "sha256:3950b70bb6eb1de7c130f4a9e2ebd1e3fc978a954d2777f12195ec612305eaff"
 CLEANUP_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-restore-e00dd39c9de542d1900bcbc4b7007789.json"
 CLEANUP_FAILURE_HASH = "sha256:240ca1fe8a0572f0f79c9bda55ae5bd9118ecdc44c91f27d1a7012c066a5e553"
+CLEANUP_RECONCILE_PLAN = "sha256:836a81adcd0eb1e8ee39b8164f6fba1d45c30b46efe732e6c22d3bb4c1979979"
+CLEANUP_RECONCILE = {
+    "plan": ("restore-cleanup-plans/836a81adcd0eb1e8ee39b8164f6fba1d45c30b46efe732e6c22d3bb4c1979979.json", "sha256:1ac6f5a45d807749ba49b33e0aa52aa30dccf2581ee69de03af1fe43fdd1e62f"),
+    "reservation": ("attempts/" + LABEL + "-delete-restore.json", "sha256:48ae916ea53cca1cd08ad1a53181544ee4d7b2f6c6e41822895cb2b9fc775392"),
+    "gate": ("restore-cleanup-realization/execution-preflight-ba2adae99830468f839834c5831e0c8f.json", "sha256:ffdeac82397aac254dca8923e051c2409a1b4d46300aff124bbbd22b702f2498"),
+}
+CLEANUP_RECONCILE_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-restore-4fda0a72ead942ef8a495cbb57349a39.json"
+CLEANUP_RECONCILE_FAILURE_HASH = "sha256:02e58b3158189a30bf9acd40aad57902d152b15db22c36f1c01d7e9219775022"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -119,7 +127,40 @@ def document(value):
     return hashlib.sha256((json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest()
 
 
-def cleanup_plan_path(C, cache, packet, store):
+def cleanup_reconciliation(C, cache, binding, request, store, declaration):
+    """An observer-only successor links the actual old submission and six gates."""
+    failure_path = C.ROOT / CLEANUP_RECONCILE_FAILURE
+    C.RESOURCE.CONTROL.no_symlinks(failure_path)
+    if binding["proof_label"] != CLEANUP_LABEL or not failure_path.exists(): return None
+    C.require(C.digest_file(failure_path) == CLEANUP_RECONCILE_FAILURE_HASH, "restore-cleanup-reconciliation-failure-changed")
+    failure = C.read_json(failure_path)
+    C.require(failure.get("schema") == "deploy/entity-smoke-restore-report/v1" and failure.get("verdict") == "blocked"
+              and failure.get("effect") == "original-restore-operation-reconcile-only" and failure.get("condition") == "restore-cleanup-observation-unavailable"
+              and failure.get("context") == {"mode": "execute", "phase": "cleanup", "proof_label_sha256": hashlib.sha256(CLEANUP_LABEL.encode()).hexdigest()},
+              "restore-cleanup-reconciliation-observation-required")
+    retained = {}
+    for name, (relative, digest) in CLEANUP_RECONCILE.items():
+        path = cache / relative
+        C.require(C.digest_file(path) == digest, "restore-cleanup-reconciliation-custody-changed")
+        retained[name] = C.read_json(path)
+    original, reservation = retained["plan"], retained["reservation"]
+    C.require(original.get("request") == request and original.get("plan_sha256") == CLEANUP_RECONCILE_PLAN
+              and C.DEPLOY.fingerprint(original["plan"]) == CLEANUP_RECONCILE_PLAN and original["plan"].get("binding") == binding
+              and original["plan"].get("graph_sha256") == C.DEPLOY.fingerprint(declaration)
+              and store.read("delete-restore", request) == reservation, "restore-cleanup-reconciliation-original-mismatch")
+    completion = C.module("entity_smoke_cleanup_original_admission", C.DIRECTORY / "task-completion.py")
+    completion.validate_gate(SimpleNamespace(C=C, STEPS=SimpleNamespace(require=C.require)), declaration, retained["gate"], CLEANUP_RECONCILE_PLAN,
+                             {declaration["artifacts"][0]["id"]: original["plan"]["controller_sha256"]}, through="execution-preflight")
+    summary = retained["gate"].get("change_summary")
+    C.require(isinstance(summary, dict) and summary.get("operation_counts") == {"create": 0, "update": 0, "delete": 8, "replace": 0, "broaden-permission": 0}
+              and summary.get("input_sha256") == C.GATE.evidence_bindings(declaration, retained["gate"]["facts"])["gates"]["change-set"],
+              "restore-cleanup-reconciliation-change-summary-invalid")
+    C.require(C.RESOURCE.timestamp(retained["gate"]["facts"]["gate_evidence"][-1]["timestamp"]) <= C.RESOURCE.timestamp(reservation["reserved_at"]),
+              "restore-cleanup-reconciliation-admission-order-invalid")
+    return CLEANUP_RECONCILE_PLAN
+
+
+def cleanup_plan_path(C, cache, packet, store, declaration=None):
     """Keep the rejected unsubmitted plan; select only its controller repair."""
     original = cache / "restore-cleanup-plan.json"
     C.RESOURCE.CONTROL.no_symlinks(original)
@@ -137,10 +178,15 @@ def cleanup_plan_path(C, cache, packet, store):
               and failure.get("context") == {"mode": "execute", "phase": "cleanup", "proof_label_sha256": hashlib.sha256(CLEANUP_LABEL.encode()).hexdigest()},
               "restore-cleanup-repair-not-unsubmitted")
     adjusted = {**before, "plan": {**before["plan"], "controller_sha256": packet["plan"]["controller_sha256"]}, "plan_sha256": packet["plan_sha256"]}
+    reconciliation = packet["plan"].get("reconciles_plan_sha256")
+    if reconciliation is not None:
+        C.require(reconciliation == cleanup_reconciliation(C, cache, packet["plan"]["binding"], packet["request"], store, declaration),
+                  "restore-cleanup-reconciliation-reference-invalid")
+        adjusted["plan"]["reconciles_plan_sha256"] = reconciliation
     C.require(adjusted == packet and packet["plan_sha256"] == C.DEPLOY.fingerprint(packet["plan"]), "restore-cleanup-repair-intent-changed")
     corrected = cache / "restore-cleanup-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")
     C.RESOURCE.CONTROL.no_symlinks(corrected)
-    if not corrected.exists():
+    if not corrected.exists() and reconciliation is None:
         C.require(store.read("delete-restore", packet["request"]) is None, "restore-cleanup-repair-already-reserved")
     return corrected
 

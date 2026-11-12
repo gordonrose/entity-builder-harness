@@ -84,6 +84,13 @@ def run(case, snapshot_args, S, T, canary):
 
     class Transport:
         fail_reader = False
+        fail_absence = False
+
+        def missing(self, service, operation, code):
+            condition = "aws-command-failed" if self.fail_absence else C.RESPONSE.classify_error(service, operation,
+                "An error occurred (" + code + ") when calling the Fixture operation: " + canary)
+            if condition == "aws-resource-missing": raise C.RESOURCE.ResourceMissing()
+            raise C.InfrastructureFailure(condition)
 
         def __call__(self, service, operation, **parameters):
             clone_stack = parameters.get("StackName") in {F.STACK, F.STACK_ARN}
@@ -106,11 +113,11 @@ def run(case, snapshot_args, S, T, canary):
                     assert clone.state == "CREATE_COMPLETE"
                     return {"taskDefinition": copy.deepcopy(task_definition)}
                 if operation == "describe-security-groups" and set(parameters["GroupIds"]) <= set(groups):
-                    if clone.deleted: raise C.RESOURCE.ResourceMissing()
+                    if clone.deleted: self.missing(service, operation, "InvalidGroup.NotFound")
                     return {"SecurityGroups": [copy.deepcopy(groups[name]) for name in parameters["GroupIds"]]}
                 name = parameters.get("RoleName")
                 if name in roles:
-                    if clone.deleted: raise C.RESOURCE.ResourceMissing()
+                    if clone.deleted: self.missing(service, operation, "NoSuchEntity")
                     assert clone.state == "CREATE_COMPLETE"
                     if operation == "get-role": return {"Role": copy.deepcopy(roles[name])}
                     if operation == "list-attached-role-policies": return {"AttachedPolicies": [], "IsTruncated": False}
@@ -393,6 +400,53 @@ def run(case, snapshot_args, S, T, canary):
     assert not any(operation == "delete-stack" for _, operation, _ in clone.calls)
     cleanup_args.approved_plan = approved; clone.lost = "delete-stack"
     fails(lambda: D.run(cleanup_args, provider(D)), "restore-cleanup-submission-uncertain-reconcile-only")
+    transport.fail_absence = True
+    old_parse, old_provider = D.parse, D.Provider
+    observer = provider(D); D.parse, D.Provider = lambda: cleanup_args, lambda: observer
+    output = io.StringIO()
+    try:
+        with redirect_stdout(output): failed_status = D.main()
+    finally: D.parse, D.Provider = old_parse, old_provider
+    failed_observation = json.loads(output.getvalue())
+    assert failed_status == 1 and failed_observation["condition"] == "restore-cleanup-observation-unavailable"
+    assert failed_observation["effect"] == "original-restore-operation-reconcile-only" and clone.deleted
+    observation_path = value["cache"] / "cleanup-absence-failure.json"
+    C.RESOURCE.write_exclusive(observation_path, failed_observation)
+    original_packet = C.read_json(failed_plan_path)
+    journal_path = store.path_for("delete-restore", original_packet["request"])
+    journal = C.read_json(journal_path)
+    admissions = [path for path in (value["cache"] / "restore-cleanup-realization").glob("execution-preflight-*.json")
+                  if C.read_json(path)["plan_sha256"] == approved and C.RESOURCE.timestamp(C.read_json(path)["facts"]["gate_evidence"][-1]["timestamp"]) <= C.RESOURCE.timestamp(journal["reserved_at"])]
+    assert admissions
+    admission_path = sorted(admissions)[0]
+    source_paths = {"plan": value["cache"] / "restore-cleanup-plans" / (approved[7:] + ".json"), "reservation": journal_path, "gate": admission_path}
+    reconcile_values = {**repair_values, "CLEANUP_RECONCILE_PLAN": approved,
+        "CLEANUP_RECONCILE": {name: (str(path.relative_to(value["cache"])), C.digest_file(path)) for name, path in source_paths.items()},
+        "CLEANUP_RECONCILE_FAILURE": str(observation_path.relative_to(C.ROOT)), "CLEANUP_RECONCILE_FAILURE_HASH": C.digest_file(observation_path)}
+    for key, item in reconcile_values.items():
+        overrides.append((C.TRANSITION, key, getattr(C.TRANSITION, key))); setattr(C.TRANSITION, key, item)
+    original_bytes = {path: path.read_bytes() for path in (*source_paths.values(), observation_path, failed_plan_path)}
+    missing_store = SimpleNamespace(read=lambda *a: None)
+    fails(lambda: C.TRANSITION.cleanup_reconciliation(C, value["cache"], original_packet["plan"]["binding"], original_packet["request"], missing_store, D.graph("cleanup")), "restore-cleanup-reconciliation-original-mismatch")
+    for name, path in source_paths.items():
+        path.write_bytes(original_bytes[path] + b"\n")
+        try: fails(lambda: C.TRANSITION.cleanup_reconciliation(C, value["cache"], original_packet["plan"]["binding"], original_packet["request"], store, D.graph("cleanup")), "restore-cleanup-reconciliation-custody-changed")
+        finally: path.write_bytes(original_bytes[path])
+    # The normal seventh-gate reader must still reject a six-gate admission.
+    fails(lambda: T.COMPLETION.validate_gate(SimpleNamespace(C=C, STEPS=SimpleNamespace(require=C.require)), D.graph("cleanup"), C.read_json(admission_path), approved,
+          {"restore-cleanup-controller-source": value["artifact"]}), "task-step-completion-gates-incomplete")
+    transport.fail_absence = False; cleanup_args.mode = "plan"
+    reconciled = planned(D, cleanup_args)
+    assert reconciled["plan"]["reconciles_plan_sha256"] == approved and reconciled["plan_sha256"] != approved
+    cleanup_args.mode = "execute"
+    old_cleanup, old_reserve, old_enable = D.RESTORE.cleanup_restore, D.R.ResourceStore.reserve, D.Provider.enable_restore
+    def prohibited(*a, **kw): raise AssertionError("observation-only reconciliation attempted a mutation capability")
+    D.RESTORE.cleanup_restore = D.R.ResourceStore.reserve = D.Provider.enable_restore = prohibited
+    try:
+        assert D.run(cleanup_args, provider(D))["verdict"] == "completed"
+        assert D.run(cleanup_args, provider(D))["verdict"] == "completed"
+    finally: D.RESTORE.cleanup_restore, D.R.ResourceStore.reserve, D.Provider.enable_restore = old_cleanup, old_reserve, old_enable
+    assert all(path.read_bytes() == content for path, content in original_bytes.items())
     assert D.run(cleanup_args, provider(D))["verdict"] == "completed"
     assert D.run(cleanup_args, provider(D))["verdict"] == "completed"
     assert sum(operation == "delete-stack" for _, operation, _ in clone.calls) == 1
@@ -473,6 +527,7 @@ def run(case, snapshot_args, S, T, canary):
                     assert historical["custody"]["plan"] == receipt["packet"]["plan"]
                 finally: C.CONTROL_COMPLETION.REPAIRS.pop(pin)
             if name == "restore-cleanup":
+                assert archived["custody"]["plan"]["reconciles_plan_sha256"] == approved
                 assert archived["custody"]["gate"]["change_summary"]["operation_counts"] == {"create": 0, "update": 0, "delete": 8, "replace": 0, "broaden-permission": 0}
                 assert archived["facts"]["absence_observed"] is True and archived["facts"]["source_mutation"] is False
         def archive_failure(call, kind, condition):
@@ -480,6 +535,11 @@ def run(case, snapshot_args, S, T, canary):
             except kind as failure:
                 assert failure.code == condition and canary not in str(failure)
             else: raise AssertionError("original archive custody must reject corruption")
+        cleanup_plan = captured_cleanup["receipt"]["packet"]["plan"]
+        for changed in ({"reconciles_plan_sha256": "sha256:" + "0" * 64}, {"binding": None},
+                        {"binding": {**cleanup_plan["binding"], "proof_label": "foreign-proof"}}):
+            archive_failure(lambda: K.CONTROL.validate_plan(K.A, "restore-cleanup", {**cleanup_plan, **changed}, collection_binding),
+                            K.CONTROL.ControlFailure, "acceptance-control-reconciliation-reference-invalid")
         completion_path = T.COMPLETION.path(T.STEPS.path(final_context, final))
         completion_bytes = completion_path.read_bytes()
         capture_final = lambda: K.A.capture_task(T, final_context, final, provider(T), "final-read", collection_binding, historical=False)

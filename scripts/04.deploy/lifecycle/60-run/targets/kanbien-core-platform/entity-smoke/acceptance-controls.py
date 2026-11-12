@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -58,7 +58,12 @@ def hash_value(value):
 
 def validate_plan(A, name, plan, binding):
     require(isinstance(name, str) and name in SELECTIONS, "acceptance-control-selection-invalid")
-    require(isinstance(plan, dict) and set(plan) == COMMON | PLAN_EXTRA[name], "acceptance-control-plan-fields-invalid", name)
+    optional = {"reconciles_plan_sha256"} if name == "restore-cleanup" and isinstance(plan, dict) and "reconciles_plan_sha256" in plan else set()
+    require(isinstance(plan, dict) and set(plan) == COMMON | PLAN_EXTRA[name] | optional, "acceptance-control-plan-fields-invalid", name)
+    if optional:
+        require(plan["reconciles_plan_sha256"] == A.C.TRANSITION.CLEANUP_RECONCILE_PLAN and isinstance(plan.get("binding"), dict)
+                and plan["binding"].get("proof_label") == A.C.TRANSITION.CLEANUP_LABEL,
+                "acceptance-control-reconciliation-reference-invalid", name)
     A.C.RESOURCE.validate_binding(binding)
     selected_binding = {key: item for key, item in binding.items() if key != "record_digest"} if name == "initial-stop" else binding
     schema = "failure" if name == "initial-stop" else "initial-restart" if name == "initial-restart" else "replacement" if name.endswith("replacement") else "snapshot" if name == "snapshot" else "restore"

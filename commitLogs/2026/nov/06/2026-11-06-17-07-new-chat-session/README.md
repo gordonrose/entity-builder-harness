@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T11:35:22Z
-latest_commit_sha: 5aeab94d
-chat_duration: 498495s (05:18:28:15)
+latest_commit_at_utc: 2026-11-12T12:32:02Z
+latest_commit_sha: 2a6e1410913f8993d2cce9709fa853750f6523e6
+chat_duration: 501895s (05:19:24:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,40 @@ new chat session
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
 ## Decisions Made
+
+- Cleanup observer correction consolidated review: the shared classifier now
+  recognizes only the exact EC2 describe-security-groups and IAM get-role missing
+  codes. The connected caller regression passed through the old unavailable
+  observation, preserved submission and additive observer plan through final
+  task/archive consumers. Explicit traps prohibit reserve, enable_restore and
+  cleanup execution during reconciliation; one original delete remains. Actual
+  pinned plan/journal/six-gate custody validates offline with zero provider calls
+  or writes. The ordinary completion validator still requires seven gates.
+  Acceptance validates the exact original-plan reference and proof label.
+  Remaining broad malformed-input/processing debt stays partial. No source image,
+  template, SQL, permission or original evidence changes; no new AWS mutation.
+  Metadata preparation, registered affected checks and checkpoint precede live
+  observer reconciliation. Earlier lifecycle statements remain dated history.
+
+- Cleanup absence-classification inventory: actual deletion es-f520734f was
+  submitted once under plan836a81ad/controllera3d195f8. AWS now reports the
+  restore stack DELETE_COMPLETE and DBInstanceNotFound for the clone. Public
+  observation4fda0a72 failed with original-restore-operation-reconcile-only;
+  the shared response adapter recognizes missing RDS but lacks EC2
+  describe-security-groups InvalidGroup.NotFound and IAM get-role NoSuchEntity.
+  Its code extractor also excludes dots. These are missing typed observation
+  mappings, not deletion failures or authorization requests. Add only those
+  operation/code pairs, preserving denied/unknown/malformed/wrong-operation
+  outcomes and raw-value exclusion. Exercise actual adapter-to-cleanup delivery.
+  A new observer-only cleanup plan must reference original836a81ad, its exact
+  journal48ae916e, original six-gate custody and failed observation02e58b31.
+  Keep every original file; revalidate unchanged request/bindings, and call only
+  observe_cleanup with no reserve/delete capability. The resulting receipt
+  attributes reconciliation to the checked observer controller and explicitly
+  references the original execution plan, never restamping the old operation.
+  Update the acceptance plan reader first for this bounded additive reference.
+  Tests remain planned. No image/template/SQL/permission change or AWS mutation
+  is required by this correction; the completed clone must not be recreated.
 
 - Cleanup correction consolidated review: all eight scoped files and the
   snapshot/reader/task-completion/acceptance consumers were inspected. Original
@@ -1615,6 +1649,17 @@ Summary: Restore-probe recovery passed registered composition287.207557 seconds,
 
 ADR impact: No new architecture decision: bounded existing controller-only repair and one terminal read-only probe recovery; exact one-off pins remain acknowledged design debt.
 
+
+### 2026-11-12T12:32:02Z - Commit recorded
+
+Commit: `2a6e1410913f8993d2cce9709fa853750f6523e6`
+
+Message: fix(deploy): accept empty ECS capability defaults during restore cleanup
+
+Summary: Cleanup correction passed capability alternatives, connected restore and actual corrected-plan preparation, diagnostic review, preparation, staged gates, registered composition288.061227 seconds and four dependent units597.902543 seconds. Final impact report .cache/test-runs/20261112T123141Z-afb0d384ae004f58bddb9b50aea9a10c/report.json passed47.897609 seconds with46 reused entries representing45 unique local check IDs,13 later-stage deferred,zero findings. Preserve successful reader task4a74462f/preflight and32b61783/original-digest read, original cleanup failuree00dd39c and immutable unused plan. Resume cleanup only; no image/template/SQL/permission change or task replay. Incorrect comma-separated focused-check invocation was rejected before execution and corrected; include in retrospective.
+
+ADR impact: No new architecture decision: implement existing approved bounded controller repair, preserve exact historical custody and never overwrite or replay the unused cleanup intent; one-off pins and duplicate normalization remain design debt.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1825,6 +1870,13 @@ ADR impact: No new architecture decision: bounded existing controller-only repai
   Summary: Restore-probe recovery passed registered composition287.207557 seconds, staged gates and46 local integration checks598.482078 seconds:4 executed42 reused13 later-stage deferred,zero findings. Report .cache/test-runs/20261112T113501Z-c0f8906d7dc346b7afde07e1554a6227/report.json. Retain exact original failed probe and original completed snapshot/clone custody; permit one separate read-only probe, then actual restored-record read, owned clone cleanup, final source read, collection and promotion. No image/template/SQL/permission changes. Full evidence-backed retrospective remains required.
   ADR impact: No new architecture decision: bounded existing controller-only repair and one terminal read-only probe recovery; exact one-off pins remain acknowledged design debt.
 
+
+- Commit: `2a6e1410913f8993d2cce9709fa853750f6523e6`
+  Time UTC: 2026-11-12T12:32:02Z
+  Message: fix(deploy): accept empty ECS capability defaults during restore cleanup
+  Summary: Cleanup correction passed capability alternatives, connected restore and actual corrected-plan preparation, diagnostic review, preparation, staged gates, registered composition288.061227 seconds and four dependent units597.902543 seconds. Final impact report .cache/test-runs/20261112T123141Z-afb0d384ae004f58bddb9b50aea9a10c/report.json passed47.897609 seconds with46 reused entries representing45 unique local check IDs,13 later-stage deferred,zero findings. Preserve successful reader task4a74462f/preflight and32b61783/original-digest read, original cleanup failuree00dd39c and immutable unused plan. Resume cleanup only; no image/template/SQL/permission change or task replay. Incorrect comma-separated focused-check invocation was rejected before execution and corrected; include in retrospective.
+  ADR impact: No new architecture decision: implement existing approved bounded controller repair, preserve exact historical custody and never overwrite or replay the unused cleanup intent; one-off pins and duplicate normalization remain design debt.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1838,9 +1890,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T11:35:22Z
-Latest commit SHA: 5aeab94d
-Chat duration: 498495s (05:18:28:15)
+Latest commit at UTC: 2026-11-12T12:32:02Z
+Latest commit SHA: 2a6e1410913f8993d2cce9709fa853750f6523e6
+Chat duration: 501895s (05:19:24:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
