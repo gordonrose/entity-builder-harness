@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-11"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -37,6 +37,16 @@ TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", 
 # Exact successful grant/permissions custody before controller-only repairs.
 # These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "fb8995433ced8601ffa5492afe013c391be778d5ca2aff5dcc98858572a54c95": ("d2a40f89c6692d255caec08aeed64ea580d25980efd0136a1b87c1ded222c192", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "33be6d1b5c712f12a43c28dc40b2373c15aea4d140a07fb25c6c3959dbd736ad": ("e6a7800a15d0b815b857739c94014829e848aa5ec28dc4d1e504903c58042625", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "4c9fa83aca658fa9e38c4239872f8213bbf805042710609e509159c42692007d": ("252b3eebf5ef44f91051a8d92a0216ee106224a2acc72be95ac22eed9fc8d264", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "ec9eea404148f7374c77ec9784ba43e0f45b58800c954ad6ee89c17292763bbf": ("cab5a67784c3c51ac65f050216eb434b037bb0efcb9e2b022685b102b59ae011", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "41428e9d5fa8b8d3e25e87eb187c54c85fbd5eb88aa430d7839af7a391851b9d": ("9f0a8fd796cda4520f346a919e092528aa61c45b49da5e9eceb79123cdfc1dd0", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "e10473d6c5ebc0bb33e042eb46ccef404e380f323da9a877e72f10cb72abb710": ("19b55df23869b6c15c3d1aa7e8c085f69ec6c90fae3ab09df859dbf46fd3ea5a", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "e004fc0e288df46b0e4fc258190f90e9ea305718c55d6c6a10bb027ff8673d9f": ("b057d31f2961ba81a970895141caf67d371f643ca7d43475194c508fd2f86f92", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "07d957062f64c99a5865f83b4e335f7fe79e48b7c774bfb1976f144a7b225a99": ("f95170628ce680b472f6686f31c21d7acd5316afc4e25201490bae81d8a775f5", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "a23a9a795be66bd18b81df262fdaec8cf8422537d78a331277ca3cfe7909fb46": ("d4e600bedd72727da84d4a25df06c68cafe58ff10ca591034701307bdd6d38f0", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
+    "65e5caedc468e695ff76a9bfb2e22aa03f6a86f455d3af314cae937cbff80600": ("af38a97d81cc6290022018a6638c2c255fec6d8a5df390ddc8094922debce26f", "73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76"),
     "cc54216f376d48a61d7819e4bc8f01020ab9cefc853f0a73d7bb1cc85b2caa0e": ("8c1b2c14bf88bb17c71a5417c3639ab761c9484d787421cf3b87013823ecbeb5", "4efd5bafb39ecea7173f3a6622b6a7d37d1dadc5d4d9bb12e19dd190ed490091"),
     "9743ae4553d93a135b9433f0676f9abd45cd0e499fe2a8f8912ea571de71dbae": ("b35f2942fc879ec357de2f074c77621e51d32d783238418670bee8230998ccd1", "4efd5bafb39ecea7173f3a6622b6a7d37d1dadc5d4d9bb12e19dd190ed490091"),
     "64b4810e796333e67039af4130be627046063b342ee0ea9f3f7602e26ecb5501": ("c2c00a42e398a9bcf02b1c1558a4d3064ff90e1680372a770337fd4dea4b41a6", "4efd5bafb39ecea7173f3a6622b6a7d37d1dadc5d4d9bb12e19dd190ed490091"),
@@ -76,6 +86,11 @@ HISTORY_PACKET = "sha256:64b4810e796333e67039af4130be627046063b342ee0ea9f3f7602e
 HISTORY_COMPLETION = "sha256:c2c00a42e398a9bcf02b1c1558a4d3064ff90e1680372a770337fd4dea4b41a6"
 HISTORY_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-ba3f7a648fce4dafbab63285797f2402.json"
 HISTORY_FAILURE_HASH = "sha256:d51de3649c43f77651463e667bb907195d407e2743cf1c6d5e8a1c5b2875b5f7"
+CREDENTIAL_PROBE = "es-b72f7c07746d4fdb8a086df46f5cf7f2"
+CREDENTIAL_PACKET = "sha256:a23a9a795be66bd18b81df262fdaec8cf8422537d78a331277ca3cfe7909fb46"
+CREDENTIAL_COMPLETION = "sha256:d4e600bedd72727da84d4a25df06c68cafe58ff10ca591034701307bdd6d38f0"
+CREDENTIAL_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-plan-7200236746314bd1a6128b0fc985cc15.json"
+CREDENTIAL_FAILURE_HASH = "sha256:aa23ea2ce53e67eed66b5fa0990490a0d4dffd12c3292cb49da91b06140e4d1f"
 RECOVERY = {
     "administrator-recovery/validated/result.json": "9adfdc13e471d1c12839af34d6f5d0ac4d136d367c45ea3f68e34c910b07a727",
     "administrator-recovery/validated/temporary-access-removed.json": "78793d7a4addfc11a4b3045ad3feed4eb2bb009d2600533e1da7ebf591db83d6",
@@ -167,6 +182,10 @@ def collision_recovery(args):
 
 
 def readback_recovery(args):
+    if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "verifier", "read", "credential-recovery"):
+        return {"probe": CREDENTIAL_PROBE, "packet": CREDENTIAL_PACKET, "completion": CREDENTIAL_COMPLETION,
+                "failure": CREDENTIAL_FAILURE, "failure_hash": CREDENTIAL_FAILURE_HASH,
+                "path": "task-steps/verifier-read-credential-recovery-preflight.json", "condition": "aws-command-failed", "prefix": "task-credential-read-recovery"}
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "administration", "observe-migration-state", "initial-recovery"):
         return {"probe": HISTORY_PROBE, "packet": HISTORY_PACKET, "completion": HISTORY_COMPLETION,
                 "failure": HISTORY_FAILURE, "failure_hash": HISTORY_FAILURE_HASH,

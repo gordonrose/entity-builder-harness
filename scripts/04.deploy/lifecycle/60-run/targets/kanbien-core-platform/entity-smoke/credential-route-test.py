@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -24,6 +24,7 @@ import json
 import io
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_CREDENTIAL_ASSERTIONS_DISABLED")
 
@@ -255,6 +256,38 @@ with scenario() as case:
     assert not T.STEPS.path({"cache": case.cache}, copied_read).exists(), "pre-restoration readiness is not fresh recovered readiness"
     replacement_path = case.cache / "credential-replacement-receipt.json"
     replacement_raw = replacement_path.read_bytes()
+    # A controller-only repair consumes the completed original replacement,
+    # never stamps it anew or skips its companion, gates or live successor.
+    route = T.dependencies()
+    context = T.prepare(copied_read, task_provider(case))
+    prior = T.CREDENTIAL.prefix(route, context, copied_read, task_provider(case), 4)
+    repaired_context = {**context, "artifact": "sha256:" + "d" * 64}
+    consume = lambda: T.CREDENTIAL.replacement(route, repaired_context, copied_read, task_provider(case), prior)
+    fails(consume, "credential-replacement-binding-mismatch")
+    retained = json.loads(replacement_raw)
+    pin = ("credential-replacement", R.C.CONTROL_COMPLETION.document(retained))
+    companion = R.C.CONTROL_COMPLETION.companion(replacement_path)
+    companion_raw = companion.read_bytes()
+    gate_path = case.root / retained["realization_evidence"]
+    gate_raw = gate_path.read_bytes()
+    with patch.dict(R.C.CONTROL_COMPLETION.REPAIRS, {pin: retained["packet"]["plan"]["controller_sha256"]}):
+        assert consume() == retained
+        for target, original, code in ((companion, companion_raw, "control-completion-changed"),
+                                       (gate_path, gate_raw, "control-completion-gate-changed")):
+            target.write_bytes(b'{}\n')
+            try: fails(consume, code)
+            finally: target.write_bytes(original)
+        moved_companion = companion.with_suffix(".temporarily-moved")
+        companion.rename(moved_companion)
+        try: fails(consume, "control-completion-required")
+        finally: moved_companion.rename(companion)
+        successor = case.transport.task_rows[SUCCESSOR]
+        original_health = successor["healthStatus"]
+        successor["healthStatus"] = "UNHEALTHY"
+        try: fails(consume, "control-completion-current-successor-not-confirmed")
+        finally: successor["healthStatus"] = original_health
+        assert consume() == retained
+    assert replacement_path.read_bytes() == replacement_raw and companion.read_bytes() == companion_raw
     moved = replacement_path.with_suffix(".temporarily-moved"); replacement_path.rename(moved)
     try:
         (case.cache / "replacement-receipt.json").write_bytes(replacement_raw)

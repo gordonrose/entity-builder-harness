@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-11"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -29,6 +29,8 @@ LEGACY = {("server-replacement", "sha256:fefc8e5561299b9e5cb63e41f820fae3a250f1b
 # Completed under the preceding checked controller. Unlike LEGACY, these
 # always require their producer-written companion and original seven gates.
 REPAIRS = {
+    ("credential-replacement", "sha256:f414b14961fd75cdac1194d83cff8f7f5572f33e16f3940f72d124b5cf0dda61"):
+        "sha256:73972bbe0d009d57bf81353056b407b424b7f67c78f1355915c89422cfe20d76",
     ("initial-stop", "sha256:00b9f317659a999ff0d3eaa27dc109319d1ba34ba30a0a8f3613e4612b4f2e7f"):
         "sha256:8528955470b87a617667f2c1a502e356b7e831e5a65101358a83b323493d3b2e",
     ("initial-restart", "sha256:f3e0823c12b19c1ab9ebcc19f4021c5fc9adceaaba6d2f58f6a037a4cc172726"):

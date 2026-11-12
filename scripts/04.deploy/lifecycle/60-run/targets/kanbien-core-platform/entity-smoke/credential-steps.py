@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -121,7 +121,8 @@ def replacement(route, context, args, provider, prior):
     require(request["binding"] == {**context["binding"], "record_digest": args.expected_digest} and request["definition"] == server["definition"]
             and request["original_task"] == prior["base"]["restart"]["server"]["task"] and plan.get("proof_stage") == "credential-recovery"
             and plan.get("binding") == request["binding"] and plan.get("request_sha256") == C.DEPLOY.fingerprint(request)
-            and plan.get("controller_sha256") == context["artifact"] and plan.get("graph_sha256") == C.DEPLOY.fingerprint(route.GRAPH.replacement(C.GATE, C.CONTRACT, "credential-recovery"))
+            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("credential-replacement", C.CONTROL_COMPLETION.document(value), context["artifact"])
+            and plan.get("graph_sha256") == C.DEPLOY.fingerprint(route.GRAPH.replacement(C.GATE, C.CONTRACT, "credential-recovery"))
             and plan.get("baseline_read_sha256") == C.DEPLOY.fingerprint(prior["packets"]["initial-recovery-original-read"])
             and plan.get("prerequisites_sha256") == C.DEPLOY.fingerprint(public_prefix(prior))
             and plan.get("configuration_sha256") == C.DEPLOY.fingerprint({"parameters": context["parameters"], "resources": context["resources"], "server": server}), "credential-replacement-binding-mismatch")

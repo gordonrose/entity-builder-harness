@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 11
+version: 12
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-11"
+updated_on: "2026-11-12"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -290,6 +290,20 @@ Preserve completed stop/restart and initial-recovery tasks under their exact
 original controller hashes. Their producer-written completion companions and
 seven-gate evidence remain mandatory; this is not a missing-companion exception
 or permission to repeat either control or a completed business operation.
+
+For this same proof, permit one renewal of the successful credential-recovery
+ready probe `es-b72f7c07746d4fdb8a086df46f5cf7f2`, whose unused window expired
+when SSO authentication failed. Require the exact original step/completion/gate
+hashes and journal, the pinned not-started identity-read failure, and no read
+operation reservation before the new probe's first reservation. Use the existing
+deterministic renewed label and separate immutable path. Retain all90-second,
+first-five-gate, actual terminal evidence and900-second admission requirements.
+The completed history, permission observation, revocation, unready, restoration
+and credential replacement remain historical under their original controller
+and actual companions/gates; this permits neither replay nor restamping them.
+Current qualified successor, identity, permission and dependency checks remain
+mandatory. This extends the existing bounded renewal only, not retry authority
+for other operations, images or scopes.
 
 ### Stopped-service activation refresh
 

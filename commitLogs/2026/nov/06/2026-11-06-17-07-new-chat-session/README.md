@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T22:07:20Z
-latest_commit_sha: 24a3d9a52cca85e5fa42ad97d0724014cd2e5f81
-chat_duration: 450013s (05:05:00:13)
+latest_commit_at_utc: 2026-11-11T23:58:32Z
+latest_commit_sha: 26c985414f5d31fea17e447b7ea50dbe3e326040
+chat_duration: 456685s (05:06:51:25)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -93,6 +93,152 @@ new chat session
   provider mutation still require concrete approval. No push is authorised.
 
 ## Context Hygiene
+
+- 2026-11-12T08:18Z: actual sts get-caller-identity succeeds again in account
+  337159794548; authentication is no longer blocked. Original credential ready
+  es-b72f7c07746d4fdb8a086df46f5cf7f2 completed at02:12:05Z but expired unused
+  during the sign-in interruption. The retained STS planning failure is explicitly
+  not-started and no credential read operation has been reserved. Standing user
+  completion/repair authority covers extending the existing one-renewal owner
+  for this exact observation; no new permission or resource scope is needed.
+  Inventory before editing: source-transition exact probe/failure/receipt pins
+  and existing deterministic renewal; credential-steps original-controller check;
+  control-completion exact historical receipt selection; applicability standard;
+  existing source-transition and credential-route fixtures; three affected partial
+  diagnostic review owners. Preserve ten actual completed26c task/gate pairs and
+  the completed credential replacement under controller73972bbe, not current
+  readiness or replay. New task-credential-read-recovery conditions distinguish
+  changed originals/gates, wrong selection/effect, fresh probe, missing journal
+  and already-reserved operation. Tests will prove those rejections, one renewed
+  identity, retained negative admission, exact replacement companion/source and
+  unchanged successor checks. No image, template, schema, grants or baseline
+  changes. Freeze this small repair batch, verify affected checks, commit, then
+  fresh readiness/read and the remaining original proof chain. Full retrospective
+  must identify these repeated one-off renewals as controller design debt.
+
+- Required final handover, explicitly requested by the user on2026-11-12:
+  after completing the full deployment/proof chain, deliver a comprehensive,
+  evidence-backed analysis and retrospective of the assistant's failures.
+  Cover the actual timeline and delays; architecture/controller complexity;
+  repeated validation and ineffective reuse; piecemeal fixes and regressions;
+  governance/approval friction; authentication planning; failure recovery;
+  inaccurate estimates or completion claims; communication and interruptions;
+  effects on the user's time, resource cost and repository complexity; and
+  concrete preventive changes with measurable checks. Distinguish evidenced
+  assistant-caused failures from genuine external constraints, state unknowns,
+  and identify what should have been done differently. This is an additional
+  completion deliverable, not authority to redesign the deployment now or
+  substitute a retrospective for finishing the existing live proof.
+
+- 2026-11-12T02:15Z: continuation40709 terminated before original-record read
+  submission because AWS SSO expired and refresh failed. Direct sts identity
+  lookup confirmed that explicit authentication error (not resource drift).
+  Credential readiness did complete: es-b72f7c07746d4fdb8a086df46f5cf7f2,
+  stopped02:12:05.312Z, ENTITY_SMOKE_HEALTHY, capture
+  finish-task-execute-307a1ec53b434b878e7c49fd77c37024, plan
+  sha256:f87a68b40390008c266c1ae3989917438dde7c3b439e72710daf4432641be8a4.
+  Read operation planning failures60b62701/bf6b0624/72002367 were not-started;
+  no record-read operation reservation or task was created. Existing runtime
+  access restoration and credential replacement remain completed, not undone.
+  Fresh aws sso login process33028 is active, and the user was sent its live
+  sign-in URL/code (not copied into this log). Once authentication succeeds,
+  resume only verifier read operation at credential-recovery; then runtime
+  permissions and snapshot/isolated restore/read/cleanup/final read/collection
+  and promotion. Respect actual preflight freshness; do not restamp it or replay
+  completed recovery actions. Session1392 (diagnostic STS) exited255.
+
+- Credential replacement is now conclusively completed under its original plan:
+  finish-replacement-b3fc2d6553744f159194952082d81ca5 retained
+  credential-replacement-receipt.json and the original completion companion.
+  Continuation40709 is still live and has advanced to verifier read preflight
+  in credential-recovery, followed by original-record read and runtime permissions.
+  Preserve operation es-b1cf46e411c145638840e9c6d3dbb0ec; no second StopTask was
+  used during reconciliation. Snapshot, isolated restore/read/cleanup, final
+  ready/read, collection and promotion remain outstanding.
+
+- Credential replacement plan
+  sha256:8c6a6167c7723806af91de0f3a053308f2bb2428251b10a24684c2667e1fd1e4
+  was submitted as es-b1cf46e411c145638840e9c6d3dbb0ec; first execute returned
+  pending (finish-replacement-99c20a6ddb9a4ea38d03378505f3edf5). Direct ECS
+  observation subsequently reported desired1/running1/pending0 and completed
+  rollout. Continuation93055 then terminated on a read-only prepare failure,
+  capture finish-replacement-27206b2b02144c9db5ce1b9e7e9401e8, aws-command-failed,
+  effect not-started for that observer invocation (not the prior replacement).
+  Continuation40709 is now live: execute/reconcile the exact original replacement
+  plan, then credential ready/read and database permissions, snapshot, isolated
+  restore/read, clone cleanup, final read and collection. Its producer uses the
+  existing reservation and does not enable another StopTask. Promotion remains
+  required immediately after successful collection. Do not restart93055.
+
+- 2026-11-12T01:33Z: runtime access restoration completed. Preflight
+  es-559540903b104f7393b4e1a4206e770a and actual restore-runtime operation
+  are retained; success capture finish-task-execute-f8952d1c91a249d891e18b4f34f2a001
+  uses plan sha256:2052f3b04a91f288dd2b533806354c7543f54cf68b9973229f71c92d4e2b88b5.
+  Continuation93055 remains active and has advanced to credential server
+  replacement, followed by actual ready/read/permissions and then the remaining
+  snapshot/restore/read/cleanup/final acceptance chain. Do not rerun completed
+  observe-permissions, revoke-runtime, unready or restore-runtime operations.
+  Full credential-recovery acceptance is not yet established by restoration alone.
+
+- 2026-11-12T01:12Z: actual verifier unready proof completed after revocation,
+  capture finish-task-execute-f64b38b419614d448665a5c3cd744546, under plan
+  sha256:dd62dd2c30c6b7f8e85a06a6e8e95a8dc6350735e13b2185a2b20a8be4b6f2a5.
+  Two prior IAM/Route53 failures were not-started and retained; the third
+  preparation submitted the single verifier. Continuation93055 is now preparing
+  restore-runtime preflight. Runtime login remains revoked until the actual
+  restoration operation completes. Do not replay either revoke or unready.
+
+- 2026-11-12T01:01Z: credential runtime access is now deliberately revoked.
+  Continuation93055 completed preflight es-15d71cebd2ff421ea1dd66b2b5941fc3 and
+  revoke operation es-9f91178beec34948aeddbe35c5ef50fb. Capture
+  finish-task-execute-b24add2e683a4c96bd8464a476f84350 records completion under
+  plan sha256:72355170bb895f2c43a313d7c43b3f0743d5a088712d8537d72ad743196c4ff4.
+  The same live helper is planning verifier unready, then restore-runtime,
+  replacement, read and permissions before snapshot/restore/cleanup/acceptance.
+  Do not repeat revocation or restart the whole credential-recovery stage.
+  Access restoration and subsequent readiness are not yet proved.
+
+- 2026-11-12T00:41Z: continuation93055 completed credential-recovery permission
+  observation. Preflight es-427764c96b86487ba51ade3f3a5015dd and operation
+  es-47500dc15e2e44f78b23807e5808bfbf both passed; operation stopped at
+  00:41:18.321Z with ENTITY_SMOKE_ADMINISTRATION_CONFIRMED. Capture
+  finish-task-execute-3a1e8ab898a54e7a9409540494a8e6b9 retains the result under
+  plan sha256:44d23a3a4175952b339d8da279b4a8eb94325ed66ec2af9c6c2b850c0a04d4cb.
+  The preceding ecs/list-tasks failure was explicitly not-started and retained;
+  the bounded read retry submitted exactly one observation. The live helper is
+  now preparing revoke-runtime preflight. No revoke, snapshot or restore result
+  exists yet; do not repeat completed initial recovery or permission observation.
+
+- Checkpoint26c985414f5d31fea17e447b7ea50dbe3e326040 is committed after all47
+  selected local integration checks passed with zero findings (7 executed,
+  40 reused,13 later-stage deferred;1115.43831 seconds), feature composition
+  passed (442.10073 seconds), focused renewal/restart/adapter fixtures and staged
+  gates passed. Two actual controls and three completed task/gate pairs validate
+  under their original controllers; actual unused history renewal eligibility
+  also validated offline. Reports use history-renewal-* under the stable capture
+  directory. One fixture correction updated all old30-second timeout assertions
+  to the reviewed40-second bound; no operational check was weakened.
+  Continuation93055 is active: history preflight plan
+  sha256:27107b2a7a3de65efc659d18e6ccd9b930e1fed45fa19fe9b028aea9dd637006
+  (finish-task-plan-32bee4297aed4cd690beed5512ead075) passed. Its first execute
+  failed not-started on ecs/describe-task-definition, capture
+  finish-task-execute-1914dcb9ce324fa08c4f404cff3100dc; the helper's second bounded
+  before-submission read retry is running. No additional history-operation,
+  credential recovery, snapshot or restore result exists yet. After history,
+  this continuation owns credential-recovery, snapshot, restore, restore-read,
+  cleanup, final-read and collect; promotion remains a separate controller invocation
+  immediately after actual collection. Do not repeat completed stop/restart/read.
+
+- Continuation93055 advanced: renewed history preflight completed, capture
+  finish-task-execute-f7d478a6f6d54937b4f22d1da2fa8742, retaining the separate
+  administration-observe-migration-state-initial-recovery-readback-recovery-1-preflight
+  step. History observation then completed under plan
+  sha256:7a19195f6b5994c1d1e08e1256731461e45a3c502b926b7fba3f949162481c35,
+  capture finish-task-execute-c2696b2703f74a4cbf30f56016d01da7. Stop/restart,
+  original-record readback and migration-history preservation are now actual
+  completed proof. Transient before-submission reads were retried with no
+  operation replay. The same live continuation is now planning administration
+  observe-permissions preflight in credential-recovery. Do not repeat history.
 
 - Continuation33491 is now terminal. Initial-recovery readiness and original
   record read both succeeded; operationes-c99251e6bd3b4fef854b671f2a0e793f returned
@@ -1229,6 +1375,17 @@ Summary: Recovery binding now consumes the completed qualified source transition
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-11T23:58:32Z - Commit recorded
+
+Commit: `26c985414f5d31fea17e447b7ea50dbe3e326040`
+
+Message: fix(deploy): renew unused recovery probe and retain completed custody
+
+Summary: Bounded history preflight renewal and exact old-controller stop/restart/task custody passed source-transition, restart and adapter fixtures, registered feature composition, all47 affected local checks with zero findings and staged gates.13 later-stage obligations remain deferred. Actual two control and three task completion/seven-gate pairs validate offline without rewriting evidence or provider calls. Transport now allows10-second connect/40-second process budget with unchanged single-mutation admission. Resume only unused migration-history preflight/operation, then credential recovery, snapshot, isolated restore/read/cleanup and acceptance; completed stop/restart/original-read must not replay.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1411,6 +1568,13 @@ ADR impact: covered by session ADR disposition
   Summary: Recovery binding now consumes the completed qualified source transition while preserving original creation lineage. Focused failure suite, feature composition, staged gates and full affected integration passed: 46 local passed, 13 later-stage deferred, zero findings. Actual read-only inventory confirmed 30 owned resources, service 1/1/0 and unchanged source database incarnation. No stop/revoke/snapshot/restore had yet occurred. Resume only initial-recovery onward; do not repeat replacement/readback.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `26c985414f5d31fea17e447b7ea50dbe3e326040`
+  Time UTC: 2026-11-11T23:58:32Z
+  Message: fix(deploy): renew unused recovery probe and retain completed custody
+  Summary: Bounded history preflight renewal and exact old-controller stop/restart/task custody passed source-transition, restart and adapter fixtures, registered feature composition, all47 affected local checks with zero findings and staged gates.13 later-stage obligations remain deferred. Actual two control and three task completion/seven-gate pairs validate offline without rewriting evidence or provider calls. Transport now allows10-second connect/40-second process budget with unchanged single-mutation admission. Resume only unused migration-history preflight/operation, then credential recovery, snapshot, isolated restore/read/cleanup and acceptance; completed stop/restart/original-read must not replay.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1424,9 +1588,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T22:07:20Z
-Latest commit SHA: 24a3d9a52cca85e5fa42ad97d0724014cd2e5f81
-Chat duration: 450013s (05:05:00:13)
+Latest commit at UTC: 2026-11-11T23:58:32Z
+Latest commit SHA: 26c985414f5d31fea17e447b7ea50dbe3e326040
+Chat duration: 456685s (05:06:51:25)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
