@@ -38,6 +38,7 @@ TASK_DEFINITIONS = {name + "TaskDefinition" for name in ("Server", "Migration", 
 # Exact successful grant/permissions custody before controller-only repairs.
 # These already use the current qualified image, not OLD_IMAGE.
 CONTROLLER_REPAIR_PINS = {
+    "62a5836895aefd79c277c6e26afa80fce5dd78a2dd980016aacba02b39d95216": ("157b62e23169a40e691bfde41ce50b557142ed2dfc8c3702a5db801555495589", "3d3a9818b84ee8174f4d7bc4caa59e898629c124277eca03768d683c55fd29a1"),
     "625fa6adfb7c585a6df84f6b645e7fe430f2317c246e75eb5e21c3931b83d489": ("e5428c0a242c063e34ecafa59477bf325fdf7c506f45095e62d82b011552ae41", "2f07f14b598ee22cfd9b1ab8980ef990f06ed43d1301bda848bf75934daa9f4c"),
     "b82bc6487a8a3d24024aeeb4ef8fd21d931d25dc9a94d2dfb6c0100ad6dba689": ("c8b7d8d9043dac48de128c8d6bc6483fadc06dd7d53222e2beabdc9d725e86fc", "2f07f14b598ee22cfd9b1ab8980ef990f06ed43d1301bda848bf75934daa9f4c"),
     "f86edfe5bb0a57bc58a28a659b86f1377800c8472fe0f9a2327f7c8ed9440607": ("ed3f465366f0ed09287e4f3e5d0a7d4770164c3ae3da58949abf3a75b33a121d", "1a4f5abbf42a6771fa410981768887cd5f9ebdb02031d046dcad8c8119ad6457"),
@@ -117,6 +118,12 @@ CLEANUP_RECONCILE = {
 CLEANUP_RECONCILE_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-restore-4fda0a72ead942ef8a495cbb57349a39.json"
 CLEANUP_RECONCILE_FAILURE_HASH = "sha256:02e58b3158189a30bf9acd40aad57902d152b15db22c36f1c01d7e9219775022"
 ACCEPTANCE_REFRESH_LABEL = LABEL
+ACCEPTANCE_RENEWAL_LABEL = LABEL
+ACCEPTANCE_PROBE = "es-02963945b7784b11a3366f46d8c6d3f9"
+ACCEPTANCE_PACKET = "sha256:62a5836895aefd79c277c6e26afa80fce5dd78a2dd980016aacba02b39d95216"
+ACCEPTANCE_COMPLETION = "sha256:157b62e23169a40e691bfde41ce50b557142ed2dfc8c3702a5db801555495589"
+ACCEPTANCE_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-task-execute-13d3dae7310542d4886217c36a4ed8f2.json"
+ACCEPTANCE_FAILURE_HASH = "sha256:953a82faddf6df2b24b83b64fb46db89c82abc04f3feef9ca07619a3aec42725"
 ACCEPTANCE_REFRESH_CONTROLLER = "sha256:2f07f14b598ee22cfd9b1ab8980ef990f06ed43d1301bda848bf75934daa9f4c"
 ACCEPTANCE_REFRESH_FAILURE = ".cache/test-runs/entity-smoke-stable.7wpnDKuN/finish-collect-acceptance-3d5f9bd455ba4b30865c7717172f550c.json"
 ACCEPTANCE_REFRESH_FAILURE_HASH = "sha256:ade8a64f7e28862eb00d2430fd4b5cf8dd98ce54780a6cc463acc654f131cc81"
@@ -279,6 +286,10 @@ def collision_recovery(args):
 
 
 def readback_recovery(args):
+    if acceptance_renewal(args):
+        return {"probe": ACCEPTANCE_PROBE, "packet": ACCEPTANCE_PACKET, "completion": ACCEPTANCE_COMPLETION,
+                "failure": ACCEPTANCE_FAILURE, "failure_hash": ACCEPTANCE_FAILURE_HASH,
+                "path": "task-steps/verifier-read-acceptance-collector-recovery-1-preflight.json", "condition": "preflight-observation-not-fresh", "prefix": "task-acceptance-read-recovery"}
     if (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (LABEL, "verifier", "read", "credential-recovery"):
         return {"probe": CREDENTIAL_PROBE, "packet": CREDENTIAL_PACKET, "completion": CREDENTIAL_COMPLETION,
                 "failure": CREDENTIAL_FAILURE, "failure_hash": CREDENTIAL_FAILURE_HASH,
@@ -299,14 +310,15 @@ def readback_recovery(args):
 
 
 def preflight_step_suffix(args):
-    if acceptance_refresh(args): return "-collector-recovery-1"
+    if acceptance_refresh(args): return "-collector-recovery-1" + ("-readback-recovery-1" if acceptance_renewal(args) and args.phase == "preflight" else "")
     if restore_reader_recovery(args) and args.phase == "preflight": return "-connection-recovery-1"
     return "-readback-recovery-1" if readback_recovery(args) is not None and args.phase == "preflight" else ""
 
 
 def replacement_label(context, args, original):
     if acceptance_refresh(args):
-        return "entity-smoke-" + hashlib.sha256((original + ":collector-recovery-1").encode()).hexdigest()[:24]
+        original = collector_label(original)
+        return "entity-smoke-" + hashlib.sha256((original + ":" + ACCEPTANCE_PROBE + ":readback-recovery-1").encode()).hexdigest()[:24] if acceptance_renewal(args) else original
     if restore_reader_recovery(args):
         return "entity-smoke-" + hashlib.sha256((original + ":" + RESTORE_PROBE + ":connection-recovery-1").encode()).hexdigest()[:24]
     recovery = readback_recovery(args)
@@ -325,6 +337,14 @@ def restore_reader_recovery(args):
 
 def acceptance_refresh(args):
     return (args.proof_label, args.workload, args.operation, getattr(args, "proof_stage", "baseline")) == (ACCEPTANCE_REFRESH_LABEL, "verifier", "read", "acceptance")
+
+
+def collector_label(original):
+    return "entity-smoke-" + hashlib.sha256((original + ":collector-recovery-1").encode()).hexdigest()[:24]
+
+
+def acceptance_renewal(args):
+    return acceptance_refresh(args) and args.proof_label == ACCEPTANCE_RENEWAL_LABEL
 
 
 def acceptance_refresh_preflight(C, context, args, original, *, current_time):
@@ -428,8 +448,11 @@ def restore_reader_preflight(C, context, deployed, original):
 
 
 def recovery_preflight(C, context, args, original):
-    if acceptance_refresh(args): return acceptance_refresh_preflight(C, context, args, original, current_time=C.now())
     selected = replacement_label(context, args, original)
+    if acceptance_refresh(args):
+        acceptance_refresh_preflight(C, context, args, original, current_time=C.now())
+        if not acceptance_renewal(args): return selected
+        original = collector_label(original)
     if selected == original: return original
     recovery = readback_recovery(args)
     if recovery is not None:
@@ -460,6 +483,7 @@ def recovery_preflight(C, context, args, original):
         renewed = {**request, "proof_label": selected, "environment": renewed_environment}
         if args.phase == "preflight" and store.read("renewed-readback-preflight", renewed) is None:
             suffix = "" if getattr(args, "proof_stage", "baseline") == "baseline" else ":" + args.proof_stage
+            if acceptance_renewal(args): suffix += ":collector-recovery-1"
             key = "task-" + hashlib.sha256((LABEL + ":" + args.workload + ":" + args.operation + ":operation" + suffix).encode()).hexdigest()[:48]
             operation_path = context["cache"] / "task-attempts" / (key + ".json")
             C.RESOURCE.CONTROL.no_symlinks(operation_path)

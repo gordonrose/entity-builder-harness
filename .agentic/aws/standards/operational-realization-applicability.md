@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 16
+version: 17
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-12"
@@ -377,6 +377,17 @@ evidence and final nine-hundred-second acceptance freshness. Historical cleanup
 may use its exact original receipt/controller/seven-gate custody; a controller
 repair must not repeat deletion or restamp cleanup. This is fresh observation
 under the existing approved proof, not replay of the completed original tasks.
+
+The fixed pair's unused ready probe `es-02963945b7784b11a3366f46d8c6d3f9`
+may be renewed once after the exact retained not-started freshness failure of
+2026-11-12. Use the existing unused-probe renewal mechanism: original collector
+recovery custody, exact expired probe/companion/journal/gate hashes, unchanged
+binding and absence of the still-fixed read reservation are mandatory. Give only
+the replacement preflight a separate deterministic key/path; preserve its old
+successful observation and both not-started read failures. This is not a third
+pair or a second record read. Normal first-five gates, ninety-second completion,
+fresh admission and final acceptance freshness remain unchanged. No arbitrary
+retry count, another replacement, business-data write or resource mutation follows.
 
 ### Stopped-service activation refresh
 

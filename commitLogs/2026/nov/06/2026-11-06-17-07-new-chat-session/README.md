@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T13:39:33Z
-latest_commit_sha: 986cc4fe
-chat_duration: 505946s (05:20:32:26)
+latest_commit_at_utc: 2026-11-12T14:50:02Z
+latest_commit_sha: 1a91e7a6
+chat_duration: 510175s (05:21:42:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,36 @@ new chat session
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
 ## Decisions Made
+
+- Renewal correction consolidated review: the existing readback recovery owner
+  now admits only the pinned expired acceptance probe, preserving parent collector
+  custody. Its operation-reservation guard uses the actual collector-recovery
+  read key, not the legacy acceptance key. Only preflight gets a new suffix.
+  Focused source-transition fixture passed for replacement, credential and final
+  acceptance stages, with explicit controlled parent-collector primitive in the
+  last case. Actual complete original collector/probe custody separately passed
+  with zero provider calls/writes, selecting86f33324230dae70377a0465. No timestamp
+  relaxation, third pair or source/runtime/template change. Source-matched partial
+  diagnostic reviews retain outstanding debt. No ADR: existing bounded unused
+  probe renewal, not new deployment architecture. Freeze for registered checks.
+
+- Final-read admission failure,2026-11-12: fresh ready es-02963945 completed
+  at14:59 with healthy result. The first read executor f0fbe396 rejected an
+  incomplete task-history observation before submission; an independent exact
+  observer subsequently passed with no active owned proof tasks. Its original
+  response cause is unknown. The same unsubmitted plan then rejected freshness
+  in13d3dae7 at15:14, again without reservation. Repeated controller reads consumed
+  the900-second window. Extend the existing unused-probe renewal mechanism only
+  for this exact ready packet/companion and not-started freshness failure. Require
+  original collector-recovery custody, old probe journal/gate bytes, expiry and
+  absence of the fixed read reservation; preserve all originals. One fixed renewed
+  preflight identity/path, same still-unsubmitted read identity, normal fresh
+  admission and terminal proofs; no new pair, data write, cleanup or replay.
+  Standing completion authority applies without another approval question.
+  Extend the existing renewal fixture and test exact selected step keys/paths;
+  audit actual custody before checking in the bounded correction. This extra
+  cycle is controller overhead and missing observation resilience, not a failed
+  application read. Do not infer an AWS history-expiry cause without its response.
 
 - Collector correction review,2026-11-12: reviewed archive binding versus
   controller provenance, validated source-transition actor mapping, retained
@@ -1739,6 +1769,17 @@ Summary: Closed my omitted source-checkpoint boundary for exactly shared AWS res
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-12T14:50:02Z - Commit recorded
+
+Commit: `1a91e7a6`
+
+Message: fix(deploy): collect historical clone and transition proof correctly
+
+Summary: Corrected controller/image/clone evidence distinction, exact transition actor mapping and historical cleanup selection. Connected negative and no-replay fixtures passed. Registered focused checks passed in 618.607713 seconds; selector regression in 694.143996 seconds; final integration 64 local instances passed, 63 reused, one executed, 20 later-stage obligations deferred, no findings, in 85.008356 seconds. Captures: .cache/test-runs/entity-smoke-stable.7wpnDKuN/collector-repair-{focused,selector,integration}.json. Actual 37-task/seven-control audit passed except appropriately expired final freshness. Next: only one fresh ready/read pair, real collection and acceptance promotion; never replay cleanup.
+
+ADR impact: No ADR: repairs existing evidence attribution and bounded observation owners; application, image and infrastructure contracts unchanged.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1970,6 +2011,13 @@ ADR impact: covered by session ADR disposition
   Summary: Closed my omitted source-checkpoint boundary for exactly shared AWS response.py and recovery-test.py; actual Git checkpoint and four real read-only deleted-role/security-group observations pass. Real-Git regression and staged gates passed. Registered feature/acceptance/payload batch passed482.368946 seconds with unchanged persistence composition reused; parallel selector passed652.312283 seconds. Final integration passed45 entries (44 unique local IDs),all reused,13 deferred,zero findings in47.720782 seconds. No AWS mutation occurred in failed e0bd1801 plan. Resume original cleanup observation then final read/collector/promotion; retrospective must include this avoidable extra repair cycle.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `1a91e7a6`
+  Time UTC: 2026-11-12T14:50:02Z
+  Message: fix(deploy): collect historical clone and transition proof correctly
+  Summary: Corrected controller/image/clone evidence distinction, exact transition actor mapping and historical cleanup selection. Connected negative and no-replay fixtures passed. Registered focused checks passed in 618.607713 seconds; selector regression in 694.143996 seconds; final integration 64 local instances passed, 63 reused, one executed, 20 later-stage obligations deferred, no findings, in 85.008356 seconds. Captures: .cache/test-runs/entity-smoke-stable.7wpnDKuN/collector-repair-{focused,selector,integration}.json. Actual 37-task/seven-control audit passed except appropriately expired final freshness. Next: only one fresh ready/read pair, real collection and acceptance promotion; never replay cleanup.
+  ADR impact: No ADR: repairs existing evidence attribution and bounded observation owners; application, image and infrastructure contracts unchanged.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1983,9 +2031,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T13:39:33Z
-Latest commit SHA: 986cc4fe
-Chat duration: 505946s (05:20:32:26)
+Latest commit at UTC: 2026-11-12T14:50:02Z
+Latest commit SHA: 1a91e7a6
+Chat duration: 510175s (05:21:42:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -218,16 +218,25 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-collision-renewal-") as te
     assert store.read("renewed", renewed_request) == renewed
     assert all(path.read_bytes() == data for path, data in original_bytes.items())
 
-# Both completed replacement stages renew only their unused ready probe.
+# Completed replacement stages and final acceptance renew only unused probes.
 for stage, tag, condition, prefix in (
     ("server-replacement", "REPLACEMENT", "resource-observation-not-confirmed", "task-replacement-read-recovery"),
     ("credential-recovery", "CREDENTIAL", "aws-command-failed", "task-credential-read-recovery"),
+    ("acceptance", "ACCEPTANCE", "preflight-observation-not-fresh", "task-acceptance-read-recovery"),
 ):
     with tempfile.TemporaryDirectory(prefix="entity-smoke-replacement-renewal-") as temporary, ExitStack() as patches:
         root = Path(temporary); cache = root / "proof"
         patches.enter_context(patch.object(C, "ROOT", root))
         task, reservation, result = EF.fixture("verifier", "ready")
         request = reservation["request"]
+        original_argument = request["proof_label"]
+        if stage == "acceptance":
+            request["proof_label"] = M.collector_label(original_argument)
+            request["environment"]["ENTITY_SMOKE_PROOF_LABEL"] = request["proof_label"]
+            result["proof_label_sha256"] = M.hashlib.sha256(request["proof_label"].encode()).hexdigest()
+            # Prior collector-failure custody is an explicit primitive here;
+            # connected restore tests and the actual archive audit own it.
+            patches.enter_context(patch.object(M, "acceptance_refresh_preflight", return_value=request["proof_label"]))
         request["deadline_seconds"] = 90
         request["environment"]["ENTITY_SMOKE_EXPECTED_SOURCE"] = request["source_revision"]
         reservation["request_sha256"] = M.hashlib.sha256(EF.EVIDENCE.CONTROL.canonical(request)).hexdigest()
@@ -236,7 +245,7 @@ for stage, tag, condition, prefix in (
         binding["proof_label"] = M.LABEL
         packet = {"schema": "deploy/entity-smoke-task-step/v1", "binding": binding, "plan_sha256": "sha256:" + "8" * 64,
                   "reservation": reservation, "receipt": EF.collect(task, reservation, result)}
-        target = cache / f"task-steps/verifier-read-{stage}-preflight.json"
+        target = cache / f"task-steps/verifier-read-{stage}{'-collector-recovery-1' if stage == 'acceptance' else ''}-preflight.json"
         C.RESOURCE.write_exclusive(target, packet)
         gate = root / "controlled-gate.json"; C.RESOURCE.write_exclusive(gate, {"controlled_original_gate": True})
         completion = {"step_sha256": C.digest_file(target), "plan_sha256": packet["plan_sha256"],
@@ -254,7 +263,7 @@ for stage, tag, condition, prefix in (
         store = C.RESOURCE.CONTROL.AttemptStore(cache / "task-attempts")
         original_path = store.path_for("original", request); C.RESOURCE.write_exclusive(original_path, reservation)
         selected_args = SimpleNamespace(proof_label=M.LABEL, workload="verifier", operation="read", proof_stage=stage, phase="preflight")
-        context = {"cache": cache, "binding": binding}; original_label = request["proof_label"]
+        context = {"cache": cache, "binding": binding}; original_label = original_argument
         selected = M.recovery_preflight(C, context, selected_args, original_label)
         assert selected != original_label and selected == M.recovery_preflight(C, context, selected_args, original_label)
         assert M.readback_recovery(SimpleNamespace(**{**vars(selected_args), "proof_stage": "initial-recovery"})) is None
@@ -268,7 +277,14 @@ for stage, tag, condition, prefix in (
         with patch.object(M, tag + "_FAILURE_HASH", C.digest_file(failure_path)):
             fails(lambda: M.recovery_preflight(C, context, selected_args, original_label), prefix + "-evidence-invalid")
         failure_path.write_text(C.json.dumps(failure, sort_keys=True, separators=(",", ":")) + "\n")
-        key = "task-" + M.hashlib.sha256((M.LABEL + ":verifier:read:operation:" + stage).encode()).hexdigest()[:48]
+        suffix = ":collector-recovery-1" if stage == "acceptance" else ""
+        key = "task-" + M.hashlib.sha256((M.LABEL + ":verifier:read:operation:" + stage + suffix).encode()).hexdigest()[:48]
+        if stage == "acceptance":
+            steps = module("acceptance_renewal_steps", DIRECTORY / "task-steps.py")
+            operation_args = SimpleNamespace(**{**vars(selected_args), "phase": "operation"})
+            assert steps.key(operation_args) == key
+            assert steps.path(context, selected_args).name == "verifier-read-acceptance-collector-recovery-1-readback-recovery-1-preflight.json"
+            assert steps.path(context, operation_args).name == "verifier-read-acceptance-collector-recovery-1-operation.json"
         C.RESOURCE.write_exclusive(cache / "task-attempts" / (key + ".json"), {"existing_operation": True})
         fails(lambda: M.recovery_preflight(C, context, selected_args, original_label), prefix + "-operation-already-reserved")
         renewed_request = {**request, "proof_label": selected, "environment": {**request["environment"], "ENTITY_SMOKE_PROOF_LABEL": selected}}
