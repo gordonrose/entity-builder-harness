@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -237,6 +237,14 @@ def execute(args, provider):
     if not safe["execution_route_available"]:
         raise TaskRouteFailure("task-prerequisite-required", safe["pending_prerequisite"]) if safe["pending_prerequisite"] is not None else TaskRouteFailure("task-execution-prerequisites-not-connected")
     runner, deps = RUNNER, dependencies()
+    history = HISTORY.reconcile(deps, {**context, "provider": provider}, args)
+    if history is not None:
+        step_path = STEPS.path(context, args)
+        packet, completion = C.read_json(step_path), C.read_json(COMPLETION.path(step_path))
+        return {"verdict": "completed", "plan_sha256": packet["plan_sha256"],
+                "reconciliation_plan_sha256": report["plan_sha256"], "receipt": str(step_path.relative_to(C.ROOT)),
+                "realization_evidence": completion["realization_evidence"], "effect": provider.effect,
+                "reused": True, "credential_history": str(history.relative_to(C.ROOT))}
     request = STEPS.request(deps, context, args)
     store = runner.CONTROL.AttemptStore(context["cache"] / "task-attempts")
     key = STEPS.key(args)
@@ -307,8 +315,8 @@ def execute(args, provider):
     evidence = book.validate("controlled-execution", 1)
     COMPLETION.retain(deps, context, args, step_path, evidence)
     manifest = STEPS.manifest(deps, context, args, provider, context["prerequisites"], packet)
-    history = HISTORY.retain(deps, {**context, "provider": provider}, args)
     provider.effect = "original-task-completion-observed"
+    history = HISTORY.retain(deps, {**context, "provider": provider}, args)
     return {"verdict": "completed", "plan_sha256": report["plan_sha256"], "receipt": str(step_path.relative_to(C.ROOT)),
             "realization_evidence": str(evidence.relative_to(C.ROOT)), "effect": provider.effect, "reused": completed["reused"],
             **({"activation_prerequisites": str(manifest.relative_to(C.ROOT))} if manifest is not None else {}),

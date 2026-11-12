@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 import importlib.util
 import json
 import io
+import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -145,6 +146,16 @@ def fails(call, code, kind=None):
         assert CANARY not in str(failure)
         return failure
     else: raise AssertionError("expected credential recovery rejection")
+
+
+# Local dependency-capacity boundary, not task or provider proof.
+with tempfile.TemporaryDirectory(prefix="entity-smoke-history-capacity-") as temporary:
+    cache = Path(temporary)
+    for index in range(T.HISTORY.MAX_DEPENDENCIES):
+        R.C.RESOURCE.write_exclusive(cache / "task-attempts" / ("fixture-" + str(index) + ".json"), {"controlled_dependency": index})
+    assert len(T.HISTORY.closure(T.dependencies(), cache)) == T.HISTORY.MAX_DEPENDENCIES
+    R.C.RESOURCE.write_exclusive(cache / "task-attempts/fixture-overflow.json", {"controlled_dependency": "overflow"})
+    fails(lambda: T.HISTORY.closure(T.dependencies(), cache), "history-dependency-bound-exceeded")
 
 
 with scenario() as case:
@@ -300,16 +311,67 @@ with scenario() as case:
     finally: moved_journal.rename(journal)
     assert sum(action == "stop-task" and args.get("task") == I.RECOVERED for _, action, args in case.transport.observed) == 1
     pair(case, "verifier", "read")
-    pair(case, "database-proof", "permissions")
+    task(case, "database-proof", "permissions", "preflight")
+    permission_args = selected(case, "database-proof", "permissions")
+    original_plan = T.plan(permission_args, task_provider(case))
+    permission_args.approved_plan = original_plan["plan_sha256"]
+    with patch.object(T.HISTORY, "closure", side_effect=T.HISTORY.HistoryFailure("history-dependency-bound-exceeded")):
+        fails(lambda: T.execute(permission_args, task_provider(case)), "history-dependency-bound-exceeded")
+    final_step = T.STEPS.path({"cache": case.cache}, permission_args)
+    final_raw = final_step.read_bytes()
+    final_completion = T.COMPLETION.path(final_step)
+    final_completion_raw = final_completion.read_bytes()
+    assert not (case.cache / "credential-history.json").exists()
+    completed_jobs = sum(operation == "run-task" for _, operation, _ in case.transport.jobs.observed)
+    reporter_provider, output = task_provider(case), io.StringIO()
+    reporter_args = SimpleNamespace(**{**vars(permission_args), "execute": True})
+    with patch.object(T, "parse", return_value=reporter_args), patch.object(T, "Provider", return_value=reporter_provider), patch.object(T.HISTORY, "closure", side_effect=T.HISTORY.HistoryFailure("history-dependency-bound-exceeded")), redirect_stdout(output):
+        assert T.main() == 1
+    failure = json.loads(output.getvalue())
+    assert failure["condition"] == "history-dependency-bound-exceeded" and failure["effect"] == "original-task-completion-observed"
+    assert failure["context"]["operation"] == "permissions" and failure["context"]["proof_stage"] == "credential-recovery"
+    assert CANARY not in output.getvalue()
+    context = T.prepare(permission_args, task_provider(case))
+    repaired = "sha256:" + "e" * 64
+    repaired_context = {**context, "artifact": repaired, "provider": task_provider(case),
+                        "report": {**context["report"], "plan": {**context["report"]["plan"], "controller_sha256": repaired}}}
+    fails(lambda: T.HISTORY.reconcile(T.dependencies(), repaired_context, permission_args), "history-original-plan-not-confirmed")
+    task_pins, control_pins = {}, {}
+    for step in (case.cache / "task-steps").glob("*.json"):
+        packet = R.C.read_json(step)
+        companion = T.COMPLETION.path(step)
+        if packet.get("schema") == "deploy/entity-smoke-task-step/v1" and companion.is_file():
+            task_pins[R.C.TRANSITION.document(packet)] = (R.C.TRANSITION.document(R.C.read_json(companion)), context["artifact"].removeprefix("sha256:"))
+    for name, path in (("initial-stop", "failure-receipts/stopped.json"), ("initial-restart", "initial-restart-receipt.json"),
+                       ("server-replacement", "replacement-receipt.json"), ("credential-replacement", "credential-replacement-receipt.json")):
+        receipt = R.C.read_json(case.cache / path)
+        packet = receipt["root"]["request"]["packet"] if name == "initial-stop" else receipt["packet"]
+        control_pins[name, R.C.CONTROL_COMPLETION.document(receipt)] = packet["plan"]["controller_sha256"]
+    # Retained local fragments model accumulated recovery history, not extra
+    # AWS tasks. All original dependencies remain present and byte-bound.
+    for index in range(200):
+        R.C.RESOURCE.write_exclusive(case.cache / "replacement-plans" / ("fixture-retained-" + str(index) + ".json"), {"controlled_retained_fragment": index})
+    with patch.dict(R.C.TRANSITION.CONTROLLER_REPAIR_PINS, task_pins), patch.dict(T.IMAGE_REPAIR.C.TRANSITION.CONTROLLER_REPAIR_PINS, task_pins), patch.dict(R.C.CONTROL_COMPLETION.REPAIRS, control_pins), patch.object(R.C, "source_digest", return_value=repaired):
+        drifted = {**repaired_context, "report": {**repaired_context["report"], "plan": {**repaired_context["report"]["plan"], "operator_sha256": "sha256:" + "0" * 64}}}
+        fails(lambda: T.HISTORY.reconcile(T.dependencies(), drifted, permission_args), "history-original-plan-not-confirmed")
+        permission_args.approved_plan = T.plan(permission_args, task_provider(case))["plan_sha256"]
+        recovered = T.execute(permission_args, task_provider(case))
+        assert recovered["reused"] is True and recovered["effect"] == "original-task-completion-observed"
+        assert recovered["plan_sha256"] == original_plan["plan_sha256"] and recovered["reconciliation_plan_sha256"] == permission_args.approved_plan
+        assert T.execute(permission_args, task_provider(case))["credential_history"] == recovered["credential_history"]
+        assert T.HISTORY.read(T.dependencies(), repaired_context, permission_args)["controller_sha256"] == context["artifact"]
+    assert sum(operation == "run-task" for _, operation, _ in case.transport.jobs.observed) == completed_jobs
+    assert final_step.read_bytes() == final_raw and final_completion.read_bytes() == final_completion_raw
     history_path = case.cache / "credential-history.json"
     history_raw = history_path.read_bytes(); history = json.loads(history_raw)
     assert history["current_readiness"] is False and history["scope_acceptance"] is False and history_path.stat().st_mode & 0o777 == 0o600
-    assert len(history["references"]) <= 256
+    assert 256 < len(history["references"]) <= T.HISTORY.MAX_DEPENDENCIES
     def snapshot_provider():
         value = S.Provider(); value._invoke = lambda service, operation, parameters: case.transport(service, operation, **parameters)
         return value
     snapshot_args = SimpleNamespace(**{**vars(case.replacement_args), "mode": "plan", "approved_plan": None})
-    for edited, code in (({**history, "references": {**history["references"], "../provider-canary.json": "sha256:" + "0" * 64}}, "history-reference-invalid"),
+    for edited, code in (({**history, "references": {str(index): "sha256:" + "0" * 64 for index in range(T.HISTORY.MAX_DEPENDENCIES + 1)}}, "history-reference-set-invalid"),
+                         ({**history, "references": {**history["references"], "../provider-canary.json": "sha256:" + "0" * 64}}, "history-reference-invalid"),
                          ({**history, "references": {key: value for key, value in history["references"].items() if key != history["final_step"]}}, "history-final-step-not-bound"),
                          ({**history, "references": {key: value for key, value in history["references"].items() if not key.startswith("task-receipts/admissions/")}}, "history-required-dependencies-omitted")):
         history_path.write_text(json.dumps(edited))

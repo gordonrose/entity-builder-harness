@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-11T23:58:32Z
-latest_commit_sha: 26c985414f5d31fea17e447b7ea50dbe3e326040
-chat_duration: 456685s (05:06:51:25)
+latest_commit_at_utc: 2026-11-12T08:46:56Z
+latest_commit_sha: c0154a64342060f3457a0a42ecc12485be83c201
+chat_duration: 488389s (05:15:39:49)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,62 @@ new chat session
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
 ## Decisions Made
+
+- 2026-11-12T09:21Z: actual final credential permission task
+  es-665c4cca43a74513808647afda100d5d passed
+  ENTITY_SMOKE_EFFECTIVE_PRIVILEGES_PROVEN, stopped09:20:34.196Z; its original
+  task receipt, admission, step and seventh-gate companion exist. Public execute
+  capture finish-task-execute-a8f26f3d6ad44a67bbf35cc229b239c7 then failed with
+  history-dependency-bound-exceeded during local history retention. No snapshot
+  or clone has been created. Runner76007 ended; do not repeat completed tasks.
+  Root cause: recovery-history.closure sweeps205 retained journal/receipt/step/
+  plan files before adding top-level control and referenced gate files; the
+  combined genuine proof exceeds its256-file cap. The fixture's clean path did
+  not model recovery accumulation. This is an assistant controller defect, not
+  a database permission failure or new approval requirement.
+  Repair inventory before edits: raise the existing bounded closure capacity
+  to512 without omitting/moving original evidence; test the exact boundary and
+  overflow. Add completed-final-task reconciliation to the existing history
+  owner/public task route before any runner call. Reconstruct the original safe
+  plan only by selecting its exact pinned packet/completion controller and
+  requiring the original plan digest; original prerequisites, binding, request,
+  admissions and all gates still validate. Preserve original completed_at and
+  controller in history; later readers use the same original-controller rule,
+  not current-source restamping. Pin only the four actual new task/completion
+  pairs under e022fa39. Connected tests must inject post-completion retention
+  failure, reject unpinned/drifted original plans and altered custody, recover
+  without another task call and exercise subsequent snapshot/restore consumers.
+  Reuse existing partial diagnostic owners and approved controller-only repair;
+  application image, deployment templates, AWS authority and scope are unchanged.
+
+- 2026-11-12T09:04Z: controller-only repair checkpoint c0154a64 is complete;
+  controller sha256:e022fa391f24fa326a4ba5b9b6193fff7c587045525fb758e3935b7394cbad9b.
+  Focused source-transition and connected credential fixtures passed. Registered
+  composition passed in223.892335 seconds. Final integration passed all46 local
+  checks,6 executed40 reused,13 later-stage deferred,zero findings,in624.124278
+  seconds. Final staged preparation passed. Captures: credential-renewal-* under
+  .cache/test-runs/entity-smoke-stable.7wpnDKuN. Ten actual task/completion pairs,
+  original credential-replacement companion/seven gates and unused-probe renewal
+  eligibility validated offline without provider calls or evidence rewrites.
+  Earlier staging preparation correctly rejected a review-ledger update made
+  after its preparation snapshot; reran preparation with frozen final inputs.
+  Two attempted review patches failed to match and changed nothing before the
+  scoped object patch succeeded. These are assistant execution overhead, not AWS
+  failures. No new architecture ADR: this is the existing bounded repair owner;
+  repeated one-off source pins remain design debt for the required retrospective.
+- Live continuation under c0154a64: renewed credential-ready operation
+  es-d8346dfa5a434b0d803cbdac13863eaf passed ENTITY_SMOKE_HEALTHY; stopped
+  2026-11-12T08:55:05.004Z. Exact plan b848f8a5f6370410e3c0378daa5f96053b1de892f80b49fc8ad95cbcf62869e5;
+  capture finish-task-execute-8a281ace9c9442df95861c19c75aef8d.
+  Credential original-record read es-99fe48ea7745421eb46eef6ea896af29 passed
+  ENTITY_SMOKE_RECORD_RETRIEVED with exact original digest; stopped
+  2026-11-12T09:03:27.815Z. Plan f5686acf470d56ef509039bcc1f2aab576fa5569831f46aeb40ade5d0231238e;
+  capture finish-task-execute-1922a8f86d31479ab9c8cb3e3977ad09.
+  Runtime permission preflight/operation are next, followed by snapshot, isolated
+  restore/read/owned-clone cleanup, final read, collection and promotion. Runner
+  session76007 continues that exact sequence; it does not include promotion.
+  Actual08:33 AWS observation confirmed authentication and service1/1/0 with
+  completed rollout. No completed revoke, restore or replacement was replayed.
 
 - 2026-11-11: user explicitly directs completion of the full proof and
   overrides repository/plan requirements for repeated approval. This supersedes
@@ -1386,6 +1442,17 @@ Summary: Bounded history preflight renewal and exact old-controller stop/restart
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-12T08:46:56Z - Commit recorded
+
+Commit: `c0154a64342060f3457a0a42ecc12485be83c201`
+
+Message: fix(deploy): resume credential proof with original recovery custody
+
+Summary: Credential ready renewal and original-controller recovery custody passed focused source/credential fixtures, registered composition, staged gates and all46 local integration checks with zero findings:6 executed40 reused13 later-stage deferred; integration624.124278 seconds. Actual ten task pairs and credential replacement completion/seven-gate custody validate offline, with no provider calls or evidence rewrites. Renew only the unused ready probe, then finish credential original read/permissions, snapshot, isolated restore/read/cleanup and final acceptance. Full evidence-backed failure retrospective remains a required final deliverable. Reports: credential-renewal-* in .cache/test-runs/entity-smoke-stable.7wpnDKuN.
+
+ADR impact: No new architecture decision: narrow use of the existing approved controller repair and deterministic unused-probe renewal; one-off source pins remain explicit design debt for the retrospective.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1575,6 +1642,13 @@ ADR impact: covered by session ADR disposition
   Summary: Bounded history preflight renewal and exact old-controller stop/restart/task custody passed source-transition, restart and adapter fixtures, registered feature composition, all47 affected local checks with zero findings and staged gates.13 later-stage obligations remain deferred. Actual two control and three task completion/seven-gate pairs validate offline without rewriting evidence or provider calls. Transport now allows10-second connect/40-second process budget with unchanged single-mutation admission. Resume only unused migration-history preflight/operation, then credential recovery, snapshot, isolated restore/read/cleanup and acceptance; completed stop/restart/original-read must not replay.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `c0154a64342060f3457a0a42ecc12485be83c201`
+  Time UTC: 2026-11-12T08:46:56Z
+  Message: fix(deploy): resume credential proof with original recovery custody
+  Summary: Credential ready renewal and original-controller recovery custody passed focused source/credential fixtures, registered composition, staged gates and all46 local integration checks with zero findings:6 executed40 reused13 later-stage deferred; integration624.124278 seconds. Actual ten task pairs and credential replacement completion/seven-gate custody validate offline, with no provider calls or evidence rewrites. Renew only the unused ready probe, then finish credential original read/permissions, snapshot, isolated restore/read/cleanup and final acceptance. Full evidence-backed failure retrospective remains a required final deliverable. Reports: credential-renewal-* in .cache/test-runs/entity-smoke-stable.7wpnDKuN.
+  ADR impact: No new architecture decision: narrow use of the existing approved controller repair and deterministic unused-probe renewal; one-off source pins remain explicit design debt for the retrospective.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1588,9 +1662,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-11T23:58:32Z
-Latest commit SHA: 26c985414f5d31fea17e447b7ea50dbe3e326040
-Chat duration: 456685s (05:06:51:25)
+Latest commit at UTC: 2026-11-12T08:46:56Z
+Latest commit SHA: c0154a64342060f3457a0a42ecc12485be83c201
+Chat duration: 488389s (05:15:39:49)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
