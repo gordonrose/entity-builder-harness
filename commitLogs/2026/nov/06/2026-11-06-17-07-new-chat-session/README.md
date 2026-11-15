@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-15T13:55:48Z
-latest_commit_sha: 29e5f1a3ee9f1e1f6014e12859d23f2f826e0c4e
-chat_duration: 766121s (08:20:48:41)
+latest_commit_at_utc: 2026-11-15T14:56:11Z
+latest_commit_sha: 4bf7a882
+chat_duration: 769744s (08:21:49:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2203,6 +2203,17 @@ Summary: Canonical shared persistence migration reviewed and frozen
 
 Durable evidence: Active Nov6 worktree; checkpoint29e5f1a3 and sessiond74dac68 remain local. C03 plan is committed and canonical migration now implemented with exact compatibility wrappers. Existing plan and migration plan contain source review, focused outcomes, truthful setup failures, historical reader results and unchanged evidence boundaries. Diagnostic ledger sources match with unchanged adoption/debt. Agent has frozen all files and has no active processes. Next: normal preparation, registered focused checks and complete affected integration, approved local checkpoint, then actual local image qualification. No push, publication or AWS authority is added; no new ADR is needed for this internal ownership migration.
 
+
+### 2026-11-15T14:56:11Z - Commit recorded
+
+Commit: `4bf7a882`
+
+Message: refactor(deploy): migrate shared persistence entrypoints
+
+Summary: Committed all 42 outstanding paths after successful commit-boundary verification. Shared persistence implementations, callers, image inputs, catalog compile roots, regression fixtures and reviewed metadata are checkpointed. Broader integration has failed mechanics and entity-smoke-composition checks still under diagnosis; full local image qualification remains pending. No push or AWS operations.
+
+ADR impact: No new ADR: implements the approved consolidation architecture while retaining separate workload policies and accepted histories.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2462,6 +2473,13 @@ Durable evidence: Active Nov6 worktree; checkpoint29e5f1a3 and sessiond74dac68 r
   Summary: Committed all240 current paths under explicit user approval, including the retrospective lesson. Required commit gate passed46 checks with103 integration/later-stage obligations deferred; report .cache/test-runs/20261115T135443Z-c46262409d9e497babd1aec3341be33c/report.json. The health/recovery fixture is corrected without weakening real acceptance or changing retained evidence. Source was clean after commit; no push, publication or AWS changes. The committed migration plan now permits C03 canonical helper migration. Full affected integration and actual image qualification remain pending; this checkpoint does not complete the consolidation goal.
   ADR impact: No new ADR: shared ownership extraction, wrapper compatibility and fixture isolation follow existing module/deployment/testing standards; no public package, layer namespace or runtime authority change.
 
+
+- Commit: `4bf7a882`
+  Time UTC: 2026-11-15T14:56:11Z
+  Message: refactor(deploy): migrate shared persistence entrypoints
+  Summary: Committed all 42 outstanding paths after successful commit-boundary verification. Shared persistence implementations, callers, image inputs, catalog compile roots, regression fixtures and reviewed metadata are checkpointed. Broader integration has failed mechanics and entity-smoke-composition checks still under diagnosis; full local image qualification remains pending. No push or AWS operations.
+  ADR impact: No new ADR: implements the approved consolidation architecture while retaining separate workload policies and accepted histories.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2475,9 +2493,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-15T13:55:48Z
-Latest commit SHA: 29e5f1a3ee9f1e1f6014e12859d23f2f826e0c4e
-Chat duration: 766121s (08:20:48:41)
+Latest commit at UTC: 2026-11-15T14:56:11Z
+Latest commit SHA: 4bf7a882
+Chat duration: 769744s (08:21:49:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
