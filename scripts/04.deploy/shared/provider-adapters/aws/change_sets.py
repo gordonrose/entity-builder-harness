@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.change-set-execution
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-15"
 #   updated_on: "2026-11-15"
@@ -18,6 +18,8 @@
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/deployment-control.py
 #   - id: deploy.library.core-persistence.change-set-operations
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/change-set-operations.py
+#   - id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py
 """Single-submission change-set protocol; callbacks retain workload proof rules.
 
 The provider must already be gated by its owning command. A retained reservation
@@ -30,6 +32,54 @@ class ChangeSetFailure(Exception):
     def __init__(self, code):
         super().__init__(code)
         self.code = code
+
+
+def parameter_values(rows):
+    """Read resolved provider parameters without silently losing invalid rows.
+
+    Duplicate names are ambiguous even when their values match. Provider
+    metadata such as ResolvedValue never replaces ParameterValue. The caller
+    owns its safe rejection code; no raw value is included in a failure.
+    """
+    if not isinstance(rows, list):
+        return None
+    values = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            return None
+        key, value = row.get("ParameterKey"), row.get("ParameterValue")
+        if not isinstance(key, str) or not key or key in values or not isinstance(value, str):
+            return None
+        values[key] = value
+    return values
+
+
+def update_parameter_inputs(current, desired):
+    """Preserve every unowned deployed value, including opaque NoEcho values.
+
+    Omitting a parameter during UPDATE can select a template default rather
+    than preserve the existing value. Only explicitly owned parameters may be
+    replaced; new keys require a different, explicitly reviewed template change.
+    """
+    if not isinstance(current, dict) or not isinstance(desired, dict):
+        return None
+    if not all(isinstance(key, str) and key and isinstance(value, str)
+               for mapping in (current, desired) for key, value in mapping.items()):
+        return None
+    if not set(desired) <= set(current):
+        return None
+    return ([{"ParameterKey": key, "UsePreviousValue": True} for key in sorted(set(current) - set(desired))] +
+            [{"ParameterKey": key, "ParameterValue": desired[key]} for key in sorted(desired)])
+
+
+def update_parameters_match(actual, desired, current):
+    """Verify the complete resolved result, not merely the changed parameters."""
+    if not all(isinstance(mapping, dict) for mapping in (actual, desired, current)):
+        return False
+    if not all(isinstance(key, str) and key and isinstance(value, str)
+               for mapping in (actual, desired, current) for key, value in mapping.items()):
+        return False
+    return set(actual) == set(current) and set(desired) <= set(current) and actual == {**current, **desired}
 
 
 def _run(provider, store, *, phase, request, operation, token_field, arguments,

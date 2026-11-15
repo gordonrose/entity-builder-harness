@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.deployment-control
-#   version: 1
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -17,10 +17,13 @@
 #   - id: deploy.test.entity-smoke.composition.wrapper
 #     path: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
 import copy
+from datetime import datetime, timezone
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import tempfile
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_DEPLOYMENT_CONTROL_ASSERTIONS_DISABLED")
 SPEC = importlib.util.spec_from_file_location("entity_smoke_deployment_control_test", Path(__file__).with_name("deployment-control.py"))
@@ -72,6 +75,17 @@ class Provider:
                 details = value["Changes"][0]["ResourceChange"]["Details"]
                 details[0]["Evaluation"] = "Static"
                 details.append({"Target": copy.deepcopy(details[0]["Target"]), "Evaluation": "Dynamic", "ChangeSource": "DirectModification"})
+                if parameters.get("UsePreviousTemplate"):
+                    assert "TemplateBody" not in parameters
+                    old = {row["ParameterKey"]: row["ParameterValue"] for row in self.stack["Parameters"]}
+                    value["Parameters"] = [{"ParameterKey": row["ParameterKey"], "ParameterValue": old[row["ParameterKey"]] if row.get("UsePreviousValue") is True else row["ParameterValue"]} for row in parameters["Parameters"]]
+                    value["Changes"] = []
+                    for name, kind in M.RESOURCE_TYPES.items():
+                        if not (name.endswith("TaskDefinition") or name == "FeatureService"): continue
+                        task = name.endswith("TaskDefinition")
+                        value["Changes"].append({"ResourceChange": {"LogicalResourceId": name, "ResourceType": kind, "Action": "Modify", "Replacement": "True" if task else "False", "Scope": ["Properties"],
+                            "Details": [{"Target": {"Attribute": "Properties", "Name": "ContainerDefinitions" if task else "TaskDefinition", "RequiresRecreation": "Always" if task else "Never"},
+                                         "ChangeSource": "ParameterReference" if task else "ResourceReference", "CausingEntity": "ImageDigest" if task else "ServerTaskDefinition", "Evaluation": "Static"}]}})
             else:
                 value["OnStackFailure"] = "DO_NOTHING"
                 assert self.stack is None
@@ -91,9 +105,10 @@ class Provider:
             assert parameters["StackName"] == STACK_ARN
             matches = [change for change in self.changes.values() if change["ChangeSetId"] == parameters["ChangeSetName"]]
             assert len(matches) == 1
-            change = matches[0]; activate = change["ChangeSetName"].startswith("entity-smoke-activate-")
+            change = matches[0]; activate = not change["ChangeSetName"].startswith("entity-smoke-create-")
             assert (parameters.get("DisableRollback") is True) if activate else "DisableRollback" not in parameters
             self.tokens.append(parameters["ClientRequestToken"])
+            self.completed_at = datetime.now(timezone.utc).isoformat()
             self.stack.update(Tags=copy.deepcopy(change["Tags"]), Parameters=copy.deepcopy(change["Parameters"]), StackStatus=("UPDATE_IN_PROGRESS" if activate else "CREATE_IN_PROGRESS") if self.delayed else ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"))
             change["ExecutionStatus"] = "EXECUTE_COMPLETE"
             # The executed change-set API object is not durable completion
@@ -102,7 +117,7 @@ class Provider:
             if self.lost_execute: raise OSError(CANARY)
             return {}
         if operation == "describe-stack-events":
-            return {"StackEvents": [{"PhysicalResourceId": STACK_ARN, "ClientRequestToken": token} for token in self.tokens], **({"NextToken": CANARY} if self.paginated_events else {})}
+            return {"StackEvents": [{"PhysicalResourceId": STACK_ARN, "ClientRequestToken": token, "ResourceStatus": "UPDATE_COMPLETE", "Timestamp": self.completed_at} for token in self.tokens], **({"NextToken": CANARY} if self.paginated_events else {})}
         if operation == "list-stack-resources":
             return {"StackResourceSummaries": copy.deepcopy(self.resources), **({"NextToken": CANARY} if self.paginated_resources else {})}
         desired = int(next(item["ParameterValue"] for item in self.stack["Parameters"] if item["ParameterKey"] == "ServerDesiredCount"))
@@ -110,7 +125,8 @@ class Provider:
             return {"services": [{"serviceName": R.SERVICE, "clusterArn": PARAMETERS["ClusterArn"], "taskDefinition": SERVER_DEFINITION, "status": "ACTIVE", "desiredCount": desired, "runningCount": desired, "pendingCount": 0}]}
         if operation == "list-tasks": return {"taskArns": [TASK] if desired else []}
         assert operation == "describe-tasks"
-        return {"tasks": [{"taskArn": TASK, "taskDefinitionArn": SERVER_DEFINITION, "group": "service:" + R.SERVICE, "launchType": "FARGATE", "lastStatus": "RUNNING", "healthStatus": "HEALTHY", "containers": [{"name": "entity-smoke-server", "imageDigest": "sha256:" + "0" * 64 if self.wrong_image else BINDING["image_digest"]}]}]}
+        digest = next(row["ParameterValue"] for row in self.stack["Parameters"] if row["ParameterKey"] == "ImageDigest")
+        return {"tasks": [{"taskArn": TASK, "taskDefinitionArn": SERVER_DEFINITION, "group": "service:" + R.SERVICE, "launchType": "FARGATE", "lastStatus": "RUNNING", "healthStatus": "HEALTHY", "containers": [{"name": "entity-smoke-server", "imageDigest": "sha256:" + "0" * 64 if self.wrong_image else digest}]}]}
 
 
 def fails(call, code):
@@ -121,7 +137,77 @@ def fails(call, code):
     else: raise AssertionError("expected deployment-control rejection")
 
 
+def delivery_fixture():
+    identity = {"expected_predecessor": "release-" + "1" * 24,
+                "predecessor": {"release_id": "release-" + "1" * 24, "source_revision": "1" * 40, "image_digest": "sha256:" + "2" * 64, "proof_set_sha256": "sha256:" + "3" * 64},
+                "candidate": {"source_revision": BINDING["source_revision"], "image_digest": BINDING["image_digest"], "receipt_reference": "github-actions-run:123"},
+                "contracts": {key: BINDING[key] for key in ("configuration_contract_sha256", "permission_contract_sha256")},
+                "dependency_incarnation_sha256": BINDING["dependency_incarnation_sha256"], "proof_label": BINDING["proof_label"]}
+    digest = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return {"schema": "deploy/entity-smoke-delivery-context/v1", **identity, "delivery_id": digest, "smoke_label": "entity-smoke-" + digest[:24]}
+
+
+def accepted_provider(provider, delivery):
+    old = {**PARAMETERS, "ServerDesiredCount": "1", "ImageDigest": delivery["predecessor"]["image_digest"], "SourceRevision": delivery["predecessor"]["source_revision"]}
+    provider.stack = {"StackName": M.STACK, "StackId": STACK_ARN, "StackStatus": "UPDATE_COMPLETE",
+                      "Tags": [{"Key": key, "Value": value} for key, value in {"Target": R.CLUSTER, "Scope": "entity-smoke", "ProofLabel": BINDING["proof_label"]}.items()],
+                      "Parameters": [{"ParameterKey": key, "ParameterValue": value} for key, value in old.items()]}
+    return old
+
+
+def successor_cases(root):
+    delivery, active = delivery_fixture(), {**PARAMETERS, "ServerDesiredCount": "1"}
+    provider = Provider(lost_prepare=True, lost_execute=True)
+    old = accepted_provider(provider, delivery)
+    store = R.ResourceStore(root / "successor")
+    options = {"activate": True, "delivery": delivery, "previous_parameters": old}
+    fails(lambda: M.prepare(provider, store, BINDING, active, **options), "deployment-change-submission-uncertain-reconcile-only")
+    reviewed = M.prepare(provider, store, BINDING, active, **options)
+    assert reviewed["status"] == "reviewed" and reviewed["facts"]["resource_count"] == 6
+    submitted = next(arguments for _, operation, arguments in provider.calls if operation == "create-change-set")
+    assert submitted["UsePreviousTemplate"] is True and "TemplateBody" not in submitted
+    assert {row["ParameterKey"] for row in submitted["Parameters"] if row.get("UsePreviousValue") is True} == set(PARAMETERS) - {"ImageDigest", "SourceRevision"}
+    assert [row for row in submitted["Parameters"] if "ParameterValue" in row] == [{"ParameterKey": "ImageDigest", "ParameterValue": active["ImageDigest"]}, {"ParameterKey": "SourceRevision", "ParameterValue": active["SourceRevision"]}]
+    facts = reviewed["facts"]
+    fails(lambda: M.execute(provider, store, BINDING, active, facts["change_set_arn"], facts["stack_arn"], **options), "deployment-execution-uncertain-reconcile-only")
+    result = M.execute(provider, store, BINDING, active, facts["change_set_arn"], facts["stack_arn"], **options)
+    assert result["status"] == "completed" and result["reservation"]["request"]["delivery"] == delivery
+    assert sum(op == "create-change-set" for _, op, _ in provider.calls) == sum(op == "execute-change-set" for _, op, _ in provider.calls) == 1
+    provider.lost_prepare = provider.lost_execute = False
+    rollback_binding = {**BINDING, "source_revision": old["SourceRevision"], "image_digest": old["ImageDigest"]}
+    rollback = {"activate": True, "delivery": delivery, "previous_parameters": active, "rollback": True}
+    restored_review = M.prepare(provider, store, rollback_binding, old, **rollback)
+    restored = M.execute(provider, store, rollback_binding, old, restored_review["facts"]["change_set_arn"], STACK_ARN, **rollback)
+    assert restored["status"] == "completed" and restored["reservation"]["operation_id"] != result["reservation"]["operation_id"]
+    assert restored["reservation"]["phase"] == "deploy-execute-rollback"
+    assert {row["ParameterKey"]: row["ParameterValue"] for row in provider.stack["Parameters"]} == old
+    assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 2
+    untouched = Provider(); accepted_provider(untouched, delivery)
+    fails(lambda: M.prepare(untouched, R.ResourceStore(root / "changed-network"), BINDING, {**active, "VpcCidr": "10.72.0.0/16"}, **options), "deployment-non-image-parameter-change-prohibited")
+    assert untouched.calls == []
+    for index, mutate in enumerate((lambda value: value.update(delivery_id="0" * 64), lambda value: value["predecessor"].update(image_digest="sha256:" + "0" * 64), lambda value: value.update(smoke_label=BINDING["proof_label"]))):
+        invalid = copy.deepcopy(delivery); mutate(invalid)
+        fails(lambda: M.prepare(untouched, R.ResourceStore(root / ("invalid-delivery-" + str(index))), BINDING, active, activate=True, delivery=invalid, previous_parameters=old), "resource-delivery-identity-mismatch")
+    for index, mutate in enumerate((lambda row: row.update(Action="Remove"), lambda row: row.update(Replacement="False"),
+                                   lambda row: row["Details"][0]["Target"].update(Name="TaskRoleArn"), lambda row: row["Details"][0].update(CausingEntity="DatabaseEndpoint"))):
+        bad = Provider(); accepted_provider(bad, delivery)
+        bad.mutate_change = lambda value, mutate=mutate: mutate(value["Changes"][0]["ResourceChange"])
+        fails(lambda: M.prepare(bad, R.ResourceStore(root / ("unsafe-successor-" + str(index))), BINDING, active, **options), "deployment-change-shape-invalid" if index < 2 else "deployment-update-not-image-only")
+        assert not any(op == "execute-change-set" for _, op, _ in bad.calls)
+    for path in root.rglob("*.json"):
+        assert CANARY not in path.read_text() and PARAMETERS["AdministratorSecretArn"] not in path.read_text()
+
+
 if __name__ == "__main__":
+    rows = [{"ParameterKey": key, "ParameterValue": value} for key, value in PARAMETERS.items()]
+    M.exact_parameters(rows, PARAMETERS)
+    for invalid in (None, {}, rows + [rows[0]], rows + [{"ParameterKey": "ImageDigest", "ParameterValue": CANARY}],
+                    rows + [None], rows[:-1], [{"ParameterKey": key, "ParameterValue": None} for key in PARAMETERS]):
+        fails(lambda: M.exact_parameters(invalid, PARAMETERS), "deployment-provider-parameters-mismatch")
+    # The real feature binding must consume the shared reader, not a local copy.
+    with patch.object(M.CHANGE_SETS, "parameter_values", return_value=None) as guard:
+        fails(lambda: M.exact_parameters(rows, PARAMETERS), "deployment-provider-parameters-mismatch")
+        guard.assert_called_once_with(rows)
     with tempfile.TemporaryDirectory(prefix="entity-smoke-deployment-controls-") as temporary:
         root = Path(temporary)
         def store(name): return R.ResourceStore(root / name)
@@ -166,6 +252,10 @@ if __name__ == "__main__":
         existing = Provider(); existing.stack = {"StackName": M.STACK}
         fails(lambda: M.prepare(existing, store("existing"), BINDING, PARAMETERS), "deployment-stack-already-exists")
         assert not any(op == "create-change-set" for _, op, _ in existing.calls)
+        unsafe = Provider()
+        unsafe.mutate_change = lambda change: change["Parameters"].insert(0, {"ParameterKey": "ImageDigest", "ParameterValue": CANARY})
+        fails(lambda: M.prepare(unsafe, store("ambiguous-parameters"), BINDING, PARAMETERS), "deployment-provider-parameters-mismatch")
+        assert not any(op == "execute-change-set" for _, op, _ in unsafe.calls)
         unsafe = Provider()
         unsafe.mutate_change = lambda change: change["Changes"][0]["ResourceChange"].update(Action="Remove")
         fails(lambda: M.prepare(unsafe, store("delete"), BINDING, PARAMETERS), "deployment-change-shape-invalid")
@@ -220,6 +310,7 @@ if __name__ == "__main__":
         missing.changes.clear(); missing.stack = None
         assert M.prepare(missing, owner, BINDING, PARAMETERS)["status"] == "pending"
         assert sum(op == "create-change-set" for _, op, _ in missing.calls) == 1
+        successor_cases(root)
         for path in root.rglob("*.json"):
             assert CANARY not in path.read_text() and PARAMETERS["AdministratorSecretArn"] not in path.read_text()
     print(json.dumps({"schema": "deploy/entity-smoke-deployment-control-fixture/v1", "verdict": "passed", "provider_observation": False,

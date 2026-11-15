@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.resource-control
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
 #   updated_on: "2026-11-15"
@@ -87,6 +87,28 @@ def write_exclusive(path, value):
     except RESERVATIONS.ReservationFailure as failure: raise ResourceFailure("resource-" + failure.code) from None
 
 
+def validate_delivery(value):
+    """Closed delivery identity, not a claim of acceptance or provider success."""
+    fields = {"schema", "delivery_id", "expected_predecessor", "predecessor", "candidate", "contracts", "dependency_incarnation_sha256", "proof_label", "smoke_label"}
+    require(isinstance(value, dict) and set(value) == fields and value["schema"] == "deploy/entity-smoke-delivery-context/v1", "resource-delivery-invalid")
+    predecessor, candidate, contracts = value["predecessor"], value["candidate"], value["contracts"]
+    require(isinstance(predecessor, dict) and set(predecessor) == {"release_id", "source_revision", "image_digest", "proof_set_sha256"}
+            and isinstance(candidate, dict) and set(candidate) == {"source_revision", "image_digest", "receipt_reference"}
+            and isinstance(contracts, dict) and set(contracts) == {"configuration_contract_sha256", "permission_contract_sha256"}, "resource-delivery-invalid")
+    def matches(item, pattern): return isinstance(item, str) and re.fullmatch(pattern, item) is not None
+    require(matches(value["expected_predecessor"], r"release-[a-f0-9]{24}") and predecessor["release_id"] == value["expected_predecessor"]
+            and matches(value["proof_label"], PATTERNS["proof_label"])
+            and matches(value["dependency_incarnation_sha256"], PATTERNS["dependency_incarnation_sha256"])
+            and all(matches(contracts[key], PATTERNS[key]) for key in contracts)
+            and all(matches(item["source_revision"], PATTERNS["source_revision"]) and matches(item["image_digest"], PATTERNS["image_digest"]) for item in (predecessor, candidate))
+            and matches(predecessor["proof_set_sha256"], r"sha256:[a-f0-9]{64}")
+            and matches(candidate["receipt_reference"], r"github-actions-run:[0-9]+"), "resource-delivery-invalid")
+    identity = {key: item for key, item in value.items() if key not in {"schema", "delivery_id", "smoke_label"}}
+    digest = hashlib.sha256(CONTROL.canonical(identity)).hexdigest()
+    require(value["delivery_id"] == digest and value["smoke_label"] == "entity-smoke-" + digest[:24], "resource-delivery-identity-mismatch")
+    return value
+
+
 def validate_request(phase, request):
     fields = {
         "server-replacement": {"binding", "definition", "original_task"},
@@ -102,11 +124,21 @@ def validate_request(phase, request):
         "deploy-execute-create": {"binding", "parameters_sha256", "template_sha256", "change_set_arn", "stack_arn"},
         "deploy-execute-activate": {"binding", "parameters_sha256", "template_sha256", "change_set_arn", "stack_arn"},
     }
+    for action in ("update", "rollback"):
+        fields["deploy-" + action + "-change-set"] = {"binding", "parameters_sha256", "template_sha256", "delivery", "previous_parameters_sha256"}
+        fields["deploy-execute-" + action] = fields["deploy-" + action + "-change-set"] | {"change_set_arn", "stack_arn"}
     require(isinstance(phase, str) and phase in fields and isinstance(request, dict) and set(request) == fields[phase], "resource-request-invalid")
     deployment = phase.startswith("deploy-")
     validate_binding(request["binding"], record_required=not deployment)
-    for key in ("parameters_sha256", "template_sha256", "resources_sha256", "reader_receipt_sha256"):
+    for key in ("parameters_sha256", "previous_parameters_sha256", "template_sha256", "resources_sha256", "reader_receipt_sha256"):
         if key in request: require(isinstance(request[key], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", request[key]) is not None, "resource-request-invalid")
+    if "delivery" in request:
+        delivery = validate_delivery(request["delivery"])
+        binding = request["binding"]
+        require(binding["proof_label"] == delivery["proof_label"] and binding["dependency_incarnation_sha256"] == delivery["dependency_incarnation_sha256"]
+                and all(binding[key] == value for key, value in delivery["contracts"].items()), "resource-delivery-binding-mismatch")
+        selected = delivery["predecessor"] if "rollback" in phase else delivery["candidate"]
+        require(all(binding[key] == selected[key] for key in ("source_revision", "image_digest")), "resource-delivery-binding-mismatch")
     task_pattern = r"arn:aws:ecs:" + REGION + ":" + ACCOUNT + ":task/" + CLUSTER + r"/[a-f0-9]{32}"
     if "definition" in request:
         require(isinstance(request["definition"], str) and re.fullmatch(r"arn:aws:ecs:" + REGION + ":" + ACCOUNT + r":task-definition/kanbien-core-platform-entity-smoke-server:[1-9][0-9]*", request["definition"]) is not None, "resource-request-invalid")
@@ -120,6 +152,8 @@ def validate_request(phase, request):
         timestamp(request["original_commit_observed_at"])
     if "change_set_arn" in request:
         name = ("entity-smoke-" + ("activate" if phase.endswith("activate") else "create") + "-" if deployment else "entity-smoke-restore-") + request["binding"]["proof_label"].removeprefix("entity-smoke-")
+        if "delivery" in request:
+            name = "entity-smoke-" + ("rollback" if "rollback" in phase else "update") + "-" + request["delivery"]["delivery_id"][:24]
         require(isinstance(request["change_set_arn"], str) and re.fullmatch(r"arn:aws:cloudformation:" + REGION + ":" + ACCOUNT + ":changeSet/" + name + r"/[A-Za-z0-9-]+", request["change_set_arn"]) is not None, "resource-request-invalid")
     if "stack_arn" in request:
         stack = "kanbien-core-platform-entity-smoke" if deployment else "kanbien-core-platform-entity-smoke-restore-" + request["binding"]["proof_label"].removeprefix("entity-smoke-")

@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.collect-acceptance.implementation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
 #   updated_on: "2026-11-15"
@@ -10,7 +10,7 @@
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Collect current full first-release proof into immutable scope-local candidate evidence without launching tasks, deleting resources or promoting a release.
+#   purpose: Collect first-qualification or applicable successor proof into immutable scope-local candidates without launching tasks, deleting resources or promoting a release.
 #   portability: {class: internal, targets: [kanbien-core-platform]}
 #   effects: [network, writes-files]
 #   used_by:
@@ -41,6 +41,8 @@ S = module("entity_smoke_acceptance_succession", C.ROOT / "scripts/04.deploy/lif
 TARGET, SCOPE = "kanbien-core-platform", "entity-smoke"
 EVIDENCE_ROOT = C.CONTRACT.parent.parent / "30-release-evidence"
 SCHEMA = "deploy/entity-smoke-collected-acceptance/v1"
+SUCCESSOR_SCHEMA = "deploy/entity-smoke-collected-acceptance/v2"
+SUCCESSOR_TASKS = ("baseline-permissions", "lifecycle", "collision", "final-read")
 PROOF_CONTRACT = {"proof_type": "entity-smoke-complete-acceptance", "operation": "collect", "result_code": "ENTITY_SMOKE_COMPLETE_PROOF_COLLECTED"}
 MAX_PACKET_BYTES = 4 * 1024 * 1024
 CONTROLS = {"server-replacement", "initial-stop", "initial-restart", "credential-replacement", "snapshot", "restore-deployment", "restore-cleanup"}
@@ -54,6 +56,71 @@ class CollectionFailure(Exception):
 
 def require(value, code, item=None):
     if not value: raise CollectionFailure(code, item)
+
+
+def successor_parent(value, args):
+    """Resolve actual accepted custody and assess retained recovery applicability."""
+    delivery = C.RESOURCE.validate_delivery(value["delivery"])
+    require(delivery["expected_predecessor"] == args.expected_predecessor,
+            "acceptance-predecessor-mismatch")
+    previous = current_predecessor()
+    require(previous is not None and previous["reference"]["release_id"] == args.expected_predecessor,
+            "acceptance-predecessor-mismatch")
+    binding = {**value["binding"], "record_digest": args.expected_digest}
+    schema_path = C.CONTRACT.parent / "acceptance-record-schema.yml"
+    C.RESOURCE.CONTROL.no_symlinks(schema_path)
+    try: schema = C.yaml.safe_load(schema_path.read_text())
+    except (OSError, ValueError, C.yaml.YAMLError):
+        raise CollectionFailure("acceptance-recovery-policy-unavailable") from None
+    policy = schema.get("ordinary_update") if isinstance(schema, dict) else None
+    require(isinstance(policy, dict) and policy.get("fresh_tasks") == list(SUCCESSOR_TASKS),
+            "acceptance-recovery-policy-invalid")
+    applicable = A.recovery_applicability(previous["packet"]["binding"], binding,
+                                         policy.get("recovery_input_paths"))
+    identity = previous["identity"]
+    require(delivery["predecessor"] == {"release_id": args.expected_predecessor,
+            **{key: identity[key] for key in ("source_revision", "image_digest", "proof_set_sha256")}},
+            "acceptance-predecessor-mismatch")
+    return {"release_id": args.expected_predecessor,
+            "candidate_record": str(previous["path"].relative_to(EVIDENCE_ROOT)),
+            "candidate_sha256": previous["sha256"], "applicability": applicable}
+
+
+def successor_admission(delivery, binding):
+    previous = current_predecessor()
+    require(previous is not None, "acceptance-predecessor-required")
+    args = SimpleNamespace(expected_predecessor=delivery["expected_predecessor"],
+                           expected_digest=previous["packet"]["binding"]["record_digest"])
+    return successor_parent({"delivery": delivery, "binding": binding}, args)
+
+
+def current_predecessor():
+    owner = module("entity_smoke_successor_state", DIRECTORY / "acceptance-state.py")
+    try: return owner.State().current()
+    except Exception as failure:
+        detail = owner.K.failure_details(failure)
+        raise CollectionFailure(detail["condition"], detail.get("context", {}).get("item")) from None
+
+
+def collection_cache(args, custody=None):
+    if getattr(args, "expected_predecessor", None) is None:
+        return C.delivery_cache(args.proof_label)
+    previous = current_predecessor()
+    require(previous is not None and previous["reference"]["release_id"] == args.expected_predecessor,
+            "acceptance-predecessor-mismatch")
+    custody = C.ALIGN.read_receipt(args.receipt.absolute()) if custody is None else custody
+    binding = {key: item for key, item in previous["packet"]["binding"].items() if key != "record_digest"}
+    require(binding["proof_label"] == args.proof_label, "acceptance-predecessor-label-mismatch")
+    binding.update(source_revision=custody["source_revision"], image_digest=custody["image_digest"],
+                   configuration_contract_sha256=C.digest_file(C.ROOT / C.ALIGN.SCOPE),
+                   permission_contract_sha256=C.digest_file(C.DEPLOY.SOURCE))
+    return C.delivery_cache(args.proof_label, C.delivery_context(args, custody, binding))
+
+
+def final_required_after(packet):
+    if packet.get("schema") == SUCCESSOR_SCHEMA:
+        return packet["tasks"]["collision"]["operation"]["packet"]["receipt"]["task"]["stopped_at"]
+    return packet["controls"]["restore-cleanup"]["facts"]["observed_at"]
 
 
 def read_packet(path):
@@ -74,7 +141,7 @@ class Provider(C.Provider):
 
 
 def selected_args(args, stage, workload, operation, phase="operation"):
-    digest = None if stage == "baseline" and operation in {"bootstrap", "apply", "grant-runtime", "permissions", "create", "observe-create", "lifecycle"} else args.expected_digest
+    digest = None if getattr(args, "expected_predecessor", None) is None and stage == "baseline" and operation in {"bootstrap", "apply", "grant-runtime", "permissions", "create", "observe-create", "lifecycle"} else args.expected_digest
     return SimpleNamespace(**{**vars(args), "proof_stage": stage, "workload": workload, "operation": operation, "phase": phase, "expected_digest": digest})
 
 
@@ -82,7 +149,7 @@ def task_context(value, args, provider, checked):
     if args.workload not in checked:
         checked[args.workload] = T.BINDING.inspect(provider, args.workload, value["parameters"], value["resources"], value["binding_snapshot"])
     context = {**value, "checked": checked[args.workload]}
-    context["report"] = {"plan": {"preflight_label": A.preflight_label(value["binding"], args.proof_stage, args.workload, args.operation)}}
+    context["report"] = {"plan": {"preflight_label": A.preflight_label(value["binding"], args.proof_stage, args.workload, args.operation, delivery=value.get("delivery"))}}
     return context
 
 
@@ -214,6 +281,8 @@ def validate_control(name, value, binding):
 
 
 def gather(args, provider):
+    if getattr(args, "expected_predecessor", None) is not None:
+        return gather_successor(args, provider)
     evidence = retained_source_evidence(args)
     source_options = {"retained_source_evidence": evidence} if evidence is not None else {}
     value = D.source(args, provider, **source_options)
@@ -253,19 +322,149 @@ def gather(args, provider):
     return packet, value["cache"]
 
 
-def validate_packet(value, *, evidence_class="live"):
-    require(isinstance(value, dict) and set(value) - {"source_transition"} == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256", "controller_basis", "package", "tasks", "controls", "restored_binding", "runtime"}
-            and value["schema"] == SCHEMA and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
+def gather_successor(args, provider):
+    evidence = retained_source_evidence(args)
+    options = {"retained_source_evidence": evidence} if evidence is not None else {}
+    selected = selected_args(args, "acceptance", "verifier", "read")
+    value = T.prepare(selected, provider, **options)
+    require(value.get("delivery") is not None, "acceptance-delivery-required")
+    predecessor = successor_parent(value, args)
+    deployed = C.completed_deployment(provider, value["binding"], value["parameters"], value["delivery"])
+    binding = {**value["binding"], "record_digest": args.expected_digest}
+    checked, tasks = {}, {}
+    for name in SUCCESSOR_TASKS:
+        stage, workload, operations = A.TASKS[name]
+        pair = {}
+        for phase in ("preflight", "operation"):
+            current = selected_args(args, stage, workload, operations[0], phase)
+            current.delivery_id = value["delivery"]["delivery_id"]
+            context = task_context(value, current, provider, checked)
+            pair[phase] = A.capture_task(T, context, current, provider, name, binding, historical=False)
+        tasks[name] = pair
+    definition = value["resources"]["ServerTaskDefinition"]["physical_id"]
+    service = C.RESOURCE.service(provider, definition, 1)
+    arns = C.RESOURCE.running_service_tasks(provider)
+    require(len(arns) == 1 and service.get("runningCount") == 1 and service.get("pendingCount") == 0,
+            "acceptance-current-runtime-not-confirmed")
+    running = C.RESOURCE.task(provider, arns[0], definition, binding["image_digest"])
+    require(running.get("lastStatus") == "RUNNING" and running.get("healthStatus") == "HEALTHY",
+            "acceptance-current-runtime-not-confirmed")
+    packet = {"schema": SUCCESSOR_SCHEMA, "target": TARGET, "scope": SCOPE, "evidence_class": "live",
+              "binding": binding, "controller_sha256": value["artifact"], "delivery": value["delivery"],
+              "predecessor": predecessor, "deployment": deployed["receipt"], "tasks": tasks,
+              "package": {key: value["custody"][key] for key in ("source_revision", "image_digest", "receipt_reference", "program_id", "package_contract_id")},
+              "runtime": {"task": running["taskArn"], "definition": definition, "created_at": running["createdAt"],
+                          "started_at": running["startedAt"], "source_resource_id": value["parameters"]["DatabaseResourceId"],
+                          "database_name": value["parameters"]["DatabaseName"], "observed_at": C.now()}}
+    validate_packet(packet)
+    require(C.source_digest() == value["artifact"], "acceptance-source-changed-before-retention")
+    C.ALIGN.source_preflight(value["custody"], **options)
+    return packet, value["cache"]
+
+
+def validate_successor(value, *, evidence_class):
+    require(set(value) == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256",
+            "delivery", "predecessor", "deployment", "tasks", "package", "runtime"}
+            and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
             "acceptance-collection-envelope-invalid")
     binding = C.RESOURCE.validate_binding(value["binding"])
-    transition = value.get("source_transition")
-    if "source_transition" in value: C.TRANSITION.validate(C, transition, {key: item for key, item in binding.items() if key != "record_digest"})
+    delivery = C.RESOURCE.validate_delivery(value["delivery"])
+    require(all(delivery["candidate"][key] == binding[key] for key in ("source_revision", "image_digest"))
+            and all(delivery["contracts"][key] == binding[key] for key in delivery["contracts"])
+            and all(delivery[key] == binding[key] for key in ("dependency_incarnation_sha256", "proof_label")),
+            "acceptance-delivery-binding-mismatch")
+    validate_package(value, binding)
+    require(delivery["candidate"]["receipt_reference"] == value["package"]["receipt_reference"], "acceptance-package-binding-invalid")
+    predecessor = value["predecessor"]
+    require(isinstance(predecessor, dict) and set(predecessor) == {"release_id", "candidate_record", "candidate_sha256", "applicability"}
+            and predecessor["release_id"] == delivery["expected_predecessor"]
+            and isinstance(predecessor["candidate_record"], str)
+            and re.fullmatch(r"release-candidates/release-[a-f0-9]{24}\.yml", predecessor["candidate_record"])
+            and isinstance(predecessor["candidate_sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", predecessor["candidate_sha256"]),
+            "acceptance-predecessor-reference-invalid")
+    applicable = predecessor["applicability"]
+    require(isinstance(applicable, dict) and set(applicable) == {"schema", "predecessor_source", "candidate_source", "input_paths", "inputs_sha256"}
+            and applicable["schema"] == "deploy/entity-smoke-recovery-applicability/v1"
+            and applicable["predecessor_source"] == delivery["predecessor"]["source_revision"]
+            and applicable["candidate_source"] == binding["source_revision"]
+            and isinstance(applicable["inputs_sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", applicable["inputs_sha256"]),
+            "acceptance-recovery-applicability-invalid")
+    require(A.recovery_input_paths(applicable["input_paths"]) == applicable["input_paths"],
+            "acceptance-recovery-applicability-invalid")
+    C.validate_deployment_receipt(value["deployment"], {key: item for key, item in binding.items() if key != "record_digest"}, delivery)
+    tasks = value["tasks"]
+    require(isinstance(tasks, dict) and set(tasks) == set(SUCCESSOR_TASKS), "acceptance-proof-set-incomplete")
+    timestamp = T.RUNNER.EVIDENCE.timestamp
+    after = value["deployment"]["result"]["facts"]["completed_at"]
+    operations, earlier = set(), {}
+    for name in SUCCESSOR_TASKS:
+        pair = tasks[name]
+        require(isinstance(pair, dict) and set(pair) == {"preflight", "operation"}, "acceptance-task-phases-incomplete", name)
+        for phase in ("preflight", "operation"):
+            proof = pair[phase]
+            require(isinstance(proof, dict) and proof.get("name") == name and proof.get("phase") == phase
+                    and proof.get("controller_sha256") == value["controller_sha256"], "acceptance-task-attribution-mismatch", name)
+            A.validate_task(proof, binding, delivery=delivery)
+            packet = proof["packet"]
+            plan = packet["plan"]
+            require(plan["controller_sha256"] == value["controller_sha256"]
+                    and plan["package_custody_reference"] == value["package"]["receipt_reference"]
+                    and all(plan[key] == value["deployment"]["plan"][key] for key in ("parameters_sha256", "template_sha256")),
+                    "acceptance-task-delivery-plan-mismatch", name)
+            require(packet["prerequisites"] == {"required_after": after, "packets": {
+                "deployment": value["deployment"], "predecessor": predecessor, **earlier}},
+                "acceptance-task-prerequisite-mismatch", name)
+            operation_id = packet["reservation"]["operation_id"]
+            require(operation_id not in operations and timestamp(packet["receipt"]["task"]["created_at"]) >= timestamp(after),
+                    "acceptance-successor-task-order-invalid", name)
+            operations.add(operation_id)
+        before = pair["preflight"]["packet"]
+        admission = pair["operation"]["admission"]["preflight"]
+        require(admission["reservation"] == before["reservation"] and admission["receipt"] == before["receipt"],
+                "acceptance-original-preflight-mismatch", name)
+        stage, workload, allowed = A.TASKS[name]
+        earlier[workload + "-" + allowed[0]] = pair["operation"]["packet"]
+        after = pair["operation"]["packet"]["receipt"]["task"]["stopped_at"]
+    validate_runtime(value["runtime"], binding)
+    runtime = value["runtime"]
+    require(runtime["definition"] == value["deployment"]["result"]["facts"]["resources"]["ServerTaskDefinition"]["physical_id"]
+            and isinstance(runtime["task"], str)
+            and re.fullmatch(r"arn:aws:ecs:" + C.RESOURCE.REGION + ":" + C.RESOURCE.ACCOUNT + r":task/" + C.RESOURCE.CLUSTER + r"/[a-f0-9]{32}", runtime["task"])
+            and timestamp(runtime["started_at"]) >= timestamp(runtime["created_at"])
+            and timestamp(runtime["created_at"]) >= timestamp(value["deployment"]["result"]["reservation"]["reserved_at"]),
+            "acceptance-current-server-mismatch")
+    A.fresh_final(tasks["final-read"]["operation"], final_required_after(value), value["runtime"]["observed_at"])
+    require(timestamp(value["runtime"]["observed_at"]) >= timestamp(tasks["final-read"]["operation"]["packet"]["receipt"]["collected_at"]),
+            "acceptance-current-server-mismatch")
+    return value
+
+
+def validate_package(value, binding):
     require(isinstance(value["controller_sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", value["controller_sha256"]), "acceptance-controller-source-invalid")
     package = value["package"]
     require(isinstance(package, dict) and set(package) == {"source_revision", "image_digest", "receipt_reference", "program_id", "package_contract_id"}
             and package["source_revision"] == binding["source_revision"] and package["image_digest"] == binding["image_digest"]
             and package["program_id"] == "kanbien-entity-smoke" and package["package_contract_id"] == "kanbien-entity-smoke-image"
             and isinstance(package["receipt_reference"], str) and re.fullmatch(r"[A-Za-z0-9._:/-]{1,512}", package["receipt_reference"]), "acceptance-package-binding-invalid")
+
+
+def validate_runtime(runtime, binding):
+    require(isinstance(runtime, dict) and set(runtime) == {"task", "definition", "created_at", "started_at", "source_resource_id", "database_name", "observed_at"}, "acceptance-runtime-facts-invalid")
+    require(isinstance(runtime["database_name"], str) and re.fullmatch(r"[a-z][a-z0-9_]{0,62}", runtime["database_name"])
+            and isinstance(runtime["source_resource_id"], str) and re.fullmatch(r"db-[A-Za-z0-9]+", runtime["source_resource_id"])
+            and A.digest({"resource_id": runtime["source_resource_id"], "database": runtime["database_name"], "schema": "entity_smoke"}) == binding["dependency_incarnation_sha256"], "acceptance-source-incarnation-mismatch")
+
+
+def validate_packet(value, *, evidence_class="live"):
+    if isinstance(value, dict) and value.get("schema") == SUCCESSOR_SCHEMA:
+        return validate_successor(value, evidence_class=evidence_class)
+    require(isinstance(value, dict) and set(value) - {"source_transition"} == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256", "controller_basis", "package", "tasks", "controls", "restored_binding", "runtime"}
+            and value["schema"] == SCHEMA and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
+            "acceptance-collection-envelope-invalid")
+    binding = C.RESOURCE.validate_binding(value["binding"])
+    transition = value.get("source_transition")
+    if "source_transition" in value: C.TRANSITION.validate(C, transition, {key: item for key, item in binding.items() if key != "record_digest"})
+    validate_package(value, binding)
     tasks, controls = value["tasks"], value["controls"]
     require(isinstance(tasks, dict) and set(tasks) == set(A.TASKS) and isinstance(controls, dict) and set(controls) == CONTROLS, "acceptance-proof-set-incomplete")
     operations = set()
@@ -288,10 +487,7 @@ def validate_packet(value, *, evidence_class="live"):
                 require(admission["reservation"] == before["reservation"] and admission["receipt"] == before["receipt"], "acceptance-original-preflight-mismatch", name)
     for name, proof in controls.items(): validate_control(name, proof, binding)
     runtime = value["runtime"]
-    require(isinstance(runtime, dict) and set(runtime) == {"task", "definition", "created_at", "started_at", "source_resource_id", "database_name", "observed_at"}, "acceptance-runtime-facts-invalid")
-    require(isinstance(runtime["database_name"], str) and re.fullmatch(r"[a-z][a-z0-9_]{0,62}", runtime["database_name"])
-            and isinstance(runtime["source_resource_id"], str) and re.fullmatch(r"db-[A-Za-z0-9]+", runtime["source_resource_id"])
-            and A.digest({"resource_id": runtime["source_resource_id"], "database": runtime["database_name"], "schema": "entity_smoke"}) == binding["dependency_incarnation_sha256"], "acceptance-source-incarnation-mismatch")
+    validate_runtime(runtime, binding)
     snapshot = controls["snapshot"]["facts"]
     deployed, cleaned = controls["restore-deployment"]["facts"], controls["restore-cleanup"]["facts"]
     require(snapshot["source_resource_id"] == runtime["source_resource_id"] and deployed["restored_resource_id"] != runtime["source_resource_id"]
@@ -328,7 +524,7 @@ def candidate_material(packet):
 
 
 def retained_source_evidence(args, custody=None):
-    observation = C.ROOT / ".cache/entity-smoke-live" / args.proof_label / "acceptance-observation.json"
+    observation = collection_cache(args, custody) / "acceptance-observation.json"
     C.RESOURCE.CONTROL.no_symlinks(observation)
     if not observation.exists(): return None
     packet = read_packet(observation)
@@ -362,7 +558,7 @@ def retain(packet, cache, *, root=None):
 
 
 def collect(args, provider):
-    cache = C.ROOT / ".cache/entity-smoke-live" / args.proof_label
+    cache = collection_cache(args)
     observation = cache / "acceptance-observation.json"
     C.RESOURCE.CONTROL.no_symlinks(observation)
     if observation.exists():
@@ -377,7 +573,7 @@ def collect(args, provider):
         return retain(packet, cache), "retained"
     packet, selected_cache = gather(args, provider)
     require(selected_cache == cache, "acceptance-proof-cache-mismatch")
-    A.fresh_final(packet["tasks"]["final-read"]["operation"], packet["controls"]["restore-cleanup"]["facts"]["observed_at"], C.now())
+    A.fresh_final(packet["tasks"]["final-read"]["operation"], final_required_after(packet), C.now())
     require(len(T.RUNNER.CONTROL.canonical(packet)) + 1 <= MAX_PACKET_BYTES, "acceptance-collected-proof-too-large")
     # Reserve the immutable observation before any durable copy. A lost response
     # resumes these same bytes, never restamps old tasks or creates another proof.
@@ -392,6 +588,7 @@ def parse(arguments=None):
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--proof-label")
     parser.add_argument("--expected-digest")
+    parser.add_argument("--expected-predecessor")
     parser.add_argument("--write-candidate", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
@@ -399,7 +596,10 @@ def parse(arguments=None):
     if args.inputs is None:
         require(args.receipt is not None and isinstance(args.proof_label, str) and isinstance(args.expected_digest, str)
                 and re.fullmatch(r"entity-smoke-[a-f0-9]{24}", args.proof_label) and re.fullmatch(r"[a-f0-9]{64}", args.expected_digest), "acceptance-arguments-invalid")
-    else: require(all(value is None for value in (args.receipt, args.proof_label, args.expected_digest)), "acceptance-arguments-invalid")
+    else: require(all(value is None for value in (args.receipt, args.proof_label, args.expected_digest, args.expected_predecessor)), "acceptance-arguments-invalid")
+    require(args.expected_predecessor is None or re.fullmatch(r"none|release-[a-f0-9]{24}", args.expected_predecessor),
+            "acceptance-arguments-invalid")
+    if args.expected_predecessor == "none": args.expected_predecessor = None
     require(args.write_candidate, "acceptance-candidate-write-approval-required")
     return args
 
@@ -412,8 +612,9 @@ def resolve_inputs(args):
     except ValueError as failure:
         code = str(failure)
         raise CollectionFailure(code if re.fullmatch(r"acceptance-inputs-[a-z0-9-]+", code) else "acceptance-inputs-not-confirmed") from None
-    require(set(values) == {"candidate_receipt", "proof_label", "expected_digest"}, "acceptance-inputs-set-invalid")
-    return parse(["--receipt", values["candidate_receipt"], "--proof-label", values["proof_label"], "--expected-digest", values["expected_digest"], "--write-candidate"])
+    require(set(values) == {"candidate_receipt", "proof_label", "expected_digest", "expected_predecessor"}, "acceptance-inputs-set-invalid")
+    return parse(["--receipt", values["candidate_receipt"], "--proof-label", values["proof_label"], "--expected-digest", values["expected_digest"],
+                  "--expected-predecessor", values["expected_predecessor"], "--write-candidate"])
 
 
 def failure_details(failure, context=None):

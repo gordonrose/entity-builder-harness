@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-accept-or-restore-release
-version: 6
+version: 7
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-11-10"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -29,6 +29,12 @@ baseline. Follow
 and the selected provider workflow for concrete commands and authority.
 
 ## Verify and Accept
+
+Use the [realization proof-applicability assessment](../../standards/operational-realization-gate.md#proof-applicability-by-change)
+from the change inventory. Acceptance still requires the selected declaration
+and collector to agree; neither a routine-release label nor a faster report
+waives their current proof set. Preserve original evidence when qualifying a
+more reusable successor route.
 
 1. Validate the scope's health, failure, and recovery declaration through
    `verify-health-failure-and-recovery.md`. Stop when its structure, safe
@@ -68,6 +74,27 @@ and the selected provider workflow for concrete commands and authority.
    do not declare the candidate current after restoring the original release.
 
 ## Restore and Verify
+
+### Ordinary entity-smoke acceptance
+
+The owning acceptance route declares `expected_predecessor` alongside the
+candidate receipt, stable original-record proof label and digest. Use `none`
+only for first acceptance. For an ordinary update, the collector requires its
+checked update receipt and a distinct delivery-bound sequence: current runtime
+permissions, the feature lifecycle smoke, collision behaviour and final
+original-record read. Each operation retains its own preflight, original plan,
+prerequisites, reservation and completion. Synthetic lifecycle data uses the
+delivery's derived label; the original data check retains the stable label.
+
+The existing acceptance schema owns recovery-input selectors. Actual source
+trees, configuration/permission contracts and database incarnation must still
+match before earlier recovery capability evidence can be used. A changed or
+removed protected input requires requalification; ordinary acceptance does not
+implement that requalification or claim it succeeded. The retained v1 reader
+continues to validate the original full qualification; v2 records reference
+accepted predecessor custody rather than copying or restamping its proofs.
+Promotion rechecks current applicability, live observations and exact predecessor.
+These local implementation checks do not establish the ten-minute live target.
 
 ### Eligible initial scope
 
@@ -160,6 +187,14 @@ Complete only when the declared final release is healthy, independently verified
 and reflected in the accepted record. Output the candidate verdict, final live
 identity, accepted record and safe evidence references. No result grants new
 permissions, expands the scope, or substitutes for missing mutation authority.
+
+Report delivery-budget outcome separately using the shared
+[accounting rule](../../../shared/testing/standards/test-execution.md#delivery-budget-accounting).
+Only terminal required verification and acceptance can close a successful
+delivery measurement. Include available preceding build/package/deploy timing;
+missing connected timing means the budget is not established. Publication,
+submission, readiness alone or a successful restoration is not successful
+delivery of the rejected candidate.
 
 Historical succession validation checks the retained evidence hashes and full
 predecessor lineage without comparing historical contracts to today's files.

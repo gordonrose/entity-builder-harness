@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.lifecycle-stage-ownership
-version: 1
+version: 2
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.lifecycle
 disciplines:
@@ -44,6 +44,27 @@ used_by:
   affected checks first.
 - Keep one capability authoritative. A capability may cite upstream or
   downstream phases but must not duplicate their checks or approval gates.
+
+## Workload and machinery boundary
+
+Apply the [shared reuse and delivery objective](../../shared/standards/require-change-completion.md#reuse-simplicity-and-normal-delivery)
+before adding a route. Reuse the existing lifecycle owner; extend a shared
+capability when needed. A workload supplies its program, configuration,
+migrations, identity/access requirements and behaviour proof. Its name alone
+does not justify another build, deployment, recovery or acceptance engine.
+
+A new feature does not automatically require a new deployment scope or image.
+Choose the app/program and isolation boundary from actual runtime, ownership
+and security needs. A legitimately isolated workload still consumes shared
+machinery. Do not merge distinct identities, databases or accepted histories
+merely to remove files. Conversely, do not retain duplicated execution logic
+merely because resources must remain isolated.
+
+Infrastructure additions expose capability contracts through these existing
+owners so subsequent applications can declare their use. Review callers and
+older rules together; retire superseded machinery through the existing migration
+workflow, preserving historical evidence. Proof selection follows the
+[realization applicability rules](operational-realization-gate.md#proof-applicability-by-change).
 
 ## Stage Assignment
 

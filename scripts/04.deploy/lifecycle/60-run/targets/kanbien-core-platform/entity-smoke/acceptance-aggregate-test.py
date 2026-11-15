@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-aggregate
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -104,6 +104,7 @@ def fixture(K, source_revision=None):
 
 
 def run(K):
+    successor_protocols(K)
     value = fixture(K)
     A, M = K.A, K.CONTROL
     assert K.T.RECOVERY.STATE.STOP.artifact(K.C) == A.digest(value["controller_basis"])
@@ -210,6 +211,70 @@ def run(K):
             else: raise AssertionError("Misassembled aggregate accepted: " + name)
     print(json.dumps({"schema": "deploy/entity-smoke-aggregate-fixture/v1", "verdict": "passed", "primitive_owners": "controlled-prevalidated-protocols-not-live-proof",
         "negative_connections": len(cases), "historical_file_or_provider_queries": False, "candidate_retention": False}))
+
+
+def successor_protocols(K):
+    """Actual successor aggregate; primitive custody readers explicitly controlled."""
+    value = fixture(K)
+    A = K.A
+    value["schema"] = K.SUCCESSOR_SCHEMA
+    value.pop("controller_basis"); value.pop("controls"); value.pop("restored_binding")
+    value["package"]["receipt_reference"] = "github-actions-run:12345"
+    binding = value["binding"]
+    identity = {"expected_predecessor": "release-" + "a" * 24,
+        "predecessor": {"release_id": "release-" + "a" * 24, "source_revision": "b" * 40,
+                        "image_digest": "sha256:" + "b" * 64, "proof_set_sha256": "sha256:" + "d" * 64},
+        "candidate": {key: value["package"][key] for key in ("source_revision", "image_digest", "receipt_reference")},
+        "contracts": {key: binding[key] for key in ("configuration_contract_sha256", "permission_contract_sha256")},
+        "dependency_incarnation_sha256": binding["dependency_incarnation_sha256"], "proof_label": binding["proof_label"]}
+    delivery_id = A.digest(identity)[7:]
+    value["delivery"] = {"schema": "deploy/entity-smoke-delivery-context/v1", **identity,
+                         "delivery_id": delivery_id, "smoke_label": "entity-smoke-" + delivery_id[:24]}
+    value["predecessor"] = {"release_id": identity["expected_predecessor"],
+        "candidate_record": "release-candidates/" + identity["expected_predecessor"] + ".yml",
+        "candidate_sha256": "sha256:" + "9" * 64, "applicability": {
+            "schema": "deploy/entity-smoke-recovery-applicability/v1", "predecessor_source": "b" * 40,
+            "candidate_source": binding["source_revision"], "input_paths": ["platform"], "inputs_sha256": "sha256:" + "8" * 64}}
+    plan = {"parameters_sha256": "sha256:" + "1" * 64, "template_sha256": "sha256:" + "2" * 64}
+    value["deployment"] = {"fixture": "prevalidated-deployment-not-live-evidence", "plan": plan,
+        "result": {"reservation": {"reserved_at": "2026-11-09T00:00:00Z"}, "facts": {
+            "completed_at": "2026-11-09T00:00:01Z",
+            "resources": {"ServerTaskDefinition": {"physical_id": value["runtime"]["definition"]}}}}}
+    value["tasks"] = {name: value["tasks"][name] for name in K.SUCCESSOR_TASKS}
+    after, earlier = value["deployment"]["result"]["facts"]["completed_at"], {}
+    for name in K.SUCCESSOR_TASKS:
+        for proof in value["tasks"][name].values():
+            proof["packet"]["plan"] = {**plan, "controller_sha256": value["controller_sha256"],
+                                      "package_custody_reference": value["package"]["receipt_reference"]}
+            proof["packet"]["prerequisites"] = copy.deepcopy({"required_after": after,
+                "packets": {"deployment": value["deployment"], "predecessor": value["predecessor"], **earlier}})
+        stage, workload, operations = A.TASKS[name]
+        operation = value["tasks"][name]["operation"]["packet"]
+        earlier[workload + "-" + operations[0]] = copy.deepcopy(operation)
+        after = operation["receipt"]["task"]["stopped_at"]
+    def reject(mutator, expected):
+        invalid = copy.deepcopy(value); mutator(invalid)
+        try: K.validate_packet(invalid, evidence_class="simulated")
+        except K.CollectionFailure as failure:
+            assert failure.code == expected, (failure.code, expected)
+            assert "private-successor-canary" not in json.dumps(K.failure_details(failure))
+        else: raise AssertionError("invalid successor aggregate accepted: " + expected)
+    with patch.object(A, "validate_task", side_effect=lambda task, *args, **kw: task) as tasks, \
+            patch.object(K.C, "validate_deployment_receipt", return_value=value["deployment"]) as deployment:
+        assert K.validate_packet(value, evidence_class="simulated") is value
+        assert tasks.call_count == 8 and deployment.call_count == 1
+        assert all(call.kwargs["delivery"] == value["delivery"] for call in tasks.call_args_list)
+        reject(lambda v: v["tasks"].pop("lifecycle"), "acceptance-proof-set-incomplete")
+        reject(lambda v: v["predecessor"].update(candidate_record="../private-successor-canary"), "acceptance-predecessor-reference-invalid")
+        reject(lambda v: v["predecessor"]["applicability"].update(candidate_source="0" * 40), "acceptance-recovery-applicability-invalid")
+        reject(lambda v: v["tasks"]["final-read"]["operation"]["packet"]["prerequisites"].update(required_after="2026-11-09T00:00:00Z"), "acceptance-task-prerequisite-mismatch")
+        reject(lambda v: v["tasks"]["final-read"]["operation"]["packet"]["plan"].update(template_sha256="sha256:" + "0" * 64), "acceptance-task-delivery-plan-mismatch")
+        reject(lambda v: v["tasks"]["final-read"]["operation"]["packet"]["receipt"]["task"].update(created_at="2026-11-09T00:00:00Z"), "acceptance-successor-task-order-invalid")
+        reject(lambda v: v["tasks"]["final-read"]["operation"]["admission"]["preflight"].update(reservation={"other": True}), "acceptance-original-preflight-mismatch")
+        reject(lambda v: v["runtime"].update(definition="private-successor-canary"), "acceptance-current-server-mismatch")
+    print(json.dumps({"schema": "deploy/entity-smoke-successor-aggregate-fixture/v1", "verdict": "passed",
+        "primitive_owners": "controlled-prevalidated-protocols-not-live-proof", "fresh_task_phases": 8,
+        "candidate_retention": False, "provider_observation": False}))
 
 
 if __name__ == "__main__":

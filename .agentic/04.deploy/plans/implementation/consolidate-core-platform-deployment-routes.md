@@ -40,7 +40,100 @@ safeguard, then (3) declaration-derived build/packaging with ongoing governance
 and enforcement. Neither follow-on makes unfinished consolidation complete or
 expands the existing no-push, no-publication and no-AWS authority boundary.
 
-## Progress
+## Current programme: remaining pieces and all 34 lessons
+
+The user has authorised repository remediation in the order below. Full image,
+publication and AWS proof remain paused until these corrections are integrated.
+Earlier implementation entries are history, not evidence that the complete
+delivery lifecycle is reusable or meets its ten-minute budget. The retrospective
+lesson guide retains its separate user-led discussion progress.
+
+| Batch | Connected pieces and surviving owners | Completion evidence |
+| --- | --- | --- |
+| A — Declarations and coordination | Existing target/scope/workload declarations, declaration coverage, build/package and deployment controllers. Replace copied selection and sequencing with shared owners; migrate persistence and entity-smoke together. | Both real consumers use the same implementation; changed declarations reach callers; unsupported selections fail before effects; displaced code and conflicting instructions removed. **In progress, not complete.** |
+| B — Capabilities, proof and recovery | Existing provider adapters, realization gate, release succession and acceptance. Generalize supported capabilities, not workload names; distinguish first qualification, ordinary update and capability-changing update. | Initial release, successor, rollback, interrupted operation, expected failure and owned cleanup use the same contracts. Requalification and partially failed updates remain open. |
+| C — Fast execution and reliable continuation | Existing selector/cache, custody receipts, operation journals and reporting. Connect stages without repeated work or loss of failure evidence. | Accurate stage status, safe actionable failures, resume without replay, credential-expiry handling and end-to-end timing; no new parallel runner or evidence registry. |
+| D — Integrated demonstration | Use the existing consumers and a differently named declared consumer to exercise the connected route. Remove remaining superseded machinery throughout A–C, not only here. | Frozen-source local integration, package and finally live proof; measure the ten-minute target and separately identify actual provider waits/full regression. A renamed fixture alone is insufficient. |
+
+For every batch: inspect actual consumers and conflicting rules; record the
+shared owner and justified workload data; refactor callers and remove obsolete
+code together; review source and counterexamples; run only affected focused
+checks. Do not run full proof after each lesson. Record terminal run results in
+the session log, outside frozen verification inputs. No lesson is closed solely
+by a rule, a refreshed review hash or a planned test.
+
+The following is engineering disposition, **not a claim that 34 fixes are
+complete**. “Historical fix” means the original incident was repaired; reusable
+coverage still needs the named batch. Lesson numbers refer to
+[the existing retrospective](../../../../docs/education/lesson-plans/0002-entity-smoke-release-retrospective.md).
+
+| Lesson | Current finding and remaining obligation | Batch |
+| --- | --- | --- |
+| 1 — Complete path upfront | Shared operations exist; connected ordinary delivery and ownership remain incomplete. | A–D |
+| 2 — Overclaimed local success | Stage-separated selector reports exist; verify caller summaries do not claim later-stage success. | C, all reporting |
+| 3 — Compiler mapping/shim | Declaration-derived workspace build exists; prove new and removed programs through real packaging callers. | A, D |
+| 4 — Diagnostic owner | Original identifier corrected; keep catalog-owner checks in applicable feature validation. | A, focused regression |
+| 5 — Diagnostic explanation | Do not invent missing foundations; inspect existing definitions and producers before changes. | All source reviews |
+| 6 — Feature organization | Existing contract/transport/domain/persistence and per-use-case services are the owner; no second feature template. | A |
+| 7 — Circular preflight | Historical bounded exception exists; replace workload-only admission with reusable capability rules. | B |
+| 8 — Admin/runtime assumption | Separate runtime proof supported; verify declared principal ownership across consumers. | B |
+| 9 — Expected failure | Historical unready exception exists; generic recovery must represent expected failure and subsequent readiness. | B |
+| 10 — Restore cleanup | Historical owned-clone exception exists; generalize ownership/readback requirements without broad deletion. | B |
+| 11 — Acceptance dirty files | Collector-file exception repaired the incident; verify exact generated evidence versus source changes in the shared route. | B |
+| 12 — Controller/image coupling | Controller-only repair was added for the incident; reusable input identity and artifact reuse remain to be proved. | A, C |
+| 13 — Tests/controller identity | Audit source manifests and cache inputs; test changes must invalidate test evidence, not unrelated runtime identity. | A, C |
+| 14 — Provider response shapes | Existing adapter regressions improved; exercise real caller mappings and uncertain/partial responses. | B |
+| 15 — ECR endpoints | Initial incident fixed; dependency alignment must cover declared registry reachability before launch. | B |
+| 16 — PostgreSQL assumptions | Preserve separate bootstrap, migration and runtime access checks through shared declared capabilities. | B |
+| 17 — Historical/fresh evidence | Existing freshness and immutable-evidence owners remain; prove no historical receipt becomes current health. | B, C |
+| 18 — Interrupted recovery | Reservation/journal helpers exist; shared end-to-end reconciliation still incomplete. | B, C |
+| 19 — Combining evidence | Successor collection added locally; general reusable acceptance composition remains open. | B |
+| 20 — Freshness consumed locally | Move immutable preparation before fresh observation; measure actual remaining validity at execution. | C |
+| 21 — Serial investigation | Review connected failures as one batch; parallelize independent read-only checks where useful, without concurrent edits to frozen inputs. | All batches |
+| 22 — Feature-specific machinery | Low-level sharing is partial; remove repeated declarations and lifecycle control, not just helper bodies. | A, B |
+| 23 — Slow feedback | Selector/cache exist; narrow real proof inputs and replace repeated direct prechecks with matching evidence reuse. | C |
+| 24 — Accepted-state fixtures | Test both initial and successor states; do not encode current acceptance as a fixture prerequisite. | B |
+| 25 — Copied fixtures | Inventory all callers when contracts change; share reusable fixture builders without erasing independent assertions. | A, B |
+| 26 — Stale diagnostic reviews | Existing source-matched review procedure applies; finish review before frozen focused tests. | All batches |
+| 27 — Lost failure detail | Selector still has not-retained child details; add bounded safe diagnostics through its existing report owner. | C |
+| 28 — Credential lifetime | Plan credential validity against remaining operations; distinguish expiry from provider failure. Polling does not renew an authentication session. | C |
+| 29 — Assistant-dependent continuation | Persistent operation evidence exists; one resumable coordinator still needs implementation/proof. | A, C |
+| 30 — Repeated approvals | Reuse recorded authority within its actual scope; only new authority or external authentication requires user action. | All batches, C |
+| 31 — Unreliable remaining-work reports | This current matrix supersedes broad completion claims; report implementation and proof separately. | All batches, C |
+| 32 — Premature pass | Only terminal successful evidence can mark a check passed; started/running/deferred remain distinct. | C |
+| 33 — Local execution mistakes | Use governed entrypoints and exact workspace/input identity; cover failure propagation rather than manual command chains. | A, C |
+| 34 — User became coordinator | Implementer owns connected review, corrections and continuation; report material decisions and actual outcomes. | All batches |
+
+### Batch A first connected slice: declared ECS template selection
+
+Inspection found `entity-smoke-runtime-configuration.py` repeats workload IDs,
+provider references and template selection already owned by workload bindings.
+The existing `ecs-runtime-configuration.py` is used by persistence, bootstrap,
+staging package projection and entity-smoke package projection. Extend that
+owner to select an explicitly declared sibling template per workload; retain
+the default template for existing bindings. Point entity-smoke at that owner
+and delete the special adapter and its active references. Do not rewrite
+historical release evidence or the pinned inventory.
+
+Consumers: declaration coverage/runtime-configuration, entity-smoke workload
+binding and declaration impact paths, composition template tests, the existing
+declaration-coverage regression/catalog, package-projection callers and the
+diagnostic review ledger. Package projection remains single-template and
+unchanged. This removes one actual special adapter; it does **not** complete
+shared release coordination or Batch A.
+
+Diagnostic predicates: absent per-workload template selects the supplied default;
+an explicit template must be a nonempty relative sibling filename, regular and
+not symlinked, within the supplied template directory. Reject empty/wrong-type,
+absolute/traversing/symlinked or missing selections, duplicate workload IDs and
+invalid provider resources before yielding normalized facts. Preserve the
+existing caller's `runtime-provider-configuration-invalid` safe projection;
+never expose supplied paths, template contents or secret values. Tests must use
+two real bindings, a differently named multi-template fixture, invalid-path and
+symlink canaries, and unchanged package projection. These checks are planned
+until terminal results are recorded.
+
+## Earlier consolidation progress (historical scope)
 
 | Stage | Status | Deliverable |
 | --- | --- | --- |
@@ -50,10 +143,10 @@ expands the existing no-push, no-publication and no-AWS authority boundary.
 | 3 — Remove superseded implementations | Migrated internals and four obsolete incident executors removed; historical readers preserved | Three historical helper paths are export-only wrappers; cumulative source change is not a net reduction; source accounting and historical compatibility observations are recorded below |
 | 4 — Demonstrate reuse | Connected controlled fixture reviewed and passed | Differently named packaged Node workload uses shared reservation, CloudFormation, ECS, snapshot and candidate entrypoints; real PostgreSQL, OCI qualification and AWS proof are not established |
 
-All three authorised workstreams are implemented and source-reviewed. The
-reporting safeguard and declaration-derived build enforcement have focused
-proof below; complete affected integration and actual local image qualification
-remain required. Final frozen-input run IDs, checkpoint/image identities and
+The original bounded helper, reporting and build slices were source-reviewed;
+they do not establish completion of the expanded programme above. Their focused
+proof is recorded below; complete affected integration and actual local image
+qualification remain pending. Final frozen-input run IDs, checkpoint/image identities and
 terminal outcomes are recorded in the active
 [session log](../../../../commitLogs/2026/nov/06/2026-11-06-17-07-new-chat-session/README.md),
 so later execution observations do not require changing verified source inputs.
@@ -61,6 +154,391 @@ Earlier dated implementation entries below are chronological history, not
 current blockers; in particular, local checkpoint authority was granted and C03
 has moved beyond its former committed-plan boundary. No fresh publication or
 AWS proof is claimed by this cleanup.
+
+## Reusable delivery reconciliation inventory — 2026-11-15
+
+### Scope, authority and objective
+
+The user authorised this bounded inventory after reviewing the proposed
+reusable-delivery rules and asking which existing text or code conflicts with
+them. This section records source findings and proposed corrections only. It
+does not enact new standards, resume the paused consolidation goal, change
+release requirements, authorise provider operations or claim full proof.
+The earlier "three workstreams implemented" status covers those original
+workstreams, not the additional corrections below.
+
+Inspected checkpoint: `872052b03a239a7ddb8d4fc98cb6cfa7f178497f`; the active
+2026-11-06 chat worktree was clean before this document edit. The parent agent
+performed the read-only review; no new agent, build, container, CI run or AWS
+operation was started. All paths below are relative to the repository root.
+
+The user's objective is reusable machinery, modular ownership, predictable
+expansion and a normal delivery lifecycle of at most ten minutes for changes
+or additions to features, apps and products. Infrastructure capabilities must
+be consumable through that same lifecycle. Report total elapsed time, with
+genuinely externally controlled setup/waits and additional full regression
+work identified separately. Repeated compilation, unnecessary checks,
+orchestration overhead and manual repair are not external-wait exclusions.
+The target is not yet proved. Work through the retrospective corrections with
+focused checks, then perform consolidated full proof on stable inputs.
+
+### Inspected coverage and limits
+
+| Surface | Inspection performed | Limit of this observation |
+| --- | --- | --- |
+| Governance | Change completion, test execution, lifecycle ownership, package qualification, realization/evidence reuse, feature creation, deploy/acceptance workflows and AWS applicability rules | Source review, not proof that all callers comply |
+| CI | Read delivery-coverage and entity-smoke publication workflows; compared bootstrap, persistence and collector publication entrypoints; searched staging workflow entrypoints | Core-platform path is the detailed case; no hosted executions or complete staging migration audit |
+| Build/package | Traced entity-smoke workflow to its builder, shared candidate prechecks, composition suite, Dockerfile and qualification receipt; compared persistence builder | No image builds, cache hit measurements or assurance that host/container compilation can be safely collapsed |
+| Selection/cache | Read execution, final revalidation, feedback classification, receipt identity, invalidation reasons and safe reporting code; inspected composition catalog inputs | No empirical cache miss frequency or end-to-end performance measurement |
+| Acceptance | Traced entity-smoke collector's exact task/control requirements and scope declaration; read generic succession workflow | Identifies this route's requirements; does not assert every other release repeats this route |
+| Historical text | Read incident-retirement notice, current consolidation status and retrospective progress | Historical records are evidence, not instructions to rerun retired operations |
+
+This is a bounded reconciliation inventory, not an exhaustive audit of every
+feature, frontend build, provider adapter or CI branch. Those consumers must be
+included when a proposed correction changes their shared owner. No absence of
+a conflict outside this inspected set is claimed.
+
+### Findings, surviving owners and corrections
+
+<!-- deterministic-check: allow reason="this inventory records observed implementation and proposed corrections; execution and evidence reuse remain governed by existing lifecycle and selector entrypoints, not these table descriptions" -->
+
+| ID | Confirmed source observation and risk | Surviving owner and proposed correction | Focused evidence required before closing the correction |
+| --- | --- | --- | --- |
+| RD01 — Objective ownership | Shared completion already requires connected consumers and proportionate tests; lifecycle ownership already forbids duplicate capability checks/gates. Neither establishes the user's end-to-end ten-minute objective. Adding copies everywhere would conflict with single ownership. | Put the cross-layer objective in `.agentic/shared/standards/require-change-completion.md`; keep timing/test policy in `.agentic/shared/testing/standards/test-execution.md` and deployment semantics with `.agentic/04.deploy/standards/lifecycle-stage-ownership.md`. Feature/deployment workflows reference those owners. | Review a feature change, new app and new infrastructure capability against one short reuse/impact assessment. Do not pretend a text-presence check proves architectural simplicity. |
+| RD02 — Workload-only governance | `.agentic/aws/standards/operational-realization-applicability.md` still restricts read-only preflight, expected-unready observation and disposable-restore cleanup to entity-smoke. A future workload cannot acquire these capabilities merely by using the shared code. | General capability/admission semantics stay with `.agentic/04.deploy/standards/operational-realization-gate.md`; AWS execution conditions stay with the existing applicability standard and provider adapters. Separate reusable rules from incident-specific approval/history; bind new uses to declared ownership and operation scope. | Another declared workload can use the capability; undeclared/widened operations and replay remain rejected. Test actual callers, not just renamed fixtures. Preserve resource protection and execution-authority boundaries. |
+| RD03 — Qualification versus ordinary release | `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py` requires the exact `A.TASKS` set and seven `CONTROLS`, including replacement, stop/restart, snapshot, restore and cleanup. The scope declaration's server-mediated proof includes replacement. The acceptance workflow explicitly requires replacement/restore for first acceptance. A readiness-only report cannot satisfy these contracts. | Keep declaration/health-recovery owners and shared `release-succession`; define applicability for new platform capability qualification, first workload use of an already-qualified capability, ordinary update and changes invalidating prior proof. Reconcile collector, declarations, acceptance workflow and their tests together. Preserve the historical complete-proof reader. | Exercise each change class: routine changes retain relevant capability proof plus fresh workload evidence; changed permissions/schema/runtime/recovery invalidate the affected proof; missing first-use obligations cannot pass. Do not assume every new feature needs full infrastructure qualification or silently exclude its required tests from the budget. |
+| RD04 — Broad suite labelled fast | `scripts/repo/check-selection/checks.yml` labels `entity-smoke-composition` development-eligible with a 60-second estimate. Its `20-build/entity-smoke-composition/smoke-test.sh` compiles fresh output and invokes alignment, administration, task, failure/restart/credential, infrastructure, restore, acceptance and qualification fixtures. It is not just a small composition check. | Keep `checks.yml` as the single catalog and the existing selector as scheduler. Separate focused units from the broad composition/controller aggregate, retaining full required membership. Update the estimate/rationale from measured results after the split. | Changed feature logic selects fast relevant units; controller changes select their tests; integration still includes every former assertion; aggregate child failures propagate. Do not meet the budget by dropping coverage. |
+| RD05 — Package prechecks rerun directly | `40-package/build-entity-smoke-image/script.sh` directly runs catalog, app and full composition checks. Its workflow and shared `build-candidate-image/operations.sh` both call delivery inventory. The persistence builder also directly invokes PostgreSQL diagnostics/integration/composition checks. These direct calls do not themselves consult selector receipts. | Keep builders, shared candidate prechecks and selector/cache owners. Route reusable local prerequisites through their registered checks with exact input identity, while retaining distinct container/package proof. Reconcile publication callers as well as local builders. | Matching local evidence avoids duplicate execution; changed relevant input/runtime reruns it; direct package entry cannot skip required prerequisites. Measure both cold and warm paths. The Dockerfile's isolated compilation is a separate trust boundary, not automatically safe to delete. |
+| <!-- deterministic-check: allow reason="observational inventory and proposed proof requirements, not an executable procedure or replacement for the existing stage owners" --> RD06 — CI and release boundary | `.github/workflows/delivery-coverage.yml` executes integration selection. Entity-smoke publication independently installs, validates, builds, qualifies, scans and attests, and explicitly does not deploy. These are separate phases, not one measured normal-delivery command. A 35-minute job timeout is a safety ceiling, not measured duration or a conflicting delivery promise. | Preserve CI, package custody and deploy/run owners. Connect one source/artifact-bound delivery identity and timing observation across their existing entrypoints. Define when the clock starts, required stages, interruptions and completion before claiming a result. Do not introduce a second deployment engine or import arbitrary local receipts into CI. | A publication-only run cannot claim delivery; missing/failed deploy or smoke remains incomplete; resumed runs retain gaps and original elapsed time; overlaps are not double-counted; cold installation and repo-controlled setup remain visible. |
+| RD07 — Evidence invalidation | `scripts/repo/check-selection/script.py:identity` binds declared inputs, runtime, verification contract and dependency evidence; `local_cache.py` explains misses. Audited `scope_inputs: false` checks already separate impact from proof inputs. The realization standard permits immutable artifact evidence reuse but expires live observations after 900 seconds. This is not a missing reuse policy. | Preserve selector/cache and realization owners. Audit overly broad input declarations and direct callers before narrowing anything. Package `qualification.py` retains image identity, explicit input hashes and projected runtime configuration; it is not interchangeable with local check cache. | Unrelated text edits preserve only genuinely unaffected proof; test/assertion, source, runtime/configuration and dependency changes invalidate the corresponding evidence; stale live observations never become fresh by reusing an immutable receipt. Cache-hit savings remain unmeasured until execution. |
+| RD08 — Reporting duplication and semantics | `execution_policy.py` already owns local run reports, stage-separated evidence and per-check estimate overruns. `shared/deployment-operation-diagnostics.py` owns failure/uncertain-operation diagnostics with bounded persistence execution timing, not successful end-to-end delivery reporting. Neither is a generic release executor. | Extend existing local reports and reference package/deploy/run receipts. Do not force success/budget reporting into the failure-diagnostic schema. The previously proposed `shared/delivery-report/` folder is provisional, not an approved file addition; justify any small observation-only adapter only after its cross-stage inputs are defined. | Separate estimate overrun, delivery-budget miss and functional outcome; missing timing yields unknown, never pass; reports cannot grant execution or seed trusted proof; total wall time and evidenced exclusions remain auditable without secrets. |
+| RD09 — Useful failure evidence | The test standard forbids raw child output. The selector captures output but stores `not-retained` markers, leaving an exit status without the actual child assertion detail for ordinary leaves. The earlier unexplained failures illustrate the diagnostic cost. | Keep diagnostic definitions/producers and existing safe report projection. Add bounded structured failure details and safe evidence references, with explicit unavailable state for unadapted commands. Do not retain unrestricted stdout/stderr as a shortcut. | A failing child yields actionable safe detail without rerunning it; canary secrets and arbitrary output are rejected; original status survives failed report retention. Registration and aggregate handling must preserve the child failure identity. |
+| RD10 — Historical/current text | The AWS applicability standard already explicitly retires the completed incident executors; do not describe them as still-active duplicate deployment commands. The retrospective progress still says lesson 1 / 0 of 34, while chat has discussed later topics. This plan's original implementation status does not cover these new corrections. | Keep historical approvals/receipts and immutable accepted evidence. Update current status/pointers in their existing owners as work progresses; distinguish discussed, understood/confirmed, implemented and verified. This section qualifies the original plan status without rewriting history. | Status review agrees with actual code/evidence and pending work. Never mark lessons understood or full proof complete merely because topics were discussed. No historical evidence deletion or mass document rewrite. |
+
+### Exact source anchors for the next implementation pass
+
+These are owner/caller references, not an instruction to edit every file listed.
+The future change set must use the smallest connected subset for each finding.
+
+- RD01/RD02: `.agentic/03.product/feature/workflows/create-feature.md`,
+  `.agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md`,
+  `.agentic/aws/standards/operational-realization-applicability.md` (sections
+  "Completed incident executors are retired", "Entity-smoke read-only execution
+  preflight" and its observation/cleanup exceptions).
+- RD03: `.agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md`;
+  `infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml`
+  (`server_mediated_dependency_proof` and health/recovery proof);
+  `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py`
+  (`CONTROLS`, `acceptance-proof-set-incomplete`), `acceptance-evidence.py`,
+  `acceptance-controls.py`, and their route/control tests.
+- RD04/RD05: `scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh`;
+  `scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh`;
+  `scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh`;
+  `scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh`;
+  `infra/04.deploy/03.product/image/entity-smoke/Dockerfile`.
+- RD06: `.github/workflows/delivery-coverage.yml` and the four existing
+  `publish-kanbien-core-platform-{core-server,core-server-persistence,entity-smoke,observability-collector}.yml`
+  workflows; `.agentic/04.deploy/standards/package-qualification.md` and the
+  package/deploy/run workflows. Publication remains distinct from deployment.
+- RD07/RD08/RD09: `scripts/repo/check-selection/{script.py,execution_policy.py,local_cache.py,checks.yml,mechanics_test.py,README.md}`;
+  `scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py`;
+  `scripts/04.deploy/shared/deployment-operation-diagnostics.py` and its tests.
+- RD10: `docs/education/lesson-plans/0002-entity-smoke-release-retrospective.md`,
+  this plan, the existing route inventory and the active session log. The
+  lesson plan remains user-led; this inventory does not mark any lesson complete.
+
+### Implementation ordering and acceptance of the follow-up
+
+1. Reconcile proof applicability and objective ownership together (RD01–03).
+   Keep new-capability qualification distinct from reuse by a new workload.
+   Do not declare a routine route fast by silently reducing required proof.
+2. Correct fast feedback, prerequisite invocation and evidence invalidation
+   together (RD04–07; retrospective lessons 13 and 23). Reuse existing build,
+   selector and custody machinery. Validate complete aggregate coverage and
+   cache invalidation with focused fixtures before broader execution.
+3. Connect truthful timing and useful safe failures (RD08–09; lesson 27), then
+   reconcile current documentation (RD10). No separate scheduler, check catalog,
+   approval registry or new deployment controller. No new reporting folder is
+   precommitted by this inventory.
+4. Review the remaining retrospective lessons for connected corrections; do not
+   turn this list into a claim that all 34 lessons are resolved. Once the agreed
+   changes are stable, perform the consolidated full proof. Measure a routine
+   update and a new workload consuming existing capability; separately account
+   for genuine new infrastructure setup and additional regression work.
+
+Safety and correctness checks must remain effective. A budget miss is an
+engineering finding, not authority to cancel an uncertain mutation, skip proof
+or declare success. Fresh cloud facts, ownership, no-replay protection, data
+preservation and acceptance custody are retained. Provider/provisioning and
+regression exclusions need evidence; normal repo work is not hidden by starting
+the clock after expensive preparation. Exact command/correlation/report schema
+design remains follow-up implementation, not an achieved capability.
+
+Inventory deliverable: this existing plan only; no new, moved or removed files,
+no runtime or policy edits, no change to paused/full-proof status. Validation is
+limited to source review, document metadata, referenced-path checks and diff
+hygiene; it does not establish runtime behaviour or a ten-minute release.
+
+Inventory validation: the scoped artifact-header check passed for this file;
+`git diff --check` passed; all 22 concrete source-path references in this section
+exist and RD01–RD10 are unique. Grouped brace paths are readable shorthand,
+not literal file links. The reference checker was corrected to distinguish
+the `:identity` symbol suffix from a file path before reporting that pass.
+Only this plan is modified; nothing is committed by this inventory step.
+
+### Implementation batch 1 — objective and proof-applicability governance
+
+The user authorised implementation after this inventory and supplied the
+AGENTS efficiency principle: assess duplication/reuse and actively reconcile
+conflicting older machinery and instructions. That instruction applies now.
+The saved AGENTS file in the recorded worktree does not yet contain the quoted
+edit; preserve the user's editor/worktree changes rather than overwriting them.
+
+This batch updates existing owners only: shared change completion and test
+execution; deployment lifecycle ownership and realization proof; feature
+creation/readiness; target update; health/recovery verification; and release
+acceptance. RD01 is the implementation target. RD03 receives a single explicit
+proof-applicability design rule and a migration boundary, not a bypass of the
+currently stricter declarations/collectors. RD02 provider generalisation and
+RD03 executable applicability remain pending with RD04–09 implementation.
+The rule is deliberately distinct from a claim of achieved performance.
+
+Conflict review: preserve current first-acceptance replacement/restore
+requirements, fresh target evidence, explicit operation authority and the
+exact collector proof set. Existing evidence reuse is retained, not replaced.
+Change the feature workflow's unconditional "run selected local checks" wording
+to the existing development/integration distinction; it must not trigger full
+integration at each conversational step. Keep all final proof obligations.
+No new schema, command, reporting folder, test catalog, registry or approval
+step is introduced. No files move or retire in this batch.
+
+Diagnostic applicability: process-only Markdown edits do not add runtime
+conditions, diagnostic definitions, producers or readers; no review-ledger
+hashes or runtime catalog exports need modification. Source review will check
+the linked owner chain and consider three counterexamples: a feature creates
+another deployment engine; a new workload claims old capability proof as its
+own live proof; a fast-looking report hides required preparation or a failed
+acceptance. The rules must reject each without requiring another full proof
+during editing. Verification is scoped metadata/link/diff validation and this
+source review; runtime and performance proof stay deferred.
+
+Batch result: RD01 governance is implemented in the existing owners and linked
+from feature readiness/creation and deployment/run workflows. RD03's assessment
+and compatibility boundary are documented; its executable correction and RD02
+remain pending, not passed. The first-release recovery/collector rules were not
+relaxed. RD04–09 tooling work is not implemented by this documentation batch.
+RD10 is reflected here without marking any user-led lesson complete.
+
+Parent source review rejected the three counterexamples above: the shared
+reuse section requires an owner/disposition review, realization applicability
+requires new-workload proof rather than inherited success, and budget accounting
+includes preparation and terminal acceptance with explicit missing-timing state.
+These are reviewed governance requirements, not an automatic architecture or
+performance checker. Existing metadata validation passed for all ten changed
+Markdown files; all sixteen added Markdown links resolve to files/headings;
+`git diff --check` passed. No executable source, runtime diagnostic, provider
+permission, schema, accepted evidence or AGENTS file changed. The pre-existing
+inventory edit is preserved. Full proof remains deferred; no commit, push,
+publication, AWS execution or background test was started.
+
+### Batch 2 pre-implementation finding — successor route missing
+
+The user approved the proposed schema/validator/applicability/collector batch.
+Tracing its real consumers before editing exposed a material gap in that file
+map: entity-smoke does not yet have an ordinary successor delivery route.
+
+- `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py:gather`
+  requires `accepted_release_id == "none"` and the initial stop/preserve-data
+  policy; otherwise it raises `acceptance-subsequent-release-proof-required`.
+  This is explicit rejection, not merely an overly large test selection.
+- `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/deployment-control.py:prepare`
+  permits initial CREATE only when the stack is absent, or activation UPDATE
+  after confirming desired count zero with the candidate bindings. It does not
+  implement an accepted-running-predecessor to successor image transition.
+- The existing persistence `qualify-proof-applicability/script.py` covers a
+  restore-verifier-only successor, including one exact historical test-helper
+  delta. It is not a general feature-release reuse policy. Keep its historical
+  meaning and exact receipt checks; do not widen them by deleting restrictions.
+
+Consequently, changing only proof declarations and the collector would not
+produce the promised ordinary feature-release path. Removing the first-release
+guard would also admit an unproved predecessor/recovery arrangement. No such
+guard, declaration, receipt or executable was changed in this inspection.
+
+Recommended scope extension: connect entity-smoke to the existing shared
+successor-update machinery, using the persistence
+`scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/`
+and shared `scripts/04.deploy/shared/provider-adapters/aws/change_sets.py` as
+the source owners to compare/reuse. Include predecessor selection, exact
+workload/permission/configuration bindings, compatible-image recovery and
+successor acceptance before enabling selective proof. This is a connected
+update binding, not permission to create a parallel deployment engine.
+Keep initial-release behaviour, historical readers and accepted evidence.
+
+The user subsequently directed refactoring the incorrect first-release-only
+implementation and explicitly said to continue. That authorizes the connected
+successor-path correction, removal of superseded implementations and focused
+local tests; it does not resume full proof or authorize AWS execution. Preserve
+historical evidence readers only where actual retained records require them.
+
+### Successor refactor — connected implementation sequence
+
+1. Move existing CloudFormation parameter-preservation policy to the existing
+   shared change-set owner, remove its workload-local implementations, and make
+   both persistence and entity-smoke use the same checked parameter reader.
+   Keep each workload's resource, image, permission and recovery policy at its
+   binding. This is preparation for the successor route, not that route itself.
+2. Connect accepted-predecessor selection, ordinary update and compatible
+   rollback to those shared mechanics. Retain exact ownership and no-replay
+   behavior. Do not revive the retired incident-specific source-transition
+   executor as a general deployment route.
+3. Replace the initial-only orchestration/acceptance assumption with connected
+   release verification and applicable proof selection. Keep the historical v1
+   acceptance reader for the actual accepted record; do not edit that record or
+   admit subsequent releases merely by deleting the first-release guard.
+4. Prove the real caller path for A-to-B update, retained-data verification and
+   compatible rollback using focused controlled fixtures. Record separately what
+   requires image qualification/live proof. No claim of a ten-minute delivery
+   target being achieved follows from these fixtures.
+
+Step 1 consumer/diagnostic inventory (tests planned until recorded below):
+
+- The existing persistence `transition-qualified-release` parameter constructor
+  and `prepare-candidate:update_parameters_match` have provider-neutral meaning.
+  Reuse them in `shared/provider-adapters/aws/change_sets.py`, retaining their
+  current callable interfaces for real baseline callers and controller fixtures.
+- Entity `deployment-control:exact_parameters` and baseline transition review
+  both consume CloudFormation parameter rows. Missing/wrong-type rows, missing
+  keys/values and duplicate keys must reject rather than disappear through a
+  dict comprehension. ResolvedValue is provider metadata, not an override.
+- Safe caller outcomes remain `deployment-provider-parameters-mismatch`,
+  `persistence-release-transition-not-reviewable` and
+  `persistence-release-transition-update-parameter-inputs-invalid`; the shared
+  pure reader returns no private values on failure and grants no operation.
+- Untouched parameter values must use UsePreviousValue when constructing an
+  update and must match the actual predecessor in review. Candidate-owned
+  parameters may change; undeclared/new keys, omissions and drift must reject.
+- Extend the existing `controller-regression.py` and
+  `deployment-control-test.py` actual consumers, including duplicate/conflicting
+  rows, malformed inputs, unchanged parameter preservation and no execution
+  after rejection. Existing checks are `persistence-provider-regression` and
+  `entity-smoke-composition`; focused fixture results are not whole-check passes.
+
+Steps 2–4 remain incomplete until their connected code and tests are present.
+
+Focused-check finding: the baseline controller suite also assumed the retained
+October rollback compatibility record still authorized today's contract. Both
+the unchanged HEAD implementation and the working implementation return false;
+the owning reader validates the historical archive with
+`current_contracts=False` and rejects current use with
+`release-succession-compatibility-contract-mismatch`. Correct the controller
+fixture to declare its compatibility prerequisite as controlled input and prove
+that false blocks before provider access. Keep actual archive integrity and
+current-contract rejection in the existing provider CLI fixture, plus its
+existing temporary valid/changed-contract compatibility fixture. Do not rewrite
+the archive, refresh its hashes, or loosen the production compatibility reader.
+
+Step 1 result (2026-11-15): implemented in the existing shared change-set
+module; removed the two workload-local parameter-policy bodies. Persistence
+update, rejected-review cleanup and all three completion-observation branches
+now reject malformed/ambiguous rows through the same reader as entity-smoke.
+Existing callable baseline interfaces remain because five real update
+controllers use them; they delegate rather than retain duplicate policy.
+
+- Direct controller fixture: 54 tests passed (7.731s); direct provider CLI
+  fixture: 6 tests passed (13.799s). Feature deployment-control and public
+  infrastructure-route fixtures passed, including original no-replay cases.
+- Registered `persistence-provider-regression`: passed, 58.359741s elapsed,
+  38.330646s command execution. Report:
+  `.cache/test-runs/20261115T181130Z-c90db15d9bcb44498edc52e207426c3d/report.json`.
+  This is requested-local proof, not complete affected integration.
+- First registered attempt failed; direct reproduction exposed the stale
+  rollback fixture assumption described above. Its report-retention boundary
+  additionally returned OSError. The final run used permission to retain local
+  evidence in the recorded chat worktree/Git cache and passed. Do not relabel
+  the original failed attempt as a pass or infer its retention cause.
+- Diagnostic structural review: passed, no findings; metadata headers:
+  seven files passed; `git diff --check`: passed.
+- No image was qualified, no live operation ran, and no acceptance record or
+  provider configuration changed. Full proof remains paused. Successor-route
+  implementation and acceptance are still incomplete, as steps 2–4 state.
+
+### Successor refactor — implementation and bounded verification (2026-11-15)
+
+Steps 2–4 now have implementation in the existing infrastructure, task and
+acceptance owners. Final source-matched focused verification is in progress;
+this entry is not a full integration or live acceptance claim.
+
+- Infrastructure selects the exact typed accepted predecessor, a deterministic
+  candidate delivery namespace and the existing shared change-set/reservation
+  mechanics. Image update and compatible rollback retain original data/label
+  ownership. No new deployment engine or evidence registry was added.
+- Review exposed two connected correctness gaps: immutable task-definition
+  revisions were counted as updates, and recovery compatibility was only
+  checked when requesting rollback. The reviewed successor must report five
+  definition replacements and one service update, and establish compatible
+  recovery before candidate deployment. Existing refresh policy has a closed
+  accepted-predecessor/compatible-rollback alternative; retained stopped-workload
+  declarations keep their original meaning. Actual controller validation is
+  required; declaration flags are not provider proof.
+- Ordinary verification uses four fresh pairs: runtime permissions, lifecycle,
+  collision and original-record read. Each uses the existing preflight,
+  reservation, completion and gate owners. Its prerequisites bind the actual
+  deployment and exact previous tasks. Bootstrap, migration, permission changes
+  and long restore proof are not repeated merely for a feature-only change.
+- The existing acceptance schema owns the recovery-input paths. Actual immutable
+  Git trees establish applicability, including additions, removals and file
+  modes. Changed configuration/permissions/database identity or protected
+  migration/persistence/runtime/build/dependency inputs reject before update.
+  **Affected-capability successor requalification is not implemented by this
+  ordinary-update branch.** This is a remaining delivery boundary, not a claim
+  that all new functionality can already use the fast path.
+- V2 evidence binds exact predecessor candidate/hash/history, deployment,
+  current task plan/prerequisites and current runtime. Historical v1 readers
+  remain for actual retained evidence. Iterative lineage validation avoids a
+  fixed maximum release count and rejects cycles. Promotion checks the selected
+  manifest predecessor and current same-candidate proof through shared succession.
+- Diagnostic review replaces stale initial-only/cleanup-blocked descriptions,
+  retains partial status and records explicit fixture dependencies and missing
+  live/requalification evidence. New predicates reuse finite owner failures;
+  private paths/provider errors are not forwarded as diagnostic detail.
+- The existing command README was source-reviewed using the README skill.
+  Its update sequence, recovery arguments, four fresh checks, receipt location
+  and unimplemented requalification boundary replace first-only descriptions.
+  This is scoped command guidance, not a whole-folder documentation rewrite.
+
+Recorded evidence so far: the shared realization compiler's actual CLI fixture
+passed 162 cases with zero provider calls; the actual original
+`release-53798ef563be4ce9a8c5b2f0` historical state validates unchanged and
+explicitly reports `current_readiness: false`. Focused Git applicability,
+successor archive, aggregate and local succession protocols have passed with
+their controlled dependencies identified in the source review. The final
+connected update/task batch and source-matched registered results are recorded
+below when terminal, not inferred from those component results.
+
+Full proof remains paused. No image qualification, publication, AWS mutation or
+new accepted release was performed. This command chain is not yet a one-command
+delivery orchestrator, and the ten-minute objective is not measured or achieved
+by these local fixtures.
+
+Recovery boundary: this ordinary route requires an owned CloudFormation stack
+in CREATE_COMPLETE or UPDATE_COMPLETE. It can select the compatible prior image
+when application verification fails on a completed deployment; it does not
+implement recovery from UPDATE_FAILED or other partial provider transitions.
+Those cases remain incomplete, not automatic retry or generic recovery authority.
+
+Final-check accounting: registered `operational-realization-regression` passed
+(29.640889s execution / 42.261115s elapsed), report
+`.cache/test-runs/20261115T190400Z-376eb24909094e98823b93669980e91c/report.json`.
+The first final acceptance command exited zero, but its report correctly remained
+`gap`: plan/review edits overlapped the run (`check-input-changed-during-execution`).
+That is an orchestration error, not a passing source-matched check. Preserve
+`.cache/test-runs/20261115T190852Z-d55c1cac8224468e8ff60913237cfa5b/report.json`.
+All task sources are now frozen. The rerun result is recorded in the existing
+chat session log, outside this check's inputs, so reporting it does not
+invalidate the just-tested documentation. Diagnostic structural review passed
+with no findings; scoped metadata checked 39 files and README links/diff checks
+passed. None of those structural checks establishes live behaviour.
 
 ## Inventory method
 
@@ -2579,3 +3057,82 @@ published catalogue bytes remain unchanged. There are no outstanding source
 review corrections and no stale diagnostic bindings. The whole task now enters
 normal preparation and final registered verification on stable inputs. C03's
 focused passes are not yet full integration or actual image qualification.
+
+### Successor control and task implementation inventory
+
+The existing infrastructure controller reuses release-succession current/history
+and compatibility readers. Explicit expected predecessor must match current.
+Stable proof label retains workload/data ownership; deterministic delivery ID
+binds predecessor, candidate source/image/custody, contracts and dependency.
+The isolated cache is not authority: resource requests, task keys, plans and
+completion evidence also bind delivery identity. Actual initial v1 readers stay.
+
+Existing deployment-control/resource-control add UPDATE and rollback phases
+through shared change-set reservation/submission, preserving non-image parameters
+and previous template. Review admits only all five task definitions and ECS
+service image-reference changes. Rollback uses current controller custody plus
+separate retained package and current-contract compatibility covering all five
+workloads; no acceptance advancement. Task-route replaces CREATE-only ownership
+with completed delivery reservation/current observed resources. Existing task
+selection will use delivery-derived lifecycle label and stable original-read
+label. Parent-owned acceptance selects fresh permission/lifecycle/read proof and
+explicit recovery-capability applicability; equal template is insufficient.
+
+Predicates needing exact finite reasons: missing/mismatched predecessor, invalid
+delivery shape/hash, foreign custody/compatibility/workloads, changed non-image
+parameters or template, unsafe change resources/details, foreign reservation and
+post-submission uncertainty. Existing safe reports preserve owner codes and
+operation effects; private provider/parameter contents are never retained. This
+remains partial finite-adapter coverage. Planned actual-caller tests cover update
+and rollback success/lost responses, duplicate rejection, changed lineage,
+omitted workload coverage, foreign completion and unchanged initial readers.
+Existing entity composition owns focused fixtures; full proof/AWS stay paused.
+
+### Successor control and task implementation checkpoint
+
+Implemented in the existing infrastructure/deployment/resource/task owners,
+not another deployment engine. Stable workload label and deterministic delivery
+namespace are both bound in retained requests, reviewed plans and completion
+packets. Initial v1 readers and old reservation bytes remain supported. Normal
+update and rollback preserve the previous template and every non-image/source
+parameter. Both now validate the separately retained predecessor package and
+current-contract compatibility for all five workload roles before planning or
+mutation. The actual selected graph permits exactly one service update and five
+immutable task-definition replacements; its hash is retained in the v2 plan.
+
+The first implementation counted all six changes as updates. Source review
+caught that false accounting before any AWS execution. The existing generic
+refresh declaration was stopped-workload-only, so the parent extended its closed
+variant for accepted predecessor plus compatible rollback; no stopped-workload
+predicate was bypassed. Current fixtures assert truthful replacement counts.
+
+Current local, controlled-provider checks completed successfully:
+
+- Full `infrastructure-route-test.py`: update, lost response/reconciliation,
+  distinct rollback, actual generic gates, missing/invalid compatibility before
+  any mutation, and original create/activation/transport regressions.
+- Full `deployment-control-test.py` and `resource-control-test.py`: shared
+  submission and reservation, changed inputs/change details, safe retention,
+  old envelope compatibility, and initial/recovery cases.
+- Full baseline `controller-regression.py`: 54 cases, 2.631 seconds, confirming
+  the extracted pure reservation predicate preserves other subclasses.
+- Full `task-route-test.py`: actual successor prerequisite ordering, all eight
+  preflight/operation tasks, real runner/collector/gates/completion and actual
+  acceptance `capture_task` v2; original initial/replacement/recovery cases and
+  transport regressions also pass. Typed predecessor/applicability, source
+  custody and provider results remain controlled. Missing/stale prerequisites,
+  changed delivery/request/prerequisite hashes, repeated launch and original
+  record/lifecycle label confusion are rejected.
+- Whitespace check passes. Six source bindings refreshed under four existing
+  partial diagnostic owners, retaining their limitation/debt statements.
+
+These are direct focused fixture results, not the registered acceptance check,
+full affected integration, image qualification, real SQL/AWS proof or promotion.
+The superseded task diagnostic handle became unavailable without a retained
+terminal result and is not counted; the complete current task fixture above was
+subsequently observed terminal zero. No accepted evidence was rewritten.
+Supported ordinary rollback starts from the exact owned CREATE_COMPLETE or
+UPDATE_COMPLETE stack; recovery of a partially failed CloudFormation transition
+is not claimed by this image-only route. Parent acceptance/source eligibility
+and registered proof remain independently required. Full proof and AWS remain
+paused; no commit, push, publication or cloud mutation was performed.

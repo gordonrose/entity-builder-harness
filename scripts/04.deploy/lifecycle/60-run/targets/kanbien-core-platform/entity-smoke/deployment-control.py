@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.deployment-control
-#   version: 2
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-08"
 #   updated_on: "2026-11-15"
@@ -10,7 +10,7 @@
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Reserve, review and reconcile isolated feature creation with no running server, then a desired-count-only activation without mutation replay.
+#   purpose: Reserve and reconcile initial creation, activation and image-only accepted-release update or rollback through the shared change-set owner.
 #   portability: {class: internal, targets: [kanbien-core-platform]}
 #   effects: [network, writes-files]
 #   used_by:
@@ -69,8 +69,19 @@ def source():
         raise RESOURCE.ResourceFailure("deployment-source-unavailable") from None
 
 
-def change_name(binding, activate):
-    return "entity-smoke-" + ("activate" if activate else "create") + "-" + binding["proof_label"].removeprefix("entity-smoke-")
+def selection(activate, delivery=None, rollback=False):
+    require(type(activate) is bool and type(rollback) is bool and (not rollback or delivery is not None), "deployment-selection-invalid")
+    if delivery is not None:
+        RESOURCE.validate_delivery(delivery)
+        require(activate, "deployment-successor-must-remain-active")
+        return "rollback" if rollback else "update"
+    return "activate" if activate else "create"
+
+
+def change_name(binding, activate, delivery=None, rollback=False):
+    phase = selection(activate, delivery, rollback)
+    suffix = delivery["delivery_id"][:24] if delivery else binding["proof_label"].removeprefix("entity-smoke-")
+    return "entity-smoke-" + phase + "-" + suffix
 
 
 def parameters_for(binding, parameters, activate):
@@ -96,9 +107,35 @@ def parameters_for(binding, parameters, activate):
     return parameters
 
 
-def request(binding, parameters, activate):
+def request(binding, parameters, activate, *, delivery=None, previous_parameters=None, rollback=False):
     parameters_for(binding, parameters, activate)
-    return {"binding": binding, "parameters_sha256": fingerprint(parameters), "template_sha256": "sha256:" + hashlib.sha256(source()[0].encode()).hexdigest()}
+    mode = selection(activate, delivery, rollback)
+    intent = {"binding": binding, "parameters_sha256": fingerprint(parameters), "template_sha256": "sha256:" + hashlib.sha256(source()[0].encode()).hexdigest()}
+    if delivery is not None:
+        previous = delivery["candidate"] if rollback else delivery["predecessor"]
+        before_binding = {**binding, **{key: previous[key] for key in ("source_revision", "image_digest")}}
+        parameters_for(before_binding, previous_parameters, True)
+        require(CHANGE_SETS.update_parameters_match(
+            parameters, {"ImageDigest": binding["image_digest"], "SourceRevision": binding["source_revision"]}, previous_parameters), "deployment-non-image-parameter-change-prohibited")
+        require(parameters["ImageDigest"] != previous_parameters["ImageDigest"], "deployment-successor-image-unchanged")
+        intent.update(delivery=delivery, previous_parameters_sha256=fingerprint(previous_parameters))
+    else:
+        require(previous_parameters is None, "deployment-selection-invalid")
+    RESOURCE.validate_request("deploy-" + mode + "-change-set", intent)
+    return intent
+
+
+def change_arguments(binding, parameters, activate, *, delivery=None, previous_parameters=None, rollback=False):
+    request(binding, parameters, activate, delivery=delivery, previous_parameters=previous_parameters, rollback=rollback)
+    arguments = {"StackName": STACK, "ChangeSetName": change_name(binding, activate, delivery, rollback), "ChangeSetType": "UPDATE" if activate else "CREATE",
+                 "Capabilities": ["CAPABILITY_IAM"],
+                 "Tags": [{"Key": key, "Value": value} for key, value in {"Target": RESOURCE.CLUSTER, "Scope": "entity-smoke", "ProofLabel": binding["proof_label"]}.items()]}
+    if delivery is not None:
+        arguments.update(UsePreviousTemplate=True, Parameters=CHANGE_SETS.update_parameter_inputs(previous_parameters, {"ImageDigest": binding["image_digest"], "SourceRevision": binding["source_revision"]}))
+    else:
+        arguments.update(TemplateBody=source()[0], Parameters=[{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())])
+    if not activate: arguments["OnStackFailure"] = "DO_NOTHING"
+    return arguments
 
 
 def exact_tags(value, binding):
@@ -108,7 +145,7 @@ def exact_tags(value, binding):
 
 
 def exact_parameters(value, expected):
-    require(isinstance(value, list) and len(value) == len(expected) and all(isinstance(item, dict) and isinstance(item.get("ParameterKey"), str) and isinstance(item.get("ParameterValue"), str) for item in value) and {item["ParameterKey"]: item["ParameterValue"] for item in value} == expected, "deployment-provider-parameters-mismatch")
+    require(CHANGE_SETS.parameter_values(value) == expected, "deployment-provider-parameters-mismatch")
 
 
 def exact_stack(value, binding):
@@ -125,8 +162,8 @@ def deployed_stack(provider, binding, parameters):
     return value
 
 
-def reviewed_change(provider, binding, parameters, reservation, activate, *, executed=False):
-    name = change_name(binding, activate)
+def reviewed_change(provider, binding, parameters, reservation, activate, *, executed=False, delivery=None, rollback=False):
+    name = change_name(binding, activate, delivery, rollback)
     value = provider("cloudformation", "describe-change-set", StackName=STACK, ChangeSetName=name)
     require(isinstance(value, dict) and value.get("StackName") == STACK and value.get("ChangeSetName") == name and value.get("Description") == reservation["operation_id"] and not value.get("NextToken"), "deployment-change-identity-not-confirmed")
     if value.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}: return None
@@ -135,14 +172,28 @@ def reviewed_change(provider, binding, parameters, reservation, activate, *, exe
     exact_tags(value.get("Tags"), binding)
     exact_parameters(value.get("Parameters"), parameters)
     changes = value.get("Changes")
-    expected = {"FeatureService": RESOURCE_TYPES["FeatureService"]} if activate else RESOURCE_TYPES
+    expected = ({key: kind for key, kind in RESOURCE_TYPES.items() if key.endswith("TaskDefinition") or key == "FeatureService"}
+                if delivery is not None else {"FeatureService": RESOURCE_TYPES["FeatureService"]} if activate else RESOURCE_TYPES)
     require(isinstance(changes, list) and len(changes) == len(expected), "deployment-change-resource-set-invalid")
     actual = {}
     for item in changes:
         resource = item.get("ResourceChange") if isinstance(item, dict) else None
-        require(isinstance(resource, dict) and isinstance(resource.get("LogicalResourceId"), str) and resource["LogicalResourceId"] not in actual and resource.get("Action") == ("Modify" if activate else "Add") and resource.get("Replacement", "False") == "False", "deployment-change-shape-invalid")
+        require(isinstance(resource, dict) and isinstance(resource.get("LogicalResourceId"), str) and resource["LogicalResourceId"] not in actual and resource.get("Action") == ("Modify" if activate else "Add"), "deployment-change-shape-invalid")
+        replacement = "True" if delivery is not None and resource["LogicalResourceId"].endswith("TaskDefinition") else "False"
+        require(resource.get("Replacement", "False") == replacement, "deployment-change-shape-invalid")
         actual[resource["LogicalResourceId"]] = resource.get("ResourceType")
-        if activate:
+        if delivery is not None:
+            task_definition = resource["LogicalResourceId"].endswith("TaskDefinition")
+            target = {"Attribute": "Properties", "Name": "ContainerDefinitions" if task_definition else "TaskDefinition", "RequiresRecreation": "Always" if task_definition else "Never"}
+            details = resource.get("Details")
+            require(resource.get("Scope") == ["Properties"] and isinstance(details, list) and details
+                    and all(isinstance(row, dict) and row.get("Target") == target for row in details), "deployment-update-not-image-only")
+            for row in details:
+                allowed = (row.get("ChangeSource") == "ParameterReference" and row.get("CausingEntity") in {"ImageDigest", "SourceRevision"}) if task_definition else (row.get("ChangeSource") == "ResourceReference" and row.get("CausingEntity") == "ServerTaskDefinition")
+                dynamic = row.get("ChangeSource") == "DirectModification" and row.get("Evaluation") == "Dynamic" and "CausingEntity" not in row
+                require((allowed and row.get("Evaluation") in (None, "Static", "Dynamic")) or dynamic, "deployment-update-not-image-only")
+            require(any(row.get("ChangeSource") != "DirectModification" for row in details), "deployment-update-not-image-only")
+        elif activate:
             details = resource.get("Details")
             target = {"Attribute": "Properties", "Name": "DesiredCount", "RequiresRecreation": "Never"}
             require(resource.get("Scope") == ["Properties"] and isinstance(details, list) and len(details) in {1, 2}
@@ -174,10 +225,16 @@ def initial_stack(provider, value, binding, parameters, reservation, *, executed
     require(value.get("StackName") == STACK and value.get("StackId") == facts["stack_arn"], "deployment-stack-identity-not-confirmed")
 
 
-def prepare(provider, store, binding, parameters, *, activate=False):
-    intent = request(binding, parameters, activate)
+def prepare(provider, store, binding, parameters, *, activate=False, delivery=None, previous_parameters=None, rollback=False):
+    options = {"delivery": delivery, "previous_parameters": previous_parameters, "rollback": rollback}
+    intent = request(binding, parameters, activate, **options)
+    mode = selection(activate, delivery, rollback)
     def precondition(_reservation):
-        if activate:
+        if delivery is not None:
+            previous_binding = {**binding, "source_revision": previous_parameters["SourceRevision"], "image_digest": previous_parameters["ImageDigest"]}
+            before = deployed_stack(provider, previous_binding, previous_parameters)
+            require(before.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "deployment-successor-precondition-not-confirmed")
+        elif activate:
             before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"})
             require(before.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "deployment-activation-precondition-not-confirmed")
         else:
@@ -186,23 +243,20 @@ def prepare(provider, store, binding, parameters, *, activate=False):
             except Exception: raise RESOURCE.ResourceFailure("deployment-initial-absence-unavailable") from None
             else: raise RESOURCE.ResourceFailure("deployment-stack-already-exists")
     def review(reservation):
-        try: facts = reviewed_change(provider, binding, parameters, reservation, activate)
+        try: facts = reviewed_change(provider, binding, parameters, reservation, activate, delivery=delivery, rollback=rollback)
         except RESOURCE.ResourceMissing: return {"status": "pending", "reservation": reservation}
         return {"status": "reviewed" if facts is not None else "pending", "reservation": reservation, "facts": facts}
-    arguments = {"StackName": STACK, "ChangeSetName": change_name(binding, activate), "ChangeSetType": "UPDATE" if activate else "CREATE", "TemplateBody": source()[0],
-                 "Parameters": [{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())], "Capabilities": ["CAPABILITY_IAM"],
-                 "Tags": [{"Key": key, "Value": value} for key, value in {"Target": RESOURCE.CLUSTER, "Scope": "entity-smoke", "ProofLabel": binding["proof_label"]}.items()],
-                 **({} if activate else {"OnStackFailure": "DO_NOTHING"})}
+    arguments = change_arguments(binding, parameters, activate, **options)
     try:
-        return CHANGE_SETS.prepare(provider, store, phase="deploy-activate-change-set" if activate else "deploy-create-change-set",
+        return CHANGE_SETS.prepare(provider, store, phase="deploy-" + mode + "-change-set",
             request=intent, arguments=arguments, precondition=precondition, observe=review, passthrough=(RESOURCE.SubmissionNotStarted,))
     except CHANGE_SETS.ChangeSetFailure:
         raise RESOURCE.ResourceFailure("deployment-change-submission-uncertain-reconcile-only") from None
 
 
-def observe(provider, store, binding, parameters, change_arn, stack_arn, *, activate=False):
-    intent = {**request(binding, parameters, activate), "change_set_arn": change_arn, "stack_arn": stack_arn}
-    reservation = store.read("deploy-execute-activate" if activate else "deploy-execute-create", intent)
+def observe(provider, store, binding, parameters, change_arn, stack_arn, *, activate=False, delivery=None, previous_parameters=None, rollback=False):
+    intent = {**request(binding, parameters, activate, delivery=delivery, previous_parameters=previous_parameters, rollback=rollback), "change_set_arn": change_arn, "stack_arn": stack_arn}
+    reservation = store.read("deploy-execute-" + selection(activate, delivery, rollback), intent)
     require(reservation is not None, "deployment-execution-reservation-missing")
     value = only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
     if not activate and value.get("StackStatus") == "REVIEW_IN_PROGRESS":
@@ -220,6 +274,13 @@ def observe(provider, store, binding, parameters, change_arn, stack_arn, *, acti
     # A matching root event is positive lineage evidence even when AWS retains
     # older event pages. This is not a claim that the event inventory is complete.
     require(isinstance(events, dict) and isinstance(events.get("StackEvents"), list) and any(isinstance(event, dict) and event.get("PhysicalResourceId") == stack_arn and event.get("ClientRequestToken") == reservation["operation_id"] for event in events["StackEvents"]), "deployment-execution-lineage-not-confirmed")
+    completion = {}
+    if delivery is not None:
+        terminal = [event for event in events["StackEvents"] if isinstance(event, dict) and event.get("PhysicalResourceId") == stack_arn
+                    and event.get("ClientRequestToken") == reservation["operation_id"] and event.get("ResourceStatus") == "UPDATE_COMPLETE"]
+        require(len(terminal) == 1 and isinstance(terminal[0].get("Timestamp"), str), "deployment-completion-time-not-confirmed")
+        require(RESOURCE.timestamp(terminal[0]["Timestamp"]) >= RESOURCE.timestamp(reservation["reserved_at"]), "deployment-completion-predates-reservation")
+        completion["completed_at"] = terminal[0]["Timestamp"]
     response = provider("cloudformation", "list-stack-resources", StackName=stack_arn)
     rows = response.get("StackResourceSummaries") if isinstance(response, dict) else None
     require(isinstance(rows, list) and len(rows) == len(RESOURCE_TYPES) and not response.get("NextToken") and all(isinstance(row, dict) and all(isinstance(row.get(key), str) for key in ("LogicalResourceId", "ResourceType", "PhysicalResourceId", "ResourceStatus")) and row["PhysicalResourceId"] and row["ResourceStatus"] in {"CREATE_COMPLETE", "UPDATE_COMPLETE"} for row in rows) and {row["LogicalResourceId"]: row["ResourceType"] for row in rows} == RESOURCE_TYPES, "deployment-resources-not-confirmed")
@@ -231,25 +292,31 @@ def observe(provider, store, binding, parameters, change_arn, stack_arn, *, acti
     if activate:
         running = RESOURCE.task(provider, tasks[0], resources["ServerTaskDefinition"]["physical_id"], binding["image_digest"])
         require(running.get("lastStatus") == "RUNNING" and running.get("healthStatus") == "HEALTHY", "deployment-service-not-steady")
-    return {"status": "completed", "reservation": reservation, "facts": {"stack_arn": stack_arn, "desired_count": 1 if activate else 0, "resources": resources, "resources_sha256": fingerprint(resources)}}
+    return {"status": "completed", "reservation": reservation, "facts": {"stack_arn": stack_arn, "desired_count": 1 if activate else 0, "resources": resources, "resources_sha256": fingerprint(resources), **completion}}
 
 
-def execute(provider, store, binding, parameters, change_arn, stack_arn, *, activate=False):
-    intent = request(binding, parameters, activate)
-    review = store.read("deploy-activate-change-set" if activate else "deploy-create-change-set", intent)
+def execute(provider, store, binding, parameters, change_arn, stack_arn, *, activate=False, delivery=None, previous_parameters=None, rollback=False):
+    options = {"delivery": delivery, "previous_parameters": previous_parameters, "rollback": rollback}
+    intent = request(binding, parameters, activate, **options)
+    mode = selection(activate, delivery, rollback)
+    review = store.read("deploy-" + mode + "-change-set", intent)
     require(review is not None, "deployment-review-reservation-missing")
     def precondition(_execution):
-        facts = reviewed_change(provider, binding, parameters, review, activate)
+        facts = reviewed_change(provider, binding, parameters, review, activate, delivery=delivery, rollback=rollback)
         require(isinstance(facts, dict) and facts["change_set_arn"] == change_arn and facts["stack_arn"] == stack_arn, "deployment-change-not-ready")
-        before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"}) if activate else only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
+        if delivery is not None:
+            previous_binding = {**binding, "source_revision": previous_parameters["SourceRevision"], "image_digest": previous_parameters["ImageDigest"]}
+            before = deployed_stack(provider, previous_binding, previous_parameters)
+        else:
+            before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"}) if activate else only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
         if activate: exact_stack(before, binding)
         else: initial_stack(provider, before, binding, parameters, review)
         require(before["StackId"] == stack_arn and before.get("StackStatus") in ({"CREATE_COMPLETE", "UPDATE_COMPLETE"} if activate else {"REVIEW_IN_PROGRESS"}), "deployment-execution-precondition-not-confirmed")
     try:
-        return CHANGE_SETS.execute(provider, store, phase="deploy-execute-activate" if activate else "deploy-execute-create",
+        return CHANGE_SETS.execute(provider, store, phase="deploy-execute-" + mode,
             request={**intent, "change_set_arn": change_arn, "stack_arn": stack_arn},
             arguments={"StackName": stack_arn, "ChangeSetName": change_arn, **({"DisableRollback": True} if activate else {})},
-            precondition=precondition, observe=lambda _reservation: observe(provider, store, binding, parameters, change_arn, stack_arn, activate=activate),
+            precondition=precondition, observe=lambda _reservation: observe(provider, store, binding, parameters, change_arn, stack_arn, activate=activate, **options),
             passthrough=(RESOURCE.SubmissionNotStarted,))
     except CHANGE_SETS.ChangeSetFailure:
         raise RESOURCE.ResourceFailure("deployment-execution-uncertain-reconcile-only") from None

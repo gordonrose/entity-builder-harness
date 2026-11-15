@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-route
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
 #   updated_on: "2026-11-15"
@@ -64,6 +64,51 @@ def report(call):
     return status, json.loads(output.getvalue()), output.getvalue()
 
 
+def recovery_applicability_protocols():
+    """Real isolated Git history, not simulated live recovery evidence."""
+    A = K.A
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-applicability-") as temporary:
+        root = Path(temporary)
+        def git(*args):
+            result = subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                                     *args], cwd=root, capture_output=True, text=True, check=True)
+            return result.stdout.strip()
+        git("init", "--quiet")
+        protected = root / "runtime"; protected.mkdir()
+        source = protected / "adapter.ts"; source.write_text("original recovery boundary\n")
+        feature = root / "feature.ts"; feature.write_text("first feature\n")
+        git("add", "."); git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture baseline")
+        first = git("rev-parse", "HEAD")
+        feature.write_text("changed feature behaviour needs fresh functional proof\n")
+        git("add", "."); git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture feature update")
+        second = git("rev-parse", "HEAD")
+        binding = {"source_revision": first, "configuration_contract_sha256": "sha256:" + "a" * 64,
+                   "permission_contract_sha256": "sha256:" + "b" * 64, "dependency_incarnation_sha256": "sha256:" + "c" * 64,
+                   "proof_label": "entity-smoke-" + "a" * 24, "record_digest": "d" * 64}
+        candidate = {**binding, "source_revision": second}
+        result = A.recovery_applicability(binding, candidate, ["runtime", "new-lockfile"], root=root)
+        assert result["predecessor_source"] == first and result["candidate_source"] == second
+        assert result["input_paths"] == ["new-lockfile", "runtime"]
+        # A new input, changed input and deletion must all invalidate retained
+        # capability proof even though the deployment template did not change.
+        for filename, content in (("new-lockfile", "new dependency"), ("runtime/adapter.ts", "changed adapter"), ("runtime/adapter.ts", None)):
+            target = root / filename
+            if content is None: target.unlink()
+            else: target.write_text(content)
+            git("add", "-A"); git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture protected change")
+            changed = {**candidate, "source_revision": git("rev-parse", "HEAD")}
+            rejection(lambda: A.recovery_applicability(binding, changed, ["runtime", "new-lockfile"], root=root),
+                      A.EvidenceFailure, "acceptance-recovery-requalification-required")
+        for field in ("configuration_contract_sha256", "permission_contract_sha256", "dependency_incarnation_sha256", "proof_label", "record_digest"):
+            rejection(lambda: A.recovery_applicability(binding, {**candidate, field: "changed"}, ["runtime"], root=root),
+                      A.EvidenceFailure, "acceptance-recovery-binding-changed")
+        for paths in ([], ["runtime", "runtime"], ["../runtime"], ["runtime/*"], [":(exclude)runtime"], [42]):
+            rejection(lambda: A.recovery_input_paths(paths), A.EvidenceFailure, "acceptance-recovery-input-paths-invalid")
+        rejection(lambda: A.recovery_input_tree(first, ["nonexistent"], root=root), A.EvidenceFailure, "acceptance-recovery-inputs-empty")
+        rejection(lambda: A.recovery_input_tree("e" * 40, ["runtime"], root=root), A.EvidenceFailure, "acceptance-recovery-inputs-unavailable")
+        rejection(lambda: A.recovery_input_tree("--private-canary", ["runtime"], root=root), A.EvidenceFailure, "acceptance-recovery-input-source-invalid")
+
+
 def candidate_construction_protocols():
     """Actual feature caller preserves its prior bytes without live collection."""
     canonical = lambda value: json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
@@ -100,6 +145,60 @@ def candidate_construction_protocols():
         assert renamed["release"]["id"] not in identifiers
     with patch.object(K.S, "candidate_document", side_effect=K.S.SuccessionFailure("release-succession-candidate-proof-invalid")):
         rejection(lambda: K.candidate_material(packet), K.S.SuccessionFailure, "release-succession-candidate-proof-invalid")
+
+
+def successor_state_protocols():
+    """Real local succession/history with explicitly controlled typed proof packets."""
+    K, S = STATE.K, STATE.S
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-successor-state-") as temporary:
+        base = Path(temporary)
+        root = base / STATE.EVIDENCE_PATH
+        with patch.object(S, "REPOSITORY_ROOT", base), patch.object(S, "EVIDENCE_CLASS", "simulated"), \
+                patch.object(K, "EVIDENCE_ROOT", root), patch.object(K, "validate_packet", side_effect=lambda packet, **kw: packet):
+            owner = STATE.State(base, rehearsal=True)
+            first = {"schema": K.SCHEMA, "binding": {"source_revision": "a" * 40, "image_digest": "sha256:" + "a" * 64,
+                "configuration_contract_sha256": "sha256:" + "b" * 64, "permission_contract_sha256": "sha256:" + "c" * 64,
+                "dependency_incarnation_sha256": "sha256:" + "d" * 64, "proof_label": "entity-smoke-" + "a" * 24,
+                "record_digest": "e" * 64}, "runtime": {"observed_at": "2026-11-15T12:00:00Z"},
+                "fixture": "prevalidated-protocol-not-live-proof"}
+            def retain(packet):
+                material = K.candidate_material(packet)
+                for path, payload in (material["proof"], material["candidate"]):
+                    path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(payload)
+                return owner.candidate(material["candidate"][0], current_contracts=False)
+            initial = retain(first)
+            initial_id = S.release_id(initial["identity"])
+            S.promote(root, target=K.TARGET, scope=K.SCOPE, identity=initial["identity"], source_path=initial["path"],
+                      source_digest=initial["sha256"], expected_predecessor="none", legacy=False)
+            assert owner.current()["reference"]["release_id"] == initial_id
+            second = copy.deepcopy(first)
+            second["schema"] = K.SUCCESSOR_SCHEMA
+            second["binding"].update(source_revision="f" * 40, image_digest="sha256:" + "f" * 64)
+            second["runtime"]["observed_at"] = "2026-11-15T12:01:00Z"
+            second["delivery"] = {"expected_predecessor": initial_id, "predecessor": {"release_id": initial_id,
+                **{key: initial["identity"][key] for key in ("source_revision", "image_digest", "proof_set_sha256")}}}
+            second["predecessor"] = {"release_id": initial_id, "candidate_record": str(initial["path"].relative_to(root)),
+                "candidate_sha256": initial["sha256"], "applicability": {"fixture": "source-comparison-tested-separately"}}
+            successor = retain(second)
+            successor_id = S.release_id(successor["identity"])
+            assert successor_id != initial_id
+            for mutate, code in (
+                (lambda value: value["predecessor"].update(candidate_sha256="sha256:" + "0" * 64), "acceptance-state-predecessor-custody-mismatch"),
+                (lambda value: value["delivery"]["predecessor"].update(image_digest="sha256:" + "0" * 64), "acceptance-state-predecessor-custody-mismatch"),
+                (lambda value: value["binding"].update(record_digest="0" * 64), "acceptance-state-predecessor-binding-mismatch")):
+                invalid = copy.deepcopy(second); mutate(invalid)
+                rejection(lambda: retain(invalid), STATE.StateFailure, code)
+            S.promote(root, target=K.TARGET, scope=K.SCOPE, identity=successor["identity"], source_path=successor["path"],
+                      source_digest=successor["sha256"], expected_predecessor=initial_id, legacy=False)
+            assert owner.current()["reference"]["release_id"] == successor_id
+            verdict, selected = S.promote(root, target=K.TARGET, scope=K.SCOPE, identity=successor["identity"], source_path=successor["path"],
+                source_digest=successor["sha256"], expected_predecessor=initial_id, legacy=False)
+            assert verdict == "already-current" and selected == successor_id
+            # Historical state reads neither reinterpret applicability against
+            # today's Git checkout nor claim fresh provider health.
+            with patch.object(K.A, "recovery_applicability", side_effect=AssertionError("historical Git lookup")):
+                assert owner.current()["packet"] == second
+            assert initial["path"].read_bytes() == S.rendered(initial["record"])
 
 
 def promotion_protocols(base):
@@ -323,7 +422,9 @@ def source_boundary_protocols(base):
 
 
 def run():
+    recovery_applicability_protocols()
     candidate_construction_protocols()
+    successor_state_protocols()
     module("entity_smoke_route_aggregate_fixture", DIRECTORY / "acceptance-aggregate-test.py").run(K)
     contract = K.C.CONTRACT.parent / "declaration-contract.yml"
     assert R.inspect(contract)["verdict"] == "covered", "real offline parsers, not declared command existence"
@@ -357,7 +458,7 @@ def run():
         source_boundary_protocols(base)
         receipt = base / "qualified.json"; receipt.write_text("{}")
         manifest = base / "inputs.yml"
-        values = {"candidate_receipt": str(receipt), "proof_label": "entity-smoke-" + "a" * 24, "expected_digest": "b" * 64}
+        values = {"candidate_receipt": str(receipt), "proof_label": "entity-smoke-" + "a" * 24, "expected_digest": "b" * 64, "expected_predecessor": "none"}
         manifest.write_text(yaml.safe_dump({"schema": "deploy/acceptance-inputs/v1", "target": K.TARGET, "scope": K.SCOPE, "values": values}))
         resolved = K.resolve_inputs(K.parse(["--inputs", str(manifest), "--write-candidate"]))
         assert resolved.receipt == receipt and resolved.proof_label == values["proof_label"] and resolved.expected_digest == values["expected_digest"]

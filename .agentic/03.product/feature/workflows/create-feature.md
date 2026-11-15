@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.feature.workflow.create
-version: 2
+version: 3
 status: active
 created_on: "2026-11-06"
 updated_on: "2026-11-15"
@@ -33,13 +33,13 @@ Follow [feature boundary](../standards/feature-boundary.md), the shared [change-
 ## Procedure
 
 1. Record the capability, exclusions, consumers, public contract, lifecycle decisions, persistence dependency, and intended proof in the feature plan or current session record. Do not assume that a local persistence seam is a deployable target.
-2. Inspect the selected Core lifecycle contract, Platform persistence port, provider adapter, current product manifest, and target scope. Reuse existing owners. If any required capability is unavailable or its owner is unclear, stop and record the gap.
+2. Inspect the selected Core lifecycle contract, Platform persistence port, provider adapter, current product manifest, and target scope. Apply the shared [reuse assessment](../../../shared/standards/require-change-completion.md#reuse-simplicity-and-normal-delivery), including conflicting older rules/callers and delivery impact, in that same plan. Use the [workload/machinery boundary](../../../04.deploy/standards/lifecycle-stage-ownership.md#workload-and-machinery-boundary); a new feature does not by itself require a new deployment scope or execution engine. If any required capability is unavailable or its owner is unclear, record the gap before implementing the affected path.
 3. Create the feature using the boundary standard: contracts first, then transport adaptation, domain services, persistence mapping/migrations, and the deliberate public index. Add the local README from actual source. Declare public exports and runtime versus test dependencies in the owning package manifest under the [public-module standard](../../standards/public-module-structure.md#declared-workspace-dependencies). Use its shared declaration-derived compiler/runtime owners rather than copying alias or shim maps into the feature.
 4. Define safe feature diagnostics at the decision boundary and stable feature errors for callers. Preserve normal operation outcomes; diagnostics do not retry, replay, or turn a failed mutation into a successful one.
 5. Connect the feature only through its app’s public mount and product composition. Prove platform code has no import of feature internals.
 6. Add focused tests for each operation and meaningful alternative: validation, archive, logical deletion, restore window, purge eligibility, and repository mapping. Include sensitive-data canaries where diagnostics cross a boundary.
 7. If the package/runtime/deployment scope changes, use 04.deploy declaration coverage before claiming package, target, or AWS readiness. For an affected runnable program, follow [runnable-program build proof](../../../04.deploy/20-build/workflows/prove-runnable-program-builds.md): update its existing build and approved dependency declarations, then pass the validated inputs to the existing package route. Add scope requirements and proof references; do not create an ungoverned deploy path.
-8. Use the repository check selector for changed paths, then run the selected local checks. Record the distinct local, package, target, and live outcomes.
+8. Use the repository check selector for changed paths at the appropriate [feedback boundary](../../../shared/testing/standards/test-execution.md#three-feedback-loops): focused development checks while editing, complete affected integration before promotion, and package/live proof at their owning stages. Apply [proof applicability](../../../04.deploy/standards/operational-realization-gate.md#proof-applicability-by-change) when the delivery path changes. Record distinct local, package, target and live outcomes; focused success does not close pending integration or prove delivery time.
 
 ## Stop conditions
 

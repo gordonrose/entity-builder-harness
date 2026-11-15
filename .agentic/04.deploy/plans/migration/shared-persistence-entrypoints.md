@@ -17,6 +17,39 @@ used_by:
 -->
 # Shared persistence entrypoint migration
 
+## Follow-on: retire the workload-specific ECS configuration adapter
+
+This additional slice belongs to Batch A of the linked consolidation plan.
+Old path: `scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/entity-smoke-runtime-configuration.py`.
+Surviving owner: `scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py`.
+Disposition: **retired**, after migrating active callers. This is a merge into
+an inspected existing implementation, not a move overwriting that destination.
+No external/public API, namespace or bootstrap contract changes; no ADR needed.
+Existing local-checkpoint authority covers this checked plan before retirement.
+
+The reference planner completed with exit 0: both paths exist; nine exact old
+path references were found. Three are dormant generated recognition entries;
+four are active scripts/catalog/review references; two are declaration/binding
+references. Basename review additionally finds the pinned historical inventory
+and the implementation plan. Preserve the inventory's historical finding,
+but explicitly mark the adapter recommendation superseded. Remove only the
+obsolete generated recognition entry, without running dormant RAG machinery.
+
+The shared adapter will accept a per-workload sibling `provider_template`,
+defaulting to the caller's template. Entity-smoke's restore-reader binding
+declares its different template; all other callers keep existing defaults.
+Reject invalid paths, symlinks, duplicate IDs and missing resources. Retain the
+runtime-configuration caller's safe invalid-provider-configuration diagnostic.
+The old adapter's error text is private to that caller and one fixture; migrate
+the fixture, not historical receipts. Package projection is unchanged.
+
+Validate the two real workload bindings, differently named multi-template
+fixtures, invalid selections and existing package projection. Update registered
+input closures and source review records. Run the migration checker with this
+plan and no compatibility allowance, plus scoped metadata/whitespace checks.
+Historical evidence remains untouched. Recovery is an inverse patch restoring
+the old adapter and its callers together, never a worktree reset.
+
 ## Scope and execution boundary
 
 This is the C03 path-migration slice of the existing

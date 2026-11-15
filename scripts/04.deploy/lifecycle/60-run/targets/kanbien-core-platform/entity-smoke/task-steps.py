@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.task-steps
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -75,17 +75,19 @@ def activation_generation(args):
     return value[7:]
 
 
-def key(args):
+def key(args, delivery=None):
     suffix = "" if stage(args) == "baseline" else ":" + stage(args)
-    if TRANSITION.acceptance_refresh(args): suffix += ":collector-recovery-1"
-    if TRANSITION.acceptance_renewal(args) and args.phase == "preflight": suffix += ":readback-recovery-1"
+    if delivery is None:
+        if TRANSITION.acceptance_refresh(args): suffix += ":collector-recovery-1"
+        if TRANSITION.acceptance_renewal(args) and args.phase == "preflight": suffix += ":readback-recovery-1"
     if stage(args) == "activation": suffix += ":" + activation_generation(args)
+    if delivery is not None: suffix += ":delivery:" + delivery["delivery_id"]
     return "task-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":" + args.phase + suffix).encode()).hexdigest()[:48]
 
 
 def path(context, args):
     suffix = "" if stage(args) == "baseline" else "-" + stage(args)
-    suffix += TRANSITION.preflight_step_suffix(args)
+    if not context.get("delivery"): suffix += TRANSITION.preflight_step_suffix(args)
     if stage(args) == "activation":
         generation = activation_generation(args)
         require(context["artifact"] == "sha256:" + generation, "task-activation-controller-mismatch")
@@ -98,10 +100,14 @@ def request(route, context, args):
     probe = args.phase == "preflight"
     operation = ("ready" if args.workload == "verifier" else "preflight") if probe else args.operation
     label = context["report"]["plan"]["preflight_label"] if probe else args.proof_label
+    if not probe and context.get("delivery"):
+        label = route.C.delivery_operation_label(context["delivery"], args.workload, args.operation)
     environment = {route.RUNNER.CONTROL.OPERATIONS[args.workload][0]: operation}
     if args.workload in {"verifier", "database-proof", "restore-reader"}: environment["ENTITY_SMOKE_PROOF_LABEL"] = label
     if args.workload == "verifier": environment["ENTITY_SMOKE_EXPECTED_SOURCE"] = binding["source_revision"]
     metadata_only = stage(args) == "initial-recovery" and args.workload == "administration" or stage(args) == "credential-recovery" and (args.workload == "administration" or args.operation in {"unready", "permissions"})
+    if context.get("delivery") and (args.workload, args.operation) in {("database-proof", "permissions"), ("verifier", "lifecycle")}:
+        metadata_only = True
     if not probe and args.expected_digest is not None and not metadata_only:
         environment["ENTITY_SMOKE_EXPECTED_DIGEST"] = args.expected_digest
     deadline = 90 if probe else context["completion_deadlines"][args.workload]
@@ -109,6 +115,29 @@ def request(route, context, args):
     return route.RUNNER.CONTROL.validate_request({**binding, "workload": args.workload, "definition": checked["definition"],
            "security_group": checked["security_group"], "subnets": checked["subnets"], "environment": environment,
            "deadline_seconds": deadline, "proof_label": label})
+
+
+def validate_delivery_step(route, value, binding, delivery, args):
+    """Captured delivery custody only; callers validate actual task evidence."""
+    C = route.C
+    C.RESOURCE.validate_delivery(delivery)
+    require(isinstance(value, dict) and set(value) == {"schema", "plan_sha256", "binding", "reservation", "receipt", "delivery", "plan", "prerequisites"}
+            and value["schema"] == "deploy/entity-smoke-task-step/v2" and value["binding"] == binding
+            and isinstance(value["reservation"], dict) and isinstance(value["reservation"].get("request"), dict), "task-step-binding-mismatch")
+    plan, expected = value["plan"], value["reservation"]["request"]
+    fields = {"schema", "target", "scope", "account", "region", "workload", "phase", "operation", "prepared_operation", "proof_stage", "preflight_label", "database_effect",
+              "expected_record_digest", "binding", "controller_sha256", "graph_sha256", "parameters_sha256", "template_sha256", "preflight_rule_sha256", "operator_sha256",
+              "task_definition_sha256", "configuration_sha256", "roles_sha256", "network_sha256", "callee_bindings_sha256", "package_custody_reference", "task_count",
+              "automatic_retry", "delivery", "prerequisites_sha256", "pending_prerequisite", "execution_route_available", "request_sha256"}
+    require(value["delivery"] == delivery and isinstance(plan, dict) and set(plan) == fields and plan["schema"] == "deploy/entity-smoke-task-plan/v2"
+            and plan["delivery"] == delivery and C.DEPLOY.fingerprint(plan) == value["plan_sha256"]
+            and plan["binding"] == binding and plan["request_sha256"] == C.DEPLOY.fingerprint(expected)
+            and isinstance(value["prerequisites"], dict) and plan["prerequisites_sha256"] == C.DEPLOY.fingerprint(value["prerequisites"])
+            and plan["proof_stage"] == stage(args) and plan["workload"] == args.workload and plan["phase"] == args.phase
+            and plan["prepared_operation"] == args.operation and plan["pending_prerequisite"] is None and plan["execution_route_available"] is True
+            and plan["package_custody_reference"] == delivery["candidate"]["receipt_reference"], "task-step-delivery-plan-mismatch")
+    require(plan["preflight_label"] == C.delivery_preflight_label(delivery, stage(args), args.workload, args.operation), "task-step-delivery-label-mismatch")
+    return value
 
 
 def observe_packet(route, context, args, provider, *, completion_required=True, historical=False):
@@ -119,18 +148,22 @@ def observe_packet(route, context, args, provider, *, completion_required=True, 
     runner.CONTROL.no_symlinks(target)
     if not target.exists(): return None
     value = C.read_json(target)
-    if completion_required and route.COMPLETION.path(target).is_file():
+    if not context.get("delivery") and completion_required and route.COMPLETION.path(target).is_file():
         legacy = C.TRANSITION.legacy_context(route, context, args, value, C.read_json(route.COMPLETION.path(target)))
         if legacy is not None: context, historical = legacy, True
-    require(isinstance(value, dict) and set(value) == {"schema", "plan_sha256", "binding", "reservation", "receipt"}
-            and value["schema"] == "deploy/entity-smoke-task-step/v1" and value["binding"] == context["binding"], "task-step-binding-mismatch")
+    delivery = context.get("delivery")
+    fields = {"schema", "plan_sha256", "binding", "reservation", "receipt"} | ({"delivery", "plan", "prerequisites"} if delivery else set())
+    require(isinstance(value, dict) and set(value) == fields
+            and value["schema"] == "deploy/entity-smoke-task-step/" + ("v2" if delivery else "v1") and value["binding"] == context["binding"], "task-step-binding-mismatch")
     require(isinstance(value["plan_sha256"], str) and route.re.fullmatch(r"sha256:[a-f0-9]{64}", value["plan_sha256"]), "task-step-plan-invalid")
     reservation = value["reservation"]
     require(isinstance(reservation, dict) and isinstance(reservation.get("request"), dict), "task-step-reservation-invalid")
     expected = request(route, context, args)
     require(reservation["request"] == expected, "task-step-request-mismatch")
+    if delivery:
+        validate_delivery_step(route, value, context["binding"], delivery, args)
     store = runner.CONTROL.AttemptStore(context["cache"] / "task-attempts")
-    require(store.read(key(args), expected) == reservation, "task-step-reservation-not-retained")
+    require(store.read(key(args, delivery), expected) == reservation, "task-step-reservation-not-retained")
     receipt = runner.EVIDENCE.validate_retained(value["receipt"], reservation)
     retained = runner.read_receipt(runner.receipt_path(context["cache"] / "task-receipts", expected, reservation), reservation)
     require(retained == receipt, "task-step-receipt-not-retained")
@@ -149,6 +182,7 @@ def observe_packet(route, context, args, provider, *, completion_required=True, 
 def prerequisites(route, context, args, provider):
     """Return the exact prefix or absence; malformed evidence is never absence."""
     from types import SimpleNamespace
+    if context.get("delivery"): return route.ACCEPTANCE.prerequisites(route, context, args, provider)
     if stage(args) == "acceptance": return route.ACCEPTANCE.prerequisites(route, context, args, provider)
     if stage(args) == "initial-recovery": return route.RECOVERY.prerequisites(route, context, args, provider)
     if stage(args) == "credential-recovery": return route.CREDENTIAL.prerequisites(route, context, args, provider)
@@ -184,6 +218,8 @@ def prerequisites(route, context, args, provider):
 def retain(route, context, args, reservation, receipt):
     value = {"schema": "deploy/entity-smoke-task-step/v1", "plan_sha256": context["report"]["plan_sha256"],
              "binding": context["binding"], "reservation": reservation, "receipt": receipt}
+    if context.get("delivery"):
+        value.update(schema="deploy/entity-smoke-task-step/v2", delivery=context["delivery"], plan=context["report"]["plan"], prerequisites=context["prerequisites"])
     target = path(context, args)
     if not route.C.RESOURCE.write_exclusive(target, value):
         previous = route.C.read_json(target)
@@ -193,6 +229,7 @@ def retain(route, context, args, reservation, receipt):
 
 
 def manifest(route, context, args, provider, prerequisites, packet):
+    if context.get("delivery"): return None
     if stage(args) not in {"baseline", "activation"}: return None
     if (args.workload, args.operation, args.phase) != ("database-proof", "permissions", "operation"): return None
     value = {**prerequisites["packets"], "permissions": {"reservation": packet["reservation"], "receipt": packet["receipt"]}}

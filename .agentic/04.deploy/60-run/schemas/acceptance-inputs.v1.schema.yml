@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.acceptance-inputs.v1
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: '2026-10-26'
+#   updated_on: '2026-11-15'
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -32,4 +32,8 @@ values: exact keys and types from the owning acceptance route inputs; references
   using only same-image receipts; it must be a checked file reference when a
   route declares a bounded cross-image proof-applicability record. A receipt-map
   has only the declared receipt names and checked file references; the owning
-  collector validates each receipt's content and provenance.
+  collector validates each receipt's content and provenance. Where a route
+  declares expected_predecessor, use the exact accepted release identifier,
+  or the literal none for first acceptance. It selects custody, not a new
+  release or permission to reuse old proof; the owning collector validates
+  applicability and the deployment-to-task evidence chain.

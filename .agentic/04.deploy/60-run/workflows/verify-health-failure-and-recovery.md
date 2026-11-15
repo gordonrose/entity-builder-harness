@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-health-failure-and-recovery
-version: 9
+version: 10
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-11-09"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -26,6 +26,11 @@ contract with `validate-health-failure-and-recovery-declaration` before calling
 provider or target commands.
 
 ## Required sequence
+
+Apply [proof applicability](../../standards/operational-realization-gate.md#proof-applicability-by-change)
+when designing or changing this proof chain. Its migration boundary preserves
+the currently declared requirements below until their connected controls and
+readers support more selective reuse; it is not a runtime exception.
 
 1. Locate the canonical scope declaration; do not construct a parallel health
    record in a plan, README, or provider template.

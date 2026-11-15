@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: deploy.standard.operational-realization-gate
-  version: 5
+  version: 6
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-11-09"
+  updated_on: "2026-11-15"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -119,6 +119,37 @@ Proof levels are ordered. A higher level can satisfy a lower requirement.
 
 `unknown` is never an acceptable actual or required proof state. It is a
 deliberate stop signal in a contract and is rejected by the compiler.
+
+## Proof applicability by change
+
+Use the existing scope, capability and realization declarations to distinguish
+what changed before selecting proof. Record the reasoning in the existing
+change inventory, not a new registry. This classification guides connected
+implementation and evidence selection; it does not itself add a schema field,
+grant an exception or weaken an executable requirement.
+
+| Change | Required assessment |
+| --- | --- |
+| New or materially changed platform/infrastructure capability | Qualify the new execution, access, state and recovery behaviour at its owning boundary. Expose reusable capability inputs and proof bindings for later consumers, not a workload-named copy of the machinery. |
+| New feature/app/workload using qualified capability | Identify matching reusable capability evidence and prove the new workload's actual package, configuration, permissions, migrations and meaningful operation. A shared engine or passing old workload is not proof that this workload works. |
+| Update within an existing qualified route | Invalidate evidence for changed inputs and affected dependencies; reuse only still-matching evidence through its owning reader. Always obtain the fresh target/operation observations required by the gates. |
+| Removal, retirement or changed isolation/ownership | Prove affected callers, permissions, data-retention and recovery consequences. Source removal is not authority to delete remote resources or erase accepted history. |
+
+For each selected obligation, name its existing owner, current input binding,
+whether execution or valid retained proof supplies it, and the invalidation
+conditions. Changes to migrations, permissions, runtime, state semantics or
+recovery can invalidate capability proof as well as workload proof. Review the
+actual affected boundary, not just the changed filename. Reusing a capability
+must neither trigger a full infrastructure rehearsal solely because a feature
+has a new name nor substitute capability proof for its new workload obligations.
+
+Migration boundary: currently declared first-acceptance replacement/restore
+requirements and exact target collector proof sets remain effective. Adopting
+more selective proof requires the owning declaration/schema, validator,
+collector and tests to agree in the same change, with historical readers
+preserved. A plan label, timing report or this classification cannot bypass
+them. Report unsupported selective reuse as a remaining implementation gap;
+do not claim the routine route or delivery budget has been achieved.
 
 ## Mandatory Gate Sequence
 

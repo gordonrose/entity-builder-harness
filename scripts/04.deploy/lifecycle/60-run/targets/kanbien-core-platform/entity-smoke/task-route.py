@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.task-plan.implementation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
 #   updated_on: "2026-11-15"
@@ -128,7 +128,12 @@ def operator(provider, definition, roles):
     return C.DEPLOY.fingerprint({"account": caller["Account"], "role": value["Arn"]})
 
 
-def owned_stack(provider, binding, parameters, cache):
+def owned_stack(provider, binding, parameters, cache, *, delivery=None):
+    if delivery is not None:
+        selected = {**parameters, "ServerDesiredCount": "1"}
+        checked = C.completed_deployment(provider, binding, selected, delivery)
+        require(checked["cache"] == cache, "task-delivery-cache-mismatch")
+        return selected, checked["resources"]
     retained = C.read_json(cache / "receipts/create.json")
     transition = C.TRANSITION.read(C, cache, binding)
     creation_binding = transition["plan"]["previous_binding"] if transition else binding
@@ -162,23 +167,24 @@ def owned_stack(provider, binding, parameters, cache):
     return selected, observed
 
 
-def prepare(args, provider):
+def prepare(args, provider, *, retained_source_evidence=None):
     provider = BINDING.observation_scope(provider)
     proof_stage = STEPS.stage(args)
     receipt = C.ALIGN.read_receipt(args.receipt.absolute())
-    C.ALIGN.source_preflight(receipt)
+    C.ALIGN.source_preflight(receipt, **({"retained_source_evidence": retained_source_evidence} if retained_source_evidence is not None else {}))
     C.local_checks()
     artifact = C.source_digest()
     if proof_stage == "activation": args.activation_generation = artifact
-    cache = C.ROOT / ".cache/entity-smoke-live" / args.proof_label
+    alignment, parameters, _ = C.ALIGN.inspect(provider, receipt, C.now())
+    binding = {**C.binding_for(receipt, alignment), "proof_label": args.proof_label}
+    delivery = C.delivery_context(args, receipt, binding)
+    cache = C.delivery_cache(args.proof_label, delivery)
     C.filesystem_preflight(cache)
     declaration = GRAPH.contract(args.workload, C.GATE, negative=CREDENTIAL.negative(args))
     artifacts = {item["id"]: artifact if item["id"] == GRAPH.CONTROLLER_SOURCE else receipt["image_digest"] for item in declaration["artifacts"]}
     book = C.GateBook(artifact, cache / "task-realization", contract=declaration, artifact_bindings=artifacts)
     book.gate("source"); book.gate("artifact"); book.gate("semantic-integration")
-    alignment, parameters, _ = C.ALIGN.inspect(provider, receipt, C.now())
-    binding = {**C.binding_for(receipt, alignment), "proof_label": args.proof_label}
-    selected, resources = owned_stack(provider, binding, parameters, cache)
+    selected, resources = owned_stack(provider, binding, parameters, cache, **({"delivery": delivery} if delivery else {}))
     binding_snapshot = BINDING.DEPLOY.source()[1]
     checked = BINDING.inspect(provider, args.workload, selected, resources, binding_snapshot)
     callees = {"server": BINDING.inspect(provider, "server", selected, resources, binding_snapshot)} if args.workload == "verifier" else {}
@@ -188,8 +194,11 @@ def prepare(args, provider):
     stage_suffix = "" if proof_stage == "baseline" else ":" + proof_stage
     if proof_stage == "activation": stage_suffix += ":" + artifact
     preflight_label = "entity-smoke-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":preflight" + stage_suffix).encode()).hexdigest()[:24]
-    preflight_label = IMAGE_REPAIR.recovery_label({"cache": cache, "binding": binding, "checked": checked}, args, preflight_label)
-    preflight_label = C.TRANSITION.recovery_preflight(C, {"cache": cache, "binding": binding}, args, preflight_label)
+    if delivery:
+        preflight_label = C.delivery_preflight_label(delivery, proof_stage, args.workload, args.operation)
+    else:
+        preflight_label = IMAGE_REPAIR.recovery_label({"cache": cache, "binding": binding, "checked": checked}, args, preflight_label)
+        preflight_label = C.TRANSITION.recovery_preflight(C, {"cache": cache, "binding": binding}, args, preflight_label)
     actual_operation = ("ready" if args.workload == "verifier" else "preflight") if args.phase == "preflight" else args.operation
     safe = {"schema": "deploy/entity-smoke-task-plan/v1", "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke", "account": C.ALIGN.ACCOUNT, "region": C.ALIGN.REGION,
             "workload": args.workload, "phase": args.phase, "operation": actual_operation, "prepared_operation": args.operation, "proof_stage": proof_stage, "preflight_label": preflight_label,
@@ -199,10 +208,12 @@ def prepare(args, provider):
             "operator_sha256": actor, "task_definition_sha256": C.DEPLOY.fingerprint(checked["definition"]), "configuration_sha256": checked["configuration_sha256"],
             "roles_sha256": checked["roles_sha256"], "network_sha256": checked["network_sha256"], "callee_bindings_sha256": C.DEPLOY.fingerprint(callees), "package_custody_reference": receipt["receipt_reference"],
             "task_count": 1, "automatic_retry": False}
+    if delivery: safe.update(schema="deploy/entity-smoke-task-plan/v2", delivery=delivery)
     declaration = C.yaml.safe_load((C.CONTRACT.parent / "declaration-contract.yml").read_text())
     deadlines = {row["id"].removeprefix("entity-smoke-"): row["completion"]["deadline_seconds"] for row in declaration["health_recovery"]["workloads"] if "completion" in row}
     context = {"report": {"plan": safe}, "book": book, "cache": cache, "binding": binding, "checked": checked,
                "parameters": selected, "resources": resources, "artifact": artifact, "custody": receipt, "callees": callees, "completion_deadlines": deadlines, "binding_snapshot": binding_snapshot}
+    if delivery: context["delivery"] = delivery
     # Missing prior work is visible in a plan, not manufactured as success.
     missing = None
     try: prerequisites = STEPS.prerequisites(dependencies(), context, args, provider)
@@ -247,9 +258,9 @@ def execute(args, provider):
                 "reused": True, "credential_history": str(history.relative_to(C.ROOT))}
     request = STEPS.request(deps, context, args)
     store = runner.CONTROL.AttemptStore(context["cache"] / "task-attempts")
-    key = STEPS.key(args)
+    key = STEPS.key(args, context.get("delivery"))
     previous = store.read(key, request)
-    C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
+    if not context.get("delivery"): C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
     negative = CREDENTIAL.negative(args)
     preflight = None
     if negative:
@@ -280,7 +291,9 @@ def execute(args, provider):
         C.ALIGN.source_preflight(context["custody"])
         alignment, parameters, _ = C.ALIGN.inspect(observed, context["custody"], C.now())
         require({**C.binding_for(context["custody"], alignment), "proof_label": args.proof_label} == context["binding"], "task-dependency-changed-before-submission")
-        selected, resources = owned_stack(observed, context["binding"], parameters, context["cache"])
+        if context.get("delivery"):
+            require(C.delivery_context(args, context["custody"], context["binding"]) == context["delivery"], "task-predecessor-changed-before-submission")
+        selected, resources = owned_stack(observed, context["binding"], parameters, context["cache"], **({"delivery": context["delivery"]} if context.get("delivery") else {}))
         binding_snapshot = BINDING.DEPLOY.source()[1]
         require(selected == context["parameters"] and resources == context["resources"]
                 and BINDING.inspect(observed, args.workload, selected, resources, binding_snapshot) == context["checked"], "task-target-changed-before-submission")
@@ -334,6 +347,7 @@ def parse(arguments=None):
     parser.add_argument("--phase", choices=("preflight", "operation"), default="operation")
     parser.add_argument("--proof-stage", choices=("baseline", "activation", "server-replacement", "initial-recovery", "credential-recovery", "acceptance"), default="baseline")
     parser.add_argument("--expected-digest")
+    parser.add_argument("--expected-predecessor")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     parser.add_argument("--execute", action="store_true")
@@ -342,6 +356,7 @@ def parse(arguments=None):
     require(re.fullmatch(r"entity-smoke-[a-f0-9]{24}", args.proof_label) is not None
             and args.operation in C.RESOURCE.CONTROL.OPERATIONS[args.workload][1] and args.operation in EFFECTS, "task-arguments-invalid")
     require(args.expected_digest is None or re.fullmatch(r"[a-f0-9]{64}", args.expected_digest) is not None, "task-arguments-invalid")
+    require(args.expected_predecessor is None or re.fullmatch(r"release-[a-f0-9]{24}", args.expected_predecessor) is not None, "task-predecessor-invalid")
     STEPS.stage(args)
     require(args.operation not in {"read", "cleanup", "collision"} or args.expected_digest is not None, "task-original-record-digest-required")
     require(args.proof_stage not in {"initial-recovery", "credential-recovery", "acceptance"} or args.expected_digest is not None, "task-original-record-digest-required")

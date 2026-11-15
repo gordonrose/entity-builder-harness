@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 10
+#   version: 11
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-15"
@@ -458,6 +458,83 @@ class ControllerRegression(unittest.TestCase):
         self.assertIn('--use-previous-template',submitted)
         self.assertNotIn('--template-body',submitted)
 
+    def test_shared_update_parameters_reject_ambiguous_rows_and_preserve_unowned_values(self):
+        transition = load(DEPLOY / 'transition-qualified-release/script.py')
+        prepare = load(DEPLOY / 'prepare-candidate/script.py')
+        shared = transition.CHANGE_SETS
+        current = {'ImageDigest': 'old', 'EnableObservability': 'true', 'PrivateSetting': '****'}
+        desired = {'ImageDigest': 'new'}
+        self.assertIs(transition.update_parameter_inputs, shared.update_parameter_inputs)
+        self.assertEqual(shared.update_parameter_inputs(current, desired), [
+            {'ParameterKey': 'EnableObservability', 'UsePreviousValue': True},
+            {'ParameterKey': 'PrivateSetting', 'UsePreviousValue': True},
+            {'ParameterKey': 'ImageDigest', 'ParameterValue': 'new'},
+        ])
+        inputs = [{'ParameterKey': key, 'ParameterValue': value} for key, value in current.items()]
+        self.assertEqual(shared.parameter_values(inputs), current)
+        self.assertEqual(shared.parameter_values([{'ParameterKey': 'key', 'ParameterValue': '****', 'ResolvedValue': 'private-canary'}]), {'key': '****'})
+        for invalid in (None, {}, [None], [{'ParameterKey': 'key'}],
+                        [{'ParameterKey': '', 'ParameterValue': 'private-canary'}],
+                        [{'ParameterKey': [], 'ParameterValue': 'private-canary'}],
+                        [{'ParameterKey': 'key', 'ParameterValue': 0}],
+                        inputs + [inputs[0]], inputs + [{'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'}]):
+            with self.subTest(invalid=type(invalid).__name__):
+                self.assertIsNone(shared.parameter_values(invalid))
+        for invalid in (None, [], {'ImageDigest': 1}, {'': 'private-canary'}):
+            self.assertIsNone(shared.update_parameter_inputs(invalid, desired))
+            self.assertIsNone(shared.update_parameter_inputs(current, invalid))
+            self.assertFalse(prepare.update_parameters_match(invalid, desired, current))
+        self.assertIsNone(shared.update_parameter_inputs(current, {'NewParameter': 'private-canary'}))
+        for actual, expected in (({**current, **desired}, True), (current, False),
+                                 ({**current, **desired, 'EnableObservability': 'false'}, False),
+                                 ({**current, **desired, 'Unexpected': 'private-canary'}, False),
+                                 (desired, False)):
+            self.assertEqual(prepare.update_parameters_match(actual, desired, current), expected)
+        owner = prepare.update_operations()
+        with patch.object(owner.CHANGE_SETS, 'update_parameters_match', return_value=False) as guard:
+            self.assertFalse(prepare.update_parameters_match({**current, **desired}, desired, current))
+            guard.assert_called_once_with({**current, **desired}, desired, current)
+
+    def test_update_reconciliation_rejects_ambiguous_completion_without_replay(self):
+        prepare = load(DEPLOY / 'prepare-candidate/script.py')
+        name, expected = 'fixture-update', {'ImageDigest': 'expected'}
+        row = {'ParameterKey': 'ImageDigest', 'ParameterValue': 'expected'}
+        for change in (None,
+                       {'ChangeSetName': name, 'Status': 'FAILED', 'ExecutionStatus': 'UNAVAILABLE', 'Changes': [], 'StatusReason': "The submitted information didn't contain changes."},
+                       {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE'}):
+            for rows in (None, [row, row], [{'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'}, row], [None, row]):
+                def response(parts):
+                    if parts[1] == 'describe-change-set':
+                        return (False, None, 'aws-resource-missing') if change is None else (True, change, 'ok')
+                    self.assertEqual(parts[1], 'describe-stacks')
+                    return True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': rows}]}, 'ok'
+                provider = Provider(response)
+                with patch.object(prepare, 'aws', provider.aws):
+                    observed = prepare.observe_update(name, expected, lambda _change: True)
+                self.assertEqual(observed, ('uncertain', 'persistence-update-stack-parameters-unobservable'))
+                self.assertEqual([parts[1] for parts in provider.calls], ['describe-change-set', 'describe-stacks'])
+                self.assertNotIn('private-canary', json.dumps(observed))
+
+    def test_image_transition_rejects_invalid_stack_parameters_before_provider_mutation(self):
+        module = load(DEPLOY / 'transition-qualified-release/script.py')
+        prepare = load(DEPLOY / 'prepare-candidate/script.py')
+        receipt = {'image_digest': 'sha256:' + 'a' * 64, 'source_revision': 'a' * 40}
+        row = {'ParameterKey': 'ImageDigest', 'ParameterValue': 'sha256:' + 'b' * 64}
+        for rows in (None, [row, row], [row, {'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'}], [row, None]):
+            for operation in ('update', 'discard-rejected-review'):
+                provider = Provider(lambda parts: (True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': rows}]}, 'ok'))
+                with patch.object(module, 'load', side_effect=[prepare, SimpleNamespace(package_gates=lambda _path: True)]), \
+                     patch.object(prepare, 'validate_receipt', return_value=receipt), \
+                     patch.object(prepare, 'retained_release', return_value=False), \
+                     patch.object(prepare, 'live_budget', return_value=(True, 'ok')), \
+                     patch.object(prepare, 'aws', provider.aws), \
+                     patch.object(sys, 'argv', ['fixture', '--receipt', 'candidate', '--operation', operation]):
+                    code, report, _ = result(module.main)
+                self.assertEqual(code, 1)
+                self.assertEqual(report['findings'], [{'code': 'persistence-release-transition-update-parameter-inputs-invalid'}])
+                self.assertEqual([parts[1] for parts in provider.calls], ['describe-stacks'])
+                self.assertNotIn('private-canary', json.dumps(report))
+
     def test_image_transition_uses_deployed_template_and_keeps_resource_guard(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
         prepare = load(DEPLOY/'prepare-candidate/script.py')
@@ -465,7 +542,7 @@ class ControllerRegression(unittest.TestCase):
         desired = {'ImageDigest': receipt['image_digest'], 'SupportImageDigest': receipt['image_digest'], 'RestoreVerifierImageDigest': receipt['image_digest'], 'SourceRevision': receipt['source_revision']}
         current = {**desired, 'ImageDigest': 'sha256:'+'b'*64, 'SupportImageDigest': 'sha256:'+'b'*64, 'RestoreVerifierImageDigest': 'sha256:'+'b'*64, 'SourceRevision': 'b'*40, 'EnableObservability': 'true'}
         name = 'kanbien-core-platform-persistence-update-' + receipt['image_digest'][7:19]
-        for forced_type in (None, 'AWS::IAM::Role', 'AWS::RDS::DBInstance'):
+        for forced_type in (None, 'AWS::IAM::Role', 'AWS::RDS::DBInstance', 'duplicate-parameter', 'malformed-parameter'):
             with self.subTest(forced_type=forced_type):
                 state = {'submitted': None, 'executed': False, 'uses_deployed': False}
                 def response(parts):
@@ -487,8 +564,11 @@ class ControllerRegression(unittest.TestCase):
                         # The real failed review brought in RDS/IAM changes from
                         # the repository template. A deployed-template request
                         # avoids that input, but never waives the result guard.
-                        resource_type = forced_type or ('AWS::ECS::TaskDefinition' if state['uses_deployed'] else 'AWS::RDS::DBInstance')
-                        return True, {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE' if state['executed'] else 'AVAILABLE', 'ChangeSetType': 'UPDATE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in state['submitted'].items()], 'Changes': [{'ResourceChange': {'ResourceType': resource_type}}]}, 'ok'
+                        resource_type = forced_type if forced_type in ('AWS::IAM::Role', 'AWS::RDS::DBInstance') else ('AWS::ECS::TaskDefinition' if state['uses_deployed'] else 'AWS::RDS::DBInstance')
+                        rows = [{'ParameterKey': k, 'ParameterValue': v} for k, v in state['submitted'].items()]
+                        if forced_type == 'duplicate-parameter': rows.insert(0, {'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'})
+                        if forced_type == 'malformed-parameter': rows.append(None)
+                        return True, {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE' if state['executed'] else 'AVAILABLE', 'ChangeSetType': 'UPDATE', 'Parameters': rows, 'Changes': [{'ResourceChange': {'ResourceType': resource_type}}]}, 'ok'
                     if operation == 'execute-change-set': state['executed'] = True; return True, {}, 'ok'
                     raise AssertionError(operation)
                 provider = Provider(response)
@@ -502,6 +582,7 @@ class ControllerRegression(unittest.TestCase):
                     self.assertEqual(report['verdict'], 'blocked')
                     self.assertEqual(report['findings'], [{'code': 'persistence-update-change-set-review-invalid'}])
                     self.assertFalse(state['executed'])
+                    self.assertNotIn('private-canary', json.dumps(report))
 
     def test_qualified_rollback_main_retains_support_and_restoration_images(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
@@ -515,7 +596,11 @@ class ControllerRegression(unittest.TestCase):
         desired = {**prepare.candidate_parameters(outputs, {}, retained), 'SupportImageDigest': support['image_digest'], 'RestoreVerifierImageDigest': support['image_digest'], 'EnableObservability': 'true'}
         name = 'kanbien-core-platform-persistence-rollback-' + retained['image_digest'][7:19]
         arguments = ['test', '--receipt', str(retained_path), '--operation', 'rollback', '--rollback-compatibility-id', 'rollback-compatibility-8f1ffbb5741c5ce923b0cfab', '--support-receipt', str(support_path), '--json']
-        for wrong_pin in (None, 'SupportImageDigest', 'RestoreVerifierImageDigest', 'support-scan', 'retained-scan', 'foundation'):
+        # This fixture owns transition/pin behavior, not live compatibility.
+        # The companion provider CLI fixtures exercise the actual immutable
+        # reader with valid and changed contracts. An old archive is not
+        # automatically compatible with today's template.
+        for wrong_pin in (None, 'compatibility', 'SupportImageDigest', 'RestoreVerifierImageDigest', 'support-scan', 'retained-scan', 'foundation'):
             with self.subTest(wrong_pin=wrong_pin):
                 current = {**original}
                 if wrong_pin in ('SupportImageDigest', 'RestoreVerifierImageDigest'): current[wrong_pin] = 'sha256:'+'a'*64
@@ -546,21 +631,25 @@ class ControllerRegression(unittest.TestCase):
                     failed = (wrong_pin=='support-scan' and receipt['image_digest']==support['image_digest']) or (wrong_pin=='retained-scan' and receipt['image_digest']==retained['image_digest'])
                     return not failed, 'persistence-candidate-image-scan-not-clean' if failed else 'ok'
                 infrastructure = (None, 'persistence-private-startup-endpoints-unavailable') if wrong_pin=='foundation' else ({}, 'ok')
-                with patch.object(module, 'load', side_effect=[prepare, create]), patch.object(sys, 'argv', arguments), patch.object(prepare, 'aws', provider.aws), patch.object(prepare, 'live_budget', return_value=(True, 'ok')), patch.object(prepare, 'foundation_outputs', return_value=(outputs, 'ok')), patch.object(prepare, 'infrastructure_parameters', return_value=infrastructure), patch.object(prepare, 'candidate_image', side_effect=image_check) as scans:
+                with patch.object(module, 'load', side_effect=[prepare, create]), patch.object(sys, 'argv', arguments), patch.object(prepare, 'aws', provider.aws), patch.object(prepare, 'rollback_compatibility', return_value=wrong_pin != 'compatibility') as compatibility, patch.object(prepare, 'live_budget', return_value=(True, 'ok')), patch.object(prepare, 'foundation_outputs', return_value=(outputs, 'ok')), patch.object(prepare, 'infrastructure_parameters', return_value=infrastructure), patch.object(prepare, 'candidate_image', side_effect=image_check) as scans:
                     report = result(module.main)[1]
+                compatibility.assert_called_once_with(retained, 'rollback-compatibility-8f1ffbb5741c5ce923b0cfab')
                 if wrong_pin is None:
                     self.assertEqual(report['verdict'], 'transitioned')
                     self.assertEqual([call.args[0]['image_digest'] for call in scans.call_args_list], [support['image_digest'], retained['image_digest']])
                     self.assertEqual(sum(parts[1]=='execute-change-set' for parts in provider.calls), 1)
                 else:
                     self.assertEqual(report['verdict'], 'blocked')
-                    code = {'support-scan': 'persistence-rollback-support-package-not-proven', 'RestoreVerifierImageDigest': 'persistence-rollback-restoration-image-mismatch', 'retained-scan': 'persistence-release-transition-alignment-not-proven', 'foundation': 'persistence-release-transition-alignment-not-proven'}.get(wrong_pin, 'persistence-rollback-support-image-mismatch')
+                    code = {'compatibility': 'persistence-rollback-compatibility-not-proven', 'support-scan': 'persistence-rollback-support-package-not-proven', 'RestoreVerifierImageDigest': 'persistence-rollback-restoration-image-mismatch', 'retained-scan': 'persistence-release-transition-alignment-not-proven', 'foundation': 'persistence-release-transition-alignment-not-proven'}.get(wrong_pin, 'persistence-rollback-support-image-mismatch')
                     self.assertEqual(report['findings'][0]['code'], code)
                     if wrong_pin in ('SupportImageDigest', 'RestoreVerifierImageDigest'): scans.assert_not_called()
                     if wrong_pin in ('support-scan', 'retained-scan', 'foundation'):
                         reason = 'persistence-private-startup-endpoints-unavailable' if wrong_pin=='foundation' else 'persistence-candidate-image-scan-not-clean'
                         self.assertEqual(report['findings'], [{'code': code}, {'code': reason}])
                     self.assertFalse(any(parts[1] in ('create-change-set', 'execute-change-set') for parts in provider.calls))
+                    if wrong_pin == 'compatibility':
+                        self.assertEqual(provider.calls, [])
+                        scans.assert_not_called()
         parameters = [{'ParameterKey': key, 'ParameterValue': value} for key, value in desired.items()]
         completed = {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE', 'ChangeSetType': 'UPDATE', 'Parameters': parameters, 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::ECS::TaskDefinition'}}]}
         for restore_digest, expected in ((support['image_digest'], 'transitioned'), (retained['image_digest'], 'uncertain')):

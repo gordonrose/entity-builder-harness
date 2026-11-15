@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.readme.entity-smoke.execution
-version: 3
+version: 4
 status: draft
 created_on: "2026-11-08"
 updated_on: "2026-11-15"
@@ -22,7 +22,9 @@ those resources must not also start an application whose database permissions
 and tables have not been prepared. The infrastructure commands therefore first
 create an isolated service with **zero** running application tasks. A separate
 activation changes its desired count to one only after required task receipts
-have been checked.
+have been checked. Once a release is accepted, the same controller supports
+an image update with an exact accepted predecessor and compatible rollback;
+it does not recreate the stack or repeat initial database preparation.
 
 This folder also contains public preparation/feature tasks, bounded server
 replacement, initial failure stopping, restart/preservation and credential-recovery observations, plus internal snapshot/restore
@@ -52,7 +54,7 @@ today's AWS health. Local fixtures likewise are not live AWS proof.
 | [task-completion.py](task-completion.py) | Link each collected step to its actual final gate through an immutable completion sidecar. An interrupted result without that gate cannot admit the next step. |
 | [feature-steps.py](feature-steps.py) | Require actual activation and original-record proof before lifecycle, collision and baseline read; admit a read-only observer only after the original reserved create task is terminal with its qualified image. |
 | [replacement.sh](replacement.sh), [replacement-route.py](replacement-route.py) | Plan or explicitly execute one original-record-bound server replacement. The original task is selected by the controller and retained across interruption; the successor cannot become a second stop target. A separate staged verifier read must establish data survival. |
-| [deployment-control.py](deployment-control.py) | Exact main-template creation and count-only activation, with durable reservations and observation after uncertain responses. |
+| [deployment-control.py](deployment-control.py) | Exact main-template creation, count-only activation and accepted-predecessor image update/compatible rollback, using shared change-set review and durable reservations. |
 | [resource-control.py](resource-control.py) | Shared resource reservations; original-record-bound replacement, controlled healthy stop/start and snapshot creation. Healthy stop/start is not emergency failure recovery. |
 | [failure-plan.sh](failure-plan.sh), [failure-stop.sh](failure-stop.sh), [failure-route.py](failure-route.py) | Plan and explicitly execute the initial-release stop control. Hold the real release-succession lock, reselect its policy and guard each exact reserved effect. No healthy application or SQL connection is required to stop a failed workload. |
 | [failure-binding.py](failure-binding.py), [failure-control.py](failure-control.py) | Observe own failed/partial stack lineage, exact task revisions and other service configurations; reserve each count-zero or exact task-stop request once, reconcile uncertainty and retain actual stopped-state facts. |
@@ -68,6 +70,7 @@ today's AWS health. Local fixtures likewise are not live AWS proof.
 | [unready-control.py](unready-control.py) | Separate negative-recovery admission bound to a successful permission-revocation task. The public credential stage consumes it; expected-unready evidence cannot substitute for ordinary readiness. |
 | [restore-control.py](restore-control.py) | Exact isolated restore creation/execution and owned cleanup after original-record reader completion. No source-database deletion. |
 | [acceptance-evidence.py](acceptance-evidence.py) | Historical task-archive validation and immutable evidence retention, reusing the actual task/admission/completion owners. Historical proof is not current readiness. |
+| [acceptance-steps.py](acceptance-steps.py) | Bind initial final-read admission to completed restore cleanup, or successor checks to the current deployment and preceding release-specific tasks. |
 | [acceptance-controls.py](acceptance-controls.py) | Archive of the original safe control plan, selected graph, seven-gate report and original submission identity/time/hash. It cannot call AWS or execute a plan. |
 | [collect-acceptance.sh](collect-acceptance.sh), [acceptance-route.py](acceptance-route.py) | Read the bounded acceptance input manifest, recheck actual proof and retain immutable candidate evidence. The provider allows reads only; collection does not accept a release. |
 | [acceptance-state.sh](acceptance-state.sh), [acceptance-state.py](acceptance-state.py) | Validate a candidate or the existing succession current reference and its full archived feature proof. Historical validation is not current health. |
@@ -175,6 +178,54 @@ rejection remains distinct from an uncertain remote submission.
 When a local check fails and its retained selector report is available, the
 failure includes a checked `evidence_reference` for that report instead of
 forwarding the child's native output.
+
+## Updating an accepted release
+
+For example, after release A has been accepted, a feature-only change produces
+qualified image B. Use the existing infrastructure command with `--phase update`,
+B's `--receipt`, the original `--proof-label` and A's exact
+`--expected-predecessor`. Supply A's qualified `--rollback-receipt` and
+`--rollback-compatibility-id` too. The controller checks rollback compatibility
+before deploying B, covering all five image roles changed by the template.
+These are required real records, not values to invent from this example.
+
+The checked update changes five immutable task-definition revisions and rolls
+the existing service onto its new definition. Its reviewed counts are five
+replacements and one update, with no storage or permission changes. Review,
+execution, durable reservation and uncertain-response reconciliation use the
+same owners as initial deployment. `--phase rollback` uses B's controller
+receipt and A's separate recovery records; it does not accept B or undo data.
+
+Before an update, [acceptance-evidence.py](acceptance-evidence.py) compares the
+two immutable Git revisions against the existing
+[acceptance schema's recovery-input boundary](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-record-schema.yml).
+Unchanged recovery inputs allow the original capability proof to remain
+applicable. Added, changed or removed protected inputs return
+`acceptance-recovery-requalification-required`; a changed-capability
+requalification path is **not yet implemented** by this ordinary-update route.
+This includes migrations, persistence/runtime machinery and build dependencies.
+
+After the actual update completes, the existing task commands use the exact
+`--expected-predecessor` and original `--expected-digest` for four fresh checks:
+
+1. `baseline / database-proof / permissions`.
+2. `baseline / verifier / lifecycle`.
+3. `baseline / database-proof / collision`.
+4. `acceptance / verifier / read`.
+
+Each still has its own preflight and operation. The lifecycle check uses a
+delivery-specific synthetic record; collision/read remain tied to A's original
+record. Receipts live under
+`.cache/entity-smoke-live/<proof-label>/releases/<delivery-id>/`, keeping earlier
+receipts untouched. Collection requires the checked deployment, all eight task
+phases, original gates and exact predecessor history. It does not rerun
+bootstrap, migration, permission changes or isolated restore on this path.
+
+The command chain is not a single automatic deploy command. Focused controlled
+fixtures cover its local protocol; successor image qualification, live execution
+and the ten-minute delivery target remain unproved. See the existing
+[consolidation plan](../../../../../../../.agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md)
+for remaining work, rather than treating this example as an executed release.
 
 ## Initial task preparation
 
@@ -755,11 +806,15 @@ image qualification or completed live collection/promotion.
 ### Acceptance commands and their boundary
 
 The [scope route](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml)
-lists the actual commands. Its composite proof requires nineteen named task
-selections and seven control selections, not only a healthy process. The
+lists the actual commands. First qualification requires nineteen named task
+selections and seven control selections, not only a healthy process. Ordinary
+updates use the four fresh checks and applicable predecessor history described
+above. The
 registered `entity-smoke-acceptance` check runs at the acceptance stage, not as
 ordinary local development feedback. Its input manifest has exactly
-`candidate_receipt`, `proof_label` and `expected_digest`, under the existing
+`candidate_receipt`, `proof_label`, `expected_digest` and
+`expected_predecessor` (the accepted release ID, or `none` for first acceptance),
+under the existing
 `deploy/acceptance-inputs/v1` target/scope envelope. The collector reads actual
 owned receipts; the manifest is not a place to supply invented passing results.
 

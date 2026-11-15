@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-11-15"
@@ -30,6 +30,8 @@ DIAGNOSTIC_DIRECTORY = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-p
 
 def load(path, name):
     spec=importlib.util.spec_from_file_location(name,path); value=importlib.util.module_from_spec(spec); assert spec and spec.loader; spec.loader.exec_module(value); return value
+CHANGE_SETS = load(ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py", "persistence_transition_change_sets")
+update_parameter_inputs = CHANGE_SETS.update_parameter_inputs
 def diagnostic_controls():
     return load(DIAGNOSTICS,"deployment_operation_diagnostics")
 def retain_failure_diagnostic(prepare,name,digest,code,outcome):
@@ -58,26 +60,11 @@ def emit(verdict,*codes,facts=None):
 def reviewable(change, status, name, digest, revision, support_digest=None):
     if not isinstance(change,dict) or status not in STABLE_STACK_STATES: return False
     if not (change.get("ChangeSetName")==name or (isinstance(change.get("ChangeSetName"),str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/",1)[-1].split("/",1)[0]==name)) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"}: return False
-    params={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
+    params=CHANGE_SETS.parameter_values(change.get("Parameters"))
+    if params is None: return False
     if params.get("ImageDigest")!=digest or params.get("SupportImageDigest")!=(support_digest or digest) or params.get("RestoreVerifierImageDigest")!=(support_digest or digest) or params.get("SourceRevision")!=revision: return False
     changes=[x.get("ResourceChange",{}) for x in change.get("Changes",[]) if isinstance(x,dict)]
     return bool(changes) and {x.get("ResourceType") for x in changes} <= ALLOWED
-
-
-def update_parameter_inputs(current, desired):
-    """Retain every non-image stack parameter through a narrow image update.
-
-    CloudFormation applies a template default when an UPDATE omits a parameter;
-    omission is therefore not equivalent to preserving the deployed value.
-    In particular, an image-only release must not disable an independently
-    governed observability surface.  ``UsePreviousValue`` preserves opaque
-    values (including NoEcho parameters) without reading or re-emitting them.
-    """
-    if not isinstance(current, dict) or not isinstance(desired, dict): return None
-    if not all(isinstance(key, str) and key and isinstance(value, str) for mapping in (current, desired) for key, value in mapping.items()): return None
-    if not set(desired) <= set(current): return None
-    return ([{"ParameterKey": key, "UsePreviousValue": True} for key in sorted(set(current) - set(desired))] +
-            [{"ParameterKey": key, "ParameterValue": desired[key]} for key in sorted(desired)])
 
 
 def discard_rejected_review(prepare, name, current, digest, revision):
@@ -152,14 +139,16 @@ def main():
         # or candidate-image observations.
         ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
         if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
-        current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict) and isinstance(item.get("ParameterKey"),str) and isinstance(item.get("ParameterValue"),str)}
+        current_parameters=CHANGE_SETS.parameter_values(stack.get("Stacks",[{}])[0].get("Parameters"))
+        if current_parameters is None:return emit("blocked","persistence-release-transition-update-parameter-inputs-invalid")
         name=f"kanbien-core-platform-persistence-update-{digest[7:19]}"
         return discard_rejected_review(prepare, name, current_parameters, digest, revision)
     if args.reconcile:return reconcile(prepare,name,digest,revision,support_digest)
     if not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return emit("blocked","persistence-release-transition-preconditions-not-proven")
     ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
     if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
-    current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict) and isinstance(item.get("ParameterKey"),str) and isinstance(item.get("ParameterValue"),str)}
+    current_parameters=CHANGE_SETS.parameter_values(stack.get("Stacks",[{}])[0].get("Parameters"))
+    if current_parameters is None:return emit("blocked","persistence-release-transition-update-parameter-inputs-invalid")
     if args.operation=="rollback":
         if current_parameters.get("SupportImageDigest")!=support_digest:return emit("blocked","persistence-rollback-support-image-mismatch")
         if current_parameters.get("RestoreVerifierImageDigest")!=support_digest:return emit("blocked","persistence-rollback-restoration-image-mismatch")
@@ -180,7 +169,7 @@ def main():
     parameters=update_parameter_inputs(current_parameters, expected)
     if parameters is None: return emit("blocked", "persistence-release-transition-update-parameter-inputs-invalid")
     def admit(change):
-        actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
+        actual=CHANGE_SETS.parameter_values(change.get("Parameters"))
         return None if prepare.update_parameters_match(actual,expected,current_parameters) else "persistence-update-live-parameters-mismatch"
     return prepare.apply_update(
         name=name, parameters=parameters, template_arguments=("--use-previous-template",),

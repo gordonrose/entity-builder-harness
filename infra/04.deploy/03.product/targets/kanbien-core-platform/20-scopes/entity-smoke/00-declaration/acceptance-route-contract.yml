@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.entity-smoke.acceptance-route
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -24,6 +24,7 @@ inputs:
   candidate_receipt: {kind: path, owner: package-custody, example: /tmp/qualified-entity-smoke.json}
   proof_label: {kind: identifier, owner: entity-smoke-proof, example: entity-smoke-aaaaaaaaaaaaaaaaaaaaaaaa}
   expected_digest: {kind: identifier, owner: original-record-proof, example: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+  expected_predecessor: {kind: identifier, owner: release-succession, example: none}
 outputs:
   candidate_record: {command: collect, fact: candidate_record, kind: target-evidence-path}
   current_release_id: {command: current-release, fact: release_id, kind: release-id}

@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.provider-cli-boundaries
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-26"
 #   updated_on: "2026-11-15"
@@ -109,15 +109,24 @@ class ProviderCliRegression(unittest.TestCase):
         before = {path: path.read_bytes() for path in (receipt_path, record_path)}
         receipt = json.loads(before[receipt_path])
         with patch.object(prepare, 'aws', side_effect=AssertionError('provider reached')):
-            self.assertTrue(prepare.rollback_compatibility(receipt, identifier))
             validated = prepare.validate_receipt(receipt_path)
             self.assertEqual(validated['receipt_reference'], receipt['receipt_reference'])
-            self.assertTrue(prepare.rollback_compatibility(validated, identifier))
-            self.assertFalse(prepare.rollback_compatibility({**validated, 'receipt_reference': 'github-actions-run:1'}, identifier))
-            self.assertFalse(prepare.rollback_compatibility({**validated, 'source_revision': 'a'*40}, identifier))
-            self.assertFalse(prepare.rollback_compatibility({**validated, 'image_digest': 'sha256:'+'a'*64}, identifier))
             owner = prepare.succession_control()
-            record, reference = owner.compatibility_record(evidence, identifier)
+            record, reference = owner.compatibility_record(evidence, identifier, current_contracts=False)
+            current_matches = all(owner.sha256_bytes((ROOT / reference['identity'][key]['path']).read_bytes()) == reference['identity'][key]['sha256']
+                                  for key in ('configuration_contract', 'permission_contract'))
+            self.assertEqual(prepare.rollback_compatibility(receipt, identifier), current_matches)
+            self.assertEqual(prepare.rollback_compatibility(validated, identifier), current_matches)
+            if not current_matches:
+                with self.assertRaisesRegex(owner.SuccessionFailure, '^release-succession-compatibility-contract-mismatch$'):
+                    owner.compatibility_record(evidence, identifier)
+            # Isolate qualified package identity matching from the separately
+            # tested current-contract admission above; no archive is rewritten.
+            with patch.object(prepare, 'succession_control', return_value=owner), patch.object(owner, 'compatibility_record', return_value=(record, reference)):
+                self.assertTrue(prepare.rollback_compatibility(validated, identifier))
+                self.assertFalse(prepare.rollback_compatibility({**validated, 'receipt_reference': 'github-actions-run:1'}, identifier))
+                self.assertFalse(prepare.rollback_compatibility({**validated, 'source_revision': 'a'*40}, identifier))
+                self.assertFalse(prepare.rollback_compatibility({**validated, 'image_digest': 'sha256:'+'a'*64}, identifier))
             for workloads in (['core-server-service'], ['core-server-service', 'private-release-verifier-task', 'unowned-task'], ['persistence-restoration-verifier-task']):
                 changed = {**reference, 'identity': {**reference['identity'], 'workloads': workloads}}
                 with patch.object(prepare, 'succession_control', return_value=owner), patch.object(owner, 'compatibility_record', return_value=(record, changed)):

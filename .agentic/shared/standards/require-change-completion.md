@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 12
+version: 13
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-15"
@@ -32,6 +32,40 @@ For README additions or edits, follow the
 [README-writing skill](../skills/write-readme.md). Keep the task's scope and
 verification proportionate; this does not require unrelated documentation work.
 
+## Reuse, simplicity and normal delivery
+
+Assess every change for duplication and missed reuse before implementation.
+For repository machinery, actively inspect existing code, instructions, rules,
+checks and callers for competing ownership or contradictory behaviour. Record
+their disposition in the existing consumer inventory: reuse, extend, reconcile,
+or retire through the owning migration process. Adding a new rule does not
+resolve an old conflicting rule; historical evidence is not deletion debt.
+
+Features, apps and products consume shared build, packaging, deployment and
+recovery capabilities. Workload-specific code, schemas, migrations, declarations
+and behaviour tests are expected; another execution engine for the same
+capability is not. New infrastructure/runtime support must become a reusable
+platform capability exposed through the normal delivery path. Prefer the
+smallest connected change, with one authoritative owner and no unnecessary
+registries, wrappers, mandatory fields or manual steps.
+
+Normal delivery has an engineering budget of at most ten minutes from the
+initial delivery invocation to the changed application running remotely with
+its required smoke checks and acceptance complete. This applies to updates
+and new features, apps and products using supported capabilities. It is a
+requirement to design and measure against, not a claim already achieved.
+The [test-execution standard](../testing/standards/test-execution.md#delivery-budget-accounting)
+owns timing, exclusions and reporting. Budget misses require correction; they
+do not authorise bypassing safety checks, killing uncertain operations or
+calling incomplete proof successful.
+
+In the existing task plan or session record, briefly identify the reused owner,
+any genuinely new capability, conflicting/superseded consumers, delivery-cost
+impact and proportional verification. Scale this assessment to the change;
+a small correction does not require a new plan or a repository-wide audit.
+The implementing agent owns it. Escalate material scope/risk tradeoffs, not
+routine implementation choices already authorised by the task.
+
 ## Implementation and consumers
 
 For new modules, public-surface changes and refactoring, apply the
@@ -61,6 +95,11 @@ diagnostic predicate inventory. The parent owns this review for delegated work;
 without delegation or a separate reviewer, perform and record an explicit
 self-review. Collect required corrections in one consolidated list rather than
 feeding enhancements into an announced final test pass.
+
+Include the reuse/contradiction assessment and delivery impact in that review.
+Confirm which old owners were retained or reconciled and which implementation
+or measurement gaps remain; a passing test alone does not establish simplicity,
+reusability or the delivery budget.
 
 For each material behavioral guarantee changed by coding work, identify a
 plausible incorrect outcome and the exact assertions that would reject it.

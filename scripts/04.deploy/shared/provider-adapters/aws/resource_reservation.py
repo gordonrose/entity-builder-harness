@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.resource-reservation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
 #   updated_on: "2026-11-15"
@@ -90,9 +90,14 @@ class ImmutableReservationStore:
             previous = json.loads(raw)
         except FileNotFoundError: return None
         except (OSError, ValueError, TypeError, UnicodeError): raise self.failure("reservation-unavailable") from None
-        if not (isinstance(previous, dict) and set(previous) == {"schema", "phase", "operation_id", "request", "request_sha256", "reserved_at"} and previous.get("schema") == self.schema and previous.get("phase") == phase and previous.get("request") == request and previous.get("request_sha256") == hashlib.sha256(canonical(request)).hexdigest() and isinstance(previous.get("operation_id"), str) and re.fullmatch(re.escape(self.operation_prefix) + r"[a-f0-9]{32}", previous["operation_id"]) is not None):
-            raise self.failure("reservation-mismatch")
-        self.validate_time(previous.get("reserved_at"))
+        return self.validate_record(phase, request, previous, validate_time=self.validate_time)
+
+    @classmethod
+    def validate_record(cls, phase, request, previous, *, validate_time):
+        """Validate captured immutable bytes without claiming they remain stored."""
+        if not (isinstance(previous, dict) and set(previous) == {"schema", "phase", "operation_id", "request", "request_sha256", "reserved_at"} and previous.get("schema") == cls.schema and previous.get("phase") == phase and previous.get("request") == request and previous.get("request_sha256") == hashlib.sha256(canonical(request)).hexdigest() and isinstance(previous.get("operation_id"), str) and re.fullmatch(re.escape(cls.operation_prefix) + r"[a-f0-9]{32}", previous["operation_id"]) is not None):
+            raise cls.failure("reservation-mismatch")
+        validate_time(previous.get("reserved_at"))
         return previous
 
     def reserve(self, phase, request):

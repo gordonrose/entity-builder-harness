@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.promote-acceptance.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -73,10 +73,12 @@ def run(args, provider, progress):
             owner.current()
         elif not reconciling:
             selected = K.resolve_inputs(K.parse(["--inputs", str(args.inputs), "--write-candidate"]))
+            K.require((getattr(selected, "expected_predecessor", None) or "none") == args.expected_predecessor,
+                      "acceptance-promotion-predecessor-mismatch")
             fresh, _ = K.gather(selected, provider)
             K.require(same_observation(candidate["packet"], fresh), "acceptance-promotion-candidate-not-current")
             K.A.fresh_final(candidate["packet"]["tasks"]["final-read"]["operation"],
-                candidate["packet"]["controls"]["restore-cleanup"]["facts"]["observed_at"], K.C.now())
+                K.final_required_after(candidate["packet"]), K.C.now())
             rechecked = owner.candidate(args.candidate_record)
             K.require(rechecked["sha256"] == candidate["sha256"] and K.C.source_digest() == candidate["packet"]["controller_sha256"], "acceptance-promotion-candidate-changed")
         progress["effect"] = "release-custody-reconciliation-required"

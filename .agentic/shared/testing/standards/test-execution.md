@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.testing.standard.execution
-version: 1
+version: 2
 status: active
 created_on: "2026-11-07"
-updated_on: "2026-11-09"
+updated_on: "2026-11-15"
 layer: 06.shared
 domain: testing
 disciplines: [agentic, architecture, sre]
@@ -68,6 +68,37 @@ isolated checkout may verify a pinned checkpoint while development continues;
 its outputs, dependencies and services must not share mutable state with the
 development checkout. Later changes require their affected proof. No commit or
 auxiliary worktree is authorised by this standard alone.
+
+## Delivery budget accounting
+
+The [shared completion standard](../../standards/require-change-completion.md#reuse-simplicity-and-normal-delivery)
+owns the normal-delivery budget. Per-check `expected_seconds` and current
+`budget_exceeded` fields describe estimate overruns only; they do not measure
+or enforce that end-to-end requirement. Process/job timeouts are safety limits,
+not delivery-duration claims.
+
+Measure total wall-clock time from the first delivery invocation through
+required acceptance. Include dependency installation, planning, compilation,
+packaging, required checks, rollout, readiness and smoke verification, even
+when they run in different jobs. Do not start the clock after expensive
+preparation, add overlapping stage durations as if serial, or reset it after
+an interruption. Identify the source, artifact and resumed attempt boundaries.
+
+Show genuinely provider-controlled setup/wait intervals and separately selected
+additional regression work alongside the total. An exclusion requires observed
+boundaries and a reason; overlapping useful repo work cannot also be subtracted.
+Cold dependency setup, duplicated work, local orchestration and manual repair
+are not exclusions. Required checks cannot be relabelled optional regression
+to make a delivery pass. Where time cannot be attributed reliably, report it
+as unclassified rather than inventing an exclusion.
+
+Report functional outcome separately from budget outcome: met, missed or not
+established. A successful package, partial run or missing terminal timing cannot
+establish successful delivery. Preserve unfinished/failed stages. Reports are
+observations, not execution journals or trusted proof. Extend existing report
+owners and reference their evidence rather than introducing a parallel runner
+or importing reports into the local cache. Until connected timing is implemented,
+explicitly report the end-to-end budget as not established.
 
 ## Result storage
 

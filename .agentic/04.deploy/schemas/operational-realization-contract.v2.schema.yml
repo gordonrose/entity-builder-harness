@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.operational-realization-contract.v2
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -45,6 +45,10 @@ bounded_definition_refresh:
   selection: change_shape.immutable_definition_refresh
   default: replacement-remains-forbidden
   required_true_fields: [owned_task_definitions_only, stopped_workload_required, unchanged_permissions_and_storage, qualified_image_required, original_preparation_retained]
+  accepted_release_variant:
+    required_true_fields: [owned_task_definitions_only, accepted_predecessor_required, compatible_rollback_required, unchanged_permissions_and_storage, qualified_image_required, original_preparation_retained]
+    selection: exact-closed-alternative-to-stopped-workload-fields
+    proof: provider-controller-validates-exact-accepted-predecessor-compatible-recovery-and-reviewed-resource-facts-before-mutation
   additional_fields: forbidden
   allowed_operation_classes: [update, replace]
   forbidden_operation_classes: [create, delete, broaden-permission]

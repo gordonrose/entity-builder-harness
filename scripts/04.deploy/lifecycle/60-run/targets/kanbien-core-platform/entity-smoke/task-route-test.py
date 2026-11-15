@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-route
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
 #   updated_on: "2026-11-15"
@@ -125,7 +125,8 @@ class Provider(F.Provider):
             return {"events": [] if "nextToken" in parameters or result is None else [{"message": json.dumps(result)}], "nextForwardToken": "complete"}
         if operation == "get-caller-identity": return {"Account": M.C.ALIGN.ACCOUNT, "Arn": "arn:aws:sts::337159794548:assumed-role/ApprovedOperator/fixture"}
         if operation == "get-role" and parameters["RoleName"] == "ApprovedOperator": return {"Role": {"RoleName": "ApprovedOperator", "Arn": "arn:aws:iam::337159794548:role/ApprovedOperator"}}
-        if operation == "simulate-principal-policy": return {"IsTruncated": False, "EvaluationResults": [{"EvalActionName": parameters["ActionNames"][0], "EvalResourceName": arn, "EvalDecision": "allowed"} for arn in parameters["ResourceArns"]]}
+        if operation == "simulate-principal-policy": return {"IsTruncated": False, "EvaluationResults": [{"EvalActionName": action, "EvalResourceName": arn, "EvalDecision": "allowed"} for action in parameters["ActionNames"] for arn in parameters["ResourceArns"]]}
+        if operation == "validate-template": return {"Parameters": [{"ParameterKey": name} for name in M.C.DEPLOY.PARAMETERS], "Capabilities": ["CAPABILITY_IAM"]}
         if operation == "describe-task-definition":
             name = next(name for name, value in self.bindings.items() if value.task["taskDefinitionArn"] == parameters["taskDefinition"])
             return self.bindings[name](service, operation, **parameters)
@@ -698,6 +699,98 @@ def run():
                       "prerequisites": "controlled-source-custody-local-proof-and-target-responses-not-qualification", "checks": ["actual-selected-graph-and-generic-gates", "all-reachable-callees-retained", "deployed-resource-lineage", "exact-task-role-network-binding", "preflight-and-business-plan-binding", "no-sixth-gate-before-probe", "planning-no-write-capability", "actual-offline-cli", "actual-execute-provider-runner-collector", "lost-launch-no-replay", "four-ordered-prerequisites-and-activation-consumer", "changed-prerequisite-rejected", "exact-reserved-payload", "known-prewrite-versus-unknown-effect-reporter", "named-missing-prerequisite", "activated-feature-prerequisites", "uncertain-create-observed-never-replayed", "terminal-qualified-original-before-observer", "lifecycle-digest-cannot-replace-original", "collision-and-original-read", "selected-primary-diagnostic-preserved", "public-replacement-requires-baseline-read", "lost-stop-reconciles-original-not-successor", "separate-post-replacement-ready-and-read", "baseline-receipt-substitution-rejected", "changed-replacement-gate-rejected", "replacement-exact-payload", "replacement-public-main-preserves-guard-context", "no-original-record-recreation"]}))
 
 
+def successor_task_protocols():
+    """Actual controller/task/collector chain; source/applicability are doubles."""
+    evidence = module("successor_task_actual_evidence", DIRECTORY / "acceptance-evidence.py")
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-successor-tasks-") as temporary:
+        root = Path(temporary)
+        receipt = {**F.delivery_fixture()["candidate"]}
+        prior = F.delivery_fixture()["predecessor"]
+        current = {"target": M.C.RESOURCE.CLUSTER, "scope": "entity-smoke", "release_id": prior["release_id"]}
+        history = {"release": {"id": prior["release_id"], **{key: prior[key] for key in ("source_revision", "image_digest", "proof_set_sha256")}}}
+        actual_digest = M.C.digest_file
+        with patch.object(M.C, "ROOT", root), patch.object(M.C, "source_digest", lambda: "sha256:" + "f" * 64), \
+             patch.object(M.C, "digest_file", lambda path: actual_digest(path) if path.is_file() else "sha256:" + "c" * 64), \
+             patch.object(M.C, "local_checks", lambda: None), patch.object(M.C.ALIGN, "source_preflight", lambda *args, **kwargs: None), \
+             patch.object(M.C.ALIGN, "read_receipt", lambda path: receipt), \
+             patch.object(M.C.ALIGN, "inspect", lambda *args: ({"dependency_incarnation_sha256": F.BINDING["dependency_incarnation_sha256"]}, copy.deepcopy(F.PARAMETERS), "fixture")), \
+             patch.object(M.C.SUCCESSION, "current", lambda path: current), patch.object(M.C.SUCCESSION, "history_record_for_id", lambda *args: (history, b"controlled")), \
+             patch.object(M.C, "successor_admission", lambda *args: None), \
+             patch.object(M.C, "rollback_selection", lambda args, delivery, binding: ({**binding, **{key: prior[key] for key in ("source_revision", "image_digest")}}, {
+                 "compatibility_id": "rollback-compatibility-" + "8" * 24, "compatibility_sha256": "sha256:" + "8" * 64, "receipt_reference": "github-actions-run:99"})):
+            provider = Provider(); F.accepted_provider(provider, F.delivery_fixture()); provider.created_record = True
+            def live(owner=M):
+                value = owner.Provider(); value._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
+                return value
+            deploy_args = SimpleNamespace(mode="plan", phase="update", receipt=root / "candidate.json", proof_label=F.BINDING["proof_label"], expected_predecessor=prior["release_id"], approved_plan=None, wait_seconds=0, prerequisites=None)
+            planned = M.C.run(deploy_args, live(M.C))
+            deploy_args.approved_plan, deploy_args.mode = planned["plan_sha256"], "review"
+            assert M.C.run(deploy_args, live(M.C))["verdict"] == "reviewed"
+            deploy_args.mode = "execute"
+            assert M.C.run(deploy_args, live(M.C))["verdict"] == "completed"
+            delivery, binding = planned["plan"]["delivery"], planned["plan"]["binding"]
+            cache = M.C.delivery_cache(binding["proof_label"], delivery)
+            deployment = M.C.read_json(cache / "receipts/update.json")
+            # Only typed predecessor/applicability is controlled. Actual ordering,
+            # deployed receipt, task observations and retained archive validation run.
+            predecessor_owner = SimpleNamespace(successor_parent=lambda *args: {"release_id": prior["release_id"]})
+            with patch.object(M.ACCEPTANCE, "acceptance_owner", lambda: predecessor_owner), patch.object(M.C.TRANSITION, "RETIRED_PROOF_LABEL", binding["proof_label"]):
+                previous_stop = deployment["result"]["facts"]["completed_at"]
+                for workload, operation, stage in (("database-proof", "permissions", "baseline"), ("verifier", "lifecycle", "baseline"), ("database-proof", "collision", "baseline"), ("verifier", "read", "acceptance")):
+                    args = SimpleNamespace(receipt=root / "candidate.json", proof_label=binding["proof_label"], expected_predecessor=prior["release_id"],
+                                           workload=workload, operation=operation, proof_stage=stage, phase="preflight", expected_digest="1" * 64)
+                    for phase in ("preflight", "operation"):
+                        args.phase = phase
+                        context = M.prepare(args, live())
+                        assert context["delivery"] == delivery and context["report"]["plan"]["execution_route_available"]
+                        args.approved_plan = context["report"]["plan_sha256"]
+                        completed = M.execute(args, live())
+                        assert completed["verdict"] == "completed"
+                        step = M.C.read_json(root / completed["receipt"])
+                        assert step["schema"] == "deploy/entity-smoke-task-step/v2" and step["prerequisites"]["packets"]["deployment"] == deployment
+                        assert M.RUNNER.EVIDENCE.timestamp(step["prerequisites"]["required_after"]) >= M.RUNNER.EVIDENCE.timestamp(previous_stop)
+                        M.STEPS.validate_delivery_step(M.dependencies(), step, binding, delivery, args)
+                        proof_name = {"permissions": "baseline-permissions", "lifecycle": "lifecycle", "collision": "collision", "read": "final-read"}[operation]
+                        archive = evidence.capture_task(M, context, args, live(), proof_name, {**binding, "record_digest": "1" * 64})
+                        assert archive["packet"] == step and archive["delivery"] == delivery
+                        request = step["reservation"]["request"]
+                        label = M.C.delivery_preflight_label(delivery, stage, workload, operation) if phase == "preflight" else M.C.delivery_operation_label(delivery, workload, operation)
+                        assert request["environment"]["ENTITY_SMOKE_PROOF_LABEL"] == label
+                        assert M.STEPS.key(args, delivery) != M.STEPS.key(args)
+                        if operation == "lifecycle" and phase == "operation": assert label == delivery["smoke_label"] != binding["proof_label"]
+                        if phase == "operation" and operation in {"permissions", "lifecycle"}: assert "ENTITY_SMOKE_EXPECTED_DIGEST" not in request["environment"]
+                        for mutate in (
+                            lambda packet: packet["delivery"].update(delivery_id="0" * 64),
+                            lambda packet: packet["plan"].update(request_sha256="sha256:" + "0" * 64),
+                            lambda packet: packet["prerequisites"].update(required_after="2000-01-01T00:00:00Z"),
+                            lambda packet: packet["plan"].update(preflight_label=binding["proof_label"]),
+                        ):
+                            changed = copy.deepcopy(step); mutate(changed)
+                            changed["plan_sha256"] = M.C.DEPLOY.fingerprint(changed["plan"])
+                            try: M.STEPS.validate_delivery_step(M.dependencies(), changed, binding, delivery, args)
+                            except M.STEPS.StepFailure: pass
+                            else: raise AssertionError("successor delivery/plan/prerequisite mutation accepted")
+                        observed = sum(op == "run-task" for _, op, _ in provider.observed)
+                        assert M.execute(args, live())["reused"] is True
+                        assert sum(op == "run-task" for _, op, _ in provider.observed) == observed
+                    previous_stop = step["receipt"]["task"]["stopped_at"]
+                # Actual prerequisite owner rejects absent and stale predecessors.
+                with patch.object(M.STEPS, "observe_packet", lambda *args, **kwargs: None):
+                    try: M.ACCEPTANCE.successor_prerequisites(M.dependencies(), context, args, live())
+                    except M.STEPS.PrerequisiteMissing: pass
+                    else: raise AssertionError("missing successor prerequisite admitted")
+                stale = copy.deepcopy(step)
+                stale["receipt"]["task"]["created_at"] = "2000-01-01T00:00:00Z"
+                with patch.object(M.STEPS, "observe_packet", lambda *args, **kwargs: stale):
+                    try: M.ACCEPTANCE.successor_prerequisites(M.dependencies(), context, args, live())
+                    except M.ACCEPTANCE.AcceptanceFailure as failure: assert failure.code == "acceptance-successor-task-order-invalid"
+                    else: raise AssertionError("stale successor prerequisite admitted")
+            assert sum(op == "run-task" for _, op, _ in provider.observed) == 8
+            assert not (root / ".cache/entity-smoke-live" / binding["proof_label"] / "task-steps").exists()
+            for path in cache.rglob("*.json"):
+                assert CANARY not in path.read_text() and F.PARAMETERS["AdministratorSecretArn"] not in path.read_text()
+
+
 def transport_read_protocols():
     """Actual task provider transport, controlled CLI responses; never AWS."""
     original_run, original_parse, original_plan = M.C.subprocess.run, M.parse, M.plan
@@ -753,5 +846,6 @@ def transport_read_protocols():
 
 
 if __name__ == "__main__":
+    successor_task_protocols()
     transport_read_protocols()
     run()

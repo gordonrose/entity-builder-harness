@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.infrastructure-route
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
 #   updated_on: "2026-11-15"
@@ -28,6 +28,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from types import SimpleNamespace
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_INFRASTRUCTURE_ROUTE_ASSERTIONS_DISABLED")
 
@@ -556,6 +557,105 @@ try:
         assert len(attempts) == 1 and current.effect == "unknown-reconcile-only"
 finally:
     M.subprocess.run = old_subprocess
+def successor_protocols():
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-successor-route-") as temporary:
+        root = Path(temporary)
+        receipt = {**F.delivery_fixture()["candidate"]}
+        predecessor = F.delivery_fixture()["predecessor"]
+        history = {"release": {"id": predecessor["release_id"], **{key: predecessor[key] for key in ("source_revision", "image_digest", "proof_set_sha256")}}}
+        current = {"target": M.RESOURCE.CLUSTER, "scope": "entity-smoke", "release_id": predecessor["release_id"]}
+        actual_digest = M.digest_file
+        real_selection = M.rollback_selection
+        compatibility_metadata = {"compatibility_id": "rollback-compatibility-" + "8" * 24, "compatibility_sha256": "sha256:" + "8" * 64, "receipt_reference": "github-actions-run:99"}
+        admission = []
+        with patch.object(M, "ROOT", root), patch.object(M, "source_digest", lambda: "sha256:" + "f" * 64), \
+             patch.object(M, "digest_file", lambda path: actual_digest(path) if path.is_file() else "sha256:" + "c" * 64), \
+             patch.object(M, "local_checks", lambda: None), patch.object(M.ALIGN, "source_preflight", lambda value: None), \
+             patch.object(M.ALIGN, "read_receipt", lambda path: receipt), \
+             patch.object(M.ALIGN, "inspect", lambda *arguments: ({"dependency_incarnation_sha256": F.BINDING["dependency_incarnation_sha256"]}, copy.deepcopy(F.PARAMETERS), "fixture")), \
+             patch.object(M.SUCCESSION, "current", lambda path: current), patch.object(M.SUCCESSION, "history_record_for_id", lambda *arguments: (history, b"controlled")), \
+             patch.object(M, "successor_admission", lambda delivery, binding: admission.append(delivery["delivery_id"])), \
+             patch.object(M, "rollback_selection", lambda args, delivery, binding: ({**binding, **{key: predecessor[key] for key in ("source_revision", "image_digest")}}, compatibility_metadata)):
+            args = SimpleNamespace(mode="plan", phase="update", receipt=root / "candidate.json", proof_label=F.BINDING["proof_label"],
+                                   expected_predecessor=predecessor["release_id"], approved_plan=None, wait_seconds=0, prerequisites=None)
+            provider = Provider(lost_execute=True)
+            F.accepted_provider(provider, F.delivery_fixture())
+            # The real public updater must reject unavailable recovery custody
+            # before creating a change set, not only when rollback is requested.
+            with patch.object(M, "rollback_selection", real_selection):
+                failed(lambda: M.run(args, provider), "infrastructure-rollback-compatibility-required")
+                args.rollback_receipt = root / "rollback.json"
+                args.rollback_compatibility_id = compatibility_metadata["compatibility_id"]
+                def unavailable(*arguments): raise M.SUCCESSION.SuccessionFailure("release-succession-compatibility-not-found")
+                with patch.object(M.SUCCESSION, "compatibility_record", unavailable):
+                    failed(lambda: M.run(args, provider), "release-succession-compatibility-not-found")
+            assert not any(op in {"create-change-set", "execute-change-set"} for _, op, _ in provider.calls)
+            planned = M.run(args, provider)
+            assert planned["plan"]["resource_modifications"] == 1 and planned["plan"]["resource_replacements"] == 5 and planned["plan"]["resource_additions"] == 0
+            delivery, binding = planned["plan"]["delivery"], planned["plan"]["binding"]
+            cache = M.delivery_cache(args.proof_label, delivery)
+            assert str(cache).endswith("/releases/" + delivery["delivery_id"])
+            assert not any(op in {"create-change-set", "execute-change-set"} for _, op, _ in provider.calls)
+            args.mode, args.approved_plan = "review", planned["plan_sha256"]
+            assert M.run(args, provider)["verdict"] == "reviewed"
+            args.mode = "execute"
+            failed(lambda: M.run(args, provider), "deployment-execution-uncertain-reconcile-only")
+            assert M.run(args, provider)["verdict"] == "completed"
+            assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 1
+            packet = M.read_json(cache / "receipts/update.json")
+            assert packet["plan"]["rollback_compatibility"] == compatibility_metadata
+            for gate in (cache / "realization").glob("controlled-execution-*.json"):
+                assert M.read_json(gate)["change_summary"]["operation_counts"] == {"create": 0, "update": 1, "delete": 0, "replace": 5, "broaden-permission": 0}
+            assert M.validate_deployment_receipt(packet, binding, delivery) is packet
+            checked = M.completed_deployment(provider, binding, {**F.PARAMETERS, "ServerDesiredCount": "1"}, delivery)
+            assert checked["receipt"] == packet and checked["required_after"] == packet["result"]["facts"]["completed_at"]
+            for mutate, code in (
+                (lambda item: item["plan"].update(phase="rollback"), "infrastructure-delivery-plan-mismatch"),
+                (lambda item: item["plan"].update(previous_parameters_sha256="sha256:" + "0" * 64), "infrastructure-delivery-plan-mismatch"),
+                (lambda item: item["result"]["facts"].update(resources_sha256="sha256:" + "0" * 64), "infrastructure-delivery-facts-invalid"),
+                (lambda item: item["result"]["reservation"].update(request_sha256="0" * 64), "resource-reservation-mismatch"),
+            ):
+                changed = copy.deepcopy(packet); mutate(changed); changed["plan_sha256"] = M.DEPLOY.fingerprint(changed["plan"])
+                failed(lambda: M.validate_deployment_receipt(changed, binding, delivery), code)
+            changed = copy.deepcopy(delivery); changed["candidate"]["image_digest"] = "sha256:" + "0" * 64
+            failed(lambda: M.validate_deployment_receipt(packet, binding, changed), "resource-delivery-identity-mismatch")
+            args.expected_predecessor = "release-" + "9" * 24
+            failed(lambda: M.run(args, provider), "infrastructure-predecessor-mismatch")
+            args.expected_predecessor = predecessor["release_id"]
+            rollback_receipt = {"source_revision": predecessor["source_revision"], "image_digest": predecessor["image_digest"], "receipt_reference": "github-actions-run:99"}
+            compatibility_id = "rollback-compatibility-" + "8" * 24
+            compatibility = {"target": M.RESOURCE.CLUSTER, "scope": "entity-smoke", "sha256": "sha256:" + "8" * 64,
+                "identity": {"historical_release_id": predecessor["release_id"], "source_revision": predecessor["source_revision"], "image_digest": predecessor["image_digest"],
+                    "workloads": ["server", "migration", "administration", "verifier", "database-proof"],
+                    "configuration_contract": {"path": str(M.ALIGN.SCOPE), "sha256": binding["configuration_contract_sha256"]},
+                    "permission_contract": {"path": str(M.DEPLOY.SOURCE.relative_to(REAL_ROOT)), "sha256": binding["permission_contract_sha256"]}}}
+            # Production contract paths remain repository-relative even while
+            # this fixture's output store lives under a disposable root.
+            with patch.object(M.ALIGN, "read_receipt", lambda path: rollback_receipt if path.name == "rollback.json" else receipt), \
+                 patch.object(M.SUCCESSION, "compatibility_record", lambda *arguments: ({}, compatibility)):
+                args.phase, args.mode, args.rollback_receipt, args.rollback_compatibility_id = "rollback", "plan", root / "rollback.json", compatibility_id
+                # Use the same current-contract path ownership as production.
+                with patch.object(M, "ROOT", REAL_ROOT):
+                    selected, metadata = real_selection(args, delivery, binding)
+                    assert selected["image_digest"] == predecessor["image_digest"] and metadata["compatibility_id"] == compatibility_id
+                    compatibility["identity"]["workloads"].pop()
+                    failed(lambda: real_selection(args, delivery, binding), "infrastructure-rollback-workloads-incomplete")
+                    compatibility["identity"]["workloads"].append("database-proof")
+                with patch.object(M, "rollback_selection", lambda *arguments: (selected, metadata)):
+                    rollback_plan = M.run(args, provider)
+                    assert rollback_plan["plan"]["binding"] == selected and rollback_plan["plan"]["delivery"] == delivery
+                    args.approved_plan, args.mode = rollback_plan["plan_sha256"], "review"
+                    assert M.run(args, provider)["verdict"] == "reviewed"
+                    provider.lost_execute = False
+                    args.mode = "execute"
+                    assert M.run(args, provider)["verdict"] == "completed"
+                    assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 2
+            assert admission and current["release_id"] == predecessor["release_id"]
+            for path in cache.rglob("*.json"):
+                assert CANARY not in path.read_text() and F.PARAMETERS["AdministratorSecretArn"] not in path.read_text()
+
+
+successor_protocols()
 print(json.dumps({"schema": "deploy/entity-smoke-infrastructure-route-fixture/v1", "verdict": "passed", "provider_observation": False,
                   "prerequisites": "controlled-source-custody-alignment-and-policy-responses-not-qualification",
                   "checks": ["actual-generic-gates", "plan-is-not-approval", "changed-plan-rejected", "review-before-execute", "lost-execution-observe-only", "completed-receipt-reconciliation", "no-fictional-runtime-facts", "same-label-ownership", "activation-proof-required", "activation-binds-four-real-collector-receipts", "activation-resume-no-old-zero-count-requirement", "submission-must-match-plan", "missing-gate-observation-rejected", "actual-cli-safe-rejection", "no-provider-on-offline-failure", "fixed-provider-endpoint", "no-automatic-mutation-retry"]}))

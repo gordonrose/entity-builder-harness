@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.realization-service-graph
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -129,6 +129,30 @@ def main():
         refresh_facts, refresh_summary = observations(refresh)
         refresh_summary["operation_counts"].update(create=0, update=1, replace=5)
         run(root, refresh, facts=refresh_facts, summary=refresh_summary)
+        successor = copy.deepcopy(refresh)
+        policy = successor["change_shape"]["immutable_definition_refresh"]
+        policy.pop("stopped_workload_required")
+        policy.update(accepted_predecessor_required=True, compatible_rollback_required=True)
+        assert set(policy) == set(schema["bounded_definition_refresh"]["accepted_release_variant"]["required_true_fields"])
+        run(root, successor)
+        facts, summary = observations(successor)
+        summary["operation_counts"].update(create=0, update=1, replace=5)
+        run(root, successor, facts=facts, summary=summary)
+        for field in policy:
+            for invalid in (None, False, 1, CANARY):
+                changed = copy.deepcopy(successor)
+                changed["change_shape"]["immutable_definition_refresh"][field] = invalid
+                run(root, changed, "change-shape-invalid")
+            changed = copy.deepcopy(successor)
+            changed["change_shape"]["immutable_definition_refresh"].pop(field)
+            run(root, changed, "change-shape-invalid")
+        for extra in ("stopped_workload_required", "unrestricted_replacement"):
+            changed = copy.deepcopy(successor)
+            changed["change_shape"]["immutable_definition_refresh"][extra] = True
+            run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(LEGACY)
+        changed["change_shape"] = copy.deepcopy(successor["change_shape"])
+        run(root, changed, "change-shape-invalid")
         cleanup = copy.deepcopy(CONTRACT)
         cleanup["change_shape"] = {
             "reviewed_change_summary_required": True,

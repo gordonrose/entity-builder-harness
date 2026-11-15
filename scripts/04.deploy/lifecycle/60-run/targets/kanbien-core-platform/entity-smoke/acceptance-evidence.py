@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.acceptance-evidence
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -21,6 +21,7 @@ import hashlib
 import importlib.util
 from pathlib import Path
 import re
+import subprocess
 from types import SimpleNamespace
 
 
@@ -75,7 +76,57 @@ def document_digest(value):
     return "sha256:" + hashlib.sha256(T.RUNNER.CONTROL.canonical(value) + b"\n").hexdigest()
 
 
-def preflight_label(binding, stage, workload, operation):
+def recovery_input_paths(value):
+    """One declaration owns the boundary; callers cannot supply wildcard paths."""
+    require(isinstance(value, list) and bool(value) and len(value) <= 128
+            and all(isinstance(path, str) and re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", path)
+                    and all(part not in {".", ".."} for part in path.split("/")) for path in value)
+            and len(value) == len(set(value)), "acceptance-recovery-input-paths-invalid")
+    return sorted(value)
+
+
+def recovery_input_tree(source_revision, paths, *, root=None):
+    """Hash actual immutable Git objects, including additions, removals and modes."""
+    require(isinstance(source_revision, str) and re.fullmatch(r"[a-f0-9]{40}", source_revision),
+            "acceptance-recovery-input-source-invalid")
+    paths = recovery_input_paths(paths)
+    root = C.ROOT if root is None else root
+    try:
+        completed = subprocess.run(
+            ["git", "ls-tree", "-r", "-z", "--full-tree", source_revision, "--",
+             *[":(literal)" + path for path in paths]],
+            cwd=root, capture_output=True, check=False, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        raise EvidenceFailure("acceptance-recovery-inputs-unavailable") from None
+    require(completed.returncode == 0 and len(completed.stdout) <= 16 * 1024 * 1024,
+            "acceptance-recovery-inputs-unavailable")
+    # Empty selections must not become a permissive proof if a declaration points
+    # at nonexistent boundaries. Individual absent files remain significant when
+    # added later (for example a newly introduced lockfile or .npmrc).
+    require(bool(completed.stdout) and completed.stdout.endswith(b"\0"),
+            "acceptance-recovery-inputs-empty")
+    return "sha256:" + hashlib.sha256(completed.stdout).hexdigest()
+
+
+def recovery_applicability(previous, candidate, paths, *, root=None):
+    """Retained recovery history is valid only for its unchanged owning inputs."""
+    fields = ("configuration_contract_sha256", "permission_contract_sha256",
+              "dependency_incarnation_sha256", "proof_label", "record_digest")
+    require(isinstance(previous, dict) and isinstance(candidate, dict)
+            and all(key in previous and key in candidate and previous[key] == candidate[key] for key in fields),
+            "acceptance-recovery-binding-changed")
+    paths = recovery_input_paths(paths)
+    before = recovery_input_tree(previous.get("source_revision"), paths, root=root)
+    after = recovery_input_tree(candidate.get("source_revision"), paths, root=root)
+    require(before == after, "acceptance-recovery-requalification-required")
+    return {"schema": "deploy/entity-smoke-recovery-applicability/v1",
+            "predecessor_source": previous["source_revision"], "candidate_source": candidate["source_revision"],
+            "input_paths": paths, "inputs_sha256": before}
+
+
+def preflight_label(binding, stage, workload, operation, *, delivery=None):
+    if delivery is not None:
+        return C.delivery_preflight_label(delivery, stage, workload, operation)
     suffix = "" if stage == "baseline" else ":" + stage
     original = "entity-smoke-" + hashlib.sha256((binding["proof_label"] + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
     # Historical selection only, not launch authority: the public task route
@@ -110,9 +161,14 @@ def validate_gate(graph, gate, plan_sha256, artifacts, counts, *, item, family="
     return gate
 
 
-def validate_task(value, collection_binding, *, expected_binding=None):
+def validate_task(value, collection_binding, *, expected_binding=None, delivery=None):
     """Pure historical validation; no provider access or today's source hash."""
     fields = {"schema", "name", "stage", "phase", "requested_operation", "controller_sha256", "collection_binding", "graph", "packet", "completion", "gate", "admission"}
+    if delivery is not None:
+        C.RESOURCE.validate_delivery(delivery)
+        fields.add("delivery")
+        require(isinstance(value, dict) and value.get("delivery") == delivery,
+                "acceptance-task-delivery-mismatch")
     require(isinstance(value, dict) and set(value) == fields and value["schema"] == SCHEMA, "acceptance-task-envelope-invalid")
     name = value["name"]
     require(isinstance(name, str) and name in TASKS, "acceptance-task-selection-invalid")
@@ -124,10 +180,11 @@ def validate_task(value, collection_binding, *, expected_binding=None):
     require(value["collection_binding"] == collection_binding and isinstance(value["controller_sha256"], str)
             and re.fullmatch(r"sha256:[a-f0-9]{64}", value["controller_sha256"]), "acceptance-task-source-invalid", name)
     packet = value["packet"]
-    require(isinstance(packet, dict) and set(packet) == {"schema", "plan_sha256", "binding", "reservation", "receipt"}
-            and packet["schema"] == "deploy/entity-smoke-task-step/v1", "acceptance-task-packet-invalid", name)
+    packet_fields = {"schema", "plan_sha256", "binding", "reservation", "receipt"} | ({"delivery", "plan", "prerequisites"} if delivery is not None else set())
+    require(isinstance(packet, dict) and set(packet) == packet_fields
+            and packet["schema"] == "deploy/entity-smoke-task-step/" + ("v2" if delivery is not None else "v1"), "acceptance-task-packet-invalid", name)
     parent = {key: item for key, item in collection_binding.items() if key != "record_digest"}
-    legacy = C.TRANSITION.historical(packet, value["completion"])
+    legacy = delivery is None and C.TRANSITION.historical(packet, value["completion"])
     source_transition = legacy and any(packet["binding"].get(key) != parent[key] for key in ("source_revision", "image_digest"))
     if source_transition:
         C.TRANSITION.compatible(C, packet["binding"], parent)
@@ -135,6 +192,9 @@ def validate_task(value, collection_binding, *, expected_binding=None):
     expected_binding = parent if expected_binding is None else expected_binding
     C.RESOURCE.validate_binding(expected_binding, record_required=False)
     require(packet["binding"] == expected_binding, "acceptance-task-binding-mismatch", name)
+    if delivery is not None:
+        selection = SimpleNamespace(workload=workload, operation=operation, phase=phase, proof_stage=stage)
+        T.STEPS.validate_delivery_step(T.dependencies(), packet, expected_binding, delivery, selection)
     # The clone reader alone has a distinct incarnation and permission contract.
     require(source_transition or all(expected_binding[key] == parent[key] for key in parent if name != "restore-read" or key not in {"permission_contract_sha256", "dependency_incarnation_sha256"})
             and (name == "restore-read" or expected_binding == parent), "acceptance-task-parent-mismatch", name)
@@ -144,7 +204,8 @@ def validate_task(value, collection_binding, *, expected_binding=None):
     request = reservation["request"]
     require(request["workload"] == workload and all(request[key] == expected_binding[key] for key in parent if key != "proof_label"), "acceptance-task-request-binding-mismatch", name)
     actual_operation = ("ready" if workload == "verifier" else "preflight") if phase == "preflight" else operation
-    label = preflight_label(parent, stage, workload, operation) if phase == "preflight" else parent["proof_label"]
+    label = preflight_label(parent, stage, workload, operation, delivery=delivery) if phase == "preflight" else (
+        C.delivery_operation_label(delivery, workload, operation) if delivery is not None else parent["proof_label"])
     require(request["environment"][T.RUNNER.CONTROL.OPERATIONS[workload][0]] == actual_operation
             and request["proof_label"] == label, "acceptance-task-request-selection-mismatch", name)
     if workload in {"verifier", "database-proof", "restore-reader"}:
@@ -160,8 +221,9 @@ def validate_task(value, collection_binding, *, expected_binding=None):
     require(isinstance(completion, dict) and set(completion) == {"schema", "step_sha256", "plan_sha256", "realization_evidence", "realization_evidence_sha256"}
             and completion["schema"] == "deploy/entity-smoke-task-completion/v1" and completion["plan_sha256"] == packet["plan_sha256"]
             and completion["step_sha256"] == document_digest(packet) and completion["realization_evidence_sha256"] == document_digest(gate), "acceptance-task-completion-mismatch", name)
+    namespace = "" if delivery is None else "/releases/" + delivery["delivery_id"]
     require(isinstance(completion["realization_evidence"], str) and re.fullmatch(
-        r"\.cache/entity-smoke-live/" + re.escape(parent["proof_label"]) + r"/task-realization/controlled-execution-[a-f0-9]{32}\.json",
+        r"\.cache/entity-smoke-live/" + re.escape(parent["proof_label"]) + namespace + r"/task-realization/controlled-execution-[a-f0-9]{32}\.json",
         completion["realization_evidence"]), "acceptance-task-gate-reference-invalid", name)
     expected = {row["id"]: value["controller_sha256"] if row["id"] == T.GRAPH.CONTROLLER_SOURCE else expected_binding["image_digest"] for row in graph["artifacts"]}
     validate_gate(graph, gate, packet["plan_sha256"], expected,
@@ -171,7 +233,7 @@ def validate_task(value, collection_binding, *, expected_binding=None):
     elif name == "credential-unready": T.RUNNER.UNREADY.validate_admission(admission, reservation)
     else:
         T.RUNNER.PREFLIGHT.validate_admission(admission, reservation)
-        require(admission["preflight"]["label"] == preflight_label(parent, stage, workload, operation), "acceptance-preflight-stage-mismatch", name)
+        require(admission["preflight"]["label"] == preflight_label(parent, stage, workload, operation, delivery=delivery), "acceptance-preflight-stage-mismatch", name)
     return value
 
 
@@ -201,7 +263,9 @@ def capture_task(route, context, args, provider, name, collection_binding, *, hi
              "controller_sha256": T.IMAGE_REPAIR.completed_bootstrap_controller(packet, completion, context["artifact"]), "collection_binding": collection_binding,
              "graph": route.GRAPH.contract(args.workload, route.C.GATE, negative=name == "credential-unready"),
              "packet": packet, "completion": completion, "gate": gate, "admission": admission}
-    return validate_task(value, collection_binding, expected_binding=context["binding"])
+    delivery = context.get("delivery")
+    if delivery is not None: value["delivery"] = delivery
+    return validate_task(value, collection_binding, expected_binding=context["binding"], delivery=delivery)
 
 
 def immutable_json(path, value):

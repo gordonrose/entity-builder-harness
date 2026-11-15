@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.release-update-and-recovery
-version: 4
+version: 5
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-25"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -34,6 +34,14 @@ image contracts, and publication route. Follow the build and package workflows
 linked from the lifecycle map. A new capability must first satisfy declaration
 coverage; existing exclusions are not implicit authority to expand the scope.
 
+Reconcile [proof applicability](../../standards/operational-realization-gate.md#proof-applicability-by-change)
+against those declarations before selecting checks. Refer to valid earlier
+build/package proof through its owning readers rather than independently
+repeating preparation. Carry source/artifact identity and available stage
+observations forward under the shared [delivery accounting](../../../shared/testing/standards/test-execution.md#delivery-budget-accounting)
+rule; starting Deploy does not restart the delivery clock. If cross-stage
+timing is unavailable, say so without inventing a new execution journal.
+
 Before unattended work, resolve the worktree and tool/dependency setup, exact
 committed source revision, permitted operations, credential availability,
 publication approval mechanism, and expiring provider conditions. Use existing
@@ -60,6 +68,24 @@ independent local work when an external prerequisite blocks mutation.
 6. Pass the receipt, deployment result, reviewed change identity and retained
    baseline to
    `.agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md`.
+
+For the entity-smoke adapter, use its existing infrastructure command with
+`--phase update` and the exact `--expected-predecessor`; create/activate are
+initial deployment operations, not aliases for an update. The same shared
+change-set and reservation owners review, submit once and reconcile updates.
+Supply `--rollback-receipt` and `--rollback-compatibility-id` for the update
+too: compatible recovery is checked before deploying, not discovered only
+after the candidate fails.
+Before submission, the adapter checks the existing acceptance schema's
+recovery-input boundary against both immutable source revisions. Changes to
+that boundary require affected capability requalification, not a silent
+readiness-only acceptance. Keep the original proof label/data ownership and
+use the derived delivery namespace for new operation receipts.
+
+Recovery uses `--phase rollback`, the same candidate/controller receipt,
+and the separate `--rollback-receipt` and `--rollback-compatibility-id`.
+Compatibility must cover every image role the actual template updates.
+It never rewinds migrations, widens grants or promotes the failed candidate.
 
 ## Stop Conditions and Output
 

@@ -4,10 +4,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.operational-realization-gate
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -438,10 +438,15 @@ def validate_change_shape(contract: dict[str, Any]) -> None:
     forbidden = set(listed_ids(shape.get("forbidden_operation_classes"), "change-shape-forbidden-missing"))
     if "immutable_definition_refresh" in shape:
         refresh = shape["immutable_definition_refresh"]
-        requirements = {"owned_task_definitions_only", "stopped_workload_required", "unchanged_permissions_and_storage",
-                        "qualified_image_required", "original_preparation_retained"}
+        common = {"owned_task_definitions_only", "unchanged_permissions_and_storage",
+                  "qualified_image_required", "original_preparation_retained"}
+        variants = (common | {"stopped_workload_required"},
+                    common | {"accepted_predecessor_required", "compatible_rollback_required"})
+        # Retained stopped-workload declarations retain their exact meaning.
+        # Ordinary releases declare predecessor/recovery custody instead; the
+        # provider controller must establish it, not merely set these flags.
         if (contract["schema"] != SERVICE_CONTRACT_SCHEMA or "disposable_restore_cleanup" in shape
-                or not isinstance(refresh, dict) or set(refresh) != requirements or any(refresh[key] is not True for key in requirements)
+                or not isinstance(refresh, dict) or set(refresh) not in variants or any(value is not True for value in refresh.values())
                 or allowed != {"update", "replace"} or forbidden != {"create", "delete", "broaden-permission"}):
             raise ContractFailure("change-shape-invalid")
     elif "disposable_restore_cleanup" in shape:

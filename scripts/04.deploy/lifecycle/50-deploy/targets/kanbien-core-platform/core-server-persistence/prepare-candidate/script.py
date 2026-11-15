@@ -40,15 +40,20 @@ _AWS_CLI=None
 _UPDATE_OPERATIONS=None
 
 
-def apply_update(**arguments):
-    """Keep all baseline UPDATE callers on the same provider sequence."""
+def update_operations():
+    """Load the shared provider binding once for every baseline UPDATE caller."""
     global _UPDATE_OPERATIONS
     if _UPDATE_OPERATIONS is None:
         path = Path(__file__).resolve().parent.parent / "change-set-operations.py"
         spec = importlib.util.spec_from_file_location("persistence_update_operations", path)
         _UPDATE_OPERATIONS = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(_UPDATE_OPERATIONS)
-    return _UPDATE_OPERATIONS.apply_update(aws, stack=STACK, **arguments)
+    return _UPDATE_OPERATIONS
+
+
+def apply_update(**arguments):
+    """Keep all baseline UPDATE callers on the same provider sequence."""
+    return update_operations().apply_update(aws, stack=STACK, **arguments)
 
 def aws_response():
     global _AWS_RESPONSE
@@ -206,8 +211,8 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
             return "uncertain", "persistence-update-stack-observation-uncertain" if stack_ok else stack_code
         stack = stacks[0]
-        try: params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
-        except (AttributeError, TypeError): return "uncertain", "persistence-update-stack-parameters-unobservable"
+        params = update_operations().CHANGE_SETS.parameter_values(stack.get("Parameters"))
+        if params is None: return "uncertain", "persistence-update-stack-parameters-unobservable"
         if any(params.get(key) != value for key, value in expected_parameters.items()):
             return "uncertain", "persistence-update-missing-change-set-identity-unproven"
         status = stack.get("StackStatus")
@@ -248,7 +253,8 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
             return "uncertain", "persistence-update-stack-observation-uncertain" if stack_ok else stack_code
         stack = stacks[0]
-        params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+        params = update_operations().CHANGE_SETS.parameter_values(stack.get("Parameters"))
+        if params is None: return "uncertain", "persistence-update-stack-parameters-unobservable"
         if stack.get("StackStatus") == "UPDATE_COMPLETE" and all(params.get(key) == value for key, value in expected_parameters.items()):
             return "complete", "persistence-update-noop-candidate-already-applied"
         return "failed", "persistence-update-change-set-failed"
@@ -279,8 +285,8 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         return "pending", "persistence-update-stack-pending"
     if status in {"UPDATE_FAILED", "UPDATE_ROLLBACK_FAILED", "UPDATE_ROLLBACK_COMPLETE", "DELETE_COMPLETE"}:
         return "failed", "persistence-update-stack-failed"
-    try: params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
-    except (AttributeError, TypeError): return "uncertain", "persistence-update-stack-parameters-unobservable"
+    params = update_operations().CHANGE_SETS.parameter_values(stack.get("Parameters"))
+    if params is None: return "uncertain", "persistence-update-stack-parameters-unobservable"
     if status != "UPDATE_COMPLETE" or any(params.get(key) != value for key, value in expected_parameters.items()):
         return "uncertain", "persistence-update-completion-identity-unproven"
     return "complete", "persistence-update-operation-complete"
@@ -296,22 +302,8 @@ def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> 
 
 
 def update_parameters_match(actual: object, desired: object, current: object) -> bool:
-    """Accept only a complete UPDATE parameter map with bounded ownership.
-
-    CloudFormation describes all template parameters for an UPDATE, including
-    values retained through ``UsePreviousValue`` or template defaults.  A
-    controller owns only its explicit candidate parameters, but must prove all
-    other returned parameters stayed exactly at the pre-update stack value.
-    """
-    if not isinstance(actual, dict) or not isinstance(desired, dict) or not isinstance(current, dict):
-        return False
-    if not all(isinstance(key, str) and isinstance(value, str) for mapping in (actual, desired, current) for key, value in mapping.items()):
-        return False
-    if set(actual) != set(current) or not set(desired) <= set(actual):
-        return False
-    return all(actual.get(key) == value for key, value in desired.items()) and all(
-        actual.get(key) == current.get(key) for key in set(actual) - set(desired)
-    )
+    """Existing controller interface; the shared change-set owner defines policy."""
+    return update_operations().CHANGE_SETS.update_parameters_match(actual, desired, current)
 
 
 def candidate_runnable_manifest(receipt: dict[str, Any]) -> tuple[str | None, str]:

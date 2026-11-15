@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-controls
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -221,6 +221,7 @@ def archive_protocols(*, bootstrap=False, proof_label=None):
         value = {"schema": A.SCHEMA, "name": name, "stage": stage, "phase": "preflight", "requested_operation": operation,
             "controller_sha256": artifact, "collection_binding": binding, "graph": graph, "packet": packet, "completion": completion, "gate": gate, "admission": None}
         assert A.validate_task(value, binding) is value
+        if not bootstrap: successor_archive_protocols(A, value, task, result, root)
         if bootstrap:
             step = cache / "task-steps/administration-bootstrap-preflight.json"
             C.RESOURCE.write_exclusive(step, packet)
@@ -292,6 +293,69 @@ def archive_protocols(*, bootstrap=False, proof_label=None):
         fails(lambda: A.validate_task(malformed, binding), T.STEPS.StepFailure, "task-step-completion-gates-incomplete")
         malformed = copy.deepcopy(value); malformed["packet"]["receipt"]["native"] = "private-archive-canary"
         fails(lambda: A.validate_task(malformed, binding), T.RUNNER.EVIDENCE.EvidenceFailure, "task-retained-receipt-mismatch")
+
+
+def successor_archive_protocols(A, original, task, result, root):
+    """Actual v2 task/gate reader using local controlled task and plan inputs."""
+    T, C = A.T, A.C
+    value = copy.deepcopy(original)
+    binding = value["collection_binding"]
+    parent = {key: item for key, item in binding.items() if key != "record_digest"}
+    identity = {"expected_predecessor": "release-" + "8" * 24,
+        "predecessor": {"release_id": "release-" + "8" * 24, "source_revision": "9" * 40,
+                        "image_digest": "sha256:" + "9" * 64, "proof_set_sha256": "sha256:" + "8" * 64},
+        "candidate": {"source_revision": binding["source_revision"], "image_digest": binding["image_digest"],
+                      "receipt_reference": "github-actions-run:12345"},
+        "contracts": {key: binding[key] for key in ("configuration_contract_sha256", "permission_contract_sha256")},
+        "dependency_incarnation_sha256": binding["dependency_incarnation_sha256"], "proof_label": binding["proof_label"]}
+    identifier = A.digest(identity)[7:]
+    delivery = {"schema": "deploy/entity-smoke-delivery-context/v1", **identity, "delivery_id": identifier,
+                "smoke_label": "entity-smoke-" + identifier[:24]}
+    value["delivery"] = delivery
+    packet = value["packet"]
+    label = A.preflight_label(binding, "acceptance", "verifier", "read", delivery=delivery)
+    reservation = packet["reservation"]
+    request = reservation["request"]
+    request["proof_label"] = label
+    request["environment"]["ENTITY_SMOKE_PROOF_LABEL"] = label
+    reservation["request_sha256"] = hashlib.sha256(T.RUNNER.CONTROL.canonical(request)).hexdigest()
+    observed_task = copy.deepcopy(task); observed_task["overrides"] = T.RUNNER.CONTROL.overrides(request)
+    observed_result = {**result, "proof_label_sha256": hashlib.sha256(label.encode()).hexdigest()}
+    packet["receipt"] = T.RUNNER.EVIDENCE.collect(observed_task, reservation,
+        {"events": [{"message": json.dumps(observed_result)}]}, packet["receipt"]["collected_at"])
+    prerequisites = {"required_after": reservation["reserved_at"], "packets": {"fixture": "controlled-prerequisites-not-a-deployment"}}
+    plan = {"schema": "deploy/entity-smoke-task-plan/v2", "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke",
+        "account": C.ALIGN.ACCOUNT, "region": C.ALIGN.REGION, "workload": "verifier", "phase": "preflight",
+        "operation": "ready", "prepared_operation": "read", "proof_stage": "acceptance", "preflight_label": label,
+        "database_effect": "read-only-http-observation", "expected_record_digest": binding["record_digest"],
+        "binding": parent, "controller_sha256": value["controller_sha256"], "delivery": delivery,
+        "package_custody_reference": identity["candidate"]["receipt_reference"],
+        "task_count": 1, "automatic_retry": False, "pending_prerequisite": None, "execution_route_available": True,
+        "request_sha256": A.digest(request), "prerequisites_sha256": A.digest(prerequisites)}
+    for field in ("graph_sha256", "parameters_sha256", "template_sha256", "preflight_rule_sha256", "operator_sha256",
+                  "task_definition_sha256", "configuration_sha256", "roles_sha256", "network_sha256", "callee_bindings_sha256"):
+        plan[field] = "sha256:" + "7" * 64
+    packet.update(schema="deploy/entity-smoke-task-step/v2", delivery=delivery, plan=plan,
+                  prerequisites=prerequisites, plan_sha256=A.digest(plan))
+    graph = value["graph"]
+    artifacts = {row["id"]: value["controller_sha256"] if row["id"] == T.GRAPH.CONTROLLER_SOURCE else binding["image_digest"] for row in graph["artifacts"]}
+    cache = root / ".cache/entity-smoke-live" / binding["proof_label"] / "releases" / identifier
+    book = C.GateBook(value["controller_sha256"], cache / "task-realization", contract=graph, artifact_bindings=artifacts)
+    for component in book.known: book.component(component)
+    book.bind_plan(packet["plan_sha256"])
+    for gate in C.GATE.GATE_ORDER[:7]: book.gate(gate)
+    produced = book.validate("controlled-execution", 1)
+    value["gate"] = C.read_json(produced)
+    value["completion"] = {"schema": "deploy/entity-smoke-task-completion/v1", "step_sha256": A.document_digest(packet),
+        "plan_sha256": packet["plan_sha256"], "realization_evidence": str(produced.relative_to(root)),
+        "realization_evidence_sha256": A.document_digest(value["gate"])}
+    assert A.validate_task(value, binding, delivery=delivery) is value
+    invalid = copy.deepcopy(value); invalid["packet"]["prerequisites"]["packets"]["fixture"] = "changed"
+    fails(lambda: A.validate_task(invalid, binding, delivery=delivery), T.STEPS.StepFailure, "task-step-delivery-plan-mismatch")
+    invalid = copy.deepcopy(value); invalid["completion"]["realization_evidence"] = original["completion"]["realization_evidence"]
+    fails(lambda: A.validate_task(invalid, binding, delivery=delivery), A.EvidenceFailure, "acceptance-task-gate-reference-invalid")
+    invalid = copy.deepcopy(value); invalid["delivery"] = None
+    fails(lambda: A.validate_task(invalid, binding, delivery=delivery), A.EvidenceFailure, "acceptance-task-delivery-mismatch")
 
 
 def control_custody_protocols():

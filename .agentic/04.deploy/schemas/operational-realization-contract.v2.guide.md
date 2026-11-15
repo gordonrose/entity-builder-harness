@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.guide.operational-realization-contract.v2
-version: 2
+version: 3
 status: active
 created_on: "2026-11-08"
-updated_on: "2026-11-09"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [architecture, security, sre]
@@ -51,6 +51,23 @@ Every declared identity, configuration shape, artifact and recovery relationship
 is still required. No queue or synthetic store is needed to satisfy the schema.
 
 ## Keep declarations separate from proof
+
+For immutable task-definition revisions, `immutable_definition_refresh` has
+two closed alternatives in the [schema](operational-realization-contract.v2.schema.yml).
+The retained repair alternative requires a stopped workload. The ordinary
+release alternative instead requires an exact accepted predecessor and a
+compatible rollback; it does not require stopping a running service. Both
+require owned task definitions, unchanged permissions/storage, a qualified
+image and retained original preparation. Mixing the alternatives, omitting a
+field or setting one false rejects. Only `update` and `replace` are allowed.
+
+These declarations do not establish those facts. The deployment controller
+must validate the predecessor, recovery applicability and exact reviewed
+resource changes before mutation. Count each new immutable task-definition
+revision as a replacement and a service rollout as an update; never relabel
+replacement as update merely to pass a gate. Stateful resources, permissions
+and unrelated resources are outside this image-refresh policy. Initial
+creation keeps its separate create/update change shape in the same controller.
 
 For a separately governed disposable-restore cleanup, `change_shape` may opt in
 with `disposable_restore_cleanup`. Declare its four fields from the
