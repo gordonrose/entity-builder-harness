@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-12T17:02:55Z
-latest_commit_sha: f3b6afbd
-chat_duration: 518148s (05:23:55:48)
+latest_commit_at_utc: 2026-11-15T13:55:48Z
+latest_commit_sha: 29e5f1a3ee9f1e1f6014e12859d23f2f826e0c4e
+chat_duration: 766121s (08:20:48:41)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2181,6 +2181,17 @@ Summary: Combined checkpoint replaces planning-only split
 
 Durable evidence: The explicit commit-everything request includes all current work and the retrospective lesson, resolving the planning-only staged-input conflict without changing the selector or checkpoint workflow. First all-change gate:45 passed,1 health/recovery fixture failed,103 deferred; report .cache/test-runs/20261115T134455Z-545b323b27a14413a802f25a7fd68234/report.json. Fixture correction preserves production acceptance validation and proves copied live references are rejected; original wrapper now passes31.844s. Existing plan records exact cause and review. Final commit gate must pass; C03 canonical migration/full integration/package qualification remain pending.
 
+
+### 2026-11-15T13:55:48Z - Commit recorded
+
+Commit: `29e5f1a3ee9f1e1f6014e12859d23f2f826e0c4e`
+
+Message: refactor(deploy): checkpoint consolidation and declaration-driven builds
+
+Summary: Committed all240 current paths under explicit user approval, including the retrospective lesson. Required commit gate passed46 checks with103 integration/later-stage obligations deferred; report .cache/test-runs/20261115T135443Z-c46262409d9e497babd1aec3341be33c/report.json. The health/recovery fixture is corrected without weakening real acceptance or changing retained evidence. Source was clean after commit; no push, publication or AWS changes. The committed migration plan now permits C03 canonical helper migration. Full affected integration and actual image qualification remain pending; this checkpoint does not complete the consolidation goal.
+
+ADR impact: No new ADR: shared ownership extraction, wrapper compatibility and fixture isolation follow existing module/deployment/testing standards; no public package, layer namespace or runtime authority change.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2433,6 +2444,13 @@ Durable evidence: The explicit commit-everything request includes all current wo
   Summary: Live AWS release release-53798ef563be4ce9a8c5b2f0 accepted at 2026-11-12T16:00:21Z. Retained four immutable acceptance files containing 37 real task and seven control archives; entity-smoke active. Original-record digest, lifecycle/index, replacement, stop-preserve/restart, credential failure/recovery, isolated snapshot restore/readback and owned clone cleanup proved; source database/snapshot and other baselines preserved. Current accepted-state validation passed with zero findings, including after fixture repairs. Full retrospective records delivery, architecture, governance, verification, approval and communication failures and unproved limits. Five local fixture corrections isolate copied live acceptance and simulated accepted-reader behavior; reviewed persistence fixture hash updated without operational source changes. Final staged gate passed 38 checks, zero findings. Final affected integration passed 69 checks (65 reused, four executed), 20 separately staged checks deferred, zero findings, 142.295892 seconds. Focused payload/provider regressions passed in 122.931506 seconds; selector regression passed in 608.259798 seconds. Reports retained in .cache/test-runs/entity-smoke-stable.7wpnDKuN/acceptance-final-{integration,focused,selector}.json. Four evidence hashes unchanged. No AWS effects performed for post-acceptance repairs; no push or merge. The accepted feature path is proved; a clean unattended repeat, fast emergency delivery, subsequent-image rollback, hard purge, DynamoDB feature parity and staging retirement are not claimed.
   ADR impact: No new ADR: retained acceptance and bounded fixture isolation follow existing deployment/testing governance; retrospective recommendations are future work, not silently implemented redesign.
 
+
+- Commit: `29e5f1a3ee9f1e1f6014e12859d23f2f826e0c4e`
+  Time UTC: 2026-11-15T13:55:48Z
+  Message: refactor(deploy): checkpoint consolidation and declaration-driven builds
+  Summary: Committed all240 current paths under explicit user approval, including the retrospective lesson. Required commit gate passed46 checks with103 integration/later-stage obligations deferred; report .cache/test-runs/20261115T135443Z-c46262409d9e497babd1aec3341be33c/report.json. The health/recovery fixture is corrected without weakening real acceptance or changing retained evidence. Source was clean after commit; no push, publication or AWS changes. The committed migration plan now permits C03 canonical helper migration. Full affected integration and actual image qualification remain pending; this checkpoint does not complete the consolidation goal.
+  ADR impact: No new ADR: shared ownership extraction, wrapper compatibility and fixture isolation follow existing module/deployment/testing standards; no public package, layer namespace or runtime authority change.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2446,9 +2464,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-12T17:02:55Z
-Latest commit SHA: f3b6afbd
-Chat duration: 518148s (05:23:55:48)
+Latest commit at UTC: 2026-11-15T13:55:48Z
+Latest commit SHA: 29e5f1a3ee9f1e1f6014e12859d23f2f826e0c4e
+Chat duration: 766121s (08:20:48:41)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
