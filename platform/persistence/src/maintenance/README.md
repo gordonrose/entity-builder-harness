@@ -80,10 +80,12 @@ map existing source names        declare job choices and proof formats
 
 The actual callers are [migration](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts)
 and [restore verification](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts).
-Their [configuration binding](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts)
+Their [configuration binding](../../../../infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts)
 reads the existing environment names and supplies the existing Platform config
 loading process. The two report definitions also remain available through the
 combined persistence catalogue and the target's generated reader catalogue.
+The binding lives under `entrypoints/shared/persistence/`; the old baseline-named
+file remains an export-only compatibility wrapper, not a separate implementation.
 Runtime registration uses each owner once, not both the combined reader
 catalogue and its constituent catalogues.
 
@@ -130,7 +132,7 @@ that a diagnosis is true. The checker and its tests establish which of these
 fifteen failures actually occurred. Source-read exceptions are not relabelled
 as missing content; this module does not fetch secrets or remote configuration.
 
-[Maintenance runtime tests](../../tests/integration/maintenance-configuration-runtime.test.ts)
+[Maintenance runtime tests](../../tests/unit/maintenance-configuration-runtime.test.ts)
 exercise all fifteen failures, defaults, combined problems and value safety.
 [Compiled caller tests](../../../../scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs)
 prove rejection before pool/token/connection work; the

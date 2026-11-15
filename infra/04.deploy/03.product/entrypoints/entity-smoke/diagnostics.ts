@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.entity-smoke.diagnostics
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -27,8 +27,8 @@ import { platformConfigDiagnosticCatalog } from "@kanbien/platform-config";
 import { platformObservabilityDiagnosticCatalog } from "@kanbien/platform-observability";
 import { platformHealthDiagnosticCatalog } from "@kanbien/platform-health";
 import { defineConfigurationDiagnostic, configurationDiagnostic } from "@kanbien/core/config";
-import { persistenceConfigurationDiagnosticCatalog } from "../kanbien-core-server-persistence-configuration";
-import { persistenceTaskOperationDiagnosticCatalog } from "../kanbien-core-server-persistence-operation-diagnostics";
+import { persistenceConfigurationDiagnosticCatalog } from "../shared/persistence/configuration";
+import { persistenceTaskOperationDiagnosticCatalog } from "../shared/persistence/operation-diagnostics";
 import { entitySmokeProofDiagnostic } from "./verification";
 
 export const entitySmokeTargetDiagnostic = defineDiagnostic({

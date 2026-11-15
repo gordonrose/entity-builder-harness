@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.migration.shared-persistence-entrypoints
-version: 1
+version: 2
 status: draft
 created_on: "2026-11-15"
 updated_on: "2026-11-15"
@@ -27,8 +27,8 @@ the feature depend on baseline application composition.
 
 The migration workflow requires this plan to be committed before active callers
 move. On 2026-11-15 the user approved local checkpoints for this checked plan
-and the verified consolidation and follow-on changes. No canonical path or
-active import has been changed by preparing this plan. Publication, AWS
+and the verified consolidation and follow-on changes. Checkpoint `29e5f1a3`
+committed this plan before the canonical migration recorded below. Publication, AWS
 execution and changes to accepted evidence remain outside this migration's
 authority.
 
@@ -117,3 +117,76 @@ their imports and their build/test references together. Preserve unrelated
 changes and accepted history; do not use a worktree reset. Record actual check
 results and migration status in the consolidation plan and session log before
 claiming C03 complete.
+
+## Executed migration and connected catalog correction
+
+The migration plan was committed in local checkpoint `29e5f1a3` before canonical
+source edits. The three implementation bodies now live in shared/persistence;
+the old paths retain export-only compatibility wrappers. Current callers and
+build/test references use the canonical implementations.
+
+Fresh isolated catalog compilation on 2026-11-15 passed in 19.581 seconds, but
+actual export from `/tmp/c03-catalog-build.gVTW2Sq0` failed in 1.555 seconds:
+the declared project root set omitted the existing PostgreSQL adapter, so the
+derived runtime payload had no shim for that imported package. The previous
+repository-local output location permits upward workspace-module resolution,
+which can mask this omission; that is an explanation from the resolution
+layout, not a claim of a measured previous isolated pass. Configuration already
+imported the adapter before this ownership migration.
+
+The bounded correction adds the existing PostgreSQL adapter public entrypoint
+to the catalog project's explicit roots, asserts its selected public export in
+the actual project-selection fixture, and repeats fresh compilation and actual
+export outside the repository without NODE_PATH. No generic resolver expansion,
+automatic import approval or new dependency mapping is needed.
+
+## C03 focused outcome — 2026-11-15
+
+Implementation is ready for the parent's final registered verification and
+checkpoint, not claimed image-qualified or deployed. The three canonical
+implementation bodies retain the old exports and diagnostic definitions; the
+parent independently compared bodies against `29e5f1a3`. Old modules are
+export-only compatibility wrappers, excluded from the feature's normal source,
+compiled and Docker COPY closure. Actual baseline callers, feature callers,
+program/declaration inputs, both Docker contexts, catalog exporter, copied
+fixtures and selector input references now point to the shared owner.
+
+The configuration fixture compiles the three real wrappers separately with the
+actual declared compiler inputs, checks each contains only its canonical export,
+and proves every old export is the identical canonical object. This does not
+silently put historical wrappers back into production payloads. Feature boundary
+counterexamples reject missing canonical files, copies and context allowances,
+and reject the old wrappers and baseline application/runtime sources.
+
+| Focused observation | Result and elapsed |
+| --- | --- |
+| Fresh baseline compile; configuration fixture; restore diagnostic fixture | Passed, 10.880s; 10.129s; 8.845s. Configuration includes 577 failure-before-pool cases and wrapper identity. |
+| Fresh feature compile; actual source boundary | Passed, 10.074s; 9.099s. Boundary observed 255 sources; installed dependency preparation copied 40 packages. |
+| Feature runtime, access-control, preflight, database-proof fixtures | Passed, 1.040s; 0.459s; 0.500s; 0.484s. Controlled local dependencies, not live PostgreSQL/AWS. |
+| Three governed path-migration checks, configuration / role / operation | Passed, 13.075s / 11.128s / 9.235s, with justified compatibility-wrapper allowance. Existing migration-helper smoke also passed. |
+| Actual payload fixture | Assembly positive, 13 broken payload and six omitted-source cases passed; publication qualification fixture passed. Final recovery pin check initially failed; parent subsequently refreshed reviewed COPY-only owner pin and all 47 bounded recovery cases passed. Whole registered payload check still pending. |
+| Corrected catalog project selection | Seven tests passed, 1.433s; actual declaration asserts PostgreSQL root/export/source inclusion. |
+| Fresh corrected catalog compile | Passed, 11.377s outside repository. |
+| Actual isolated catalog export | Passed, 2.347s in `/tmp/c03-catalog-isolation.eXIDgv/payload`, NODE_PATH unset. The existing installed-lock copier prepared 42 external packages selected from the actual project declaration into an isolated parent node_modules. No workspace links or repository upward resolution. |
+| Three canonical inputs across six registered consumer closures | All 18 mutation/omission fingerprint cases passed; existing full impact-plan fixture now includes these paths but was not rerun independently. |
+| Two edited README local links; whitespace | 79 links passed; diff check passed. One pre-existing maintenance test link corrected from integration to its actual unit folder. |
+
+Isolation setup failures are retained rather than counted as passes: after the
+workspace-root correction, a payload without external packages failed on `pg`.
+An attempted copier invocation aimed at the existing compiled directory was
+correctly rejected as `existing-or-overlapping`; the setup was corrected to its
+documented new-directory-only destination. Neither required weakening the
+copier, adding production fallback resolution, or changing external dependency
+policy. The final isolated export passed with the actual declared external set.
+
+Remaining old references are intentional compatibility metadata/exports,
+explicit negative tests, published catalog filenames and historical plans,
+session logs, education snapshots or accepted receipts. Current README links
+and executable callers use canonical paths. Published JSON catalogs and accepted
+histories were not rewritten. Parent independently validated both accepted
+reference readers and byte-identical release-evidence trees.
+
+Parent owns final source review bindings, metadata/preparation, registered
+affected checks, full integration and committed-source image qualification.
+These focused observations do not replace those obligations or establish new
+live proof. No child commit, publication or AWS operation was performed.

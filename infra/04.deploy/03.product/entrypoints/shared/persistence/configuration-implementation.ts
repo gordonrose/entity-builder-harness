@@ -1,7 +1,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.shared.persistence-configuration-implementation
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-15"
 //   updated_on: "2026-11-15"
@@ -12,8 +12,8 @@
 //   purpose: Select shared PostgreSQL configuration requirements without importing a workload application or runtime constructor.
 //   portability: { class: internal, targets: [kanbien-core-platform] }
 //   used_by:
-//   - id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-configuration
-//     path: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+//   - id: infra.04-deploy.03-product.entrypoint.shared-persistence-configuration
+//     path: infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
 //   - id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-composition
 //     path: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.ts
 

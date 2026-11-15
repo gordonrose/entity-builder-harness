@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-image-payload-fixture
-#   version: 6
+#   version: 7
 #   status: draft
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-15"
@@ -57,7 +57,7 @@ function missingCopiedEntrypointImports(dockerfileSource) {
   return [...missing].sort();
 }
 assert.deepEqual(missingCopiedEntrypointImports(dockerfile), [], 'actual relative entrypoint dependencies must be copied into the image build');
-const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'kanbien-core-server-persistence-operation-diagnostics', 'kanbien-core-server-persistence-composition', 'shared/persistence/configuration-implementation'];
+const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'shared/persistence/operation-diagnostics', 'shared/persistence/configuration', 'shared/persistence/role-credential', 'kanbien-core-server-persistence-composition', 'shared/persistence/configuration-implementation'];
 for (const module of requiredEntrypointModules) {
   const source = `${entrypointDirectory}/${module}.ts`;
   const copy = `COPY ${source} ./${source}`;

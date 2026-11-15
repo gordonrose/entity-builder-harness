@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 12
+#   version: 13
 #   status: active
 #   created_on: "2026-10-29"
 #   updated_on: "2026-11-15"
@@ -184,6 +184,9 @@ class RepositoryContractTests(unittest.TestCase):
             'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/replacement-operations.py': {'diagnostic-catalog-readers', 'persistence-provider-regression', 'acceptance-route-regression', 'deployment-operation-diagnostics-regression'},
             'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py': {'diagnostic-catalog-readers', 'persistence-provider-regression', 'acceptance-route-regression', 'deployment-operation-diagnostics-regression'},
             'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
             aws + 'resource_reservation.py': baseline | {'entity-smoke-composition', 'runtime-payload-assembly'},
             aws + 'snapshots.py': baseline | {'entity-smoke-composition', 'runtime-payload-assembly'},
             aws + 'change_sets.py': {'entity-smoke-composition', 'persistence-provider-regression', 'acceptance-route-regression', 'runtime-payload-assembly'},

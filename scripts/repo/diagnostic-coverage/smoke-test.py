@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.regression
-#   version: 9
+#   version: 10
 #   status: active
 #   created_on: "2026-10-27"
 #   updated_on: "2026-11-15"
@@ -1239,7 +1239,7 @@ process.stdout.write(JSON.stringify([
             with self.assertRaises(reader.DiagnosticContractError):
                 reader.validate_record(bad)
             cases.append(bad)
-        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceAdministratorCredentialDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceAdministratorCredentialDiagnostic,value).ok)));"
+        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceAdministratorCredentialDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceAdministratorCredentialDiagnostic,value).ok)));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(cases), capture_output=True, text=True, check=True, cwd=ROOT)
         self.assertEqual(json.loads(result.stdout), [True, True] + [False] * 5)
 
@@ -1288,7 +1288,7 @@ process.stdout.write(JSON.stringify([
                 self.assertEqual(administration.accept(task, 10, "bootstrap-identities"), 1)
             self.assertNotIn("diagnostic", json.loads(output.getvalue()).get("facts", {}))
             self.assertNotIn("synthetic-sensitive-canary", output.getvalue())
-        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceConfigurationDiagnosticCatalog:catalog}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>{const definition=catalog.definitions.find(item=>item.code===value.code);return !!definition&&parseDiagnosticRecord(definition,value).ok})));"
+        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceConfigurationDiagnosticCatalog:catalog}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>{const definition=catalog.definitions.find(item=>item.code===value.code);return !!definition&&parseDiagnosticRecord(definition,value).ok})));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(records + malformed), capture_output=True, text=True, check=True, cwd=ROOT)
         self.assertEqual(json.loads(result.stdout), [True] * len(records) + [False] * len(malformed))
 
@@ -1462,7 +1462,7 @@ process.stdout.write(JSON.stringify([
                 expected.append(True)
             except reader.DiagnosticContractError:
                 expected.append(False)
-        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export'); const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js')); const {persistenceConfigurationDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js')); process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceConfigurationDiagnostic,value).ok)));"
+        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export'); const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js')); const {persistenceConfigurationDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js')); process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceConfigurationDiagnostic,value).ok)));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(cases), capture_output=True, text=True, check=True, cwd=ROOT, env={**os.environ, "NODE_PATH": str(ROOT / "node_modules")})
         self.assertEqual(json.loads(result.stdout), expected)
         self.assertEqual(expected, [True, True] + [False] * (len(cases) - 2))
@@ -1547,7 +1547,7 @@ process.stdout.write(JSON.stringify([
             except deployment.DiagnosticFailure:
                 expected.append(False)
         self.assertEqual(expected, [True] * 4 + [False] * 9)
-        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {persistenceTaskDiagnosticFields:fields}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(([primary,related])=>fields(primary,related).related_diagnostics!==undefined)));"
+        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {persistenceTaskDiagnosticFields:fields}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(([primary,related])=>fields(primary,related).related_diagnostics!==undefined)));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(cases), capture_output=True, text=True, check=True, cwd=ROOT, env={**os.environ, "NODE_PATH": str(ROOT / "node_modules")})
         self.assertEqual(json.loads(result.stdout), expected)
         self.assertEqual(reader.validate_operation_record(local, "migration"), local)

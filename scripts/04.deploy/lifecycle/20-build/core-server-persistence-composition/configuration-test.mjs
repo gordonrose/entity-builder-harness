@@ -2,7 +2,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-persistence-configuration
-//   version: 7
+//   version: 8
 //   status: draft
 //   created_on: "2026-10-24"
 //   updated_on: "2026-11-15"
@@ -22,6 +22,8 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
 import { join, resolve } from "node:path";
+import ts from "typescript";
+import { readProgramBuildInputs } from "../runnable-program-contract/build-inputs.mjs";
 
 import { fixtureRuntime } from "./fixture-runtime.mjs";
 const compiled = fixtureRuntime(process.argv[2]);
@@ -38,19 +40,20 @@ globalThis.tokenRequests = 0;
 let rejectedCases = 0;
 const require = createRequire(join(compiled, "configuration-test.cjs"));
 const entrypoints = join(compiled, "infra/04.deploy/03.product/entrypoints");
-const config = require(join(entrypoints, "kanbien-core-server-persistence-configuration.js"));
+const config = require(join(entrypoints, "shared/persistence/configuration.js"));
 const sharedConfiguration = require(join(entrypoints, "shared/persistence/configuration-implementation.js"));
 assert.deepEqual(Object.keys(sharedConfiguration.selectPersistenceConfigurationImplementation(undefined).value).sort(), ["assembleConfiguration", "id", "requirements"]);
 assert.equal(Object.isFrozen(sharedConfiguration.selectPersistenceConfigurationImplementation("postgresql").value), true);
 for (const name of ["kanbien-core-server-persistence-composition", "kanbien-core-server-persistence-postgresql", "kanbien-core-server-persistence.app", "kanbien-core-server-persistence-diagnostics"]) {
   assert.equal(require.cache[join(entrypoints, name + ".js")], undefined, "loading configuration must not import a workload application or runtime");
 }
-const taskDiagnostics = require(join(entrypoints, "kanbien-core-server-persistence-operation-diagnostics.js"));
+const taskDiagnostics = require(join(entrypoints, "shared/persistence/operation-diagnostics.js"));
 await privateTaskDiagnosticRegression();
 const server = require(join(entrypoints, "kanbien-core-server-persistence.main.js"));
 const migration = require(join(entrypoints, "kanbien-core-server-persistence-migration.main.js"));
 const administration = require(join(entrypoints, "kanbien-core-server-persistence-administration.main.js"));
-const roleCredential = require(join(entrypoints, "kanbien-core-server-persistence-role-credential.js"));
+const roleCredential = require(join(entrypoints, "shared/persistence/role-credential.js"));
+compatibilityExportsRegression();
 const iamAuthentication = require(join(entrypoints, "kanbien-core-server-persistence-iam-authentication.js"));
 const restore = require(join(entrypoints, "kanbien-core-server-persistence-restore-verifier.main.js"));
 const valid = {
@@ -74,10 +77,34 @@ await startupProcessingFailureRegression();
 await configurationResponsibilityRegression();
 await implementationSelectionRegression();
 
+function compatibilityExportsRegression() {
+  const declaration = readProgramBuildInputs(process.cwd(), { programId: "kanbien-core-server-persistence" });
+  const parsed = ts.getParsedCommandLineOfConfigFile(declaration.project, {}, ts.sys);
+  assert(parsed && parsed.errors.length === 0);
+  const names = ["configuration", "role-credential", "operation-diagnostics"];
+  const sources = names.map(name => resolve("infra/04.deploy/03.product/entrypoints", `kanbien-core-server-persistence-${name}.ts`));
+  const program = ts.createProgram(sources, { ...parsed.options, outDir: compiled,
+    baseUrl: process.cwd(), paths: declaration.inputs.compilerPaths });
+  assert.deepEqual(ts.getPreEmitDiagnostics(program).map(item => item.code), [], "old imports must still typecheck against canonical exports");
+  for (const [index, name] of names.entries()) {
+    const output = join(entrypoints, `kanbien-core-server-persistence-${name}.js`);
+    assert.equal(fs.existsSync(output), false, "normal baseline compilation must use canonical helpers, not wrappers");
+    const source = program.getSourceFile(sources[index]);
+    assert(source);
+    assert.equal(source.statements.length, 1, "compatibility files must not duplicate implementation logic");
+    assert(ts.isExportDeclaration(source.statements[0]));
+    assert.equal(source.statements[0].moduleSpecifier.text, `./shared/persistence/${name}`);
+    assert.equal(program.emit(source).emitSkipped, false);
+    const compatibility = require(output), canonical = require(join(entrypoints, `shared/persistence/${name}.js`));
+    assert.deepEqual(Object.keys(compatibility).sort(), Object.keys(canonical).sort());
+    for (const key of Object.keys(canonical)) assert.equal(compatibility[key], canonical[key], "old imports must share canonical export identity");
+  }
+}
+
 function configurationReasonSelectionRegression() {
   const core = require(join(compiled, "packages/core/src/config/index.js"));
   const future = "fixture-future-reason";
-  const filename = join(entrypoints, "kanbien-core-server-persistence-configuration.js");
+  const filename = join(entrypoints, "shared/persistence/configuration.js");
   const localRequire = createRequire(filename), fixture = { exports: {} };
   new Function("require", "module", "exports", fs.readFileSync(filename, "utf8"))(
     name => name === "@kanbien/core/config" ? { ...core,
@@ -111,7 +138,7 @@ async function configurationResponsibilityRegression() {
     return fixture.exports;
   }
   const platform = require(join(compiled, "platform/config/src/index.js"));
-  const configured = check => load("kanbien-core-server-persistence-configuration", {
+  const configured = check => load("shared/persistence/configuration", {
     "@kanbien/platform-config": { ...platform, loadPlatformConfiguration(input) {
       const result = check(input.source, input.requirements.map(item => ({ ...item, source: input.bindings[item.setting] })));
       return result.ok ? input.assemble(result.value) : result;
@@ -142,7 +169,7 @@ async function configurationResponsibilityRegression() {
   async function runActualCaller(configuration, expectedIssues) {
     let dependentChecks = 0, received;
     const runner = load("kanbien-core-server-persistence.main", {
-      "./kanbien-core-server-persistence-configuration": configuration,
+      "./shared/persistence/configuration": configuration,
       "./kanbien-core-server-persistence-iam-authentication": { ...iamAuthentication,
         persistenceIamAuthenticationResult(env, value, key) {
           dependentChecks++; received = value;
@@ -189,7 +216,7 @@ function destinationPortConstraintRegression() {
       assert.equal(result.value.port, Number(port));
     }
   }
-  const filename = join(entrypoints, "kanbien-core-server-persistence-configuration.js");
+  const filename = join(entrypoints, "shared/persistence/configuration.js");
   const localRequire = createRequire(filename);
   const core = require(join(compiled, "packages/core/src/config/index.js"));
   const narrowed = Object.freeze({ ...core.destinationPortConstraint, minimum: 2, maximum: 65_534 });
@@ -200,7 +227,7 @@ function destinationPortConstraintRegression() {
   );
   const fixture = { exports: {} };
   new Function("require", "module", "exports", fs.readFileSync(filename, "utf8"))(
-    name => name === "./shared/persistence/configuration-implementation" ? { ...sharedConfiguration, selectPersistenceConfigurationImplementation(value) {
+    name => name === "./configuration-implementation" ? { ...sharedConfiguration, selectPersistenceConfigurationImplementation(value) {
       const selected = sharedConfiguration.selectPersistenceConfigurationImplementation(value);
       return selected.ok ? { ok: true, value: { ...selected.value, requirements: requirements.exports.postgreSqlPersistenceRequirements } } : selected;
     } } : localRequire(name), fixture, fixture.exports,
@@ -1002,7 +1029,7 @@ async function implementationSelectionRegression() {
   let received;
   new Function("require", "module", "exports", fs.readFileSync(filename, "utf8"))(
     name => name === "./kanbien-core-server-persistence-composition" ? { selectPersistenceImplementation() { selections++; return { ok: true, value: selected }; } }
-      : name === "./kanbien-core-server-persistence-configuration" ? { ...config, persistenceCertificateAuthorityResult: () => ({ ok: true, value: "fixture-authority" }) }
+      : name === "./shared/persistence/configuration" ? { ...config, persistenceCertificateAuthorityResult: () => ({ ok: true, value: "fixture-authority" }) }
       : name === "./kanbien-core-server-persistence-iam-authentication" ? { persistenceIamAuthenticationResult: () => ({ ok: true, value: {} }) }
       : name === "./kanbien-platform-observability" ? { ...observability, observabilityConfigurationFromTargetEnvironment: () => ({ ok: true, value: { options: {} } }),
           createTargetObservabilityRuntime: () => ({ ok: true, value: undefined }) }

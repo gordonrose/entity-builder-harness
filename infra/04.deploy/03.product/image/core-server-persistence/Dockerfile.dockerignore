@@ -34,6 +34,9 @@
 !infra/04.deploy/03.product/entrypoints/shared/
 !infra/04.deploy/03.product/entrypoints/shared/persistence/
 !infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
+!infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
+!infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
+!infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
 !infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
 !infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
 !infra/04.deploy/03.product/image/

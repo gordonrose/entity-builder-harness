@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.entrypoints.runnable-program-index
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-10-19"
 #   updated_on: "2026-11-15"
@@ -89,7 +89,7 @@ runnable_programs:
     entrypoint: artifacts/kanbien-core-server-persistence.main.js
     runtime_executable: node
     role: http-server
-    configuration_boundary: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+    configuration_boundary: infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
     dependency_failure_boundary: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
     local_proof: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
     owner: 04.deploy/03.product

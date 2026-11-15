@@ -1471,6 +1471,10 @@ process used to reach it is not the standard to preserve.
 - Summary: Combined checkpoint replaces planning-only split
   Durable evidence: The explicit commit-everything request includes all current work and the retrospective lesson, resolving the planning-only staged-input conflict without changing the selector or checkpoint workflow. First all-change gate:45 passed,1 health/recovery fixture failed,103 deferred; report .cache/test-runs/20261115T134455Z-545b323b27a14413a802f25a7fd68234/report.json. Fixture correction preserves production acceptance validation and proves copied live references are rejected; original wrapper now passes31.844s. Existing plan records exact cause and review. Final commit gate must pass; C03 canonical migration/full integration/package qualification remain pending.
 
+
+- Summary: Canonical shared persistence migration reviewed and frozen
+  Durable evidence: Active Nov6 worktree; checkpoint29e5f1a3 and sessiond74dac68 remain local. C03 plan is committed and canonical migration now implemented with exact compatibility wrappers. Existing plan and migration plan contain source review, focused outcomes, truthful setup failures, historical reader results and unchanged evidence boundaries. Diagnostic ledger sources match with unchanged adoption/debt. Agent has frozen all files and has no active processes. Next: normal preparation, registered focused checks and complete affected integration, approved local checkpoint, then actual local image qualification. No push, publication or AWS authority is added; no new ADR is needed for this internal ownership migration.
+
 ## Activity Log
 
 ### 2026-11-10 - Actual task-definition empty-default comparison
@@ -2191,6 +2195,13 @@ Message: refactor(deploy): checkpoint consolidation and declaration-driven build
 Summary: Committed all240 current paths under explicit user approval, including the retrospective lesson. Required commit gate passed46 checks with103 integration/later-stage obligations deferred; report .cache/test-runs/20261115T135443Z-c46262409d9e497babd1aec3341be33c/report.json. The health/recovery fixture is corrected without weakening real acceptance or changing retained evidence. Source was clean after commit; no push, publication or AWS changes. The committed migration plan now permits C03 canonical helper migration. Full affected integration and actual image qualification remain pending; this checkpoint does not complete the consolidation goal.
 
 ADR impact: No new ADR: shared ownership extraction, wrapper compatibility and fixture isolation follow existing module/deployment/testing standards; no public package, layer namespace or runtime authority change.
+
+
+### 2026-11-15T14:21:04Z - Context hygiene
+
+Summary: Canonical shared persistence migration reviewed and frozen
+
+Durable evidence: Active Nov6 worktree; checkpoint29e5f1a3 and sessiond74dac68 remain local. C03 plan is committed and canonical migration now implemented with exact compatibility wrappers. Existing plan and migration plan contain source review, focused outcomes, truthful setup failures, historical reader results and unchanged evidence boundaries. Diagnostic ledger sources match with unchanged adoption/debt. Agent has frozen all files and has no active processes. Next: normal preparation, registered focused checks and complete affected integration, approved local checkpoint, then actual local image qualification. No push, publication or AWS authority is added; no new ADR is needed for this internal ownership migration.
 
 ## Sub-Agent Activity
 

@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-main
-//   version: 4
+//   version: 5
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-11-02"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -27,7 +27,7 @@ import { coreDiagnosticCatalog } from "@kanbien/core";
 import type { Metrics } from "@kanbien/core/monitoring";
 import { createPlatformDiagnosticReporter, createPlatformReadinessObserver, createPlatformSafeLogger, platformObservabilityDiagnosticCatalog, reportPlatformDiagnostic } from "@kanbien/platform-observability";
 import { persistenceDiagnosticCodes, platformPersistenceDiagnosticCatalog } from "@kanbien/platform-persistence";
-import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceStartupDiagnosticBinding } from "./kanbien-core-server-persistence-configuration";
+import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceStartupDiagnosticBinding } from "./shared/persistence/configuration";
 import { platformSecurityDiagnosticCatalog } from "@kanbien/platform-security";
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { platformContractDiagnosticCatalog, type PlatformDiagnosticCatalog } from "@kanbien/platform-contracts";

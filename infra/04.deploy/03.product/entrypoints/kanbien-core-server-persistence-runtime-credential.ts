@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-runtime-credential
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-24"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -16,8 +16,8 @@
 //     path: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
 
 import type { PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { requireBoundedExistingRole } from "./kanbien-core-server-persistence-role-credential";
-import { AdministrationObservation, type PersistenceTaskDiagnosticOptions } from "./kanbien-core-server-persistence-operation-diagnostics";
+import { requireBoundedExistingRole } from "./shared/persistence/role-credential";
+import { AdministrationObservation, type PersistenceTaskDiagnosticOptions } from "./shared/persistence/operation-diagnostics";
 
 /**
  * Urgent revocation removes the IAM-authentication membership, disables new

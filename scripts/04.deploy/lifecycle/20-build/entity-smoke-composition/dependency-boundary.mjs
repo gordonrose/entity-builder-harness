@@ -1,7 +1,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.entity-smoke.dependency-boundary
-//   version: 2
+//   version: 3
 //   status: draft
 //   created_on: "2026-11-08"
 //   updated_on: "2026-11-15"
@@ -35,8 +35,8 @@ const program = ts.createProgram([...new Set([...parsed.fileNames, ...declaratio
 assert.equal(ts.getPreEmitDiagnostics(program).length, 0, "the observed program must resolve and typecheck, not silently omit failed imports");
 const workspace = Object.entries(declaration.workspaceOwners).sort(([left], [right]) => right.length - left.length);
 const borrowed = new Set([
-  "kanbien-core-server-persistence-configuration.ts", "kanbien-core-server-persistence-role-credential.ts",
-  "kanbien-core-server-persistence-operation-diagnostics.ts",
+  "shared/persistence/configuration.ts", "shared/persistence/role-credential.ts",
+  "shared/persistence/operation-diagnostics.ts",
   "shared/persistence/configuration-implementation.ts",
 ].map(name => "infra/04.deploy/03.product/entrypoints/" + name));
 const ownSource = /^infra\/04\.deploy\/03\.product\/entrypoints\/(?:entity-smoke\/[^/]+\.ts|kanbien-entity-smoke(?:-migration|-administration|-verifier|-database-proof)?\.main\.ts)$/;
@@ -86,12 +86,13 @@ function assertBorrowedCopies(source, context) {
   }
 }
 assertBorrowedCopies(dockerfile, dockerignore);
-const sharedSource = "infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts";
-assert.throws(() => assertBorrowedCopies(dockerfile.replace(`COPY ${sharedSource} ./${sharedSource}`, ""), dockerignore));
-for (const required of [sharedSource, "infra/04.deploy/03.product/entrypoints/shared/", "infra/04.deploy/03.product/entrypoints/shared/persistence/"]) {
+for (const source of borrowed) {
+  assert.throws(() => assertBorrowedCopies(dockerfile.replace(`COPY ${source} ./${source}`, ""), dockerignore));
+}
+for (const required of [...borrowed, "infra/04.deploy/03.product/entrypoints/shared/", "infra/04.deploy/03.product/entrypoints/shared/persistence/"]) {
   assert.throws(() => assertBorrowedCopies(dockerfile, dockerignore.split(/\r?\n/).filter(line => line !== "!" + required).join("\n")));
 }
-for (const name of ["kanbien-core-server-persistence-composition", "kanbien-core-server-persistence-postgresql", "kanbien-core-server-persistence.app", "kanbien-core-server-persistence-diagnostics"]) {
+for (const name of ["kanbien-core-server-persistence-composition", "kanbien-core-server-persistence-postgresql", "kanbien-core-server-persistence.app", "kanbien-core-server-persistence-diagnostics", "kanbien-core-server-persistence-configuration", "kanbien-core-server-persistence-role-credential", "kanbien-core-server-persistence-operation-diagnostics"]) {
   const source = "infra/04.deploy/03.product/entrypoints/" + name;
   assert.throws(() => ownerOf(source + ".ts"), "configuration must not silently regain a dependency on the baseline application");
   assert.equal(existsSync(join(compiled, source + ".js")), false, "fresh feature output must not contain baseline application code");

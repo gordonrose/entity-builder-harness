@@ -2,7 +2,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: repo.diagnostics.export-catalogs
-//   version: 5
+//   version: 6
 //   status: active
 //   created_on: "2026-10-27"
 //   updated_on: "2026-11-15"
@@ -59,8 +59,8 @@ const selections = [
   ["apps/platform-smoke", "apps/platform-smoke/src/diagnostics.js", "platformSmokeDiagnosticCatalog"],
   ["apps/entity-smoke", "apps/entity-smoke/features/test-entity/contract/diagnostics.js", "testEntityDiagnosticCatalog"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js", "entitySmokeTargetDiagnosticCatalog", "entity-smoke-target-diagnostics.v1.json"],
-  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js", "persistenceTaskConfigurationDiagnosticCatalog"],
-  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.js", "persistenceTaskOperationDiagnosticCatalog", "kanbien-core-server-persistence-operation-diagnostics.v1.json", "persistenceTaskFailureContract"],
+  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js", "persistenceTaskConfigurationDiagnosticCatalog"],
+  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.js", "persistenceTaskOperationDiagnosticCatalog", "kanbien-core-server-persistence-operation-diagnostics.v1.json", "persistenceTaskFailureContract"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.js", "kanbienPlatformPostgreSqlOperationDiagnosticCatalog", "kanbien-platform-postgresql-operation-diagnostics.v1.json"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-platform-configuration-diagnostics.js", "kanbienPlatformConfigurationDiagnosticCatalog", "kanbien-platform-diagnostics.v1.json"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.js", "kanbienCoreAcceptanceDiagnosticCatalog", "kanbien-core-server-acceptance-diagnostics.v1.json"],

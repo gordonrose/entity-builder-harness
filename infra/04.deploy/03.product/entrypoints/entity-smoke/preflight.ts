@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.entity-smoke.preflight
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-11"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -17,7 +17,7 @@
 
 import { createDiagnosticRecord } from "@kanbien/core/diagnostics";
 import type { PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { requireBoundedExistingRole } from "../kanbien-core-server-persistence-role-credential";
+import { requireBoundedExistingRole } from "../shared/persistence/role-credential";
 import { entitySmokeMigrationUsername, entitySmokeRuntimeUsername, entitySmokeSchema } from "./postgresql";
 import { entitySmokePreflightDiagnostic, reportEntitySmokeFailure } from "./diagnostics";
 

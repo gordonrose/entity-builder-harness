@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-iam-authentication
-//   version: 3
+//   version: 4
 //   status: draft
 //   created_on: "2026-10-25"
-//   updated_on: "2026-10-27"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -19,7 +19,7 @@
 
 import { rdsIamAuthenticationToken, rdsIamAuthenticationTextRules, type PostgreSqlPersistenceConfiguration } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { recordConfigSource, validateConfigSettings } from "@kanbien/core/config";
-import { persistenceConfigurationFailure, persistenceIamConfigurationDiagnostic } from "./kanbien-core-server-persistence-configuration";
+import { persistenceConfigurationFailure, persistenceIamConfigurationDiagnostic } from "./shared/persistence/configuration";
 
 export type PersistenceIamAuthentication = { readonly username: string; readonly authenticationToken: () => Promise<string> };
 

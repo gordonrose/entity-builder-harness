@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-23"
 #   updated_on: "2026-11-15"
@@ -39,12 +39,12 @@ COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
 COPY infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json

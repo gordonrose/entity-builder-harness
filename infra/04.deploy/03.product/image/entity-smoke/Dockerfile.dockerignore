@@ -55,12 +55,12 @@
 !scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/**
 !infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke*.ts
 !infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json
-!infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+!infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
 !infra/04.deploy/03.product/entrypoints/shared/
 !infra/04.deploy/03.product/entrypoints/shared/persistence/
 !infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
-!infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
-!infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
+!infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
+!infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
 
 !scripts/repo/workspace-build/compile.mjs
 !scripts/04.deploy/lifecycle/20-build/

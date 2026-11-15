@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.entity-smoke.administration
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-11"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -16,8 +16,8 @@
 //     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
 
 import { createNodePostgreSqlConnectionPool, postgreSqlPersistenceOperationError, type PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceCredentialsResult } from "../kanbien-core-server-persistence-configuration";
-import { ensureBoundedLoginRole, ensureRdsIamAuthentication, requireBoundedExistingRole } from "../kanbien-core-server-persistence-role-credential";
+import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceCredentialsResult } from "../shared/persistence/configuration";
+import { ensureBoundedLoginRole, ensureRdsIamAuthentication, requireBoundedExistingRole } from "../shared/persistence/role-credential";
 import { entitySmokeSchema, entitySmokeRuntimeUsername, entitySmokeMigrationUsername, entitySmokeMigrationManifest } from "./postgresql";
 import { entitySmokeConfigurationError, entitySmokeDependencyStateError, entitySmokeDiagnosticCatalogs, reportEntitySmokeFailure } from "./diagnostics";
 import { entitySmokePasswordAuthenticationPredicate, performEntitySmokeDatabasePreflight } from "./preflight";

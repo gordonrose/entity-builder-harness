@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 22
+#   version: 23
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-15"
@@ -733,7 +733,7 @@ checks:
     aggregate_branch: default
     members: [diagnostic-base-runtime, platform-server-runtime, kanbien-platform-runtime]
     focused_prerequisites: &startup_prerequisites
-    - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/adapters/aws/persistence/postgresql, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition]
+    - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/adapters/aws/persistence/postgresql, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts, infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition]
       checks: [persistence-composition]
     - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/workers, products/kanbien-platform, apps/platform-smoke, platform/adapters/aws/auth/cognito, platform/adapters/aws/persistence/dynamodb, platform/adapters/aws/queue/sqs, platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/security/dynamodb-rate-limiter, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/build-platform-shell-image]
       checks: [platform-shell-payload]
@@ -1988,10 +1988,10 @@ checks:
     - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts
     - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json
     - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
-    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
     - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
-    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
-    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
     - apps/entity-smoke
     - packages/core
     - platform/config

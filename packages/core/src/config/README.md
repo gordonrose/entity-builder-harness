@@ -429,13 +429,14 @@ There are also connections between the files:
   they do not prove the underlying cause.
 
 For a current example of this shared approach,
-[kanbien-core-server-persistence-configuration.ts](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts)
+[shared persistence configuration](../../../../infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts)
 supplies values and checking rules to `validateConfigSettings()` from
 `domain/validation/settings.ts`. If the port is missing, it receives a problem report described by
 `contract/reporting/setting-issues.ts`. That file then asks Platform configuration to turn that report
 into a diagnostic for core-server. If the checks pass instead, it passes the
 checked details to the PostgreSQL adapter. Core does not make that database
-connection itself.
+connection itself. The shared file serves both persistence workloads; the old
+baseline-named file only re-exports its implementation for compatibility.
 
 Another current example is
 [platform/observability/src/configuration.ts](../../../../platform/observability/src/configuration.ts).
@@ -525,7 +526,7 @@ The existing core-server startup path supplies these fixed facts:
 | `operation` | `startup` | The task being attempted is starting that part of the server. |
 | `stage` | `startup` | The failure occurred before normal server operation began. |
 
-The [target configuration file](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts)
+The [target configuration file](../../../../infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts)
 uses Platform's `bindPlatformDiagnosticContext()` to keep those facts together
 with the permitted diagnostic definitions. Its `select()` method checks a
 report against those definitions and returns the checked report alongside the
@@ -751,7 +752,7 @@ already receives a number, so it uses this same rule's limits with its numeric
 check. It does not pass that number through the text reader. Each path retains
 its own missing/wrong-type/format failure distinctions.
 
-The [core-server target](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts)
+The [core-server target](../../../../infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts)
 still chooses `database.port` and `PERSISTENCE_POSTGRES_PORT`; Core owns the
 reused range, not those names. The two real consumers use it differently:
 
@@ -977,7 +978,7 @@ the actual usernames.
 
 Use it for failed comparisons returned by `validateConfigSettings()` when a
 caller supplies relationship rules. The
-[core-server administration settings](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts)
+[core-server administration settings](../../../../infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts)
 provide a real example. If a participant setting is itself invalid, the validator
 does not pretend it has successfully compared the two values.
 
@@ -999,7 +1000,7 @@ A frozen list containing these five names:
 | `is-a-directory` | A directory was identified where file content was expected. |
 | `unclassified-read-failure` | The read failed, without evidence for one of the other observations. |
 
-The [core-server certificate reader](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts)
+The [core-server certificate reader](../../../../infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts)
 is one consumer; other readers can reuse the meanings through
 [Platform configuration reporting](../../../../platform/config/src/diagnostics.ts).
 The code observing the failure selects the supported name. A generic exception
@@ -1573,7 +1574,7 @@ Failures return `{ ok: false, error: { reason: ... } }`:
 | `"[]"` | `wrong-shape` | JSON describes a list, not an object. |
 
 Failures include no rejected text or native parser message.
-[Core-server's credential reader](../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts)
+[Core-server's credential reader](../../../../infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts)
 uses this parser, then PostgreSQL's credential checker checks the actual fields.
 That second operation is not implemented by this parser.
 

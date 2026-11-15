@@ -46,9 +46,21 @@ expands the existing no-push, no-publication and no-AWS authority boundary.
 | --- | --- | --- |
 | 0 — Source inventory | Complete | [File-level findings and comparison](../../../../docs/04.deploy/plans/core-platform-deployment-route-inventory.md), pinned to `eecf0c50178ef004f62792aef2835023e492a470` |
 | 1 — Runtime payload assembly | Source reviewed; focused checks passed | Both callers use one assembler; full affected integration and actual image qualification remain pending |
-| 2 — Remaining common operations | Connected source reviewed with exploratory proof; earlier A05/A06/B03 focused receipts retained but not assumed current | Shared package/provider/task/publication/change-set/replacement/snapshot and candidate owners in use; distinct alignment, ordering and restore policies retained; connected registered batch and C03 canonical migration remain |
-| 3 — Remove superseded implementations | Migrated internals and four obsolete incident executors removed; historical readers preserved | Cumulative source change is not a net reduction; C03 compatibility wrappers and final removal/verification accounting remain |
+| 2 — Remaining common operations | Implementation and parent source review complete; final registered proof pending | Shared package/provider/task/publication/change-set/replacement/snapshot and candidate owners in use; distinct alignment, ordering and restore policies retained; C03 canonical migration and compatibility fixtures complete |
+| 3 — Remove superseded implementations | Migrated internals and four obsolete incident executors removed; historical readers preserved | Three historical helper paths are export-only wrappers; cumulative source change is not a net reduction; source accounting and historical compatibility observations are recorded below |
 | 4 — Demonstrate reuse | Connected controlled fixture reviewed and passed | Differently named packaged Node workload uses shared reservation, CloudFormation, ECS, snapshot and candidate entrypoints; real PostgreSQL, OCI qualification and AWS proof are not established |
+
+All three authorised workstreams are implemented and source-reviewed. The
+reporting safeguard and declaration-derived build enforcement have focused
+proof below; complete affected integration and actual local image qualification
+remain required. Final frozen-input run IDs, checkpoint/image identities and
+terminal outcomes are recorded in the active
+[session log](../../../../commitLogs/2026/nov/06/2026-11-06-17-07-new-chat-session/README.md),
+so later execution observations do not require changing verified source inputs.
+Earlier dated implementation entries below are chronological history, not
+current blockers; in particular, local checkpoint authority was granted and C03
+has moved beyond its former committed-plan boundary. No fresh publication or
+AWS proof is claimed by this cleanup.
 
 ## Inventory method
 
@@ -2501,3 +2513,69 @@ passed in31.844 seconds, including the new copied-current-reference rejection;
 its source SHA256 is `ef5224fb6ba29b6c7d985de61827d69b8af9e9342bf1cb1b4181089e56822057`.
 This direct result proves the corrected fixture, not full integration or image
 qualification. Commit-boundary verification follows against the staged bytes.
+
+### Committed checkpoint and canonical migration review — 2026-11-15
+
+User instruction to commit everything superseded the earlier plan-only staging
+boundary. Commit `29e5f1a3ee9f1e1f6014e12859d23f2f826e0c4e` contains all240
+then-current paths, including the educational lesson explicitly included by that
+instruction; bookkeeping commit `d74dac68` records the result. The final commit
+gate passed46 checks with103 integration/later-stage checks deferred and no
+findings, retained at
+`.cache/test-runs/20261115T135443Z-c46262409d9e497babd1aec3341be33c/report.json`.
+The working tree was clean after both commits. Nothing was pushed or published;
+no AWS operation occurred. The C03 migration plan is now committed, so its
+canonical migration is authorised without a new checkpoint workflow.
+
+The parent reviewed the three new shared implementation bodies against that
+checkpoint: only their expected relative import paths change; configuration,
+credential handling and diagnostic contracts remain identical. Both Dockerfile
+diffs replace the three helper COPY paths and update metadata, without changing
+base images, installation, user, trust or runtime settings. The exporter selects
+canonical modules and retains its published catalogue filenames. Remaining
+caller/fixture changes are still under agent implementation and final review;
+source-match checks alone do not prove image closure.
+
+The existing succession reader validates baseline current release
+`release-570327efbb91af717da6da13`; the feature acceptance-state reader validates
+`release-53798ef563be4ce9a8c5b2f0`, reporting `current_readiness: false` as expected
+for an offline observation. Both complete30-release-evidence trees remain
+byte-identical to inventory checkpoint `eecf0c50`. An initial parent invocation
+incorrectly passed a succession history document to the legacy typed baseline
+record validator and received `accepted-release-schema-invalid`; selecting the
+existing succession reader corrected the invocation, with no code or evidence
+change. These checks establish retained historical compatibility, not new live
+health, publication or qualification of the consolidated images.
+
+Parent review also covers the actual caller imports, compiler declaration,
+selector inputs, compatibility fixture, missing-COPY/allowlist counterexamples,
+canonical diagnostic fixture injection paths and scoped README links. The
+existing diagnostic ledger transfers implementation sources and definitions to
+canonical paths without promoting adoption or erasing debt; three export-only
+wrappers have their own support entry. Structural validation passes with743
+discovered sources,134 adopted,482 partial/support and127 legacy-debt sources,
+and no findings. The recovery wrapper's exact Dockerfile pin is now
+`acd1b6d74a552f8700f296989a6003a3080439b6bed291636bfc3d00465c190c`;
+its bounded47-case regression passes with no real Docker calls or stored-client
+configuration changes. A prior payload invocation reached this fixture before
+the pin refresh and failed there; that failure is not an image qualification.
+
+Current code accounting against `eecf0c50`, including the three new canonical
+files, covers185 changed executable/source files (`py`, `js`, `mjs`, `ts`,
+`tsx`, `sh`): +10208/-4390, net +5818 lines. The deployment-only subset under
+scripts/04.deploy and infra/04.deploy is136 files, +7176/-3278, net +3898.
+These counts include test/fixture code and exclude documentation/configuration;
+they are a point-in-time measurement before the final catalog fixture addition,
+not a claim of net repository shrinkage or a release-time improvement.
+
+The agent completed C03 and explicitly froze all inputs after its focused
+observations; no child process remains active. The migration plan records the
+full commands' boundaries, compatibility disposition,18 input-invalidation
+cases and isolated catalogue proof. Parent final review also accepts the one
+missing explicit PostgreSQL catalogue root, its actual project-selection
+assertions and three canonical impact-case additions. Fresh isolated export
+passes with declared external dependencies and no NODE_PATH; all existing
+published catalogue bytes remain unchanged. There are no outstanding source
+review corrections and no stale diagnostic bindings. The whole task now enters
+normal preparation and final registered verification on stable inputs. C03's
+focused passes are not yet full integration or actual image qualification.

@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-migration
-//   version: 3
+//   version: 4
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-11-04"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -21,11 +21,11 @@ import {
   postgreSqlMigrationChecksum,
   postgreSqlPersistenceFoundationMigration,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceMigrationInstructionsResult } from "./kanbien-core-server-persistence-configuration";
+import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceMigrationInstructionsResult } from "./shared/persistence/configuration";
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { persistenceIamAuthenticationResult } from "./kanbien-core-server-persistence-iam-authentication";
 import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
-import { reportCoreServerPersistenceBoundary } from "./kanbien-core-server-persistence-operation-diagnostics";
+import { reportCoreServerPersistenceBoundary } from "./shared/persistence/operation-diagnostics";
 
 export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const parsed = persistenceConfigurationResult(env, "migration");

@@ -1,7 +1,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: repo.workspace-build.project-selection-test
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-15"
 //   updated_on: "2026-11-15"
@@ -118,6 +118,12 @@ test("actual legacy and diagnostic projects derive nonempty declared closures", 
     assert(result.selection.roots.length > 1);
     assert(result.inputs.packageNames.includes("@kanbien/core"));
     assert(result.unownedRootFiles.length > 0);
+    if (project === "scripts/repo/diagnostic-coverage/tsconfig.json") {
+      const name = "@kanbien/platform-adapter-aws-persistence-postgresql";
+      assert(result.selection.roots.includes(name), "catalog must explicitly select its imported PostgreSQL adapter");
+      assert.equal(result.inputs.packages[name]["."], "platform/adapters/aws/persistence/postgresql/src/index.js");
+      assert(result.inputs.sourceFiles.includes("platform/adapters/aws/persistence/postgresql/src/index.ts"));
+    }
   }
 });
 
