@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-15T14:56:11Z
-latest_commit_sha: 4bf7a882
-chat_duration: 769744s (08:21:49:04)
+latest_commit_at_utc: 2026-11-15T15:22:48Z
+latest_commit_sha: a69df9ff
+chat_duration: 771341s (08:22:15:41)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2247,6 +2247,17 @@ Raised: Frozen focused verification completed with explicit gaps; broad proof no
 
 Resolution: Original registered run 62464 completed exit 1. Retained report .cache/test-runs/20261115T151538Z-c5447f79e3f4458ca11ade2af93d1ab4/report.json: six passed (diagnostic-catalog-readers, harness-artifact-migration-regression, persistence-composition, platform-shell-payload, restore-connection-diagnostics, runtime-payload-assembly), two failed (check-selection-mechanics, entity-smoke-composition), and two uncertain at final input revalidation (package-custody-regression, persistence-payload-regression; both commands exited zero but the connected qualifier fixture changed before completion). Total 2760.846669s; command execution 2579.503227s. Do not report eight passing checks or full affected integration. Direct mechanics later passed all 151 tests; initial cause remains unconfirmed. Exact qualifier startup timeout was reproduced and corrected only in the fixture, whose direct original assertions now pass. All diagnostic child processes are terminal. Remaining uncommitted paths are the fixture correction and this log; all prior implementation is preserved in 29e5f1a3/4bf7a882. User raised whether broader proof should wait until remaining retrospective mistakes are worked through. No new broad run, image build, publication or AWS operation was started; explicit sequencing/pause question is outstanding. Existing goal remains incomplete.
 
+
+### 2026-11-15T15:22:48Z - Commit recorded
+
+Commit: `a69df9ff`
+
+Message: test(deploy): bound qualifier startup watchdog separately
+
+Summary: Preserved the measured startup-only fixture watchdog correction and terminal diagnostic results. Corrected direct fixture passed; commit gate passed 28 checks, deferred 32, findings none, retained at .cache/test-runs/20261115T152221Z-8b1ba3853a644be9a6805090b0cb7ac3/report.json. Full integration and fresh image proof remain pending; no new broad verification was started after the sequencing question.
+
+ADR impact: No ADR needed: fixture supervision changes only; production behavior and assertions are unchanged.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2513,6 +2524,13 @@ Resolution: Original registered run 62464 completed exit 1. Retained report .cac
   Summary: Committed all 42 outstanding paths after successful commit-boundary verification. Shared persistence implementations, callers, image inputs, catalog compile roots, regression fixtures and reviewed metadata are checkpointed. Broader integration has failed mechanics and entity-smoke-composition checks still under diagnosis; full local image qualification remains pending. No push or AWS operations.
   ADR impact: No new ADR: implements the approved consolidation architecture while retaining separate workload policies and accepted histories.
 
+
+- Commit: `a69df9ff`
+  Time UTC: 2026-11-15T15:22:48Z
+  Message: test(deploy): bound qualifier startup watchdog separately
+  Summary: Preserved the measured startup-only fixture watchdog correction and terminal diagnostic results. Corrected direct fixture passed; commit gate passed 28 checks, deferred 32, findings none, retained at .cache/test-runs/20261115T152221Z-8b1ba3853a644be9a6805090b0cb7ac3/report.json. Full integration and fresh image proof remain pending; no new broad verification was started after the sequencing question.
+  ADR impact: No ADR needed: fixture supervision changes only; production behavior and assertions are unchanged.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2526,9 +2544,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-15T14:56:11Z
-Latest commit SHA: 4bf7a882
-Chat duration: 769744s (08:21:49:04)
+Latest commit at UTC: 2026-11-15T15:22:48Z
+Latest commit SHA: a69df9ff
+Chat duration: 771341s (08:22:15:41)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
