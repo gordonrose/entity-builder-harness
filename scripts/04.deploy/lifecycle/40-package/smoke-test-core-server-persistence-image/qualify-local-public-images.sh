@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.qualify-local-public-persistence-images
-#   version: 2
+#   version: 4
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -50,9 +50,9 @@ def public_owners(root, package):
     # This optional recovery is qualified only for these reviewed owner bytes.
     # Fail closed on owner changes instead of interpreting arbitrary shell or
     # Dockerfile forms; normal package qualification remains independent.
-    reviewed = {'scripts/04.deploy/shared/safe-command-diagnostics.sh': '3eb4218560e177d67a3b7a8cb0353268fd4004b13d769d193ec879d86d9c4e9f', 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': '140e3e9a73836983c6904c2c16cea242d773f701af900c5357324274c31f20e8', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': 'b547af68c16e37f61a197be8046a0d12c739f00c64f1938c8d67c1060c5423d4', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': 'e463add94011b248ad5e8a4d78b1e887d43fad0fafd6bf70c95f150af9cc27ec', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': '0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh': '0a56d1d262ef1da4f768e0ad6d498dbd72775fe9bba1d2725942f0758aee1afe', 'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs': '967883d6c24052c22c2e31824d158f18dc5e08798f3ceea81be6769b34ae5edf', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh': '386b30f8fd36a6a97dc5fbb23acaba5811f3e9a06a8d3bdd692e433d292da54c'}
+    reviewed = {'scripts/04.deploy/shared/safe-command-diagnostics.sh': '3eb4218560e177d67a3b7a8cb0353268fd4004b13d769d193ec879d86d9c4e9f', 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': '4407e3904d81628a3fa6ccfff5750f909c4a118dd78e2734fc665f9d85559aa7', 'scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh': 'e4df5baa63a0dee4f57ff622bb279b8eb1bde54bef5b0b018f2b9647877de247', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': 'b547af68c16e37f61a197be8046a0d12c739f00c64f1938c8d67c1060c5423d4', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': '5d414cc4adf4a2f7d18877b038c3b4606c267f70baf2b8f7b605af43dc9efa2b', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': '0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh': '0a56d1d262ef1da4f768e0ad6d498dbd72775fe9bba1d2725942f0758aee1afe', 'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs': '967883d6c24052c22c2e31824d158f18dc5e08798f3ceea81be6769b34ae5edf', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh': '386b30f8fd36a6a97dc5fbb23acaba5811f3e9a06a8d3bdd692e433d292da54c'}
     if package == 'core':
-        reviewed = {'scripts/04.deploy/shared/safe-command-diagnostics.sh': '3eb4218560e177d67a3b7a8cb0353268fd4004b13d769d193ec879d86d9c4e9f', 'scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh': '7f040575557148fa17990a017940e541ff2129d7bc65943314b69b3562f9fe8a', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh': '0129e31693f2c15b4c4c3b172a94cf3696bdb6327d6b690fe0877b32711423a6', 'infra/04.deploy/03.product/image/core-server/Dockerfile': 'f764797f1a3f7a70e3904f5371bc9f2a7716c9bac0daf453840a488d348e2820', 'infra/04.deploy/03.product/image/core-server/image-contract.yml': '71e5efb910c80f449de0defdf80cb0310a7445d21a839b828f5ab56f94fbbb67'}
+        reviewed = {'scripts/04.deploy/shared/safe-command-diagnostics.sh': '3eb4218560e177d67a3b7a8cb0353268fd4004b13d769d193ec879d86d9c4e9f', 'scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh': '7f040575557148fa17990a017940e541ff2129d7bc65943314b69b3562f9fe8a', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh': '0129e31693f2c15b4c4c3b172a94cf3696bdb6327d6b690fe0877b32711423a6', 'infra/04.deploy/03.product/image/core-server/Dockerfile': '4f86081536340c57ecf54d1ad942c6f982e75e699cdb0c7a2107b6675725e4ba', 'infra/04.deploy/03.product/image/core-server/image-contract.yml': '71e5efb910c80f449de0defdf80cb0310a7445d21a839b828f5ab56f94fbbb67'}
     for path, digest in reviewed.items():
         if hashlib.sha256((root/path).read_bytes()).hexdigest()!=digest:
             fail('local-public-recovery-owner-review-required')

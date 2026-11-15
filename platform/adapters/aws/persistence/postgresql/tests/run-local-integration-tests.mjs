@@ -1,27 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
-import path, { join } from "node:path";
+import { join } from "node:path";
+import { loadWorkspaceGraph, selectWorkspaceProject } from "../../../../../../scripts/repo/workspace-build/declarations.mjs";
+import { prepareWorkspaceRuntime } from "../../../../../../scripts/repo/workspace-build/runtime-packages.mjs";
 
 const runtimeRoot = ".cache/platform-adapter-aws-persistence-postgresql-integration";
-const coreModules = ["audit", "authn", "authz", "config", "diagnostics", "events", "i18n", "logging", "monitoring", "persistence", "queues", "security", "shared", "tenancy", "validation"];
-
-writePackageShim("@kanbien/core", {
-  ".": join(runtimeRoot, "packages/core/src/index.js"),
-  ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, join(runtimeRoot, `packages/core/src/${moduleName}/index.js`)])),
-});
-writePackageShim("@kanbien/platform-persistence", {
-  ".": join(runtimeRoot, "platform/persistence/src/index.js"),
-});
-writePackageShim("@kanbien/platform-security", { ".": join(runtimeRoot, "platform/security/src/index.js") });
-for (const capability of ["config", "health", "runtime", "server", "workers"]) {
-  writePackageShim(`@kanbien/platform-${capability}`, { ".": join(runtimeRoot, `platform/${capability}/src/index.js`) });
-}
-writePackageShim("@kanbien/platform-adapter-aws-persistence-postgresql", {
-  ".": join(runtimeRoot, "platform/adapters/aws/persistence/postgresql/src/index.js"),
-});
-
-writePackageShim("@kanbien/platform-contracts", { ".": join(runtimeRoot, "platform/contracts/src/index.js") });
-writePackageShim("@kanbien/platform-observability", { ".": join(runtimeRoot, "platform/observability/src/index.js") });
+const repository = process.cwd();
+const selection = { roots: [selectWorkspaceProject(loadWorkspaceGraph(repository), "platform/adapters/aws/persistence/postgresql/tsconfig.integration-test.json")], includeRootDevDependencies: true };
+prepareWorkspaceRuntime({ repository, compiledRoot: runtimeRoot, selection });
 
 const result = spawnSync(
   process.execPath,
@@ -30,21 +15,3 @@ const result = spawnSync(
 );
 
 process.exitCode = result.status ?? 1;
-
-function writePackageShim(packageName, exportsMap) {
-  const packageRoot = join(runtimeRoot, "node_modules", ...packageName.split("/"));
-  mkdirSync(packageRoot, { recursive: true });
-  const packageExports = {};
-  for (const [exportName, targetPath] of Object.entries(exportsMap)) {
-    const shimPath = exportName === "." ? join(packageRoot, "index.js") : join(packageRoot, exportName.slice(2), "index.js");
-    mkdirSync(path.dirname(shimPath), { recursive: true });
-    writeFileSync(shimPath, `module.exports = require(${JSON.stringify(relativeRequirePath(shimPath, targetPath))});\n`);
-    packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
-  }
-  writeFileSync(join(packageRoot, "package.json"), `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`);
-}
-
-function relativeRequirePath(fromFile, toFile) {
-  const relativePath = path.relative(path.dirname(fromFile), toFile).replaceAll(path.sep, "/");
-  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
-}

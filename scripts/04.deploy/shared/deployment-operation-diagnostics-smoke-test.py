@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.deployment-operation-diagnostics
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -268,23 +268,33 @@ assert json.loads(capture.getvalue())["facts"]=={"task_log_observation":"unavail
 replacement=load_controller(run_prefix+"rehearse-server-replacement/script.py")
 for original_arn in [task_arn,task_arn.replace("337159794548","000000000000")]:
  capture=io.StringIO();errors=io.StringIO();calls=[]
+ owner=replacement.operations()
  def interrupted_stop(*parts):
   calls.append(parts)
   checkpoint=json.loads(errors.getvalue())
   assert checkpoint["schema"]=="deploy/persistence-server-replacement-report/v1"
   assert checkpoint["target"]=="kanbien-core-platform" and checkpoint["scope"]=="core-server-persistence"
   assert checkpoint["verdict"]=="pending" and "recovery_boundary" in checkpoint["facts"]
-  assert (checkpoint["facts"].get("original_task")==task_arn)==(original_arn==task_arn)
+  assert checkpoint["facts"]["original_task"]==task_arn
   assert diagnostics.validate_persistence_controller_checkpoint(checkpoint,run_prefix+"rehearse-server-replacement/script.sh")["facts"]==checkpoint["facts"]
-  raise subprocess.TimeoutExpired(["aws"],30)
- prepare=SimpleNamespace(validate_receipt=lambda _: {},live_budget=lambda:(True,"ok"),aws=interrupted_stop)
+  return False,None,"aws-command-timeout"
+ receipt={"source_revision":"a"*40,"image_digest":"sha256:"+"b"*64}
+ definition="arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:1"
+ prepare=SimpleNamespace(validate_receipt=lambda _:receipt,live_budget=lambda:(True,"ok"),aws=interrupted_stop)
  create=SimpleNamespace(package_gates=lambda _:True)
- with patch.object(replacement,"module",side_effect=[prepare,create]),patch.object(replacement,"current_task",return_value=({"taskArn":original_arn},"ok","definition")),patch.object(replacement,"receipt_matches_task",return_value=(True,"ok")),patch.object(sys,"argv",["replacement","--receipt","unused.json"]),redirect_stdout(capture),patch.object(sys,"stderr",errors):
-  try:replacement.main()
-  except subprocess.TimeoutExpired:pass
-  else:raise AssertionError("interrupted stop did not escape unchanged")
- assert calls==[("ecs","stop-task","--cluster",replacement.CLUSTER,"--task",original_arn,"--reason","governed core-server-persistence replacement rehearsal")]
-
+ with tempfile.TemporaryDirectory(prefix="replacement-checkpoint-fixture-") as directory:
+  store=owner.Store(Path(directory))
+  with patch.object(replacement,"operations",return_value=owner),patch.object(owner,"store",return_value=store),patch.object(replacement,"module",side_effect=[prepare,create]),patch.object(replacement,"current_task",return_value=({"taskArn":original_arn},"ok",definition)),patch.object(replacement,"receipt_matches_task",return_value=(True,"ok")),patch.object(sys,"argv",["replacement","--receipt","unused.json"]),redirect_stdout(capture),patch.object(sys,"stderr",errors):
+   assert replacement.main()==1
+  observed=json.loads(capture.getvalue())
+  if original_arn==task_arn:
+   assert calls==[("ecs","stop-task","--cluster",replacement.CLUSTER,"--task",original_arn,"--reason","governed core-server-persistence replacement rehearsal")]
+   assert observed["verdict"]=="uncertain" and observed["findings"]==[{"code":"aws-command-timeout"}]
+   assert diagnostics.validate_persistence_controller_checkpoint(observed,run_prefix+"rehearse-server-replacement/script.sh")["facts"]==observed["facts"]
+   assert store.selected(receipt)["request"]["original_task"]==task_arn
+  else:
+   assert not calls and not errors.getvalue()
+   assert observed["verdict"]=="blocked" and observed["findings"]==[{"code":"persistence-replacement-request-invalid"}]
 # Choice errors keep argparse's exit 2 without projecting the rejected value.
 for owner,args,expected in [(administration,["--operation","PRIVATE_ARGUMENT_CANARY"],"persistence-administration-arguments-invalid"),(identity,["--operation","PRIVATE_ARGUMENT_CANARY"],"persistence-runtime-identity-lifecycle-arguments-invalid"),(outer,["--operation","PRIVATE_ARGUMENT_CANARY"],"observability-rehearsal-arguments-invalid"),(surface,["--mode","PRIVATE_ARGUMENT_CANARY"],"persistence-restoration-surface-arguments-invalid")]:
  capture=io.StringIO();errors=io.StringIO()

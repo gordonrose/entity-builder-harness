@@ -5,7 +5,7 @@
 //   version: 2
 //   status: draft
 //   created_on: "2026-10-19"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines:
@@ -23,41 +23,23 @@
 //   - id: deploy.command.build-core-server-image
 //     path: scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh
 
-import { mkdirSync, writeFileSync } from "node:fs";
-import path, { join, relative } from "node:path";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { readProgramBuildInputs, ProgramBuildInputError } from "../../20-build/runnable-program-contract/build-inputs.mjs";
+import { planRuntimePackages, writeRuntimePackages } from "../../../../repo/workspace-build/runtime-packages.mjs";
 
 let compiledRoot;
-let preparationPhase = "arguments";
-let preparationLocation = {};
-let writesStarted = false;
+import { WorkspaceDeclarationError } from "../../../../repo/workspace-build/declarations.mjs";
+const state = { phase: "arguments", location: {}, writesStarted: false };
+const repository = fileURLToPath(new URL("../../../../../", import.meta.url));
 try {
 compiledRoot = parseCompiledRoot(process.argv.slice(2));
-const coreModules = [
-  "audit", "authn", "authz", "config", "diagnostics", "events", "i18n",
-  "logging", "monitoring", "queues", "security", "shared", "tenancy", "validation",
-];
-const packages = {
-  "@kanbien/core": {
-    ".": "packages/core/src/index.js",
-    ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, `packages/core/src/${moduleName}/index.js`])),
-  },
-  "@kanbien/platform-config": { ".": "platform/config/src/index.js" },
-  "@kanbien/platform-contracts": { ".": "platform/contracts/src/index.js" },
-  "@kanbien/platform-health": { ".": "platform/health/src/index.js" },
-  "@kanbien/platform-observability": { ".": "platform/observability/src/index.js" },
-  "@kanbien/platform-runtime": { ".": "platform/runtime/src/index.js" },
-  "@kanbien/platform-security": { ".": "platform/security/src/index.js" },
-  "@kanbien/platform-server": {
-    ".": "platform/server/src/index.js",
-    "./main": "platform/server/src/main.js",
-  },
-};
-
-for (const [packageName, exportsMap] of Object.entries(packages)) {
-  writePackageShim(packageName, exportsMap);
-}
-preparationPhase = "wrapper-write";
-preparationLocation = { entrypoint: "kanbien-core-server.main.js" };
+state.phase = "declarations";
+const { inputs: { packages } } = readProgramBuildInputs(repository, { programId: "kanbien-core-server" });
+writeRuntimePackages(planRuntimePackages({ compiledRoot, assetRoot: repository, packages }, state), state, { packageManifestSpace: 2 });
+state.phase = "wrapper-write";
+state.location = { entrypoint: "kanbien-core-server.main.js" };
 writeFileSync(
   join(compiledRoot, "kanbien-core-server.main.js"),
   [
@@ -68,8 +50,10 @@ writeFileSync(
     "",
   ].join("\n"),
 );
-} catch {
-  console.error(JSON.stringify({ scope: "core-server-runtime-preparation", verdict: "failed", code: "runtime-preparation-boundary-failed", phase: preparationPhase, ...preparationLocation, effect: writesStarted ? "earlier-writes-possible" : "writes-not-started" }));
+} catch (cause) {
+  const declared = state.phase === "declarations" && (cause instanceof WorkspaceDeclarationError || cause instanceof ProgramBuildInputError);
+  if (declared) state.location = cause.location ?? {};
+  console.error(JSON.stringify({ scope: "core-server-runtime-preparation", verdict: "failed", code: "runtime-preparation-boundary-failed", phase: state.phase, ...(declared ? { reason: cause.code } : {}), ...state.location, effect: state.writesStarted ? "earlier-writes-possible" : "writes-not-started" }));
   process.exitCode = 1;
 }
 
@@ -78,26 +62,4 @@ function parseCompiledRoot(args) {
     throw new Error("Usage: prepare-runtime.mjs --compiled-root <compiled-output-directory>");
   }
   return args[1];
-}
-
-function writePackageShim(packageName, exportsMap) {
-  preparationLocation = { package: packageName };
-  const packageRoot = join(compiledRoot, "node_modules", ...packageName.split("/"));
-  const packageExports = {};
-  for (const [exportName, targetPath] of Object.entries(exportsMap)) {
-    preparationLocation = { package: packageName, export: exportName };
-    const shimPath = exportName === "." ? join(packageRoot, "index.js") : join(packageRoot, exportName.slice(2), "index.js");
-    preparationPhase = "shim-directory";
-    writesStarted = true;
-    mkdirSync(path.dirname(shimPath), { recursive: true });
-    const target = join(compiledRoot, targetPath);
-    const targetFromShim = relative(path.dirname(shimPath), target).replaceAll(path.sep, "/");
-    const requirePath = targetFromShim.startsWith(".") ? targetFromShim : `./${targetFromShim}`;
-    preparationPhase = "shim-write";
-    writeFileSync(shimPath, `module.exports = require(${JSON.stringify(requirePath)});\n`);
-    packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
-  }
-  preparationPhase = "manifest-write";
-  preparationLocation = { package: packageName };
-  writeFileSync(join(packageRoot, "package.json"), `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`);
 }

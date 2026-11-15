@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply only an enumerated isolated restoration-verifier provider correction."""
 from __future__ import annotations
-import argparse, importlib.util, json, subprocess, tempfile, time
+import argparse, importlib.util, json, subprocess, time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[8]; STACK="kanbien-core-platform-core-server-persistence"; TEMPLATE=ROOT/"infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 ADDED={"RestorationVerifierSecurityGroup","RestoredDatabaseSecurityGroup","RestorationVerifierDnsUdpEgress","RestorationVerifierDnsTcpEgress","RestorationVerifierEndpointEgress","RestorationVerifierArtifactObjectStoreEgress","RestorationVerifierRestoredDatabaseEgress","RestoredDatabaseIngressFromRestorationVerifier","EndpointIngressFromRestorationVerifier","RestorationVerifierExecutionRole","CoreServerPersistenceRestorationVerifierTaskDefinition"}
@@ -81,22 +81,18 @@ def main():
  if a.discard_rejected_image_review:return discard_rejected_image_review(m,name,digest,expected)
  if a.reconcile:return reconcile(m,name,digest,a.mode,expected)
  if not m.declaration_covered() or not m.live_budget()[0] or not m.candidate_image(receipt)[0]:return emit("blocked","persistence-restoration-surface-preconditions-not-proven")
- ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
- if not ok:
-  if code!="aws-resource-missing":return emit("blocked",code)
-  params=surface_parameters(state,digest)
-  with tempfile.NamedTemporaryFile(mode="w",suffix=".json") as f:
-   json.dump(params,f);f.flush();command=["cloudformation","create-change-set","--stack-name",STACK,"--change-set-name",name,"--change-set-type","UPDATE"]
-   command += ["--use-previous-template"] if a.mode=="image" else ["--template-body",f"file://{TEMPLATE}"]
-   ok,_,code=m.aws(*command,"--parameters",f"file://{f.name}","--capabilities","CAPABILITY_NAMED_IAM")
-  if not ok:return emit("uncertain",code,facts={"change_set":name})
-  for _ in range(6):
-   time.sleep(2);ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
-   if ok and isinstance(change,dict) and change.get("Status")!="CREATE_PENDING":break
- if not review(change,name,digest,a.mode,expected):return reconcile(m,name,digest,a.mode,expected)
- if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(m,name,digest,a.mode,expected)
- ok,_,code=m.aws("cloudformation","execute-change-set","--stack-name",STACK,"--change-set-name",name)
- if not ok:return emit("uncertain",code,facts={"change_set":name})
- return reconcile(m,name,digest,a.mode,expected)
+ def reviewed(change,created):
+  code="ok"
+  if created:
+   for _ in range(6):
+    time.sleep(2);ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
+    if ok and isinstance(change,dict) and change.get("Status")!="CREATE_PENDING":break
+  return (change if review(change,name,digest,a.mode,expected) else None),code
+ return m.apply_update(
+  name=name,parameters=surface_parameters(state,digest),
+  template_arguments=("--use-previous-template",) if a.mode=="image" else ("--template-body",f"file://{TEMPLATE}"),
+  review=reviewed,admit=lambda _change:None,observe=lambda:reconcile(m,name,digest,a.mode,expected),
+  failure=lambda verdict,code:emit(verdict,code,facts={"change_set":name} if verdict=="uncertain" else None),
+ )
 
 if __name__=="__main__":raise SystemExit(main())

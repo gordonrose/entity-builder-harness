@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.runnable-program-contract
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -14,7 +14,7 @@
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Compile a safe report from a runnable-program contract without reading source code or external state.
+#   purpose: Validate runnable contracts and declared workspace build inputs using a bounded local reader without compilation or provider access.
 #   portability:
 #     class: reusable
 #     targets:
@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -218,6 +219,42 @@ def validate(document: dict[str, Any]) -> str:
     return contract_id
 
 
+def validate_declared_builds(document: dict[str, Any], contract: str, *, root: Path | None = None, run=None) -> None:
+    """Legacy records stay structural; declared builds use the canonical reader."""
+    programs = document.get('runnable_programs', [])
+    selected = [program for program in programs if isinstance(program, dict) and 'build' in program]
+    if not selected and 'dependency_bindings' not in document:
+        return
+    if not selected or not isinstance(document.get('dependency_bindings'), dict):
+        raise ContractFailure('program-build-declaration-invalid')
+    repository = (root or Path.cwd()).resolve()
+    try:
+        relative = Path(contract).resolve().relative_to(repository).as_posix()
+    except (OSError, ValueError):
+        raise ContractFailure('program-build-contract-outside-repository') from None
+    reader = Path(__file__).with_name('build-inputs.mjs')
+    execute = run or subprocess.run
+    for program in selected:
+        try:
+            result = execute(['node', str(reader), '--program', program['id'], '--contract', relative],
+                             cwd=repository, capture_output=True, text=True, timeout=30, check=False)
+            if len(result.stdout) > 2 * 1024 * 1024:
+                raise ContractFailure('program-build-response-invalid')
+            value = json.loads(result.stdout)
+        except (OSError, UnicodeError, ValueError, subprocess.SubprocessError):
+            raise ContractFailure('program-build-observation-unavailable') from None
+        if result.returncode != 0:
+            supported = {'program-build-binding-invalid', 'program-build-project-invalid',
+                         'program-build-dependency-not-approved', 'program-build-external-dependency-not-approved',
+                         'workspace-dependency-not-approved', 'workspace-dependency-unresolved',
+                         'workspace-export-source-missing', 'workspace-export-target-unsupported',
+                         'workspace-source-symlink'}
+            code = value.get('error') if isinstance(value, dict) else None
+            raise ContractFailure(code if code in supported else 'program-build-declaration-invalid')
+        if not isinstance(value, dict) or value.get('programId') != program['id'] or not isinstance(value.get('inputs'), dict):
+            raise ContractFailure('program-build-response-invalid')
+
+
 def main() -> int:
     contract_id: str | None = None
     try:
@@ -227,6 +264,7 @@ def main() -> int:
         if is_id(candidate_id):
             contract_id = candidate_id
         contract_id = validate(document)
+        validate_declared_builds(document, args.contract)
         print(json.dumps(report(contract_id, "passed", ()), sort_keys=True))
         return 0
     except ContractFailure as failure:

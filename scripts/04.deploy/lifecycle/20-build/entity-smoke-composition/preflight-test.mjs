@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.entity-smoke.preflight
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-11"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -18,8 +18,8 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
-const require = createRequire(import.meta.url);
 const root = resolve(process.argv[2]);
+const require = createRequire(join(root, "entity-smoke-preflight-probe.cjs"));
 const { performEntitySmokeDatabasePreflight: preflight, entitySmokePasswordAuthenticationPredicate } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.js"));
 const { reportEntitySmokeFailure } = require(join(root, "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js"));
 const canary = "private-preflight-user-and-provider-canary";
@@ -97,6 +97,8 @@ assert.equal(invalid.statements.length, 0);
 // Exercise the real three entrypoint callers and real configuration/adapter
 // constructors. Only pg transport and the checked CA-file read are doubled.
 const fs = require("node:fs"), pg = require("pg");
+assert(require.resolve("pg").startsWith(join(root, ".dependencies/node_modules") + "/"), "double the selected dependency copy, never checkout pg");
+assert.equal(pg, createRequire(join(root, "platform/adapters/aws/persistence/postgresql/src/connection.js"))("pg"), "the actual compiled adapter must use this same doubled transport");
 const certificate = fs.readFileSync("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt", "utf8");
 const originalRead = fs.readFileSync, originalPool = pg.Pool, oldLog = console.log, oldExit = process.exitCode;
 let selected;

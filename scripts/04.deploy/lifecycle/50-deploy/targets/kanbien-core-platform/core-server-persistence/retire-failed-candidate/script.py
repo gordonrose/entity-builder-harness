@@ -14,29 +14,28 @@ STACK = "kanbien-core-platform-core-server-persistence"
 DATABASE = "kanbien-core-platform-persistence"
 SERVICE = "kanbien-core-platform-core-server-persistence"
 ROOT = Path(__file__).resolve().parents[8]
-_AWS_RESPONSE = None
+_AWS_CLI = None
+
+
+def aws_cli():
+    global _AWS_CLI
+    if _AWS_CLI is None:
+        spec = importlib.util.spec_from_file_location("aws_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
+        _AWS_CLI = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_AWS_CLI)
+    return _AWS_CLI
 
 
 def aws(*parts: str):
+    cli = aws_cli()
     try:
-        result = subprocess.run(["aws", *parts, "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True, timeout=30)
-    except subprocess.TimeoutExpired:
-        return False, None, "aws-command-timeout"
-    except OSError:
-        return False, None, "aws-command-unavailable"
-    except UnicodeError:
-        return False, None, "aws-response-invalid"
-    if result.returncode:
-        global _AWS_RESPONSE
-        if _AWS_RESPONSE is None:
-            spec = importlib.util.spec_from_file_location("aws_response", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
-            _AWS_RESPONSE = importlib.util.module_from_spec(spec); spec.loader.exec_module(_AWS_RESPONSE)
-        return False, None, _AWS_RESPONSE.classify_error(parts[0], parts[1], result.stderr)
-    try:
-        return True, {} if not result.stdout.strip() else json.loads(result.stdout), "ok"
-    except json.JSONDecodeError:
-        return False, None, "aws-response-invalid"
-
+        value = cli.invoke_json(
+            ["aws", *parts, "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--profile", PROFILE, "--region", REGION, "--output", "json"],
+            timeout=30, empty_body="whitespace", object_only=False,
+        )
+        return True, value, "ok"
+    except cli.CliFailure as failure:
+        return False, None, failure.code
 
 def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) -> int:
     value: dict[str, object] = {"schema": "deploy/persistence-failed-candidate-retirement-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}

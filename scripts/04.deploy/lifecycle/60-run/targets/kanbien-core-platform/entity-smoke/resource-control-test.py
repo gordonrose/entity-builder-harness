@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.resource-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -127,6 +127,28 @@ def fails(call, code):
 with tempfile.TemporaryDirectory(prefix="entity-smoke-resource-controls-") as temporary:
     root = Path(temporary)
     def store(name): return M.ResourceStore(root / name)
+    # Independently construct the historical format rather than using the new
+    # writer to certify its own compatibility. Reuse must not alter one byte.
+    historical = store("historical-reservation")
+    intent = {"binding": BINDING, "definition": DEFINITION, "original_task": ORIGINAL}
+    old = {"schema": "deploy/entity-smoke-resource-reservation/v1", "phase": "server-replacement",
+           "operation_id": "es-" + "1" * 32, "request": intent,
+           "request_sha256": hashlib.sha256(json.dumps(intent, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest(),
+           "reserved_at": instant(-1)}
+    old_path = historical.path_for("server-replacement", intent)
+    old_path.parent.mkdir(mode=0o700)
+    old_bytes = (json.dumps(old, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    old_path.write_bytes(old_bytes); old_path.chmod(0o600)
+    assert historical.reserve("server-replacement", intent) == (old, False)
+    assert old_path.read_bytes() == old_bytes
+    assert not M.write_exclusive(old_path, {"must": "not overwrite"})
+    assert old_path.read_bytes() == old_bytes
+    malformed = store("malformed-reservation")
+    bad_path = malformed.path_for("server-replacement", intent)
+    assert M.write_exclusive(bad_path, {**old, "operation_id": "foreign-" + "1" * 32})
+    fails(lambda: malformed.reserve("server-replacement", intent), "resource-reservation-mismatch")
+    # The extracted generic writer keeps the original canonical JSON rule.
+    fails(lambda: M.write_exclusive(root / "invalid-number.json", {"value": float("nan")}), "resource-retention-not-confirmed")
     provider = Provider(); owner = store("replacement")
     first = M.replace_runtime(provider, owner, BINDING, DEFINITION, ORIGINAL)
     assert first["status"] == "completed" and first["facts"]["successor_task"] == SUCCESSOR
@@ -242,5 +264,5 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-resource-controls-") as te
     assert M.create_recovery_point(ongoing, owner, BINDING, RESOURCE_ID, instant(-5))["status"] == "completed"
     assert sum(op == "create-db-snapshot" for _, op, _ in ongoing.calls) == 1
     for path in root.rglob("*.json"): assert CANARY not in path.read_text()
-print(json.dumps({"schema": "deploy/entity-smoke-resource-control-fixture/v1", "verdict": "passed", "provider_observation": False,
+print(json.dumps({"schema": "deploy/entity-smoke-resource-control-fixture/v1", "verdict": "passed", "provider_observation": False, "historical_reservation_compatibility": True,
                   "cases": ["exact-owned-replacement", "durable-intent", "changed-inputs-rejected", "lost-stop-no-replay", "pending-replacement-resume", "cold-replacement-no-replay", "strict-original-image-check", "pending-wrong-image-rejected", "cold-start-no-replay", "count-prewrite-identity-preserved", "wrong-image-no-mutation", "known-prewrite-preserved", "predecessor-after-reservation", "successor-time-order", "foreign-target-rejected", "completion-task-stopping-not-terminal", "stop-preserves-other-workloads", "explicit-start-no-replay", "incomplete-observation-blocks", "lost-snapshot-no-replay", "snapshot-incarnation", "existing-object-not-adopted", "preexisting-snapshot-not-adopted-on-resume", "pending-snapshot-resume"]}))

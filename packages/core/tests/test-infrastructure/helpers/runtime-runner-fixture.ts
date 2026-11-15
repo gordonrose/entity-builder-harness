@@ -2,10 +2,21 @@ import { deepEqual, equal, match, notEqual } from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 
 export function verifyRuntimeRunner(owner: string, expectedFailureExitCode = 7): void {
   const runner = resolve(owner, "tests/run-runtime-tests.mjs");
+  type Graph = { packages: Map<string, { directory: string; manifestPath: string; manifest: { exports: Record<string, string> } }> };
+  const declarations = createRequire(resolve("package.json"))(resolve("scripts/repo/workspace-build/declarations.mjs")) as {
+    loadWorkspaceGraph(root: string): Graph;
+    selectWorkspaceProject(graph: Graph, project: string): string;
+    deriveWorkspaceInputs(graph: Graph, selection: { roots: string[]; includeRootDevDependencies: boolean }): { packageNames: string[] };
+  };
+  const graph = declarations.loadWorkspaceGraph(process.cwd());
+  const dependencyNames = owner === "packages/core" ? [] : declarations.deriveWorkspaceInputs(graph, {
+    roots: [declarations.selectWorkspaceProject(graph, owner + "/tsconfig.runtime-test.json")], includeRootDevDependencies: true,
+  }).packageNames;
   function configurationValue(file: string, key: "outDir" | "rootDir"): string {
     const configuration = JSON.parse(readFileSync(file, "utf8")) as { extends?: string; compilerOptions?: { outDir?: string; rootDir?: string } };
     const value = configuration.compilerOptions?.[key];
@@ -34,6 +45,18 @@ export function verifyRuntimeRunner(owner: string, expectedFailureExitCode = 7):
     try {
       mkdirSync(sourceRoot, { recursive: true });
       mkdirSync(compiledRoot, { recursive: true });
+      // Discovery fixtures use real declarations and inert dependency exports;
+      // their assertions concern runner ordering, not application behavior.
+      write(join(root, "package.json"), JSON.stringify({ workspaces: dependencyNames.map(name => graph.packages.get(name)!.directory) }));
+      for (const name of dependencyNames) {
+        const record = graph.packages.get(name)!;
+        write(join(root, record.manifestPath), readFileSync(record.manifestPath, "utf8"));
+        for (const target of Object.values(record.manifest.exports)) {
+          const relativeSource = join(record.directory, target);
+          write(join(root, relativeSource), target.endsWith(".json") ? readFileSync(relativeSource, "utf8") : "export {};\n");
+          if (target.endsWith(".ts")) write(join(root, outputRoot, relativeSource.replace(/\.ts$/, ".js")), "module.exports = {};\n");
+        }
+      }
       check(root, source, compiled);
     } finally {
       rmSync(root, { recursive: true, force: true });

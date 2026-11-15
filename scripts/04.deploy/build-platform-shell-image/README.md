@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.script.build-platform-shell-image.readme
-version: 2
+version: 3
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-11-09"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -53,11 +53,21 @@ DynamoDB rate-limit table.
 
 The compiled product includes both `platform-smoke` and `entity-smoke`.
 `platform/server/tsconfig.image.json` compiles their public roots and reachable
-feature code. [prepare-runtime.mjs](prepare-runtime.mjs) creates CommonJS package
-shims pointing at compiled JavaScript. The payload check resolves
+feature code. The npm build command uses the shared workspace compiler: it reads
+those explicit source roots, finds their package owners, and follows their
+declared runtime dependencies. Compiler aliases and public export paths come
+from the package manifests, not a second map in this image's TypeScript config.
+[prepare-runtime.mjs](prepare-runtime.mjs) uses the same project selection and
+shared runtime assembler to create CommonJS shims and copy declared JSON assets.
+All declared compiled exports must exist before assembly starts writing. The
+payload check resolves
 `@kanbien/app-entity-smoke` through that generated shim while workspace links are
 hidden, and requires the compiled app root and feature exports to exist. A
-missing app mapping, shim or compiled target fails local packaging proof.
+missing declaration, shim or compiled target fails local packaging proof. This
+legacy multi-application project retains its explicit source scope; it does not
+add all those applications to the server package's runtime dependencies. The
+newer isolated runnable programs select their inputs through the canonical
+runnable-program contract instead.
 
 This establishes package inclusion, not durable feature persistence. The
 entity's PostgreSQL binding, migration executor, target-scoped live checks and

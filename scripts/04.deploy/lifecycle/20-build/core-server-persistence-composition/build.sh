@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines:
@@ -38,7 +38,6 @@ if [[ ! -x node_modules/.bin/tsc ]]; then
   exit 3
 fi
 
-node_modules/.bin/tsc \
-  --project infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json \
+node scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --program kanbien-core-server-persistence \
   --outDir "$2" \
   --incremental false

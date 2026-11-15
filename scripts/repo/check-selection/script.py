@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 8
+#   version: 9
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -37,6 +37,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'scripts/repo/check-selection'))
 import execution_policy
+import workspace_context
 from local_cache import (LocalCache, LocalCheckError, RuntimeIdentityWindow, runtime_identity,
                          valid_node_package, local_check_diagnostic, CACHE_INVALIDATION_REASONS, NO_PRIOR_EVIDENCE, TOOLS)
 sys.path.insert(0, str(ROOT / 'scripts/01.harness/artifact-metadata'))
@@ -446,6 +447,25 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         # Callers extend references. Never expose the cached set for mutation.
         return set(upstream_cache[key])
     consumers = downstream(changed)
+    package_context = {'checks': {}, 'discovery': []}
+    package_context_attempted = set()
+    def ensure_package_context(identities):
+        requested = set(identities) - package_context_attempted
+        if not requested: return
+        package_context_attempted.update(requested)
+        try:
+            observed = workspace_context.load(root, {key: checks[key] for key in requested if key in checks}, coverage.safe_path)
+            package_context['checks'].update(observed['checks'])
+            package_context['discovery'] = sorted(set(package_context['discovery']) | set(observed['discovery']))
+        except workspace_context.WorkspaceContextError as error:
+            findings.append({'code': error.code})
+    if explicit_checks is None and (args.all or any(
+        path in ('package.json', 'package-lock.json', '.npmrc')
+        or path.endswith(('.json', '.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs'))
+        or any(below(path, prefix) for prefix in ('packages', 'platform', 'apps', 'products',
+            'scripts/repo/workspace-build', 'scripts/repo/diagnostic-coverage/verify.sh',
+            'scripts/repo/check-selection/workspace_context.py')) for path in changed)):
+        ensure_package_context(checks)
     scopes, discovery_gaps = discover(root)
     findings += discovery_gaps
     inventory_spec = importlib.util.spec_from_file_location('delivery_inventory', ROOT / 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py')
@@ -565,6 +585,11 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     reviews_ref = 'scripts/repo/diagnostic-coverage/reviews.v1.json'
     if not isinstance(repository_rules, list):
         findings.append({'code': 'repository-input-rule-invalid'}); repository_rules = []
+    repository_rules = repository_rules + [
+        {'inputs': sorted(set(context['references']) | set(package_context['discovery'])
+                          | {path for path in changed if path.endswith('/package.json')}), 'checks': [identity]}
+        for identity, context in package_context['checks'].items()
+    ]
     # Ordinary code has diagnostic obligations even without a deployment scope.
     # Reviews name registered local checks; they never introduce executable argv.
     if 'diagnostic-adoption' in checks:
@@ -668,6 +693,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         try: reuse_cache = LocalCache.registered_source(root, Path(reuse_source))
         except (ValueError, OSError, subprocess.SubprocessError) as error: findings.append({'code': 'reuse-worktree-unavailable', **local_check_diagnostic(error)})
     results = dependency_order(list(selected.values()), dependencies)
+    ensure_package_context(identity for item in results for identity in item['catalog_entries'])
+    package_manifest_names = workspace_context.manifest_inventory(repository_paths(root)) if package_context['checks'] else ()
+    package_discovery_digest = source_fingerprint(set(package_context['discovery'])) if package_context['checks'] else None
     dependency_references = {child for values in dependencies.values() for child in values}
     for identity in dependency_references:
         instances = [item for item in results if identity in item['catalog_entries']]
@@ -701,12 +729,23 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         return (STAGES[item['stage']] <= STAGES[args.stage] and BOUNDARIES[item['boundary']] <= BOUNDARIES[boundary]
                 and (not development or execution_policy.development_check(item)))
     runtime_identities: dict[str, dict] = {}
+    npm_ignore_observation = None
     runtime_window = RuntimeIdentityWindow(root)
     def reset_runtime_identities() -> None:
+        nonlocal npm_ignore_observation
+        npm_ignore_observation = None
         runtime_identities.clear()
         runtime_window.clear()
     def identity(item: dict) -> str:
+        nonlocal npm_ignore_observation
         phase_started = time.monotonic()
+        if item.get('workspace_npm_ignore_scripts') is not None:
+            if npm_ignore_observation is None: npm_ignore_observation = workspace_context.npm_ignore_scripts(root)
+            if npm_ignore_observation != item['workspace_npm_ignore_scripts']:
+                raise workspace_context.WorkspaceContextError('workspace-context-npm-config-changed')
+        if item.get('workspace_context') and (workspace_context.manifest_inventory(repository_paths(root)) != package_manifest_names
+            or source_fingerprint(set(package_context['discovery'])) != package_discovery_digest):
+            raise workspace_context.WorkspaceContextError('workspace-context-declarations-changed')
         if diagnostic_owner:
             current_reviews = diagnostic_owner.review_bindings(root)
             item['review_bindings'] = {alias: current_reviews[alias] for alias in item['catalog_entries'] if alias in current_reviews}
@@ -724,18 +763,29 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
                 runtime_identities[runtime_key] = runtime_identity(root, runtime, window=runtime_window)
                 timings['runtime_identity_seconds'] += time.monotonic() - phase_started
             item['runtime_identity'] = runtime_identities[runtime_key]
-        preparation = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_preparation_keys', 'review_bindings')}
+        preparation = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_preparation_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
         item['preparation_key'] = hashlib.sha256(json.dumps(preparation, sort_keys=True).encode()).hexdigest()
-        payload = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings')}
+        payload = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     for item in results:
         if item['catalog_input']: item['references'].add(catalog_ref)
+        for alias in item['catalog_entries']:
+            context = package_context['checks'].get(alias)
+            if context:
+                item['workspace_context'] = True
+                item['workspace_npm_ignore_scripts'] = context['inherited_ignore_scripts']
+                item['references'].update(context['references'])
+                item['runtime'] = {**item['runtime'], 'tools': sorted(set(item['runtime']['tools']) | {'npm'}), 'node_packages': sorted(set(item['runtime'].get('node_packages', [])) | set(context['node_packages']))}
         item['references'] = upstream(item['references'] | set(item['runtime'].get('config_inputs', [])), explicit=not item['scope_inputs'])
+        # Discovery manifests detect a new/removed workspace. Their mere
+        # inventory membership must not traverse every workspace's source
+        # dependency graph into this selected package's proof inputs.
+        if item.get('workspace_context'): item['references'].update(package_context['discovery'])
         # Metadata traversal may reintroduce the catalog, and a command parent
         # may contain it. Exclude that incidental file at both boundaries;
         # declared consumers still fingerprint the whole catalog normally.
         if not item['catalog_input']: item['references'].discard(catalog_ref)
-        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py'})
+        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py', 'scripts/repo/check-selection/workspace_context.py'})
         for review in item['review_bindings'].values():
             for entry in review: item['references'].update([source['path'] for source in entry['sources']] + entry['tests'] + entry.get('definitions', []))
         if parent_binding:
@@ -949,6 +999,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     if explicit_checks is not None:
         report['selection_mode'] = 'explicit-checks'
         report['requested_check_ids'] = explicit_checks
+    report['evidence_summary'] = execution_policy.evidence_summary(report, all_inputs=args.all)
     if args.evidence: report['evidence_import_status'] = 'rejected-untrusted-report'
     if cache:
         if args.execute_local:
@@ -956,6 +1007,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             except (OSError, ValueError):
                 report['findings'].append({'code': 'test-run-retention-unavailable'})
                 report['verdict'] = 'gap'
+                report['evidence_summary'] = execution_policy.evidence_summary(report, all_inputs=args.all)
         report['local_report_path'] = str(cache.directory / 'latest-report.json')
         cache.save_report(report)
     return report

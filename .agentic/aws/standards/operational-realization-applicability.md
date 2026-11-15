@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 17
+version: 18
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-12"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -20,6 +20,29 @@ used_by:
 The generic [deployment proof standard](../../04.deploy/standards/operational-realization-gate.md) owns contract and proof semantics. This provider surface owns the following operation-specific applicability and approval conditions.
 
 ## Entity-smoke controller-only repair checkpoints
+
+### Completed incident executors are retired
+
+The November 2026 endpoint-policy repair and administrator image transition
+completed before consolidation. Their canonical `image-delivery-repair.py`
+and `source-transition.py` modules retain typed historical evidence readers,
+but their former CLI executors are retired. Invoking either command must
+return a finite blocked/not-started report and exit 1 without constructing a
+provider or writing evidence. Their one-off `administrator-observation.js`
+and `administrator-recovery.js` programs are retired too: they must emit their
+own finite retired condition, blocked/not-started and exit 1 without dependency
+imports, environment/credential reads or SQL/network operations. The incident-specific execution descriptions
+below document the original authority and proof, not reusable deployment
+instructions or authority to run those retired commands again.
+
+Retain the original receipts, controller identities and change graphs without
+rewriting or reproducing their operations. Ordinary future deployments use
+the existing governed workload routes and shared operation owners. This
+retirement keeps the separately retained task/restore recovery readers and
+selectors below only for original-attempt compatibility. For the completed
+incident proof label, task, clone and restored-record reader execution must
+require an existing validated reservation; missing history cannot authorize a
+new attempt. Other proof identities use the ordinary governed routes.
 
 ### Bounded retrieval of an uncertain read-only task submission
 

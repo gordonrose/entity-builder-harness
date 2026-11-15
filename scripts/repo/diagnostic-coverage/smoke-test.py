@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.regression
-#   version: 8
+#   version: 9
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -45,7 +45,7 @@ reader = load("runtime_contract", ROOT / "scripts/repo/diagnostic-coverage/runti
 deployment = load("deployment", ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py")
 
 class DiscoveryTests(unittest.TestCase):
-    def verification_fixture(self, relative, arguments, *, fail=0):
+    def verification_fixture(self, relative, arguments, *, fail=0, output=False):
         with tempfile.TemporaryDirectory(prefix='verification-unit-') as temporary:
             root = Path(temporary)
             subprocess.run(['git', 'init', '--quiet', temporary], check=True)
@@ -81,7 +81,24 @@ class DiscoveryTests(unittest.TestCase):
             result = subprocess.run(['bash', str(target), *arguments], cwd=root, capture_output=True, text=True,
                                     env={**os.environ, 'PATH': str(commands) + ':' + os.environ['PATH'],
                                          'TRACE': str(trace), 'TOOL_EXIT': str(fail)})
-            return result.returncode, trace.read_text().splitlines() if trace.exists() else []
+            observed = result.returncode, trace.read_text().splitlines() if trace.exists() else []
+            return (*observed, result.stdout) if output else observed
+
+    def test_package_command_projection_uses_actual_dispatch_without_executing_tools(self):
+        path = 'scripts/repo/diagnostic-coverage/verify.sh'
+        for arguments, expected in [(['--unit', 'core'], 'core:check'),
+                                    (['--unit', 'entity-smoke'], 'app:entity-smoke:check'),
+                                    (['--security-adapter', 'cognito'], 'platform:adapter:aws:auth:cognito:check'),
+                                    (['--unit', 'catalog'], None), (['--unit', 'base'], None), ([], None)]:
+            with self.subTest(arguments=arguments):
+                code, calls, stdout = self.verification_fixture(path, ['--describe-npm', *arguments], fail=7, output=True)
+                self.assertEqual((code, calls), (0, []))
+                self.assertEqual(json.loads(stdout), {'npmScript': expected,
+                    'ignoreScripts': True if expected and arguments != ['--unit', 'core'] else None})
+        for arguments in [['--unit', 'unknown'], ['--unit', 'core', 'extra'],
+                          ['--unit', 'base', 'extra'], ['--unit', 'catalog', 'extra'],
+                          ['--security-adapter', 'base'], ['--describe-npm']]:
+            self.assertEqual(self.verification_fixture(path, ['--describe-npm', *arguments]), (2, []))
 
     def test_aggregate_wrappers_request_complete_registered_units(self):
         for path, identity in [
@@ -124,7 +141,7 @@ class DiscoveryTests(unittest.TestCase):
         code, calls = self.verification_fixture(path, ['--unit', 'catalog'])
         self.assertEqual(code, 0)
         self.assertEqual(calls[:3], [
-            'tsc -p scripts/repo/diagnostic-coverage/tsconfig.json',
+            'node scripts/repo/workspace-build/script.mjs --project-roots --project scripts/repo/diagnostic-coverage/tsconfig.json --unowned-root-prefix infra/04.deploy/03.product/entrypoints/ --generated-json-assets --payload',
             'node scripts/repo/diagnostic-coverage/export-catalogs.mjs --compiled-root .cache/diagnostic-catalog-export --check',
             'python3 -B scripts/repo/diagnostic-coverage/smoke-test.py'])
         self.assertEqual(len(calls), 3)
@@ -504,14 +521,33 @@ class ReaderTests(unittest.TestCase):
         # All regeneration/mutation happens in a disposable tree, never ROOT.
         compiled = ROOT / '.cache/diagnostic-catalog-export'
         git_directory = subprocess.check_output(['git', 'rev-parse', '--absolute-git-dir'], cwd=ROOT, text=True).strip()
+        declaration_files = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', '''
+import {loadWorkspaceGraph} from './scripts/repo/workspace-build/declarations.mjs';
+import {projectWorkspaceInputs} from './scripts/repo/workspace-build/project-selection.mjs';
+const root = process.cwd(), graph = loadWorkspaceGraph(root);
+const selected = projectWorkspaceInputs(root, 'scripts/repo/diagnostic-coverage/tsconfig.json', {
+  unownedRootPrefixes: ['infra/04.deploy/03.product/entrypoints/'], allowMissingJsonAssets: true,
+});
+console.log(JSON.stringify([...new Set([...graph.manifestPaths, ...[...graph.packages.values()].map(p => p.manifestPath),
+  ...selected.rootFiles, ...selected.inputs.sourceFiles,
+  ...Object.values(selected.inputs.packages).flatMap(exports => Object.values(exports).filter(p => p.endsWith('.json')))])]));
+'''], cwd=ROOT, text=True))
         with tempfile.TemporaryDirectory(prefix='config-catalogue-export-') as temporary:
             root = Path(temporary)
             for relative in ['scripts/repo/diagnostic-coverage/export-catalogs.mjs',
-                             'scripts/repo/diagnostic-coverage/compatibility.mjs', 'packages/core/package.json', 'platform/persistence/package.json', 'platform/security/package.json', 'platform/workers/package.json',
-                             'platform/adapters/aws/queue/sqs/package.json']:
+                             'scripts/repo/diagnostic-coverage/compatibility.mjs',
+                             'scripts/repo/diagnostic-coverage/tsconfig.json',
+                             'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json',
+                             'scripts/repo/workspace-build/project-selection.mjs',
+                             'scripts/repo/workspace-build/declarations.mjs',
+                             'scripts/repo/workspace-build/runtime-packages.mjs', *declaration_files]:
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(ROOT / relative, target)
+            # The project reader uses the actual installed TypeScript parser;
+            # this is an exporter compatibility fixture, not package isolation.
+            (root / 'node_modules').mkdir()
+            (root / 'node_modules/typescript').symlink_to(ROOT / 'node_modules/typescript', target_is_directory=True)
             output = root / 'compiled'
             shutil.copytree(compiled, output)
             env = {**os.environ, 'GIT_DIR': git_directory, 'NODE_PATH': str(ROOT / 'node_modules')}
@@ -673,9 +709,13 @@ exports.coreConfigDiagnosticCatalog = {owner: 'core.config', definitions: [
 ]};
 ''')
             local.write_text('stale fixture sentinel\n')
+            retained_asset = output / 'node_modules/@kanbien/core/config/diagnostics.v1.json'
+            retained_bytes = retained_asset.read_bytes()
             self.assertEqual(run()[1]['code'], 'diagnostic-definition-version-conflict')
             self.assertEqual(local.read_text(), 'stale fixture sentinel\n')
             self.assertEqual(aggregate.read_bytes(), reader.CORE_CATALOG.read_bytes())
+            self.assertEqual(retained_asset.read_bytes(), retained_bytes,
+                             'failed compatibility must not copy stale source assets into the runtime')
 
     def test_configuration_selection_and_loading_declaration_are_closed_additive_records(self):
         selection = {"schema": "core/diagnostic-record/v1", "code": "kanbien-core-server.persistence-implementation-invalid",

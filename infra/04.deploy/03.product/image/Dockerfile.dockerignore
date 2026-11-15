@@ -63,6 +63,13 @@ build
 !scripts/04.deploy/
 !scripts/04.deploy/build-platform-shell-image/
 !scripts/04.deploy/build-platform-shell-image/**
+!scripts/repo/
+!scripts/repo/workspace-build/
+!scripts/repo/workspace-build/declarations.mjs
+!scripts/repo/workspace-build/compile.mjs
+!scripts/repo/workspace-build/project-selection.mjs
+!scripts/repo/workspace-build/script.mjs
+!scripts/repo/workspace-build/runtime-packages.mjs
 
 !infra/
 !infra/04.deploy/

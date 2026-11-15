@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[8]
 STACK = "kanbien-core-platform-core-server-persistence"
+TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 ALLOWED_TYPES = {
     "AWS::EC2::SecurityGroup", "AWS::EC2::SecurityGroupIngress", "AWS::EC2::SecurityGroupEgress", "AWS::EC2::VPCEndpoint",
     "AWS::RDS::DBSubnetGroup", "AWS::RDS::DBInstance", "AWS::SecretsManager::Secret", "AWS::ServiceDiscovery::Service",
@@ -25,6 +26,14 @@ def controls():
     assert spec and spec.loader
     spec.loader.exec_module(module)
     return module
+
+
+def operations():
+    path = Path(__file__).resolve().parents[1] / "change-set-operations.py"
+    spec = importlib.util.spec_from_file_location("persistence_change_set_operations", path)
+    value = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(value)
+    return value
 
 
 def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> int:
@@ -87,31 +96,35 @@ def main() -> int:
         return report("blocked", "persistence-private-startup-connectivity-not-proven")
     if not module.candidate_image(receipt)[0] or not module.live_budget()[0]:
         return report("blocked", "persistence-candidate-preconditions-not-proven")
-    ok, change, code = module.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", expected)
-    if not ok:
-        return report("blocked", code)
-    ok, stack, code = module.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
-    try: stack_status = stack.get("Stacks", [{}])[0].get("StackStatus") if ok and isinstance(stack, dict) else None
-    except (AttributeError, TypeError, KeyError, IndexError): return report("uncertain", "persistence-stack-observation-uncertain")
-    if not ok and code != "aws-resource-missing":
-        return report("blocked", code)
-    try: reviewed = reviewable(change, stack_status, expected, receipt["image_digest"], receipt["source_revision"])
-    except (AttributeError, TypeError): return report("uncertain", "persistence-change-set-observation-invalid")
-    if not reviewed:
-        return report("blocked", "persistence-change-set-not-reviewable")
-    try: matching = parameters_match(change, module.candidate_parameters(outputs, infrastructure, receipt))
-    except TypeError: return report("uncertain", "persistence-parameter-observation-invalid")
-    if not matching:
-        return report("blocked", "persistence-change-set-live-parameters-mismatch")
-    if change.get("ExecutionStatus") != "AVAILABLE":
-        return reconcile(module, expected, receipt)
-    ok, _, code = module.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", expected)
-    if not ok:
-        return report("uncertain", code, facts={"change_set": expected})
-    return reconcile(module, expected, receipt)
+    owner = operations()
+    parameters = module.candidate_parameters(outputs, infrastructure, receipt)
+    def precondition(reservation):
+        ok, change, code = module.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", expected)
+        if not ok: raise owner.OperationFailure("blocked", code)
+        ok, stack, code = module.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
+        try: stack_status = stack.get("Stacks", [{}])[0].get("StackStatus") if ok and isinstance(stack, dict) else None
+        except (AttributeError, TypeError, KeyError, IndexError): raise owner.OperationFailure("uncertain", "persistence-stack-observation-uncertain") from None
+        if not ok and code != "aws-resource-missing": raise owner.OperationFailure("blocked", code)
+        try: reviewed = reviewable(change, stack_status, expected, receipt["image_digest"], receipt["source_revision"])
+        except (AttributeError, TypeError): raise owner.OperationFailure("uncertain", "persistence-change-set-observation-invalid") from None
+        if not reviewed: raise owner.OperationFailure("blocked", "persistence-change-set-not-reviewable")
+        try: matching = parameters_match(change, parameters)
+        except TypeError: raise owner.OperationFailure("uncertain", "persistence-parameter-observation-invalid") from None
+        if not matching: raise owner.OperationFailure("blocked", "persistence-change-set-live-parameters-mismatch")
+        if change.get("ExecutionStatus") != "AVAILABLE": raise owner.Reported(reconcile(module, expected, receipt, reservation=reservation))
+    def submit(service, operation, **arguments):
+        ok, _, code = module.aws(service, operation, "--stack-name", STACK, "--change-set-name", expected, "--client-request-token", arguments["ClientRequestToken"])
+        if not ok: raise owner.Reported(report("uncertain", code, facts={"change_set": expected}))
+    try:
+        return owner.CHANGE_SETS.execute(submit, owner.store(ROOT), phase="execute", request=owner.intent(expected, receipt, parameters, TEMPLATE),
+            arguments={}, precondition=precondition, observe=lambda reservation: reconcile(module, expected, receipt, reservation=reservation), passthrough=(owner.Reported,))
+    except owner.Reported as result: return result.status
+    except owner.OperationFailure as failure: return report(failure.verdict, failure.code)
+    except owner.CHANGE_SETS.ChangeSetFailure:
+        return report("uncertain", "persistence-change-set-submission-uncertain", facts={"change_set": expected})
 
 
-def reconcile(module, expected: str, receipt: dict) -> int:
+def reconcile(module, expected: str, receipt: dict, *, reservation=None) -> int:
     """Observe the approved operation; this path contains no provider mutation."""
     facts = {"change_set": expected, "candidate_image_digest": receipt["image_digest"], "candidate_source_revision": receipt["source_revision"]}
     ok, change, code = module.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", expected)
@@ -137,6 +150,14 @@ def reconcile(module, expected: str, receipt: dict) -> int:
     except (AttributeError, TypeError): return report("uncertain", "persistence-stack-parameters-unobservable", facts=facts)
     if status != "CREATE_COMPLETE" or change.get("ExecutionStatus") != "EXECUTE_COMPLETE" or any(params.get(key) != value for key, value in (("ImageDigest", receipt["image_digest"]), ("SupportImageDigest", receipt["image_digest"]), ("RestoreVerifierImageDigest", receipt["image_digest"]), ("SourceRevision", receipt["source_revision"]))):
         return report("uncertain", "persistence-stack-completion-identity-unproven", facts=facts)
+    if reservation is not None:
+        stack_id = stack.get("StackId")
+        if not isinstance(stack_id, str) or not stack_id.startswith("arn:aws:cloudformation:eu-west-1:337159794548:stack/" + STACK + "/"):
+            return report("uncertain", "persistence-stack-reservation-identity-unproven", facts=facts)
+        ok, events, code = module.aws("cloudformation", "describe-stack-events", "--stack-name", stack_id)
+        rows = events.get("StackEvents") if ok and isinstance(events, dict) else None
+        if not isinstance(rows, list) or not any(isinstance(row, dict) and row.get("PhysicalResourceId") == stack_id and row.get("ClientRequestToken") == reservation["operation_id"] for row in rows):
+            return report("uncertain", "persistence-stack-execution-lineage-unproven", facts=facts)
     return report("deployed-awaiting-migration", "persistence-create-change-set-executed", facts=facts)
 
 

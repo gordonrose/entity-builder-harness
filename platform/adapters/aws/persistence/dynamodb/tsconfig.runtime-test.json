@@ -10,19 +10,6 @@
     "noEmit": false,
     "outDir": "../../../../../.cache/platform-adapter-aws-persistence-dynamodb-runtime",
     "baseUrl": "../../../../..",
-    "paths": {
-      "@kanbien/platform-contracts": ["platform/contracts/src/index.ts"],
-      "@kanbien/platform-observability": ["platform/observability/src/index.ts"],
-      "@kanbien/core": [
-        "packages/core/src/index.ts"
-      ],
-      "@kanbien/core/*": [
-        "packages/core/src/*/index.ts"
-      ],
-      "@kanbien/platform-persistence": [
-        "platform/persistence/src/index.ts"
-      ]
-    },
     "rootDir": "../../../../..",
     "types": [
       "node"

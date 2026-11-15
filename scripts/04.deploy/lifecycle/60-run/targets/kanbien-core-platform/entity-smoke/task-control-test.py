@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -51,6 +51,49 @@ def task(reservation):
             "taskDefinitionArn": REQUEST["definition"], "startedBy": reservation["operation_id"],
             "overrides": CONTROL.overrides(REQUEST), "lastStatus": "STOPPED"}
 
+
+# Construct observations independently of the production request/override builder.
+# A differently named container exercises the reusable predicate, both actual
+# caller bindings, and the unchanged feature diagnostic boundary.
+BASE_SPEC = importlib.util.spec_from_file_location("baseline_ecs_evidence", Path(__file__).parent.parent / "core-server-persistence/ecs-task-evidence.py")
+BASE = importlib.util.module_from_spec(BASE_SPEC)
+BASE_SPEC.loader.exec_module(BASE)
+expected_environment = {"A": "one", "B": "two"}
+observed_container = {"name": "entity-smoke-renamed", "environment": [{"name": "B", "value": "two"}, {"name": "A", "value": "one"}]}
+expected_reservation = {"operation_id": "es-" + "1" * 32, "request": {"workload": "renamed", "definition": "fixture-definition", "environment": expected_environment}}
+observation = {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "2" * 32,
+               "taskDefinitionArn": "fixture-definition", "startedBy": "es-" + "1" * 32,
+               "overrides": {"containerOverrides": [observed_container]}}
+for inert_default in ({}, {"inferenceAcceleratorOverrides": []}):
+    valid = {**observation, "overrides": {**observation["overrides"], **inert_default}}
+    assert BASE.task_overrides_match(valid, "entity-smoke-renamed", expected_environment)
+    assert CONTROL.exact_task(valid, expected_reservation) is valid
+invalid_overrides = [None, {}, {"containerOverrides": None}, {"containerOverrides": []},
+    {"containerOverrides": [observed_container, observed_container]},
+    {"containerOverrides": [None]},
+    {"containerOverrides": [observed_container], "taskRoleArn": CANARY},
+    {"containerOverrides": [observed_container], "inferenceAcceleratorOverrides": None},
+    {"containerOverrides": [observed_container], "inferenceAcceleratorOverrides": [CANARY]}]
+invalid_containers = [
+    {**observed_container, "command": [CANARY]}, {**observed_container, "name": "wrong"},
+    {"name": "entity-smoke-renamed"},
+    *[{**observed_container, "environment": entries} for entries in [None, [],
+      [{"name": "A", "value": "one"}],
+      [{"name": "A", "value": "one"}, {"name": "A", "value": "one"}],
+      [{"name": "A", "value": "one"}, {"name": "B", "value": CANARY}],
+      [{"name": "A", "value": "one", "unknown": CANARY}, {"name": "B", "value": "two"}],
+      [{"name": "A", "value": 1}, {"name": "B", "value": "two"}],
+      [{"name": 1, "value": "one"}, {"name": "B", "value": "two"}],
+      [None, {"name": "B", "value": "two"}], observed_container["environment"] + [{"name": "C", "value": CANARY}]]]]
+for invalid in invalid_overrides + [{"containerOverrides": [container]} for container in invalid_containers]:
+    changed = {**observation, "overrides": invalid}
+    assert not BASE.task_overrides_match(changed, "entity-smoke-renamed", expected_environment)
+    fails(lambda: CONTROL.exact_task(changed, expected_reservation), "task-observation-overrides-mismatch")
+assert not BASE.task_overrides_match(None, "entity-smoke-renamed", expected_environment)
+assert not BASE.task_overrides_match({}, "entity-smoke-renamed", expected_environment)
+empty = {**observation, "overrides": {"containerOverrides": [{"name": "entity-smoke-renamed", "environment": []}]}}
+assert BASE.task_overrides_match(empty, "entity-smoke-renamed", {})
+assert CONTROL.exact_task(empty, {**expected_reservation, "request": {**expected_reservation["request"], "environment": {}}}) is empty
 
 with tempfile.TemporaryDirectory(prefix="entity-smoke-task-control-") as temporary:
     base = Path(temporary)
@@ -117,4 +160,4 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-task-control-") as tempora
         created = json.loads(next(clean.root.glob("*.json")).read_bytes())
         return {"tasks": [task(created)]}
     assert CONTROL.invoke_once(success, clean, "new-attempt", REQUEST)[1]["lastStatus"] == "STOPPED"
-print(json.dumps({"schema": "deploy/entity-smoke-task-control-fixture/v1", "verdict": "passed", "provider_observation": False, "cases": ["reserve-before-submit", "lost-response-reconciliation", "alternate-key-no-replay", "empty-is-not-replay-permission", "uncertain-observation", "immutable-inputs", "exact-task", "inert-provider-default", "duplicate-environment", "invalid-input", "symlink", "one-successful-submission"]}))
+print(json.dumps({"schema": "deploy/entity-smoke-task-control-fixture/v1", "verdict": "passed", "provider_observation": False, "cases": ["reserve-before-submit", "lost-response-reconciliation", "alternate-key-no-replay", "empty-is-not-replay-permission", "uncertain-observation", "immutable-inputs", "exact-task", "shared-predicate-both-bindings", "independent-override-negatives", "inert-provider-default", "duplicate-environment", "invalid-input", "symlink", "one-successful-submission"]}))

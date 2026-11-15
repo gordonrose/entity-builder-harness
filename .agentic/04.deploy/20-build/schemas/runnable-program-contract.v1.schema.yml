@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.runnable-program-contract.v1
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -46,6 +46,12 @@ safe_evidence_fields:
   - source_revision
   - verification_verdict
 field_guide:
+  - path: dependency_bindings
+    what: Optional executable bindings for workspace-TypeScript programs, keyed by the existing logical dependency approval IDs.
+    validation: Each selected binding contains exactly one workspace_package name or a nonempty external_packages list; package paths and exports are read from workspace manifests, never copied here.
+  - path: runnable_programs[].build
+    what: Optional build selection for a workspace-TypeScript program.
+    validation: kind is workspace-typescript and typescript_project names an existing repository-relative tsconfig; selected approved dependencies must have bindings and derived runtime dependencies must remain within approval.
   - path: runnable_programs[]
     what: One program that may be selected as a package root.
     validation: Requires a stable ID, a relative entrypoint, runtime_executable, and approved and observed dependency lists.

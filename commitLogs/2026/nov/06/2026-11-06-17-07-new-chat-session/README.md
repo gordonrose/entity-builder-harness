@@ -86,6 +86,10 @@ below are historical incident records, not the current acceptance verdict.
 - Raised: Independent prevention within the existing controller-only repair approval: inspect both ECR endpoint image-read policies before launch and explain explicit TaskFailedToStart before requesting application logs or checking a pulled image that never existed.
   Resolution: The requested foundation/recovery expansion remains unapproved; do not edit foundation, widen its source exception or submit another task. Predicate inventory: alignment-image-delivery-policy-not-confirmed for missing/malformed/unknown/widened image endpoint policies; task-image-pull-access-denied for the bounded observed CannotPullContainerError/403 observation, task-image-pull-not-confirmed for other recognized pull failures and task-provider-startup-not-confirmed for other explicit failed starts. Keep native reasons outside output, preserve reservation/identity checks, no success receipt, no retry authority and unchanged genuine application-failure diagnostics. Extend existing alignment, evidence, runner and public task-route fixtures, with real caller/no-log/no-second-launch/canary counterexamples; all tests are planned until run. Reuse existing partial diagnostic owners; no Core catalogue, architecture ADR or new AWS authority is needed for these read-only failure checks.
 
+
+- Raised: Planning checkpoint blocked by staged-selector input closure
+  Resolution: User approved local checkpoints. Three linked planning documents and the session authority record were prepared and staged; no implementation was staged and no commit was created. Commit gate /tmp/consolidation-plans-commit-gate.Pka9sa reports232 selected-input-not-staged findings because its selected-input closure includes deferred integration checks. That includes the unrelated retrospective lesson through the deferred repository-contract docs root, plus uncommitted selector/build implementations. Existing registered-chat-worktree rules provide no clean staged-snapshot checkpoint route. Do not stage unrelated work, bypass the gate or move canonical helpers before a plan commit. A governed staged-snapshot verification path is the remaining decision; Docker read-only availability check passed29.9.2.
+
 ## Decisions Made
 
 - Renewal correction consolidated review: the existing readback recovery owner
@@ -438,6 +442,14 @@ below are historical incident records, not the current acceptance verdict.
   rules and local checkpoint permission are recorded in the timeline and plan.
 - Complete the existing goal; do not expand the framework. Publication and
   provider mutation still require concrete approval. No push is authorised.
+
+
+- Decision: Local consolidation checkpoints approved
+  Rationale: On 2026-11-15 the user explicitly approved a checked shared-file migration-plan checkpoint followed by verified consolidation/follow-on checkpoints. No push, publication or AWS execution. C03 remains governed by .agentic/04.deploy/plans/migration/shared-persistence-entrypoints.md; accepted evidence and unrelated education changes are preserved.
+
+
+- Decision: Commit all current changes locally
+  Rationale: User explicitly directed committing everything in the active chat worktree, including the existing retrospective lesson. This supersedes the planning-only checkpoint split; no push, publication or AWS execution. Existing commit gates remain in place. C03 canonical migration and final integration/image proof remain incomplete and are not claimed by this checkpoint.
 
 ## Deployment retrospective — 2026-11-12
 
@@ -1447,6 +1459,18 @@ process used to reach it is not the standard to preserve.
 - Summary: Checkpoint8cac3e3a closes the independent diagnostic correction; all required commit-boundary and exact runtime checks passed. Original image/custody8f76/282b and initial thirty-resource creation receipt are retained. The first standalone probe is terminal TaskFailedToStart, with no application start, image pull completion or SQL execution. Both actual ECR endpoint policies still exclude entity-smoke. The blocked condition has persisted across the failure turn and two consecutive goal continuations without approval for the requested narrow expansion.
   Durable evidence: Authority audit re-read the actual complete-chain approval: unused named feature/database/recovery phases remain approved, but preserve their dependencies and single-submission journals. The original plan expressly protects other baselines, and the approved controller-only repair rule requires templates unchanged. Exactly two shared foundation endpoint allowlist changes and one separately journalled new probe therefore remain outside that approval. Do not treat this as missing permission for ordinary read-only diagnosis, reconciliation or the already-approved later chain. Those safe checks and independent prevention are complete; there is no active goal process or dependency-free live phase to advance. Keep full final integration pending until the actual repaired candidate is stable, not as a waiver or completion claim. Pending user decision is recorded; no extra RunTask or baseline mutation is authorized.
 
+
+- Summary: Consolidation preparation and remaining proof
+  Durable evidence: Three repaired connected failures now have five passing registered checks in .cache/test-runs/20261115T094228Z-edeb55b1a11949338537528ae7e6a739/report.json. Repository-contract expectations were corrected with focused proof; complete impact verification remains pending C03 migration. The existing migration plan records internal wrapper compatibility, consumer inventory and no ADR requirement; no runtime behavior changes are introduced by its checkpoint.
+
+
+- Summary: All-change local checkpoint preparation
+  Durable evidence: User authorised all239 current paths. Independent source screening found no concrete credentials, caches or accepted-evidence mutations. Lifecycle preparation changed updated_on metadata only in36 files; reconstructing their prior date reproduced each recorded pre-preparation SHA256. Existing source review bindings and the bounded public-image recovery owner pin were refreshed only for these verified metadata-only changes; no diagnostic adoption/debt or executable behavior was changed. The checkpoint preserves current work, not a claim of completed C03 migration, full integration or image qualification.
+
+
+- Summary: Combined checkpoint replaces planning-only split
+  Durable evidence: The explicit commit-everything request includes all current work and the retrospective lesson, resolving the planning-only staged-input conflict without changing the selector or checkpoint workflow. First all-change gate:45 passed,1 health/recovery fixture failed,103 deferred; report .cache/test-runs/20261115T134455Z-545b323b27a14413a802f25a7fd68234/report.json. Fixture correction preserves production acceptance validation and proves copied live references are rejected; original wrapper now passes31.844s. Existing plan records exact cause and review. Final commit gate must pass; C03 canonical migration/full integration/package qualification remain pending.
+
 ## Activity Log
 
 ### 2026-11-10 - Actual task-definition empty-default comparison
@@ -2114,6 +2138,48 @@ Message: test(deploy): retain accepted entity-smoke proof and retrospective
 Summary: Live AWS release release-53798ef563be4ce9a8c5b2f0 accepted at 2026-11-12T16:00:21Z. Retained four immutable acceptance files containing 37 real task and seven control archives; entity-smoke active. Original-record digest, lifecycle/index, replacement, stop-preserve/restart, credential failure/recovery, isolated snapshot restore/readback and owned clone cleanup proved; source database/snapshot and other baselines preserved. Current accepted-state validation passed with zero findings, including after fixture repairs. Full retrospective records delivery, architecture, governance, verification, approval and communication failures and unproved limits. Five local fixture corrections isolate copied live acceptance and simulated accepted-reader behavior; reviewed persistence fixture hash updated without operational source changes. Final staged gate passed 38 checks, zero findings. Final affected integration passed 69 checks (65 reused, four executed), 20 separately staged checks deferred, zero findings, 142.295892 seconds. Focused payload/provider regressions passed in 122.931506 seconds; selector regression passed in 608.259798 seconds. Reports retained in .cache/test-runs/entity-smoke-stable.7wpnDKuN/acceptance-final-{integration,focused,selector}.json. Four evidence hashes unchanged. No AWS effects performed for post-acceptance repairs; no push or merge. The accepted feature path is proved; a clean unattended repeat, fast emergency delivery, subsequent-image rollback, hard purge, DynamoDB feature parity and staging retirement are not claimed.
 
 ADR impact: No new ADR: retained acceptance and bounded fixture isolation follow existing deployment/testing governance; retrospective recommendations are future work, not silently implemented redesign.
+
+
+### 2026-11-15T13:09:47Z - Decision
+
+Decision: Local consolidation checkpoints approved
+
+Rationale: On 2026-11-15 the user explicitly approved a checked shared-file migration-plan checkpoint followed by verified consolidation/follow-on checkpoints. No push, publication or AWS execution. C03 remains governed by .agentic/04.deploy/plans/migration/shared-persistence-entrypoints.md; accepted evidence and unrelated education changes are preserved.
+
+
+### 2026-11-15T13:09:47Z - Context hygiene
+
+Summary: Consolidation preparation and remaining proof
+
+Durable evidence: Three repaired connected failures now have five passing registered checks in .cache/test-runs/20261115T094228Z-edeb55b1a11949338537528ae7e6a739/report.json. Repository-contract expectations were corrected with focused proof; complete impact verification remains pending C03 migration. The existing migration plan records internal wrapper compatibility, consumer inventory and no ADR requirement; no runtime behavior changes are introduced by its checkpoint.
+
+
+### 2026-11-15T13:22:18Z - Issue
+
+Raised: Planning checkpoint blocked by staged-selector input closure
+
+Resolution: User approved local checkpoints. Three linked planning documents and the session authority record were prepared and staged; no implementation was staged and no commit was created. Commit gate /tmp/consolidation-plans-commit-gate.Pka9sa reports232 selected-input-not-staged findings because its selected-input closure includes deferred integration checks. That includes the unrelated retrospective lesson through the deferred repository-contract docs root, plus uncommitted selector/build implementations. Existing registered-chat-worktree rules provide no clean staged-snapshot checkpoint route. Do not stage unrelated work, bypass the gate or move canonical helpers before a plan commit. A governed staged-snapshot verification path is the remaining decision; Docker read-only availability check passed29.9.2.
+
+
+### 2026-11-15T13:29:10Z - Decision
+
+Decision: Commit all current changes locally
+
+Rationale: User explicitly directed committing everything in the active chat worktree, including the existing retrospective lesson. This supersedes the planning-only checkpoint split; no push, publication or AWS execution. Existing commit gates remain in place. C03 canonical migration and final integration/image proof remain incomplete and are not claimed by this checkpoint.
+
+
+### 2026-11-15T13:31:18Z - Context hygiene
+
+Summary: All-change local checkpoint preparation
+
+Durable evidence: User authorised all239 current paths. Independent source screening found no concrete credentials, caches or accepted-evidence mutations. Lifecycle preparation changed updated_on metadata only in36 files; reconstructing their prior date reproduced each recorded pre-preparation SHA256. Existing source review bindings and the bounded public-image recovery owner pin were refreshed only for these verified metadata-only changes; no diagnostic adoption/debt or executable behavior was changed. The checkpoint preserves current work, not a claim of completed C03 migration, full integration or image qualification.
+
+
+### 2026-11-15T13:48:47Z - Context hygiene
+
+Summary: Combined checkpoint replaces planning-only split
+
+Durable evidence: The explicit commit-everything request includes all current work and the retrospective lesson, resolving the planning-only staged-input conflict without changing the selector or checkpoint workflow. First all-change gate:45 passed,1 health/recovery fixture failed,103 deferred; report .cache/test-runs/20261115T134455Z-545b323b27a14413a802f25a7fd68234/report.json. Fixture correction preserves production acceptance validation and proves copied live references are rejected; original wrapper now passes31.844s. Existing plan records exact cause and review. Final commit gate must pass; C03 canonical migration/full integration/package qualification remain pending.
 
 ## Sub-Agent Activity
 

@@ -11,7 +11,7 @@ turn a completed observation into a reason to repeat an IAM revocation.
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -43,7 +43,7 @@ PROFILE, REGION = "kanbien-dev", "eu-west-1"
 EVIDENCE_ROOT = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence"
 PROOF_ROOT = EVIDENCE_ROOT / "proof-receipts"
 CHILD_CHECKPOINT: dict[str, Any] | None = None
-_AWS_RESPONSE = None
+_AWS_CLI = None
 
 
 class RehearsalFailure(ValueError):
@@ -84,32 +84,22 @@ def iso(value: object, code: str) -> str:
 
 
 def aws(*parts: str) -> dict[str, Any]:
+    global _AWS_CLI
+    if _AWS_CLI is None: _AWS_CLI = load("scripts/04.deploy/shared/provider-adapters/aws/cli.py", "observability_aws_cli")
     try:
-        completed = subprocess.run(
+        return _AWS_CLI.invoke_json(
             ["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"],
-            capture_output=True, text=True, timeout=30, check=False,
-            env={**os.environ, "AWS_PAGER": ""},
+            timeout=30, environment={**os.environ, "AWS_PAGER": ""}, check=False,
+            empty_body="empty-string", object_only=True,
         )
-    except subprocess.TimeoutExpired as error:
-        raise RehearsalFailure("observability-rehearsal-provider-observation-timeout") from error
-    except OSError as error:
-        raise RehearsalFailure("observability-rehearsal-provider-command-unavailable") from error
-    except UnicodeError as error:
-        raise RehearsalFailure("observability-rehearsal-provider-response-invalid") from error
-    if completed.returncode:
-        global _AWS_RESPONSE
-        if _AWS_RESPONSE is None:
-            _AWS_RESPONSE = load("scripts/04.deploy/shared/provider-adapters/aws/response.py", "observability_aws_response")
-        classified = _AWS_RESPONSE.classify_error(parts[0], parts[1], completed.stderr)
-        raise RehearsalFailure("observability-rehearsal-provider-access-denied" if classified == "aws-access-denied" else "observability-rehearsal-provider-observation-failed")
-    try:
-        value = json.loads(completed.stdout or "{}")
-    except json.JSONDecodeError as error:
-        raise RehearsalFailure("observability-rehearsal-provider-response-invalid") from error
-    if not isinstance(value, dict):
-        raise RehearsalFailure("observability-rehearsal-provider-response-invalid")
-    return value
-
+    except _AWS_CLI.CliFailure as failure:
+        if failure.phase == "process":
+            suffix = {"aws-command-timeout": "observation-timeout", "aws-command-unavailable": "command-unavailable", "aws-response-invalid": "response-invalid"}[failure.code]
+        elif failure.phase == "response": suffix = "response-invalid"
+        else: suffix = "access-denied" if failure.code == "aws-access-denied" else "observation-failed"
+        error = RehearsalFailure("observability-rehearsal-provider-" + suffix)
+        if failure.cause is not None: raise error from failure.cause
+        raise error from None
 
 def last_report(text: str, command: str | None = None) -> dict[str, Any] | None:
     for line in reversed(text.splitlines()):

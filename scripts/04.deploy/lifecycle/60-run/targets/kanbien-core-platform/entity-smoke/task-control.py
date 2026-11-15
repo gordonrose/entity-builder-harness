@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.task-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -24,11 +24,19 @@ provider capability. Importing this library performs no I/O.
 """
 from datetime import datetime, timezone
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
 import re
 import uuid
+
+_RESPONSE_SPEC = importlib.util.spec_from_file_location("entity_smoke_aws_response", Path(__file__).resolve().parents[5] / "shared/provider-adapters/aws/response.py")
+_RESPONSE = importlib.util.module_from_spec(_RESPONSE_SPEC)
+_RESPONSE_SPEC.loader.exec_module(_RESPONSE)
+TASKS_SPEC = importlib.util.spec_from_file_location("entity_smoke_aws_tasks", Path(__file__).resolve().parents[5] / "shared/provider-adapters/aws/tasks.py")
+TASKS = importlib.util.module_from_spec(TASKS_SPEC)
+TASKS_SPEC.loader.exec_module(TASKS)
 
 ACCOUNT, REGION, CLUSTER = "337159794548", "eu-west-1", "kanbien-core-platform"
 OPERATIONS = {
@@ -187,68 +195,30 @@ def exact_task(task, reservation):
         reject("task-observation-invalid")
     if task.get("taskDefinitionArn") != request["definition"] or task.get("startedBy") != reservation["operation_id"]:
         reject("task-observation-identity-mismatch")
-    actual = task.get("overrides")
-    if not isinstance(actual, dict) or set(actual) - {"containerOverrides", "inferenceAcceleratorOverrides"} or actual.get("inferenceAcceleratorOverrides", []) != []:
-        reject("task-observation-overrides-mismatch")
-    containers = actual.get("containerOverrides")
-    expected = overrides(request)["containerOverrides"]
-    if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or set(containers[0]) != {"name", "environment"} or containers[0].get("name") != expected[0]["name"]:
-        reject("task-observation-overrides-mismatch")
-    environment = containers[0].get("environment")
-    if not isinstance(environment, list) or len(environment) != len(request["environment"]) or any(not isinstance(item, dict) or set(item) != {"name", "value"} or not isinstance(item["name"], str) or not isinstance(item["value"], str) for item in environment) or {item["name"]: item["value"] for item in environment} != request["environment"]:
+    if not _RESPONSE.task_overrides_match(task, "entity-smoke-" + request["workload"], request["environment"]):
         reject("task-observation-overrides-mismatch")
     return task
 
 
 def invoke_once(provider, store, key, request, *, before_submit=None):
-    """provider(service, operation, **parameters) is an already gated capability.
-
-    An existing reservation ALWAYS reconciles, even if a lost response yields
-    an empty list. No provider mutation is retried by this helper.
-    """
+    """Durably reserve before shared submission; existing attempts only reconcile."""
     reservation, fresh = store.reserve(key, request)
-    if fresh:
-        if before_submit is not None: before_submit(reservation)
-        network = {"awsvpcConfiguration": {"subnets": request["subnets"], "securityGroups": [request["security_group"]], "assignPublicIp": "DISABLED"}}
-        try:
-            result = provider("ecs", "run-task", cluster=CLUSTER, taskDefinition=request["definition"], launchType="FARGATE", count=1,
-                              networkConfiguration=network, overrides=overrides(request), startedBy=reservation["operation_id"], clientToken=reservation["operation_id"])
-        except SubmissionNotStarted: raise
-        except Exception:
-            reject("task-submission-uncertain-reconcile-required")
-        tasks = result.get("tasks") if isinstance(result, dict) else None
-        if not isinstance(tasks, list) or len(tasks) != 1 or result.get("failures"):
-            reject("task-submission-uncertain-reconcile-required")
-        return reservation, exact_task(tasks[0], reservation)
-    return reconcile_reserved(provider, reservation)
+    if not fresh: return reconcile_reserved(provider, reservation)
+    network = {"awsvpcConfiguration": {"subnets": request["subnets"], "securityGroups": [request["security_group"]], "assignPublicIp": "DISABLED"}}
+    try:
+        task = TASKS.submit_task(provider, cluster=CLUSTER, definition=request["definition"], operation_id=reservation["operation_id"],
+            network=network, overrides=overrides(request), validate_task=lambda task: exact_task(task, reservation),
+            before_submit=(lambda: before_submit(reservation)) if before_submit is not None else None, passthrough=(SubmissionNotStarted,))
+        return reservation, task
+    except TASKS.TaskFailure: reject("task-submission-uncertain-reconcile-required")
 
 
 def reconcile_reserved(provider, reservation):
-    """Observe a checked existing reservation; this function cannot RunTask.
-
-    The owning caller reads it through AttemptStore, including the request/hash
-    and reservation identity checks. Unknown absence never authorizes replay.
-    """
+    """Observe the checked existing reservation without another submission."""
     request = validate_request(reservation["request"])
-    family = request["definition"].rsplit("/", 1)[1].split(":", 1)[0]
-    arns = []
-    for status in ("RUNNING", "STOPPED"):
-        try: result = provider("ecs", "list-tasks", cluster=CLUSTER, family=family, desiredStatus=status)
-        except Exception: reject("task-reconciliation-unavailable")
-        batch = result.get("taskArns") if isinstance(result, dict) else None
-        if not isinstance(batch, list) or result.get("nextToken") or any(not isinstance(arn, str) for arn in batch):
-            reject("task-reconciliation-unavailable")
-        arns.extend(batch)
-    arns = sorted(set(arns))
-    matching = []
-    for offset in range(0, len(arns), 100):
-        batch = arns[offset:offset + 100]
-        try: result = provider("ecs", "describe-tasks", cluster=CLUSTER, tasks=batch)
-        except Exception: reject("task-reconciliation-unavailable")
-        tasks = result.get("tasks") if isinstance(result, dict) else None
-        if not isinstance(tasks, list) or len(tasks) != len(batch) or result.get("failures") or any(not isinstance(task, dict) or not isinstance(task.get("taskArn"), str) for task in tasks) or {task["taskArn"] for task in tasks} != set(batch):
-            reject("task-reconciliation-unavailable")
-        matching.extend(task for task in tasks if task.get("startedBy") == reservation["operation_id"])
-    if len(matching) != 1:
-        reject("task-reconciliation-unresolved-no-replay")
-    return reservation, exact_task(matching[0], reservation)
+    try:
+        task = TASKS.reconcile_task(provider, cluster=CLUSTER, definition=request["definition"], operation_id=reservation["operation_id"],
+            validate_task=lambda task: exact_task(task, reservation), sort_arns=True)
+        return reservation, task
+    except TASKS.TaskFailure as failure:
+        reject("task-reconciliation-unresolved-no-replay" if failure.code == "reconciliation-unresolved" else "task-reconciliation-unavailable")

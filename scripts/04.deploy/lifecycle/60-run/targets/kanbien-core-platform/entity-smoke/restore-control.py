@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.restore-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -39,6 +39,7 @@ def module(name, path):
 RESOURCE = module("entity_smoke_restore_resource_control", Path(__file__).with_name("resource-control.py"))
 ROOT = Path(__file__).resolve().parents[7]
 CF = module("entity_smoke_restore_cf", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
+CHANGES = module("entity_smoke_restore_changes", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py")
 SOURCE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml"
 RESOURCE_TYPES = {"RestoreDatabaseSecurityGroup": "AWS::EC2::SecurityGroup", "RestoredDatabase": "AWS::RDS::DBInstance", "RestoreReaderSecurityGroup": "AWS::EC2::SecurityGroup", "EndpointIngressFromRestoreReader": "AWS::EC2::SecurityGroupIngress", "RestoreReaderExecutionRole": "AWS::IAM::Role", "RestoreReaderTaskRole": "AWS::IAM::Role", "RestoreReaderTaskDefinition": "AWS::ECS::TaskDefinition", "RestoreDatabaseIngressFromReader": "AWS::EC2::SecurityGroupIngress"}
 PARAMETERS = {"VpcId", "VpcCidr", "EndpointSecurityGroupId", "S3ArtifactPrefixListId", "LogGroupName", "DatabaseSubnetGroupName", "RestoredDatabaseName", "RestoredDatabaseIdentifier", "SourceSnapshotArn", "ProofLabel", "ImageRepositoryUri", "ImageRepositoryArn", "ImageDigest", "SourceRevision"}
@@ -129,8 +130,7 @@ def reviewed_change(provider, binding, parameters, reservation):
 def prepare_restore(provider, store, binding, parameters):
     stack, change, identifier = parameters_for(binding, parameters)
     intent = request(binding, parameters)
-    reservation, fresh = store.reserve("restore-change-set", intent)
-    if fresh:
+    def precondition(reservation):
         try: provider("cloudformation", "describe-stacks", StackName=stack)
         except RESOURCE.ResourceMissing: pass
         except Exception: raise RESOURCE.ResourceFailure("restore-stack-precondition-unavailable") from None
@@ -139,16 +139,19 @@ def prepare_restore(provider, store, binding, parameters):
         except RESOURCE.ResourceMissing: pass
         except Exception: raise RESOURCE.ResourceFailure("restore-database-precondition-unavailable") from None
         else: raise RESOURCE.ResourceFailure("restore-database-already-exists")
-        try:
-            provider("cloudformation", "create-change-set", StackName=stack, ChangeSetName=change, ChangeSetType="CREATE", TemplateBody=source()[0],
-                     Parameters=[{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())],
-                     Capabilities=["CAPABILITY_IAM"], OnStackFailure="DO_NOTHING", Description=reservation["operation_id"], ClientToken=reservation["operation_id"],
-                     Tags=[{"Key": key, "Value": value} for key, value in tags(binding).items()])
-        except RESOURCE.SubmissionNotStarted: raise
-        except Exception: raise RESOURCE.ResourceFailure("restore-change-submission-uncertain-reconcile-only") from None
-    try: reviewed = reviewed_change(provider, binding, parameters, reservation)
-    except RESOURCE.ResourceMissing: return {"status": "pending", "reservation": reservation}
-    return {"status": "reviewed" if reviewed is not None else "pending", "reservation": reservation, "facts": reviewed}
+    def observe(reservation):
+        try: reviewed = reviewed_change(provider, binding, parameters, reservation)
+        except RESOURCE.ResourceMissing: return {"status": "pending", "reservation": reservation}
+        return {"status": "reviewed" if reviewed is not None else "pending", "reservation": reservation, "facts": reviewed}
+    arguments = {"StackName": stack, "ChangeSetName": change, "ChangeSetType": "CREATE", "TemplateBody": source()[0],
+                 "Parameters": [{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())],
+                 "Capabilities": ["CAPABILITY_IAM"], "OnStackFailure": "DO_NOTHING",
+                 "Tags": [{"Key": key, "Value": value} for key, value in tags(binding).items()]}
+    try:
+        return CHANGES.prepare(provider, store, phase="restore-change-set", request=intent, arguments=arguments,
+            precondition=precondition, observe=observe, passthrough=(RESOURCE.SubmissionNotStarted,))
+    except CHANGES.ChangeSetFailure:
+        raise RESOURCE.ResourceFailure("restore-change-submission-uncertain-reconcile-only") from None
 
 
 def restore_stack(provider, binding, parameters, observed=None):
@@ -200,18 +203,20 @@ def execute_restore(provider, store, binding, parameters, change_set_arn, stack_
     review_reservation = store.read("restore-change-set", review_intent)
     require(review_reservation is not None, "restore-review-reservation-missing")
     intent = {**review_intent, "change_set_arn": change_set_arn, "stack_arn": stack_arn}
-    execution, fresh = store.reserve("execute-restore", intent)
-    if fresh:
+    def precondition(execution):
         review = reviewed_change(provider, binding, parameters, review_reservation)
         require(isinstance(review, dict) and review["change_set_arn"] == change_set_arn and review["stack_arn"] == stack_arn, "restore-change-not-ready")
         stack = only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
         # A CREATE review stack need not have deployed parameters/template yet;
         # the exact prospective body was checked on the change set above.
         require(stack.get("StackStatus") == "REVIEW_IN_PROGRESS" and stack.get("StackId") == stack_arn and stack.get("StackName") == names(binding)[0], "restore-stack-precondition-not-confirmed")
-        try: provider("cloudformation", "execute-change-set", StackName=stack["StackId"], ChangeSetName=change_set_arn, ClientRequestToken=execution["operation_id"])
-        except RESOURCE.SubmissionNotStarted: raise
-        except Exception: raise RESOURCE.ResourceFailure("restore-execution-uncertain-reconcile-only") from None
-    return observe_restore(provider, store, binding, parameters, change_set_arn, stack_arn)
+    try:
+        return CHANGES.execute(provider, store, phase="execute-restore", request=intent,
+            arguments={"StackName": stack_arn, "ChangeSetName": change_set_arn}, precondition=precondition,
+            observe=lambda execution: observe_restore(provider, store, binding, parameters, change_set_arn, stack_arn),
+            passthrough=(RESOURCE.SubmissionNotStarted,))
+    except CHANGES.ChangeSetFailure:
+        raise RESOURCE.ResourceFailure("restore-execution-uncertain-reconcile-only") from None
 
 
 def validate_reader(provider, binding, parameters, resources, database, reservation, receipt, *, historical=False):

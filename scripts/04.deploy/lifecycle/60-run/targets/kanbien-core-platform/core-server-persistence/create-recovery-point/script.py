@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.create-persistence-recovery-point.impl
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -28,6 +28,8 @@ CLUSTER="kanbien-core-platform"; SERVICE="kanbien-core-platform-core-server-pers
 PATTERN=re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
 def load():
  p=ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"; s=importlib.util.spec_from_file_location("prepare",p); m=importlib.util.module_from_spec(s); assert s and s.loader; s.loader.exec_module(m); return m
+def operations():
+ p=Path(__file__).resolve().parents[1]/"snapshot-operations.py"; s=importlib.util.spec_from_file_location("persistence_snapshot_operations",p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); return m
 def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/persistence-recovery-point-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
@@ -37,26 +39,38 @@ def main():
  if u or not isinstance(a.snapshot_id,str) or not PATTERN.fullmatch(a.snapshot_id): return emit("blocked","persistence-recovery-point-arguments-invalid")
  if a.validate_arguments:print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
  m=load()
- if a.observe_only:return observe_or_create(m,a.snapshot_id,True)
+ if a.observe_only:return observe_or_create(m,a.snapshot_id)
  if not m.live_budget()[0]: return emit("blocked","target-budget-live-configuration-invalid")
  ok,service,code=m.aws("ecs","describe-services","--cluster",CLUSTER,"--services",SERVICE); services=service.get("services",[]) if ok and isinstance(service,dict) else []
  if len(services)!=1 or not isinstance(services[0],dict) or services[0].get("desiredCount")!=1 or services[0].get("runningCount")!=1: return emit("blocked","persistence-recovery-point-service-not-healthy")
  ok,db,code=m.aws("rds","describe-db-instances","--db-instance-identifier",DATABASE); items=db.get("DBInstances",[]) if ok and isinstance(db,dict) else []; instance=items[0] if len(items)==1 else None
- if not isinstance(instance,dict) or instance.get("DBInstanceStatus")!="available" or instance.get("PubliclyAccessible") is not False or instance.get("StorageEncrypted") is not True: return emit("blocked",code if not ok else "persistence-recovery-point-source-not-healthy")
- return observe_or_create(m,a.snapshot_id)
+ if not isinstance(instance,dict) or instance.get("DBInstanceIdentifier")!=DATABASE or instance.get("DBInstanceStatus")!="available" or instance.get("PubliclyAccessible") is not False or instance.get("StorageEncrypted") is not True: return emit("blocked",code if not ok else "persistence-recovery-point-source-not-healthy")
+ return operations().create(m,ROOT,a.snapshot_id,instance.get("DbiResourceId"),emit,observe_or_create)
 
-def observe_or_create(m,sid,observe_only=False):
+def observe_or_create(m,sid,observe_only=True,*,reservation=None):
+ # Retain the historical callable name, but this reader never submits.
  facts={"snapshot":sid}
  ok,snapshot,code=m.aws("rds","describe-db-snapshots","--db-snapshot-identifier",sid)
  if not ok:
   if code!="aws-resource-missing":return emit("uncertain",code,facts=facts)
-  if observe_only:return emit("uncertain","persistence-recovery-point-operation-not-observed",facts=facts)
-  ok,_,code=m.aws("rds","create-db-snapshot","--db-instance-identifier",DATABASE,"--db-snapshot-identifier",sid)
-  return emit("pending" if ok else "uncertain","persistence-recovery-point-submitted" if ok else code,facts=facts)
+  return emit("uncertain","persistence-recovery-point-operation-not-observed",facts=facts)
  items=snapshot.get("DBSnapshots") if isinstance(snapshot,dict) else None
  value=items[0] if isinstance(items,list) and len(items)==1 else None
  if not isinstance(value,dict):return emit("uncertain","persistence-recovery-point-observation-invalid",facts=facts)
  if value.get("DBSnapshotIdentifier")!=sid or value.get("Encrypted") is not True or value.get("DBInstanceIdentifier")!=DATABASE:return emit("blocked","persistence-recovery-point-invalid",facts=facts)
+ if reservation is not None:
+  binding=operations(); arn="arn:aws:rds:eu-west-1:337159794548:snapshot:"+sid
+  try:
+   if (value.get("DBSnapshotArn")!=arn or value.get("DbiResourceId")!=reservation["request"]["source_resource_id"]
+       or value.get("SnapshotType")!="manual" or binding.timestamp(value.get("SnapshotCreateTime"))<binding.timestamp(reservation["reserved_at"])):
+    return emit("uncertain","persistence-recovery-point-lineage-not-confirmed",facts=facts)
+  except binding.OperationFailure:return emit("uncertain","persistence-recovery-point-lineage-not-confirmed",facts=facts)
+  ok,tagged,code=m.aws("rds","list-tags-for-resource","--resource-name",arn)
+  if not ok:return emit("uncertain",code,facts=facts)
+  tags=tagged.get("TagList") if isinstance(tagged,dict) else None
+  if not isinstance(tags,list) or len(tags)>50 or any(not isinstance(item,dict) or not isinstance(item.get("Key"),str) or not isinstance(item.get("Value"),str) for item in tags):return emit("uncertain","persistence-recovery-point-ownership-not-confirmed",facts=facts)
+  mapping={item["Key"]:item["Value"] for item in tags}
+  if len(mapping)!=len(tags) or any(mapping.get(key)!=expected for key,expected in {"Target":"kanbien-core-platform","Scope":"core-server-persistence","Operation":reservation["operation_id"]}.items()):return emit("uncertain","persistence-recovery-point-ownership-not-confirmed",facts=facts)
  status=value.get("Status")
  if status in {"creating","copying"}:return emit("pending","persistence-recovery-point-awaiting-provider",facts=facts)
  if status in {"failed","deleted","deleting"}:return emit("failed","persistence-recovery-point-failed",facts=facts)

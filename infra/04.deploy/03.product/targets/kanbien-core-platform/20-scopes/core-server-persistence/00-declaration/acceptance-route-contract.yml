@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -113,6 +113,30 @@ inputs:
     kind: identifier
     owner: verify-candidate
     example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  migration_state_observation_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  effective_privilege_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  runtime_identity_initial_access_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  credential_revocation_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  credential_recovery_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  runtime_identity_access_route_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
 outputs:
   candidate_record:
     command: collect
@@ -155,6 +179,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - observe-migration-state
+    - --new-operation
+    - --expected-operation
+    - '{migration_state_observation_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -166,6 +193,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - prove-effective-privilege
+    - --new-operation
+    - --expected-operation
+    - '{effective_privilege_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -202,6 +232,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - confirm-runtime-iam-access
+    - --new-operation
+    - --expected-operation
+    - '{runtime_identity_initial_access_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -213,6 +246,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - revoke-runtime
+    - --new-operation
+    - --expected-operation
+    - '{credential_revocation_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -238,6 +274,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - restore-runtime
+    - --new-operation
+    - --expected-operation
+    - '{credential_recovery_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -376,6 +415,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - confirm-runtime-iam-access
+    - --new-operation
+    - --expected-operation
+    - '{runtime_identity_access_route_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:

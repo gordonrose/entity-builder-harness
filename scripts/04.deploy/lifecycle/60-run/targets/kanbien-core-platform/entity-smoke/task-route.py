@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.task-plan.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -249,6 +249,7 @@ def execute(args, provider):
     store = runner.CONTROL.AttemptStore(context["cache"] / "task-attempts")
     key = STEPS.key(args)
     previous = store.read(key, request)
+    C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
     negative = CREDENTIAL.negative(args)
     preflight = None
     if negative:

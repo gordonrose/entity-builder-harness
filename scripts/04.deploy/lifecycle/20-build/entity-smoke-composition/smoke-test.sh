@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -22,17 +22,18 @@ cd "$ROOT"
 entity_smoke_build="$(mktemp -d /tmp/kanbien-entity-smoke-build.XXXXXXXX)"
 [[ "$entity_smoke_build" == /tmp/kanbien-entity-smoke-build.* && -d "$entity_smoke_build" && ! -L "$entity_smoke_build" ]]
 trap 'rm -rf -- "$entity_smoke_build"' EXIT
-node_modules/.bin/tsc --project infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json --outDir "$entity_smoke_build" --incremental false
+node scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --program kanbien-entity-smoke --outDir "$entity_smoke_build" --incremental false
 node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/dependency-boundary.mjs "$entity_smoke_build"
 node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --compiled-root "$entity_smoke_build" --dry-run
 node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --compiled-root "$entity_smoke_build"
-NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/runtime-test.mjs "$entity_smoke_build"
-NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/access-control-test.mjs "$entity_smoke_build"
+node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs "$ROOT" "$entity_smoke_build/.dependencies/node_modules"
+NODE_PATH="$entity_smoke_build/.dependencies/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/runtime-test.mjs "$entity_smoke_build"
+NODE_PATH="$entity_smoke_build/.dependencies/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/access-control-test.mjs "$entity_smoke_build"
 node scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-observation-test.mjs
 node scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-recovery-test.mjs
 python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/source-transition-test.py
-NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/preflight-test.mjs "$entity_smoke_build"
-NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/database-proof-test.mjs "$entity_smoke_build"
+NODE_PATH="$entity_smoke_build/.dependencies/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/preflight-test.mjs "$entity_smoke_build"
+NODE_PATH="$entity_smoke_build/.dependencies/node_modules" node scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/database-proof-test.mjs "$entity_smoke_build"
 node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/dependency-test.mjs
 python3 -B scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/template-test.py
 python3 -B scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/alignment-test.py

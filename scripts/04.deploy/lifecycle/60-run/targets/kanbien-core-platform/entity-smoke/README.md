@@ -1,15 +1,15 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.readme.entity-smoke.execution
-version: 2
+version: 3
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-09"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.entity-smoke
 disciplines: [architecture, security, sre]
 kind: readme
-purpose: Explain the actual infrastructure and initial task commands, safe evidence and unfinished proof/acceptance connections without claiming live qualification.
+purpose: Explain the infrastructure and proof commands, retained original acceptance, and the distinction between historical evidence and qualification of later controller changes.
 portability: {class: internal, targets: [kanbien-core-platform]}
 used_by:
 - id: deploy.plan.entity-smoke-core-platform
@@ -26,10 +26,19 @@ have been checked.
 
 This folder also contains public preparation/feature tasks, bounded server
 replacement, initial failure stopping, restart/preservation and credential-recovery observations, plus internal snapshot/restore
-controls. The acceptance template and guarded local promotion are connected,
-but the complete live recovery/acceptance proof has **not yet run**;
-the [implementation plan](../../../../../../../.agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md)
-tracks that work. None of the local fixtures is live AWS proof.
+controls. The original live deployment/proof chain completed: the
+[current accepted reference](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/30-release-evidence/current-accepted-release.yml)
+records `release-53798ef563be4ce9a8c5b2f0`, promoted on 2026-11-12. Its
+[immutable history](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/30-release-evidence/accepted-releases/release-53798ef563be4ce9a8c5b2f0.yml)
+binds the original source, image and retained proof. The
+[original implementation plan](../../../../../../../.agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md)
+is historical context, not the current acceptance status.
+
+The later [deployment consolidation](../../../../../../../.agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md)
+is still in progress. Original acceptance does not qualify those changed
+controllers or images. Offline `acceptance-state.sh --operation validate-current`
+checks retained history and reports `current_readiness: false`; it does not query
+today's AWS health. Local fixtures likewise are not live AWS proof.
 
 ## What each file does
 
@@ -37,7 +46,7 @@ tracks that work. None of the local fixtures is live AWS proof.
 | --- | --- |
 | [plan.sh](plan.sh) | Runs only planning; rejects an attempt to override it into another mode. AWS reads, local checks/cache writes and credential-cache refresh are possible; AWS writes are not admitted. |
 | [script.sh](script.sh), [script.py](script.py) | Public command wrapper and actual argument checking, source/custody checks, provider boundary, gate evidence, plan matching and execution orchestration. |
-| [task-plan.sh](task-plan.sh), [task-execute.sh](task-execute.sh), [task-route.py](task-route.py) | Separate read-only planning and explicit single-task execution commands; check actual bindings, exact approval and original admission/attempt. Initial preparation, baseline, initial-recovery and credential-recovery observations are connected; restored-reader orchestration remains unfinished. |
+| [task-plan.sh](task-plan.sh), [task-execute.sh](task-execute.sh), [task-route.py](task-route.py) | Separate read-only planning and explicit single-task execution commands; check actual bindings, exact approval and original admission/attempt. Initial preparation, baseline, initial-recovery, credential-recovery and isolated-restoration observations use their declared stages. |
 | [task-binding.py](task-binding.py), [task-graph.py](task-graph.py) | Compare deployed task/role/private-network settings with the own source template, then derive the selected workload's complete reachable realization graph for the existing compiler. These checks are not actual database access. |
 | [task-steps.py](task-steps.py) | Build closed task requests, reobserve immutable preparation receipts in order and assemble the existing four-pair activation manifest. |
 | [task-completion.py](task-completion.py) | Link each collected step to its actual final gate through an immutable completion sidecar. An interrupted result without that gate cannot admit the next step. |
@@ -58,8 +67,8 @@ tracks that work. None of the local fixtures is live AWS proof.
 | [preflight-control.py](preflight-control.py) | Closed observation-only launch selection and fresh, immutable prerequisite-receipt matching. It does not produce generic gate passes or grant provider authority. |
 | [unready-control.py](unready-control.py) | Separate negative-recovery admission bound to a successful permission-revocation task. The public credential stage consumes it; expected-unready evidence cannot substitute for ordinary readiness. |
 | [restore-control.py](restore-control.py) | Exact isolated restore creation/execution and owned cleanup after original-record reader completion. No source-database deletion. |
-| [acceptance-evidence.py](acceptance-evidence.py) | Draft historical task-archive validation and immutable evidence retention, reusing the actual task/admission/completion owners. Historical proof is not current readiness. |
-| [acceptance-controls.py](acceptance-controls.py) | Draft archive of the original safe control plan, selected graph, seven-gate report and original submission identity/time/hash. It cannot call AWS or execute a plan. |
+| [acceptance-evidence.py](acceptance-evidence.py) | Historical task-archive validation and immutable evidence retention, reusing the actual task/admission/completion owners. Historical proof is not current readiness. |
+| [acceptance-controls.py](acceptance-controls.py) | Archive of the original safe control plan, selected graph, seven-gate report and original submission identity/time/hash. It cannot call AWS or execute a plan. |
 | [collect-acceptance.sh](collect-acceptance.sh), [acceptance-route.py](acceptance-route.py) | Read the bounded acceptance input manifest, recheck actual proof and retain immutable candidate evidence. The provider allows reads only; collection does not accept a release. |
 | [acceptance-state.sh](acceptance-state.sh), [acceptance-state.py](acceptance-state.py) | Validate a candidate or the existing succession current reference and its full archived feature proof. Historical validation is not current health. |
 | [promote-acceptance.sh](promote-acceptance.sh), [acceptance-promote.py](acceptance-promote.py) | Recheck fresh same-candidate proof before ordinary release and local scope promotion. Reconcile exact retained custody after interruption without claiming new health or repeating AWS work. |
@@ -127,7 +136,8 @@ AWS effect. `--mode execute` checks that reviewed change, exercises the executio
 preflight and submits only its exact identity. The supplied digest prevents a
 different plan from being executed; possessing a digest does not grant approval.
 Follow the existing [AWS execution workflow](../../../../../../../.agentic/aws/workflows/execute-approved-aws-change.md).
-These live examples have not been executed for entity-smoke.
+The accepted history records the original execution; these instructions are not
+authority to repeat it or proof that a changed checkout is qualified.
 
 The operation-specific [infrastructure graph](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml)
 describes this controller, its operator, control-plane connection and durable
@@ -247,7 +257,7 @@ transport and source/custody/alignment prerequisites. Its four probes/four
 operations include a lost-response reconciliation with no second launch. These
 are local protocol tests, not actual qualified image or AWS results.
 
-## Evidence and remaining proof
+## Proof stages and evidence boundaries
 
 ### First-release failure stop
 
@@ -365,8 +375,8 @@ alignment, task and transport producers. It exercises preservation ordering,
 lost/pending starts, exact payloads, changed prerequisites/evidence and unsuitable
 history results without another launch. These are local protocol tests, not
 database or AWS survival proof. The later connected restore fixture covers
-isolated restore/cleanup and the distinct final read; actual live acceptance
-collection remains required.
+isolated restore/cleanup and the distinct final read. Each new acceptance still
+requires its applicable actual proof, not reuse of controlled fixture output.
 
 ### Baseline feature operations and uncertain create
 
@@ -526,8 +536,9 @@ gate passed in advance. The initial task preparation route above consumes these
 controls; the infrastructure command itself still cannot launch a task.
 [preflight-control-test.py](preflight-control-test.py), the task/evidence/runner
 fixtures and the [actual-entrypoint fixture](../../../../20-build/entity-smoke-composition/preflight-test.mjs)
-exercise controlled responses only. Finished-image qualification now includes
-these modes, but it has not been executed against Docker/PostgreSQL yet.
+exercise controlled responses only. Finished-image qualification includes these
+modes; consult the selected image's qualification evidence. The original accepted
+image's proof does not qualify a later image or changed controller.
 
 ### Expected-unready recovery observation
 
@@ -683,8 +694,8 @@ and reservation. `snapshot-plan.json`, `snapshot-plans/`, `snapshot-realization/
 and `snapshot-receipt.json` use the same private label cache. A pending snapshot
 exits 2 under the existing zero-to-sixty-second observation bound. Its receipt
 always says `isolated_restore_proven: false`: it does not create a clone, read
-restored data, delete resources or accept the feature. Those later public
-connections remain required by the implementation plan.
+restored data, delete resources or accept the feature. Those later stages use the
+separate restore, reader, cleanup and acceptance commands described below.
 
 The connected credential fixture exercises the actual snapshot route/provider/
 resource helper and compiler, including expired controlled old tasks/logs,
@@ -704,7 +715,7 @@ These working receipts are not an accepted release or a parallel release ledger.
 The final collector must validate and retain actual live proof under the scope's
 existing release-evidence ownership before normal succession/promotion.
 
-The draft acceptance archive keeps the checked plan and gate report, not merely
+The acceptance archive keeps the checked plan and gate report, not merely
 a hash claiming they existed. `acceptance-controls.capture` reads the original
 gate only under the selected control's private cache directory and compares its
 original byte hash. `validate` checks the plan's closed fields and limits, exact
@@ -721,7 +732,7 @@ does not call AWS, query today's source or advance timestamps. The
 control graphs with real local gate production and controlled plans, including
 the explicitly approved disposable-restore cleanup declaration. Ordinary deletion
 still fails without that declaration. These tests are not live control receipts;
-no candidate or accepted release has been produced for this feature.
+the original accepted release is established by its retained evidence linked above.
 
 For cleanup, [restore-route.py](restore-route.py) first validates the original
 successful reader and retained plan/gate custody, observes exact clone ownership
@@ -793,6 +804,8 @@ checks from controlled candidate/validator/promotion protocols. Neither those
 protocols nor a covered route template is live acceptance evidence.
 
 The public infrastructure route does not launch tasks, perform SQL, delete
-resources, purge feature records or grant application acceptance. Isolated restore/
-cleanup, final collection/validation and actual package/publication/AWS
-execution remain required. Existing accepted scopes and staging are preserved.
+resources, purge feature records or grant application acceptance. Those actions
+belong to their separate commands and applicable approval/proof boundaries.
+The original accepted release does not make the in-progress consolidation
+package-qualified, deployed or accepted. Preserve existing accepted histories
+and unrelated scopes when performing subsequent work.

@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
 import subprocess
 import sys
-import time
-import uuid
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,34 +23,28 @@ LOG_GROUP = "/aws/ecs/kanbien-core-platform"
 AWS_CONNECT_TIMEOUT_SECONDS = 5
 AWS_READ_TIMEOUT_SECONDS = 20
 AWS_PROCESS_TIMEOUT_SECONDS = 30
-_AWS_RESPONSE = None
+_AWS_CLI = None
+
+
+def aws_cli():
+    global _AWS_CLI
+    if _AWS_CLI is None:
+        spec = importlib.util.spec_from_file_location("aws_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
+        _AWS_CLI = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_AWS_CLI)
+    return _AWS_CLI
 
 
 def aws(*parts: str):
+    cli = aws_cli()
     try:
-        result = subprocess.run(
+        value = cli.invoke_json(
             ["aws", *parts, "--cli-connect-timeout", str(AWS_CONNECT_TIMEOUT_SECONDS), "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS), "--profile", PROFILE, "--region", REGION, "--output", "json"],
-            capture_output=True, text=True, timeout=AWS_PROCESS_TIMEOUT_SECONDS, env={**os.environ, "AWS_PAGER": ""},
+            timeout=AWS_PROCESS_TIMEOUT_SECONDS, empty_body="empty-string", object_only=False, environment={**os.environ, "AWS_PAGER": ""},
         )
-    except subprocess.TimeoutExpired:
-        return False, None, "aws-command-timeout"
-    except OSError:
-        return False, None, "aws-command-unavailable"
-    except UnicodeError:
-        return False, None, "aws-response-invalid"
-    if result.returncode:
-        global _AWS_RESPONSE
-        if _AWS_RESPONSE is None:
-            spec = importlib.util.spec_from_file_location("aws_response", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
-            _AWS_RESPONSE = importlib.util.module_from_spec(spec)
-            assert spec and spec.loader
-            spec.loader.exec_module(_AWS_RESPONSE)
-        return False, None, _AWS_RESPONSE.classify_error(parts[0], parts[1], result.stderr)
-    try:
-        return True, json.loads(result.stdout or "{}"), "ok"
-    except json.JSONDecodeError:
-        return False, None, "aws-response-invalid"
-
+        return True, value, "ok"
+    except cli.CliFailure as failure:
+        return False, None, failure.code
 
 def report(verdict: str, *codes: str, facts: dict[str, object] | None = None, stream=None) -> int:
     value: dict[str, object] = {"schema": "deploy/persistence-migration-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
@@ -224,26 +217,29 @@ def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, object] 
     return None, "persistence-migration-rejection-not-confirmed"
 
 
+def task_execution():
+    path = Path(__file__).resolve().parents[6] / "shared/provider-adapters/aws/tasks.py"
+    spec = importlib.util.spec_from_file_location("persistence_task_execution", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def reconciliation_operation(operation: str, definition: str) -> tuple[str | None, str]:
-    arns = []
-    family = definition.rsplit("/", 1)[-1].split(":", 1)[0]
-    for state in ("RUNNING", "STOPPED"):
-        # AWS forbids combining startedBy with another ListTasks filter.
-        ok, listed, code = aws("ecs", "list-tasks", "--cluster", CLUSTER, "--family", family, "--desired-status", state)
-        values = listed.get("taskArns") if ok and isinstance(listed, dict) else None
-        if not isinstance(values, list) or listed.get("nextToken") or not all(isinstance(value, str) for value in values):
-            return None, "persistence-migration-observation-uncertain"
-        arns.extend(values)
-    arns = list(dict.fromkeys(arns))
-    matching = []
-    for offset in range(0, len(arns), 100):
-        batch = arns[offset:offset + 100]
-        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", *batch)
-        tasks = described.get("tasks") if ok and isinstance(described, dict) else None
-        if not isinstance(tasks, list) or described.get("failures") or len(tasks) != len(batch) or not all(isinstance(task, dict) and isinstance(task.get("taskArn"), str) for task in tasks) or {task["taskArn"] for task in tasks} != set(batch):
-            return None, "persistence-migration-observation-uncertain"
-        matching.extend(task["taskArn"] for task in tasks if task.get("startedBy") == operation)
-    return (matching[0], "ok") if len(matching) == 1 else (None, "persistence-migration-task-identity-unresolved")
+    tasks = task_execution()
+    try:
+        found = tasks.reconcile_task(tasks.cli_provider(aws), cluster=CLUSTER, definition=definition, operation_id=operation, validate_task=lambda task: task)
+        return found["taskArn"], "ok"
+    except tasks.TaskFailure as failure:
+        return None, "persistence-migration-task-identity-unresolved" if failure.code == "reconciliation-unresolved" else "persistence-migration-observation-uncertain"
+
+
+def task_operations():
+    path = Path(__file__).resolve().parents[1] / "task-operations.py"
+    spec = importlib.util.spec_from_file_location("persistence_task_operations", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def task_evidence():
@@ -287,11 +283,20 @@ def qualified_digest(path: Path) -> str | None:
     return value.get("image_digest") if isinstance(value, dict) and isinstance(value.get("image_digest"), str) else None
 
 
-def accepted_completion(task: dict[str, object], seconds: int, operation: str) -> int:
+def accepted_completion(task: dict[str, object], seconds: int, operation: str, on_receipt=None) -> int:
     facts = {"migration_task": task.get("taskArn"), "operation_id": task.get("startedBy")}
     observed_duration = duration(task)
     if observed_duration is None:
         return report("uncertain", "persistence-migration-duration-unavailable", facts=facts)
+    if on_receipt is not None and (observed_duration > seconds or not task_exit(task)):
+        try:
+            digest = image_digest(task.get("taskDefinitionArn"))
+            if digest is None: raise ValueError()
+            failure = "persistence-migration-completion-deadline-exceeded" if observed_duration > seconds else "persistence-migration-unsuccessful-completion"
+            receipt = proof_receipts().make(proof_type="migration", operation=operation, task=task, image_digest=digest, result_code=failure,
+                context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration}, controller="run-migration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+            on_receipt(proof_receipts().persist(receipt))
+        except Exception: return report("uncertain", "persistence-migration-receipt-persistence-failed", facts=facts)
     if observed_duration > seconds:
         return report("failed", "persistence-migration-completion-deadline-exceeded", facts=facts)
     containers = task.get("containers")
@@ -316,9 +321,11 @@ def accepted_completion(task: dict[str, object], seconds: int, operation: str) -
             controller="run-migration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         )
         path = proof_receipts().persist(receipt)
+        if on_receipt is not None: on_receipt(path)
     except Exception:
-        return report("blocked", "persistence-migration-receipt-persistence-failed")
-    return report("accepted", "persistence-migration-applied", facts={"operation": operation, "migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": str(path.relative_to(ROOT))})
+        return report("uncertain" if on_receipt is not None else "blocked", "persistence-migration-receipt-persistence-failed",
+            facts=facts if on_receipt is not None else None)
+    return report("accepted", "persistence-migration-applied", facts={"operation": operation, "migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": str(path.relative_to(ROOT)), **({"operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"} if on_receipt is not None else {})})
 
 
 def main() -> int:
@@ -330,11 +337,18 @@ def main() -> int:
     parser.add_argument("--capture-completed-task")
     parser.add_argument("--qualified-receipt", type=Path)
     parser.add_argument("--migration-operation", default="apply")
+    parser.add_argument("--new-operation", action="store_true")
+    parser.add_argument("--expected-operation")
+    parser.add_argument("--migration-state-receipt", type=Path)
     args, unknown = parser.parse_known_args()
     if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None) or args.migration_operation not in SUCCESS:
         return report("blocked", "persistence-migration-arguments-invalid")
     if args.reconcile_operation is not None and (args.reconcile_task is not None or args.capture_completed_task is not None or re.fullmatch(r"kp-[a-f0-9]{32}", args.reconcile_operation) is None):
         return report("blocked", "persistence-migration-reconciliation-operation-invalid")
+    if args.new_operation != (args.expected_operation is not None) or (args.expected_operation is not None and args.expected_operation != "none" and re.fullmatch(r"kp-[a-f0-9]{32}", args.expected_operation) is None) or (args.new_operation and any((args.reconcile_task, args.reconcile_operation, args.capture_completed_task))):
+        return report("blocked", "persistence-migration-new-operation-arguments-invalid")
+    if args.migration_state_receipt is not None and not args.new_operation:
+        return report("blocked", "persistence-migration-new-operation-arguments-invalid")
     if args.validate_arguments:
         print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": {"proof_type":"migration","operation":args.migration_operation,"result_code":SUCCESS[args.migration_operation],"family":"kanbien-core-platform-persistence-migration","deadline_workload":"persistence-migration"}}))
         return 0
@@ -382,31 +396,35 @@ def main() -> int:
         return accepted_completion(task, seconds, args.migration_operation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
     overrides = json.dumps({"containerOverrides": [{"name": "persistence-migration", "environment": [{"name": "PERSISTENCE_MIGRATION_OPERATION", "value": args.migration_operation}]}]})
-    operation_id = "kp-" + uuid.uuid4().hex
-    # Flush identity before submission so a lost response has a read-only recovery path.
-    report("pending", "persistence-migration-submission-prepared", facts={"operation_id": operation_id}, stream=sys.stderr)
-    sys.stderr.flush()
-    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--started-by", operation_id, "--client-token", operation_id, "--network-configuration", network, "--overrides", overrides)
-    tasks = started.get("tasks", []) if ok and isinstance(started, dict) else []
-    if not ok or not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
-        return report("failed" if ok and isinstance(started, dict) and isinstance(started.get("failures"), list) and started["failures"] else "uncertain", code if not ok else "persistence-migration-not-started", facts={"operation_id": operation_id})
-    arn = tasks[0]["taskArn"]
-    started_at = time.monotonic()
-    current: dict[str, object] | None = None
-    while time.monotonic() - started_at <= seconds:
-        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", arn)
-        listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
-        if not ok or not isinstance(listed, list) or len(listed) != 1 or not isinstance(listed[0], dict):
-            return report("uncertain", "persistence-migration-controller-observation-uncertain", facts={"migration_task": arn, "operation_id": operation_id})
-        current = listed[0]
-        if current.get("taskArn") != arn or current.get("taskDefinitionArn") != task_definition or current.get("startedBy") != operation_id or not task_operation_bound(current, args.migration_operation):
-            return report("uncertain", "persistence-migration-controller-task-identity-mismatch", facts={"migration_task": arn, "operation_id": operation_id})
-        if current.get("lastStatus") == "STOPPED":
-            break
-        time.sleep(5)
-    if current is None or current.get("lastStatus") != "STOPPED":
-        return report("pending", "persistence-migration-controller-deadline-remote-task-still-running", facts={"migration_task": arn, "operation_id": operation_id})
-    return accepted_completion(current, seconds, args.migration_operation)
+    operations = task_operations()
+    admission, observer = None, None
+    if args.migration_state_receipt is not None:
+        try:
+            path = args.migration_state_receipt.absolute()
+            if any(part.is_symlink() for part in (path, *path.parents)) or not path.resolve().is_relative_to(proof_receipts().RECEIPTS.resolve()): raise ValueError()
+            raw = path.read_bytes()
+            if len(raw) > 1048576: raise ValueError()
+            observer = proof_receipts().validate(json.loads(raw))
+            admission = {"path": path.relative_to(ROOT).as_posix(), "sha256": hashlib.sha256(raw).hexdigest()}
+        except Exception:
+            return report("blocked", "persistence-migration-replay-observation-invalid")
+    def authorize_successor(previous, proof):
+        if proof["task"]["exit_code"] == 0 and proof["task"]["result_code"] == SUCCESS[args.migration_operation]: return
+        try:
+            if observer is None or observer["proof_type"] != "administration" or observer["operation"] != "observe-migration-state": raise ValueError()
+            task, context, provenance = observer["task"], observer["context"], observer["provenance"]
+            if task["exit_code"] != 0 or task["result_code"] != "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED" or task["definition"] != scope_outputs.get("CoreServerPersistenceAdministrationTaskDefinitionArn") or task["image_digest"] != image_digest(task_definition): raise ValueError()
+            if provenance.get("evidence_class", "live") != proof_receipts().EVIDENCE_CLASS or provenance["controller"] != "run-administration" or context["completion_duration_seconds"] > context["completion_deadline_seconds"]: raise ValueError()
+            after, prior = timestamp(task["started_at"]), timestamp(proof["task"]["stopped_at"])
+            if after is None or prior is None or after < prior: raise ValueError()
+        except Exception:
+            raise operations.OperationFailure("replay-observation-required") from None
+    binding = operations.BoundOperation(root=ROOT, proof_type="migration", family="kanbien-core-platform-persistence-migration",
+        container="persistence-migration", selector="PERSISTENCE_MIGRATION_OPERATION", results=SUCCESS,
+        aws=aws, report=report, accept=accepted_completion, receipts=proof_receipts())
+    return binding.run(mode=args.migration_operation, definition=task_definition, network=network, overrides=overrides,
+        seconds=seconds, new_operation=args.new_operation, expected_operation=args.expected_operation,
+        admission=admission, authorize_successor=authorize_successor)
 
 
 if __name__ == "__main__":

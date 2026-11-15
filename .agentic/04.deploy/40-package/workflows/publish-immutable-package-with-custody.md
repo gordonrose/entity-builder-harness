@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.package-custody-and-promotion
-version: 3
+version: 4
 status: active
 layer: 04.deploy
 domain: deployment.package-candidates
@@ -22,7 +22,7 @@ used_by:
   - id: deploy.schema.package-custody-receipt.v1
     path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-10-25"
+updated_on: "2026-11-15"
 -->
 # Publish Immutable Package With Custody
 
@@ -42,6 +42,16 @@ publishes an immutable package or records package evidence.
    mutate a workload through this route.
 3. Build and qualify the package before it is published. Bind the publication
    result to an immutable digest.
+   For workspace-backed runnable programs, consume the validated contract and
+   observed dependency report from the existing
+   [build workflow](../../20-build/workflows/prove-runnable-program-builds.md).
+   Use the selected program's shared declaration-derived compiler and runtime
+   preparer; package manifests own public exports and dependencies, while the
+   program declaration owns its approved build boundary. Keep non-derivable
+   assets explicit at their existing owner, not in a copied alias/shim map.
+   <!-- deterministic-check: allow reason="the existing selector and package qualification owners execute these checks; this workflow states their evidence boundary rather than introducing another dispatcher" -->
+   Run the affected existing payload and actual image qualification checks;
+   declaration validation or local compilation alone is not package proof.
 4. Require scan, SBOM, and provenance results before a qualified receipt is
    emitted.
 5. Validate the receipt against the safe receipt contract and retain it as the

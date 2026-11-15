@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-persistence-configuration
-//   version: 6
+//   version: 7
 //   status: draft
 //   created_on: "2026-10-24"
-//   updated_on: "2026-11-05"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -39,6 +39,12 @@ let rejectedCases = 0;
 const require = createRequire(join(compiled, "configuration-test.cjs"));
 const entrypoints = join(compiled, "infra/04.deploy/03.product/entrypoints");
 const config = require(join(entrypoints, "kanbien-core-server-persistence-configuration.js"));
+const sharedConfiguration = require(join(entrypoints, "shared/persistence/configuration-implementation.js"));
+assert.deepEqual(Object.keys(sharedConfiguration.selectPersistenceConfigurationImplementation(undefined).value).sort(), ["assembleConfiguration", "id", "requirements"]);
+assert.equal(Object.isFrozen(sharedConfiguration.selectPersistenceConfigurationImplementation("postgresql").value), true);
+for (const name of ["kanbien-core-server-persistence-composition", "kanbien-core-server-persistence-postgresql", "kanbien-core-server-persistence.app", "kanbien-core-server-persistence-diagnostics"]) {
+  assert.equal(require.cache[join(entrypoints, name + ".js")], undefined, "loading configuration must not import a workload application or runtime");
+}
 const taskDiagnostics = require(join(entrypoints, "kanbien-core-server-persistence-operation-diagnostics.js"));
 await privateTaskDiagnosticRegression();
 const server = require(join(entrypoints, "kanbien-core-server-persistence.main.js"));
@@ -192,11 +198,10 @@ function destinationPortConstraintRegression() {
   new Function("require", "module", "exports", fs.readFileSync(requirementFile, "utf8"))(
     name => name === "@kanbien/core/config" ? { ...core, destinationPortConstraint: narrowed } : requirementRequire(name), requirements, requirements.exports,
   );
-  const composition = require(join(entrypoints, "kanbien-core-server-persistence-composition.js"));
   const fixture = { exports: {} };
   new Function("require", "module", "exports", fs.readFileSync(filename, "utf8"))(
-    name => name === "./kanbien-core-server-persistence-composition" ? { ...composition, selectPersistenceImplementation(value) {
-      const selected = composition.selectPersistenceImplementation(value);
+    name => name === "./shared/persistence/configuration-implementation" ? { ...sharedConfiguration, selectPersistenceConfigurationImplementation(value) {
+      const selected = sharedConfiguration.selectPersistenceConfigurationImplementation(value);
       return selected.ok ? { ok: true, value: { ...selected.value, requirements: requirements.exports.postgreSqlPersistenceRequirements } } : selected;
     } } : localRequire(name), fixture, fixture.exports,
   );

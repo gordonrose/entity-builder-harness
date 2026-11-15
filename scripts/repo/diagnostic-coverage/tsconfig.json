@@ -3,26 +3,7 @@
   "compilerOptions": {
     "baseUrl": "../../..",
     "rootDir": "../../..",
-    "outDir": "../../../.cache/diagnostic-catalog-export",
-    "paths": {
-      "@kanbien/core": ["packages/core/src/index.ts"],
-      "@kanbien/core/*": ["packages/core/src/*/index.ts"],
-      "@kanbien/app-platform-smoke": ["apps/platform-smoke/src/index.ts"],
-      "@kanbien/app-entity-smoke": ["apps/entity-smoke/src/index.ts"],
-      "@kanbien/product-kanbien-platform": ["products/kanbien-platform/src/index.ts"],
-      "@kanbien/platform-contracts": ["platform/contracts/src/index.ts"],
-      "@kanbien/platform-adapter-aws-persistence-postgresql": ["platform/adapters/aws/persistence/postgresql/src/index.ts"],
-      "@kanbien/platform-adapter-aws-observability-cloudwatch": ["platform/adapters/aws/observability/cloudwatch/src/index.ts"],
-      "@kanbien/platform-config": ["platform/config/src/index.ts"],
-      "@kanbien/platform-health": ["platform/health/src/index.ts"],
-      "@kanbien/platform-observability": ["platform/observability/src/index.ts"],
-      "@kanbien/platform-persistence": ["platform/persistence/src/index.ts"],
-      "@kanbien/platform-runtime": ["platform/runtime/src/index.ts"],
-      "@kanbien/platform-security": ["platform/security/src/index.ts"],
-      "@kanbien/platform-server": ["platform/server/src/index.ts"],
-      "@kanbien/platform-server/main": ["platform/server/src/main.ts"],
-      "@kanbien/platform-workers": ["platform/workers/src/index.ts"]
-    }
+    "outDir": "../../../.cache/diagnostic-catalog-export"
   },
   "include": [
     "../../../packages/core/src/**/*.ts",
@@ -34,6 +15,7 @@
     "../../../platform/server/src/diagnostics.ts",
     "../../../platform/workers/src/diagnostics.ts",
     "../../../apps/platform-smoke/src/diagnostics.ts",
+    "../../../products/kanbien-platform/src/index.ts",
     "../../../apps/entity-smoke/features/test-entity/contract/diagnostics.ts",
     "../../../infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.ts",
     "../../../platform/persistence/src/diagnostics.ts",

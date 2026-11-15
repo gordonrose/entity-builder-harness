@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -70,7 +70,8 @@ class Fixture:
   subprocess.run(['git','init','--quiet',str(self.root)],check=True)
   for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py',
                Path('scripts/04.deploy/shared/deployment-operation-diagnostics.py'),Path('scripts/repo/diagnostic-coverage/runtime_contract.py'),
-               Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/task_journal.py'),
                Path('packages/core/contracts/diagnostics.v1.json'),Path('platform/persistence/contracts/diagnostics.v1.json'),
                Path('platform/security/contracts/diagnostics.v1.json'),Path('platform/observability/contracts/diagnostics.v1.json'),
                Path('infra/04.deploy/03.product/entrypoints/contracts/diagnostics.v1.json'),

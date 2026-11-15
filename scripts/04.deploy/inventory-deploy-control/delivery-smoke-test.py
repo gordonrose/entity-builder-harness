@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.delivery-inventory
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -53,6 +53,37 @@ class DeliveryInventoryCLI(unittest.TestCase):
         self.assertEqual(report['source_revision'], '0' * 39 + '1')
         self.assertEqual(report['routes'][0]['target'], 'synthetic')
         self.assertTrue(report['inputs']); self.assertTrue(report['routes'][0]['chain'])
+
+    def publication_adapter_edge(self, workload):
+        adapter = 'scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/' + workload + '-package-custody/publication.py'
+        shared = 'scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py'
+        for relative in (adapter, shared):
+            destination = self.root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, destination)
+        # The actual binding is reached through this disposable route. The
+        # catalog registers the provider, but must not itself create a route.
+        self.fixture.check_script('local', ['read-only', 'writes-files'], 'python3 ' + adapter + '\n')
+        self.fixture.catalog['checks']['local']['inputs'].append(shared)
+        self.fixture.save()
+        code, report = self.invoke()
+        self.assertEqual(code, 0, report['findings'])
+        self.assertIn(shared, report['routes'][0]['trace_inputs'])
+        self.assertTrue(next(item for item in report['entrypoints'] if item['path'] == shared)['routes'])
+        source = (self.root / adapter).read_text()
+        exact = 'str((ROOT / "' + shared + '").parent)'
+        self.assertIn(exact, source)
+        (self.root / adapter).write_text(source.replace(exact, 'str(ROOT / "scripts/04.deploy/shared/provider-adapters/aws")'))
+        code, report = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertIn(('delivery-consumer-unbound', shared), {(item['code'], item['path']) for item in report['findings']})
+        self.assertNotIn(shared, report['routes'][0]['trace_inputs'])
+
+    def test_actual_feature_publication_import_binds_shared_provider(self):
+        self.publication_adapter_edge('entity-smoke')
+
+    def test_actual_persistence_publication_import_binds_shared_provider(self):
+        self.publication_adapter_edge('core-server-persistence')
 
     def extracted_policy(self):
         source = self.root / 'platform/workers/src/main.ts'

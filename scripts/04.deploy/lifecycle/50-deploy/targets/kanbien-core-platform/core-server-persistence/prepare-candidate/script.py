@@ -36,6 +36,19 @@ AWS_PROCESS_TIMEOUT_SECONDS = 30
 
 
 _AWS_RESPONSE=None
+_AWS_CLI=None
+_UPDATE_OPERATIONS=None
+
+
+def apply_update(**arguments):
+    """Keep all baseline UPDATE callers on the same provider sequence."""
+    global _UPDATE_OPERATIONS
+    if _UPDATE_OPERATIONS is None:
+        path = Path(__file__).resolve().parent.parent / "change-set-operations.py"
+        spec = importlib.util.spec_from_file_location("persistence_update_operations", path)
+        _UPDATE_OPERATIONS = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_UPDATE_OPERATIONS)
+    return _UPDATE_OPERATIONS.apply_update(aws, stack=STACK, **arguments)
 
 def aws_response():
     global _AWS_RESPONSE
@@ -47,36 +60,28 @@ def aws_response():
     return _AWS_RESPONSE
 
 
-def aws_in_region(region: str, *parts: str) -> tuple[bool, Any, str]:
-    if not aws_response().inventory_covered(ROOT):return False,None,"delivery-inventory-not-covered"
-    try:
-        result = subprocess.run(
-            [
-                "aws", *parts,
-                "--cli-connect-timeout", str(AWS_CONNECT_TIMEOUT_SECONDS),
-                "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS),
-                "--profile", PROFILE, "--region", region, "--output", "json",
-            ],
-            capture_output=True, text=True, timeout=AWS_PROCESS_TIMEOUT_SECONDS, env={**os.environ, "AWS_PAGER": ""},
-        )
-    except subprocess.TimeoutExpired:
-        # A lost provider response is never permission to repeat an operation.
-        # Callers must reconcile the named target state before another mutation.
-        return False, None, "aws-command-timeout"
-    except OSError:
-        return False, None, "aws-command-unavailable"
-    except UnicodeError:
-        return False, None, "aws-response-invalid"
-    if result.returncode:
-        return False, None, aws_response().classify_error(parts[0], parts[1], result.stderr)
-    try:
-        # AWS accepts several mutation requests with no response body. The
-        # caller must reconcile the named provider operation, never retry an
-        # acknowledged operation because an empty success body was misread.
-        return True, {} if not result.stdout.strip() else json.loads(result.stdout), "ok"
-    except json.JSONDecodeError:
-        return False, None, "aws-response-invalid"
+def aws_cli():
+    global _AWS_CLI
+    if _AWS_CLI is None:
+        spec = importlib.util.spec_from_file_location("aws_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
+        _AWS_CLI = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_AWS_CLI)
+    return _AWS_CLI
 
+
+def aws_in_region(region: str, *parts: str) -> tuple[bool, Any, str]:
+    if not aws_response().inventory_covered(ROOT): return False, None, "delivery-inventory-not-covered"
+    cli = aws_cli()
+    try:
+        value = cli.invoke_json(
+            ["aws", *parts, "--cli-connect-timeout", str(AWS_CONNECT_TIMEOUT_SECONDS),
+             "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS), "--profile", PROFILE, "--region", region, "--output", "json"],
+            timeout=AWS_PROCESS_TIMEOUT_SECONDS, environment={**os.environ, "AWS_PAGER": ""}, empty_body="whitespace", object_only=False,
+        )
+        return True, value, "ok"
+    except cli.CliFailure as failure:
+        # Lost responses still require observation; this boundary never retries.
+        return False, None, failure.code
 
 def aws(*parts: str) -> tuple[bool, Any, str]:
     return aws_in_region(REGION, *parts)

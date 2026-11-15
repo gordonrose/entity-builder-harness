@@ -31,6 +31,9 @@
 !infra/04.deploy/03.product/
 !infra/04.deploy/03.product/entrypoints/
 !infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence*.ts
+!infra/04.deploy/03.product/entrypoints/shared/
+!infra/04.deploy/03.product/entrypoints/shared/persistence/
+!infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
 !infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
 !infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
 !infra/04.deploy/03.product/image/
@@ -38,11 +41,19 @@
 !infra/04.deploy/03.product/image/core-server-persistence/**
 
 !scripts/
+!scripts/repo/
+!scripts/repo/workspace-build/
+!scripts/repo/workspace-build/runtime-packages.mjs
+!scripts/repo/workspace-build/declarations.mjs
 !scripts/04.deploy/
 !scripts/04.deploy/lifecycle/
 !scripts/04.deploy/lifecycle/40-package/
 !scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/
 !scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/*.mjs
+!scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/
+!scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs
+!scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/
+!scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs
 
 
 !platform/persistence/
@@ -55,6 +66,13 @@
 !platform/adapters/aws/observability/
 !platform/adapters/aws/observability/cloudwatch/
 !platform/adapters/aws/observability/cloudwatch/**
+
+!scripts/repo/workspace-build/compile.mjs
+!scripts/04.deploy/lifecycle/20-build/
+!scripts/04.deploy/lifecycle/20-build/runnable-program-contract/
+!scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs
+!scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs
+!infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
 
 # Reapply all high-risk exclusions after the source allowlist.
 **/.git

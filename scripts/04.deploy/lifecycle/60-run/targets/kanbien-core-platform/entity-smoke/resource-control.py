@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.resource-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -22,14 +22,11 @@ The public owning route must supply a provider capability only after its
 declaration/custody/realization gates and concrete approval pass. Importing this
 module calls no provider. A reservation is intent, never proof of completion.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 import hashlib
 import importlib.util
-import json
-import os
 from pathlib import Path
 import re
-import uuid
 
 
 def module(name, path):
@@ -41,6 +38,8 @@ def module(name, path):
 
 CONTROL = module("entity_smoke_resource_task_control", Path(__file__).with_name("task-control.py"))
 EVIDENCE = module("entity_smoke_resource_task_evidence", Path(__file__).with_name("task-evidence.py"))
+RESERVATIONS = module("aws_resource_reservations", Path(__file__).resolve().parents[5] / "shared/provider-adapters/aws/resource_reservation.py")
+SNAPSHOTS = module("aws_snapshot_execution", Path(__file__).resolve().parents[5] / "shared/provider-adapters/aws/snapshots.py")
 ACCOUNT, REGION, CLUSTER = CONTROL.ACCOUNT, CONTROL.REGION, CONTROL.CLUSTER
 SERVICE = "kanbien-core-platform-entity-smoke"
 SOURCE_DATABASE = "kanbien-core-platform-persistence"
@@ -84,17 +83,8 @@ def validate_binding(binding, *, record_required=True):
 
 def write_exclusive(path, value):
     CONTROL.no_symlinks(path)
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
-        with os.fdopen(descriptor, "wb") as stream:
-            stream.write(CONTROL.canonical(value) + b"\n"); stream.flush(); os.fsync(stream.fileno())
-        descriptor = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-        try: os.fsync(descriptor)
-        finally: os.close(descriptor)
-    except FileExistsError: return False
-    except (OSError, ValueError, TypeError, UnicodeError): raise ResourceFailure("resource-retention-not-confirmed") from None
-    return True
+    try: return RESERVATIONS.write_exclusive(path, value)
+    except RESERVATIONS.ReservationFailure as failure: raise ResourceFailure("resource-" + failure.code) from None
 
 
 def validate_request(phase, request):
@@ -138,10 +128,15 @@ def validate_request(phase, request):
         require(isinstance(request["restored_resource_id"], str) and re.fullmatch(r"db-[A-Za-z0-9]+", request["restored_resource_id"]) is not None and isinstance(request["reader_task_arn"], str) and re.fullmatch(task_pattern, request["reader_task_arn"]) is not None, "resource-request-invalid")
 
 
-class ResourceStore:
+class ResourceStore(RESERVATIONS.ImmutableReservationStore):
+    schema = "deploy/entity-smoke-resource-reservation/v1"
+    operation_prefix = "es-"
+    failure = staticmethod(lambda code: ResourceFailure("resource-" + code))
+    validate_time = staticmethod(timestamp)
+
     def __init__(self, root):
-        self.root = Path(root)
-        CONTROL.no_symlinks(self.root)
+        CONTROL.no_symlinks(Path(root))
+        super().__init__(root)
 
     def path_for(self, phase, request):
         validate_request(phase, request)
@@ -150,32 +145,6 @@ class ResourceStore:
         path = self.root / (request["binding"]["proof_label"] + "-" + phase + ".json")
         CONTROL.no_symlinks(path)
         return path
-
-    def read(self, phase, request):
-        path = self.path_for(phase, request)
-        try:
-            descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
-            with os.fdopen(descriptor, "rb") as stream: raw = stream.read(65537)
-            require(len(raw) <= 65536, "resource-reservation-unavailable")
-            previous = json.loads(raw)
-        except FileNotFoundError: return None
-        except (OSError, ValueError, TypeError, UnicodeError): raise ResourceFailure("resource-reservation-unavailable") from None
-        require(isinstance(previous, dict) and set(previous) == {"schema", "phase", "operation_id", "request", "request_sha256", "reserved_at"} and previous.get("schema") == "deploy/entity-smoke-resource-reservation/v1" and previous.get("phase") == phase and previous.get("request") == request and previous.get("request_sha256") == hashlib.sha256(CONTROL.canonical(request)).hexdigest() and isinstance(previous.get("operation_id"), str) and re.fullmatch(r"es-[a-f0-9]{32}", previous["operation_id"]) is not None, "resource-reservation-mismatch")
-        timestamp(previous.get("reserved_at"))
-        return previous
-
-    def reserve(self, phase, request):
-        path = self.path_for(phase, request)
-        value = {"schema": "deploy/entity-smoke-resource-reservation/v1", "phase": phase,
-                 "operation_id": "es-" + uuid.uuid4().hex, "request": request,
-                 "request_sha256": hashlib.sha256(CONTROL.canonical(request)).hexdigest(),
-                 "reserved_at": datetime.now(timezone.utc).isoformat()}
-        fresh = write_exclusive(path, value)
-        if fresh: return value, True
-        previous = self.read(phase, request)
-        require(previous is not None, "resource-reservation-unavailable")
-        return previous, False
-
 
 def only(response, field):
     values = response.get(field) if isinstance(response, dict) else None
@@ -240,26 +209,30 @@ def replace_runtime(provider, store, binding, definition, original, *, credentia
     require(isinstance(original, str) and re.fullmatch(r"arn:aws:ecs:" + REGION + ":" + ACCOUNT + ":task/" + CLUSTER + r"/[a-f0-9]{32}", original) is not None, "resource-server-task-invalid")
     service(provider, definition, 1)
     before = task(provider, original, definition, binding["image_digest"])
-    reservation, fresh = store.reserve(phase, {"binding": binding, "definition": definition, "original_task": original})
-    if fresh:
+    request = {"binding": binding, "definition": definition, "original_task": original}
+    def precondition(_reservation):
         require(before.get("lastStatus") == "RUNNING" and original in running_service_tasks(provider), "resource-replacement-precondition-not-confirmed")
-        try: provider("ecs", "stop-task", cluster=CLUSTER, task=original, reason=reservation["operation_id"])
-        except SubmissionNotStarted: raise
-        except Exception: raise ResourceFailure("resource-submission-uncertain-reconcile-only") from None
-    predecessor = task(provider, original, definition, binding["image_digest"])
-    if predecessor.get("lastStatus") != "STOPPED": return {"status": "pending", "reservation": reservation}
-    require(predecessor.get("stoppedReason") == reservation["operation_id"], "resource-replacement-cause-not-confirmed")
-    old_stop = timestamp(predecessor.get("stoppedAt"))
-    require(old_stop >= timestamp(reservation["reserved_at"]) - timedelta(seconds=60), "resource-predecessor-predates-reservation")
-    candidates = running_service_tasks(provider)
-    if original in candidates or len(candidates) != 1: return {"status": "pending", "reservation": reservation}
-    successor = task(provider, candidates[0], definition, binding["image_digest"], allow_starting=True)
-    current = service(provider, definition, 1)
-    if current.get("runningCount") != 1 or current.get("pendingCount") != 0 or successor.get("lastStatus") != "RUNNING" or successor.get("healthStatus") != "HEALTHY": return {"status": "pending", "reservation": reservation}
-    created, started = timestamp(successor.get("createdAt")), timestamp(successor.get("startedAt"))
-    require(created >= timestamp(reservation["reserved_at"]), "resource-successor-predates-reservation")
-    require(started >= created, "resource-successor-start-precedes-creation")
-    return {"status": "completed", "reservation": reservation, "facts": {"original_task": original, "successor_task": candidates[0], "predecessor_stopped_at": old_stop.isoformat(), "successor_started_at": started.isoformat()}}
+    def observe(reservation):
+        predecessor = task(provider, original, definition, binding["image_digest"])
+        if predecessor.get("lastStatus") != "STOPPED": return {"status": "pending", "reservation": reservation}
+        require(predecessor.get("stoppedReason") == reservation["operation_id"], "resource-replacement-cause-not-confirmed")
+        old_stop = timestamp(predecessor.get("stoppedAt"))
+        require(old_stop >= timestamp(reservation["reserved_at"]) - timedelta(seconds=60), "resource-predecessor-predates-reservation")
+        candidates = running_service_tasks(provider)
+        if original in candidates or len(candidates) != 1: return {"status": "pending", "reservation": reservation}
+        successor = task(provider, candidates[0], definition, binding["image_digest"], allow_starting=True)
+        current = service(provider, definition, 1)
+        if current.get("runningCount") != 1 or current.get("pendingCount") != 0 or successor.get("lastStatus") != "RUNNING" or successor.get("healthStatus") != "HEALTHY": return {"status": "pending", "reservation": reservation}
+        created, started = timestamp(successor.get("createdAt")), timestamp(successor.get("startedAt"))
+        require(created >= timestamp(reservation["reserved_at"]), "resource-successor-predates-reservation")
+        require(started >= created, "resource-successor-start-precedes-creation")
+        return {"status": "completed", "reservation": reservation, "facts": {"original_task": original, "successor_task": candidates[0], "predecessor_stopped_at": old_stop.isoformat(), "successor_started_at": started.isoformat()}}
+    try:
+        return CONTROL.TASKS.replace_task(provider, store, phase=phase, request=request,
+            cluster=CLUSTER, original=original, reason=lambda reservation: reservation["operation_id"],
+            precondition=precondition, observe=observe, passthrough=(SubmissionNotStarted,))
+    except CONTROL.TASKS.TaskFailure:
+        raise ResourceFailure("resource-submission-uncertain-reconcile-only") from None
 
 
 def control_runtime_count(provider, store, binding, definition, original_tasks, *, start=False):
@@ -304,29 +277,35 @@ def create_recovery_point(provider, store, binding, resource_id, original_commit
     incarnation = "sha256:" + hashlib.sha256(CONTROL.canonical({"resource_id": resource_id, "database": source.get("DBName"), "schema": "entity_smoke"})).hexdigest()
     require(incarnation == binding["dependency_incarnation_sha256"], "resource-source-incarnation-not-confirmed")
     snapshot = "kanbien-core-platform-" + binding["proof_label"]
-    reservation, fresh = store.reserve("create-recovery-point", {"binding": binding, "source_resource_id": resource_id, "snapshot": snapshot, "original_commit_observed_at": original_commit_observed_at})
-    require(timestamp(reservation["reserved_at"]) >= committed, "resource-snapshot-reservation-predates-record")
-    if fresh:
+    request = {"binding": binding, "source_resource_id": resource_id, "snapshot": snapshot, "original_commit_observed_at": original_commit_observed_at}
+    def validate_reservation(reservation):
+        require(timestamp(reservation["reserved_at"]) >= committed, "resource-snapshot-reservation-predates-record")
+    def precondition(reservation):
         # An independently existing object cannot be adopted merely because its
         # name matches. This must be an exact service-code absence observation.
         try: provider("rds", "describe-db-snapshots", DBSnapshotIdentifier=snapshot)
         except ResourceMissing: pass
         except Exception: raise ResourceFailure("resource-snapshot-precondition-unavailable") from None
         else: raise ResourceFailure("resource-snapshot-already-exists")
-        tags = [{"Key": "Target", "Value": CLUSTER}, {"Key": "Scope", "Value": "entity-smoke"}, {"Key": "ProofLabel", "Value": binding["proof_label"]}]
-        try: provider("rds", "create-db-snapshot", DBInstanceIdentifier=SOURCE_DATABASE, DBSnapshotIdentifier=snapshot, Tags=tags)
-        except SubmissionNotStarted: raise
-        except Exception: raise ResourceFailure("resource-submission-uncertain-reconcile-only") from None
-    try: observed = only(provider("rds", "describe-db-snapshots", DBSnapshotIdentifier=snapshot), "DBSnapshots")
-    except ResourceMissing: return {"status": "pending", "reservation": reservation}
-    arn = "arn:aws:rds:" + REGION + ":" + ACCOUNT + ":snapshot:" + snapshot
-    require(observed.get("DBSnapshotIdentifier") == snapshot and observed.get("DBSnapshotArn") == arn and observed.get("DBInstanceIdentifier") == SOURCE_DATABASE and observed.get("DbiResourceId") == resource_id and observed.get("Encrypted") is True and observed.get("SnapshotType") == "manual", "resource-snapshot-identity-not-confirmed")
-    require(timestamp(observed.get("SnapshotCreateTime")) >= committed, "resource-snapshot-predates-record")
-    require(timestamp(observed.get("SnapshotCreateTime")) >= timestamp(reservation["reserved_at"]), "resource-snapshot-predates-reservation")
-    tags = provider("rds", "list-tags-for-resource", ResourceName=arn).get("TagList")
-    require(isinstance(tags, list) and len(tags) <= 50 and all(isinstance(item, dict) and isinstance(item.get("Key"), str) and isinstance(item.get("Value"), str) for item in tags), "resource-snapshot-ownership-not-confirmed")
-    tag_map = {item["Key"]: item["Value"] for item in tags}
-    require(len(tag_map) == len(tags) and all(tag_map.get(key) == value for key, value in {"Target": CLUSTER, "Scope": "entity-smoke", "ProofLabel": binding["proof_label"]}.items()), "resource-snapshot-ownership-not-confirmed")
-    if observed.get("Status") in {"creating", "copying"}: return {"status": "pending", "reservation": reservation}
-    require(observed.get("Status") == "available", "resource-snapshot-not-available")
-    return {"status": "completed", "reservation": reservation, "facts": {"snapshot_arn": arn, "source_resource_id": resource_id, "snapshot_created_at": timestamp(observed["SnapshotCreateTime"]).isoformat()}}
+    def observe(reservation, fresh):
+        try: observed = only(provider("rds", "describe-db-snapshots", DBSnapshotIdentifier=snapshot), "DBSnapshots")
+        except ResourceMissing: return {"status": "pending", "reservation": reservation}
+        arn = "arn:aws:rds:" + REGION + ":" + ACCOUNT + ":snapshot:" + snapshot
+        require(observed.get("DBSnapshotIdentifier") == snapshot and observed.get("DBSnapshotArn") == arn and observed.get("DBInstanceIdentifier") == SOURCE_DATABASE and observed.get("DbiResourceId") == resource_id and observed.get("Encrypted") is True and observed.get("SnapshotType") == "manual", "resource-snapshot-identity-not-confirmed")
+        require(timestamp(observed.get("SnapshotCreateTime")) >= committed, "resource-snapshot-predates-record")
+        require(timestamp(observed.get("SnapshotCreateTime")) >= timestamp(reservation["reserved_at"]), "resource-snapshot-predates-reservation")
+        tags = provider("rds", "list-tags-for-resource", ResourceName=arn).get("TagList")
+        require(isinstance(tags, list) and len(tags) <= 50 and all(isinstance(item, dict) and isinstance(item.get("Key"), str) and isinstance(item.get("Value"), str) for item in tags), "resource-snapshot-ownership-not-confirmed")
+        tag_map = {item["Key"]: item["Value"] for item in tags}
+        require(len(tag_map) == len(tags) and all(tag_map.get(key) == value for key, value in {"Target": CLUSTER, "Scope": "entity-smoke", "ProofLabel": binding["proof_label"]}.items()), "resource-snapshot-ownership-not-confirmed")
+        if observed.get("Status") in {"creating", "copying"}: return {"status": "pending", "reservation": reservation}
+        require(observed.get("Status") == "available", "resource-snapshot-not-available")
+        return {"status": "completed", "reservation": reservation, "facts": {"snapshot_arn": arn, "source_resource_id": resource_id, "snapshot_created_at": timestamp(observed["SnapshotCreateTime"]).isoformat()}}
+    tags = [{"Key": "Target", "Value": CLUSTER}, {"Key": "Scope", "Value": "entity-smoke"}, {"Key": "ProofLabel", "Value": binding["proof_label"]}]
+    try:
+        return SNAPSHOTS.create(provider, store, phase="create-recovery-point", request=request,
+            arguments=lambda reservation: {"DBInstanceIdentifier": SOURCE_DATABASE, "DBSnapshotIdentifier": snapshot, "Tags": tags},
+            precondition=precondition, validate_reservation=validate_reservation, observe=observe,
+            passthrough=(SubmissionNotStarted,))
+    except SNAPSHOTS.SnapshotFailure:
+        raise ResourceFailure("resource-submission-uncertain-reconcile-only") from None

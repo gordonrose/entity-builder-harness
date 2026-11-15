@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.apply-core-server-persistence-database-permission-surface.impl
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -23,7 +23,6 @@ import argparse
 import importlib.util
 import json
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 
@@ -206,34 +205,19 @@ def main() -> int:
     if len(services) != 1 or not isinstance(services[0], dict) or services[0].get("desiredCount") != 1 or services[0].get("runningCount") != 1:
         return report("blocked", "persistence-database-permission-surface-service-not-healthy")
     name = f"kanbien-core-platform-persistence-permissions-{receipt['image_digest'][7:19]}"
-    ok, existing, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if ok and isinstance(existing,dict) and (existing.get("Status")=="FAILED" or existing.get("ExecutionStatus")!="AVAILABLE"):
-        return reconcile(prepare,name,receipt)
-    if not ok:
-        if code != "aws-resource-missing":
-            return report("blocked", code)
-        parameter_values = [{"ParameterKey": key, "UsePreviousValue": True} for key in parameters]
-        for key, value in (("ImageDigest", receipt["image_digest"]), ("SupportImageDigest", receipt["image_digest"]), ("RestoreVerifierImageDigest", receipt["image_digest"]), ("SourceRevision", receipt["source_revision"]), ("EnableObservability", "false")):
-            parameter_values = [item for item in parameter_values if item["ParameterKey"] != key]
-            parameter_values.append({"ParameterKey": key, "ParameterValue": value})
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as parameter_file:
-            json.dump(parameter_values, parameter_file)
-            parameter_file.flush()
-            ok, _, code = prepare.aws(
-                "cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name,
-                "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}",
-                "--parameters", f"file://{parameter_file.name}", "--capabilities", "CAPABILITY_NAMED_IAM",
-            )
-        if not ok:
-            return report("uncertain", code, facts={"change_set":name})
-    change, code = wait_for_review(prepare, name, status, receipt["image_digest"], receipt["source_revision"])
-    if change is None:return reconcile(prepare,name,receipt)
-    if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(prepare,name,receipt)
-    actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
-    if not prepare.update_parameters_match(actual,desired_parameters(receipt),parameters):return report("blocked","persistence-update-live-parameters-mismatch")
-    ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok:return report("uncertain",code,facts={"change_set":name})
-    return reconcile(prepare,name,receipt)
+    desired = desired_parameters(receipt)
+    parameter_values = [{"ParameterKey": key, "UsePreviousValue": True} for key in parameters if key not in desired]
+    parameter_values += [{"ParameterKey": key, "ParameterValue": value} for key, value in desired.items()]
+    def admit(change):
+        actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
+        return None if prepare.update_parameters_match(actual,desired,parameters) else "persistence-update-live-parameters-mismatch"
+    return prepare.apply_update(
+        name=name, parameters=parameter_values, template_arguments=("--template-body", f"file://{TEMPLATE}"),
+        review=lambda _existing, _created: wait_for_review(prepare, name, status, receipt["image_digest"], receipt["source_revision"]),
+        admit=admit, observe=lambda: reconcile(prepare,name,receipt),
+        failure=lambda verdict, code: report(verdict,code,facts={"change_set":name} if verdict=="uncertain" else None),
+        reconcile_existing=lambda existing: isinstance(existing,dict) and (existing.get("Status")=="FAILED" or existing.get("ExecutionStatus")!="AVAILABLE"),
+    )
 
 
 

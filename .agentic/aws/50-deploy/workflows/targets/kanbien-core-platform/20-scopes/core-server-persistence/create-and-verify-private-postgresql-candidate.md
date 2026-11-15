@@ -4,7 +4,7 @@ id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
 version: 8
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-11-06"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -152,6 +152,19 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 # decision: do not restore an image across a changed permission contract.
 ```
 
+The ordinary administration/migration examples above describe initial use.
+Their controllers now durably reserve before submission. Repeat the exact
+invocation to observe that same operation; retained completion is historical,
+not a fresh phase. Intentional subsequent execution requires --new-operation
+and --expected-operation with the same operation's last terminal report ID.
+Use none only for initial creation; preserve the exact predecessor when resuming.
+Administration --fresh also requires this predecessor. The acceptance route
+supplies six explicit administration predecessor inputs; the later
+runtime-identity-access-route phase consumes the previous confirm-runtime-iam-access
+operation, including the initial-access result when applicable. Existing saved
+acceptance input files need these six references for the updated route; immutable
+old proof receipts and accepted records remain unchanged and readable.
+
 #### Migration interruption or unsuccessful completion
 
 Do not rerun an unsuccessful, timed-out, or interrupted migration merely
@@ -166,6 +179,24 @@ history remains a release block and needs governed review.
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation observe-migration-state --json > migration_state_observation_report.json
 ```
+
+For a subsequent observer invocation, supply its own --new-operation and
+--expected-operation flags as above; a receipt from before the failed migration
+is not admissible. After a successful REPLAY_PERMITTED result, pass the exact
+retained path from its facts.proof_receipt together with the failed migration's
+facts.operation_id:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh --new-operation --expected-operation "$failed_migration_operation" --migration-state-receipt "$migration_state_receipt" --json > migration_retry_report.json
+```
+
+The controller requires the current administration task definition and image,
+a successful observation after the failed migration within its declared deadline,
+and the original receipt provenance. The new reservation binds the receipt path
+and hash; retrying that exact request reconciles the same migration. A terminal
+failed predecessor alone never permits replay. Pending/unknown predecessors
+remain blocked until exact terminal evidence is obtained. This command still
+requires the existing reviewed execution authority.
 
 At the update boundary ECS replaces the image-bound service task. The service
 is not acceptable merely because it is running: its private readiness and a
@@ -324,8 +355,9 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 
 The controller flushes a safe operation receipt to stderr before task submission
 and emits one final JSON report on stdout. Retain both streams. If interrupted,
-do **not** invoke the no-argument command again. Reconcile the already-submitted
-task. If its ARN was lost, use the emitted operation ID with
+repeat the exact invocation to reconcile its durable reservation without another
+submission, or use the explicit read-only task reconciliation interface. For a
+legacy execution whose ARN was lost, use the emitted operation ID with
 `--reconcile-operation "$operation_id"` instead of `--reconcile-task`.
 That route searches running and stopped tasks and never launches a replacement;
 missing or ambiguous discovery remains `uncertain`. Discovery uses family and
@@ -406,6 +438,16 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation cleanup --snapshot-id "$snapshot" --json
 ```
 
+New normal snapshot creation retains immutable intent for the exact snapshot
+name and source database incarnation before submitting. The created snapshot
+has the target, scope and reserved operation tags. Normal repeated invocation
+observes that same intent and requires exact ARN/incarnation, manual encryption,
+creation no earlier than reservation and matching tags; absence after uncertain
+submission never permits another create. Explicit `--observe-only` remains the
+read-only historical reader and does not retroactively require these new intent
+files or tags. It is not equivalent to new-operation lineage proof. Source
+snapshot preservation and the restore/readback requirements below are unchanged.
+
 The first verifier launch waits for one bounded restoration-identity
 stabilization interval after the exact temporary `rds-db:connect` policy is
 observed. It then requires IAM's policy simulator to report `allowed` for that
@@ -458,6 +500,24 @@ private `read` verifier so the data-survival evidence is explicit. Set
 `previous_read_operation` from the previous read report's `facts.operation_id`,
 or `none` for the first read. A retained `historical-completion` result is retry
 evidence, not a new observation after the replacement.
+
+Normal replacement now durably selects the original before StopTask. Repeating
+the same command observes that original and its successor; it cannot select the
+currently running successor as another stop target. A completed reservation is
+not an implicit reset. Retained completion must match that reservation's original,
+definition and recovery boundary, with successor creation/start and original stop
+after the reservation. Explicit historical `--reconcile-original-task` and
+`--capture-completed-original-task` readers retain their existing receipt rules.
+
+The credential lifecycle requires separate replacements after revoke and restore.
+Its existing parent passes `--after-administration-receipt` from the immediately
+preceding successful administration command. That exact validated receipt binds
+a separate immutable replacement slot; retrying it observes the same original.
+The input must be an owned successful revoke/restore receipt for the current
+administrator definition and image, within its completion deadline and evidence
+class. The support image may differ from the runtime image on rollback. An
+arbitrary label, unrelated receipt or changed retained original is rejected;
+the receipt does not grant AWS authority or waive the command's existing gates.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh --receipt "$receipt" --json > "$replacement_report"
@@ -727,13 +787,14 @@ permissions. A `pending`, `failed`, or `uncertain` result never means acceptance
 | Controller | Observation or continuation boundary |
 | --- | --- |
 | `prepare-candidate` | Read-only preflight; offline declaration coverage precedes provider observation. |
-| `create-change-set` | Same receipt with `--reconcile`; never resubmits the fixed CREATE. |
-| `deploy-candidate` | Same receipt/change-set with `--reconcile`; never executes again. |
-| `run-migration` | Exact `--reconcile-task` or pre-submission `--reconcile-operation`; no new task. |
+| `create-change-set` | The same default request observes its retained fixed-name reservation; it never repeats CREATE. Description must match the reserved token. Explicit historical `--reconcile` remains read-only without requiring a new reservation. |
+| `deploy-candidate` | The same default request observes its retained execution reservation and requires positive root-stack token lineage before completion. Explicit historical `--reconcile` remains read-only; neither path executes again. |
+| `run-migration` | Repeat the exact invocation to reconcile its durable reservation, or use legacy `--reconcile-task`/`--reconcile-operation`; no repeated launch. A new successor requires the exact predecessor and, after failure, the separately observed replay-permitted receipt. |
+| `run-administration` | Repeat the exact invocation to reconcile, or read an exact legacy task/receipt. A new phase requires the same-operation predecessor; `--fresh` cannot bypass it. |
 | `verify-candidate` | Repeat the exact original invocation to reconcile its durable reservation. A fresh phase requires `--new-operation --expected-operation <last-same-mode-operation-id>` (`none` only for initial creation); retrying the identical predecessor reconciles that same successor. Retained completion is explicitly historical. |
 | `create-recovery-point` | Same snapshot with `--observe-only`; absence stays uncertain. |
 | `rehearse-isolated-database-restore` | Same operation/snapshot with `--observe-only`; no restore, launch or deletion. |
-| `rehearse-server-replacement` | `--reconcile-original-task`; no second stop, and no reuse across task definitions. |
+| `rehearse-server-replacement` | Repeat the same command/admission to observe the durably selected original; historical `--reconcile-original-task` remains read-only. No second stop or reuse across task definitions. |
 | `rehearse-runtime-credential-lifecycle` | Preserve the child checkpoint; reconcile the exact administration/replacement/verifier task, then follow the existing continuation boundary. |
 | `transition-qualified-release` | Same operation/receipt with `--reconcile`; no repeated UPDATE execution. |
 | `apply-private-verifier-route-update` | Same receipt with `--reconcile`; no repeated route update. |
@@ -741,6 +802,15 @@ permissions. A `pending`, `failed`, or `uncertain` result never means acceptance
 | `apply-observability-mvp-surface` | Same server/collector receipts with `--reconcile`; no repeated observability update. |
 | `reconcile-rds-log-export-surface` | `--reconcile` only observes the exact target's required export set; it never repeats an in-flight RDS mutation. |
 | `retire-failed-candidate` | Retained exact stack ARN with `--reconcile-stack-id`; explicit `--continue-stack-id` advances only the incomplete deletion stage after safety checks. |
+
+New CREATE and execute requests reserve immutable local intent before their
+precondition and single provider call. The request binds hashes of the exact
+parameter set and template, the image/source and fixed change-set name; no
+parameter values are retained in that store. Rejected preconditions or lost
+responses do not authorize resetting the reservation or another call. Changed
+inputs reject against the retained intent and require separately governed
+resolution. Baseline CAPABILITY_NAMED_IAM and provider-default rollback remain
+unchanged; this controller consolidation does not merge feature rollback rules.
 
 The regression suite at
 `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py`

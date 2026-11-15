@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.target-alignment.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -37,6 +37,12 @@ CONTROLLER_DIRECTORY = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-
 FOUNDATION = TARGET + "/30-provider-realization/aws/cloudformation/foundation.yml"
 CONTROLLER_REPAIR_FILES = frozenset({
     "scripts/04.deploy/shared/provider-adapters/aws/response.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/cli.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/tasks.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py",
+    "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
     "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py",
     "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh",
     "scripts/04.deploy/operational-realization-gate/script.py",
@@ -76,6 +82,9 @@ def module(name, path):
     return loaded
 
 
+CLI = module("entity_smoke_alignment_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
 
@@ -97,10 +106,14 @@ def aws(service, operation, **parameters):
     require((service, operation) in READS, "alignment-provider-operation-prohibited")
     arguments = ["aws", service, operation, "--profile", PROFILE, "--region", REGION, "--output", "json",
                  "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--no-cli-pager", "--no-paginate", "--cli-input-json", json.dumps(parameters)]
-    try: value = json.loads(command(arguments))
+    try:
+        return CLI.invoke_json(arguments, cwd=ROOT, timeout=30, empty_body="reject", object_only=True, classify_errors=False,
+                               environment={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "PYTHONDONTWRITEBYTECODE": "1"})
+    except CLI.CliFailure as failure:
+        code = {"process": "alignment-command-unavailable", "service": "alignment-command-not-confirmed", "response": "alignment-provider-observation-invalid"}[failure.phase]
+        raise AlignmentFailure(code) from None
+    except (OSError, subprocess.SubprocessError): raise AlignmentFailure("alignment-command-unavailable") from None
     except (ValueError, TypeError): raise AlignmentFailure("alignment-provider-observation-invalid") from None
-    require(isinstance(value, dict), "alignment-provider-observation-invalid")
-    return value
 
 
 def only(response, field):

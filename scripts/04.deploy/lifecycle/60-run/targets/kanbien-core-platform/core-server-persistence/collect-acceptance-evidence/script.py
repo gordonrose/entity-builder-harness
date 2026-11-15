@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -50,7 +50,7 @@ EVIDENCE_ROOT = RECORD.parent
 TASK_ARN = re.compile(rf"^arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/[0-9a-f]{{32}}$")
 SNAPSHOT = re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
 TASKS: dict[str, dict[str, Any]] = {}
-_AWS_RESPONSE = None
+_AWS_CLI = None
 
 
 class EvidenceFailure(Exception):
@@ -123,31 +123,10 @@ def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]],
             contracts[key] = {"path": relative, "sha256": succession.sha256_bytes((ROOT / relative).read_bytes())}
         except OSError as error:
             raise EvidenceFailure("acceptance-evidence-contract-unreadable") from error
-    identity = {
-        "target": TARGET,
-        "scope": SCOPE,
-        "source_revision": source_revision,
-        "image_digest": image_digest,
-        **contracts,
-        "proof_set_sha256": succession.sha256_bytes(succession.canonical(receipt_set)),
-    }
-    value: dict[str, Any] = {
-        "schema": succession.CANDIDATE_SCHEMA,
-        "evidence_class": EVIDENCE_CLASS,
-        "target": TARGET,
-        "scope": SCOPE,
-        "status": "verified",
-        "release": {
-            "id": succession.release_id(identity),
-            "source_revision": source_revision,
-            "image_digest": image_digest,
-            **contracts,
-            "proof_set_sha256": identity["proof_set_sha256"],
-        },
-        "proof": {"accepted_at": accepted_at, "receipt_count": len(receipt_set)},
-        "proof_set": receipt_set,
-    }
     try:
+        value = succession.candidate_document(target=TARGET, scope=SCOPE,
+            source_revision=source_revision, image_digest=image_digest, **contracts,
+            proofs=receipt_set, accepted_at=accepted_at)
         succession.candidate_identity(value, EVIDENCE_ROOT)
     except succession.SuccessionFailure as error:
         raise EvidenceFailure("acceptance-evidence-candidate-record-invalid") from error
@@ -217,29 +196,22 @@ def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> in
 
 
 def aws(*parts: str) -> dict[str, Any]:
+    global _AWS_CLI
+    if _AWS_CLI is None: _AWS_CLI = controller("scripts/04.deploy/shared/provider-adapters/aws/cli.py")
     try:
-        completed = subprocess.run(["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True, timeout=30, env={**os.environ, "AWS_PAGER": ""}, check=False)
-    except subprocess.TimeoutExpired as error:
-        raise EvidenceFailure("acceptance-evidence-aws-observation-timeout") from error
-    except OSError as error:
-        raise EvidenceFailure("acceptance-evidence-aws-command-unavailable") from error
-    except UnicodeError as error:
-        raise EvidenceFailure("acceptance-evidence-aws-response-invalid") from error
-    if completed.returncode:
-        global _AWS_RESPONSE
-        if _AWS_RESPONSE is None:
-            _AWS_RESPONSE = controller("scripts/04.deploy/shared/provider-adapters/aws/response.py")
-        classified = _AWS_RESPONSE.classify_error(parts[0], parts[1], completed.stderr)
-        code = "acceptance-evidence-aws-access-denied" if classified == "aws-access-denied" else "acceptance-evidence-aws-observation-failed"
-        raise EvidenceFailure(code)
-    try:
-        parsed = json.loads(completed.stdout or "{}")
-    except json.JSONDecodeError as error:
-        raise EvidenceFailure("acceptance-evidence-aws-response-invalid") from error
-    if not isinstance(parsed, dict):
-        raise EvidenceFailure("acceptance-evidence-aws-response-invalid")
-    return parsed
-
+        return _AWS_CLI.invoke_json(
+            ["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"],
+            timeout=30, environment={**os.environ, "AWS_PAGER": ""}, check=False,
+            empty_body="empty-string", object_only=True,
+        )
+    except _AWS_CLI.CliFailure as failure:
+        if failure.phase == "process":
+            suffix = {"aws-command-timeout": "observation-timeout", "aws-command-unavailable": "command-unavailable", "aws-response-invalid": "response-invalid"}[failure.code]
+        elif failure.phase == "response": suffix = "response-invalid"
+        else: suffix = "access-denied" if failure.code == "aws-access-denied" else "observation-failed"
+        error = EvidenceFailure("acceptance-evidence-aws-" + suffix)
+        if failure.cause is not None: raise error from failure.cause
+        raise error from None
 
 def receipt(path: Path) -> dict[str, str]:
     command = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"

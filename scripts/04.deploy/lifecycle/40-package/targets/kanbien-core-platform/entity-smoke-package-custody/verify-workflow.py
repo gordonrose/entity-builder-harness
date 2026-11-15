@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.validation.entity-smoke.publication-workflow
-#   version: 1
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -27,7 +27,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[7]
 sys.path.insert(0, str(ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt"))
-from workflow_guard import job_steps, protected_step, protected_script, record_command, custody_tail, scan_step
+from workflow_guard import reserved_publication_binding, job_steps, protected_step, protected_script, record_command, custody_tail, scan_step, CANDIDATE_BUILD_OPERATIONS, protected_candidate_build
 
 class WorkflowLoader(yaml.SafeLoader):
     pass
@@ -49,11 +49,12 @@ WORKFLOW = ".github/workflows/publish-kanbien-core-platform-entity-smoke.yml"
 BASE = "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody"
 BUILD = "scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh"
 SMOKE = "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
-QUALIFICATION = [shlex.split(value) for value in ["bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/script.sh --json","bash scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification","bash scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification","python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-entity-smoke:qualification --receipt \"$RUNNER_TEMP/qualified-image.json\" --input infra/04.deploy/03.product/image/entity-smoke/image-contract.yml --input infra/04.deploy/03.product/image/entity-smoke/Dockerfile --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/verify-image.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/capability-negative-test.py --input scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml entity-smoke-server,entity-smoke-migration,entity-smoke-administration,entity-smoke-verifier,entity-smoke-database-proof --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml entity-smoke-restore-reader"]]
+QUALIFICATION = [shlex.split(value) for value in ["bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/script.sh --json","bash scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification","bash scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification","python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-entity-smoke:qualification --receipt \"$RUNNER_TEMP/qualified-image.json\" --input infra/04.deploy/03.product/image/entity-smoke/image-contract.yml --input infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore --input scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs --input scripts/repo/workspace-build/declarations.mjs --input scripts/repo/workspace-build/compile.mjs --input scripts/repo/workspace-build/runtime-packages.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --input infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs --input infra/04.deploy/03.product/image/entity-smoke/Dockerfile --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/verify-image.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/capability-negative-test.py --input scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml entity-smoke-server,entity-smoke-migration,entity-smoke-administration,entity-smoke-verifier,entity-smoke-database-proof --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml entity-smoke-restore-reader"]]
 BUILD_BODY = r'''set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 source scripts/04.deploy/shared/safe-command-diagnostics.sh
+source scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh
 entity_smoke_tag="kanbien-entity-smoke:qualification"
 if [[ $# == 2 && "$1" == --tag ]]; then entity_smoke_tag="$2"; elif [[ $# != 0 ]]; then
   printf '%s\n' 'ENTITY_SMOKE_IMAGE_ARGUMENTS_INVALID' >&2; exit 2
@@ -66,14 +67,7 @@ if [[ -n "$(git status --porcelain --untracked-files=all -- . ':!commitLogs')" ]
 fi
 entity_smoke_source="$(git rev-parse HEAD)"
 [[ "$entity_smoke_source" =~ ^[a-f0-9]{40}$ ]] || { printf '%s\n' 'ENTITY_SMOKE_IMAGE_SOURCE_INVALID' >&2; exit 1; }
-bash scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh \
-  --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml --json
-python3 -B scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
-bash scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh \
-  --target-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes --json
-safe_command_diagnostic ENTITY_SMOKE_IMAGE_PROGRAM_INVALID package 'The isolated program contract was not confirmed.' 'Inspect the program declaration without changing accepted programs.' -- \
-  bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh \
-  --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
+candidate_image_prechecks infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes ENTITY_SMOKE_IMAGE_PROGRAM_INVALID 'The isolated program contract was not confirmed.' 'Inspect the program declaration without changing accepted programs.' python3 -B
 safe_command_diagnostic ENTITY_SMOKE_IMAGE_DIAGNOSTICS_NOT_CONFIRMED package 'The source diagnostic contract check failed.' 'Regenerate code-owned catalog exports or correct their source before packaging.' -- \
   bash scripts/repo/diagnostic-coverage/verify.sh --unit catalog
 safe_command_diagnostic ENTITY_SMOKE_IMAGE_FEATURE_NOT_CONFIRMED package 'The feature contract and use-case checks failed.' 'Correct the feature before image qualification.' -- \
@@ -83,11 +77,7 @@ safe_command_diagnostic ENTITY_SMOKE_IMAGE_COMPOSITION_FAILED package 'The isola
 if ! command -v docker >/dev/null 2>&1 || ! timeout 30 docker info >/dev/null 2>&1; then
   printf '%s\n' 'ENTITY_SMOKE_IMAGE_LOCAL_ENGINE_UNAVAILABLE' >&2; exit 1
 fi
-safe_command_diagnostic ENTITY_SMOKE_IMAGE_BUILD_FAILED package 'The isolated image build failed.' 'Inspect this build attempt; publication and deployment were not invoked.' -- \
-  docker build --load --platform linux/amd64 --provenance=false --file infra/04.deploy/03.product/image/entity-smoke/Dockerfile \
-  --tag "$entity_smoke_tag" --label "org.opencontainers.image.revision=$entity_smoke_source" \
-  --label org.opencontainers.image.source=entity-builder-harness \
-  --build-arg "SOURCE_COMMIT_SHA=$entity_smoke_source" "$ROOT"
+candidate_image_build ENTITY_SMOKE_IMAGE_BUILD_FAILED 'The isolated image build failed.' 'Inspect this build attempt; publication and deployment were not invoked.' infra/04.deploy/03.product/image/entity-smoke/Dockerfile "$entity_smoke_tag" "$entity_smoke_source" "$entity_smoke_source" "$ROOT" --load --platform linux/amd64 --provenance=false
 printf '%s\n' 'ENTITY_SMOKE_LOCAL_IMAGE_BUILT_NOT_QUALIFIED'
 '''
 SMOKE_BODY = r'''set -euo pipefail
@@ -105,7 +95,7 @@ if [[ $# == 2 && "$1" == --tag ]]; then entity_smoke_tag="$2"; fi
 python3 -B scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/capability-negative-test.py --image "$entity_smoke_tag"
 '''
 
-def inspect(text, builder=None, smoke=None):
+def inspect(text, builder=None, smoke=None, operations=None):
     try:
         workflow = yaml.load(text, Loader=WorkflowLoader)
         if not isinstance(workflow, dict) or workflow.get("on") != {"workflow_dispatch": {}}:
@@ -144,19 +134,7 @@ def inspect(text, builder=None, smoke=None):
             raise ValueError("qualification-outcome")
         if steps[7] != {"uses": "aws-actions/configure-aws-credentials@v4", "with": {"role-to-assume": "${{ env.AWS_ROLE_ARN }}", "aws-region": "${{ env.AWS_REGION }}"}}:
             raise ValueError("credentials")
-        access_index, access = protected_step(steps, "Prove fixed delivery read access", [["python3", BASE+"/publication.py", "--operation", "reserve"]])
-        retained_index, retained = protected_step(steps, "Retain pre-publication identity")
-        if retained != {"name": "Retain pre-publication identity", "uses": "actions/upload-artifact@v4", "with": {
-            "name": "kanbien-core-platform-entity-smoke-reservation-${{ github.run_id }}",
-            "path": "${{ runner.temp }}/entity-smoke-publication-reservation.json\n${{ runner.temp }}/qualified-image.json\n",
-            "if-no-files-found": "error", "overwrite": False, "retention-days": 30}}:
-            raise ValueError("reservation-retention")
-        login_index, login = protected_step(steps, "Log in to Amazon ECR")
-        if login != {"name": "Log in to Amazon ECR", "uses": "aws-actions/amazon-ecr-login@v2"}:
-            raise ValueError("registry-login")
-        publication_index, publication = protected_step(steps, "Publish immutable image", [["python3", BASE+"/publication.py", "--operation", "publish"]])
-        if access.get("id") != "access" or publication.get("id") != "image" or not qualification_index < access_index < retained_index < login_index < publication_index:
-            raise ValueError("publication-order")
+        publication_index = reserved_publication_binding(steps, qualification_index, command=BASE+"/publication.py", stem="entity-smoke", target="kanbien-core-platform")
         scanned = scan_step(steps, ["python3", "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py", "--repository", "$ECR_REPOSITORY", "--image-digest", "${{ steps.image.outputs.digest }}", "--report", "$RUNNER_TEMP/ecr-scan.json"], "Require clean ECR scan")
         if scanned <= publication_index:
             raise ValueError("scan-order")
@@ -167,12 +145,6 @@ def inspect(text, builder=None, smoke=None):
                      provenance_name="Attest image provenance", attestation_name="Attest image SBOM", capture_name="Write and validate safe package-custody receipt",
                      upload_name="Upload safe package-custody evidence", receipt_filename="package-custody-receipt.json",
                      extra_artifacts=["${{ runner.temp }}/qualified-image.json", "${{ runner.temp }}/ecr-scan.json"], registry_expression="${{ env.ECR_URI }}")
-        failure_index, failure = protected_step(steps, "Retain safe failed-operation evidence", condition="${{ failure() }}")
-        if failure != {"name": "Retain safe failed-operation evidence", "if": "${{ failure() }}", "uses": "actions/upload-artifact@v4", "with": {
-            "name": "kanbien-core-platform-entity-smoke-failed-operation-${{ github.run_id }}-${{ github.run_attempt }}",
-            "path": "${{ runner.temp }}/entity-smoke-publication-reservation.json\n${{ runner.temp }}/entity-smoke-publication-invoked.json\n${{ runner.temp }}/entity-smoke-publication-operation.json\n",
-            "if-no-files-found": "ignore", "overwrite": False, "retention-days": 30}}:
-            raise ValueError("failure-retention")
         # Summary is information-only, but cannot run an unreviewed provider command.
         summary_index, summary = protected_step(steps, "Record package-custody summary")
         expected_summary = '''{
@@ -187,6 +159,7 @@ echo '- Deployment: not performed by this workflow.'
         summary_lines = [line.strip() for line in summary["run"].splitlines() if line.strip()]
         if summary_lines != expected_summary.splitlines():
             raise ValueError("summary-command")
+        protected_candidate_build(operations or ROOT/CANDIDATE_BUILD_OPERATIONS)
         protected_script(builder or ROOT/BUILD, BUILD_BODY)
         protected_script(smoke or ROOT/SMOKE, SMOKE_BODY)
     except (OSError, UnicodeError, yaml.YAMLError, ValueError, TypeError, KeyError, AttributeError, IndexError, RecursionError):

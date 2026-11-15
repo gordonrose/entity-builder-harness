@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.collect-acceptance.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -318,11 +318,11 @@ def candidate_material(packet):
     proofs = {"entity-smoke-complete-proof": {"path": str(proof_path.relative_to(EVIDENCE_ROOT)), "sha256": S.sha256_bytes(proof_bytes)}}
     contracts = {"configuration_contract": {"path": str((C.CONTRACT.parent / "declaration-contract.yml").relative_to(C.ROOT)), "sha256": packet["binding"]["configuration_contract_sha256"]},
                  "permission_contract": {"path": str(C.DEPLOY.SOURCE.relative_to(C.ROOT)), "sha256": packet["binding"]["permission_contract_sha256"]}}
-    identity = {"target": TARGET, "scope": SCOPE, "source_revision": packet["binding"]["source_revision"], "image_digest": packet["binding"]["image_digest"],
-                **contracts, "proof_set_sha256": S.sha256_bytes(S.canonical(proofs))}
-    candidate = {"schema": S.CANDIDATE_SCHEMA, "target": TARGET, "scope": SCOPE, "status": "verified", "evidence_class": "live",
-                 "release": {"id": S.release_id(identity), **{key: item for key, item in identity.items() if key not in {"target", "scope"}}},
-                 "proof": {"accepted_at": packet["runtime"]["observed_at"], "receipt_count": 1}, "proof_set": proofs}
+    document = S.candidate_document(target=TARGET, scope=SCOPE,
+        source_revision=packet["binding"]["source_revision"], image_digest=packet["binding"]["image_digest"],
+        **contracts, proofs=proofs, accepted_at=packet["runtime"]["observed_at"])
+    # Retain the original YAML order: a resumed copy must reproduce exact bytes.
+    candidate = {key: document[key] for key in ("schema", "target", "scope", "status", "evidence_class", "release", "proof", "proof_set")}
     target = EVIDENCE_ROOT / S.CANDIDATE_DIRECTORY / (candidate["release"]["id"] + ".yml")
     return {"proof": (proof_path, proof_bytes), "candidate": (target, S.rendered(candidate)), "document": candidate}
 

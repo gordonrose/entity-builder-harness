@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.restore-reader.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -109,6 +109,7 @@ def run(args, provider):
     deps, runner, steps, book = TASK.dependencies(), TASK.RUNNER, TASK.STEPS, value["book"]
     request, store, key = value["request"], value["store"], steps.key(args)
     previous = store.read(key, request)
+    C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
     step_path = steps.path(value, args)
     completion_path = TASK.COMPLETION.path(step_path)
     runner.CONTROL.no_symlinks(completion_path)

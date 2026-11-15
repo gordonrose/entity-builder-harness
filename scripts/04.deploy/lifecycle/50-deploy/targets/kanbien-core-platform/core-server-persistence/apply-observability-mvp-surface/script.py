@@ -8,10 +8,10 @@ declared dedicated collector.  It never retries an ambiguous provider mutation:
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -29,7 +29,6 @@ import hashlib
 import importlib.util
 import json
 import re
-import tempfile
 import time
 from pathlib import Path
 
@@ -283,29 +282,16 @@ def main() -> int:
     if not isinstance(services, list) or len(services) != len(service_names) or not all(healthy(item) for item in services):
         return report("blocked", "persistence-observability-mvp-services-not-healthy")
     values = {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{prepare.REGION}:{prepare.ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": foundation["RepositoryUri"], **expected}
-    ok, _, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok:
-        if code != "aws-resource-missing":
-            return report("blocked", code)
-        parameter_values = [{"ParameterKey": key, "ParameterValue": value} for key, value in values.items()]
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
-            json.dump(parameter_values, file)
-            file.flush()
-            ok, _, code = prepare.aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
-        if not ok:
-            return report("uncertain", code, facts={"change_set": name})
-    change, code = wait_for_review(prepare, name, server, collector, args.alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified)
-    if change is None:
-        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
-    if change.get("ExecutionStatus") != "AVAILABLE":
-        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
-    actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if not prepare.update_parameters_match(actual, observable_expected, current):
-        return report("blocked", "persistence-observability-mvp-parameters-mismatch")
-    ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok:
-        return report("uncertain", code, facts={"change_set": name})
-    return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
+    def admit(change):
+        actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
+        return None if prepare.update_parameters_match(actual, observable_expected, current) else "persistence-observability-mvp-parameters-mismatch"
+    return prepare.apply_update(
+        name=name, parameters=[{"ParameterKey": key, "ParameterValue": value} for key, value in values.items()],
+        template_arguments=("--template-body", f"file://{TEMPLATE}"),
+        review=lambda _existing, _created: wait_for_review(prepare, name, server, collector, args.alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified),
+        admit=admit, observe=lambda: reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified),
+        failure=lambda verdict, code: report(verdict, code, facts={"change_set": name} if verdict == "uncertain" else None),
+    )
 
 
 if __name__ == "__main__":

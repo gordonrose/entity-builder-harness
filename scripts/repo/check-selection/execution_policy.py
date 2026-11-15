@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.execution-policy
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 06.shared
 #   domain: testing
 #   disciplines: [agentic, security, sre]
@@ -95,6 +95,45 @@ def inventory(checks: dict) -> dict:
             'limitation': 'Missing feedback is unclassified; existing gates are unchanged. This inventory executes no checks.'}
 
 
+def evidence_summary(report: dict, *, all_inputs: bool = False) -> dict:
+    """Project this invocation's evidence, never qualify another stage or run."""
+    policy = report['execution_policy']
+    stale_codes = {'check-input-changed-before-execution', 'check-input-changed-during-execution',
+                   'check-input-changed-before-completion', 'check-catalog-changed-before-execution',
+                   'check-catalog-changed-during-execution'}
+    stale = {item.get('check_id') for item in report['findings'] if item['code'] in stale_codes}
+    catalog_drift = any(item['code'] in {'check-catalog-changed-during-planning', 'check-catalog-changed-during-invocation'}
+                        for item in report['findings'])
+
+    def observed(items):
+        rows = []
+        for item in items:
+            outcome = ('interrupted' if type(item.get('exit_code')) is int and item['exit_code'] < 0
+                       else 'stale' if item['check_id'] in stale or
+                       (catalog_drift and item['stage'] == 'local' and item['status'] not in {'failed', 'deferred'})
+                       else 'absent' if item['status'] == 'pending' else item['status'])
+            rows.append({'check_id': item['check_id'], 'status': item['status'], 'observation': outcome})
+        outcomes = {item['observation'] for item in rows}
+        status = next((value for value in ('interrupted', 'failed', 'stale', 'uncertain', 'blocked', 'absent', 'deferred')
+                       if value in outcomes), 'passed' if rows and outcomes == {'passed'} else 'not-selected')
+        return {'status': status, 'checks': rows}
+
+    local = [item for item in report['checks'] if item['stage'] == 'local']
+    eligibility = {item['check_id']: item['development_eligible'] for item in policy['checks']}
+    requested = [item for item in local if (report['boundary'] == 'integration' or item['boundary'] == 'commit')
+                 and (policy['mode'] != 'development' or eligibility[item['check_id']])]
+    affected = observed(local)
+    complete_selection = (policy['mode'] == 'impact' and report['boundary'] == 'integration'
+                          and bool(report['changed_inputs'] or all_inputs) and not report['findings'])
+    affected['coverage'] = ('complete-declared-impact' if complete_selection and affected['status'] == 'passed'
+                            else 'not-established')
+    summary = {'requested_local': observed(requested), 'affected_local_integration': affected}
+    for name, stage in (('package_qualification', 'package'), ('live_target_proof', 'deploy'), ('acceptance', 'acceptance')):
+        summary[name] = {**observed([item for item in report['checks'] if item['stage'] == stage]),
+                         'coverage': 'not-evaluated', 'authority': 'owning-stage-controller'}
+    return summary
+
+
 def safe_run(report: dict, run_id: str) -> dict:
     """Allowlist observation fields; no child output, runtime values or imported proof."""
     return {
@@ -109,6 +148,7 @@ def safe_run(report: dict, run_id: str) -> dict:
                    for item in report['checks']],
         'pending_check_ids': report['execution_policy']['pending_check_ids'],
         'execution_policy': report['execution_policy'],
+        **({'evidence_summary': report['evidence_summary']} if 'evidence_summary' in report else {}),
         'timings': report['execution_summary']['timings'],
         'findings': [{'code': item['code'], **({'check_id': item['check_id']} if 'check_id' in item else {})} for item in report['findings']],
         'authority': 'historical-observation-only; cannot seed trusted reuse or live acceptance',
@@ -118,6 +158,8 @@ def safe_run(report: dict, run_id: str) -> dict:
 def render(report: dict) -> str:
     policy = report.get('execution_policy', {})
     lines = [f"Verdict: {report['verdict']} — {policy.get('coverage', 'inventory-only')}"]
+    for name, item in report.get('evidence_summary', {}).items():
+        lines.append(f"Evidence {name}: {item['status']}" + (f"; {item['coverage']}" if 'coverage' in item else ''))
     if policy:
         lines.append(f"Estimated command seconds: {policy['estimated_execution_seconds']} (advisory; complete estimates: {policy['estimates_complete']})")
     for item in policy.get('checks', report.get('checks', [])):

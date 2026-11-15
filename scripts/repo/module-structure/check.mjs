@@ -1,15 +1,15 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: repo.module-structure.check
-//   version: 4
+//   version: 5
 //   status: active
 //   created_on: "2026-11-01"
-//   updated_on: "2026-11-02"
+//   updated_on: "2026-11-15"
 //   layer: 03.product
 //   domain: architecture
 //   disciplines: [architecture, agentic]
 //   kind: script
-//   purpose: Check public indexes, adopted module dependency boundaries and narrow configuration source access.
+//   purpose: Check public indexes, declared workspace imports, adopted module boundaries and narrow configuration source access.
 //   portability: {class: source-only, targets: []}
 //   effects: [read-only]
 //   used_by:
@@ -20,6 +20,8 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { inspectWorkspaceDependencies } from "../workspace-build/dependencies.mjs";
+import { WorkspaceDeclarationError } from "../workspace-build/declarations.mjs";
 
 export const sourceRoots = Object.freeze(["packages", "platform", "apps", "products"]);
 const excluded = new Set(["node_modules", ".git", "dist", "build", "tests", "fixtures", "__tests__"]);
@@ -303,7 +305,16 @@ async function main() {
   catch { console.log(JSON.stringify({ findings: [{ code: "MODULE_INDEX_SOURCE_UNREADABLE" }] })); process.exitCode = 1; return; }
   const indexes = checkIndexes(sources, baseline), dependencies = inspectModuleDependencies(sources, aliases);
   const access = inspectConfigurationAccess(sources);
-  const report = safeReport({ ...indexes, modules: dependencies.modules, findings: [...indexes.findings, ...dependencies.findings, ...access.findings] });
+  let workspaces;
+  try { workspaces = inspectWorkspaceDependencies(root); }
+  catch (error) {
+    workspaces = { findings: [{ code: error instanceof WorkspaceDeclarationError
+      ? error.code.toUpperCase().replaceAll("-", "_") : "WORKSPACE_DEPENDENCY_INSPECTION_FAILED" }] };
+  }
+  const report = safeReport({ ...indexes, modules: dependencies.modules,
+    workspaceSources: workspaces.files, workspaceImports: workspaces.imports,
+    computedWorkspaceImports: workspaces.computedImports,
+    findings: [...indexes.findings, ...dependencies.findings, ...access.findings, ...workspaces.findings] });
   console.log(JSON.stringify(report));
   if (report.findings.length) process.exitCode = 1;
 }

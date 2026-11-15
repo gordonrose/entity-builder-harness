@@ -18,6 +18,10 @@
     "pg": "^8.23.0"
   },
   "devDependencies": {
+    "@kanbien/app-platform-smoke": "0.0.0",
+    "@kanbien/platform-config": "0.0.0",
+    "@kanbien/platform-server": "0.0.0",
+    "@kanbien/platform-workers": "0.0.0",
     "@types/pg": "^8.23.1"
   }
 }

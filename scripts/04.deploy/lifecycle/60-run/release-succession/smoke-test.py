@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.regression
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -85,6 +85,17 @@ def candidate(root: Path, *, source: str, image: str, configuration: str, permis
         "proof": {"accepted_at": accepted, "receipt_count": len(proof_set)},
         "proof_set": proof_set,
     }
+    constructed = module.candidate_document(target=identity["target"], scope=identity["scope"],
+        source_revision=source, image_digest=image, configuration_contract=contract,
+        permission_contract=permission, proofs=proof_set, accepted_at=accepted)
+    assert module.rendered(constructed) == yaml.safe_dump(value, sort_keys=False).encode(), "shared construction must match independently built candidate bytes"
+    for invalid in ({"proofs": {}}, {"accepted_at": "not-a-timestamp"}, {"permission_contract": {"path": "contracts/permissions.yml", "sha256": "invalid"}}):
+        inputs = dict(target=identity["target"], scope=identity["scope"], source_revision=source,
+            image_digest=image, configuration_contract=contract, permission_contract=permission,
+            proofs=proof_set, accepted_at=accepted)
+        try: module.candidate_document(**{**inputs, **invalid})
+        except module.SuccessionFailure: pass
+        else: raise AssertionError("malformed candidate construction passed")
     path = root / module.CANDIDATE_DIRECTORY / f"{value['release']['id']}.yml"
     write(path, value)
     return path

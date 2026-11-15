@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -155,22 +155,20 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
         original_after = guarded_admission(lambda: PREFLIGHT.read_admission(receipt_root, reservation))
         required_after = max([original_after, *([] if required_after is None else [required_after])], key=EVIDENCE.timestamp)
     path = receipt_path(receipt_root, request, reservation)
-    deadline = monotonic() + request["deadline_seconds"]
     def progress(phase):
         if on_progress is not None:
             try: on_progress({"phase": phase, "operation_id": reservation["operation_id"], "task": current["taskArn"]})
             except Exception: pass
-    while current.get("lastStatus") != "STOPPED":
-        require(monotonic() < deadline, "task-deadline-remote-operation-not-terminal", reservation, current)
-        progress("waiting-for-terminal-state")
-        try: described = provider("ecs", "describe-tasks", cluster=CONTROL.CLUSTER, tasks=[current["taskArn"]])
-        except Exception: raise RunnerFailure("task-observation-unavailable-reconcile-only", reservation["operation_id"], current["taskArn"]) from None
-        tasks = described.get("tasks") if isinstance(described, dict) else None
-        require(isinstance(tasks, list) and len(tasks) == 1 and not described.get("failures"), "task-observation-unavailable-reconcile-only", reservation, current)
-        observed = CONTROL.exact_task(tasks[0], reservation)
-        require(observed["taskArn"] == current["taskArn"], "task-observation-identity-mismatch", reservation, current)
-        current = observed
-        if current.get("lastStatus") != "STOPPED": sleep(2)
+    def observe(previous):
+        try:
+            return CONTROL.TASKS.describe_task(provider, cluster=CONTROL.CLUSTER, arn=previous["taskArn"],
+                validate_task=lambda task: CONTROL.exact_task(task, reservation))
+        except CONTROL.TASKS.TaskFailure as failure:
+            code = "task-observation-identity-mismatch" if failure.code == "observation-identity-mismatch" else "task-observation-unavailable-reconcile-only"
+            raise RunnerFailure(code, reservation["operation_id"], previous["taskArn"]) from None
+    current, terminal = CONTROL.TASKS.observe_until_terminal(observe, seconds=request["deadline_seconds"], interval=2,
+        initial=current, monotonic=monotonic, sleep=sleep, on_pending=lambda _task: progress("waiting-for-terminal-state"))
+    require(terminal, "task-deadline-remote-operation-not-terminal", reservation, current)
     EVIDENCE.reject_failed_start(current)
     progress("collecting-terminal-evidence")
     try: response = EVIDENCE.read_logs(provider, request, current["taskArn"])

@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.entity-smoke.dependencies
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -24,11 +24,13 @@ import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dependencyClosure, prepareDependencies } from "./prepare-dependencies.mjs";
+import { copyProgramFixture } from "../prepare-runtime-dependencies/program-fixture.mjs";
 
 const fixture = mkdtempSync(join(tmpdir(), "kanbien-entity-smoke-dependencies-"));
 assert(fixture.startsWith(join(tmpdir(), "kanbien-entity-smoke-dependencies-")));
 try {
   const source = join(fixture, "source"), output = join(fixture, "payload/node_modules"), locked = {};
+  copyProgramFixture(source, "kanbien-entity-smoke");
   function pkg(location, name, version, attributes = {}, body = "module.exports = {};") {
     const path = join(source, location);
     mkdirSync(path, { recursive: true });

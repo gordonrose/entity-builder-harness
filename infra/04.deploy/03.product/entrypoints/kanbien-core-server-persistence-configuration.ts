@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-configuration
-//   version: 5
+//   version: 6
 //   status: draft
 //   created_on: "2026-10-24"
-//   updated_on: "2026-11-05"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -33,7 +33,7 @@ import { platformObservabilityDiagnosticCatalog } from "@kanbien/platform-observ
 import { coreDiagnosticCatalog } from "@kanbien/core";
 import { bindPlatformDiagnosticContext } from "@kanbien/platform-contracts";
 
-import { selectPersistenceImplementation, persistenceImplementationDiagnostic, type KanbienCorePersistenceImplementation } from "./kanbien-core-server-persistence-composition";
+import { selectPersistenceConfigurationImplementation, persistenceImplementationDiagnostic, type PersistenceConfigurationImplementation } from "./shared/persistence/configuration-implementation";
 
 export const persistenceConfigurationBindings = {
   "database.host": "PERSISTENCE_POSTGRES_HOST", "database.port": "PERSISTENCE_POSTGRES_PORT",
@@ -112,8 +112,8 @@ export function persistenceConfigurationFailure(issues: readonly ConfigSettingIs
   return { ok: false as const, error: { code: "CONFIGURATION_INVALID" as const, diagnostic } };
 }
 
-export function persistenceConfigurationResult(env: NodeJS.ProcessEnv, purpose: "server" | "migration" | "restore" | "administration", implementation?: KanbienCorePersistenceImplementation) {
-  const selected = implementation === undefined ? selectPersistenceImplementation(env["PERSISTENCE_IMPLEMENTATION"]) : { ok: true as const, value: implementation };
+export function persistenceConfigurationResult(env: NodeJS.ProcessEnv, purpose: "server" | "migration" | "restore" | "administration", implementation?: PersistenceConfigurationImplementation) {
+  const selected = implementation === undefined ? selectPersistenceConfigurationImplementation(env["PERSISTENCE_IMPLEMENTATION"]) : { ok: true as const, value: implementation };
   if (!selected.ok) return selected;
   const reference = purpose === "administration" ? "administrator.reference" : "authentication.reference";
   const bindings = Object.fromEntries(selected.value.requirements.map(({ setting }) => [

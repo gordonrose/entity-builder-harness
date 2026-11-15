@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.deployment-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -39,6 +39,7 @@ def module(name, path):
 RESOURCE = module("entity_smoke_deployment_resource", Path(__file__).with_name("resource-control.py"))
 ROOT = Path(__file__).resolve().parents[7]
 CF = module("entity_smoke_deployment_cf", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
+CHANGE_SETS = module("aws_change_set_execution", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py")
 SOURCE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml"
 STACK = "kanbien-core-platform-entity-smoke"
 PARAMETERS = {"VpcId", "VpcCidr", "PrivateSubnetIds", "ClusterArn", "NamespaceId", "EndpointSecurityGroupId", "S3ArtifactPrefixListId", "LogGroupName", "DatabaseEndpoint", "DatabaseName", "DatabaseResourceId", "DatabaseSecurityGroupId", "AdministratorSecretArn", "ImageRepositoryUri", "ImageRepositoryArn", "ImageDigest", "SourceRevision", "ServerDesiredCount"}
@@ -175,8 +176,7 @@ def initial_stack(provider, value, binding, parameters, reservation, *, executed
 
 def prepare(provider, store, binding, parameters, *, activate=False):
     intent = request(binding, parameters, activate)
-    reservation, fresh = store.reserve("deploy-activate-change-set" if activate else "deploy-create-change-set", intent)
-    if fresh:
+    def precondition(_reservation):
         if activate:
             before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"})
             require(before.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "deployment-activation-precondition-not-confirmed")
@@ -185,17 +185,19 @@ def prepare(provider, store, binding, parameters, *, activate=False):
             except RESOURCE.ResourceMissing: pass
             except Exception: raise RESOURCE.ResourceFailure("deployment-initial-absence-unavailable") from None
             else: raise RESOURCE.ResourceFailure("deployment-stack-already-exists")
-        try:
-            provider("cloudformation", "create-change-set", StackName=STACK, ChangeSetName=change_name(binding, activate), ChangeSetType="UPDATE" if activate else "CREATE", TemplateBody=source()[0],
-                     Parameters=[{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())], Capabilities=["CAPABILITY_IAM"],
-                     Description=reservation["operation_id"], ClientToken=reservation["operation_id"],
-                     Tags=[{"Key": key, "Value": value} for key, value in {"Target": RESOURCE.CLUSTER, "Scope": "entity-smoke", "ProofLabel": binding["proof_label"]}.items()],
-                     **({} if activate else {"OnStackFailure": "DO_NOTHING"}))
-        except RESOURCE.SubmissionNotStarted: raise
-        except Exception: raise RESOURCE.ResourceFailure("deployment-change-submission-uncertain-reconcile-only") from None
-    try: facts = reviewed_change(provider, binding, parameters, reservation, activate)
-    except RESOURCE.ResourceMissing: return {"status": "pending", "reservation": reservation}
-    return {"status": "reviewed" if facts is not None else "pending", "reservation": reservation, "facts": facts}
+    def review(reservation):
+        try: facts = reviewed_change(provider, binding, parameters, reservation, activate)
+        except RESOURCE.ResourceMissing: return {"status": "pending", "reservation": reservation}
+        return {"status": "reviewed" if facts is not None else "pending", "reservation": reservation, "facts": facts}
+    arguments = {"StackName": STACK, "ChangeSetName": change_name(binding, activate), "ChangeSetType": "UPDATE" if activate else "CREATE", "TemplateBody": source()[0],
+                 "Parameters": [{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())], "Capabilities": ["CAPABILITY_IAM"],
+                 "Tags": [{"Key": key, "Value": value} for key, value in {"Target": RESOURCE.CLUSTER, "Scope": "entity-smoke", "ProofLabel": binding["proof_label"]}.items()],
+                 **({} if activate else {"OnStackFailure": "DO_NOTHING"})}
+    try:
+        return CHANGE_SETS.prepare(provider, store, phase="deploy-activate-change-set" if activate else "deploy-create-change-set",
+            request=intent, arguments=arguments, precondition=precondition, observe=review, passthrough=(RESOURCE.SubmissionNotStarted,))
+    except CHANGE_SETS.ChangeSetFailure:
+        raise RESOURCE.ResourceFailure("deployment-change-submission-uncertain-reconcile-only") from None
 
 
 def observe(provider, store, binding, parameters, change_arn, stack_arn, *, activate=False):
@@ -236,16 +238,18 @@ def execute(provider, store, binding, parameters, change_arn, stack_arn, *, acti
     intent = request(binding, parameters, activate)
     review = store.read("deploy-activate-change-set" if activate else "deploy-create-change-set", intent)
     require(review is not None, "deployment-review-reservation-missing")
-    execution, fresh = store.reserve("deploy-execute-activate" if activate else "deploy-execute-create", {**intent, "change_set_arn": change_arn, "stack_arn": stack_arn})
-    if fresh:
+    def precondition(_execution):
         facts = reviewed_change(provider, binding, parameters, review, activate)
         require(isinstance(facts, dict) and facts["change_set_arn"] == change_arn and facts["stack_arn"] == stack_arn, "deployment-change-not-ready")
         before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"}) if activate else only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
         if activate: exact_stack(before, binding)
         else: initial_stack(provider, before, binding, parameters, review)
         require(before["StackId"] == stack_arn and before.get("StackStatus") in ({"CREATE_COMPLETE", "UPDATE_COMPLETE"} if activate else {"REVIEW_IN_PROGRESS"}), "deployment-execution-precondition-not-confirmed")
-        try:
-            provider("cloudformation", "execute-change-set", StackName=stack_arn, ChangeSetName=change_arn, ClientRequestToken=execution["operation_id"], **({"DisableRollback": True} if activate else {}))
-        except RESOURCE.SubmissionNotStarted: raise
-        except Exception: raise RESOURCE.ResourceFailure("deployment-execution-uncertain-reconcile-only") from None
-    return observe(provider, store, binding, parameters, change_arn, stack_arn, activate=activate)
+    try:
+        return CHANGE_SETS.execute(provider, store, phase="deploy-execute-activate" if activate else "deploy-execute-create",
+            request={**intent, "change_set_arn": change_arn, "stack_arn": stack_arn},
+            arguments={"StackName": stack_arn, "ChangeSetName": change_arn, **({"DisableRollback": True} if activate else {})},
+            precondition=precondition, observe=lambda _reservation: observe(provider, store, binding, parameters, change_arn, stack_arn, activate=activate),
+            passthrough=(RESOURCE.SubmissionNotStarted,))
+    except CHANGE_SETS.ChangeSetFailure:
+        raise RESOURCE.ResourceFailure("deployment-execution-uncertain-reconcile-only") from None

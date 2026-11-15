@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -21,6 +21,219 @@ from test_support import *
 
 
 class SelectionTests(FixtureSupport):
+    def workspace_context_fixture(self):
+        folder = self.root / 'scripts/repo/workspace-build'
+        shutil.copytree(ROOT / 'scripts/repo/workspace-build', folder)
+        wrapper = self.root / selection.workspace_context.WRAPPER
+        wrapper.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / selection.workspace_context.WRAPPER, wrapper)
+        modules = self.root / 'node_modules'
+        modules.mkdir()
+        for name in ('typescript', 'yaml'):
+            (modules / name).symlink_to(ROOT / 'node_modules' / name, target_is_directory=True)
+        def package(name, dependencies=None):
+            directory = self.root / 'packages' / name
+            (directory / 'src').mkdir(parents=True, exist_ok=True)
+            (directory / 'src/index.ts').write_text('export const value = 1;\n')
+            (directory / 'package.json').write_text(json.dumps({'name': '@renamed/' + name,
+                'exports': {'.': './src/index.ts'}, 'dependencies': dependencies or {}}))
+        package('leaf')
+        package('direct', {'@renamed/leaf': '0.0.0'})
+        package('ledger', {'@renamed/direct': '0.0.0'})
+        package('unrelated')
+        (self.root / 'packages/ledger/tsconfig.json').write_text(json.dumps({'include': ['src']}))
+        (self.root / 'package.json').write_text(json.dumps({'workspaces': ['packages/*'], 'scripts': {
+            'core:check': 'node scripts/repo/workspace-build/script.mjs --project packages/ledger/tsconfig.json --development'}}))
+        (self.root / 'package-lock.json').write_text(json.dumps({'lockfileVersion': 3, 'packages': {}}))
+        self.catalog['checks']['workspace'] = {**copy.deepcopy(self.catalog['checks']['local']),
+            'effects': ['writes-files'],
+            'argv': ['bash', selection.workspace_context.WRAPPER, '--unit', 'core'],
+            'inputs': ['packages/ledger'], 'runtime': {'tools': ['bash', 'node'], 'node_packages': [], 'environment': []}}
+        self.save()
+        return package
+
+    def test_workspace_context_actual_selection_and_fingerprints_follow_changed_declarations(self):
+        package = self.workspace_context_fixture()
+        with patch.object(selection, 'runtime_identity', return_value={'fixture': 'installed-runtime'}):
+            before = self.run_plan(paths=['packages/leaf/src/index.ts'])
+            self.assertFalse(before['findings'], before['findings'])
+            selected = next(item for item in before['checks'] if item['check_id'] == 'workspace')
+            self.assertIn('packages/direct', selected['references'])
+            self.assertIn('packages/leaf', selected['references'])
+            self.assertIn('packages/unrelated/package.json', selected['references'])
+            self.assertNotIn('packages/unrelated', selected['references'])
+            self.assertNotIn('packages/unrelated/src/index.ts', selected['references'])
+            unrelated = self.run_plan(paths=['packages/unrelated/src/index.ts'])
+            self.assertNotIn('workspace', [item['check_id'] for item in unrelated['checks']])
+            before_digest = selected['input_digest']
+            (self.root / 'packages/unrelated/src/index.ts').write_text('export const value = 99;\n')
+            unchanged = self.run_plan(checks=['workspace'])['checks'][0]
+            self.assertEqual(unchanged['input_digest'], before_digest)
+            package('new-name')
+            added = self.run_plan(paths=['packages/new-name/package.json'])
+            self.assertIn('workspace', [item['check_id'] for item in added['checks']])
+            package('ledger', {'@renamed/new-name': '0.0.0'})
+            changed = self.run_plan(paths=['packages/new-name/src/index.ts'])
+            current = next(item for item in changed['checks'] if item['check_id'] == 'workspace')
+            self.assertIn('packages/new-name', current['references'])
+            self.assertNotIn('packages/direct', current['references'])
+            self.assertNotEqual(current['input_digest'], before_digest)
+            shutil.rmtree(self.root / 'packages/unrelated')
+            removed = self.run_plan(paths=['packages/unrelated/package.json'])
+            self.assertIn('workspace', [item['check_id'] for item in removed['checks']])
+            self.assertFalse(removed['findings'], removed['findings'])
+            (self.root / '.npmrc').write_text('ignore-scripts=true\n')
+            configuration = self.run_plan(paths=['.npmrc'])
+            configured = next(item for item in configuration['checks'] if item['check_id'] == 'workspace')
+            self.assertTrue(configured['workspace_npm_ignore_scripts'])
+
+    def test_workspace_context_missing_or_unsupported_declarations_block_before_execution(self):
+        self.workspace_context_fixture()
+        (self.root / 'packages/direct/package.json').write_text('PRIVATE_CANARY invalid')
+        with patch.object(selection, 'runtime_identity', return_value={'fixture': 'installed-runtime'}):
+            report = self.run_plan(checks=['workspace'], execute=True)
+        self.assertIn('workspace-context-observation-failed', self.codes(report))
+        self.assertEqual(report['checks'][0]['status'], 'blocked')
+        self.assertNotIn('PRIVATE_CANARY', json.dumps(report))
+        self.assertFalse((self.root / 'packages/ledger/src/index.js').exists())
+
+    def test_workspace_context_rejects_malformed_projection_and_detects_inventory_changes(self):
+        owner = selection.workspace_context
+        check = {'x': {'argv': ['bash', owner.WRAPPER, '--unit', 'core']}}
+        for value in ({'contexts': {'core:check|inherit': {'references': [{}], 'nodePackages': [], 'ignoreScripts': False}}, 'discoveryInputs': ['package.json']},
+                      {'contexts': {'core:check|inherit': {'references': ['package.json'], 'nodePackages': [{}], 'ignoreScripts': False}}, 'discoveryInputs': ['package.json']},
+                      {'contexts': {}, 'discoveryInputs': ['package.json']},
+                      {'contexts': {'core:check|inherit': {'references': ['../PRIVATE_CANARY'], 'nodePackages': [], 'ignoreScripts': False}}, 'discoveryInputs': ['package.json']}):
+            with patch.object(owner, '_read', side_effect=[{'npmScript': 'core:check', 'ignoreScripts': None}, value]):
+                with self.assertRaisesRegex(owner.WorkspaceContextError, '^workspace-context-response-invalid$'):
+                    owner.load(self.root, check, selection.coverage.safe_path)
+        self.assertEqual(owner.manifest_inventory(['packages/a/src/index.ts', 'package.json', 'packages/a/package.json']),
+                         ('package.json', 'packages/a/package.json'))
+        self.assertNotEqual(owner.manifest_inventory(['package.json']), owner.manifest_inventory(['package.json', 'packages/new/package.json']))
+
+    def test_workspace_context_changed_inherited_npm_configuration_prevents_execution(self):
+        self.workspace_context_fixture()
+        (self.root / '.npmrc').write_text('ignore-scripts=false\n')
+        with patch.object(selection, 'runtime_identity', return_value={'fixture': 'installed-runtime'}), \
+             patch.object(selection.workspace_context, 'npm_ignore_scripts', side_effect=[False, True]):
+            report = self.run_plan(checks=['workspace'], execute=True)
+        self.assertIn('check-input-changed-before-execution', self.codes(report))
+        self.assertEqual(report['checks'][0]['status'], 'uncertain')
+        self.assertNotIn('workspace', report['execution_summary']['executed_check_ids'])
+        self.assertFalse((self.root / 'packages/ledger/src/index.js').exists())
+
+    def test_workspace_policy_receipts_reuse_and_reject_changed_or_tampered_policy(self):
+        self.workspace_context_fixture()
+        configuration = self.root / '.npmrc'
+        configuration.write_text('ignore-scripts=false\n')
+        command = self.catalog['checks']['workspace']['argv']
+        actual_run = subprocess.run
+        calls = []
+        def run(argv, *args, **kwargs):
+            if argv == command:
+                calls.append(list(argv))
+                return subprocess.CompletedProcess(argv, 0, '', '')
+            return actual_run(argv, *args, **kwargs)
+        # Only the selected leaf is controlled. Real project/declaration/npm
+        # observations and private receipt writing/validation remain connected.
+        with patch.object(selection, 'runtime_identity', return_value={'fixture': 'installed-runtime'}), \
+             patch.object(selection.subprocess, 'run', side_effect=run):
+            first = self.run_plan(checks=['workspace'], execute=True)
+            self.assertFalse(first['findings'], first['findings'])
+            self.assertEqual(first['execution_summary']['executed_check_ids'], ['workspace'])
+            receipt = first['checks'][0]
+            self.assertIs(receipt['workspace_npm_ignore_scripts'], False)
+            repeated = self.run_plan(checks=['workspace'], execute=True)
+            self.assertEqual(repeated['execution_summary']['reused_check_ids'], ['workspace'])
+            self.assertEqual(len(calls), 1)
+            cache = local_cache.LocalCache(self.root)
+            retained = cache.read(receipt['evidence_key'])
+            self.assertIs(retained['workspace_npm_ignore_scripts'], False)
+            for changed in (True, None, 'false'):
+                cache.write(receipt['evidence_key'] + '.json', {**retained, 'workspace_npm_ignore_scripts': changed})
+                self.assertEqual(cache.read(receipt['evidence_key']), {})
+            cache.write(receipt['evidence_key'] + '.json', retained)
+            configuration.write_text('ignore-scripts=true\n')
+            changed = self.run_plan(checks=['workspace'], execute=True)
+            self.assertFalse(changed['findings'], changed['findings'])
+            self.assertEqual(changed['execution_summary']['executed_check_ids'], ['workspace'])
+            self.assertNotEqual(changed['checks'][0]['evidence_key'], receipt['evidence_key'])
+            self.assertIn(local_cache.RUNTIME_CHANGED, changed['checks'][0]['cache_invalidation_reasons'])
+            self.assertNotIn(local_cache.CONTRACT_CHANGED, changed['checks'][0]['cache_invalidation_reasons'])
+            self.assertEqual(self.run_plan(checks=['workspace'], execute=True)['execution_summary']['reused_check_ids'], ['workspace'])
+            self.assertEqual(len(calls), 2)
+
+    def test_evidence_summary_separates_local_impact_and_external_stage_proof(self):
+        report = self.run_plan(execute=True)
+        self.assertFalse(report['findings'], report['findings'])
+        summary = report['evidence_summary']
+        self.assertEqual(summary['requested_local']['status'], 'passed')
+        self.assertEqual(summary['affected_local_integration']['coverage'], 'complete-declared-impact')
+        for name in ('package_qualification', 'live_target_proof', 'acceptance'):
+            self.assertEqual(summary[name]['status'], 'deferred')
+            self.assertEqual(summary[name]['coverage'], 'not-evaluated')
+            self.assertEqual(summary[name]['authority'], 'owning-stage-controller')
+        self.assertFalse((self.root / 'operations').exists())
+        saved = json.loads((self.root / report['run_report_path']).read_text())
+        self.assertEqual(saved['evidence_summary'], summary)
+        rendered = (self.root / report['run_report_path']).with_name('summary.txt').read_text()
+        self.assertIn('Evidence affected_local_integration: passed; complete-declared-impact', rendered)
+        self.assertIn('Evidence acceptance: deferred; not-evaluated', rendered)
+        reused = self.run_plan(execute=True)
+        self.assertEqual(reused['evidence_summary'], summary)
+        self.assertIn('local', reused['execution_summary']['reused_check_ids'])
+
+    def test_explicit_development_and_commit_passes_do_not_establish_full_impact(self):
+        self.declare_development_feedback()
+        for options in ({'checks': ['local']}, {'development': True}, {'boundary': 'commit'}):
+            with self.subTest(options=options):
+                report = self.run_plan(execute=True, **options)
+                self.assertFalse(report['findings'], report['findings'])
+                self.assertEqual(report['evidence_summary']['requested_local']['status'], 'passed')
+                self.assertEqual(report['evidence_summary']['affected_local_integration']['coverage'], 'not-established')
+        explicit = self.run_plan(checks=['local'], execute=True)
+        self.assertEqual(explicit['evidence_summary']['acceptance']['status'], 'not-selected')
+        self.assertEqual(explicit['evidence_summary']['acceptance']['coverage'], 'not-evaluated')
+
+    def test_evidence_summary_preserves_absent_failed_interrupted_and_stale_results(self):
+        planned = self.run_plan()
+        self.assertEqual(planned['evidence_summary']['requested_local']['status'], 'absent')
+        for body, status, outcome in (
+            ('exit 3\n', 'failed', 'failed'),
+            ('kill -TERM $$\n', 'failed', 'interrupted'),
+            ('echo changed > src/main.ts\n', 'uncertain', 'stale'),
+        ):
+            with self.subTest(outcome=outcome):
+                self.check_script('local', ['read-only', 'writes-files'], body)
+                report = self.run_plan(execute=True)
+                row = next(item for item in report['evidence_summary']['requested_local']['checks'] if item['check_id'] == 'local')
+                self.assertEqual((row['status'], row['observation']), (status, outcome))
+                self.assertEqual(report['evidence_summary']['affected_local_integration']['coverage'], 'not-established')
+                self.assertFalse((self.root / 'operations').exists())
+
+    def test_evidence_summary_does_not_infer_coverage_from_empty_or_legacy_reports(self):
+        report = self.run_plan(checks=['local'])
+        empty = {**report, 'checks': []}
+        summary = selection.execution_policy.evidence_summary(empty)
+        self.assertEqual(summary['requested_local']['status'], 'not-selected')
+        self.assertEqual(summary['affected_local_integration']['coverage'], 'not-established')
+        legacy = {key: value for key, value in report.items() if key != 'evidence_summary'}
+        self.assertNotIn('Evidence ', selection.execution_policy.render(legacy))
+        self.assertNotIn('evidence_summary', selection.execution_policy.safe_run(legacy, 'fixture'))
+
+    def test_evidence_summary_keeps_global_catalog_drift_separate_from_check_status(self):
+        report = self.run_plan(execute=True)
+        original = copy.deepcopy(report['checks'])
+        for code in ('check-catalog-changed-during-planning', 'check-catalog-changed-during-invocation'):
+            with self.subTest(code=code):
+                observed = {**report, 'findings': [{'code': code}]}
+                summary = selection.execution_policy.evidence_summary(observed)
+                self.assertEqual(summary['requested_local']['status'], 'stale')
+                self.assertEqual(summary['affected_local_integration']['coverage'], 'not-established')
+                self.assertTrue(all(item['status'] == 'passed' for item in summary['requested_local']['checks']))
+                self.assertEqual(summary['acceptance']['status'], 'deferred')
+                self.assertEqual(observed['checks'], original)
+
     def declare_development_feedback(self):
         self.catalog['checks']['local']['feedback'] = {
             'development': True, 'expected_seconds': 30, 'isolation': 'worktree',
@@ -79,6 +292,8 @@ class SelectionTests(FixtureSupport):
         report = self.run_plan(development=True, execute=True)
         self.assertIn('verification-prerequisite-not-passed', self.codes(report))
         self.assertEqual(self.local_command_result(report)['status'], 'blocked')
+        self.assertEqual(report['evidence_summary']['requested_local']['status'], 'blocked')
+        self.assertEqual(report['evidence_summary']['affected_local_integration']['coverage'], 'not-established')
         self.assertEqual(report['execution_summary']['executed_check_ids'], [])
         self.assertFalse((self.root / 'operations').exists())
 
@@ -112,6 +327,10 @@ class SelectionTests(FixtureSupport):
         self.assertEqual(report['verdict'], 'gap')
         self.assertEqual(self.local_command_result(report)['status'], 'passed')
         self.assertEqual(list((self.root / 'outside').iterdir()), [])
+        integrated = self.run_plan(execute=True)
+        self.assertIn('test-run-retention-unavailable', self.codes(integrated))
+        self.assertEqual(integrated['evidence_summary']['requested_local']['status'], 'passed')
+        self.assertEqual(integrated['evidence_summary']['affected_local_integration']['coverage'], 'not-established')
 
     def test_inventory_and_development_cli_are_read_only_until_execution(self):
         self.declare_development_feedback()
@@ -1128,6 +1347,8 @@ PY
         self.assertIn('check-catalog-changed-during-execution', self.codes(report))
         self.assertIn('check-catalog-changed-before-execution', self.codes(report))
         self.assertEqual(self.local_command_result(report)['status'], 'uncertain')
+        self.assertEqual(report['evidence_summary']['requested_local']['status'], 'stale')
+        self.assertEqual(report['evidence_summary']['affected_local_integration']['coverage'], 'not-established')
         mutator_result = next(item for item in report['checks'] if item['check_id'] == 'a-mutator')
         self.assertFalse((self.root / '.git/agentic-local-checks' / (mutator_result['evidence_key'] + '.json')).exists())
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
@@ -1714,6 +1935,7 @@ used_by:
             'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py',
             'scripts/repo/check-selection/local_cache.py',
             'scripts/repo/check-selection/execution_policy.py',
+            'scripts/repo/check-selection/workspace_context.py',
             'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py',
             'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py',
             'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py',
@@ -1895,7 +2117,7 @@ used_by:
     def test_real_repository_hook_reuses_local_evidence_without_report_argument(self):
         # Actual source-owned hook, selector, and cache run in an isolated Git
         # worktree. The unrelated revision is simulated without creating commits.
-        for relative in ('scripts/repo/commit-gates/script.sh', 'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
+        for relative in ('scripts/repo/commit-gates/script.sh', 'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py', 'scripts/repo/check-selection/workspace_context.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
             target = self.root / relative; target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(ROOT / relative, target)
         (self.root / 'package.json').write_text(json.dumps({'scripts': {'fixture:coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         gate = self.root / 'scripts/01.harness/artifact-metadata/generate-index/script.sh'; gate.parent.mkdir(parents=True); gate.write_text('#!/bin/bash\nexit 0\n')

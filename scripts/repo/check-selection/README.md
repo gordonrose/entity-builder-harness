@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 10
+version: 11
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-09"
+updated_on: "2026-11-15"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -74,6 +74,30 @@ or total wall-time guarantees; planning and runtime identity have separate
 timings in `execution_summary`. `not_selected` explains absent declared pilot
 checks. Supported impact still depends on declared consumers; no heuristic can
 prove an undeclared dependency safe.
+
+For example, a successful `--checks platform-server-runtime` run proves that
+requested check, not every consequence of a server change. The additive
+`evidence_summary` makes that distinction in JSON, `--explain` and retained run
+files. Its five sections are:
+
+| Section | What it reports |
+| --- | --- |
+| `requested_local` | Results of the local checks requested at this scheduling boundary. |
+| `affected_local_integration` | All selected local results; coverage is `complete-declared-impact` only after a nonempty impact-based integration selection passes without findings. Otherwise it is `not-established`. |
+| `package_qualification` | Selected package obligations, with coverage `not-evaluated` by this runner. |
+| `live_target_proof` | Selected live-target obligations, with coverage `not-evaluated`. |
+| `acceptance` | Selected acceptance obligations, with coverage `not-evaluated`. |
+
+Each section retains check IDs and original statuses. Its `observation` also
+distinguishes a pending check with absent proof, an observed signal interruption
+(negative process exit code), and input drift detected by the runner. It does
+not infer why an entirely missing run report is absent. Deferred and unselected
+later-stage checks are not successful proof or claims of non-applicability.
+Package/live/acceptance proof remains with the owning stage controllers; this
+projection neither reads their receipts nor changes command exit behavior.
+Explicit, development and commit-only passes never establish full impact.
+Matching local cache results may count only after existing revalidation succeeds.
+The projection adds no commands, scheduler, proof store or approval requirement.
 
 Executed runs create private, unique ignored
 `.cache/test-runs/<UTC-time-and-random-id>/report.json` and `summary.txt` files.

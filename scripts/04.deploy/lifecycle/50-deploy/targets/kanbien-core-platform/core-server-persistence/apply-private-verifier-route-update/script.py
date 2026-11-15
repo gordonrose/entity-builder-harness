@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply only the reviewed verifier-to-current-server route correction."""
 from __future__ import annotations
-import argparse, importlib.util, json, subprocess, tempfile, time
+import argparse, importlib.util, json, subprocess, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[8]
@@ -29,8 +29,9 @@ def reviewed_change_set(prepare: object, name: str, stack_status: str, digest: s
     """Await the named, already-created change set becoming fully reviewable.
 
     CloudFormation can briefly report CREATE_COMPLETE before the `Changes`
-    collection is visible. The fixed name makes this reconciliation idempotent:
-    it can only ever inspect and, later, execute the one bounded correction.
+    collection is visible. This loop only inspects the fixed named correction;
+    it does not authorize repeated execution. After an interrupted submission,
+    the owning command's explicit --reconcile path remains read-only.
     """
     last_code = "persistence-private-route-update-not-reviewable"
     for attempt in range(6):
@@ -74,21 +75,15 @@ def main() -> int:
     digest, revision = receipt["image_digest"], receipt["source_revision"]
     name = f"kanbien-core-platform-persistence-route-update-{digest[7:19]}"
     parameters = [{"ParameterKey": key, "ParameterValue": value} for key, value in prepare.candidate_parameters(foundation, infrastructure, receipt).items()]
-    ok, _, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok:
-        if code != "aws-resource-missing": return report("blocked", code)
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
-            json.dump(parameters, file); file.flush()
-            ok, _, code = prepare.aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
-        if not ok: return report("uncertain", code, facts={"change_set": name})
-    change, code = reviewed_change_set(prepare, name, status, digest, revision)
-    if change is None: return reconcile(prepare, name, digest, revision)
-    if change.get("ExecutionStatus") != "AVAILABLE": return reconcile(prepare, name, digest, revision)
     expected = prepare.candidate_parameters(foundation, infrastructure, receipt)
-    actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if not prepare.update_parameters_match(actual, expected, current_parameters): return report("blocked", "persistence-update-live-parameters-mismatch")
-    ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok: return report("uncertain", code, facts={"change_set": name})
-    return reconcile(prepare, name, digest, revision)
+    def admit(change):
+        actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
+        return None if prepare.update_parameters_match(actual, expected, current_parameters) else "persistence-update-live-parameters-mismatch"
+    return prepare.apply_update(
+        name=name, parameters=parameters, template_arguments=("--template-body", f"file://{TEMPLATE}"),
+        review=lambda _existing, _created: reviewed_change_set(prepare, name, status, digest, revision),
+        admit=admit, observe=lambda: reconcile(prepare, name, digest, revision),
+        failure=lambda verdict, code: report(verdict, code, facts={"change_set": name} if verdict == "uncertain" else None),
+    )
 
 if __name__ == "__main__": raise SystemExit(main())

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.entity-smoke.image.dockerfile
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -35,16 +35,21 @@ COPY infra/04.deploy/03.product/entrypoints/entity-smoke/ ./infra/04.deploy/03.p
 COPY infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke*.ts ./infra/04.deploy/03.product/entrypoints/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json ./infra/04.deploy/03.product/entrypoints/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
 COPY scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs
+COPY scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs ./scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs
+COPY scripts/repo/workspace-build/runtime-packages.mjs ./scripts/repo/workspace-build/runtime-packages.mjs
+COPY scripts/repo/workspace-build/declarations.mjs ./scripts/repo/workspace-build/declarations.mjs
 COPY scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs ./scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs
+COPY scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs ./scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs
+COPY scripts/repo/workspace-build/compile.mjs ./scripts/repo/workspace-build/compile.mjs
+COPY scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs ./scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs
+COPY scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs ./scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs
+COPY infra/04.deploy/03.product/entrypoints/runnable-program-index.yml ./infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
 RUN npm ci --ignore-scripts \
- && node_modules/.bin/tsc --project infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json --outDir /payload/artifacts --incremental false \
+ && node scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --program kanbien-entity-smoke --outDir /payload/artifacts --incremental false \
  && node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --compiled-root /payload/artifacts --dry-run \
  && node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --compiled-root /payload/artifacts \
  && node scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs /app /payload/node_modules

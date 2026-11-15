@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-route
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -28,6 +28,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from types import SimpleNamespace
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_TASK_ROUTE_ASSERTIONS_DISABLED")
 
@@ -283,6 +284,9 @@ def run():
         before = sum(op == "run-task" for _, op, _ in provider.observed)
         fails(lambda: M.execute(execute_args, live), "task-approved-plan-mismatch")
         execute_args.approved_plan = M.plan(execute_args, live)["plan_sha256"]
+        with patch.object(M.C.TRANSITION, "RETIRED_PROOF_LABEL", binding["proof_label"]):
+            fails(lambda: M.execute(execute_args, live), "incident-proof-new-attempt-retired")
+        assert not (cache / "task-attempts").exists()
         fails(lambda: M.execute(execute_args, live), "task-preflight-receipt-required")
         assert sum(op == "run-task" for _, op, _ in provider.observed) == before
         assert not (cache / "task-attempts").exists()
@@ -307,7 +311,15 @@ def run():
                 fails(lambda: M.execute(execute_args, live), "task-submission-uncertain-reconcile-required")
                 assert live.effect == "unknown-reconcile-only"
                 live = M.Provider(); live._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
-            completed = M.execute(execute_args, live)
+            if number == 0:
+                # A closed incident can observe the original lost submission,
+                # but cannot reserve another task under the retired identity.
+                submitted = sum(op == "run-task" for _, op, _ in provider.observed)
+                with patch.object(M.C.TRANSITION, "RETIRED_PROOF_LABEL", binding["proof_label"]):
+                    completed = M.execute(execute_args, live)
+                assert sum(op == "run-task" for _, op, _ in provider.observed) == submitted
+            else:
+                completed = M.execute(execute_args, live)
             assert completed["verdict"] == "completed"
             gates = json.loads((root / completed["realization_evidence"]).read_text())["facts"]["gate_evidence"]
             assert [row["gate"] for row in gates] == list(M.C.GATE.GATE_ORDER[:7]), "actual preflight completion, not simulation, supplies gate six"

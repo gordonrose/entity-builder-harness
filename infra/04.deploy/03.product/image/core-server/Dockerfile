@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.core-server.dockerfile
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -41,9 +41,14 @@ COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts ./infra/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server.tsconfig.json
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs
 
+COPY scripts/repo/workspace-build/declarations.mjs ./scripts/repo/workspace-build/declarations.mjs
+COPY scripts/repo/workspace-build/runtime-packages.mjs ./scripts/repo/workspace-build/runtime-packages.mjs
+COPY scripts/repo/workspace-build/compile.mjs ./scripts/repo/workspace-build/compile.mjs
+COPY scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs ./scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs
+COPY scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs ./scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs
+COPY infra/04.deploy/03.product/entrypoints/runnable-program-index.yml ./infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
 RUN npm ci --ignore-scripts \
-  && node_modules/.bin/tsc \
-    --project infra/04.deploy/03.product/entrypoints/kanbien-core-server.tsconfig.json \
+  && node scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --program kanbien-core-server \
     --outDir /payload/artifacts \
     --incremental false \
   && node scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs \

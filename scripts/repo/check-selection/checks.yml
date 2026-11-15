@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 20
+#   version: 22
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -516,7 +516,7 @@ checks:
     owner: repo.module-structure.command
     scope_inputs: false
     inputs:
-    - scripts/repo/module-structure
+    - scripts
     - .agentic/03.product/standards/public-module-structure.md
     - .agentic/03.product/standards/config-runtime-settings.md
     - packages
@@ -536,11 +536,11 @@ checks:
     argv: [bash, scripts/repo/module-structure/smoke-test.sh]
     stage: local
     evidence_class: static
-    effects: [read-only]
+    effects: [read-only, writes-files]
     owner: repo.module-structure.regression
     scope_inputs: false
     inputs:
-    - scripts/repo/module-structure
+    - scripts
     - packages
     - platform
     - apps
@@ -733,7 +733,7 @@ checks:
     aggregate_branch: default
     members: [diagnostic-base-runtime, platform-server-runtime, kanbien-platform-runtime]
     focused_prerequisites: &startup_prerequisites
-    - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/adapters/aws/persistence/postgresql, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition]
+    - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/adapters/aws/persistence/postgresql, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts, infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition]
       checks: [persistence-composition]
     - inputs: [packages/core, platform/contracts, platform/config, platform/health, platform/observability, platform/persistence, platform/runtime, platform/security, platform/server, platform/workers, products/kanbien-platform, apps/platform-smoke, platform/adapters/aws/auth/cognito, platform/adapters/aws/persistence/dynamodb, platform/adapters/aws/queue/sqs, platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/security/dynamodb-rate-limiter, platform/adapters/aws/observability/cloudwatch, infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/build-platform-shell-image]
       checks: [platform-shell-payload]
@@ -759,7 +759,7 @@ checks:
     - package-lock.json
     runtime: &verification_unit_runtime
       tools: [bash, python3, node, npm, typescript, git]
-      node_packages: [typescript, '@types/node', '@types/pg', pg, '@aws-sdk/client-dynamodb', '@aws-sdk/client-sqs', '@aws-sdk/rds-signer', '@opentelemetry/api', '@opentelemetry/exporter-metrics-otlp-proto', '@opentelemetry/resources', '@opentelemetry/sdk-metrics', '@kanbien/core', '@kanbien/platform-config', '@kanbien/platform-persistence', '@kanbien/platform-testing', '@kanbien/platform-security', '@kanbien/platform-server', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-contracts', '@kanbien/platform-health', '@kanbien/platform-workers', '@kanbien/platform-adapter-aws-queue-sqs', '@kanbien/platform-adapter-aws-runtime-ecs-fargate', '@kanbien/platform-adapter-aws-auth-cognito', '@kanbien/platform-adapter-aws-observability-cloudwatch', '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter', '@kanbien/platform-adapter-aws-persistence-dynamodb', '@kanbien/platform-adapter-aws-persistence-postgresql', '@kanbien/product-kanbien-platform', '@kanbien/app-platform-smoke', '@kanbien/app-entity-smoke']
+      node_packages: [typescript, yaml, '@types/node', '@types/pg', pg, '@aws-sdk/client-dynamodb', '@aws-sdk/client-sqs', '@aws-sdk/rds-signer', '@opentelemetry/api', '@opentelemetry/exporter-metrics-otlp-proto', '@opentelemetry/resources', '@opentelemetry/sdk-metrics', '@kanbien/core', '@kanbien/platform-config', '@kanbien/platform-persistence', '@kanbien/platform-testing', '@kanbien/platform-security', '@kanbien/platform-server', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-contracts', '@kanbien/platform-health', '@kanbien/platform-workers', '@kanbien/platform-adapter-aws-queue-sqs', '@kanbien/platform-adapter-aws-runtime-ecs-fargate', '@kanbien/platform-adapter-aws-auth-cognito', '@kanbien/platform-adapter-aws-observability-cloudwatch', '@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter', '@kanbien/platform-adapter-aws-persistence-dynamodb', '@kanbien/platform-adapter-aws-persistence-postgresql', '@kanbien/product-kanbien-platform', '@kanbien/app-platform-smoke', '@kanbien/app-entity-smoke']
       environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
       config_inputs: [.python-version, pyproject.toml, requirements.txt, .npmrc, .node-version, .nvmrc]
   diagnostic-catalog-readers: &diagnostic_unit
@@ -772,6 +772,14 @@ checks:
     scope_inputs: false
     # Catalog compilation consumes target configuration and its package imports.
     inputs:
+    - scripts/repo/workspace-build
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - scripts/repo/diagnostic-coverage
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence
@@ -801,7 +809,7 @@ checks:
     effects: [writes-files]
     owner: repo.diagnostics.verification
     scope_inputs: false
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, scripts/repo/module-structure/check.mjs, package.json, package-lock.json]
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, scripts/repo/module-structure/check.mjs, scripts/repo/workspace-build, package.json, package-lock.json]
     runtime: &package_runtime
       tools: [bash, node, npm, typescript]
       node_packages: [typescript, '@types/node', '@kanbien/core']
@@ -1082,6 +1090,9 @@ checks:
     owner: deploy.test.core-platform-target-declaration
     scope_inputs: false
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - scripts/04.deploy/lifecycle/00-target-alignment
     - scripts/04.deploy/lifecycle/60-run
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
@@ -1106,6 +1117,7 @@ checks:
     owner: deploy.test.kanbien-core-platform.target-controls
     scope_inputs: false
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime
     - scripts/04.deploy/lifecycle/00-target-alignment
@@ -1415,6 +1427,9 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
@@ -1702,6 +1717,13 @@ checks:
     scope_inputs: false
     inputs:
     - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
+    - scripts/repo/workspace-build/declarations.mjs
+    - package.json
+    - package-lock.json
+    - packages
+    - platform
+    - apps
+    - products
     argv:
     - bash
     - scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh
@@ -1722,6 +1744,8 @@ checks:
       tools:
       - bash
       - python3
+      - node
+      node_packages: [yaml]
       environment:
       - PATH
       - LANG
@@ -1776,7 +1800,9 @@ checks:
       node_packages:
       - '@types/node'
       - typescript
+      - yaml
     inputs:
+    - scripts/repo/workspace-build
     - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
     - package.json
     - package-lock.json
@@ -1822,6 +1848,80 @@ checks:
     - platform/contracts/contracts
     - platform/persistence/contracts
     - platform/workers/contracts
+  runtime-dependency-assembly:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/script.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.runtime-dependency-preparation.wrapper
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 5
+      isolation: disposable-fixture
+      rationale: Exercise both real dependency bindings, copied Docker scripts and context omissions with controlled installed trees; no Docker or AWS.
+    runtime:
+      tools: [bash, git, node]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, TMPDIR, NODE_OPTIONS, NODE_PATH]
+      config_inputs: [.node-version, .nvmrc]
+    inputs:
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image
+    - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image
+    - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
+    - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
+    - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore
+    - infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore
+  runtime-payload-assembly:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/script.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.prepare-runtime-payload.wrapper
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 60
+      isolation: disposable-fixture
+      rationale: Exercise declaration-derived real compilation, isolated shims, both payload adapters and copied Docker source closures without Docker or AWS.
+    runtime:
+      tools: [bash, git, node, npm, python3]
+      node_packages: [typescript, '@types/node', yaml]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, NODE_OPTIONS, NODE_PATH, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
+      config_inputs: [.node-version, .nvmrc, .python-version, pyproject.toml, requirements.txt]
+    inputs:
+    - scripts/repo/workspace-build
+    - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
+    - infra/04.deploy/03.product/entrypoints
+    - package.json
+    - package-lock.json
+    - packages
+    - platform
+    - apps
+    - products
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.py
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-dependencies.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs
+    - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs
+    - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
+    - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
+    - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore
+    - infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore
+    - packages/core/package.json
+    - packages/core/src
   entity-smoke-composition:
     boundary: integration
     argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh]
@@ -1842,6 +1942,13 @@ checks:
       environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
       config_inputs: [.npmrc, .node-version, .nvmrc, .python-version, pyproject.toml, requirements.txt]
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
     - .agentic/aws/standards/operational-realization-applicability.md
     - .agentic/aws/workflows/execute-approved-aws-change.md
     - scripts/04.deploy/lifecycle/20-build/entity-smoke-composition
@@ -1857,7 +1964,9 @@ checks:
     - apps/platform-smoke/contracts
     - platform/workers/contracts
     - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload
     - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies
     - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/dependency-test.mjs
     - scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image
     - scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py
@@ -1869,6 +1978,7 @@ checks:
     - scripts/04.deploy/operational-realization-gate/script.py
     - infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
     - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
+    - infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore
     - infra/04.deploy/03.product/image/entity-smoke/realization-contract.v2.yml
     - infra/04.deploy/03.product/entrypoints/entity-smoke
     - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts
@@ -1879,10 +1989,7 @@ checks:
     - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json
     - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
     - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
-    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.ts
-    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
-    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
-    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
     - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
     - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
     - apps/entity-smoke
@@ -1948,6 +2055,13 @@ checks:
       - '@types/node'
       - typescript
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - infra/04.deploy/03.product/targets/kanbien-core-platform
     - infra/04.deploy/03.product/image/core-server-persistence
     - scripts/04.deploy/lifecycle/60-run
@@ -1978,6 +2092,12 @@ checks:
   persistence-provider-regression:
     boundary: integration
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
     - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
@@ -2057,11 +2177,28 @@ checks:
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
       node_packages: []
     inputs:
+    - infra/04.deploy/03.product/entrypoints/contracts
+    - apps/platform-smoke/contracts
+    - platform/runtime/contracts
+    - platform/workers/contracts
+    - platform/server/contracts
+    - platform/contracts/contracts
+    - platform/config/contracts
+    - platform/health/contracts
+    - platform/observability/contracts
+    - platform/security/contracts
+    - platform/persistence/contracts
+    - packages/core/contracts
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
     - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
     - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody
     - .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
     - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh
+    - scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh
     - scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
@@ -2623,6 +2760,7 @@ checks:
     - scripts/04.deploy/lifecycle/40-package/build-core-server-image
     - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
     - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload
     - scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
     - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image
     - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
@@ -2681,6 +2819,10 @@ checks:
       - '@types/node'
       - typescript
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
     - scripts/04.deploy/shared/safe-command-diagnostics.sh
     - scripts/repo/diagnostic-coverage/runtime_contract.py
     - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image
@@ -2826,6 +2968,14 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
     - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence
@@ -2913,6 +3063,14 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/replacement-operations.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
     - scripts/repo/diagnostic-coverage/runtime_contract.py
     - packages/core/contracts
     - platform/config/contracts
@@ -4194,6 +4352,21 @@ checks:
       <<: *verification_unit_runtime
       node_packages: [typescript, '@types/node', '@kanbien/core', '@kanbien/platform-config', '@kanbien/platform-contracts', '@kanbien/platform-health', '@kanbien/platform-observability', '@kanbien/platform-runtime', '@kanbien/platform-security', '@kanbien/platform-server']
     inputs:
+    - infra/04.deploy/03.product/entrypoints/contracts
+    - apps/platform-smoke/contracts
+    - platform/runtime/contracts
+    - platform/workers/contracts
+    - platform/server/contracts
+    - platform/contracts/contracts
+    - platform/config/contracts
+    - platform/health/contracts
+    - platform/observability/contracts
+    - platform/security/contracts
+    - platform/persistence/contracts
+    - packages/core/contracts
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
     - scripts/04.deploy/lifecycle/40-package
     - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
     - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
@@ -4456,6 +4629,46 @@ checks:
     inputs:
     - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
 repository_inputs:
+- inputs:
+  - scripts/repo/workspace-build
+  checks: [runtime-payload-assembly, core-dependency-boundary, entity-smoke-composition, diagnostic-catalog-readers]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+  - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+  - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+  - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+  - scripts/04.deploy/lifecycle/60-run/release-succession/script.py
+  checks: [runtime-payload-assembly]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/build-candidate-image
+  checks: [persistence-payload-regression, entity-smoke-publication-contract, package-custody-regression, persistence-container, entity-smoke-container]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies
+  checks: [runtime-dependency-assembly, runtime-payload-assembly, persistence-payload-regression, entity-smoke-composition, persistence-container, entity-smoke-container]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image
+  - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image
+  - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
+  - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
+  - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore
+  - infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore
+  checks: [runtime-dependency-assembly]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload
+  checks: [runtime-payload-assembly, runtime-dependency-assembly, bootstrap-payload-regression, persistence-payload-regression, entity-smoke-composition, persistence-container, entity-smoke-container]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
+  - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
+  - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs
+  - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-dependencies.mjs
+  - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs
+  - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs
+  - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
+  - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
+  - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore
+  - infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore
+  - packages/core/package.json
+  checks: [runtime-payload-assembly]
 - inputs: [apps/entity-smoke]
   checks: [entity-smoke-runtime, entity-smoke-composition]
 - inputs:
@@ -4685,6 +4898,7 @@ repository_inputs:
   checks: [chat-log-deletion-regression]
 - inputs:
   - scripts/repo/module-structure/check.mjs
+  - scripts/repo/workspace-build
   checks: [core-runtime]
 - inputs:
   - packages
@@ -4692,16 +4906,21 @@ repository_inputs:
   - apps
   - products
   - infra
-  - scripts/repo/module-structure
+  - scripts
   - .agentic/03.product/standards/public-module-structure.md
   - .agentic/03.product/standards/config-runtime-settings.md
   - package.json
   - package-lock.json
   checks: [module-index-structure]
 - inputs:
-  - scripts/repo/module-structure
-  - packages/core/src/config/index.ts
-  - packages/core/tests/test-infrastructure/static-validation/core-boundaries.test.mjs
+  - scripts
+  - packages
+  - platform
+  - apps
+  - products
+  - infra
+  - package.json
+  - package-lock.json
   - .agentic/03.product/standards/public-module-structure.md
   - .agentic/03.product/standards/config-runtime-settings.md
   checks: [module-index-structure-regression]
@@ -5004,11 +5223,44 @@ repository_inputs:
   checks:
   - core-package-custody-regression
 - inputs:
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
+  checks: [entity-smoke-composition, persistence-payload-regression]
+- inputs:
+  - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
+  checks: [diagnostic-catalog-readers, entity-smoke-composition, persistence-composition, persistence-payload-regression, platform-shell-payload, package-custody-regression]
+- inputs:
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/replacement-operations.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py
+  checks: [diagnostic-catalog-readers, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+  checks: [diagnostic-catalog-readers, entity-smoke-composition, persistence-composition, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression, restore-connection-diagnostics, persistence-payload-regression]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+  checks: [diagnostic-catalog-readers, persistence-composition, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+  - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+  checks: [diagnostic-catalog-readers, entity-smoke-composition, persistence-composition, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+  checks: [entity-smoke-composition, persistence-provider-regression, acceptance-route-regression]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+  checks: [entity-smoke-publication-contract, package-custody-regression]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+  checks: [diagnostic-catalog-readers, core-target-declaration-regression, bootstrap-target-controls-regression, restore-connection-diagnostics, entity-smoke-composition, persistence-composition, persistence-payload-regression, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression]
+- inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/response.py
   - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
   - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
   checks:
   - persistence-provider-regression
+  - entity-smoke-composition
+  - persistence-payload-regression
   - shell-negative-authz-client-check
   - shell-postgresql-relational-smoke-check
   - deployment-operation-diagnostics-regression
@@ -5028,6 +5280,9 @@ repository_inputs:
   - scripts/04.deploy/lifecycle/60-run/release-succession
   - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py
   checks: [release-succession-regression]
+- inputs:
+  - scripts/04.deploy/lifecycle/60-run/release-succession/script.py
+  checks: [entity-smoke-composition, acceptance-route-regression]
 - inputs:
   - scripts/02.rag-rulebook/validate-okf-source-material-reviews
   - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml

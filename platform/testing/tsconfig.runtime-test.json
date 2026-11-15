@@ -10,17 +10,6 @@
     "noEmit": false,
     "outDir": "../../.cache/platform-testing-runtime",
     "baseUrl": "../..",
-    "paths": {
-      "@kanbien/core": [
-        "packages/core/src/index.ts"
-      ],
-      "@kanbien/core/*": [
-        "packages/core/src/*/index.ts"
-      ],
-      "@kanbien/platform-contracts": [
-        "platform/contracts/src/index.ts"
-      ]
-    },
     "rootDir": "../..",
     "types": [
       "node"

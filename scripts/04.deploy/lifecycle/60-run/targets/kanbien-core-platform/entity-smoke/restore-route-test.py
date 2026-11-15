@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.connected-restore-route
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -26,6 +26,7 @@ import json
 from pathlib import Path
 import runpy
 from types import SimpleNamespace
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_RESTORE_ROUTE_ASSERTIONS_DISABLED")
 
@@ -45,6 +46,7 @@ def run(case, snapshot_args, S, T, canary):
     D.S, D.TASK, D.C = S, T, T.C
     Y.D, Y.TASK, Y.C = D, T, T.C
     C = T.C
+    response = module("restore_fixture_response", Path(__file__).resolve().parents[7] / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
     original_transport = case.transport
     original_call = original_transport.__call__
     root_args = SimpleNamespace(**{**vars(snapshot_args), "mode": "plan", "phase": "deploy", "approved_plan": None})
@@ -88,7 +90,7 @@ def run(case, snapshot_args, S, T, canary):
         fail_absence = False
 
         def missing(self, service, operation, code):
-            condition = "aws-command-failed" if self.fail_absence else C.RESPONSE.classify_error(service, operation,
+            condition = "aws-command-failed" if self.fail_absence else response.classify_error(service, operation,
                 "An error occurred (" + code + ") when calling the Fixture operation: " + canary)
             if condition == "aws-resource-missing": raise C.RESOURCE.ResourceMissing()
             raise C.InfrastructureFailure(condition)
@@ -157,8 +159,12 @@ def run(case, snapshot_args, S, T, canary):
     original_others = copy.deepcopy(original_transport.other)
     planned(D, root_args)
     root_args.mode = "review"; clone.lost = "create-change-set"
+    with patch.object(C.TRANSITION, "RETIRED_PROOF_LABEL", root_args.proof_label):
+        fails(lambda: D.run(root_args, provider(D)), "incident-proof-new-attempt-retired")
+    assert not any(operation == "create-change-set" for _, operation, _ in clone.calls)
     fails(lambda: D.run(root_args, provider(D)), "restore-change-submission-uncertain-reconcile-only")
-    assert D.run(root_args, provider(D))["verdict"] == "completed"
+    with patch.object(C.TRANSITION, "RETIRED_PROOF_LABEL", root_args.proof_label):
+        assert D.run(root_args, provider(D))["verdict"] == "completed"
     assert sum(operation == "create-change-set" for _, operation, _ in clone.calls) == 1
     root_args.mode = "execute"; clone.lost = "execute-change-set"
     fails(lambda: D.run(root_args, provider(D)), "restore-execution-uncertain-reconcile-only")
@@ -187,6 +193,8 @@ def run(case, snapshot_args, S, T, canary):
     read_args = reader_args("operation")
     planned(Y, read_args); read_args.mode = "execute"
     before_jobs = len(original_transport.jobs.remote)
+    with patch.object(C.TRANSITION, "RETIRED_PROOF_LABEL", read_args.proof_label):
+        fails(lambda: Y.run(read_args, provider(Y)), "incident-proof-new-attempt-retired")
     fails(lambda: Y.run(read_args, provider(Y)), "restore-reader-preflight-required")
     assert len(original_transport.jobs.remote) == before_jobs
     host = next(row for row in task_definition["containerDefinitions"][0]["environment"] if row["name"] == "PERSISTENCE_POSTGRES_HOST")
@@ -293,7 +301,8 @@ def run(case, snapshot_args, S, T, canary):
     assert Y.run(probe_args, provider(Y))["verdict"] == "completed"
     planned_read = reader_args("operation"); planned(Y, planned_read); planned_read.mode = "execute"; original_transport.jobs.lost_next = True
     fails(lambda: Y.run(planned_read, provider(Y)), "task-submission-uncertain-reconcile-required")
-    read_result = Y.run(planned_read, provider(Y))
+    with patch.object(C.TRANSITION, "RETIRED_PROOF_LABEL", planned_read.proof_label):
+        read_result = Y.run(planned_read, provider(Y))
     assert read_result["verdict"] == "completed"
     assert len(original_transport.jobs.remote) == before_jobs + 3
     assert failed_path.read_bytes() == failed_bytes and failure_path.read_bytes() == negative_bytes

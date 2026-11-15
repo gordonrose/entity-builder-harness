@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.publication-workflow
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -30,6 +30,14 @@ SPEC.loader.exec_module(CONTROL)
 original = (CONTROL.ROOT / CONTROL.WORKFLOW).read_text()
 document = yaml.load(original, Loader=CONTROL.WorkflowLoader)
 assert CONTROL.inspect(original) == []
+for source in ('scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh',
+                   'scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs', 'scripts/repo/workspace-build/declarations.mjs', 'scripts/repo/workspace-build/compile.mjs', 'scripts/repo/workspace-build/runtime-packages.mjs', 'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs', 'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs', 'infra/04.deploy/03.product/entrypoints/runnable-program-index.yml',
+               'scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs',
+               'scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs',
+               'infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore'):
+    selected_input = ' --input ' + source
+    assert selected_input in original
+    assert CONTROL.inspect(original.replace(selected_input, '')) == ['entity-smoke-publication-contract-invalid'], 'omitted assembly/context input must invalidate future qualification binding'
 assert CONTROL.inspect(yaml.safe_dump(document, sort_keys=False)) == [], "round-trip preserves the real trigger, not YAML-1.1 True"
 
 
@@ -76,6 +84,19 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-workflow-") as temporary:
     smoke = Path(temporary) / "smoke.sh"
     smoke.write_text((CONTROL.ROOT / CONTROL.SMOKE).read_text().replace("node scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/verify-image.mjs", "true # node"))
     assert CONTROL.inspect(original, smoke=smoke) == ["entity-smoke-publication-contract-invalid"]
+    operations = Path(temporary) / "operations.sh"
+    common = (CONTROL.ROOT / CONTROL.CANDIDATE_BUILD_OPERATIONS).read_text()
+    operations.write_text(common + "\n# editorial comment\n")
+    assert CONTROL.inspect(original, operations=operations) == []
+    for altered in (
+        common.replace('  bash scripts/04.deploy/lifecycle/00-target-alignment/', '  true # bash scripts/04.deploy/lifecycle/00-target-alignment/'),
+        common.replace('--scope-contract "$scope" --json', '--scope-contract "$scope" --json || true'),
+        common.replace('docker build "$@"', 'docker build'),
+    ):
+        operations.write_text(altered)
+        assert CONTROL.inspect(original, operations=operations) == ["entity-smoke-publication-contract-invalid"]
+    operations.unlink()
+    assert CONTROL.inspect(original, operations=operations) == ["entity-smoke-publication-contract-invalid"]
 
 CF_SPEC = importlib.util.spec_from_file_location("entity_smoke_publication_cf", CONTROL.ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
 CF = importlib.util.module_from_spec(CF_SPEC)

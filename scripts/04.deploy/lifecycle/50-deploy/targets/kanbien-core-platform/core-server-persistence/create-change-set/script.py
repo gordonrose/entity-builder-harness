@@ -27,6 +27,14 @@ def controls():
     return module
 
 
+def operations():
+    path = Path(__file__).resolve().parents[1] / "change-set-operations.py"
+    spec = importlib.util.spec_from_file_location("persistence_change_set_operations", path)
+    value = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(value)
+    return value
+
+
 def diagnostic_controls():
     spec = importlib.util.spec_from_file_location("deployment_operation_diagnostics", DIAGNOSTICS)
     module = importlib.util.module_from_spec(spec)
@@ -138,41 +146,47 @@ def main() -> int:
         return report("blocked", "persistence-candidate-image-unavailable")
     if not module.live_budget()[0]:
         return report("blocked", "target-budget-live-configuration-invalid")
-    ok, stack, code = module.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
-    if ok:
-        try: status = stack.get("Stacks", [{}])[0].get("StackStatus") if isinstance(stack, dict) else None
-        except (AttributeError, TypeError, KeyError, IndexError): return report("uncertain", "persistence-candidate-stack-state-unknown")
-        return report("blocked", "persistence-candidate-stack-already-exists" if status else "persistence-candidate-stack-state-unknown")
-    if code != "aws-resource-missing":
-        return report("blocked", code)
-    digest, revision = receipt["image_digest"], receipt["source_revision"]
-    name = f"kanbien-core-platform-persistence-create-{digest[7:19]}"
-    parameters = [{"ParameterKey": key, "ParameterValue": value} for key, value in module.candidate_parameters(outputs, infrastructure, receipt).items()]
-    submitted = False
-    returned = False
+    owner = operations()
+    parameters = module.candidate_parameters(outputs, infrastructure, receipt)
+    def precondition(_reservation):
+        ok, stack, code = module.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
+        if ok:
+            try: status = stack.get("Stacks", [{}])[0].get("StackStatus") if isinstance(stack, dict) else None
+            except (AttributeError, TypeError, KeyError, IndexError): raise owner.OperationFailure("uncertain", "persistence-candidate-stack-state-unknown") from None
+            raise owner.OperationFailure("blocked", "persistence-candidate-stack-already-exists" if status else "persistence-candidate-stack-state-unknown")
+        if code != "aws-resource-missing": raise owner.OperationFailure("blocked", code)
+    def submit(service, operation, **arguments):
+        submitted, returned = False, False
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as parameter_file:
+                json.dump([{"ParameterKey": key, "ParameterValue": value} for key, value in parameters.items()], parameter_file)
+                parameter_file.flush()
+                submitted = True
+                ok, _, code = module.aws(
+                    service, operation, "--stack-name", STACK, "--change-set-name", name,
+                    "--change-set-type", "CREATE", "--template-body", f"file://{TEMPLATE}",
+                    "--parameters", f"file://{parameter_file.name}", "--capabilities", "CAPABILITY_NAMED_IAM",
+                    "--tags", "Key=Target,Value=kanbien-core-platform",
+                    "--client-token", arguments["ClientToken"], "--description", arguments["Description"],
+                )
+                returned = True
+        except (OSError, UnicodeError, TypeError, ValueError):
+            raise owner.Reported(report("uncertain" if submitted else "blocked", *([code] if returned and not ok else []), "persistence-submission-or-parameter-cleanup-unavailable" if submitted else "persistence-parameter-file-unavailable", facts={"change_set": name})) from None
+        if not ok:
+            finding = retain_diagnostic(module, name=name, receipt=receipt, path=diagnostic_path,
+                                        original_code="persistence-change-set-submission-uncertain",
+                                        outcome="unknown", fallback_code=code)
+            raise owner.Reported(report("uncertain", code, *(finding,) if finding else (), facts={"change_set": name}))
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as parameter_file:
-            json.dump(parameters, parameter_file)
-            parameter_file.flush()
-            submitted = True
-            ok, _, code = module.aws(
-                "cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name,
-                "--change-set-type", "CREATE", "--template-body", f"file://{TEMPLATE}",
-                "--parameters", f"file://{parameter_file.name}", "--capabilities", "CAPABILITY_NAMED_IAM",
-                "--tags", "Key=Target,Value=kanbien-core-platform",
-            )
-            returned = True
-    except (OSError, UnicodeError, TypeError, ValueError):
-        return report("uncertain" if submitted else "blocked", *([code] if returned and not ok else []), "persistence-submission-or-parameter-cleanup-unavailable" if submitted else "persistence-parameter-file-unavailable", facts={"change_set": name})
-    if not ok:
-        finding = retain_diagnostic(module, name=name, receipt=receipt, path=diagnostic_path,
-                                    original_code="persistence-change-set-submission-uncertain",
-                                    outcome="unknown", fallback_code=code)
-        return report("uncertain", code, *(finding,) if finding else (), facts={"change_set": name})
-    return reconcile(module, name, receipt, diagnostic_path)
+        return owner.CHANGE_SETS.prepare(submit, owner.store(ROOT), phase="create", request=owner.intent(name, receipt, parameters, TEMPLATE),
+            arguments={}, precondition=precondition, observe=lambda reservation: reconcile(module, name, receipt, diagnostic_path, reservation=reservation), passthrough=(owner.Reported,))
+    except owner.Reported as result: return result.status
+    except owner.OperationFailure as failure: return report(failure.verdict, failure.code)
+    except owner.CHANGE_SETS.ChangeSetFailure:
+        return report("uncertain", "persistence-change-set-submission-uncertain", facts={"change_set": name})
 
 
-def reconcile(module, name: str, receipt: dict, diagnostic_path: Path | None = None) -> int:
+def reconcile(module, name: str, receipt: dict, diagnostic_path: Path | None = None, *, reservation=None) -> int:
     facts = {"change_set": name, "candidate_image_digest": receipt["image_digest"], "candidate_source_revision": receipt["source_revision"]}
     ok, change, code = module.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
     diagnostic_path = diagnostic_path or DIAGNOSTIC_DIRECTORY / f"{name}.json"
@@ -183,6 +197,8 @@ def reconcile(module, name: str, receipt: dict, diagnostic_path: Path | None = N
         return report("uncertain", "persistence-change-set-observation-uncertain", *(finding,) if finding else (), facts=facts)
     if not module.change_name_matches(change.get("ChangeSetName"), name):
         return report("blocked", "persistence-change-set-identity-invalid", facts=facts)
+    if reservation is not None and change.get("Description") != reservation["operation_id"]:
+        return report("blocked", "persistence-change-set-reservation-identity-invalid", facts=facts)
     try: pending = change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}
     except TypeError: return report("uncertain", "persistence-change-set-status-unobservable", facts=facts)
     if pending:

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.restore.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -358,11 +358,13 @@ def run(args, provider):
         prepared["effect_request"] = {**packet["request"], "change_set_arn": facts["change_set_arn"], "stack_arn": facts["stack_arn"]}
     else: prepared["effect_request"] = packet["request"]
     effect_request = prepared["effect_request"]
+    previous = store.read(phase, effect_request)
+    C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
     reconciling_cleanup = "reconciles_plan_sha256" in packet["plan"]
     if reconciling_cleanup:
-        require(phase == "delete-restore" and store.read(phase, effect_request) is not None, "restore-cleanup-reconciliation-journal-required")
+        require(phase == "delete-restore" and previous is not None, "restore-cleanup-reconciliation-journal-required")
         provider.effect = "original-restore-operation-reconcile-only"
-    elif store.read(phase, effect_request) is None: provider.enable_restore(phase, store, effect_request, lambda: payload(prepared, phase), guard)
+    elif previous is None: provider.enable_restore(phase, store, effect_request, lambda: payload(prepared, phase), guard)
     else: provider.effect = "original-restore-operation-reconcile-only"
     deadline = time.monotonic() + args.wait_seconds
     while True:

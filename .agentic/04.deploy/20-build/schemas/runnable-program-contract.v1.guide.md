@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.schema.runnable-program-contract.v1.guide
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-19"
-updated_on: "2026-10-26"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -46,3 +46,28 @@ checked, but this contract never stores their values or any sensitive material.
 The program `runtime_executable` must name a supported interpreter; its image
 command begins with that interpreter and the exact entrypoint. A shell, echo,
 or an interpreter evaluation flag mentioning the entrypoint is not execution.
+
+## Declaration-derived workspace builds
+
+For a Node workspace-TypeScript program, add `build.kind: workspace-typescript`
+and `build.typescript_project` to the existing program record. In the same
+contract, `dependency_bindings` connects its existing logical approval IDs to
+either one `workspace_package` name or a list of `external_packages`. For example,
+`core: {workspace_package: '@kanbien/core'}` binds the existing `core` approval;
+it does not copy Core's directory, exports or dependencies.
+
+The [build-input reader](../../../../scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs)
+resolves the selected approved workspace packages from root workspaces and their
+package manifests. Their runtime dependency closure must stay inside those
+approvals, and external roots must be allowed by the selected external bindings.
+Discovery cannot approve another package. Test-only development dependencies are
+not added to a program image. An absent binding, unresolved workspace package or
+unapproved transitive dependency fails before compilation or packaging.
+
+This build reader does not replace the existing whole-contract checker, observed
+source-boundary proof, image qualification or publication/acceptance checks.
+Non-workspace and non-TypeScript programs retain their existing declarations.
+The current resolver explicitly rejects unsupported conditional/wildcard/type-only
+exports and workspace optional/peer dependencies instead of guessing semantics;
+the installed external-package resolver still owns its supported optional/peer
+closure. Extend and prove the owning mechanism before adopting such a declaration.

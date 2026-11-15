@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.infrastructure-route
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -397,7 +397,11 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-local-proof-reference-") a
     old_root, old_run, old_parse = M.ROOT, M.subprocess.run, M.parse
     old_read, old_source = M.ALIGN.read_receipt, M.ALIGN.source_preflight
     M.ROOT = root
-    M.subprocess.run = lambda *arguments, **options: SimpleNamespace(returncode=1, stdout=json.dumps({"run_report_path": reference, "checks": [], "findings": []}), stderr=CANARY)
+    def local_result(arguments, **options):
+        assert arguments == ["python3", "-B", "scripts/repo/check-selection/script.py", "--checks", "entity-smoke-composition", "secret-dependency-declaration-regression", "--execute-local", "--json"]
+        assert options == {"cwd": root, "capture_output": True, "text": True, "timeout": 900}
+        return SimpleNamespace(returncode=1, stdout=json.dumps({"run_report_path": reference, "checks": [], "findings": []}), stderr=CANARY)
+    M.subprocess.run = local_result
     M.parse = lambda: SimpleNamespace(receipt=root / "controlled.json", mode="plan", phase="create", proof_label=F.BINDING["proof_label"], validate_arguments=False)
     M.ALIGN.read_receipt, M.ALIGN.source_preflight = lambda path: {}, lambda receipt: None
     output = io.StringIO()
@@ -405,6 +409,17 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-local-proof-reference-") a
     failure = json.loads(output.getvalue())
     assert status == 1 and failure["condition"] == "infrastructure-local-proof-not-passed" and failure["evidence_reference"] == reference
     assert CANARY not in output.getvalue() and failure["effect"] == "not-started"
+    def local_timeout(arguments, **options):
+        assert options["timeout"] == 900
+        raise subprocess.TimeoutExpired(arguments, 900, stderr=CANARY)
+    M.subprocess.run = local_timeout
+    failed(M.local_checks, "infrastructure-local-proof-unavailable")
+    # Success comes only from the existing selected runner, never an imported
+    # report or force/reuse override. The runner owns input-bound cache reuse.
+    M.subprocess.run = lambda arguments, **options: SimpleNamespace(returncode=0, stdout=json.dumps({"findings": [], "checks": [{"check_id": identity, "status": "passed"} for identity in ("entity-smoke-composition", "secret-dependency-declaration-regression")]}), stderr="")
+    M.local_checks()
+    M.subprocess.run = lambda arguments, **options: SimpleNamespace(returncode=0, stdout=json.dumps({"findings": [], "checks": [{"check_id": "other-check", "status": "passed"}]}), stderr="")
+    failed(M.local_checks, "infrastructure-local-proof-not-passed")
     M.ROOT, M.subprocess.run, M.parse = old_root, old_run, old_parse
     M.ALIGN.read_receipt, M.ALIGN.source_preflight = old_read, old_source
 
@@ -422,6 +437,24 @@ failure = json.loads(output.getvalue())
 assert status == 1 and failure["condition"] == "task-unsuccessful-completion" and failure["diagnostic"] == primary
 assert failure["observations"] == [bundle] and failure["related_diagnostics"] == [] and CANARY not in output.getvalue()
 M.parse, M.run = old_parse, old_run
+
+# Actual controller source identity includes the extracted execution dependency.
+original_digest = M.digest_file
+identity_paths = []
+dependency_paths = [REAL_ROOT / "scripts/04.deploy/shared/provider-adapters/aws" / name for name in ("cli.py", "tasks.py", "resource_reservation.py", "snapshots.py", "change_sets.py")]
+dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
+try:
+    def fixed_digest(path):
+        identity_paths.append(path)
+        return "sha256:" + "1" * 64
+    M.digest_file = fixed_digest
+    original_identity = M.source_digest()
+    for dependency in dependency_paths:
+        assert dependency in identity_paths
+        M.digest_file = lambda path: "sha256:" + ("2" if path == dependency else "1") * 64
+        assert M.source_digest() != original_identity
+finally:
+    M.digest_file = original_digest
 
 # Exercise the real provider adapter with a controlled subprocess response,
 # checking that the caller cannot choose another endpoint or enable retries.

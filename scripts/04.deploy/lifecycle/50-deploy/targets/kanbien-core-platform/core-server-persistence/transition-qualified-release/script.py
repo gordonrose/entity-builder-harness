@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-06"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -18,7 +18,7 @@
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh
 #   effects: [aws-mutation]
 from __future__ import annotations
-import argparse, importlib.util, json, subprocess, tempfile, time
+import argparse, importlib.util, json, subprocess, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[8]
@@ -179,19 +179,14 @@ def main():
         expected["RestoreVerifierImageDigest"]=support_digest
     parameters=update_parameter_inputs(current_parameters, expected)
     if parameters is None: return emit("blocked", "persistence-release-transition-update-parameter-inputs-invalid")
-    ok,_,code=prepare.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
-    if not ok:
-        if code!="aws-resource-missing": return emit("blocked",code)
-        with tempfile.NamedTemporaryFile(mode="w",suffix=".json",encoding="utf-8") as file:
-            json.dump(parameters,file); file.flush(); ok,_,code=prepare.aws("cloudformation","create-change-set","--stack-name",STACK,"--change-set-name",name,"--change-set-type","UPDATE","--use-previous-template","--parameters",f"file://{file.name}","--capabilities","CAPABILITY_NAMED_IAM")
-        if not ok: return emit("uncertain",code,facts={"change_set":name})
-    change,code=wait_reviewable(prepare,name,status,digest,revision,support_digest)
-    if change is None: return reconcile(prepare,name,digest,revision,support_digest)
-    if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(prepare,name,digest,revision,support_digest)
-    actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
-    if not prepare.update_parameters_match(actual,expected,current_parameters):return emit("blocked","persistence-update-live-parameters-mismatch")
-    ok,_,code=prepare.aws("cloudformation","execute-change-set","--stack-name",STACK,"--change-set-name",name)
-    if not ok:return emit("uncertain",code,facts={"change_set":name})
-    return reconcile(prepare,name,digest,revision,support_digest)
+    def admit(change):
+        actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
+        return None if prepare.update_parameters_match(actual,expected,current_parameters) else "persistence-update-live-parameters-mismatch"
+    return prepare.apply_update(
+        name=name, parameters=parameters, template_arguments=("--use-previous-template",),
+        review=lambda _existing,_created:wait_reviewable(prepare,name,status,digest,revision,support_digest),
+        admit=admit, observe=lambda:reconcile(prepare,name,digest,revision,support_digest),
+        failure=lambda verdict,code:emit(verdict,code,facts={"change_set":name} if verdict=="uncertain" else None),
+    )
 
 if __name__=="__main__": raise SystemExit(main())

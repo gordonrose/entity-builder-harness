@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-active-workload-health-recovery
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -60,6 +60,30 @@ def index(path: Path) -> dict[str, Any]:
 
 def write(path: Path, value: dict[str, Any]) -> None:
     yaml.safe_dump(value, path.open("w", encoding="utf-8"), sort_keys=False)
+
+
+def health_only_scopes(target_root: Path) -> None:
+    # These disposable copies exercise health/ownership, not release acceptance.
+    # Copying live receipts must not turn them into accepted rehearsal evidence.
+    for contract_path in target_root.glob("*/00-declaration/declaration-contract.yml"):
+        contract = index(contract_path)
+        if "acceptance" in contract:
+            contract.pop("acceptance")
+            write(contract_path, contract)
+
+
+def copied_live_reference_rejected(target_root: Path) -> None:
+    expect_failure(target_root, "scope-lifecycle-accepted-release-invalid")
+    record = target_root / "entity-smoke/30-release-evidence/current-accepted-release.yml"
+    command = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-state.sh"
+    result = subprocess.run(["bash", str(command), "--operation", "validate-current", "--record", str(record), "--json"],
+                            check=False, capture_output=True, text=True)
+    report = json.loads(result.stdout)
+    assert result.returncode == 1
+    assert report["verdict"] == "blocked"
+    assert report["condition"] == "acceptance-state-current-reference-invalid"
+    assert report["effect"] == "read-only-no-provider-query"
+    assert report["current_readiness"] is False
 
 
 def copied_scope(target_root: Path, scope_id: str) -> None:
@@ -117,6 +141,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as directory:
         target_root = Path(directory) / "20-scopes"
         shutil.copytree(SCOPES, target_root)
+        copied_live_reference_rejected(target_root)
+        health_only_scopes(target_root)
         index_path = target_root / "scope-index.yml"
 
         valid = index(index_path)
@@ -170,6 +196,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as directory:
         target_root = Path(directory) / "20-scopes"
         shutil.copytree(SCOPES, target_root)
+        health_only_scopes(target_root)
         index_path = target_root / "scope-index.yml"
         valid = index(index_path)
         # Isolate the generic successor fixture from the target's now-active
@@ -225,6 +252,7 @@ def independent_candidates() -> None:
     with tempfile.TemporaryDirectory() as directory:
         target_root = Path(directory) / "20-scopes"
         shutil.copytree(SCOPES, target_root)
+        health_only_scopes(target_root)
         copied_scope(target_root, "independent-feature")
         binding_path = target_root / "independent-feature/10-workload-binding/workload-binding.yml"
         binding = index(binding_path)

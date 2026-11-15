@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-route
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -20,6 +20,7 @@
 #     path: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
 from contextlib import redirect_stdout
 import copy
+import hashlib
 from datetime import datetime, timedelta, timezone
 import importlib.util
 import io
@@ -61,6 +62,44 @@ def report(call):
     output = io.StringIO()
     with redirect_stdout(output): status = call()
     return status, json.loads(output.getvalue()), output.getvalue()
+
+
+def candidate_construction_protocols():
+    """Actual feature caller preserves its prior bytes without live collection."""
+    canonical = lambda value: json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    digest = lambda value: "sha256:" + hashlib.sha256(value).hexdigest()
+    packet = {"binding": {"source_revision": "a" * 40, "image_digest": "sha256:" + "b" * 64,
+              "configuration_contract_sha256": "sha256:" + "c" * 64, "permission_contract_sha256": "sha256:" + "d" * 64},
+              "runtime": {"observed_at": "2026-11-15T10:00:00Z"}, "fixture": "not-live-proof"}
+    identifiers = set()
+    for changed in [None, "source_revision", "image_digest", "configuration_contract_sha256", "permission_contract_sha256", "proof"]:
+        value = copy.deepcopy(packet)
+        if changed == "proof": value["fixture"] = "changed-not-live-proof"
+        elif changed is not None: value["binding"][changed] = "e" * 40 if changed == "source_revision" else "sha256:" + "e" * 64
+        proof_bytes = canonical(value) + b"\n"
+        proof_name = "entity-smoke-" + hashlib.sha256(canonical(value)).hexdigest() + ".json"
+        proofs = {"entity-smoke-complete-proof": {"path": "proof-receipts/" + proof_name, "sha256": digest(proof_bytes)}}
+        contracts = {"configuration_contract": {"path": str((K.C.CONTRACT.parent / "declaration-contract.yml").relative_to(ROOT)), "sha256": value["binding"]["configuration_contract_sha256"]},
+                     "permission_contract": {"path": str(K.C.DEPLOY.SOURCE.relative_to(ROOT)), "sha256": value["binding"]["permission_contract_sha256"]}}
+        identity = {"target": K.TARGET, "scope": K.SCOPE, "source_revision": value["binding"]["source_revision"],
+                    "image_digest": value["binding"]["image_digest"], **contracts, "proof_set_sha256": digest(canonical(proofs))}
+        identifier = "release-" + hashlib.sha256(canonical(identity)).hexdigest()[:24]
+        expected = {"schema": "deploy/release-candidate/v1", "target": K.TARGET, "scope": K.SCOPE, "status": "verified", "evidence_class": "live",
+                    "release": {"id": identifier, **{key: item for key, item in identity.items() if key not in {"target", "scope"}}},
+                    "proof": {"accepted_at": value["runtime"]["observed_at"], "receipt_count": 1}, "proof_set": proofs}
+        with patch.object(K.S, "candidate_document", wraps=K.S.candidate_document) as constructor:
+            material = K.candidate_material(value)
+            assert constructor.call_count == 1
+        assert material["proof"] == (K.EVIDENCE_ROOT / "proof-receipts" / proof_name, proof_bytes)
+        assert material["candidate"] == (K.EVIDENCE_ROOT / "release-candidates" / (identifier + ".yml"), yaml.safe_dump(expected, sort_keys=False).encode())
+        identifiers.add(identifier)
+    assert len(identifiers) == 6, "each changed source/image/contract/proof must change release identity"
+    with patch.object(K, "TARGET", "renamed-target"), patch.object(K, "SCOPE", "renamed-workload"):
+        renamed = K.candidate_material(packet)["document"]
+        assert (renamed["target"], renamed["scope"]) == ("renamed-target", "renamed-workload")
+        assert renamed["release"]["id"] not in identifiers
+    with patch.object(K.S, "candidate_document", side_effect=K.S.SuccessionFailure("release-succession-candidate-proof-invalid")):
+        rejection(lambda: K.candidate_material(packet), K.S.SuccessionFailure, "release-succession-candidate-proof-invalid")
 
 
 def promotion_protocols(base):
@@ -284,6 +323,7 @@ def source_boundary_protocols(base):
 
 
 def run():
+    candidate_construction_protocols()
     module("entity_smoke_route_aggregate_fixture", DIRECTORY / "acceptance-aggregate-test.py").run(K)
     contract = K.C.CONTRACT.parent / "declaration-contract.yml"
     assert R.inspect(contract)["verdict"] == "covered", "real offline parsers, not declared command existence"

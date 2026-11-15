@@ -12,5 +12,9 @@
   "dependencies": {
     "@kanbien/core": "0.0.0",
     "@kanbien/platform-contracts": "0.0.0"
+  },
+  "devDependencies": {
+    "@kanbien/platform-persistence": "0.0.0",
+    "@kanbien/platform-security": "0.0.0"
   }
 }

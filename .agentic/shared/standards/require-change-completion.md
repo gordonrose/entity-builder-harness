@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 11
+version: 12
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-09"
+updated_on: "2026-11-15"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -143,6 +143,16 @@ the stage that requires that proof. Distinguish static validation, local
 runtime tests, actual container qualification, CI and live evidence in the
 existing session record and completion report. Name checks, outcomes and safe
 evidence references; planned commands and fixtures are not execution evidence.
+
+The existing selector's report and retained run summary must state requested
+local results separately from complete declared-impact local integration,
+package qualification, live-target proof and acceptance. Explicit, development,
+commit-only and empty selections cannot establish complete affected integration.
+Preserve original statuses and distinguish absent, failed, observed interruption,
+stale and deferred evidence. Missing later-stage proof does not fail successful
+local checks: those stages remain unevaluated until their owning controller
+provides proof. A report is an observation, not a new source of trusted evidence
+or execution authority; do not import it to bypass existing custody checks.
 
 ## Correction and continuation
 

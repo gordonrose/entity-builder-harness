@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.infrastructure.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -43,7 +43,7 @@ DIRECTORY = Path(__file__).parent
 DEPLOY = module("entity_smoke_public_deployment", DIRECTORY / "deployment-control.py")
 RESOURCE = DEPLOY.RESOURCE
 ALIGN = module("entity_smoke_public_alignment", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py")
-RESPONSE = module("entity_smoke_public_response", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py")
+CLI = module("entity_smoke_public_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
 GATE = module("entity_smoke_public_gate", ROOT / "scripts/04.deploy/operational-realization-gate/script.py")
 CONTRACT = ROOT / ALIGN.TARGET / "20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml"
 TRANSITION = module("entity_smoke_source_transition", DIRECTORY / "source-transition.py")
@@ -133,26 +133,20 @@ class Provider:
         attempts = 3 if (service, operation) in READS else 1
         for attempt in range(attempts):
             try:
-                result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=40,
-                                        env={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "AWS_EC2_METADATA_DISABLED": "true"})
-            except subprocess.TimeoutExpired:
-                if attempt + 1 < attempts:
+                return CLI.invoke_json(
+                    arguments, cwd=ROOT, timeout=40, empty_body="whitespace", object_only=True,
+                    environment={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "AWS_EC2_METADATA_DISABLED": "true"},
+                    timeout_endpoint="https://" + hostname,
+                )
+            except CLI.CliFailure as error:
+                if (error.code == "aws-command-timeout" or error.transport_timeout) and attempt + 1 < attempts:
                     time.sleep(0.1 * (attempt + 1)); continue
-                raise failure("infrastructure-provider-observation-unavailable") from None
-            except (OSError, UnicodeError, subprocess.SubprocessError): raise failure("infrastructure-provider-observation-unavailable") from None
-            transport_timeout = result.returncode != 0 and re.fullmatch(
-                r'aws: \[ERROR\]: (?:Connect|Read) timeout on endpoint URL: "' + re.escape("https://" + hostname) + r'/?"', result.stderr.strip()) is not None
-            if transport_timeout and attempt + 1 < attempts:
-                time.sleep(0.1 * (attempt + 1)); continue
-            break
-        if result.returncode:
-            code = RESPONSE.classify_error(service, operation, result.stderr)
-            if code == "aws-resource-missing": raise RESOURCE.ResourceMissing()
-            raise failure(code)
-        try: value = json.loads(result.stdout) if result.stdout.strip() else {}
-        except (ValueError, TypeError): raise failure("infrastructure-provider-response-invalid") from None
-        if not isinstance(value, dict): raise failure("infrastructure-provider-response-invalid")
-        return value
+                if error.phase == "process": raise failure("infrastructure-provider-observation-unavailable") from None
+                if error.phase == "response": raise failure("infrastructure-provider-response-invalid") from None
+                if error.code == "aws-resource-missing": raise RESOURCE.ResourceMissing() from None
+                raise failure(error.code) from None
+            except (OSError, subprocess.SubprocessError): raise failure("infrastructure-provider-observation-unavailable") from None
+            except (ValueError, TypeError): raise failure("infrastructure-provider-response-invalid") from None
 
 
 def operator_resources_allowed(provider, role, action, resources, *, context=None):
@@ -171,9 +165,12 @@ def operator_resources_allowed(provider, role, action, resources, *, context=Non
 
 
 def local_checks():
+    # The runner reuses current input-bound receipts itself. Cold composition has
+    # taken 467s; retain a finite host-only bound that also admits its second check.
+    # This does not change provider timeouts or ECS task deadlines.
     arguments = ["python3", "-B", "scripts/repo/check-selection/script.py", "--checks", "entity-smoke-composition", "secret-dependency-declaration-regression", "--execute-local", "--json"]
     try:
-        result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=180)
+        result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=900)
         value = json.loads(result.stdout)
     except (OSError, ValueError, TypeError, UnicodeError, subprocess.SubprocessError): raise InfrastructureFailure("infrastructure-local-proof-unavailable") from None
     checks = value.get("checks") if isinstance(value, dict) else None
@@ -193,6 +190,12 @@ def source_digest():
     paths = sorted([*DIRECTORY.glob("*.py"), *DIRECTORY.glob("*.sh"), CONTRACT, DEPLOY.SOURCE,
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py",
+                    ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py",
+                    ROOT / "scripts/04.deploy/shared/provider-adapters/aws/tasks.py",
+                    ROOT / "scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py",
+                    ROOT / "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py",
+                    ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py",
+                    ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
                     ROOT / "scripts/04.deploy/operational-realization-gate/script.py",
                     Path(ALIGN.__file__)])
     return DEPLOY.fingerprint({str(path.relative_to(ROOT)): digest_file(path) for path in paths})

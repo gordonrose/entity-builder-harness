@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.implementation
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -162,6 +162,29 @@ def proof_set(record: dict[str, Any], root: Path | None = None) -> dict[str, dic
             if sha256_bytes(raw) != result[name]["sha256"]:
                 raise SuccessionFailure("release-succession-proof-receipt-mismatch")
     return result
+
+
+def candidate_document(*, target: str, scope: str, source_revision: str,
+                       image_digest: str, configuration_contract: dict[str, str],
+                       permission_contract: dict[str, str], proofs: dict[str, dict[str, str]],
+                       accepted_at: str) -> dict[str, Any]:
+    """Construct the common candidate without writing or claiming live proof.
+
+    Collectors own typed proof selection and observation. The normal candidate
+    validator still checks retained bytes/current contracts before publication;
+    this pure construction only validates the shared envelope and identity.
+    """
+    receipts = proof_set({"proof_set": proofs})
+    identity = {"target": target, "scope": scope, "source_revision": source_revision,
+                "image_digest": image_digest, "configuration_contract": configuration_contract,
+                "permission_contract": permission_contract,
+                "proof_set_sha256": sha256_bytes(canonical(receipts))}
+    value = {"schema": CANDIDATE_SCHEMA, "evidence_class": EVIDENCE_CLASS,
+             "target": target, "scope": scope, "status": "verified",
+             "release": {"id": release_id(identity), **{key: item for key, item in identity.items() if key not in {"target", "scope"}}},
+             "proof": {"accepted_at": accepted_at, "receipt_count": len(receipts)}, "proof_set": receipts}
+    candidate_identity(value)
+    return value
 
 
 def candidate_identity(record: dict[str, Any], root: Path | None = None, *, current_contracts: bool = True) -> tuple[str, str, str, dict[str, Any]]:

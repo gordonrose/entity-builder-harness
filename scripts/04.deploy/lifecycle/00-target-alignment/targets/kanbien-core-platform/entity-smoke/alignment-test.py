@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.target-alignment
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -24,6 +24,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from unittest.mock import patch
+from types import SimpleNamespace
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_ALIGNMENT_ASSERTIONS_DISABLED")
 SPEC = importlib.util.spec_from_file_location("entity_smoke_alignment_test", Path(__file__).with_name("script.py"))
@@ -33,6 +34,37 @@ CANARY = "credential-row-provider-canary"
 VPC, GROUP = "vpc-" + "1" * 17, "sg-" + "2" * 17
 SECRET = "arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien-core-platform-persistence-migration-aBc123"
 RECEIPT = {"source_revision": "a" * 40, "image_digest": "sha256:" + "b" * 64, "receipt_reference": "github-actions-run:123"}
+
+
+# Exercise the actual read-only CLI binding, not a substituted alignment provider.
+expected_argv = ["aws", "sts", "get-caller-identity", "--profile", "kanbien-dev", "--region", "eu-west-1", "--output", "json",
+                 "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--no-cli-pager", "--no-paginate", "--cli-input-json", "{}"]
+expected_options = {"cwd": M.ROOT, "capture_output": True, "text": True, "timeout": 30,
+                    "env": {**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "PYTHONDONTWRITEBYTECODE": "1"}}
+for stdout in ('{}', '', ' \n', '[]', 'null', CANARY):
+    with patch.object(M.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=stdout, stderr="")) as call:
+        if stdout == '{}': assert M.aws("sts", "get-caller-identity") == {}
+        else:
+            try: M.aws("sts", "get-caller-identity")
+            except M.AlignmentFailure as failure: assert failure.code == "alignment-provider-observation-invalid"
+            else: raise AssertionError("alignment requires a JSON object, including for empty responses")
+        call.assert_called_once_with(expected_argv, **expected_options)
+for value, code in [(SimpleNamespace(returncode=254, stdout='', stderr=CANARY), "alignment-command-not-confirmed"),
+                    (OSError(CANARY), "alignment-command-unavailable"),
+                    (UnicodeDecodeError('utf8', b'\xff', 0, 1, CANARY), "alignment-command-unavailable"),
+                    (subprocess.TimeoutExpired(expected_argv, 30), "alignment-command-unavailable"),
+                    (subprocess.SubprocessError(CANARY), "alignment-command-unavailable")]:
+    with patch.object(M.subprocess, "run", **({"side_effect": value} if isinstance(value, Exception) else {"return_value": value})) as call:
+        try: M.aws("sts", "get-caller-identity")
+        except M.AlignmentFailure as failure:
+            assert failure.code == code and CANARY not in str(failure)
+        else: raise AssertionError("alignment CLI failure must retain its original finite code")
+        call.assert_called_once_with(expected_argv, **expected_options)
+with patch.object(M.subprocess, "run") as call:
+    try: M.aws("ecs", "run-task")
+    except M.AlignmentFailure as failure: assert failure.code == "alignment-provider-operation-prohibited"
+    else: raise AssertionError("shared invocation does not grant mutation authority")
+    call.assert_not_called()
 
 
 def fixture():
@@ -193,7 +225,7 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
         repair = commit("controller-only correction")
         assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": repair}
         M.source_preflight(custody)
-        for path in ("scripts/04.deploy/shared/provider-adapters/aws/response.py", "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py"):
+        for path in ("scripts/04.deploy/shared/provider-adapters/aws/response.py", "scripts/04.deploy/shared/provider-adapters/aws/cli.py", "scripts/04.deploy/shared/provider-adapters/aws/tasks.py", "scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py", "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py", "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py", "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py", "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"):
             write(path, "checked controller response correction\n")
             rejected_source(lambda: M.source_preflight(custody), "alignment-committed-source-required")
             repair = commit("shared response controller-only correction")

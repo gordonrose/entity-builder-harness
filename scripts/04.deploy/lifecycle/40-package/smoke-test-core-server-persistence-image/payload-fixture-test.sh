@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-image-payload-fixture
-#   version: 5
+#   version: 6
 #   status: draft
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -23,13 +23,15 @@ TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/build.sh --out-dir "$TEMPORARY_DIRECTORY"
 node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
-NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
+node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-dependencies.mjs "$ROOT" "$TEMPORARY_DIRECTORY/.dependencies/node_modules"
+NODE_PATH="$TEMPORARY_DIRECTORY/.dependencies/node_modules" node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
 node - "$TEMPORARY_DIRECTORY" "$ROOT" <<'NODE'
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const [compiled, root] = process.argv.slice(2);
+const externalDependencies = path.join(compiled, '.dependencies/node_modules');
 const validator = path.join(root, 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs');
 const entrypointDirectory = 'infra/04.deploy/03.product/entrypoints';
 const dockerfile = fs.readFileSync(path.join(root, 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile'), 'utf8');
@@ -55,14 +57,15 @@ function missingCopiedEntrypointImports(dockerfileSource) {
   return [...missing].sort();
 }
 assert.deepEqual(missingCopiedEntrypointImports(dockerfile), [], 'actual relative entrypoint dependencies must be copied into the image build');
-const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'kanbien-core-server-persistence-operation-diagnostics', 'kanbien-core-server-persistence-composition'];
+const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'kanbien-core-server-persistence-operation-diagnostics', 'kanbien-core-server-persistence-composition', 'shared/persistence/configuration-implementation'];
 for (const module of requiredEntrypointModules) {
   const source = `${entrypointDirectory}/${module}.ts`;
   const copy = `COPY ${source} ./${source}`;
   const omitted = dockerfile.split('\n').filter((line) => line !== copy).join('\n');
   assert.deepEqual(missingCopiedEntrypointImports(omitted), [source], 'omitting a required entrypoint dependency must fail copy-closure proof');
 }
-function rejects(mutate, undo, nodePath = path.join(root, 'node_modules'), expectedCode) {
+let rejectedPayloads = 0;
+function rejects(mutate, undo, nodePath = externalDependencies, expectedCode) {
   mutate();
   try {
     const result = spawnSync(process.execPath, [validator, '--compiled-root', compiled], {encoding:'utf8', env: {...process.env, NODE_PATH:nodePath}});
@@ -70,6 +73,7 @@ function rejects(mutate, undo, nodePath = path.join(root, 'node_modules'), expec
     const report = JSON.parse(result.stderr);
     assert.equal(report.verdict, 'failed');
     if (expectedCode !== undefined) assert.equal(report.code, expectedCode);
+    rejectedPayloads++;
   } finally { undo(); }
 }
 const wrapper = path.join(compiled, 'kanbien-core-server-persistence.main.js');
@@ -87,12 +91,12 @@ rejects(() => fs.writeFileSync(entry, 'module.exports = {};'), () => fs.writeFil
 for (const module of requiredEntrypointModules) {
   const diagnostic = path.join(compiled, entrypointDirectory, `${module}.js`);
   const content = fs.readFileSync(diagnostic);
-  rejects(() => fs.unlinkSync(diagnostic), () => fs.writeFileSync(diagnostic, content), path.join(root, 'node_modules'), 'payload-import-unresolved');
+  rejects(() => fs.unlinkSync(diagnostic), () => fs.writeFileSync(diagnostic, content), externalDependencies, 'payload-import-unresolved');
 }
 fs.unlinkSync(path.join(compiled, 'packages/core/src/diagnostics/index.js'));
 const prepared = spawnSync(process.execPath, [path.join(root, 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs'), '--compiled-root', compiled], {encoding:'utf8'});
 assert.equal(prepared.status, 1, 'missing compiled export must fail preparation');
-console.log('Persistence payload regression passed (10 broken-payload cases and 3 omitted-source cases; no container or target access).');
+console.log(`Persistence payload regression passed (${rejectedPayloads + 1} broken-payload cases and ${requiredEntrypointModules.length} omitted-source cases; no container or target access).`);
 NODE
 python3 - "$ROOT" "$TEMPORARY_DIRECTORY" <<'PY'
 import json, os, shutil, subprocess, sys
@@ -106,6 +110,9 @@ for name in ('script.sh', 'script.py'):
 helper = Path('scripts/04.deploy/shared/safe-command-diagnostics.sh')
 (fixture / helper).parent.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(root / helper, fixture / helper)
+build_operations = Path('scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh')
+(fixture / build_operations).parent.mkdir(parents=True)
+shutil.copyfile(root / build_operations, fixture / build_operations)
 contract = fixture / 'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml'
 contract.parent.mkdir(parents=True)
 contract.write_text('schema: deploy/target-scope-contract/v1\nscope: core-server-persistence\n')
@@ -148,7 +155,7 @@ for capability in capabilities:
     for name in ('script.sh', 'script.py'):
         source = root / capability / name
         if source.is_file(): shutil.copy2(source, destination / name)
-for relative in ('scripts/repo/diagnostic-coverage/runtime_contract.py', 'platform/persistence/contracts/diagnostics.v1.json'):
+for relative in ('scripts/repo/diagnostic-coverage/runtime_contract.py', 'platform/persistence/contracts/diagnostics.v1.json', 'scripts/04.deploy/shared/provider-adapters/aws/tasks.py', 'scripts/04.deploy/shared/provider-adapters/aws/cli.py', 'scripts/04.deploy/shared/provider-adapters/aws/response.py'):
     destination = fixture / relative; destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(root / relative, destination)
 scopes = Path('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes')
