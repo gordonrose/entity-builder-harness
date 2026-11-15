@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-11"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -52,7 +52,10 @@ const messages={container:'No such container: '+name,network:'network '+name+' n
 process.stderr.write('Error response from daemon: '+messages[kind]+'\\n');process.exit(1);
 `, { mode: 0o700 });
   function run(args, unavailable = false, startup = false) {
-    const result = spawnSync(process.execPath, [verifier, ...args], { encoding: "utf8", timeout: 10_000,
+    // Startup also generates real TLS certificates and runs the complete
+    // cleanup subprocess chain; its watchdog is not a readiness assertion.
+    // Keep a finite bound without killing the expected preflight rejection.
+    const result = spawnSync(process.execPath, [verifier, ...args], { encoding: "utf8", timeout: startup ? 60_000 : 10_000,
       env: { ...process.env, PATH: fixture + ":" + process.env.PATH, ENTITY_SMOKE_FIXTURE_CALLS: calls, ENTITY_SMOKE_FIXTURE_UNOBSERVABLE: String(unavailable), ENTITY_SMOKE_FIXTURE_STARTUP: String(startup) } });
     assert.equal(result.error, undefined); assert.equal(result.signal, null);
     assert(!(result.stdout + result.stderr).includes(canary));
