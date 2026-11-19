@@ -44,12 +44,15 @@ bash scripts/01.harness/run-governed-script.sh --approved-action \
   --inputs <ordinary-update-inputs.json> --plan-release --json
 ```
 
-Review and explicitly approve the returned release boundary under the provider
-workflow. Execute the same invocation with `--execute --approved-release
+Review the returned release boundary under the provider workflow and match it
+to the recorded [end-to-end delivery authority](../../standards/operational-realization-gate.md#end-to-end-live-delivery-authority).
+Do not request another approval solely because its exact hash is now known.
+Execute the same invocation with `--execute --approved-release
 <approval_sha256>` instead of `--plan-release`. The hash binds the exact input
 bundle, packages, accepted predecessor, controller/configuration sources,
 account/region, declared operations and protected resources. Planning is not
-approval. Changes to those inputs require a matching newly approved boundary.
+approval. Changed inputs require a freshly reviewed matching boundary; renewed
+user approval is required only when the effects exceed the recorded authority.
 
 The bounded JSON input has exactly `schema: deploy/ordinary-update-inputs/v1`,
 `target`, `scope` and `values`. Both bindings require `candidate_receipt` and the

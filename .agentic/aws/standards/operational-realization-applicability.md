@@ -4,7 +4,7 @@ id: aws.standard.operational-realization-applicability
 version: 18
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -18,6 +18,13 @@ used_by:
 # Provider Operational Realization Applicability
 
 The generic [deployment proof standard](../../04.deploy/standards/operational-realization-gate.md) owns contract and proof semantics. This provider surface owns the following operation-specific applicability and approval conditions.
+
+For current deliveries, "explicit approval" and "concrete approval" below may
+be supplied by the recorded [end-to-end delivery authority](../../04.deploy/standards/operational-realization-gate.md#end-to-end-live-delivery-authority),
+with each exact plan reviewed and bound before execution. "Separately reviewed"
+means an independently checked operation, not another user prompt when that
+operation is already covered. This does not revive retired incident executors,
+extend their historical exceptions, or waive ownership, proof and no-replay gates.
 
 ## Entity-smoke controller-only repair checkpoints
 

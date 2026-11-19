@@ -54,6 +54,57 @@ must cite its provider-owned applicability rule and recorded approvals; an
 exception never grants execution authority or weakens an applicable executable
 gate. Without that record, the normal requirements below apply.
 
+## End-to-end live-delivery authority
+
+<!-- deterministic-check: allow reason="interpreting the user's task and matching its intended effects requires judgment; existing exact-plan controllers enforce the concrete execution boundary" -->
+An explicit instruction to execute an end-to-end live deployment authorizes
+the complete named delivery, not merely planning it. Resolve the repository,
+publication destination, target/scope and provider account/region from that
+instruction and established context. Record the original request and its limits
+in the existing session/change record before starting. Ask only for genuinely
+missing scope information; do not defer authority discovery until publication.
+
+Within that boundary, approval covers necessary task edits, checks, local
+checkpoints, normal governed integration/push, build, qualification, publication,
+declared deployment/setup, verification, acceptance and declared conditional
+recovery. This includes required in-scope corrections and their requalification
+and republication. It does not authorize unrelated work. Existing explicit user
+restrictions remain binding unless the user changes them. A request only to plan,
+explain, implement locally or test locally does not authorize live delivery.
+
+Do not ask again at each stage, after an interruption, or solely because an
+image digest, source checkpoint or plan hash becomes available. Review the actual
+generated plan against the recorded task authority, record the exact derived
+binding and use the existing approval inputs/controllers. Distinguish the user's
+task approval from the agent's later plan review; never claim the user reviewed
+a hash they were not shown. A corrected candidate requires new qualification
+and matching plans, not another prompt when its effects remain within scope.
+
+All source, package, live-state, change-shape, ownership and recovery gates still
+apply. Declared disposable proof-resource cleanup may be included in the
+delivery boundary; it requires positive ownership and original successful proof
+before deletion. A different target/account, broader permissions, shared-resource
+changes outside the declared delivery, source-data deletion, history rewriting,
+discarding unrelated work or new ungoverned recovery is not implied authority.
+Stop only that affected operation and resolve the actual missing authority or
+governance; continue independent authorized work. Reconcile uncertain effects
+without replay. Authentication or other unavailable external prerequisites may
+require user help, but do not revoke the existing task approval.
+This rule does not override platform-enforced or tool-level permission controls.
+
+Carry the original authority, explicit restrictions, current source/receipt/plan
+bindings and remaining steps through session logs, handoffs and compaction.
+Assistant-written summaries must not invent narrower "local-only" permission;
+"no AWS changes performed" reports an outcome, not an authorization limit.
+Consult the original user request if a summary conflicts with it.
+
+Review examples: "deploy this named release end to end" covers its normal
+commit/push/publication and reviewed declared execution without another prompt;
+"prepare a deployment plan" does not. A new hash for the same approved delivery
+requires revalidation, not renewed consent; an unplanned shared-network change
+requires a scope decision. These are instruction-review cases, not executable
+evidence of agent compliance or permission to bypass a controller.
+
 ## Required Realization Contract
 
 Every capability that can mutate a live target, perform a migration, execute a

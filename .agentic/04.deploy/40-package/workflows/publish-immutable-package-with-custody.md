@@ -22,7 +22,7 @@ used_by:
   - id: deploy.schema.package-custody-receipt.v1
     path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 -->
 # Publish Immutable Package With Custody
 
@@ -35,6 +35,10 @@ Use this workflow when a repository adds or changes the controlled route that
 publishes an immutable package or records package evidence.
 
 ## Procedure
+
+Use the recorded [end-to-end delivery authority](../../standards/operational-realization-gate.md#end-to-end-live-delivery-authority)
+when publication is part of that request. Do not ask separately to publish its
+qualified package; package-only approval still grants no workload mutation.
 
 1. Name the package contract, candidate, destination, permitted source ref,
    publisher identity, and required qualification proofs.

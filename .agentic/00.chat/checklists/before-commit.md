@@ -4,7 +4,7 @@
   version: 2
   status: active
   created_on: "2026-06-15"
-  updated_on: "2026-10-26"
+  updated_on: "2026-11-19"
   layer: 00.chat
   domain: git
   disciplines:
@@ -217,6 +217,10 @@ intermediate output.
 ## Approval
 
 Do not create a task commit without explicit user approval in the current chat.
+That approval may be part of an explicit end-to-end task instruction whose
+owning workflow includes committing the task. It need not be a separate prompt
+for each checkpoint. Preserve the original authority and restrictions in the
+session record; ordinary implementation permission alone is not commit approval.
 The only commit allowed by prior write permission alone is the narrow session
 bookkeeping checkpoint described above.
 

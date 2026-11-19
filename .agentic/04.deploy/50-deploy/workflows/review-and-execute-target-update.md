@@ -42,10 +42,12 @@ observations forward under the shared [delivery accounting](../../../shared/test
 rule; starting Deploy does not restart the delivery clock. If cross-stage
 timing is unavailable, say so without inventing a new execution journal.
 
-Before unattended work, resolve the worktree and tool/dependency setup, exact
-committed source revision, permitted operations, credential availability,
-publication approval mechanism, and expiring provider conditions. Use existing
-approval evidence; request only missing authority or a change of scope. Check
+Before unattended work, apply the
+[end-to-end delivery authority](../../standards/operational-realization-gate.md#end-to-end-live-delivery-authority)
+rule. Resolve worktree/tool setup, permitted operations, credentials and expiring
+provider conditions upfront; bind the exact committed source and qualified
+package when produced. A complete live-delivery request includes its governed
+publication and execution, without another stage-by-stage prompt. Check
 account capability before claiming an external approval can only be performed
 by the user. No recorded intention bypasses a protected gate. Continue
 independent local work when an external prerequisite blocks mutation.

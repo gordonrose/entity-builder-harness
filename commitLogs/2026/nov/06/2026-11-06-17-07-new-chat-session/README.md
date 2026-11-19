@@ -59,6 +59,26 @@ below are historical incident records, not the current acceptance verdict.
 
 ## Session Log
 
+- Nov19 end-to-end authority correction: user approved pushing/publishing the
+  verified checkpoint, then explicitly requested a harness rule that an
+  end-to-end live-deployment instruction must not trigger repeated approval
+  requests. Implementation is instruction-only in the existing realization
+  standard and its chat/package/Deploy/Run/AWS consumers. The existing plan
+  records the contradiction inventory and verification boundary. Self-review:
+  full delivery includes necessary commit/push/publication and declared reviewed
+  execution/recovery; planning/local-only requests do not. Generated hashes and
+  same-task corrected candidates need revalidation, not another prompt; broader
+  targets/permissions or undeclared destructive effects still need a decision.
+  All existing execution gates and tool-level controls remain unchanged.
+  The prior clean `05d10419` promotion checks passed, including integration
+  publication/declaration checks in the owned temporary worktree
+  `/tmp/agentic-remote-promotions/chat_2026-11-06-17-07-new-chat-session-20261119T214821Z-15146`.
+  No push occurred before this new request. Include this approved harness
+  correction in a fresh checked checkpoint and qualify that exact source in the
+  already-approved publication workflow; preserve the original image proof as
+  proof only of `7cbec0c9`. No application, controller or deployment-template
+  changes are part of this follow-on. No new diagnostic producer or ADR needed.
+
 - Nov19 committed-source package result: task checkpoint `815e3d5e`, followed
   by bookkeeping checkpoint `7cbec0c92f647de265bb48549ea2c431e4af1aa0`, preserved
   the approved work. The staged gate passed 49 checks, with 107 deferred, in

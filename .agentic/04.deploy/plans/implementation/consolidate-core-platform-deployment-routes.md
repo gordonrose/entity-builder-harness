@@ -17,6 +17,30 @@ used_by:
 -->
 # Consolidate core platform deployment routes
 
+## Nov19 end-to-end delivery authority — approved harness correction
+
+The user explicitly requested that an end-to-end live-deployment instruction
+authorize the complete delivery without repeated approval prompts. Extend the
+existing operational-realization standard as the provider-neutral policy owner;
+reconcile its commit, local/remote promotion, package, Deploy/Run and AWS
+planning/execution consumers. Keep portable chat instructions generic rather
+than importing deployment-only artifacts into workbench exports. Preserve exact
+plan gates, target/resource boundaries, terminal evidence and no-replay controls.
+No new controller, approval registry, schema, runtime diagnostic or AWS permission.
+
+The contradiction inventory is the unconditional ask-again wording in commit
+and promotion instructions, plan-to-execution handoff, Run release-hash approval
+and disposable-cleanup approval. Existing upstream repository bootstrap and
+dormant rulebook recommissioning approvals are outside this delivery and remain
+unchanged. Historical session records remain evidence, not current authority.
+Record original user authority and derived plan bindings in the existing session
+record; missing hashes at intake are not missing permission. Retain genuine
+scope-expansion and uncertain-operation stops. Verify metadata, links, process
+drift and selected affected checks; review positive/negative authority examples.
+This changes agent instructions, not a deterministic natural-language classifier:
+do not claim tests prove future agent compliance. ADR disposition: clarifies the
+existing bounded release approval, without a new process architecture.
+
 ## Nov19 accepted-proof rollback reuse — approved correction
 
 The user approved strictly checked accepted-proof reuse after review found that
