@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.collect-acceptance.implementation
-#   version: 3
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -41,8 +41,15 @@ S = module("entity_smoke_acceptance_succession", C.ROOT / "scripts/04.deploy/lif
 TARGET, SCOPE = "kanbien-core-platform", "entity-smoke"
 EVIDENCE_ROOT = C.CONTRACT.parent.parent / "30-release-evidence"
 SCHEMA = "deploy/entity-smoke-collected-acceptance/v1"
-SUCCESSOR_SCHEMA = "deploy/entity-smoke-collected-acceptance/v2"
-SUCCESSOR_TASKS = ("baseline-permissions", "lifecycle", "collision", "final-read")
+LEGACY_SUCCESSOR_SCHEMA = "deploy/entity-smoke-collected-acceptance/v2"
+SUCCESSOR_SCHEMA = "deploy/entity-smoke-collected-acceptance/v3"
+REQUALIFIED_SCHEMA = "deploy/entity-smoke-collected-acceptance/v4"
+SUCCESSOR_SCHEMAS = {LEGACY_SUCCESSOR_SCHEMA, SUCCESSOR_SCHEMA, REQUALIFIED_SCHEMA}
+LEGACY_SUCCESSOR_TASKS = ("baseline-permissions", "lifecycle", "collision", "final-read")
+SUCCESSOR_TASKS = ("baseline-permissions", "lifecycle", "collision", "migration-state", "final-read")
+REQUALIFICATION_TASKS = (*SUCCESSOR_TASKS[:-1], "baseline-read", "permission-state", "credential-revoke",
+    "credential-unready", "credential-restore", "credential-read", "credential-permissions", "restore-read", "final-read")
+REQUALIFICATION_CONTROLS = {"credential-replacement", "snapshot", "restore-deployment", "restore-cleanup"}
 PROOF_CONTRACT = {"proof_type": "entity-smoke-complete-acceptance", "operation": "collect", "result_code": "ENTITY_SMOKE_COMPLETE_PROOF_COLLECTED"}
 MAX_PACKET_BYTES = 4 * 1024 * 1024
 CONTROLS = {"server-replacement", "initial-stop", "initial-restart", "credential-replacement", "snapshot", "restore-deployment", "restore-cleanup"}
@@ -72,11 +79,20 @@ def successor_parent(value, args):
     try: schema = C.yaml.safe_load(schema_path.read_text())
     except (OSError, ValueError, C.yaml.YAMLError):
         raise CollectionFailure("acceptance-recovery-policy-unavailable") from None
-    policy = schema.get("ordinary_update") if isinstance(schema, dict) else None
-    require(isinstance(policy, dict) and policy.get("fresh_tasks") == list(SUCCESSOR_TASKS),
+    policy = A.POLICY.policy(schema)
+    require(policy.get("fresh_tasks") == list(SUCCESSOR_TASKS),
             "acceptance-recovery-policy-invalid")
-    applicable = A.recovery_applicability(previous["packet"]["binding"], binding,
-                                         policy.get("recovery_input_paths"))
+    requirements = A.POLICY.recovery_requirements(previous["packet"]["binding"], binding,
+        policy.get("recovery_input_paths"), root=C.ROOT, additional_bindings=("proof_label", "record_digest"))
+    if requirements["mode"] == "requalify":
+        selected = schema.get("successor_requalification")
+        require(isinstance(selected, dict) and selected.get("fresh_tasks") == list(REQUALIFICATION_TASKS)
+            and selected.get("fresh_controls") == ["credential-replacement", "snapshot", "restore-deployment", "restore-cleanup"]
+            and selected.get("resource_namespace") == "exact-delivery-id"
+            and selected.get("initial_setup_replay") == "prohibited"
+            and selected.get("acceptance") == "complete-fresh-connected-evidence-before-promotion", "acceptance-recovery-policy-invalid")
+    applicable = requirements if requirements["mode"] == "requalify" else A.recovery_applicability(
+        previous["packet"]["binding"], binding, policy.get("recovery_input_paths"))
     identity = previous["identity"]
     require(delivery["predecessor"] == {"release_id": args.expected_predecessor,
             **{key: identity[key] for key in ("source_revision", "image_digest", "proof_set_sha256")}},
@@ -118,8 +134,11 @@ def collection_cache(args, custody=None):
 
 
 def final_required_after(packet):
-    if packet.get("schema") == SUCCESSOR_SCHEMA:
-        return packet["tasks"]["collision"]["operation"]["packet"]["receipt"]["task"]["stopped_at"]
+    if packet.get("schema") == REQUALIFIED_SCHEMA:
+        return packet["controls"]["restore-cleanup"]["facts"]["observed_at"]
+    if packet.get("schema") in SUCCESSOR_SCHEMAS:
+        prior = "migration-state" if packet["schema"] == SUCCESSOR_SCHEMA else "collision"
+        return packet["tasks"][prior]["operation"]["packet"]["receipt"]["task"]["stopped_at"]
     return packet["controls"]["restore-cleanup"]["facts"]["observed_at"]
 
 
@@ -226,7 +245,11 @@ def validate_control_facts(name, value):
         "restore-cleanup": {"stack_arn", "database_identifier", "resources_sha256", "absence_observed", "source_mutation", "observed_at"},
     }
     facts = value["facts"]
-    require(isinstance(facts, dict) and set(facts) == fields[name], "acceptance-control-facts-invalid", name)
+    allowed = (fields[name], fields[name] | {"engine_version"}) if name == "restore-deployment" else (fields[name],)
+    require(isinstance(facts, dict) and set(facts) in allowed, "acceptance-control-facts-invalid", name)
+    if "engine_version" in facts:
+        try: D.RESTORE.PG.version(facts["engine_version"])
+        except D.RESTORE.PG.VersionFailure as failure: raise CollectionFailure(failure.code, name) from None
     # The operation-specific source reader establishes truth. This independent
     # historical check closes nested shapes as well as the envelope; it cannot
     # turn projected facts or hashes alone into complete original gate custody.
@@ -329,17 +352,22 @@ def gather_successor(args, provider):
     value = T.prepare(selected, provider, **options)
     require(value.get("delivery") is not None, "acceptance-delivery-required")
     predecessor = successor_parent(value, args)
+    requalify = predecessor["applicability"].get("mode") == "requalify"
+    cleanup = None
+    if requalify:
+        value = D.source(args, provider, **options)
+        cleanup = D.completed_cleanup(value, args, provider)
     deployed = C.completed_deployment(provider, value["binding"], value["parameters"], value["delivery"])
     binding = {**value["binding"], "record_digest": args.expected_digest}
     checked, tasks = {}, {}
-    for name in SUCCESSOR_TASKS:
+    for name in (REQUALIFICATION_TASKS if requalify else SUCCESSOR_TASKS):
         stage, workload, operations = A.TASKS[name]
         pair = {}
-        for phase in ("preflight", "operation"):
+        for phase in (("operation",) if name == "credential-unready" else ("preflight", "operation")):
             current = selected_args(args, stage, workload, operations[0], phase)
             current.delivery_id = value["delivery"]["delivery_id"]
-            context = task_context(value, current, provider, checked)
-            pair[phase] = A.capture_task(T, context, current, provider, name, binding, historical=False)
+            context = cleanup["reader"]["context"] if name == "restore-read" else task_context(value, current, provider, checked)
+            pair[phase] = A.capture_task(T, context, current, provider, name, binding, historical=requalify and name != "final-read")
         tasks[name] = pair
     definition = value["resources"]["ServerTaskDefinition"]["physical_id"]
     service = C.RESOURCE.service(provider, definition, 1)
@@ -356,18 +384,29 @@ def gather_successor(args, provider):
               "runtime": {"task": running["taskArn"], "definition": definition, "created_at": running["createdAt"],
                           "started_at": running["startedAt"], "source_resource_id": value["parameters"]["DatabaseResourceId"],
                           "database_name": value["parameters"]["DatabaseName"], "observed_at": C.now()}}
+    if requalify:
+        resource_binding = C.RESOURCE.recovery_binding(binding, value["delivery"])
+        sources = {"credential-replacement": value["history"]["prerequisites"]["packets"]["credential-replacement"],
+            "snapshot": value["snapshot"], "restore-deployment": cleanup["reader"]["deployed"], "restore-cleanup": cleanup["receipt"]}
+        packet.update(schema=REQUALIFIED_SCHEMA, controller_basis=T.RECOVERY.STATE.STOP.artifact_basis(C),
+            restored_binding=cleanup["reader"]["context"]["binding"],
+            controls={name: control_proof(name, receipt, binding if name == "credential-replacement" else resource_binding,
+                value["cache"], value["artifact"]) for name, receipt in sources.items()})
     validate_packet(packet)
     require(C.source_digest() == value["artifact"], "acceptance-source-changed-before-retention")
     C.ALIGN.source_preflight(value["custody"], **options)
     return packet, value["cache"]
 
 
-def validate_successor(value, *, evidence_class):
+def validate_successor_identity(value, *, evidence_class):
+    requalify = value["schema"] == REQUALIFIED_SCHEMA
+    extras = {"controls", "restored_binding", "controller_basis"} if requalify else set()
     require(set(value) == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256",
-            "delivery", "predecessor", "deployment", "tasks", "package", "runtime"}
+            "delivery", "predecessor", "deployment", "tasks", "package", "runtime"} | extras
             and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
             "acceptance-collection-envelope-invalid")
     binding = C.RESOURCE.validate_binding(value["binding"])
+    require("recovery_id" not in binding, "acceptance-delivery-binding-mismatch")
     delivery = C.RESOURCE.validate_delivery(value["delivery"])
     require(all(delivery["candidate"][key] == binding[key] for key in ("source_revision", "image_digest"))
             and all(delivery["contracts"][key] == binding[key] for key in delivery["contracts"])
@@ -383,7 +422,11 @@ def validate_successor(value, *, evidence_class):
             and isinstance(predecessor["candidate_sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", predecessor["candidate_sha256"]),
             "acceptance-predecessor-reference-invalid")
     applicable = predecessor["applicability"]
-    require(isinstance(applicable, dict) and set(applicable) == {"schema", "predecessor_source", "candidate_source", "input_paths", "inputs_sha256"}
+    if requalify:
+        A.POLICY.validate_requirements(applicable, delivery["predecessor"]["source_revision"], binding["source_revision"])
+        require(applicable["mode"] == "requalify", "acceptance-recovery-applicability-invalid")
+    else:
+        require(isinstance(applicable, dict) and set(applicable) == {"schema", "predecessor_source", "candidate_source", "input_paths", "inputs_sha256"}
             and applicable["schema"] == "deploy/entity-smoke-recovery-applicability/v1"
             and applicable["predecessor_source"] == delivery["predecessor"]["source_revision"]
             and applicable["candidate_source"] == binding["source_revision"]
@@ -392,12 +435,20 @@ def validate_successor(value, *, evidence_class):
     require(A.recovery_input_paths(applicable["input_paths"]) == applicable["input_paths"],
             "acceptance-recovery-applicability-invalid")
     C.validate_deployment_receipt(value["deployment"], {key: item for key, item in binding.items() if key != "record_digest"}, delivery)
+    return binding, delivery, predecessor
+
+
+def validate_successor(value, *, evidence_class):
+    binding, delivery, predecessor = validate_successor_identity(value, evidence_class=evidence_class)
+    if value["schema"] == REQUALIFIED_SCHEMA:
+        return validate_requalified_successor(value, binding, delivery)
     tasks = value["tasks"]
-    require(isinstance(tasks, dict) and set(tasks) == set(SUCCESSOR_TASKS), "acceptance-proof-set-incomplete")
+    selected_tasks = SUCCESSOR_TASKS if value["schema"] == SUCCESSOR_SCHEMA else LEGACY_SUCCESSOR_TASKS
+    require(isinstance(tasks, dict) and set(tasks) == set(selected_tasks), "acceptance-proof-set-incomplete")
     timestamp = T.RUNNER.EVIDENCE.timestamp
     after = value["deployment"]["result"]["facts"]["completed_at"]
     operations, earlier = set(), {}
-    for name in SUCCESSOR_TASKS:
+    for name in selected_tasks:
         pair = tasks[name]
         require(isinstance(pair, dict) and set(pair) == {"preflight", "operation"}, "acceptance-task-phases-incomplete", name)
         for phase in ("preflight", "operation"):
@@ -411,8 +462,9 @@ def validate_successor(value, *, evidence_class):
                     and plan["package_custody_reference"] == value["package"]["receipt_reference"]
                     and all(plan[key] == value["deployment"]["plan"][key] for key in ("parameters_sha256", "template_sha256")),
                     "acceptance-task-delivery-plan-mismatch", name)
-            require(packet["prerequisites"] == {"required_after": after, "packets": {
-                "deployment": value["deployment"], "predecessor": predecessor, **earlier}},
+            expected = {"required_after": after, "packets": {"deployment": value["deployment"], "predecessor": predecessor, **earlier}}
+            if packet.get("schema") == "deploy/entity-smoke-task-step/v3": expected = T.STEPS.prerequisite_custody(C, expected)
+            require(packet["prerequisites"] == expected,
                 "acceptance-task-prerequisite-mismatch", name)
             operation_id = packet["reservation"]["operation_id"]
             require(operation_id not in operations and timestamp(packet["receipt"]["task"]["created_at"]) >= timestamp(after),
@@ -439,6 +491,74 @@ def validate_successor(value, *, evidence_class):
     return value
 
 
+def validate_requalified_successor(value, binding, delivery):
+    """Require fresh, connected recovery evidence, not a reusable-proof waiver."""
+    tasks, controls = value["tasks"], value["controls"]
+    require(isinstance(tasks, dict) and set(tasks) == set(REQUALIFICATION_TASKS)
+        and isinstance(controls, dict) and set(controls) == REQUALIFICATION_CONTROLS, "acceptance-proof-set-incomplete")
+    timestamp = T.RUNNER.EVIDENCE.timestamp
+    after = value["deployment"]["result"]["facts"]["completed_at"]
+    earlier, available = {}, set()
+    for name in REQUALIFICATION_TASKS:
+        pair = tasks[name]
+        phases = {"operation"} if name == "credential-unready" else {"preflight", "operation"}
+        require(isinstance(pair, dict) and set(pair) == phases, "acceptance-task-phases-incomplete", name)
+        for phase, proof in pair.items():
+            require(isinstance(proof, dict) and proof.get("name") == name and proof.get("phase") == phase
+                and proof.get("controller_sha256") == value["controller_sha256"], "acceptance-task-attribution-mismatch", name)
+            A.validate_task(proof, binding, delivery=None if name == "restore-read" else delivery,
+                expected_binding=value["restored_binding"] if name == "restore-read" else None,
+                namespace_delivery=delivery if name == "restore-read" else None)
+            if name != "restore-read":
+                plan = proof["packet"]["plan"]
+                A.POLICY.validate_prerequisite_references(proof["packet"]["prerequisites"], available)
+                require(plan["controller_sha256"] == value["controller_sha256"]
+                    and plan["package_custody_reference"] == value["package"]["receipt_reference"]
+                    and all(plan[k] == value["deployment"]["plan"][k] for k in ("parameters_sha256", "template_sha256")),
+                    "acceptance-task-delivery-plan-mismatch", name)
+            if name in REQUALIFICATION_TASKS[:5]:
+                expected = {"required_after": after, "packets": {"deployment": value["deployment"], "predecessor": value["predecessor"], **earlier}}
+                if proof["packet"].get("schema") == "deploy/entity-smoke-task-step/v3": expected = T.STEPS.prerequisite_custody(C, expected)
+                require(proof["packet"]["prerequisites"] == expected,
+                    "acceptance-task-prerequisite-mismatch", name)
+        if "preflight" in pair:
+            before, admission = pair["preflight"]["packet"], pair["operation"]["admission"]["preflight"]
+            require(admission["reservation"] == before["reservation"] and admission["receipt"] == before["receipt"],
+                "acceptance-original-preflight-mismatch", name)
+        stage, workload, operations = A.TASKS[name]
+        earlier[workload + "-" + operations[0]] = pair["operation"]["packet"]
+        available.add(A.digest(pair["operation"]["packet"]))
+        after = pair["operation"]["packet"]["receipt"]["task"]["stopped_at"]
+    resource_binding = C.RESOURCE.recovery_binding(binding, delivery)
+    for name, proof in controls.items():
+        validate_control(name, proof, binding if name == "credential-replacement" else resource_binding)
+    validate_runtime(value["runtime"], binding)
+    runtime = value["runtime"]
+    snapshot, restored, cleaned = (controls[n]["facts"] for n in ("snapshot", "restore-deployment", "restore-cleanup"))
+    require(snapshot["source_resource_id"] == runtime["source_resource_id"]
+        and snapshot["snapshot_arn"] == "arn:aws:rds:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT + ":snapshot:kanbien-core-platform-" + C.RESOURCE.resource_label(resource_binding)
+        and restored["restored_resource_id"] != runtime["source_resource_id"]
+        and restored["database_identifier"] == D.RESTORE.names(resource_binding)[2]
+        and all(cleaned[k] == restored[k] for k in ("database_identifier", "stack_arn", "resources_sha256")), "acceptance-isolated-restore-mismatch")
+    require(value["restored_binding"]["dependency_incarnation_sha256"] == A.digest({"resource_id": restored["restored_resource_id"], "database": runtime["database_name"], "schema": "entity_smoke"})
+        and tasks["restore-read"]["operation"]["packet"]["receipt"]["task"]["definition"] == restored["reader_definition"], "acceptance-restored-reader-mismatch")
+    require(runtime["definition"] == value["deployment"]["result"]["facts"]["resources"]["ServerTaskDefinition"]["physical_id"]
+        and runtime["task"] == controls["credential-replacement"]["facts"]["successor_task"]
+        and timestamp(runtime["observed_at"]) >= timestamp(tasks["final-read"]["operation"]["packet"]["receipt"]["collected_at"]), "acceptance-current-server-mismatch")
+    for phase in ("preflight", "operation"):
+        final = tasks["final-read"][phase]["packet"]["prerequisites"]
+        require(final == {"required_after": cleaned["observed_at"], "packets": {
+            "credential-history-sha256": controls["snapshot"]["custody"]["plan"]["history_sha256"],
+            "source-snapshot-sha256": controls["snapshot"]["source_receipt_document_sha256"],
+            "restore-cleanup-sha256": controls["restore-cleanup"]["source_receipt_document_sha256"],
+            "restore-reader-sha256": A.digest(tasks["restore-read"]["operation"]["packet"])}}, "acceptance-task-prerequisite-mismatch", "final-read")
+    # This owner checks every task/control's original reservation, distinct actor,
+    # controller basis, recovery predecessor, negative admission and chronology.
+    CONTROL.validate_connections(A, value)
+    A.fresh_final(tasks["final-read"]["operation"], cleaned["observed_at"], runtime["observed_at"])
+    return value
+
+
 def validate_package(value, binding):
     require(isinstance(value["controller_sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", value["controller_sha256"]), "acceptance-controller-source-invalid")
     package = value["package"]
@@ -456,7 +576,7 @@ def validate_runtime(runtime, binding):
 
 
 def validate_packet(value, *, evidence_class="live"):
-    if isinstance(value, dict) and value.get("schema") == SUCCESSOR_SCHEMA:
+    if isinstance(value, dict) and value.get("schema") in SUCCESSOR_SCHEMAS:
         return validate_successor(value, evidence_class=evidence_class)
     require(isinstance(value, dict) and set(value) - {"source_transition"} == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256", "controller_basis", "package", "tasks", "controls", "restored_binding", "runtime"}
             and value["schema"] == SCHEMA and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
@@ -516,7 +636,8 @@ def candidate_material(packet):
                  "permission_contract": {"path": str(C.DEPLOY.SOURCE.relative_to(C.ROOT)), "sha256": packet["binding"]["permission_contract_sha256"]}}
     document = S.candidate_document(target=TARGET, scope=SCOPE,
         source_revision=packet["binding"]["source_revision"], image_digest=packet["binding"]["image_digest"],
-        **contracts, proofs=proofs, accepted_at=packet["runtime"]["observed_at"])
+        **contracts, proofs=proofs, accepted_at=packet["runtime"]["observed_at"],
+        expected_predecessor=packet["delivery"]["expected_predecessor"] if packet.get("schema") in {SUCCESSOR_SCHEMA, REQUALIFIED_SCHEMA} else None)
     # Retain the original YAML order: a resumed copy must reproduce exact bytes.
     candidate = {key: document[key] for key in ("schema", "target", "scope", "status", "evidence_class", "release", "proof", "proof_set")}
     target = EVIDENCE_ROOT / S.CANDIDATE_DIRECTORY / (candidate["release"]["id"] + ".yml")

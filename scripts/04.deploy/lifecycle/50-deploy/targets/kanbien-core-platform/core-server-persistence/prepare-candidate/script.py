@@ -8,20 +8,28 @@ import json
 import os
 import subprocess
 import sys
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[8]
-PROFILE, REGION, ACCOUNT = "kanbien-dev", "eu-west-1", "337159794548"
-FOUNDATION = "kanbien-core-platform-foundation"
-STACK = "kanbien-core-platform-core-server-persistence"
-REPOSITORY = "kanbien-core-platform/core-server"
-EXPECTED = {
-    "candidate": "kanbien-core-server-persistence-candidate",
-    "package": "kanbien-core-server-persistence-image",
-    "program": "kanbien-core-server-persistence",
-}
+INPUT_PATH = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py"
+_input_spec = importlib.util.spec_from_file_location("persistence_preparation_inputs", INPUT_PATH)
+INPUT_OWNER = importlib.util.module_from_spec(_input_spec)
+_input_spec.loader.exec_module(INPUT_OWNER)
+_image_spec = importlib.util.spec_from_file_location("persistence_image_checks", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py")
+IMAGE_CHECKS = importlib.util.module_from_spec(_image_spec)
+_image_spec.loader.exec_module(IMAGE_CHECKS)
+_foundation_spec = importlib.util.spec_from_file_location("persistence_foundation_checks", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py")
+FOUNDATION_CHECKS = importlib.util.module_from_spec(_foundation_spec)
+_foundation_spec.loader.exec_module(FOUNDATION_CHECKS)
+try:
+    INPUTS = INPUT_OWNER.load(ROOT, "kanbien-core-platform", "core-server-persistence")
+    INPUT_ERROR = None
+except INPUT_OWNER.InputFailure as failure:
+    INPUTS, INPUT_ERROR = {}, failure.code
+PROFILE, REGION, ACCOUNT = (INPUTS.get(key) for key in ("profile", "region", "account"))
+FOUNDATION, STACK, REPOSITORY = (INPUTS.get(key) for key in ("foundation_stack", "stack", "repository"))
+EXPECTED = {key: INPUTS.get(key) for key in ("candidate", "package", "program")}
 REQUIRED_FOUNDATION = {
     "VpcId", "PrivateSubnetIds", "ClusterArn", "VerifierSecurityGroupId", "LogGroupName", "RepositoryUri", "ServiceDiscoveryArn",
 }
@@ -53,7 +61,25 @@ def update_operations():
 
 def apply_update(**arguments):
     """Keep all baseline UPDATE callers on the same provider sequence."""
-    return update_operations().apply_update(aws, stack=STACK, **arguments)
+    return update_operations().apply_update(aws, root=ROOT, stack=STACK, **arguments)
+
+
+def update_settings(settings):
+    return {"target": {key: INPUTS.get(key) for key in ("account", "region", "profile", "repository_uri")}, "operation": settings}
+
+
+def update_request(**arguments):
+    arguments["settings"] = update_settings(arguments["settings"])
+    return update_operations().update_request(stack=STACK, **arguments)
+
+
+def begin_update(**arguments):
+    arguments["settings"] = update_settings(arguments["settings"])
+    return update_operations().begin_update(ROOT, stack=STACK, **arguments)
+
+
+def labelled_update_name(name, label):
+    return update_operations().labelled_name(name, label)
 
 def aws_response():
     global _AWS_RESPONSE
@@ -75,12 +101,13 @@ def aws_cli():
 
 
 def aws_in_region(region: str, *parts: str) -> tuple[bool, Any, str]:
+    if INPUT_ERROR: return False, None, INPUT_ERROR
     if not aws_response().inventory_covered(ROOT): return False, None, "delivery-inventory-not-covered"
     cli = aws_cli()
     try:
         value = cli.invoke_json(
             ["aws", *parts, "--cli-connect-timeout", str(AWS_CONNECT_TIMEOUT_SECONDS),
-             "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS), "--profile", PROFILE, "--region", region, "--output", "json"],
+             "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS), *(["--profile", PROFILE] if PROFILE else []), "--region", region, "--output", "json"],
             timeout=AWS_PROCESS_TIMEOUT_SECONDS, environment={**os.environ, "AWS_PAGER": ""}, empty_body="whitespace", object_only=False,
         )
         return True, value, "ok"
@@ -108,6 +135,7 @@ def report(verdict: str, codes: list[str], facts: dict[str, Any] | None = None) 
 
 def validate_receipt(path: Path) -> dict[str, Any] | None:
     """Reuse custody validation and retain its checked provenance for rollback."""
+    if INPUT_ERROR: return None
     try:
         spec = importlib.util.spec_from_file_location("persistence_custody_validation", ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py")
         if spec is None or spec.loader is None: return None
@@ -134,63 +162,36 @@ def declaration_covered() -> bool:
     return checked.returncode == 0 and isinstance(value, dict) and value.get("verdict") == "covered" and value.get("findings") == []
 
 
+def foundation_observation(service, operation, **parameters):
+    ok, value, code = aws(service, operation, "--cli-input-json", json.dumps(parameters))
+    if not ok: raise FOUNDATION_CHECKS.FoundationFailure(code)
+    return value
+
+
 def foundation_outputs() -> tuple[dict[str, str] | None, str]:
-    ok, data, code = aws("cloudformation", "describe-stacks", "--stack-name", FOUNDATION)
-    stacks = data.get("Stacks") if ok and isinstance(data, dict) else None
-    if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
-        return None, code if not ok else "foundation-outputs-unavailable"
+    if INPUT_ERROR: return None, INPUT_ERROR
     try:
-        outputs = {
-            item.get("OutputKey"): item.get("OutputValue")
-            for item in stacks[0].get("Outputs", [])
-            if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)
-        }
-    except TypeError: return None, "foundation-outputs-unavailable"
-    if not REQUIRED_FOUNDATION <= outputs.keys() or any(not outputs[name] for name in REQUIRED_FOUNDATION):
-        return None, "foundation-outputs-unavailable"
+        document = foundation_observation("cloudformation", "describe-stacks", StackName=FOUNDATION)
+        outputs = FOUNDATION_CHECKS.foundation(document, REQUIRED_FOUNDATION, INPUTS["foundation_expected"])
+    except FOUNDATION_CHECKS.FoundationFailure as failure:
+        return None, failure.code
+    if outputs["RepositoryUri"] != INPUTS["repository_uri"]:
+        return None, "preparation-inputs-repository-mismatch"
     return outputs, "ok"
 
 
 def infrastructure_parameters(outputs: dict[str, str]) -> tuple[dict[str, str] | None, str]:
-    ok, vpcs, code = aws("ec2", "describe-vpcs", "--vpc-ids", outputs["VpcId"])
-    items = vpcs.get("Vpcs") if ok and isinstance(vpcs, dict) else None
-    cidr = items[0].get("CidrBlock") if isinstance(items, list) and len(items) == 1 and isinstance(items[0], dict) else None
-    if not isinstance(cidr, str):
-        return None, code if not ok else "persistence-vpc-cidr-unavailable"
-    ok, service, code = aws("servicediscovery", "get-service", "--id", outputs.get("ServiceDiscoveryArn", "").rsplit("/", 1)[-1])
-    try: namespace = service.get("Service", {}).get("DnsConfig", {}).get("NamespaceId") if ok and isinstance(service, dict) else None
-    except AttributeError: return None, "persistence-namespace-observation-invalid"
-    if not isinstance(namespace, str) or not namespace.startswith("ns-"):
-        return None, code if not ok else "persistence-namespace-unavailable"
-    ok, endpoints, code = aws("ec2", "describe-vpc-endpoints", "--filters", f"Name=vpc-id,Values={outputs['VpcId']}")
-    endpoint_items = endpoints.get("VpcEndpoints") if ok and isinstance(endpoints, dict) else None
+    if INPUT_ERROR: return None, INPUT_ERROR
     try:
-        selected = [
-            endpoint for endpoint in endpoint_items or []
-            if isinstance(endpoint, dict) and endpoint.get("ServiceName") in INTERFACE_SERVICES and endpoint.get("State") == "available"
-        ]
-    except TypeError: return None, "persistence-endpoint-observation-invalid"
-    if len(selected) != 3 or {item.get("ServiceName") for item in selected} != INTERFACE_SERVICES:
-        return None, "persistence-private-startup-endpoints-unavailable"
-    if any(item.get("VpcId") != outputs["VpcId"] or item.get("VpcEndpointType") != "Interface" or item.get("PrivateDnsEnabled") is not True for item in selected):
-        return None, "persistence-private-startup-endpoint-posture-invalid"
-    if any(not isinstance(item.get("Groups"), list) or len(item["Groups"]) != 1 or not isinstance(item["Groups"][0], dict) for item in selected):
-        return None, "persistence-endpoint-security-group-unavailable"
-    try: group_sets = {(item["Groups"][0].get("GroupId"),) for item in selected}
-    except TypeError: return None, "persistence-endpoint-security-group-observation-invalid"
-    if len(group_sets) != 1 or len(next(iter(group_sets))) != 1 or not next(iter(group_sets))[0]:
-        return None, "persistence-endpoint-security-group-unavailable"
-    ok, prefix_lists, code = aws("ec2", "describe-managed-prefix-lists", "--filters", f"Name=prefix-list-name,Values=com.amazonaws.{REGION}.s3")
-    lists = prefix_lists.get("PrefixLists") if ok and isinstance(prefix_lists, dict) else None
-    try: prefix_ids = [item.get("PrefixListId") for item in lists or [] if isinstance(item, dict) and isinstance(item.get("PrefixListId"), str)]
-    except TypeError: return None, "persistence-artifact-object-store-observation-invalid"
-    if len(prefix_ids) != 1:
-        return None, code if not ok else "persistence-artifact-object-store-route-unavailable"
+        network = FOUNDATION_CHECKS.private_network(foundation_observation, outputs, INPUTS["foundation_expected"]["namespace"], REGION)
+        _, endpoint_group = FOUNDATION_CHECKS.private_endpoints(foundation_observation, outputs["VpcId"], INTERFACE_SERVICES)
+        prefix_id = FOUNDATION_CHECKS.s3_prefix_list(foundation_observation, REGION)
+    except FOUNDATION_CHECKS.FoundationFailure as failure:
+        return None, failure.code
     return {
-        "VpcId": outputs["VpcId"], "VpcCidr": cidr, "PrivateSubnetIds": outputs["PrivateSubnetIds"],
-        "ClusterArn": outputs["ClusterArn"], "NamespaceId": namespace,
-        "EndpointSecurityGroupId": next(iter(group_sets))[0], "VerifierSecurityGroupId": outputs["VerifierSecurityGroupId"],
-        "S3ArtifactPrefixListId": prefix_ids[0], "LogGroupName": outputs["LogGroupName"],
+        **network,
+        "EndpointSecurityGroupId": endpoint_group, "VerifierSecurityGroupId": outputs["VerifierSecurityGroupId"],
+        "S3ArtifactPrefixListId": prefix_id,
     }, "ok"
 
 
@@ -198,8 +199,20 @@ def change_name_matches(value: object, expected: str) -> bool:
     return value == expected or (isinstance(value, str) and value.startswith("arn:aws:cloudformation:") and value.split(":changeSet/", 1)[-1].split("/", 1)[0] == expected)
 
 
-def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, str]:
+def observe_update(name: str, expected_parameters: dict, review, *, reservation=None) -> tuple[str, str]:
     """Observe one named UPDATE; never create, execute, wait on, or replace it."""
+    def completed(stack, code):
+        # Historical explicit reconciliation keeps its original contract.
+        # A new reservation is intent, not proof that submission occurred.
+        if reservation is not None:
+            if reservation.get("phase") != "update-execute":
+                return "uncertain", "persistence-update-execution-lineage-not-confirmed"
+            ok, events, observed = aws("cloudformation", "describe-stack-events", "--stack-name", STACK)
+            if not ok: return "uncertain", observed
+            owned = update_operations().CHANGE_SETS.execution_events(events, reservation["operation_id"], stack.get("StackId"))
+            if not any(event.get("ResourceStatus") == "UPDATE_COMPLETE" for event in owned):
+                return "uncertain", "persistence-update-execution-lineage-not-confirmed"
+        return "complete", code
     ok, change, code = aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
     if not ok and code == "aws-resource-missing":
         # CloudFormation removes an executed change set.  When a controller
@@ -221,7 +234,7 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         if pending:
             return "pending", "persistence-update-executed-stack-pending"
         if status == "UPDATE_COMPLETE":
-            return "complete", "persistence-update-operation-complete"
+            return completed(stack, "persistence-update-operation-complete")
         # Do not attach an absent named change set to an unrelated failed or
         # rollback stack operation.  A known executed change set follows the
         # explicit terminal path below; this branch remains conservative.
@@ -256,7 +269,7 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         params = update_operations().CHANGE_SETS.parameter_values(stack.get("Parameters"))
         if params is None: return "uncertain", "persistence-update-stack-parameters-unobservable"
         if stack.get("StackStatus") == "UPDATE_COMPLETE" and all(params.get(key) == value for key, value in expected_parameters.items()):
-            return "complete", "persistence-update-noop-candidate-already-applied"
+            return completed(stack, "persistence-update-noop-candidate-already-applied")
         return "failed", "persistence-update-change-set-failed"
     try: failed = change.get("Status") in {"FAILED", "DELETE_COMPLETE", "DELETE_FAILED"}
     except TypeError: return "uncertain", "persistence-update-review-status-unobservable"
@@ -289,7 +302,7 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
     if params is None: return "uncertain", "persistence-update-stack-parameters-unobservable"
     if status != "UPDATE_COMPLETE" or any(params.get(key) != value for key, value in expected_parameters.items()):
         return "uncertain", "persistence-update-completion-identity-unproven"
-    return "complete", "persistence-update-operation-complete"
+    return completed(stack, "persistence-update-operation-complete")
 
 
 def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> dict[str, str]:
@@ -298,7 +311,7 @@ def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> 
     # release.  Keep these bindings together so either CREATE or UPDATE cannot
     # accidentally retain an obsolete support-program image while moving the
     # server or restoration verifier to the candidate digest.
-    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": outputs["RepositoryUri"], "ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
+    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/{REPOSITORY}", "ImageRepositoryUri": INPUTS["repository_uri"], "ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
 
 
 def update_parameters_match(actual: object, desired: object, current: object) -> bool:
@@ -307,60 +320,31 @@ def update_parameters_match(actual: object, desired: object, current: object) ->
 
 
 def candidate_runnable_manifest(receipt: dict[str, Any]) -> tuple[str | None, str]:
-    digest = receipt.get("image_digest")
-    if not isinstance(digest, str):
-        return None, "package-custody-receipt-invalid"
-    ok, image, code = aws("ecr", "batch-get-image", "--repository-name", REPOSITORY, "--image-ids", f"imageDigest={digest}", "--accepted-media-types", "application/vnd.oci.image.index.v1+json")
-    images = image.get("images") if ok and isinstance(image, dict) else None
-    if not isinstance(images, list) or len(images) != 1 or not isinstance(images[0], dict) or not isinstance(images[0].get("imageManifest"), str):
-        return None, code if not ok else "persistence-candidate-image-index-unavailable"
-    try:
-        manifests = json.loads(images[0]["imageManifest"]).get("manifests", [])
-    except (json.JSONDecodeError, AttributeError):
-        return None, "persistence-candidate-image-index-invalid"
-    if not isinstance(manifests, list):
-        return None, "persistence-candidate-image-index-invalid"
-    children = [
-        item.get("digest") for item in manifests if isinstance(item, dict)
-        and item.get("mediaType") == "application/vnd.oci.image.manifest.v1+json"
-        and item.get("platform") == {"architecture": "amd64", "os": "linux"}
-        and isinstance(item.get("digest"), str)
-    ]
-    if len(children) != 1:
-        return None, "persistence-candidate-runnable-manifest-unavailable"
-    return children[0], "ok"
+    """Retained interface for replacement/observability callers; no local predicates."""
+    try: return IMAGE_CHECKS.runnable_digest(image_observation, REPOSITORY, receipt.get("image_digest")), "ok"
+    except IMAGE_CHECKS.ScanFailure as failure: return None, str(failure)
+
+
+def image_observation(service, operation, **parameters):
+    ok, value, code = aws(service, operation, "--cli-input-json", json.dumps(parameters))
+    if not ok: raise IMAGE_CHECKS.ScanFailure(code)
+    return value
 
 
 def candidate_image(receipt: dict[str, Any]) -> tuple[bool, str]:
-    digest, code = candidate_runnable_manifest(receipt)
-    if digest is None:
-        return False, code
-    ok, scan, code = aws("ecr", "describe-image-scan-findings", "--repository-name", REPOSITORY, "--image-id", f"imageDigest={digest}", "--max-results", "1")
-    try:
-        status = scan.get("imageScanStatus", {}).get("status") if ok and isinstance(scan, dict) else None
-        findings = scan.get("imageScanFindings", {}).get("findingSeverityCounts", {}) if ok and isinstance(scan, dict) else None
-    except (AttributeError, TypeError): return False, "persistence-candidate-image-scan-observation-invalid"
-    if status != "COMPLETE" or not isinstance(findings, dict):
-        return False, code if not ok else "persistence-candidate-image-scan-unavailable"
-    if findings.get("CRITICAL", 0) or findings.get("HIGH", 0):
-        return False, "persistence-candidate-image-scan-not-clean"
+    try: IMAGE_CHECKS.check_image(image_observation, REPOSITORY, receipt.get("image_digest"))
+    except IMAGE_CHECKS.ScanFailure as failure: return False, str(failure)
     return True, "ok"
 
 
 def live_budget() -> tuple[bool, str]:
-    ok, budget, code = aws("budgets", "describe-budget", "--account-id", ACCOUNT, "--budget-name", "kanbien-core-platform-monthly")
-    value = budget.get("Budget") if ok and isinstance(budget, dict) else None
-    limit = value.get("BudgetLimit", {}) if isinstance(value, dict) else {}
-    filters = value.get("CostFilters", {}) if isinstance(value, dict) else {}
-    target = filters.get("TagKeyValue") if isinstance(filters, dict) else None
-    try:
-        amount = Decimal(str(limit.get("Amount"))) if isinstance(limit, dict) else None
-    except (InvalidOperation, ValueError):
-        amount = None
-    try: valid_amount = amount == Decimal("100") and isinstance(limit, dict) and limit.get("Unit") == "USD"
-    except InvalidOperation: return False, "target-budget-amount-observation-invalid"
-    valid_filter = isinstance(target, list) and target == ["user:Target$kanbien-core-platform"]
-    return (True, "ok") if valid_amount and valid_filter else (False, code if not ok else "target-budget-live-configuration-invalid")
+    if INPUT_ERROR: return False, INPUT_ERROR
+    expected = INPUTS["budget"]
+    ok, observed, code = aws("budgets", "describe-budget", "--account-id", ACCOUNT, "--budget-name", expected["BudgetName"])
+    if not ok: return False, code
+    try: FOUNDATION_CHECKS.budget(observed.get("Budget") if isinstance(observed, dict) else None, expected)
+    except FOUNDATION_CHECKS.FoundationFailure as failure: return False, failure.code
+    return True, "ok"
 
 
 def succession_control():
@@ -426,6 +410,7 @@ def main() -> int:
     args, unknown = parser.parse_known_args()
     if unknown or args.receipt is None:
         return report("blocked", ["persistence-candidate-preparation-arguments-invalid"])
+    if INPUT_ERROR: return report("blocked", [INPUT_ERROR])
     receipt = validate_receipt(args.receipt)
     if receipt is None:
         return report("blocked", ["package-custody-receipt-invalid"])
@@ -445,7 +430,7 @@ def main() -> int:
     budget_ok, code = live_budget()
     if not budget_ok:
         codes.append(code)
-    template = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+    template = ROOT / INPUTS["template"]
     ok, _, code = aws("cloudformation", "validate-template", "--template-body", f"file://{template}")
     if not ok:
         codes.append(code)

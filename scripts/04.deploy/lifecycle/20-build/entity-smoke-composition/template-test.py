@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -34,7 +34,7 @@ RESTORE_TEMPLATE = TEMPLATE.with_name("entity-smoke-isolated-restore.yml")
 REALIZATION_SPEC = importlib.util.spec_from_file_location("entity_smoke_realization", ROOT / "scripts/04.deploy/operational-realization-gate/script.py")
 REALIZATION = importlib.util.module_from_spec(REALIZATION_SPEC)
 REALIZATION_SPEC.loader.exec_module(REALIZATION)
-CONFIGURATION_SPEC = importlib.util.spec_from_file_location("entity_smoke_configuration", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/entity-smoke-runtime-configuration.py")
+CONFIGURATION_SPEC = importlib.util.spec_from_file_location("entity_smoke_configuration", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py")
 CONFIGURATION = importlib.util.module_from_spec(CONFIGURATION_SPEC)
 CONFIGURATION_SPEC.loader.exec_module(CONFIGURATION)
 
@@ -311,17 +311,16 @@ def main():
     assert image["source_realization_contract"] == "infra/04.deploy/03.product/image/entity-smoke/realization-contract.v2.yml"
     graph = yaml.safe_load((ROOT / image["source_realization_contract"]).read_text())
     assert check_realization(value, graph) == [], check_realization(value, graph)
-    binding = {"target": "kanbien-core-platform", "scope": "entity-smoke", "program_id": "kanbien-entity-smoke", "workloads": [
-        {"id": name, "provider_reference": reference} for name, (_source, reference) in CONFIGURATION.WORKLOADS.items()]}
+    binding = yaml.safe_load((ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/workload-binding.yml").read_text())
     normalized = CONFIGURATION.normalize(TEMPLATE, binding)
-    assert set(normalized) == set(CONFIGURATION.WORKLOADS)
+    assert set(normalized) == {item["id"] for item in binding["workloads"]}
     assert normalized["entity-smoke-restore-reader-task"][0]["environment"]["PERSISTENCE_POSTGRES_HOST"] == {"Fn::GetAtt": "RestoredDatabase.Endpoint.Address"}
     assert normalized["entity-smoke-database-proof-task"][0]["environment"]["PERSISTENCE_POSTGRES_HOST"] == {"Ref": "DatabaseEndpoint"}
     assert all(not key.startswith("PERSISTENCE_") for key in normalized["entity-smoke-verifier-task"][0]["environment"])
     misbound = copy.deepcopy(binding)
     next(item for item in misbound["workloads"] if item["id"] == "entity-smoke-restore-reader-task")["provider_reference"] = "ServerTaskDefinition"
     try: CONFIGURATION.normalize(TEMPLATE, misbound)
-    except ValueError as error: assert str(error) == "entity-smoke-configuration-binding-invalid"
+    except ValueError as error: assert str(error) == "runtime-provider-configuration-invalid"
     else: raise AssertionError("restoration may not borrow the source server binding")
     restore = CF.template(RESTORE_TEMPLATE.read_text())
     assert check_restore(restore) == [], check_restore(restore)

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.acceptance-evidence
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -21,7 +21,6 @@ import hashlib
 import importlib.util
 from pathlib import Path
 import re
-import subprocess
 from types import SimpleNamespace
 
 
@@ -33,6 +32,7 @@ def module(name, path):
 
 T = module("entity_smoke_acceptance_evidence_task", Path(__file__).with_name("task-route.py"))
 C = T.C
+POLICY = module("entity_smoke_shared_proof_policy", C.ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py")
 SCHEMA = "deploy/entity-smoke-retained-task-proof/v1"
 # Explicit selections, not all operations that might later be added to a runner.
 TASKS = {
@@ -58,11 +58,7 @@ TASKS = {
 }
 
 
-class EvidenceFailure(Exception):
-    def __init__(self, code, item=None):
-        super().__init__(code)
-        self.code, self.item = code, item
-
+EvidenceFailure = POLICY.PolicyFailure
 
 def require(value, code, item=None):
     if not value: raise EvidenceFailure(code, item)
@@ -76,57 +72,21 @@ def document_digest(value):
     return "sha256:" + hashlib.sha256(T.RUNNER.CONTROL.canonical(value) + b"\n").hexdigest()
 
 
-def recovery_input_paths(value):
-    """One declaration owns the boundary; callers cannot supply wildcard paths."""
-    require(isinstance(value, list) and bool(value) and len(value) <= 128
-            and all(isinstance(path, str) and re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", path)
-                    and all(part not in {".", ".."} for part in path.split("/")) for path in value)
-            and len(value) == len(set(value)), "acceptance-recovery-input-paths-invalid")
-    return sorted(value)
-
-
-def recovery_input_tree(source_revision, paths, *, root=None):
-    """Hash actual immutable Git objects, including additions, removals and modes."""
-    require(isinstance(source_revision, str) and re.fullmatch(r"[a-f0-9]{40}", source_revision),
-            "acceptance-recovery-input-source-invalid")
-    paths = recovery_input_paths(paths)
-    root = C.ROOT if root is None else root
-    try:
-        completed = subprocess.run(
-            ["git", "ls-tree", "-r", "-z", "--full-tree", source_revision, "--",
-             *[":(literal)" + path for path in paths]],
-            cwd=root, capture_output=True, check=False, timeout=30)
-    except (OSError, subprocess.TimeoutExpired):
-        raise EvidenceFailure("acceptance-recovery-inputs-unavailable") from None
-    require(completed.returncode == 0 and len(completed.stdout) <= 16 * 1024 * 1024,
-            "acceptance-recovery-inputs-unavailable")
-    # Empty selections must not become a permissive proof if a declaration points
-    # at nonexistent boundaries. Individual absent files remain significant when
-    # added later (for example a newly introduced lockfile or .npmrc).
-    require(bool(completed.stdout) and completed.stdout.endswith(b"\0"),
-            "acceptance-recovery-inputs-empty")
-    return "sha256:" + hashlib.sha256(completed.stdout).hexdigest()
+# Compatibility names retain the v1 feature packet; comparison has one owner.
+recovery_input_paths = POLICY.recovery_input_paths
+recovery_input_tree = POLICY.recovery_input_tree
 
 
 def recovery_applicability(previous, candidate, paths, *, root=None):
-    """Retained recovery history is valid only for its unchanged owning inputs."""
-    fields = ("configuration_contract_sha256", "permission_contract_sha256",
-              "dependency_incarnation_sha256", "proof_label", "record_digest")
-    require(isinstance(previous, dict) and isinstance(candidate, dict)
-            and all(key in previous and key in candidate and previous[key] == candidate[key] for key in fields),
-            "acceptance-recovery-binding-changed")
-    paths = recovery_input_paths(paths)
-    before = recovery_input_tree(previous.get("source_revision"), paths, root=root)
-    after = recovery_input_tree(candidate.get("source_revision"), paths, root=root)
-    require(before == after, "acceptance-recovery-requalification-required")
-    return {"schema": "deploy/entity-smoke-recovery-applicability/v1",
-            "predecessor_source": previous["source_revision"], "candidate_source": candidate["source_revision"],
-            "input_paths": paths, "inputs_sha256": before}
+    result = POLICY.recovery_applicability(previous, candidate, paths,
+        root=C.ROOT if root is None else root, additional_bindings=("proof_label", "record_digest"))
+    return {**result, "schema": "deploy/entity-smoke-recovery-applicability/v1"}
 
 
-def preflight_label(binding, stage, workload, operation, *, delivery=None):
-    if delivery is not None:
-        return C.delivery_preflight_label(delivery, stage, workload, operation)
+def preflight_label(binding, stage, workload, operation, *, delivery=None, namespace_delivery=None):
+    namespace = delivery or namespace_delivery
+    if namespace is not None:
+        return C.delivery_preflight_label(namespace, stage, workload, operation)
     suffix = "" if stage == "baseline" else ":" + stage
     original = "entity-smoke-" + hashlib.sha256((binding["proof_label"] + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
     # Historical selection only, not launch authority: the public task route
@@ -161,7 +121,7 @@ def validate_gate(graph, gate, plan_sha256, artifacts, counts, *, item, family="
     return gate
 
 
-def validate_task(value, collection_binding, *, expected_binding=None, delivery=None):
+def validate_task(value, collection_binding, *, expected_binding=None, delivery=None, namespace_delivery=None):
     """Pure historical validation; no provider access or today's source hash."""
     fields = {"schema", "name", "stage", "phase", "requested_operation", "controller_sha256", "collection_binding", "graph", "packet", "completion", "gate", "admission"}
     if delivery is not None:
@@ -172,6 +132,11 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     require(isinstance(value, dict) and set(value) == fields and value["schema"] == SCHEMA, "acceptance-task-envelope-invalid")
     name = value["name"]
     require(isinstance(name, str) and name in TASKS, "acceptance-task-selection-invalid")
+    if namespace_delivery is not None:
+        C.RESOURCE.validate_delivery(namespace_delivery)
+        require(name == "restore-read" and delivery is None
+            and namespace_delivery["proof_label"] == collection_binding["proof_label"]
+            and all(namespace_delivery["candidate"][key] == collection_binding[key] for key in ("source_revision", "image_digest")), "acceptance-task-delivery-mismatch")
     stage, workload, allowed_operations = TASKS[name]
     operation, phase = value["requested_operation"], value["phase"]
     require(value["stage"] == stage and isinstance(operation, str) and operation in allowed_operations and isinstance(phase, str) and phase in {"preflight", "operation"}
@@ -182,7 +147,7 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     packet = value["packet"]
     packet_fields = {"schema", "plan_sha256", "binding", "reservation", "receipt"} | ({"delivery", "plan", "prerequisites"} if delivery is not None else set())
     require(isinstance(packet, dict) and set(packet) == packet_fields
-            and packet["schema"] == "deploy/entity-smoke-task-step/" + ("v2" if delivery is not None else "v1"), "acceptance-task-packet-invalid", name)
+            and packet["schema"] in ({"deploy/entity-smoke-task-step/v2", "deploy/entity-smoke-task-step/v3"} if delivery is not None else {"deploy/entity-smoke-task-step/v1"}), "acceptance-task-packet-invalid", name)
     parent = {key: item for key, item in collection_binding.items() if key != "record_digest"}
     legacy = delivery is None and C.TRANSITION.historical(packet, value["completion"])
     source_transition = legacy and any(packet["binding"].get(key) != parent[key] for key in ("source_revision", "image_digest"))
@@ -204,7 +169,7 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     request = reservation["request"]
     require(request["workload"] == workload and all(request[key] == expected_binding[key] for key in parent if key != "proof_label"), "acceptance-task-request-binding-mismatch", name)
     actual_operation = ("ready" if workload == "verifier" else "preflight") if phase == "preflight" else operation
-    label = preflight_label(parent, stage, workload, operation, delivery=delivery) if phase == "preflight" else (
+    label = preflight_label(parent, stage, workload, operation, delivery=delivery, namespace_delivery=namespace_delivery) if phase == "preflight" else (
         C.delivery_operation_label(delivery, workload, operation) if delivery is not None else parent["proof_label"])
     require(request["environment"][T.RUNNER.CONTROL.OPERATIONS[workload][0]] == actual_operation
             and request["proof_label"] == label, "acceptance-task-request-selection-mismatch", name)
@@ -221,7 +186,8 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     require(isinstance(completion, dict) and set(completion) == {"schema", "step_sha256", "plan_sha256", "realization_evidence", "realization_evidence_sha256"}
             and completion["schema"] == "deploy/entity-smoke-task-completion/v1" and completion["plan_sha256"] == packet["plan_sha256"]
             and completion["step_sha256"] == document_digest(packet) and completion["realization_evidence_sha256"] == document_digest(gate), "acceptance-task-completion-mismatch", name)
-    namespace = "" if delivery is None else "/releases/" + delivery["delivery_id"]
+    namespace_owner = delivery or namespace_delivery
+    namespace = "" if namespace_owner is None else "/releases/" + namespace_owner["delivery_id"]
     require(isinstance(completion["realization_evidence"], str) and re.fullmatch(
         r"\.cache/entity-smoke-live/" + re.escape(parent["proof_label"]) + namespace + r"/task-realization/controlled-execution-[a-f0-9]{32}\.json",
         completion["realization_evidence"]), "acceptance-task-gate-reference-invalid", name)
@@ -233,7 +199,7 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     elif name == "credential-unready": T.RUNNER.UNREADY.validate_admission(admission, reservation)
     else:
         T.RUNNER.PREFLIGHT.validate_admission(admission, reservation)
-        require(admission["preflight"]["label"] == preflight_label(parent, stage, workload, operation, delivery=delivery), "acceptance-preflight-stage-mismatch", name)
+        require(admission["preflight"]["label"] == preflight_label(parent, stage, workload, operation, delivery=delivery, namespace_delivery=namespace_delivery), "acceptance-preflight-stage-mismatch", name)
     return value
 
 
@@ -265,7 +231,8 @@ def capture_task(route, context, args, provider, name, collection_binding, *, hi
              "packet": packet, "completion": completion, "gate": gate, "admission": admission}
     delivery = context.get("delivery")
     if delivery is not None: value["delivery"] = delivery
-    return validate_task(value, collection_binding, expected_binding=context["binding"], delivery=delivery)
+    return validate_task(value, collection_binding, expected_binding=context["binding"], delivery=delivery,
+        namespace_delivery=context.get("recovery_delivery"))
 
 
 def immutable_json(path, value):

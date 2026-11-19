@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -76,9 +76,41 @@ def timestamp(value):
 
 def validate_binding(binding, *, record_required=True):
     patterns = PATTERNS if record_required else {key: pattern for key, pattern in PATTERNS.items() if key != "record_digest"}
+    if record_required and isinstance(binding, dict) and "recovery_id" in binding:
+        patterns = {**patterns, "recovery_id": r"[a-f0-9]{64}"}
     require(isinstance(binding, dict) and set(binding) == set(patterns), "resource-binding-invalid")
     require(all(isinstance(binding[key], str) and re.fullmatch(pattern, binding[key]) is not None for key, pattern in patterns.items()), "resource-binding-invalid")
     return binding
+
+
+def recovery_binding(binding, delivery=None):
+    validate_binding(binding)
+    if delivery is None: return binding
+    validate_delivery(delivery)
+    require(all(binding[key] == delivery["candidate"][key] for key in ("source_revision", "image_digest"))
+        and all(binding[key] == delivery["contracts"][key] for key in delivery["contracts"])
+        and all(binding[key] == delivery[key] for key in ("proof_label", "dependency_incarnation_sha256")), "resource-delivery-binding-mismatch")
+    return {**binding, "recovery_id": delivery["delivery_id"]}
+
+
+def recovery_namespace(C, context):
+    """A successor's own journal, not an exception for the retired first journal.
+
+    Call only after the live source owner validated its accepted predecessor,
+    completed update, package, snapshot and restore lineage. A record label is
+    deliberately stable across releases and cannot identify an operation journal.
+    """
+    delivery = validate_delivery(context.get("delivery") or context.get("recovery_delivery"))
+    binding = context["restore_binding"]
+    require(recovery_binding(binding, delivery) == binding
+        and context["cache"] == C.delivery_cache(binding["proof_label"], delivery)
+        and context["custody"]["receipt_reference"] == delivery["candidate"]["receipt_reference"], "resource-delivery-binding-mismatch")
+    return delivery
+
+
+def resource_label(binding):
+    validate_binding(binding)
+    return "entity-smoke-" + binding["recovery_id"][:24] if "recovery_id" in binding else binding["proof_label"]
 
 
 def write_exclusive(path, value):
@@ -148,15 +180,18 @@ def validate_request(phase, request):
         originals, expected = request["original_tasks"], 1 if phase == "stop-runtime" else 0
         require(isinstance(originals, list) and len(originals) == expected and all(isinstance(item, str) and re.fullmatch(task_pattern, item) is not None for item in originals) and type(request["desired_count"]) is int and request["desired_count"] == (0 if expected else 1), "resource-request-invalid")
     if phase == "create-recovery-point":
-        require(isinstance(request["source_resource_id"], str) and re.fullmatch(r"db-[A-Za-z0-9]+", request["source_resource_id"]) is not None and request["snapshot"] == "kanbien-core-platform-" + request["binding"]["proof_label"], "resource-request-invalid")
+        require(isinstance(request["source_resource_id"], str) and re.fullmatch(r"db-[A-Za-z0-9]+", request["source_resource_id"]) is not None and request["snapshot"] == "kanbien-core-platform-" + resource_label(request["binding"]), "resource-request-invalid")
         timestamp(request["original_commit_observed_at"])
     if "change_set_arn" in request:
         name = ("entity-smoke-" + ("activate" if phase.endswith("activate") else "create") + "-" if deployment else "entity-smoke-restore-") + request["binding"]["proof_label"].removeprefix("entity-smoke-")
         if "delivery" in request:
             name = "entity-smoke-" + ("rollback" if "rollback" in phase else "update") + "-" + request["delivery"]["delivery_id"][:24]
+        elif not deployment:
+            name = "entity-smoke-restore-" + resource_label(request["binding"]).removeprefix("entity-smoke-")
         require(isinstance(request["change_set_arn"], str) and re.fullmatch(r"arn:aws:cloudformation:" + REGION + ":" + ACCOUNT + ":changeSet/" + name + r"/[A-Za-z0-9-]+", request["change_set_arn"]) is not None, "resource-request-invalid")
     if "stack_arn" in request:
         stack = "kanbien-core-platform-entity-smoke" if deployment else "kanbien-core-platform-entity-smoke-restore-" + request["binding"]["proof_label"].removeprefix("entity-smoke-")
+        if not deployment: stack = "kanbien-core-platform-entity-smoke-restore-" + resource_label(request["binding"]).removeprefix("entity-smoke-")
         require(isinstance(request["stack_arn"], str) and re.fullmatch(r"arn:aws:cloudformation:" + REGION + ":" + ACCOUNT + ":stack/" + stack + r"/[A-Za-z0-9-]+", request["stack_arn"]) is not None, "resource-request-invalid")
     if phase == "delete-restore":
         require(isinstance(request["restored_resource_id"], str) and re.fullmatch(r"db-[A-Za-z0-9]+", request["restored_resource_id"]) is not None and isinstance(request["reader_task_arn"], str) and re.fullmatch(task_pattern, request["reader_task_arn"]) is not None, "resource-request-invalid")
@@ -310,7 +345,7 @@ def create_recovery_point(provider, store, binding, resource_id, original_commit
     require(source.get("DBInstanceIdentifier") == SOURCE_DATABASE and source.get("DbiResourceId") == resource_id and source.get("DBInstanceStatus") == "available" and source.get("StorageEncrypted") is True and source.get("PubliclyAccessible") is False, "resource-source-incarnation-not-confirmed")
     incarnation = "sha256:" + hashlib.sha256(CONTROL.canonical({"resource_id": resource_id, "database": source.get("DBName"), "schema": "entity_smoke"})).hexdigest()
     require(incarnation == binding["dependency_incarnation_sha256"], "resource-source-incarnation-not-confirmed")
-    snapshot = "kanbien-core-platform-" + binding["proof_label"]
+    snapshot = "kanbien-core-platform-" + resource_label(binding)
     request = {"binding": binding, "source_resource_id": resource_id, "snapshot": snapshot, "original_commit_observed_at": original_commit_observed_at}
     def validate_reservation(reservation):
         require(timestamp(reservation["reserved_at"]) >= committed, "resource-snapshot-reservation-predates-record")

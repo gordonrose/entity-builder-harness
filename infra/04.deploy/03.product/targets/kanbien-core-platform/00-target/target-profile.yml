@@ -4,7 +4,7 @@
 #   version: 5
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -28,6 +28,12 @@ repository_declaration: repository-declaration-complete
 provider:
   family: aws
   selection_status: selected-and-live-verified
+  account_id: "337159794548"
+  region: eu-west-1
+  profile: kanbien-dev
+  foundation:
+    stack: kanbien-core-platform-foundation
+    template: 30-provider-realization/aws/cloudformation/foundation.yml
 target_mutation:
   status: blocked
   allowed_after: qualified-receipt-fresh-alignment-release-contract-reviewed-change-set-and-explicit-approval

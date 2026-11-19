@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.core-persistence.task-operations
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-persistence
 #   disciplines: [security, sre]
@@ -123,7 +123,7 @@ class BoundOperation:
             task = proof["task"]
             failed = task["exit_code"] != 0 or task["result_code"] in {self.prefix + "-unsuccessful-completion", self.prefix + "-completion-deadline-exceeded"}
             return self.report("failed" if failed else "accepted", task["result_code"] if failed else self.prefix + "-reconciled-retained-receipt",
-                facts={"operation_id": value["operation_id"], "operation": value["mode"], "proof_receipt": value["proof_receipt"],
+                facts={"operation_id": value["operation_id"], "operation": value["mode"], "proof_receipt": value["proof_receipt"], "proof_sha256": value["proof_sha256"],
                        "evidence_reuse": "historical-completion", "completed_at": task["stopped_at"], self.proof_type + "_task": task["arn"], "safe_result_code": task["result_code"]})
         provider = TASKS.cli_provider(self.aws)
         if value["task_arn"] is None:

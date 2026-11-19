@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -155,6 +155,7 @@ def validate_connections(A, value):
     tasks, controls, runtime = value["tasks"], value["controls"], value["runtime"]
     timestamp = A.T.RUNNER.EVIDENCE.timestamp
     binding, basis = value["binding"], value["controller_basis"]
+    successor = value.get("schema") == "deploy/entity-smoke-collected-acceptance/v4"
     declaration = str((A.C.CONTRACT.parent / "declaration-contract.yml").relative_to(A.C.ROOT))
     sources = {declaration, str((A.C.CONTRACT.parent.parent.parent / "scope-index.yml").relative_to(A.C.ROOT)),
         "scripts/04.deploy/lifecycle/60-run/release-succession/script.py", "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"}
@@ -210,30 +211,46 @@ def validate_connections(A, value):
         expected = A.digest(basis) if name in {"initial-stop", "initial-restart"} else value["controller_sha256"]
         expected = A.C.CONTROL_COMPLETION.controller(name, control["source_receipt_document_sha256"], expected)
         require(plan(name)["controller_sha256"] == expected and plan(name)["package_custody_reference"] == value["package"]["receipt_reference"], "acceptance-control-source-attribution-mismatch", name)
-    prefix = ("bootstrap", "migration", "grant-runtime", "baseline-permissions", "original-record", "lifecycle", "collision", "baseline-read")
+    prefix = ("baseline-permissions", "lifecycle", "collision", "migration-state", "baseline-read") if successor else ("bootstrap", "migration", "grant-runtime", "baseline-permissions", "original-record", "lifecycle", "collision", "baseline-read")
     previous = None
+    if successor:
+        A.C.validate_deployment_receipt(value["deployment"], {key: item for key, item in binding.items() if key != "record_digest"}, value["delivery"])
+        previous = value["deployment"]["result"]["facts"]["completed_at"]
     for name in prefix:
         task_after(name, previous); previous = stopped(name)
-    require(plan("server-replacement")["baseline_read_sha256"] == A.digest(packet("baseline-read")), "acceptance-control-predecessor-mismatch", "server-replacement")
-    later(reserved("server-replacement"), previous, "server-replacement")
-    task_after("replacement-read", max(reserved("server-replacement"), facts("server-replacement")["successor_started_at"], key=timestamp))
-    later(reserved("initial-stop"), stopped("replacement-read"), "initial-stop")
-    later(facts("initial-stop")["observed_at"], reserved("initial-stop"), "initial-stop")
-    require(plan("initial-restart")["stop_sha256"] == controls["initial-stop"]["source_receipt_sha256"]
-            and plan("initial-restart")["original_read_sha256"] == A.digest(packet("replacement-read")), "acceptance-control-predecessor-mismatch", "initial-restart")
-    later(reserved("initial-restart"), facts("initial-stop")["observed_at"], "initial-restart")
-    server = facts("initial-restart")["server"]
-    later(server["created_at"], reserved("initial-restart"), "initial-restart")
-    task_after("initial-read", server["started_at"])
-    task_after("migration-state", stopped("initial-read"))
-    task_after("permission-state", stopped("migration-state"))
+    if successor:
+        # An accepted successor must prove its real update, not manufacture an
+        # initial-stop/restart. Controller basis remains mandatory above.
+        start = packet("permission-state")["prerequisites"]["packets"]
+        require(start["deployment"] == value["deployment"] and start["predecessor"] == value["predecessor"]
+            and start["recovery-baseline-read"] == (A.T.STEPS.prerequisite_custody(A.C, packet("baseline-read")) if packet("permission-state").get("schema") == "deploy/entity-smoke-task-step/v3" else packet("baseline-read"))
+            and start["recovery-applied-history"] == (A.T.STEPS.prerequisite_custody(A.C, packet("migration-state")) if packet("permission-state").get("schema") == "deploy/entity-smoke-task-step/v3" else packet("migration-state")), "acceptance-control-predecessor-mismatch", "permission-state")
+        server = start["recovery-runtime"]
+        require(isinstance(server, dict) and set(server) == {"task", "definition", "created_at", "other_services"}
+            and server["definition"] == value["deployment"]["result"]["facts"]["resources"]["ServerTaskDefinition"]["physical_id"], "acceptance-current-server-binding-invalid", "permission-state")
+        later(server["created_at"], value["deployment"]["result"]["reservation"]["reserved_at"], "permission-state")
+        task_after("permission-state", stopped("baseline-read"))
+    else:
+        require(plan("server-replacement")["baseline_read_sha256"] == A.digest(packet("baseline-read")), "acceptance-control-predecessor-mismatch", "server-replacement")
+        later(reserved("server-replacement"), previous, "server-replacement")
+        task_after("replacement-read", max(reserved("server-replacement"), facts("server-replacement")["successor_started_at"], key=timestamp))
+        later(reserved("initial-stop"), stopped("replacement-read"), "initial-stop")
+        later(facts("initial-stop")["observed_at"], reserved("initial-stop"), "initial-stop")
+        require(plan("initial-restart")["stop_sha256"] == controls["initial-stop"]["source_receipt_sha256"]
+                and plan("initial-restart")["original_read_sha256"] == A.digest(packet("replacement-read")), "acceptance-control-predecessor-mismatch", "initial-restart")
+        later(reserved("initial-restart"), facts("initial-stop")["observed_at"], "initial-restart")
+        server = facts("initial-restart")["server"]
+        later(server["created_at"], reserved("initial-restart"), "initial-restart")
+        task_after("initial-read", server["started_at"])
+        task_after("migration-state", stopped("initial-read"))
+        task_after("permission-state", stopped("migration-state"))
     task_after("credential-revoke", stopped("permission-state"))
     negative = tasks["credential-unready"]["operation"]
     revoke = packet("credential-revoke")
     require(negative["admission"]["revocation"] == {"reservation": revoke["reservation"], "receipt": revoke["receipt"], "label": binding["proof_label"]}, "acceptance-original-revocation-mismatch", "credential-unready")
     task_after("credential-unready", stopped("credential-revoke"))
     task_after("credential-restore", stopped("credential-unready"))
-    require(plan("credential-replacement")["baseline_read_sha256"] == A.digest(packet("initial-read"))
+    require(plan("credential-replacement")["baseline_read_sha256"] == A.digest(packet("baseline-read" if successor else "initial-read"))
             and facts("credential-replacement")["original_task"] == server["task"], "acceptance-control-predecessor-mismatch", "credential-replacement")
     later(reserved("credential-replacement"), stopped("credential-restore"), "credential-replacement")
     task_after("credential-read", facts("credential-replacement")["successor_started_at"])
@@ -258,6 +275,6 @@ def validate_connections(A, value):
         require(isinstance(runtime[field], str) and re.fullmatch(pattern, runtime[field]), "acceptance-current-server-binding-invalid", "runtime", field=field)
     require(timestamp(runtime["started_at"]) == timestamp(facts("credential-replacement")["successor_started_at"]), "acceptance-current-server-time-mismatch", "runtime", field="started_at")
     require(timestamp(runtime["created_at"]) >= timestamp(reserved("credential-replacement")), "acceptance-current-server-time-mismatch", "runtime", field="created_at")
-    for actor in facts("initial-stop")["terminal_tasks"].values():
+    for actor in (() if successor else facts("initial-stop")["terminal_tasks"].values()):
         if actor["workload"] == "server": require(actor["definition"] == runtime["definition"], "acceptance-stopped-server-definition-mismatch", "initial-stop")
     return value

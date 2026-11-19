@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.acceptance-state.implementation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -78,8 +78,13 @@ class State:
         try: packet = json.loads(proof_bytes)
         except (ValueError, UnicodeError, RecursionError): raise StateFailure("acceptance-state-proof-invalid") from None
         K.validate_packet(packet, evidence_class=self.evidence_class)
+        require(not current_contracts or packet["schema"] != K.LEGACY_SUCCESSOR_SCHEMA,
+                "acceptance-current-migration-proof-required")
         require(proof_bytes == S.canonical(packet) + b"\n" and proof_path.name == "entity-smoke-" + A.digest(packet)[7:] + ".json", "acceptance-state-proof-reference-invalid")
         target, scope, image, identity = S.candidate_identity(record, self.root, current_contracts=current_contracts)
+        require(packet["schema"] not in {K.SUCCESSOR_SCHEMA, K.REQUALIFIED_SCHEMA}
+                or identity.get("expected_predecessor") == packet["delivery"]["expected_predecessor"],
+                "acceptance-state-predecessor-custody-mismatch")
         binding = packet["binding"]
         require((target, scope) == (K.TARGET, K.SCOPE) and image == binding["image_digest"] and identity["source_revision"] == binding["source_revision"]
                 and path.name == S.release_id(identity) + ".yml" and record["proof"]["accepted_at"] == packet["runtime"]["observed_at"], "acceptance-state-candidate-binding-mismatch")
@@ -87,7 +92,7 @@ class State:
                 and identity["permission_contract"] == {"path": str(K.C.DEPLOY.SOURCE.relative_to(SOURCE_ROOT)), "sha256": binding["permission_contract_sha256"]}, "acceptance-state-contract-binding-mismatch")
         result = {"record": record, "packet": packet, "identity": identity, "path": path, "sha256": S.sha256_bytes(raw)}
         selected, seen = result, {path}
-        while _validate_history and selected["packet"]["schema"] == K.SUCCESSOR_SCHEMA:
+        while _validate_history and selected["packet"]["schema"] in K.SUCCESSOR_SCHEMAS:
             selected_packet = selected["packet"]
             selected_binding = selected_packet["binding"]
             predecessor = selected_packet["predecessor"]
@@ -105,15 +110,18 @@ class State:
                         **{key: previous["identity"][key] for key in ("source_revision", "image_digest", "proof_set_sha256")}},
                     "acceptance-state-predecessor-custody-mismatch")
             prior_binding = previous["packet"]["binding"]
-            require(all(prior_binding[key] == selected_binding[key] for key in
-                    ("configuration_contract_sha256", "permission_contract_sha256", "dependency_incarnation_sha256", "proof_label", "record_digest")),
+            requalified = selected_packet["schema"] == K.REQUALIFIED_SCHEMA
+            unchanged = ("dependency_incarnation_sha256", "proof_label", "record_digest") if requalified else ("configuration_contract_sha256", "permission_contract_sha256", "dependency_incarnation_sha256", "proof_label", "record_digest")
+            require(all(prior_binding[key] == selected_binding[key] for key in unchanged),
                     "acceptance-state-predecessor-binding-mismatch")
             # Historical reading preserves the originally captured classification.
             # New admission rechecks actual Git objects and today's declared boundary.
             if current_contracts and selected is result:
                 schema = K.C.yaml.safe_load((K.C.CONTRACT.parent / "acceptance-record-schema.yml").read_text())
                 paths = schema["ordinary_update"]["recovery_input_paths"]
-                require(A.recovery_applicability(prior_binding, selected_binding, paths, root=self.base) == predecessor["applicability"],
+                applicable = A.POLICY.recovery_requirements(prior_binding, selected_binding, paths, root=self.base,
+                    additional_bindings=("proof_label", "record_digest")) if requalified else A.recovery_applicability(prior_binding, selected_binding, paths, root=self.base)
+                require(applicable == predecessor["applicability"],
                         "acceptance-state-recovery-applicability-mismatch")
             selected = previous
         return result
@@ -134,7 +142,7 @@ class State:
         require(history["evidence"]["kind"] == "verified-release-candidate", "acceptance-state-feature-candidate-required")
         result = self.candidate(self.root / history["evidence"]["path"], current_contracts=False)
         require(S.release_id(result["identity"]) == state["release_id"], "acceptance-state-current-binding-mismatch")
-        if result["packet"]["schema"] == K.SUCCESSOR_SCHEMA:
+        if result["packet"]["schema"] in K.SUCCESSOR_SCHEMAS:
             require(state["predecessor"] == result["packet"]["delivery"]["expected_predecessor"],
                     "acceptance-state-current-predecessor-mismatch")
         return {"reference": state, **result}

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-controls
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -96,6 +96,16 @@ def collection_protocols():
             else: raise AssertionError((name, field, "unchecked control field"))
         value["facts"]["native"] = "private-control-canary"
         fails(lambda: K.validate_control_facts(name, value), K.CollectionFailure, "acceptance-control-facts-invalid")
+    for version in ("18.3", "18.4-rds.20261119"):
+        current = envelope("restore-deployment"); current["facts"]["engine_version"] = version
+        assert K.validate_control_facts("restore-deployment", current) is current
+        fails(lambda: K.validate_control("restore-deployment", current, {}), K.CollectionFailure, "acceptance-control-custody-required")
+    for version in (None, False, 18, "private-control-canary", "18.3 extra"):
+        invalid = envelope("restore-deployment"); invalid["facts"]["engine_version"] = version
+        fails(lambda: K.validate_control_facts("restore-deployment", invalid), K.CollectionFailure, "postgresql-version-observation-invalid")
+    for name in K.CONTROLS - {"restore-deployment"}:
+        wrong = envelope(name); wrong["facts"]["engine_version"] = "18.3"
+        fails(lambda: K.validate_control_facts(name, wrong), K.CollectionFailure, "acceptance-control-facts-invalid")
     stopped = envelope("initial-stop")
     stopped["facts"]["terminal_tasks"][task]["native"] = "private-control-canary"
     fails(lambda: K.validate_control_facts("initial-stop", stopped), K.CollectionFailure, "acceptance-initial-stop-actor-invalid")

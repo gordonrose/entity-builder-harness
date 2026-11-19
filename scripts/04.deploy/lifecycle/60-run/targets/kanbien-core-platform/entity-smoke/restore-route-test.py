@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.connected-restore-route
-#   version: 4
+#   version: 6
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -68,6 +68,9 @@ def run(case, snapshot_args, S, T, canary):
     task_definition = T.BINDING.expected_task("restore-reader", inputs, resources, view, prefix="RestoreReader")
     task_definition.update(taskDefinitionArn=F.DEFINITION, revision=1, status="ACTIVE", compatibilities=["FARGATE"])
     task_definition["containerDefinitions"][0]["linuxParameters"]["capabilities"]["add"] = []
+    # The shared job transport observes the image from the selected definition,
+    # including this separately provisioned clone reader (not a baseline task).
+    original_transport.jobs.bindings["restore-reader"] = SimpleNamespace(task=task_definition)
     roles, policies, groups = {}, {}, {}
     for name, resource in view["Resources"].items():
         if resource["Type"] == "AWS::IAM::Role":
@@ -156,6 +159,74 @@ def run(case, snapshot_args, S, T, canary):
     def reader_args(phase):
         return SimpleNamespace(**{**vars(root_args), "mode": "plan", "phase": phase, "workload": "restore-reader", "operation": "restore-read", "proof_stage": "isolated-restore", "approved_plan": None})
 
+    if value.get("delivery"):
+        # Same clone/provider fixture, but no first-release incident repair.
+        # A distinct validated delivery journal owns every new operation.
+        with patch.object(C.TRANSITION, "RETIRED_PROOF_LABEL", root_args.proof_label):
+            planned(D, root_args)
+            root_args.mode = "review"; clone.lost = "create-change-set"
+            fails(lambda: D.run(root_args, provider(D)), "restore-change-submission-uncertain-reconcile-only")
+            assert D.run(root_args, provider(D))["verdict"] == "completed"
+            root_args.mode = "execute"; clone.lost = "execute-change-set"
+            fails(lambda: D.run(root_args, provider(D)), "restore-execution-uncertain-reconcile-only")
+            assert D.run(root_args, provider(D))["verdict"] == "completed"
+            clone.lost = None
+            cleanup = SimpleNamespace(**{**vars(root_args), "mode": "plan", "phase": "cleanup", "approved_plan": None})
+            fails(lambda: D.run(cleanup, provider(D)), "restore-reader-completion-required")
+            for phase in ("preflight", "operation"):
+                selected = reader_args(phase)
+                planned(Y, selected); selected.mode = "execute"
+                original_transport.jobs.lost_next = True
+                fails(lambda: Y.run(selected, provider(Y)), "task-submission-uncertain-reconcile-required")
+                assert Y.run(selected, provider(Y))["verdict"] == "completed"
+            captured = D.reader(value, root_args, provider(D))
+            assert captured["step"]["receipt"]["result"]["record_digest"] == snapshot_args.expected_digest
+            assert captured["context"]["binding"]["dependency_incarnation_sha256"] != case.binding["dependency_incarnation_sha256"]
+            planned(D, cleanup); cleanup.mode = "execute"; clone.lost = "delete-stack"
+            fails(lambda: D.run(cleanup, provider(D)), "restore-cleanup-submission-uncertain-reconcile-only")
+            assert D.run(cleanup, provider(D))["verdict"] == "completed"
+            assert D.completed_cleanup(value, root_args, provider(D))["receipt"]["result"]["facts"]["absence_observed"] is True
+            for operation in ("create-change-set", "execute-change-set", "delete-stack"):
+                assert sum(op == operation for _, op, _ in clone.calls) == 1
+            assert endpoint["IpPermissions"] == endpoint_before
+            K = module("successor_clone_archives", directory / "acceptance-route.py")
+            K.D, K.T, K.C, K.A.T, K.A.C = D, T, C, T, C
+            collection = {**case.binding, "record_digest": snapshot_args.expected_digest}
+            for phase in ("preflight", "operation"):
+                archive = K.A.capture_task(T, captured["context"], reader_args(phase), provider(T), "restore-read", collection, historical=True)
+                assert archive["packet"]["binding"] == captured["context"]["binding"]
+            with patch.object(T.ACCEPTANCE, "restore_owner", return_value=D):
+                for phase in ("preflight", "operation"):
+                    final = SimpleNamespace(**{**vars(root_args), "workload": "verifier", "operation": "read", "phase": phase, "proof_stage": "acceptance"})
+                    final.approved_plan = T.plan(final, provider(T))["plan_sha256"]
+                    assert T.execute(final, provider(T))["verdict"] == "completed"
+                final_context = T.prepare(final, provider(T))
+                final_archive = K.A.capture_task(T, final_context, final, provider(T), "final-read", collection)
+                K.A.fresh_final(final_archive, C.read_json(case.cache / "restore-cleanup-receipt.json")["observed_at"], C.now())
+                # Actual primitive archives and complete collector validation.
+                # Source/accepted custody remains the explicit outer fixture
+                # double; nothing is promoted or reported as real AWS proof.
+                real_root = Path(__file__).resolve().parents[7]
+                declaration = str((C.CONTRACT.parent / "declaration-contract.yml").relative_to(real_root))
+                sources = [declaration, str((C.CONTRACT.parent.parent.parent / "scope-index.yml").relative_to(real_root)),
+                    "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+                    "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"]
+                basis = {"controller": value["artifact"], "custody_sources": {name: collection["configuration_contract_sha256"] for name in sources}}
+                validate = K.validate_packet
+                def validate_in_fixture(packet, **options):
+                    with patch.object(C, "CONTRACT", case.root / C.CONTRACT.relative_to(real_root)):
+                        return validate(packet, **options)
+                with patch.object(K, "successor_parent", return_value=case.predecessor), \
+                     patch.object(K, "retained_source_evidence", return_value=None), \
+                     patch.object(T.RECOVERY.STATE.STOP, "artifact_basis", return_value=basis), \
+                     patch.object(K, "validate_packet", side_effect=validate_in_fixture):
+                    assembled, collected_cache = K.gather_successor(root_args, provider(T))
+                assert assembled["schema"] == K.REQUALIFIED_SCHEMA and collected_cache == case.cache
+                assert len(assembled["tasks"]) == 13 and len(assembled["controls"]) == 4
+                assert len(json.dumps(assembled).encode()) < 4 * 1024 * 1024
+        print("ENTITY_SMOKE_SUCCESSOR_SNAPSHOT_RESTORE_CLEANUP_FINAL_PROTOCOLS_PASSED")
+        return
+
     original_others = copy.deepcopy(original_transport.other)
     planned(D, root_args)
     root_args.mode = "review"; clone.lost = "create-change-set"
@@ -188,6 +259,30 @@ def run(case, snapshot_args, S, T, canary):
         assert all(path.read_bytes() == content for path, content in original_controls.items())
     finally:
         for pin in pins: C.CONTROL_COMPLETION.REPAIRS.pop(pin)
+    # Exercise current and historical receipt shapes at their actual reader.
+    # The shared PostgreSQL parser validates new observations; a changed live
+    # version cannot be silently discarded when the receipt recorded one.
+    original_deployment = deployment_path.read_bytes()
+    try:
+        for version, condition in ((False, "postgresql-version-observation-invalid"),
+                                   (canary, "postgresql-version-observation-invalid"),
+                                   ("19.1", "restore-deployment-observation-changed")):
+            changed = json.loads(original_deployment)
+            changed["result"]["facts"]["engine_version"] = version
+            deployment_path.write_text(json.dumps(changed))
+            fails(lambda: D.deployment(value, root_args, provider(D)), condition)
+        changed = json.loads(original_deployment)
+        changed["result"]["facts"]["unrecognized"] = canary
+        deployment_path.write_text(json.dumps(changed))
+        fails(lambda: D.deployment(value, root_args, provider(D)), "restore-deployment-resources-invalid")
+        historical = json.loads(original_deployment)
+        del historical["result"]["facts"]["engine_version"]
+        deployment_path.write_text(json.dumps(historical))
+        historical_bytes = deployment_path.read_bytes()
+        assert D.deployment(value, root_args, provider(D)) == historical
+        assert deployment_path.read_bytes() == historical_bytes
+    finally:
+        deployment_path.write_bytes(original_deployment)
     cleanup_args = SimpleNamespace(**{**vars(root_args), "mode": "plan", "phase": "cleanup", "approved_plan": None})
     fails(lambda: D.run(cleanup_args, provider(D)), "restore-reader-completion-required")
     read_args = reader_args("operation")

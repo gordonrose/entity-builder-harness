@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.acceptance-inputs.v1
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: '2026-11-15'
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -27,13 +27,18 @@ required_fields:
 - target
 - scope
 - values
-values: exact keys and types from the owning acceptance route inputs; references only,
+optional_fields:
+  release_mode: first-qualification or ordinary-update; absent means first-qualification.
+values: exact keys and types from the owning acceptance route inputs (ordinary_update_inputs
+  for an explicitly selected ordinary-update); references only,
   never secret values. An optional-path is explicitly null when the route is
-  using only same-image receipts; it must be a checked file reference when a
-  route declares a bounded cross-image proof-applicability record. A receipt-map
+  declaring that input unused; it must be a checked file reference otherwise. A receipt-map
   has only the declared receipt names and checked file references; the owning
   collector validates each receipt's content and provenance. Where a route
   declares expected_predecessor, use the exact accepted release identifier,
   or the literal none for first acceptance. It selects custody, not a new
   release or permission to reuse old proof; the owning collector validates
   applicability and the deployment-to-task evidence chain.
+proof_map_selection: First qualification uses the route proofs. Ordinary update uses
+  only its acceptance schema's fresh_tasks; retained recovery is resolved from
+  validated accepted history, not a caller-provided map of old receipts.

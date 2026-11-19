@@ -2,15 +2,15 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.change-set-execution
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Share reserved CloudFormation submissions and explicit-reconciliation UPDATE sequencing without owning workload approval or rollback policy.
+#   purpose: Share reserved CloudFormation submissions without owning workload approval or rollback policy.
 #   portability: {class: reusable, targets: [entity-builder]}
 #   effects: [network, writes-files]
 #   used_by:
@@ -82,6 +82,29 @@ def update_parameters_match(actual, desired, current):
     return set(actual) == set(current) and set(desired) <= set(current) and actual == {**current, **desired}
 
 
+def execution_events(response, operation_id, stack_id):
+    """Select root-stack events belonging to the exact reserved submission."""
+    if not isinstance(operation_id, str) or not operation_id or not isinstance(stack_id, str) or not stack_id or not isinstance(response, dict) or not isinstance(response.get("StackEvents"), list):
+        return []
+    return [event for event in response["StackEvents"] if isinstance(event, dict)
+            and event.get("PhysicalResourceId") == stack_id and event.get("ClientRequestToken") == operation_id]
+
+
+def retained_execution(store, *, preparation_phase, preparation_request,
+                       execution_phase, execution_request, missing_preparation):
+    """Select observation only from an intact, intent-matched reservation pair.
+
+    Store readers own identity/integrity validation and propagate failures.
+    A preparation alone does not establish submission. The caller supplies its
+    existing orphan-record diagnostic; this read neither admits nor retries work.
+    """
+    prepared = store.read(preparation_phase, preparation_request)
+    executed = store.read(execution_phase, execution_request)
+    if executed is not None and prepared is None:
+        raise missing_preparation()
+    return executed
+
+
 def _run(provider, store, *, phase, request, operation, token_field, arguments,
          precondition, observe, passthrough):
     # The durable operation owns the provider idempotency token. Workload policy
@@ -111,36 +134,3 @@ def execute(provider, store, *, phase, request, arguments, precondition, observe
     return _run(provider, store, phase=phase, request=request, operation="execute-change-set",
                 token_field="ClientRequestToken", arguments=arguments, precondition=precondition,
                 observe=observe, passthrough=passthrough)
-
-
-def reviewed_update(*, inspect, create, review, admit, execute, observe, failure,
-                    reconcile_existing=lambda _change: False):
-    """Share the legacy explicit-reconciliation UPDATE sequence.
-
-    The caller has already checked authority, custody and workload alignment.
-    Callbacks retain exact resource/parameter guards and bounded review timing.
-    This method performs each effect at most once per invocation, not once per
-    release: interrupted callers MUST use their existing read-only reconcile
-    mode. Unlike prepare/execute above, it does not claim durable replay safety
-    or infer a new approved operation from an existing one.
-    """
-    ok, existing, code = inspect()
-    if ok and reconcile_existing(existing):
-        return observe()
-    created = not ok
-    if created:
-        if code != "aws-resource-missing":
-            return failure("blocked", code)
-        ok, _response, code = create()
-        if not ok:
-            return failure("uncertain", code)
-    change, _code = review(existing, created)
-    if change is None or change.get("ExecutionStatus") != "AVAILABLE":
-        return observe()
-    rejection = admit(change)
-    if rejection is not None:
-        return failure("blocked", rejection)
-    ok, _response, code = execute()
-    if not ok:
-        return failure("uncertain", code)
-    return observe()

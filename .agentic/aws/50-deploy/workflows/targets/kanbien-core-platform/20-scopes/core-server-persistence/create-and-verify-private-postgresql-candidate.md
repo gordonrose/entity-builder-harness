@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 8
+version: 9
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -316,16 +316,15 @@ fact, or invalid sequence blocks acceptance.  If a proof completed before
 this control existed and no equally complete provider observation was retained,
 repeat only that governed proof and let its controller capture the receipt.
 
-An image change normally requires new receipts for every proof that executes
-that image. The only narrow exception is a record created by
-`qualify-proof-applicability`: it binds two qualified package receipts, retains
-them under the target evidence root, recomputes the exact Git source delta, and
-allows reuse only when that delta is confined to the isolated restore-verifier
-entrypoint and its controller/tests/evidence. It never permits reuse of the
-isolated-restore proof itself, current health, or a proof after a dependency,
-template, permission, configuration, Dockerfile, or shared runtime change.
-The acceptance input records the explicit path; a null value means ordinary
-same-image receipt matching remains mandatory.
+First qualification requires the complete declared proof set. Ordinary updates
+follow the shared Run workflow's proof-reuse policy and this scope's acceptance
+schema. They require fresh migration-state, effective-privilege, runtime-access
+and meaningful-read receipts plus current readiness and deployed-image identity.
+The collector resolves recovery history from the exact accepted predecessor;
+operators do not supply a map of old receipts as if they were new observations.
+Changed or missing recovery bindings require requalification. The historical
+restore-verifier-only applicability reader remains for existing evidence, but
+its writer and new-release exception have been retired.
 
 Run the bounded administrative bootstrap first. It is the only task permitted
 to create or alter bounded login roles, transfer ownership, or grant/revoke
@@ -597,11 +596,39 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_a_receipt" --operation rollback --rollback-compatibility-id "$rollback_compatibility_id" --support-receipt "$release_b_receipt" --json
 ```
 
-After an interrupted update or rollback, repeat the same operation and receipt
-with `--reconcile`. It observes only that named change set and its stack; it
-never creates or executes a change set. Pending changes, terminal rollback
-failure and missing observations are distinct. Completed updates require exact
-current digest/source parameters before reporting `transitioned`.
+### Recorded UPDATE continuation
+
+The image transition and the database-permission, private-route, observability
+and restoration-verifier update commands use the same reserved submission
+mechanism as entity-smoke. Repeat the **same command and inputs** after an
+interruption. A retained creation is observed, never created again; if its
+review is ready, current gates and exact resource/parameter admission still
+precede the first execution. Retained execution selects observation before
+healthy-predecessor gates and cannot execute again. Missing provider evidence
+remains uncertain; a reservation alone proves neither submission nor success.
+Completion of a newly reserved UPDATE requires its matching terminal root-stack
+event as well as the command's existing current-parameter checks.
+
+Inputs bind the receipt, template/controller sources, target and operation
+settings without retaining raw settings. Changed inputs for an existing attempt
+are rejected. Keep the operation's source checkpoint available for continuation.
+Do not clear reservations to make a retry run. Explicit `--reconcile` remains a
+read-only interface for historical operations; it does not fabricate reservations
+or authorise adopting an old change set for execution.
+
+A separately reviewed later release, rollback to an image already used, or
+correction after rejected-review cleanup may supply `--operation-label <label>`
+to name a distinct attempt. Use a lowercase letter followed by up to23 lowercase
+letters, digits or hyphens. Keep the label unchanged on retries and supply the
+original label to its rejected-review cleanup command. A new label must never
+be generated automatically after failure or uncertainty; existing terminal
+predecessor, review, approval and rollback requirements still apply. Cleanup
+does not delete or reset the old local reservation. Existing unlabeled names
+and historical records remain readable.
+
+Pending changes, terminal failures and missing observations remain distinct.
+This is command-level continuation, not proof that the whole delivery lifecycle
+is coordinated or meets its ten-minute budget.
 
 ## Failed Creation Cleanup
 
@@ -853,13 +880,18 @@ retain its operation ID and proof-receipt path before the next phase. A retry ma
 return the same `historical-completion`; that preserves its original timestamp
 and does not establish a fresh current-state check.
 Use paths to existing controller receipts. Missing ECS history is not permission
-to synthesize a receipt or replay a completed mutation. The normal value of
-`proof_applicability` is `null`: every required proof must bind directly to the
-candidate's immutable image. It may name a target-owned applicability record
-only when the `qualify-proof-applicability` command has preserved both package
-receipts and proven the exact source delta is restore-verifier-only. That record
-can reuse only its closed allowlist of unaffected predecessor receipts; it
-cannot carry an isolated restore proof or replace any fresh provider observation.
+to synthesize a receipt or replay a completed mutation. Full qualification uses
+the route's complete `inputs`. For an eligible ordinary update, use the same
+collector with a manifest containing `release_mode: ordinary-update` and exactly
+`candidate_receipt`, `expected_predecessor`, `proof_receipts` and
+`current_health_task` under `values`. The proof map contains only the four fresh
+task names declared in `ordinary_update.fresh_tasks`. Readiness must follow
+those tasks. Collection rechecks current database incarnation, contracts and
+immutable recovery inputs before referring to accepted recovery history.
+Use `--write-candidate`, then predecessor-checked release succession; never
+overwrite the original accepted record. Missing legacy bindings require full
+qualification, not a fabricated applicability record. This is still a collection
+and acceptance interface, not an automatic task-submission scheduler.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --inputs "$acceptance_inputs" --json

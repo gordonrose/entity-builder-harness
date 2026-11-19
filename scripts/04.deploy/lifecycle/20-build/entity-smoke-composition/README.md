@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.readme.entity-smoke.composition
-version: 1
+version: 2
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-09"
+updated_on: "2026-11-19"
 layer: 04.deploy
 domain: deployment.entity-smoke
 disciplines: [architecture, security, sre]
@@ -32,12 +32,31 @@ bash scripts/repo/check-selection/script.sh \
   --checks entity-smoke-composition --execute-local --explain
 ```
 
-The registered local check compiles fresh output, opens loopback HTTP listeners
+This is an aggregate: it requires both the infrastructure-route fixture and the
+remaining composition suite. Like other broad checks, it requires matching
+[task preparation](../../../../repo/check-selection/README.md); it reuses matching
+successful member results rather than running those fixtures twice.
+The suite compiles fresh output, opens loopback HTTP listeners
 and removes only its own temporary build directory. It does not launch provider
 tasks, create a database, publish an image or approve a deployment. The selector
 retains a safe run report under ignored `.cache/test-runs/`; the session log
 records durable outcomes. This explicit selection proves this check, not every
 affected repository check.
+
+For infrastructure-controller editing feedback alone:
+
+```bash
+bash scripts/repo/check-selection/script.sh \
+  --checks entity-smoke-infrastructure-route --execute-local --explain
+```
+
+This runs the existing
+[infrastructure fixture](../../60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py)
+with controlled provider responses, without compiling the application. Both
+members conservatively share the existing composition input declaration; a
+changed declared input invalidates reuse. The other member,
+`entity-smoke-composition-suite`, retains every other original suite command.
+A focused pass is not a full composition pass or live deployment proof.
 
 During development, changes to the app or this composition select the check
 through [the existing catalogue](../../../../repo/check-selection/checks.yml).
@@ -47,7 +66,8 @@ skip slower proof.
 
 ## Files and execution
 
-1. [smoke-test.sh](smoke-test.sh) compiles the
+1. [smoke-test.sh](smoke-test.sh) dispatches the two registered members through
+   the existing selector. Its `--unit suite` branch compiles the
    [isolated project](../../../../../infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json)
    into a newly allocated temporary directory.
 2. [dependency-boundary.mjs](dependency-boundary.mjs) reads TypeScript's resolved

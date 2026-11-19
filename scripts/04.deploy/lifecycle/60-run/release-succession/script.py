@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.implementation
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -167,7 +167,7 @@ def proof_set(record: dict[str, Any], root: Path | None = None) -> dict[str, dic
 def candidate_document(*, target: str, scope: str, source_revision: str,
                        image_digest: str, configuration_contract: dict[str, str],
                        permission_contract: dict[str, str], proofs: dict[str, dict[str, str]],
-                       accepted_at: str) -> dict[str, Any]:
+                       accepted_at: str, expected_predecessor: str | None = None) -> dict[str, Any]:
     """Construct the common candidate without writing or claiming live proof.
 
     Collectors own typed proof selection and observation. The normal candidate
@@ -179,6 +179,8 @@ def candidate_document(*, target: str, scope: str, source_revision: str,
                 "image_digest": image_digest, "configuration_contract": configuration_contract,
                 "permission_contract": permission_contract,
                 "proof_set_sha256": sha256_bytes(canonical(receipts))}
+    if expected_predecessor is not None:
+        identity["expected_predecessor"] = expected_predecessor
     value = {"schema": CANDIDATE_SCHEMA, "evidence_class": EVIDENCE_CLASS,
              "target": target, "scope": scope, "status": "verified",
              "release": {"id": release_id(identity), **{key: item for key, item in identity.items() if key not in {"target", "scope"}}},
@@ -194,7 +196,8 @@ def candidate_identity(record: dict[str, Any], root: Path | None = None, *, curr
         raise SuccessionFailure("release-succession-candidate-schema-invalid")
     target, scope = text(record.get("target")), text(record.get("scope"))
     release = record.get("release")
-    if not isinstance(release, dict) or set(release) != {"id", "source_revision", "image_digest", "configuration_contract", "permission_contract", "proof_set_sha256"}:
+    required = {"id", "source_revision", "image_digest", "configuration_contract", "permission_contract", "proof_set_sha256"}
+    if not isinstance(release, dict) or not required <= set(release) <= required | {"expected_predecessor"}:
         raise SuccessionFailure("release-succession-candidate-release-invalid")
     contracts: dict[str, dict[str, str]] = {}
     for key in ("configuration_contract", "permission_contract"):
@@ -220,6 +223,11 @@ def candidate_identity(record: dict[str, Any], root: Path | None = None, *, curr
         "permission_contract": contracts["permission_contract"],
         "proof_set_sha256": sha(release.get("proof_set_sha256")),
     }
+    if "expected_predecessor" in release:
+        predecessor = release["expected_predecessor"]
+        if not isinstance(predecessor, str) or not re.fullmatch(r"none|release-[a-f0-9]{24}", predecessor):
+            raise SuccessionFailure("release-succession-candidate-predecessor-invalid")
+        identity["expected_predecessor"] = predecessor
     if text(release.get("id")) != release_id(identity):
         raise SuccessionFailure("release-succession-candidate-identity-invalid")
     proof = record.get("proof")
@@ -490,6 +498,8 @@ def history_identity(root: Path, reference: dict[str, Any]) -> tuple[str, str, s
     }
     if release != expected or target != identity["target"] or scope != identity["scope"]:
         raise SuccessionFailure("release-succession-history-identity-invalid")
+    if "expected_predecessor" in identity and identity["expected_predecessor"] != (predecessor or "none"):
+        raise SuccessionFailure("release-succession-candidate-predecessor-mismatch")
     return target, scope, expected["id"], predecessor
 
 
@@ -625,6 +635,8 @@ def recovery_policy(root: Path, contract_path: Path) -> dict[str, str]:
 def promote(root: Path, *, target: str, scope: str, identity: dict[str, Any], source_path: Path, source_digest: str, expected_predecessor: str, legacy: bool) -> tuple[str, str]:
     if expected_predecessor == "":
         raise SuccessionFailure("release-succession-expected-predecessor-required")
+    if "expected_predecessor" in identity and identity["expected_predecessor"] != expected_predecessor:
+        raise SuccessionFailure("release-succession-candidate-predecessor-mismatch")
     if (root / CURRENT).is_symlink():
         raise SuccessionFailure("release-succession-current-invalid")
     identifier = release_id(identity)

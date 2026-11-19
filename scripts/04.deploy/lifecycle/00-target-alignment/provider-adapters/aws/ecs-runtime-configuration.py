@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -18,6 +18,8 @@
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py
 """Normalize ECS CloudFormation alternatives without contacting AWS or resolving secrets."""
 from itertools import product
+from pathlib import Path
+import re
 import yaml
 
 class Loader(yaml.SafeLoader): pass
@@ -39,6 +41,36 @@ def resolve(value, conditions):
     return value
 
 def normalize(path, binding):
+    """Normalize declared workloads, including explicitly selected sibling templates."""
+    path = Path(path).absolute()
+    workloads = binding["workloads"]
+    if not isinstance(workloads, list) or not workloads:
+        raise ValueError("workload-binding-invalid")
+    groups, identities = {}, set()
+    for workload in workloads:
+        identity = workload.get("id") if isinstance(workload, dict) else None
+        if not isinstance(identity, str) or not identity or identity in identities:
+            raise ValueError("workload-binding-invalid")
+        identities.add(identity)
+        source = path
+        if "provider_template" in workload:
+            name = workload["provider_template"]
+            if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", name):
+                raise ValueError("workload-template-invalid")
+            source = path.with_name(name)
+        if not source.is_file() or source.is_symlink() or any(parent.is_symlink() for parent in source.parents):
+            raise ValueError("workload-template-invalid")
+        groups.setdefault(source, []).append(workload)
+    result = {}
+    for source, selected in groups.items():
+        try:
+            result.update(_normalize_template(source, {**binding, "workloads": selected}))
+        except (OSError, KeyError, TypeError, AttributeError, yaml.YAMLError):
+            raise ValueError("runtime-provider-configuration-invalid") from None
+    return result
+
+
+def _normalize_template(path, binding):
     doc = yaml.load(path.read_text(), Loader=Loader)
     names = set()
     def visit(value):

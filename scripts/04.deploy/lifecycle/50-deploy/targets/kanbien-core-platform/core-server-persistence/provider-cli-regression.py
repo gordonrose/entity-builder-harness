@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.provider-cli-boundaries
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -41,7 +41,7 @@ with log.open('a') as out:out.write(json.dumps([service,op])+'\\n')
 def fail(code,message='synthetic-only'):
  print(f'An error occurred ({code}) when calling the Fixture operation: {message}',file=sys.stderr);sys.exit(254)
 def emit(value):print(json.dumps(value));sys.exit(0)
-if op=='describe-budget':emit({'Budget':{'BudgetLimit':{'Amount':'100','Unit':'USD'},'CostFilters':{'TagKeyValue':['user:Target$kanbien-core-platform']}}})
+if op=='describe-budget':emit({'Budget':{'BudgetName':'kanbien-core-platform-monthly','BudgetType':'COST','TimeUnit':'MONTHLY','BudgetLimit':{'Amount':'100','Unit':'USD'},'CostFilters':{'TagKeyValue':['user:Target$kanbien-core-platform']}}})
 if op=='describe-db-instances':
  if scenario=='database-denied':fail('AccessDenied','resource not found')
  fail('DBInstanceNotFound')
@@ -67,6 +67,13 @@ class ProviderCliRegression(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='delivery-provider-cli-') as directory:
             root=Path(directory); executable=root/'aws'; executable.write_text(FAKE_AWS); executable.chmod(0o755)
             repository=root/'repository'
+            owner_path=ROOT/'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py'
+            spec=importlib.util.spec_from_file_location('fixture_preparation_inputs',owner_path)
+            owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+            sources=[Path('scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py'),Path('scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py'),owner_path.relative_to(ROOT),Path(owner.PATHS.__file__).relative_to(ROOT),Path(owner.CF.__file__).relative_to(ROOT),
+                     *map(Path,owner.load(ROOT,'kanbien-core-platform','core-server-persistence')['references'])]
+            for relative in sources:
+                destination=repository/relative;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/relative,destination)
             for relative in [RESTORE.with_name('script.py').relative_to(ROOT),Path('scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py'),Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py')]:
                 destination=repository/relative;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/relative,destination)
             inventory=repository/'scripts/04.deploy/inventory-deploy-control/script.py';inventory.parent.mkdir(parents=True);inventory.write_text('import os,sys\nsys.exit(1 if os.environ.get("FIXTURE_SCENARIO")=="inventory-gap" else 0)\n')
@@ -200,6 +207,12 @@ class ProviderCliRegression(unittest.TestCase):
             spec=importlib.util.spec_from_file_location('actual_cli_policy_'+str(index),ROOT/relative)
             owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
             if 'prepare-candidate' in relative: owner._AWS_RESPONSE=SimpleNamespace(inventory_covered=lambda root:True)
+            if 'prepare-candidate' in relative:
+                for code in ('ExpiredToken', 'ExpiredTokenException'):
+                    response=SimpleNamespace(returncode=254, stdout='', stderr='An error occurred ('+code+') when calling the DescribeStacks operation: '+canary)
+                    with patch.object(owner.subprocess,'run',return_value=response) as expired_call:
+                        self.assertEqual(owner.aws('cloudformation','describe-stacks'),(False,None,'aws-credentials-expired'))
+                        self.assertEqual(expired_call.call_count,1)
             typed=prefix not in (None,'rds')
             arguments=['aws','cloudformation','describe-stacks']
             if cli_timeouts: arguments+=['--cli-connect-timeout','5','--cli-read-timeout','20']

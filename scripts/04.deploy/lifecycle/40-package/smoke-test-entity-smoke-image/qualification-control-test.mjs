@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-16"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -41,7 +41,7 @@ if(process.env.ENTITY_SMOKE_FIXTURE_STARTUP==='true'){
   }
   if(kind==='exec'&&args.includes('SHOW server_version_num')){
     if(!fs.existsSync(process.env.ENTITY_SMOKE_FIXTURE_CALLS+'.tcp'))process.exit(2);
-    console.log('180003');process.exit(0);
+    console.log(process.env.ENTITY_SMOKE_FIXTURE_VERSION);process.exit(0);
   }
   if(kind==='exec'&&args.includes('SELECT pg_reload_conf()')){console.log('t');process.exit(0)}
   if(kind==='run'||kind==='exec'||kind==='cp'||operation==='create')process.exit(0);
@@ -51,12 +51,12 @@ if(operation!=='inspect')process.exit(9);
 const messages={container:'No such container: '+name,network:'network '+name+' not found',volume:'get '+name+': no such volume'};
 process.stderr.write('Error response from daemon: '+messages[kind]+'\\n');process.exit(1);
 `, { mode: 0o700 });
-  function run(args, unavailable = false, startup = false) {
+  function run(args, unavailable = false, startup = false, version = "180003") {
     // Startup also generates real TLS certificates and runs the complete
     // cleanup subprocess chain; its watchdog is not a readiness assertion.
     // Keep a finite bound without killing the expected preflight rejection.
     const result = spawnSync(process.execPath, [verifier, ...args], { encoding: "utf8", timeout: startup ? 60_000 : 10_000,
-      env: { ...process.env, PATH: fixture + ":" + process.env.PATH, ENTITY_SMOKE_FIXTURE_CALLS: calls, ENTITY_SMOKE_FIXTURE_UNOBSERVABLE: String(unavailable), ENTITY_SMOKE_FIXTURE_STARTUP: String(startup) } });
+      env: { ...process.env, PATH: fixture + ":" + process.env.PATH, ENTITY_SMOKE_FIXTURE_CALLS: calls, ENTITY_SMOKE_FIXTURE_UNOBSERVABLE: String(unavailable), ENTITY_SMOKE_FIXTURE_STARTUP: String(startup), ENTITY_SMOKE_FIXTURE_VERSION: version } });
     assert.equal(result.error, undefined); assert.equal(result.signal, null);
     assert(!(result.stdout + result.stderr).includes(canary));
     return result;
@@ -103,7 +103,11 @@ process.exit(2);
   assert(!startup.stderr.includes('CLEANUP_NOT_CONFIRMED'));
   const startupCalls = readFileSync(calls, 'utf8').trim().split('\n').map(JSON.parse).slice(all.length);
   assert(startupCalls.some(call => call.kind === 'exec' && call.tcp), 'the actual qualifier must invoke TCP readiness');
-  console.log(JSON.stringify({ verdict: "passed", scope: "entity-smoke-qualification-control", real_engine: false, cases: ["safe-arguments", "reject-unowned-reservation", "exact-absence-cleanup", "cleanup-not-qualification", "unobservable-not-absence", "retain-uncertain-reservation", "final-tcp-not-initialization-socket"] }));
+  const wrongVersion = run([], false, true, "180004");
+  assert.equal(wrongVersion.status, 1);
+  assert.equal(JSON.parse(wrongVersion.stderr).phase, "disposable-resources", "compatible minor is not the exact declared qualification version");
+  assert(!wrongVersion.stdout.includes('"evidence_class":"container-qualification"'));
+  console.log(JSON.stringify({ verdict: "passed", scope: "entity-smoke-qualification-control", real_engine: false, cases: ["safe-arguments", "reject-unowned-reservation", "exact-absence-cleanup", "cleanup-not-qualification", "unobservable-not-absence", "retain-uncertain-reservation", "final-tcp-not-initialization-socket", "compatible-minor-not-exact-qualification"] }));
 } finally {
   for (const path of reservations) rmSync(path, { recursive: true, force: true });
   rmSync(fixture, { recursive: true });

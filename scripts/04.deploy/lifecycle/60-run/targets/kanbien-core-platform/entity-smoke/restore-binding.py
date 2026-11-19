@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -65,5 +65,5 @@ def inspect(C, comparator, restore, provider, binding, parameters, deployment, s
     require(ingress == [("tcp", 5432, 5432, "GroupId", group)] and egress == sorted((str(row["IpProtocol"]), row["FromPort"], row["ToPort"], "CidrIp", row["CidrIp"]) for row in expected), "task-binding-network-not-confirmed", "network", "database-ingress")
     return {"checked": {"definition": definition, "security_group": group, "subnets": list(subnets), "configuration_sha256": C.DEPLOY.fingerprint(configuration),
                         "roles_sha256": C.DEPLOY.fingerprint(roles), "network_sha256": C.DEPLOY.fingerprint({"reader": network_hash, "database": {"ingress": ingress, "egress": egress}})},
-            "binding": {**{key: value for key, value in binding.items() if key != "record_digest"}, "dependency_incarnation_sha256": incarnation, "permission_contract_sha256": C.digest_file(restore.SOURCE)},
+            "binding": {**{key: value for key, value in binding.items() if key not in {"record_digest", "recovery_id"}}, "dependency_incarnation_sha256": incarnation, "permission_contract_sha256": C.digest_file(restore.SOURCE)},
             "database": database, "view": view, "inputs": inputs}

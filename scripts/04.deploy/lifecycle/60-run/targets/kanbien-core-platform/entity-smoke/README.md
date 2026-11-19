@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.readme.entity-smoke.execution
-version: 4
+version: 5
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 layer: 04.deploy
 domain: deployment.entity-smoke
 disciplines: [architecture, security, sre]
@@ -117,8 +117,9 @@ custody receipt. Use the frozen committed source checkpoint recorded by that
 receipt. The selected account/profile/region are fixed by the target owner;
 there is no caller-supplied endpoint or alternative target flag.
 
-`script.py` first runs the existing declaration/delivery checks and registered
-local checks. The selector may reuse matching local evidence. It then observes
+For a new submission, `script.py` first runs the existing declaration/delivery
+checks and registered local checks. The selector may reuse matching local
+evidence. It then observes
 the actual private target/dependency/image through the read-only alignment
 consumer and performs the operator's identity/policy preflight. A policy
 simulation is a preflight result, not proof that a change has executed;
@@ -170,6 +171,22 @@ reconciliation does not incorrectly demand that its predecessor still has a
 zero desired count, but does compare retained resource identity with the actual
 stack. Missing or mismatched observations block success.
 
+For example, rerunning the same `--mode execute` after a lost response first
+looks for its original reservation and approved admission evidence. If the
+controller is unchanged, `resume_execution` checks those records before local
+tests or fresh dependency admission. It reconstructs the same approved plan and
+uses the existing `deployment-control.py` observer; it cannot submit a change.
+Read access and operator identity are still required, but permission to make
+another deployment is not. Pending stays pending; failed or unavailable
+observations cannot become success. Completion requires current stack,
+parameter, execution-token and runtime readback. Earlier gate timestamps stay
+unchanged, and only that completion receives a new observation.
+
+A changed controller still takes the existing checked repair path; this shortcut
+does not qualify changed code. Missing or altered original admission is not a
+reason to submit again. The same distinction applies to create, activation,
+update and rollback. Infrastructure completion is not full feature acceptance.
+
 `--wait-seconds` is bounded from zero to sixty, default thirty. A `pending`
 verdict exits 2: the original remote operation has not been proved complete.
 It is not a failed-task retry instruction. Finite failures keep supplied values,
@@ -187,45 +204,87 @@ B's `--receipt`, the original `--proof-label` and A's exact
 `--expected-predecessor`. Supply A's qualified `--rollback-receipt` and
 `--rollback-compatibility-id` too. The controller checks rollback compatibility
 before deploying B, covering all five image roles changed by the template.
-These are required real records, not values to invent from this example.
+For an unchanged target, set the compatibility selector to
+`accepted-proof-<A's release-id suffix>`. The existing rollback selector reads
+A's complete accepted proof and qualified package, then uses the shared proof
+policy to compare the two Git revisions. The permission template, declared
+schema inputs and database identity must be unchanged. Configuration may differ
+only in comments or its top-level test-selection metadata (`change_impact`).
+The checked comparison digest is retained in the normal deployment plan; no
+duplicate compatibility record is created. This is historical compatibility,
+not fresh health or qualification of B's changed recovery code.
+
+If those operational inputs changed, use a real fresh
+`rollback-compatibility-...` record instead. Missing or mismatched evidence
+blocks deployment; neither selector is a substitute for valid accepted custody.
 
 The checked update changes five immutable task-definition revisions and rolls
 the existing service onto its new definition. Its reviewed counts are five
 replacements and one update, with no storage or permission changes. Review,
 execution, durable reservation and uncertain-response reconciliation use the
 same owners as initial deployment. `--phase rollback` uses B's controller
-receipt and A's separate recovery records; it does not accept B or undo data.
+receipt and A's checked recovery selection; it does not accept B or undo data.
 
 Before an update, [acceptance-evidence.py](acceptance-evidence.py) compares the
 two immutable Git revisions against the existing
 [acceptance schema's recovery-input boundary](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-record-schema.yml).
 Unchanged recovery inputs allow the original capability proof to remain
-applicable. Added, changed or removed protected inputs return
-`acceptance-recovery-requalification-required`; a changed-capability
-requalification path is **not yet implemented** by this ordinary-update route.
-This includes migrations, persistence/runtime machinery and build dependencies.
+applicable. Added, changed or removed protected inputs select fresh successor
+recovery qualification through the same controllers, as described below.
+This selection is an obligation to obtain evidence, not evidence of success.
+It does not permit replaying migrations or replacing the source database.
 
 After the actual update completes, the existing task commands use the exact
-`--expected-predecessor` and original `--expected-digest` for four fresh checks:
+`--expected-predecessor` and original `--expected-digest` for five fresh checks:
 
 1. `baseline / database-proof / permissions`.
 2. `baseline / verifier / lifecycle`.
 3. `baseline / database-proof / collision`.
-4. `acceptance / verifier / read`.
+4. `initial-recovery / administration / observe-migration-state` (observation only).
+5. `acceptance / verifier / read`.
 
 Each still has its own preflight and operation. The lifecycle check uses a
 delivery-specific synthetic record; collision/read remain tied to A's original
 record. Receipts live under
 `.cache/entity-smoke-live/<proof-label>/releases/<delivery-id>/`, keeping earlier
-receipts untouched. Collection requires the checked deployment, all eight task
+receipts untouched. Collection requires the checked deployment, all ten task
 phases, original gates and exact predecessor history. It does not rerun
 bootstrap, migration, permission changes or isolated restore on this path.
 
-The command chain is not a single automatic deploy command. Focused controlled
-fixtures cover its local protocol; successor image qualification, live execution
-and the ten-minute delivery target remain unproved. See the existing
+The shared [delivery coordinator](../../../release-succession/ordinary-update.py)
+uses this folder's [binding](ordinary-update.py) to run the declared steps under
+one bounded release approval. Child owners still check each exact plan and
+reconcile its original reservation. Focused controlled fixtures cover its local
+protocol; successor image qualification, live execution and the ten-minute
+delivery target remain unproved. See the existing
 [consolidation plan](../../../../../../../.agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md)
 for remaining work, rather than treating this example as an executed release.
+
+### When recovery inputs have changed
+
+For example, changing the persistence implementation may invalidate release A's
+restore proof. The shared [proof policy](../../../release-succession/proof-policy.py)
+compares the declared Git inputs and returns `requalify`. The same coordinator
+then uses the acceptance schema's thirteen task checks and four resource
+controls: first the checked update and original-record read; then feature-only
+access revocation, live-but-unready observation, access restoration, runtime
+replacement and readback; then snapshot, isolated clone readback, owned-clone
+cleanup and a fresh final source read. It never uses initial stop/restart or
+bootstrap as a substitute for updating an accepted release.
+
+Snapshot and clone names use the delivery identity, while data checks keep A's
+original label and digest. The original database, record, snapshots, accepted
+history and other scopes remain protected. The collector accepts a v4 successor
+packet only with the complete fresh, connected evidence. Task-step v3 packets
+reference already-validated prior packets by hash, avoiding recursive copies;
+their references are checked against the retained archives.
+
+If a revoke or unready task fails with confirmed terminal evidence, the declared
+recovery first restores feature runtime access, then restores the exact
+compatible predecessor. Uncertain outcomes are reconciled, not retried.
+Restoration does not turn a failed capability check into an accepted release.
+This additional capability rehearsal is distinct from the smaller ordinary
+update sequence and its ten-minute target.
 
 ## Initial task preparation
 
@@ -808,7 +867,7 @@ image qualification or completed live collection/promotion.
 The [scope route](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml)
 lists the actual commands. First qualification requires nineteen named task
 selections and seven control selections, not only a healthy process. Ordinary
-updates use the four fresh checks and applicable predecessor history described
+updates use the five fresh checks and applicable predecessor history described
 above. The
 registered `entity-smoke-acceptance` check runs at the acceptance stage, not as
 ordinary local development feedback. Its input manifest has exactly

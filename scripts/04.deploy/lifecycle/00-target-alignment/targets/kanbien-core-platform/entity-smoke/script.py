@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.target-alignment.implementation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -29,12 +29,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[7]
 TARGET = "infra/04.deploy/03.product/targets/kanbien-core-platform"
 SCOPE = TARGET + "/20-scopes/entity-smoke/00-declaration/declaration-contract.yml"
-ACCOUNT, REGION, PROFILE = "337159794548", "eu-west-1", "kanbien-dev"
-DATABASE = "kanbien-core-platform-persistence"
-REPOSITORY = "kanbien-core-platform/entity-smoke"
-REPOSITORY_URI = ACCOUNT + ".dkr.ecr." + REGION + ".amazonaws.com/" + REPOSITORY
 CONTROLLER_DIRECTORY = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/"
-FOUNDATION = TARGET + "/30-provider-realization/aws/cloudformation/foundation.yml"
 CONTROLLER_REPAIR_FILES = frozenset({
     "scripts/04.deploy/shared/provider-adapters/aws/response.py",
     "scripts/04.deploy/shared/provider-adapters/aws/cli.py",
@@ -59,7 +54,7 @@ READS = {
     ("ec2", "describe-managed-prefix-lists"), ("servicediscovery", "get-service"),
     ("servicediscovery", "get-namespace"), ("route53", "get-hosted-zone"),
     ("rds", "describe-db-instances"), ("rds", "describe-db-parameters"),
-    ("ecr", "describe-repositories"), ("ecr", "describe-images"), ("ecr", "describe-image-scan-findings"),
+    ("ecr", "describe-repositories"), ("ecr", "describe-images"), ("ecr", "batch-get-image"), ("ecr", "describe-image-scan-findings"),
     ("budgets", "describe-budget"),
     ("secretsmanager", "describe-secret"),
 }
@@ -83,6 +78,24 @@ def module(name, path):
 
 
 CLI = module("entity_smoke_alignment_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
+IMAGE_CHECKS = module("entity_smoke_image_checks", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py")
+FOUNDATION_CHECKS = module("entity_smoke_foundation_checks", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py")
+PARAMETERS = module("alignment_stack_parameters", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py")
+INPUT_OWNER = module("feature_preparation_inputs", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py")
+try:
+    INPUTS = INPUT_OWNER.load(ROOT, "kanbien-core-platform", "entity-smoke")
+    require("database" in INPUTS["dependencies"], "preparation-inputs-database-dependency-missing")
+    INPUT_ERROR = None
+except (INPUT_OWNER.InputFailure, AlignmentFailure) as failure:
+    INPUTS, INPUT_ERROR = {}, failure.code
+ACCOUNT, REGION, PROFILE = (INPUTS.get(key) for key in ("account", "region", "profile"))
+REPOSITORY, REPOSITORY_URI, FOUNDATION = (INPUTS.get(key) for key in ("repository", "repository_uri", "foundation_template"))
+DATABASE_BINDING = INPUTS.get("dependencies", {}).get("database", {})
+DATABASE = DATABASE_BINDING.get("identifier")
+
+
+def preparation_ready():
+    if INPUT_ERROR: raise AlignmentFailure(INPUT_ERROR)
 
 
 def canonical(value):
@@ -103,13 +116,16 @@ def command(arguments, timeout=30):
 
 
 def aws(service, operation, **parameters):
+    preparation_ready()
     require((service, operation) in READS, "alignment-provider-operation-prohibited")
-    arguments = ["aws", service, operation, "--profile", PROFILE, "--region", REGION, "--output", "json",
+    arguments = ["aws", service, operation, *(["--profile", PROFILE] if PROFILE else []), "--region", REGION, "--output", "json",
                  "--cli-connect-timeout", "5", "--cli-read-timeout", "20", "--no-cli-pager", "--no-paginate", "--cli-input-json", json.dumps(parameters)]
     try:
-        return CLI.invoke_json(arguments, cwd=ROOT, timeout=30, empty_body="reject", object_only=True, classify_errors=False,
+        return CLI.invoke_json(arguments, cwd=ROOT, timeout=30, empty_body="reject", object_only=True,
                                environment={**os.environ, "AWS_PAGER": "", "AWS_MAX_ATTEMPTS": "1", "PYTHONDONTWRITEBYTECODE": "1"})
     except CLI.CliFailure as failure:
+        if failure.code in {"aws-credentials-expired", "aws-access-denied"}:
+            raise AlignmentFailure(failure.code) from None
         code = {"process": "alignment-command-unavailable", "service": "alignment-command-not-confirmed", "response": "alignment-provider-observation-invalid"}[failure.phase]
         raise AlignmentFailure(code) from None
     except (OSError, subprocess.SubprocessError): raise AlignmentFailure("alignment-command-unavailable") from None
@@ -123,16 +139,17 @@ def only(response, field):
 
 
 def read_receipt(path):
+    preparation_ready()
     require(path.is_absolute() and not path.is_symlink() and not any(part.is_symlink() for part in path.parents), "alignment-receipt-path-invalid")
     try:
         with path.open("rb") as stream: raw = stream.read(65537)
         require(len(raw) <= 65536, "alignment-receipt-invalid")
         value = json.loads(raw)
         owner = module("entity_smoke_alignment_custody", ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py")
-        owner.validate(value, argparse.Namespace(expected_target="kanbien-core-platform", expected_candidate="kanbien-entity-smoke-candidate", expected_package_contract="kanbien-entity-smoke-image", expected_program="kanbien-entity-smoke"))
+        owner.validate(value, argparse.Namespace(expected_target=INPUTS["target"], expected_candidate=INPUTS["candidate"], expected_package_contract=INPUTS["package"], expected_program=INPUTS["program"]))
     except AlignmentFailure: raise
     except Exception: raise AlignmentFailure("alignment-qualified-custody-not-confirmed") from None
-    require(value["provider_region_alias"] == "aws-eu-west-1", "alignment-custody-region-mismatch")
+    require(value["provider_region_alias"] == "aws-" + REGION, "alignment-custody-region-mismatch")
     return value
 
 
@@ -222,106 +239,82 @@ def source_preflight(receipt, *, retained_source_evidence=None):
 
 def database_facts(database, administrator_secret):
     require(database.get("DBInstanceIdentifier") == DATABASE and database.get("DBInstanceStatus") == "available", "alignment-dependency-not-available")
-    require(database.get("Engine") == "postgres" and database.get("EngineVersion") == "18.3", "alignment-engine-not-confirmed")
+    require(database.get("Engine") == DATABASE_BINDING["engine"], "alignment-engine-not-confirmed")
+    try: INPUT_OWNER.PG.compatible(database.get("EngineVersion"), DATABASE_BINDING["engine_major"])
+    except INPUT_OWNER.PG.VersionFailure as failure: raise AlignmentFailure(failure.code) from None
     require(database.get("StorageEncrypted") is True and database.get("PubliclyAccessible") is False and database.get("IAMDatabaseAuthenticationEnabled") is True, "alignment-dependency-security-not-confirmed")
     incarnation, name = database.get("DbiResourceId"), database.get("DBName")
     require(isinstance(incarnation, str) and re.fullmatch(r"db-[A-Za-z0-9]+", incarnation) is not None and isinstance(name, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,62}", name) is not None, "alignment-dependency-incarnation-invalid")
+    require(name == DATABASE_BINDING["database_name"], "alignment-dependency-name-not-confirmed")
     groups = database.get("VpcSecurityGroups")
     require(isinstance(groups, list) and len(groups) == 1 and groups[0].get("Status") == "active" and isinstance(groups[0].get("VpcSecurityGroupId"), str), "alignment-dependency-network-not-confirmed")
     subnet = database.get("DBSubnetGroup")
     require(isinstance(subnet, dict) and subnet.get("SubnetGroupStatus") == "Complete" and isinstance(subnet.get("DBSubnetGroupName"), str), "alignment-dependency-network-not-confirmed")
-    require(isinstance(administrator_secret, str) and re.fullmatch("arn:aws:secretsmanager:" + REGION + ":" + ACCOUNT + r":secret:kanbien-core-platform-persistence-migration-[A-Za-z0-9]{6}", administrator_secret) is not None, "alignment-administrative-reference-not-confirmed")
+    require(isinstance(administrator_secret, str) and re.fullmatch(re.escape("arn:aws:secretsmanager:" + REGION + ":" + ACCOUNT + ":secret:" + DATABASE_BINDING["administrator_secret_name"]) + r"-[A-Za-z0-9]{6}", administrator_secret) is not None, "alignment-administrative-reference-not-confirmed")
     parameters = database.get("DBParameterGroups")
     require(isinstance(parameters, list) and len(parameters) == 1 and parameters[0].get("ParameterApplyStatus") == "in-sync", "alignment-dependency-parameters-not-confirmed")
     endpoint = database.get("Endpoint")
     require(isinstance(endpoint, dict) and isinstance(endpoint.get("Address"), str) and endpoint.get("Port") == 5432, "alignment-dependency-route-not-confirmed")
     return {"DatabaseEndpoint": endpoint["Address"], "DatabaseName": name, "DatabaseResourceId": incarnation,
             "DatabaseSecurityGroupId": groups[0]["VpcSecurityGroupId"], "AdministratorSecretArn": administrator_secret,
-            "database_subnet_group": subnet["DBSubnetGroupName"], "database_vpc": subnet.get("VpcId"),
+            "engine_version": database["EngineVersion"], "database_subnet_group": subnet["DBSubnetGroupName"], "database_vpc": subnet.get("VpcId"),
             "parameter_group": parameters[0].get("DBParameterGroupName")}
 
 
-def image_delivery_policy(endpoint, api):
-    condition = "alignment-ecr-api-policy-not-confirmed" if api else "alignment-ecr-registry-policy-not-confirmed"
-    value = endpoint.get("PolicyDocument")
-    if isinstance(value, str):
-        require(len(value) <= 65536, condition)
-        def pairs(items):
-            result = {}
-            for key, item in items:
-                if key in result: raise ValueError()
-                result[key] = item
-            return result
-        try: value = json.loads(value, object_pairs_hook=pairs)
-        except (ValueError, TypeError, RecursionError): raise AlignmentFailure(condition) from None
-    require(isinstance(value, dict) and set(value) == {"Version", "Statement"} and value["Version"] == "2012-10-17"
-            and isinstance(value["Statement"], list) and len(value["Statement"]) == (2 if api else 1), condition)
-    observed = []
-    for row in value["Statement"]:
-        require(isinstance(row, dict) and set(row) == {"Effect", "Principal", "Action", "Resource"}
-                and row["Effect"] == "Allow" and row["Principal"] == "*", condition)
-        selected = []
-        for field in ("Action", "Resource"):
-            entries = [row[field]] if isinstance(row[field], str) else row[field]
-            require(isinstance(entries, list) and 1 <= len(entries) <= 3 and all(isinstance(item, str) and 0 < len(item) <= 2048 for item in entries)
-                    and len(set(entries)) == len(entries), condition)
-            selected.append(tuple(sorted(entries)))
-        observed.append(tuple(selected))
-    repositories = tuple(sorted("arn:aws:ecr:" + REGION + ":" + ACCOUNT + ":repository/kanbien-core-platform/" + name for name in ("core-server", "entity-smoke")))
-    expected = [(tuple(sorted(("ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"))), repositories)]
-    if api: expected.append((("ecr:GetAuthorizationToken",), ("*",)))
-    require(len(set(observed)) == len(observed) and set(observed) == set(expected), condition)
+def check_endpoint_policy(endpoint, declarations, parameters, outputs, required_resource):
+    service = endpoint["ServiceName"].removeprefix("com.amazonaws." + REGION + ".")
+    condition = {"ecr.api": "alignment-ecr-api-policy-not-confirmed", "ecr.dkr": "alignment-ecr-registry-policy-not-confirmed",
+                 "secretsmanager": "alignment-secret-delivery-policy-not-confirmed"}[service]
+    declared = declarations.get(endpoint["ServiceName"])
+    require(declared is not None, "alignment-endpoint-policy-declaration-missing")
+    try:
+        expected = INPUT_OWNER.policy_values(declared, parameters, outputs)
+        FOUNDATION_CHECKS.endpoint_policy(endpoint.get("PolicyDocument"), expected, service, ACCOUNT, REGION, required_resource)
+    except INPUT_OWNER.InputFailure as failure:
+        raise AlignmentFailure(failure.code) from None
+    except FOUNDATION_CHECKS.FoundationFailure:
+        raise AlignmentFailure(condition) from None
 
 
 def inspect(provider, receipt, now):
+    preparation_ready()
     caller = provider("sts", "get-caller-identity")
     require(caller.get("Account") == ACCOUNT and isinstance(caller.get("Arn"), str) and caller["Arn"].startswith("arn:aws:sts::" + ACCOUNT + ":assumed-role/"), "alignment-account-not-confirmed")
-    foundation = only(provider("cloudformation", "describe-stacks", StackName="kanbien-core-platform-foundation"), "Stacks")
-    require(foundation.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "alignment-foundation-not-ready")
-    output_items = foundation.get("Outputs")
-    require(isinstance(output_items, list) and all(isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str) for item in output_items), "alignment-foundation-observation-invalid")
-    outputs = {item["OutputKey"]: item["OutputValue"] for item in output_items}
-    require(len(outputs) == len(output_items) and {"VpcId", "PrivateSubnetIds", "ClusterArn", "LogGroupName", "ServiceDiscoveryArn"} <= set(outputs), "alignment-foundation-observation-invalid")
-    require(outputs["ClusterArn"] == "arn:aws:ecs:" + REGION + ":" + ACCOUNT + ":cluster/kanbien-core-platform" and outputs["LogGroupName"] == "/aws/ecs/kanbien-core-platform", "alignment-target-boundary-not-confirmed")
-    vpc = only(provider("ec2", "describe-vpcs", VpcIds=[outputs["VpcId"]]), "Vpcs")
-    require(vpc.get("VpcId") == outputs["VpcId"] and vpc.get("State") == "available", "alignment-vpc-not-confirmed")
-    subnets = outputs["PrivateSubnetIds"].split(",")
-    response = provider("ec2", "describe-subnets", SubnetIds=subnets)
-    actual = response.get("Subnets")
-    require(isinstance(actual, list) and len(actual) == len(subnets) and {item.get("SubnetId") for item in actual} == set(subnets) and all(item.get("VpcId") == outputs["VpcId"] and item.get("State") == "available" and item.get("MapPublicIpOnLaunch") is False for item in actual), "alignment-private-subnets-not-confirmed")
-    service = provider("servicediscovery", "get-service", Id=outputs["ServiceDiscoveryArn"].rsplit("/", 1)[-1]).get("Service")
-    namespace = service.get("DnsConfig", {}).get("NamespaceId") if isinstance(service, dict) else None
-    require(isinstance(namespace, str) and re.fullmatch(r"ns-[a-z0-9]+", namespace) is not None, "alignment-private-namespace-not-confirmed")
-    namespace_facts = provider("servicediscovery", "get-namespace", Id=namespace).get("Namespace")
-    require(isinstance(namespace_facts, dict) and namespace_facts.get("Id") == namespace and namespace_facts.get("Name") == "kanbien-core-platform.internal" and namespace_facts.get("Type") == "DNS_PRIVATE", "alignment-private-namespace-not-confirmed")
-    zone = namespace_facts.get("Properties", {}).get("DnsProperties", {}).get("HostedZoneId")
-    require(isinstance(zone, str) and re.fullmatch(r"[A-Z0-9]+", zone) is not None, "alignment-private-namespace-not-confirmed")
-    hosted_zone = provider("route53", "get-hosted-zone", Id=zone)
-    require(hosted_zone.get("HostedZone", {}).get("Config", {}).get("PrivateZone") is True and {item.get("VPCId") for item in hosted_zone.get("VPCs", []) if item.get("VPCRegion") == REGION} == {outputs["VpcId"]}, "alignment-private-namespace-vpc-mismatch")
-    endpoints = provider("ec2", "describe-vpc-endpoints", Filters=[{"Name": "vpc-id", "Values": [outputs["VpcId"]]}]).get("VpcEndpoints")
+    try:
+        foundation = provider("cloudformation", "describe-stacks", StackName=INPUTS["foundation_stack"])
+        outputs = FOUNDATION_CHECKS.foundation(foundation, FOUNDATION_CHECKS.NETWORK_OUTPUTS, INPUTS["foundation_expected"])
+        network = FOUNDATION_CHECKS.private_network(provider, outputs, INPUTS["foundation_expected"]["namespace"], REGION)
+    except FOUNDATION_CHECKS.FoundationFailure as failure:
+        raise AlignmentFailure(failure.code) from None
     services = {"com.amazonaws." + REGION + "." + suffix for suffix in ("ecr.api", "ecr.dkr", "logs", "secretsmanager")}
-    require(isinstance(endpoints, list), "alignment-private-delivery-not-confirmed")
-    selected = [item for item in endpoints if item.get("ServiceName") in services]
-    require(len(selected) == 4 and {item.get("ServiceName") for item in selected} == services and all(item.get("VpcId") == outputs["VpcId"] and item.get("State") == "available" and item.get("VpcEndpointType") == "Interface" and item.get("PrivateDnsEnabled") is True and isinstance(item.get("Groups"), list) and len(item["Groups"]) == 1 for item in selected), "alignment-private-delivery-not-confirmed")
-    groups = {item["Groups"][0].get("GroupId") for item in selected}
-    require(len(groups) == 1 and isinstance(next(iter(groups)), str), "alignment-private-delivery-not-confirmed")
+    try:
+        selected, endpoint_group = FOUNDATION_CHECKS.private_endpoints(provider, outputs["VpcId"], services)
+    except FOUNDATION_CHECKS.FoundationFailure as failure:
+        raise AlignmentFailure(failure.code) from None
+    parameters = PARAMETERS.parameter_values(foundation["Stacks"][0].get("Parameters"))
+    require(parameters is not None, "alignment-foundation-parameters-not-confirmed")
     for endpoint in selected:
         if endpoint["ServiceName"].endswith((".ecr.api", ".ecr.dkr")):
-            image_delivery_policy(endpoint, endpoint["ServiceName"].endswith(".ecr.api"))
-    prefix = only(provider("ec2", "describe-managed-prefix-lists", Filters=[{"Name": "prefix-list-name", "Values": ["com.amazonaws." + REGION + ".s3"]}]), "PrefixLists")
-    require(isinstance(prefix.get("PrefixListId"), str), "alignment-image-layer-route-not-confirmed")
+            check_endpoint_policy(endpoint, INPUTS["foundation_endpoint_policies"], parameters, outputs,
+                                  "arn:aws:ecr:" + REGION + ":" + ACCOUNT + ":repository/" + REPOSITORY)
+    try:
+        prefix_id = FOUNDATION_CHECKS.s3_prefix_list(provider, REGION)
+    except FOUNDATION_CHECKS.FoundationFailure as failure:
+        raise AlignmentFailure(failure.code) from None
     database = only(provider("rds", "describe-db-instances", DBInstanceIdentifier=DATABASE), "DBInstances")
-    dependency_stack = only(provider("cloudformation", "describe-stacks", StackName="kanbien-core-platform-core-server-persistence"), "Stacks")
+    dependency_document = provider("cloudformation", "describe-stacks", StackName=DATABASE_BINDING["stack"])
+    dependency_stack = only(dependency_document, "Stacks")
     require(dependency_stack.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "alignment-dependency-stack-not-ready")
-    dependency_outputs = {item["OutputKey"]: item["OutputValue"] for item in dependency_stack.get("Outputs", [])}
-    require(dependency_outputs.get("PersistenceDatabaseIdentifier") == DATABASE and dependency_outputs.get("PersistenceDatabaseEndpoint") == database.get("Endpoint", {}).get("Address"), "alignment-dependency-ownership-not-confirmed")
+    try:
+        dependency_outputs = FOUNDATION_CHECKS.stack_outputs(dependency_document, {DATABASE_BINDING["output"], "PersistenceDatabaseEndpoint", "AdministratorCredentialsSecretArn"})
+    except FOUNDATION_CHECKS.FoundationFailure as failure:
+        raise AlignmentFailure(failure.code) from None
+    require(dependency_outputs.get(DATABASE_BINDING["output"]) == DATABASE and dependency_outputs.get("PersistenceDatabaseEndpoint") == database.get("Endpoint", {}).get("Address"), "alignment-dependency-ownership-not-confirmed")
     dependency = database_facts(database, dependency_outputs.get("AdministratorCredentialsSecretArn"))
     secret = provider("secretsmanager", "describe-secret", SecretId=dependency["AdministratorSecretArn"])
-    require(secret.get("ARN") == dependency["AdministratorSecretArn"] and secret.get("Name") == "kanbien-core-platform-persistence-migration" and not secret.get("DeletedDate"), "alignment-administrative-reference-not-confirmed")
+    require(secret.get("ARN") == dependency["AdministratorSecretArn"] and secret.get("Name") == DATABASE_BINDING["administrator_secret_name"] and not secret.get("DeletedDate"), "alignment-administrative-reference-not-confirmed")
     secrets_endpoint = next(item for item in selected if item["ServiceName"].endswith(".secretsmanager"))
-    policy = secrets_endpoint.get("PolicyDocument")
-    if isinstance(policy, str): policy = json.loads(policy)
-    require(isinstance(policy, dict) and policy.get("Statement") == [{"Effect": "Allow", "Principal": "*", "Action": "secretsmanager:GetSecretValue", "Resource": [dependency["AdministratorSecretArn"]]}], "alignment-secret-delivery-policy-not-confirmed")
+    check_endpoint_policy(secrets_endpoint, DATABASE_BINDING["endpoint_policies"], {}, dependency_outputs, dependency["AdministratorSecretArn"])
     require(dependency["database_vpc"] == outputs["VpcId"], "alignment-dependency-vpc-mismatch")
     ssl = provider("rds", "describe-db-parameters", DBParameterGroupName=dependency["parameter_group"], MaxRecords=100)
     # A filtered AWS CLI projection is insufficient: absence on a partial page
@@ -339,14 +332,14 @@ def inspect(provider, receipt, now):
     require(repository.get("repositoryName") == REPOSITORY and repository.get("repositoryUri") == REPOSITORY_URI and repository.get("imageTagMutability") == "IMMUTABLE" and repository.get("imageScanningConfiguration", {}).get("scanOnPush") is True, "alignment-immutable-repository-not-confirmed")
     image = only(provider("ecr", "describe-images", repositoryName=REPOSITORY, imageIds=[{"imageDigest": receipt["image_digest"]}]), "imageDetails")
     require(image.get("imageDigest") == receipt["image_digest"] and image.get("repositoryName") == REPOSITORY, "alignment-qualified-image-not-observed")
-    scan = provider("ecr", "describe-image-scan-findings", repositoryName=REPOSITORY, imageId={"imageDigest": receipt["image_digest"]})
-    counts = scan.get("imageScanFindings", {}).get("findingSeverityCounts")
-    require(scan.get("imageScanStatus", {}).get("status") == "COMPLETE" and isinstance(counts, dict) and all(type(value) is int and value >= 0 for value in counts.values()) and counts.get("HIGH", 0) == 0 and counts.get("CRITICAL", 0) == 0, "alignment-clean-scan-not-confirmed")
-    budget = provider("budgets", "describe-budget", AccountId=ACCOUNT, BudgetName="kanbien-core-platform-monthly").get("Budget")
-    require(isinstance(budget, dict) and budget.get("BudgetLimit", {}).get("Unit") == "USD" and str(budget.get("BudgetLimit", {}).get("Amount")) in {"100", "100.0", "100.00"} and budget.get("CostFilters", {}).get("TagKeyValue") == ["user:Target$kanbien-core-platform"], "alignment-target-budget-not-confirmed")
+    try: IMAGE_CHECKS.check_image(provider, REPOSITORY, receipt["image_digest"])
+    except IMAGE_CHECKS.ScanFailure as failure: raise AlignmentFailure(str(failure)) from None
+    budget = provider("budgets", "describe-budget", AccountId=ACCOUNT, BudgetName=INPUTS["budget"]["BudgetName"])
+    try: FOUNDATION_CHECKS.budget(budget.get("Budget") if isinstance(budget, dict) else None, INPUTS["budget"])
+    except FOUNDATION_CHECKS.FoundationFailure as failure: raise AlignmentFailure(failure.code) from None
     parameters = {key: dependency[key] for key in ("DatabaseEndpoint", "DatabaseName", "DatabaseResourceId", "DatabaseSecurityGroupId", "AdministratorSecretArn")}
-    parameters.update(VpcId=outputs["VpcId"], VpcCidr=vpc["CidrBlock"], PrivateSubnetIds=outputs["PrivateSubnetIds"], ClusterArn=outputs["ClusterArn"], NamespaceId=namespace,
-                      EndpointSecurityGroupId=next(iter(groups)), S3ArtifactPrefixListId=prefix["PrefixListId"], LogGroupName=outputs["LogGroupName"],
+    parameters.update(**network,
+                      EndpointSecurityGroupId=endpoint_group, S3ArtifactPrefixListId=prefix_id,
                       ImageRepositoryUri=REPOSITORY_URI, ImageRepositoryArn="arn:aws:ecr:" + REGION + ":" + ACCOUNT + ":repository/" + REPOSITORY,
                       ImageDigest=receipt["image_digest"], SourceRevision=receipt["source_revision"], ServerDesiredCount="0")
     # Private parameters are consumed in-memory by the future change producer.
@@ -355,7 +348,7 @@ def inspect(provider, receipt, now):
             "source_revision": receipt["source_revision"], "image_digest": receipt["image_digest"], "package_custody_reference": receipt["receipt_reference"],
             "dependency_incarnation_sha256": fingerprint({"resource_id": dependency["DatabaseResourceId"], "database": dependency["DatabaseName"], "schema": "entity_smoke"}),
             "parameters_sha256": fingerprint(parameters), "database_subnet_group_sha256": fingerprint(dependency["database_subnet_group"]),
-            "engine_version": "18.3", "checked_at": now, "provider_mutation": False, "acceptance_evidence": False}
+            "engine_version": dependency["engine_version"], "checked_at": now, "provider_mutation": False, "acceptance_evidence": False}
     return safe, parameters, dependency["database_subnet_group"]
 
 

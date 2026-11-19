@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -28,7 +28,10 @@ from typing import Any
 import yaml
 
 IDS = ("right-destination", "right-application", "known-healthy-baseline", "allowed-deployment-route", "package-destination", "required-access", "required-settings", "change-safety", "freshness-and-drift")
-STABLE_SUCCESSFUL_STACK_STATUSES = frozenset({"CREATE_COMPLETE", "UPDATE_COMPLETE"})
+_foundation_spec = importlib.util.spec_from_file_location("runtime_foundation_checks", Path(__file__).resolve().parents[7] / "scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py")
+FOUNDATION_CHECKS = importlib.util.module_from_spec(_foundation_spec)
+_foundation_spec.loader.exec_module(FOUNDATION_CHECKS)
+STABLE_SUCCESSFUL_STACK_STATUSES = FOUNDATION_CHECKS.STABLE_STACK_STATUSES
 
 @lru_cache(maxsize=1)
 def response_adapter():
@@ -90,15 +93,16 @@ def main() -> int:
     details = image.get("imageDetails", []) if isinstance(image, dict) else []
     assertions["package-destination"] = assertion("package-destination", ok and bool(details), "immutable-digest-present" if ok else code, "missing" if ok else "unknown")
     ok, foundation, code = command(args, "cloudformation", "describe-stacks", "--stack-name", args.foundation_stack)
-    stacks = foundation.get("Stacks", []) if isinstance(foundation, dict) else []
     required_outputs = {"VpcId", "PrivateSubnetIds", "RepositoryUri", "ClusterArn", "LogGroupName", "TaskExecutionRoleArn", "ServiceSecurityGroupId", "VerifierSecurityGroupId", "ServiceDiscoveryArn"}
-    try:
-        outputs = {entry.get("OutputKey") for entry in stacks[0].get("Outputs", [])} if stacks else set()
-        foundation_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES and required_outputs <= outputs
-        foundation_failure = "unknown" if not ok else ("mismatch" if stacks and stacks[0].get("StackStatus") not in STABLE_SUCCESSFUL_STACK_STATUSES else "missing")
-    except (TypeError, AttributeError, KeyError, IndexError):
-        ok, code, foundation_ready, foundation_failure = False, "invalid-response", False, "unknown"
-    assertions["right-application"] = assertion("right-application", foundation_ready, "foundation-ready" if foundation_ready else code if not ok else "foundation-runtime-output-missing", foundation_failure)
+    foundation_ready, foundation_failure = False, "unknown"
+    if ok:
+        try:
+            FOUNDATION_CHECKS.stack_outputs(foundation, required_outputs)
+            foundation_ready, code = True, "foundation-ready"
+        except FOUNDATION_CHECKS.FoundationFailure as failure:
+            code = failure.code
+            foundation_failure = {"foundation-stack-not-ready": "mismatch", "foundation-outputs-missing": "missing"}.get(code, "unknown")
+    assertions["right-application"] = assertion("right-application", foundation_ready, code, foundation_failure)
     baseline = accepted_release(args.accepted_release)
     if args.operation in {"update", "restore"} and baseline is None:
         assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", False, "accepted-release-invalid", "missing")

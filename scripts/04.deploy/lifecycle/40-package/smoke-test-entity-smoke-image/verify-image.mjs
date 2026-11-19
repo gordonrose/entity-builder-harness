@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-11"
+//   updated_on: "2026-11-16"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -25,10 +25,7 @@ let phase = "arguments", cleanupConfirmed = true, temporary, qualification, clea
 const owned = { containers: [], networks: [], volumes: [] }, stages = [];
 const administratorPassword = "synthetic-entity-smoke-administrator";
 const token = "entity-smoke-disposable-fixture";
-// Match the read-only-observed core-platform engine, not an assumed older
-// major. Any target engine change requires newly matched qualification.
-const postgreSqlImage = "postgres:18.3-bookworm";
-const postgreSqlData = "/var/lib/postgresql/18/docker";
+let postgreSqlImage, postgreSqlData, postgreSqlVersion, observedEngineVersion;
 const markers = [administratorPassword, token, "SCRAM-SHA-256$", "credential-row-provider-canary"];
 function fail() { throw new Error("ENTITY_SMOKE_IMAGE_PROOF_NOT_CONFIRMED"); }
 function safe(value) { if (markers.some(marker => String(value).includes(marker))) fail(); return value; }
@@ -100,6 +97,9 @@ try {
   phase = "source";
   const source = invoke("git", ["rev-parse", "HEAD"]).stdout.trim();
   if (!/^[a-f0-9]{40}$/.test(source) || invoke("git", ["status", "--porcelain", "--untracked-files=all", "--", ".", ":!commitLogs"]).stdout.trim()) fail();
+  phase = "database-version-declaration";
+  const postgresql = parsed(invoke("python3", ["-B", "scripts/04.deploy/shared/postgresql-version.py", "--contract", "infra/04.deploy/03.product/image/entity-smoke/image-contract.yml"]).stdout);
+  postgreSqlImage = postgresql.qualification_image; postgreSqlData = postgresql.data_directory; postgreSqlVersion = postgresql.server_version_num;
   phase = "engine";
   docker(["info", "--format", "{{.OSType}}"], { timeout: 30_000 });
   const image = parsed(docker(["image", "inspect", tag]))[0];
@@ -143,7 +143,9 @@ try {
       // only TCP readiness establishes that its final server has started.
       const ready = invoke("docker", ["exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "fixture_root", "-d", "entitysmoke"], { allowFailure: true });
       if (ready.status === 0) {
-        if (psql(name, "SHOW server_version_num").trim() !== "180003") fail();
+        const observed = psql(name, "SHOW server_version_num").trim();
+        if (observed !== postgreSqlVersion) fail();
+        observedEngineVersion = String(Math.floor(Number(observed) / 10000)) + "." + String(Number(observed) % 10000);
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -262,7 +264,7 @@ try {
   }
   mark("safe-downstream-logs");
   qualification = { schema: "deploy/entity-smoke-image-qualification/v1", verdict: "passed", source_revision: source,
-    local_image_id: image.Id, engine_version: "18.3", stages, administrator_model: "fixture-superuser-not-rds-role-authority", evidence_class: "container-qualification", aws_observation: false, rds_iam_authentication_proven: false, rds_snapshot_restore_proven: false };
+    local_image_id: image.Id, engine_version: observedEngineVersion, stages, administrator_model: "fixture-superuser-not-rds-role-authority", evidence_class: "container-qualification", aws_observation: false, rds_iam_authentication_proven: false, rds_snapshot_restore_proven: false };
 } catch {
   process.exitCode = 1;
   console.error(JSON.stringify({ schema: "deploy/entity-smoke-image-qualification/v1", verdict: "failed", code: "ENTITY_SMOKE_IMAGE_PROOF_NOT_CONFIRMED", phase, effect: temporary || owned.containers.length || owned.networks.length ? "disposable-effects-possible" : "not-started", ...(temporary === undefined ? {} : { resource_reservation_id: basename(temporary) }) }));

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.deployment-operation-diagnostics
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -89,6 +89,17 @@ assert classification == "provider-details-unavailable" and facts == {"provider_
 def timeout_provider(*_parts): return False, None, "aws-command-timeout"
 classification, facts, outcome, collection = diagnostics.collect_cloudformation_failure(timeout_provider, stack_name="test-stack", change_set_name="test-change-set")
 assert (classification, facts, outcome, collection) == ("provider-observation-timeout", {}, "unknown", "failed")
+
+def expired_provider(*parts):
+    return False, None, "aws-credentials-expired"
+classification, facts, outcome, collection = diagnostics.collect_cloudformation_failure(expired_provider, stack_name="test-stack", change_set_name="test-change-set")
+assert (classification, facts, outcome, collection) == ("provider-credentials-expired", {}, "unknown", "failed")
+expired_report = valid(classification={"code": classification}, facts=facts,
+                       operation_outcome=outcome,
+                       next_action={"decision": "observe-current-operation"})
+diagnostics.validate(expired_report)
+fails({**expired_report, "next_action": {"decision": "correct-and-create-new-operation"}})
+assert diagnostics.classify_aws_error("aws-access-denied") == "provider-access-denied"
 
 calls = []
 def event_collection_fails(*parts):

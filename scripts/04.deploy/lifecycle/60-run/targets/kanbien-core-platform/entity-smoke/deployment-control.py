@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-18"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -273,11 +273,11 @@ def observe(provider, store, binding, parameters, change_arn, stack_arn, *, acti
     events = provider("cloudformation", "describe-stack-events", StackName=stack_arn)
     # A matching root event is positive lineage evidence even when AWS retains
     # older event pages. This is not a claim that the event inventory is complete.
-    require(isinstance(events, dict) and isinstance(events.get("StackEvents"), list) and any(isinstance(event, dict) and event.get("PhysicalResourceId") == stack_arn and event.get("ClientRequestToken") == reservation["operation_id"] for event in events["StackEvents"]), "deployment-execution-lineage-not-confirmed")
+    owned_events = CHANGE_SETS.execution_events(events, reservation["operation_id"], stack_arn)
+    require(owned_events, "deployment-execution-lineage-not-confirmed")
     completion = {}
     if delivery is not None:
-        terminal = [event for event in events["StackEvents"] if isinstance(event, dict) and event.get("PhysicalResourceId") == stack_arn
-                    and event.get("ClientRequestToken") == reservation["operation_id"] and event.get("ResourceStatus") == "UPDATE_COMPLETE"]
+        terminal = [event for event in owned_events if event.get("ResourceStatus") == "UPDATE_COMPLETE"]
         require(len(terminal) == 1 and isinstance(terminal[0].get("Timestamp"), str), "deployment-completion-time-not-confirmed")
         require(RESOURCE.timestamp(terminal[0]["Timestamp"]) >= RESOURCE.timestamp(reservation["reserved_at"]), "deployment-completion-predates-reservation")
         completion["completed_at"] = terminal[0]["Timestamp"]

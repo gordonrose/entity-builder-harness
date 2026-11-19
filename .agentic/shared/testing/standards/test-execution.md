@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.testing.standard.execution
-version: 2
+version: 3
 status: active
 created_on: "2026-11-07"
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 layer: 06.shared
 domain: testing
 disciplines: [agentic, architecture, sre]
@@ -117,5 +117,16 @@ working-tree inputs. Distinguish passed, failed, blocked, deferred and reused
 results. Never retain raw child stdout/stderr, environment values, submitted
 records or provider responses. Failed report retention remains explicit without
 rewriting original check outcomes. Historical proof is not fresh target proof.
+
+For supported structured child reports, retain bounded findings through the
+producer's existing finite-code projection, bound to the registered command
+owner. Preserve only recognised input locations, never arbitrary child paths,
+messages or evidence URLs. The existing runner-owned run report is the evidence
+reference. Unsupported, absent, invalid, oversized or failed diagnostic
+processing must be explicit; none changes the child's original exit status.
+Combined results identify the actual failed or stale dependency checks from
+the runner's dependency graph, not identities supplied by child output.
+Adding a producer format requires its owning projection and actual-caller
+privacy/preservation tests; schema-shaped JSON alone is not trusted detail.
 
 No scheduler, nightly execution or new live mutation authority is introduced.

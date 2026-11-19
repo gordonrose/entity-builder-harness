@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.acceptance-route
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [architecture, security, sre]
@@ -18,6 +18,7 @@
 #     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh
 from __future__ import annotations
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -28,6 +29,14 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[5]
 CONTEXT = {'scope_contract', 'accepted_record', 'target_root', 'target_directory', 'evidence_root', 'candidate_record', 'current_release_id'}
+
+
+def proof_policy():
+    path = Path(__file__).parents[1] / 'release-succession/proof-policy.py'
+    spec = importlib.util.spec_from_file_location('acceptance_proof_policy', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def document(path: Path) -> dict:
@@ -87,6 +96,13 @@ def input_values(path: Path, route: dict, *, root: Path = ROOT) -> dict:
     data = document(path)
     values = data.get('values')
     specifications = route.get('inputs')
+    mode = data.get('release_mode', 'first-qualification')
+    if mode not in {'first-qualification', 'ordinary-update'}:
+        raise ValueError('acceptance-input-release-mode-invalid')
+    if mode == 'ordinary-update':
+        specifications = route.get('ordinary_update_inputs')
+        if not isinstance(specifications, dict):
+            raise ValueError('acceptance-input-ordinary-update-unsupported')
     if data.get('schema') != 'deploy/acceptance-inputs/v1' or data.get('target') != route.get('target') or data.get('scope') != route.get('scope') or not isinstance(values, dict) or not isinstance(specifications, dict):
         raise ValueError('acceptance-inputs-identity-invalid')
     if set(values) != set(specifications): raise ValueError('acceptance-inputs-set-invalid')
@@ -104,6 +120,11 @@ def input_values(path: Path, route: dict, *, root: Path = ROOT) -> dict:
                 values[key] = str(selected)
         elif kind in {'proof-map', 'receipt-map'}:
             expected = route.get('proofs', {}) if kind == 'proof-map' else spec.get('receipts')
+            if kind == 'proof-map' and mode == 'ordinary-update':
+                schema = reference(root, route.get('accepted_record', {}).get('schema_path'))
+                if schema is None:
+                    raise ValueError('acceptance-recovery-policy-invalid')
+                expected = proof_policy().policy(document(schema))['fresh_tasks']
             if not isinstance(expected, (dict, list)):
                 raise ValueError('acceptance-input-receipt-map-invalid')
             expected_names = set(expected)
@@ -139,6 +160,18 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     image_path = reference(root, program.get('image_contract'))
     image = document(image_path) if image_path else {}
     if route.get('schema') != 'deploy/acceptance-route/v1': gap('acceptance-route-schema-invalid')
+    delivery = route.get('ordinary_delivery')
+    if delivery is not None:
+        if not isinstance(delivery, dict) or set(delivery) != {'implementation', 'owner', 'command'}:
+            gap('acceptance-route-delivery-owner-invalid')
+        else:
+            implementation = reference(command_root, delivery.get('implementation'))
+            if implementation is None or not implementation.is_file():
+                gap('acceptance-route-delivery-owner-missing')
+            elif command_metadata(implementation).get('id') != delivery.get('owner'):
+                gap('acceptance-route-delivery-owner-invalid')
+            else:
+                references.add(delivery['implementation'])
     for field, expected in [('target', contract.get('target')), ('scope', contract.get('scope')), ('program_id', program.get('id')), ('image_id', image.get('id'))]:
         if not isinstance(expected, str) or route.get(field) != expected: gap('acceptance-route-subject-mismatch', field)
     inputs = route.get('inputs')
@@ -194,9 +227,12 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     # The collector takes one bounded manifest; the contents are checked only at
     # the acceptance stage. A package build must not require future live proof.
     values['acceptance_inputs'] = '/tmp/acceptance-route-inputs.json'
+    values['ordinary_update_inputs'] = '/tmp/ordinary-update-inputs.json'
     values.update(evidence_root=str(scope_contract.parent.parent / '30-release-evidence'), release_candidate='/tmp/release-candidate.yml', expected_predecessor='release-' + 'a' * 24)
     commands = route.get('commands')
     if not isinstance(commands, dict) or not commands: gap('acceptance-route-commands-invalid'); commands = {}
+    if delivery is not None and (not isinstance(delivery, dict) or not isinstance(delivery.get('command'), str) or delivery['command'] not in commands):
+        gap('acceptance-route-delivery-owner-invalid')
     probes = []
     for name, command in commands.items():
         if not isinstance(command, dict): gap('acceptance-route-command-invalid', name); continue
@@ -216,6 +252,15 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     proofs = route.get('proofs')
     if not isinstance(proofs, dict) or not proofs: gap('acceptance-route-proofs-missing'); proofs = {}
     obligations = document(record_schema).get('required_proofs') if record_schema else None
+    policy_schema = document(record_schema) if record_schema else {}
+    if 'ordinary_update' in policy_schema:
+        try:
+            selected = proof_policy().policy(policy_schema)
+            members = policy_schema.get('composite_members', {}).get('tasks', proofs)
+            if not set(selected['fresh_tasks']).issubset(members):
+                gap('acceptance-route-fresh-proofs-mismatch')
+        except ValueError:
+            gap('acceptance-route-proof-policy-invalid')
     if not isinstance(obligations, list) or not obligations or any(not isinstance(item, str) for item in obligations) or len(set(obligations)) != len(obligations) or set(obligations) != set(proofs):
         gap('acceptance-route-required-proofs-mismatch')
     for name, proof in proofs.items():

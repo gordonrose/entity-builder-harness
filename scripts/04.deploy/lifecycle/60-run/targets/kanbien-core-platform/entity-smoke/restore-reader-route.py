@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -109,7 +109,7 @@ def run(args, provider):
     deps, runner, steps, book = TASK.dependencies(), TASK.RUNNER, TASK.STEPS, value["book"]
     request, store, key = value["request"], value["store"], steps.key(args)
     previous = store.read(key, request)
-    C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
+    if not value.get("recovery_delivery"): C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
     step_path = steps.path(value, args)
     completion_path = TASK.COMPLETION.path(step_path)
     runner.CONTROL.no_symlinks(completion_path)
@@ -155,6 +155,7 @@ def parse(arguments=None):
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--proof-label", required=True)
     parser.add_argument("--expected-digest", required=True)
+    parser.add_argument("--expected-predecessor")
     parser.add_argument("--approved-plan")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.target-alignment
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -50,6 +50,9 @@ for stdout in ('{}', '', ' \n', '[]', 'null', CANARY):
             else: raise AssertionError("alignment requires a JSON object, including for empty responses")
         call.assert_called_once_with(expected_argv, **expected_options)
 for value, code in [(SimpleNamespace(returncode=254, stdout='', stderr=CANARY), "alignment-command-not-confirmed"),
+                    (SimpleNamespace(returncode=254, stdout='', stderr='An error occurred (ExpiredToken) when calling the GetCallerIdentity operation: '+CANARY), "aws-credentials-expired"),
+                    (SimpleNamespace(returncode=254, stdout='', stderr='An error occurred (ExpiredTokenException) when calling the GetCallerIdentity operation: '+CANARY), "aws-credentials-expired"),
+                    (SimpleNamespace(returncode=254, stdout='', stderr='An error occurred (AccessDenied) when calling the GetCallerIdentity operation: '+CANARY), "aws-access-denied"),
                     (OSError(CANARY), "alignment-command-unavailable"),
                     (UnicodeDecodeError('utf8', b'\xff', 0, 1, CANARY), "alignment-command-unavailable"),
                     (subprocess.TimeoutExpired(expected_argv, 30), "alignment-command-unavailable"),
@@ -72,8 +75,8 @@ def fixture():
     as_outputs = lambda values: [{"OutputKey": key, "OutputValue": value} for key, value in values.items()]
     data = {
         "identity": {"Account": M.ACCOUNT, "Arn": "arn:aws:sts::337159794548:assumed-role/ApprovedInspection/session"},
-        "foundation": {"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": as_outputs(outputs)}]},
-        "dependency_stack": {"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": as_outputs({"PersistenceDatabaseIdentifier": M.DATABASE, "PersistenceDatabaseEndpoint": "private-provider-canary.internal", "AdministratorCredentialsSecretArn": SECRET})}]},
+        "foundation": {"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": as_outputs(outputs), "Parameters": [{"ParameterKey": "ExistingRepositoryArn", "ParameterValue": "arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/core-server"}]}]},
+        "dependency_stack": {"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": as_outputs({"PersistenceDatabaseIdentifier": M.DATABASE, "PersistenceDatabaseEndpoint": "private-provider-canary.internal", "AdministratorCredentialsSecretArn": SECRET, "MigrationCredentialsSecretArn": SECRET})}]},
         "vpc": {"Vpcs": [{"VpcId": VPC, "State": "available", "CidrBlock": "10.71.0.0/16"}]},
         "subnets": {"Subnets": [{"SubnetId": outputs["PrivateSubnetIds"], "VpcId": VPC, "State": "available", "MapPublicIpOnLaunch": False}]},
         "service": {"Service": {"DnsConfig": {"NamespaceId": "ns-abc123"}}},
@@ -86,8 +89,9 @@ def fixture():
         "ssl": {"Parameters": [{"ParameterName": "rds.force_ssl", "ParameterValue": "1"}]},
         "repository": {"repositories": [{"repositoryName": M.REPOSITORY, "repositoryUri": M.REPOSITORY_URI, "imageTagMutability": "IMMUTABLE", "imageScanningConfiguration": {"scanOnPush": True}}]},
         "image": {"imageDetails": [{"imageDigest": RECEIPT["image_digest"], "repositoryName": M.REPOSITORY}]},
-        "scan": {"imageScanStatus": {"status": "COMPLETE"}, "imageScanFindings": {"findingSeverityCounts": {"LOW": 2}}},
-        "budget": {"Budget": {"BudgetLimit": {"Amount": "100.0", "Unit": "USD"}, "CostFilters": {"TagKeyValue": ["user:Target$kanbien-core-platform"]}}},
+        "manifest": {"images": [{"imageId": {"imageDigest": RECEIPT["image_digest"]}, "imageManifest": json.dumps({"mediaType": "application/vnd.oci.image.manifest.v1+json"})}]},
+        "scan": {"repositoryName": M.REPOSITORY, "imageId": {"imageDigest": RECEIPT["image_digest"]}, "imageScanStatus": {"status": "COMPLETE"}, "imageScanFindings": {"findingSeverityCounts": {"LOW": 2}}},
+        "budget": {"Budget": {"BudgetName": "kanbien-core-platform-monthly", "BudgetType": "COST", "TimeUnit": "MONTHLY", "BudgetLimit": {"Amount": "100.0", "Unit": "USD"}, "CostFilters": {"TagKeyValue": ["user:Target$kanbien-core-platform"]}}},
     }
     image_read = {"Effect": "Allow", "Principal": "*", "Action": ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"],
                   "Resource": ["arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/" + name for name in ("core-server", "entity-smoke")]}
@@ -103,6 +107,7 @@ def fixture():
         assert (service, operation) in M.READS
         key = {"get-caller-identity": "identity", "describe-vpcs": "vpc", "describe-subnets": "subnets", "get-service": "service", "get-namespace": "namespace", "get-hosted-zone": "zone", "describe-vpc-endpoints": "endpoints", "describe-managed-prefix-lists": "prefix", "describe-db-instances": "database", "describe-secret": "secret", "describe-db-parameters": "ssl", "describe-repositories": "repository", "describe-images": "image", "describe-image-scan-findings": "scan", "describe-budget": "budget"}.get(operation)
         if operation == "describe-stacks": key = "foundation" if parameters["StackName"] == "kanbien-core-platform-foundation" else "dependency_stack"
+        if operation == "batch-get-image": key = "manifest"
         assert key in data
         return copy.deepcopy(data[key])
     return data, calls, provider
@@ -113,24 +118,56 @@ def observed(data_provider):
 
 
 data, calls, provider = fixture()
-safe, parameters, group = observed(provider)
+with patch.object(M.FOUNDATION_CHECKS, "private_endpoints", wraps=M.FOUNDATION_CHECKS.private_endpoints) as shared, patch.object(M.FOUNDATION_CHECKS, "s3_prefix_list", wraps=M.FOUNDATION_CHECKS.s3_prefix_list) as prefix:
+    safe, parameters, group = observed(provider)
+    shared.assert_called_once_with(provider, VPC, {"com.amazonaws." + M.REGION + "." + name for name in ("ecr.api", "ecr.dkr", "logs", "secretsmanager")})
+    prefix.assert_called_once_with(provider, M.REGION)
+assert (parameters["EndpointSecurityGroupId"], parameters["S3ArtifactPrefixListId"]) == (GROUP, "pl-abc123")
 assert safe["verdict"] == "aligned" and safe["provider_mutation"] is False and safe["acceptance_evidence"] is False
 assert safe["parameters_sha256"] == M.fingerprint(parameters)
 assert parameters["ServerDesiredCount"] == "0" and parameters["AdministratorSecretArn"] == SECRET
 assert all(marker not in json.dumps(safe) for marker in (CANARY, "private-provider-canary.internal", SECRET))
 original_incarnation = safe["dependency_incarnation_sha256"]
+for version in ("18.4", "18.12", "18.4-rds.20261116"):
+    changed, _, changed_provider = fixture()
+    changed["database"]["DBInstances"][0]["EngineVersion"] = version
+    report, _, _ = observed(changed_provider)
+    assert report["engine_version"] == version, "report actual observation, not the qualification baseline"
+with patch.object(M.FOUNDATION_CHECKS, "private_network", side_effect=M.FOUNDATION_CHECKS.FoundationFailure("foundation-vpc-mismatch")) as shared:
+    try: observed(provider)
+    except M.AlignmentFailure as failure: assert failure.code == "foundation-vpc-mismatch"
+    else: raise AssertionError("alignment must use shared private-network checking")
+    assert shared.call_count == 1
+assert [(operation, arguments["repositoryName"]) for service, operation, arguments in calls if operation in ("batch-get-image", "describe-image-scan-findings")] == [("batch-get-image", M.REPOSITORY), ("describe-image-scan-findings", M.REPOSITORY)]
+assert next(arguments for _, operation, arguments in calls if operation == "batch-get-image")["imageIds"] == [{"imageDigest": RECEIPT["image_digest"]}]
+assert next(arguments for _, operation, arguments in calls if operation == "describe-image-scan-findings")["imageId"] == {"imageDigest": RECEIPT["image_digest"]}
+with patch.object(M.IMAGE_CHECKS, "check_image", side_effect=M.IMAGE_CHECKS.ScanFailure("ecr-scan-identity-mismatch")) as shared:
+    try: observed(provider)
+    except M.AlignmentFailure as failure: assert failure.code == "ecr-scan-identity-mismatch"
+    else: raise AssertionError("alignment must consume the shared image check")
+    shared.assert_called_once_with(provider, M.REPOSITORY, RECEIPT["image_digest"])
 data["database"]["DBInstances"][0]["DbiResourceId"] = "db-ZYXWVUTSRQPONMLK"
 assert observed(provider)[0]["dependency_incarnation_sha256"] != original_incarnation
 negatives = [
+    (lambda d: d['database']['DBInstances'][0].update(DBName='other_valid_database'), 'alignment-dependency-name-not-confirmed'),
+    (lambda d: d['database']['DBInstances'][0].update(DBName=None), 'alignment-dependency-incarnation-invalid'),
+    (lambda d: d['database']['DBInstances'][0].update(Engine='mysql'), 'alignment-engine-not-confirmed'),
+    (lambda d: d['secret'].update(Name='other-secret'), 'alignment-administrative-reference-not-confirmed'),
+    (lambda d: d["foundation"]["Stacks"][0].pop("Parameters"), "alignment-foundation-parameters-not-confirmed"),
+    (lambda d: d["foundation"]["Stacks"][0]["Parameters"].append(copy.deepcopy(d["foundation"]["Stacks"][0]["Parameters"][0])), "alignment-foundation-parameters-not-confirmed"),
+    (lambda d: d["foundation"]["Stacks"][0].update(Parameters=[]), "preparation-inputs-endpoint-policy-reference-missing"),
+    (lambda d: d["foundation"]["Stacks"][0]["Parameters"][0].update(ParameterValue=CANARY), "preparation-inputs-endpoint-policy-parameter-mismatch"),
+    (lambda d: d["dependency_stack"]["Stacks"][0]["Outputs"][-1].update(OutputValue=CANARY), "preparation-inputs-endpoint-policy-output-mismatch"),
+    (lambda d: d["dependency_stack"]["Stacks"][0]["Outputs"].pop(), "preparation-inputs-endpoint-policy-reference-missing"),
     (lambda d: d["identity"].update(Account="123456789012"), "alignment-account-not-confirmed"),
-    (lambda d: d["foundation"]["Stacks"][0].update(StackStatus="UPDATE_IN_PROGRESS"), "alignment-foundation-not-ready"),
-    (lambda d: d["subnets"]["Subnets"][0].update(MapPublicIpOnLaunch=True), "alignment-private-subnets-not-confirmed"),
-    (lambda d: d["namespace"]["Namespace"].update(Type="DNS_PUBLIC"), "alignment-private-namespace-not-confirmed"),
-    (lambda d: d["zone"]["HostedZone"]["Config"].update(PrivateZone=False), "alignment-private-namespace-vpc-mismatch"),
-    (lambda d: d["endpoints"]["VpcEndpoints"].pop(), "alignment-private-delivery-not-confirmed"),
+    (lambda d: d["foundation"]["Stacks"][0].update(StackStatus="UPDATE_IN_PROGRESS"), "foundation-stack-not-ready"),
+    (lambda d: d["subnets"]["Subnets"][0].update(MapPublicIpOnLaunch=True), "foundation-subnet-not-private"),
+    (lambda d: d["namespace"]["Namespace"].update(Type="DNS_PUBLIC"), "foundation-namespace-not-private"),
+    (lambda d: d["zone"]["HostedZone"]["Config"].update(PrivateZone=False), "foundation-zone-not-private"),
+    (lambda d: d["endpoints"]["VpcEndpoints"].pop(), "foundation-endpoint-missing"),
     (lambda d: d["endpoints"]["VpcEndpoints"][-1].update(PolicyDocument={"Statement": []}), "alignment-secret-delivery-policy-not-confirmed"),
-    (lambda d: d["database"]["DBInstances"][0].update(EngineVersion="16.9"), "alignment-engine-not-confirmed"),
-    (lambda d: d["database"]["DBInstances"][0].update(EngineVersion="18.4"), "alignment-engine-not-confirmed"),
+    (lambda d: d["database"]["DBInstances"][0].update(EngineVersion="16.9"), "postgresql-version-major-incompatible"),
+    (lambda d: d["database"]["DBInstances"][0].update(EngineVersion="18.4canary"), "postgresql-version-observation-invalid"),
     (lambda d: d["database"]["DBInstances"][0].update(StorageEncrypted=False), "alignment-dependency-security-not-confirmed"),
     (lambda d: d["database"]["DBInstances"][0].update(PubliclyAccessible=True), "alignment-dependency-security-not-confirmed"),
     (lambda d: d["database"]["DBInstances"][0].update(IAMDatabaseAuthenticationEnabled=False), "alignment-dependency-security-not-confirmed"),
@@ -140,8 +177,13 @@ negatives = [
     (lambda d: d["ssl"].update(Marker="repeated-marker"), "alignment-parameter-observation-incomplete"),
     (lambda d: d["repository"]["repositories"][0].update(imageTagMutability="MUTABLE"), "alignment-immutable-repository-not-confirmed"),
     (lambda d: d["image"]["imageDetails"][0].update(imageDigest="sha256:" + "c" * 64), "alignment-qualified-image-not-observed"),
-    (lambda d: d["scan"]["imageScanFindings"]["findingSeverityCounts"].update(HIGH=1), "alignment-clean-scan-not-confirmed"),
-    (lambda d: d["budget"]["Budget"]["CostFilters"].update(TagKeyValue=[]), "alignment-target-budget-not-confirmed"),
+    (lambda d: d["scan"]["imageScanFindings"]["findingSeverityCounts"].update(HIGH=1), "ecr-scan-blocked-severity"),
+    (lambda d: d["scan"].update(repositoryName=CANARY), "ecr-scan-identity-mismatch"),
+    (lambda d: d["scan"]["imageScanStatus"].update(status="IN_PROGRESS"), "ecr-scan-not-complete"),
+    (lambda d: d["manifest"]["images"][0]["imageId"].update(imageDigest="sha256:" + "c" * 64), "ecr-manifest-identity-mismatch"),
+    (lambda d: d["budget"]["Budget"]["CostFilters"].update(TagKeyValue=[]), "foundation-budget-configuration-invalid"),
+    (lambda d: d["budget"]["Budget"].pop("BudgetName"), "foundation-budget-configuration-invalid"),
+    (lambda d: d["budget"]["Budget"].update(TimeUnit="ANNUALLY"), "foundation-budget-configuration-invalid"),
 ]
 for mutate, code in negatives:
     data, _, provider = fixture(); mutate(data)
@@ -150,6 +192,87 @@ for mutate, code in negatives:
         assert failure.code == code, (failure.code, code)
         assert CANARY not in str(failure)
     else: raise AssertionError("expected alignment rejection")
+for owner, reason, last_call in [("private_endpoints", "foundation-endpoint-group-invalid", "get-hosted-zone"), ("s3_prefix_list", "foundation-s3-prefix-missing", "describe-vpc-endpoints"), ("endpoint_policy", "alignment-ecr-api-policy-not-confirmed", "describe-vpc-endpoints")]:
+    data, calls, provider = fixture()
+    with patch.object(M.FOUNDATION_CHECKS, owner, side_effect=M.FOUNDATION_CHECKS.FoundationFailure(reason)):
+        try: observed(provider)
+        except M.AlignmentFailure as failure: assert failure.code == reason
+        else: raise AssertionError("shared endpoint failure must stop alignment")
+    assert calls[-1][1] == last_call
+for operation in ("describe-vpc-endpoints", "describe-managed-prefix-lists"):
+    data, calls, provider = fixture(); failure = M.AlignmentFailure("alignment-command-not-confirmed")
+    def denied(service, action, **parameters):
+        if action == operation:
+            calls.append((service, action, parameters)); raise failure
+        return provider(service, action, **parameters)
+    try: observed(denied)
+    except M.AlignmentFailure as caught: assert caught is failure
+    else: raise AssertionError("provider failure must be preserved")
+    assert calls[-1][1] == operation
+
+# Actual alignment consumes changed resolved budget settings and the shared check.
+data, calls, provider = fixture()
+expected_budget = copy.deepcopy(M.INPUTS['budget'])
+expected_budget.update(BudgetName='another-monthly')
+expected_budget['BudgetLimit'] = {'Amount':250, 'Unit':'EUR'}
+expected_budget['CostFilters'] = {'TagKeyValue':['user:Target$another']}
+data['budget']['Budget'] = copy.deepcopy(expected_budget)
+with patch.dict(M.INPUTS, budget=expected_budget):
+    observed(provider)
+    assert calls[-1][2]['BudgetName'] == 'another-monthly'
+    with patch.object(M.FOUNDATION_CHECKS, 'budget', side_effect=M.FOUNDATION_CHECKS.FoundationFailure('foundation-budget-configuration-mismatch')) as shared:
+        try: observed(provider)
+        except M.AlignmentFailure as failure: assert failure.code == 'foundation-budget-configuration-mismatch'
+        else: raise AssertionError('alignment must use shared budget validation')
+        shared.assert_called_once_with(data['budget']['Budget'], expected_budget)
+
+# Changed resolved settings reach the full alignment path, not just database_facts.
+data, calls, provider = fixture()
+new_name = 'another/admin.secret+name'
+new_secret = SECRET.replace('kanbien-core-platform-persistence-migration', new_name)
+data['database']['DBInstances'][0]['DBName'] = 'another_database'
+data['secret'].update(ARN=new_secret, Name=new_name)
+for row in data['dependency_stack']['Stacks'][0]['Outputs']:
+    if row['OutputValue'] == SECRET: row['OutputValue'] = new_secret
+data['endpoints']['VpcEndpoints'][-1]['PolicyDocument'] = data['endpoints']['VpcEndpoints'][-1]['PolicyDocument'].replace(SECRET, new_secret)
+with patch.dict(M.DATABASE_BINDING, database_name='another_database', administrator_secret_name=new_name):
+    safe, parameters, _ = observed(provider)
+    assert parameters['DatabaseName'] == 'another_database' and parameters['AdministratorSecretArn'] == new_secret
+    assert new_secret not in json.dumps(safe) and new_name not in json.dumps(safe)
+    data['secret']['Name'] = 'kanbien-core-platform-persistence-migration'
+    try: observed(provider)
+    except M.AlignmentFailure as failure: assert failure.code == 'alignment-administrative-reference-not-confirmed'
+    else: raise AssertionError('secret metadata must match the declared name')
+
+# Project changed declarations through the same owner and real alignment caller.
+document = M.INPUT_OWNER.CF.template((M.ROOT / M.FOUNDATION).read_text())
+extra = ["arn:aws:ecr:" + M.REGION + ":" + M.ACCOUNT + ":repository/another/" + name for name in ("one", "two")]
+for resource in document["Resources"].values():
+    if resource.get("Type") == "AWS::EC2::VPCEndpoint":
+        for row in resource["Properties"]["PolicyDocument"]["Statement"]:
+            if isinstance(row["Resource"], list): row["Resource"].extend(extra)
+declared = M.INPUT_OWNER.endpoint_policies(document, M.ACCOUNT, M.REGION)
+with patch.dict(M.INPUTS, {"foundation_endpoint_policies": declared}):
+    data, calls, provider = fixture()
+    for endpoint in data["endpoints"]["VpcEndpoints"][:2]:
+        endpoint["PolicyDocument"]["Statement"][0]["Resource"].extend(extra)
+    assert observed(provider)[0]["verdict"] == "aligned"
+    for mutation in ("missing", "extra", "unsafe-source", "selected-repository-absent"):
+        changed = copy.deepcopy(data); inputs = copy.deepcopy(declared)
+        if mutation == "missing": changed["endpoints"]["VpcEndpoints"][0]["PolicyDocument"]["Statement"][0]["Resource"].pop()
+        elif mutation == "extra": changed["endpoints"]["VpcEndpoints"][0]["PolicyDocument"]["Statement"][0]["Resource"].append(extra[0] + "-other")
+        else:
+            replacements = ["*"] if mutation == "unsafe-source" else extra
+            for policy in inputs.values():
+                for row in policy["Statement"]:
+                    if row["Action"] != "ecr:GetAuthorizationToken": row["Resource"] = replacements
+            for endpoint in changed["endpoints"]["VpcEndpoints"][:2]: endpoint["PolicyDocument"]["Statement"][0]["Resource"] = replacements
+        original = copy.deepcopy(data); data.clear(); data.update(changed)
+        with patch.dict(M.INPUTS, {"foundation_endpoint_policies": inputs}):
+            try: observed(provider)
+            except M.AlignmentFailure as failure: assert failure.code == "alignment-ecr-api-policy-not-confirmed"
+            else: raise AssertionError(mutation)
+        data.clear(); data.update(original)
 try: M.aws("ecs", "run-task", cluster=CANARY)
 except M.AlignmentFailure as failure: assert failure.code == "alignment-provider-operation-prohibited"
 else: raise AssertionError("read-only adapter must reject task launch")

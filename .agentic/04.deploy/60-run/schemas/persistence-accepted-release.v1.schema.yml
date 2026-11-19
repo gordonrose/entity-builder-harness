@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.persistence-accepted-release.v1
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -61,3 +61,25 @@ required_proofs:
 - rollback-final-health
 - rollback-final-read
 - isolated-restore
+ordinary_update:
+  qualification: unchanged-recovery-inputs-and-current-functional-proof
+  fresh_tasks: [migration-applied-state, effective-privilege, runtime-identity-initial-access, rollback-final-read]
+  retained_evidence: exact-accepted-predecessor-capability-history
+  changed_inputs: require-affected-capability-requalification
+  # The baseline's read verifier is its meaningful workload smoke. Readiness
+  # and running-image/source identity remain separately observed, never reused.
+  recovery_input_paths:
+  - packages/core
+  - platform
+  - infra/04.deploy/03.product/entrypoints
+  - infra/04.deploy/03.product/image/core-server-persistence
+  - scripts/04.deploy/lifecycle/20-build
+  - scripts/04.deploy/lifecycle/40-package
+  - scripts/repo/workspace-build
+  - package.json
+  - package-lock.json
+  - pnpm-lock.yaml
+  - pnpm-workspace.yaml
+  - tsconfig.json
+  - .npmrc
+successor_record_schema: deploy/persistence-collected-acceptance/v2

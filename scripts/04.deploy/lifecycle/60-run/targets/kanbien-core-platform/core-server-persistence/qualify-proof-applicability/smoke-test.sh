@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-proof-applicability
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -40,8 +40,16 @@ try:
         assert not module.restore_only_delta(paired,"a"*40,"b"*40)
     assert not module.restore_only_delta(["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts", "platform/adapters/aws/persistence/postgresql/src/connection.ts"])
     assert not module.restore_only_delta(["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts"])
-    with patch.object(module,"source_paths",return_value=["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"]), patch.object(module,"validate_package_receipt"):
-        record=module.make((old_identity,old),(new_identity,new))
+    module.PACKAGE_RECEIPTS.mkdir()
+    def retained(value):
+        path=module.PACKAGE_RECEIPTS/(value['receipt_reference'].split(':')[-1]+'.json')
+        path.write_text(json.dumps(value))
+        return {**{key:value[key] for key in module.PACKAGE_FIELDS},'receipt_path':str(path.relative_to(temporary)),'receipt_sha256':module.sha(value)}
+    paths=[module.RESTORE_VERIFIER_INPUT]
+    record={'schema':module.SCHEMA,'target':module.TARGET,'scope':module.SCOPE,'change_class':'restore-verifier-only',
+            'predecessor':retained(old),'candidate':retained(new),'source_delta':{'paths':paths,'sha256':module.sha(paths)},'reused_proofs':sorted(module.REUSABLE)}
+    record['integrity']={'algorithm':'sha256','payload_sha256':module.sha(record)}
+    with patch.object(module,"source_paths",return_value=paths), patch.object(module,"validate_package_receipt"):
         assert module.validate(record,new_identity)==record
     wrong=json.loads(json.dumps(record)); wrong["reused_proofs"].append("isolated-restore"); wrong["integrity"]["payload_sha256"]=module.sha({key:value for key,value in wrong.items() if key!="integrity"})
     with patch.object(module,"source_paths",return_value=["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"]), patch.object(module,"validate_package_receipt"):
@@ -49,9 +57,10 @@ try:
         except module.ApplicabilityError as error: assert str(error)=="persistence-proof-applicability-reused-proof-set-invalid"
         else: raise AssertionError("restore proof reuse passed")
     with patch.object(module,"source_paths",return_value=["infra/04.deploy/03.product/image/core-server-persistence/Dockerfile"]), patch.object(module,"validate_package_receipt"):
-        try: module.make(({key:old[key] for key in module.PACKAGE_FIELDS},old),({key:new[key] for key in module.PACKAGE_FIELDS},new))
+        try: module.validate(record,new_identity)
         except module.ApplicabilityError as error: assert str(error)=="persistence-proof-applicability-change-not-restore-only"
         else: raise AssertionError("Dockerfile change passed")
 finally: shutil.rmtree(temporary)
-print("persistence proof applicability checks passed")
+assert not hasattr(module, 'make') and not hasattr(module, 'persist'), 'obsolete writer remains'
+print("historical persistence proof applicability reader checks passed")
 PY

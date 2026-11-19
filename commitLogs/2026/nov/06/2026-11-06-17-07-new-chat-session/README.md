@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-15T15:22:48Z
-latest_commit_sha: a69df9ff
-chat_duration: 771341s (08:22:15:41)
+latest_commit_at_utc: 2026-11-15T20:26:27Z
+latest_commit_sha: 8c425ce6
+chat_duration: 789560s (09:03:19:20)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -59,6 +59,52 @@ below are historical incident records, not the current acceptance verdict.
 
 ## Session Log
 
+- Nov19 final local verification and checkpoint carry-forward: combined report
+  `.cache/test-runs/20261119T183603Z-5dbbb5bae2364cdcbf439dcc59e8409d/report.json`
+  passed with 135 source-matched passes reused and 21 later-stage checks deferred
+  (80.022 seconds aggregation; not fresh execution or end-to-end deployment time).
+  The stable preceding run
+  `.cache/test-runs/20261119T183207Z-2c41192814684d52b664c15b76c18b82/report.json`
+  took 2433.551 seconds, with 134 passes and one persistence-provider-regression
+  failure whose assertion output was unavailable. Its cause remains unexplained;
+  a direct wrapper reproduction and one registered rerun both passed unchanged.
+  The registered rerun is
+  `.cache/test-runs/20261119T183400Z-8be49d27db554523a03cf834089f5e98/report.json`
+  (one pass, 50.987 seconds). Preserve the original failure; no threshold or test
+  was weakened. The earlier in-flight run was superseded because approved source
+  changes invalidated its evidence, not because it qualified the final source.
+  Context hygiene: continue from this Nov6 worktree; local checkpoint approval
+  covers the accumulated consolidation and follow-on work. Package qualification,
+  publication and the successor AWS proof remain outstanding. A publication
+  approval question is pending; no push or AWS mutation has occurred here.
+  ADR disposition: this bounded correction applies the existing restoration
+  architecture and does not introduce another deployment engine or evidence store.
+
+- Nov19 accepted-rollback prerequisite correction: user explicitly approved
+  strictly checked accepted-proof reuse after the missing feature compatibility
+  producer was identified. The existing shared proof policy now compares actual
+  immutable configuration, permission-template and declared schema inputs and
+  database incarnation. Only configuration comments and top-level change_impact
+  are excluded. The existing feature selector validates complete accepted
+  custody/package identity and retains comparison hashes in its existing plan;
+  no new compatibility record, evidence store or deployment engine is created.
+  Changed operational inputs still require fresh compatibility proof. Focused
+  Git/selector protocols and the complete acceptance-route regression passed
+  (`/tmp/nov19-accepted-reuse-route.log`); the infrastructure regression also
+  passed (`/tmp/nov19-accepted-reuse-infrastructure-final.log`), including
+  exact-predecessor receipt checks and a controller-source fingerprint test for
+  the shared policy dependency.
+  Read-only inspection validated actual accepted release
+  `release-53798ef563be4ce9a8c5b2f0` and matching operational inputs at committed
+  checkpoint `8c425ce6ed33cc2ebf9d7e1b56170ea7b75417c7`, explicitly not current
+  worktree qualification or fresh AWS health. The in-flight affected run must
+  not qualify changed inputs; final preparation/source-matched reuse follows.
+  AWS identity was rechecked successfully in account 337159794548. No source
+  checkpoint, publication, AWS mutation or acceptance advancement occurred in
+  this correction. The README skill kept its explanation scoped to the existing
+  update section; shared standards/workflows now distinguish reuse from fresh
+  compatibility records. Diagnostic reviews remain partial, not full adoption.
+
 - Session started.
 - Branch created.
 - Chat-owned worktree created.
@@ -97,6 +143,10 @@ below are historical incident records, not the current acceptance verdict.
 
 - Raised: Frozen focused verification completed with explicit gaps; broad proof not started
   Resolution: Original registered run 62464 completed exit 1. Retained report .cache/test-runs/20261115T151538Z-c5447f79e3f4458ca11ade2af93d1ab4/report.json: six passed (diagnostic-catalog-readers, harness-artifact-migration-regression, persistence-composition, platform-shell-payload, restore-connection-diagnostics, runtime-payload-assembly), two failed (check-selection-mechanics, entity-smoke-composition), and two uncertain at final input revalidation (package-custody-regression, persistence-payload-regression; both commands exited zero but the connected qualifier fixture changed before completion). Total 2760.846669s; command execution 2579.503227s. Do not report eight passing checks or full affected integration. Direct mechanics later passed all 151 tests; initial cause remains unconfirmed. Exact qualifier startup timeout was reproduced and corrected only in the fixture, whose direct original assertions now pass. All diagnostic child processes are terminal. Remaining uncommitted paths are the fixture correction and this log; all prior implementation is preserved in 29e5f1a3/4bf7a882. User raised whether broader proof should wait until remaining retrospective mistakes are worked through. No new broad run, image build, publication or AWS operation was started; explicit sequencing/pause question is outstanding. Existing goal remains incomplete.
+
+
+- Raised: Preparation refactor exploratory fixture failures and review freshness.
+  Resolution: The provider fixture initially lacked the new resolver/declaration closure (14 cases); copied actual references. Two update fixture cases used a conflicting synthetic repository; selected the real declared repository. One new coverage assertion incorrectly expected an empty reference field; corrected to the actual report shape. Two diagnostic fixture-source hashes were stale; reviewed setup changes and refreshed their existing records. All corrected focused tests and the complete persistence target-control smoke suite subsequently passed. Both real scope coverage checks passed. Governed surviving-path preparation passed: 21 headers, zero errors, selector planned with no findings; prior deleted-path preparation limitation remains separate. No failures were treated as passes before correction.
 
 ## Decisions Made
 
@@ -462,6 +512,50 @@ below are historical incident records, not the current acceptance verdict.
 
 - Decision: User explicitly requested pausing the goal after recording current results
   Rationale: All earlier running checks and their exact gaps were already recorded. Before the reply arrived, a four-owner recheck was launched at clean checkpoint 883f8fa64f2746fe607a7779e32b9e853c1cc6ac. On explicit pause, its positively identified process group 69033 was terminated; session 93899 returned 143 and a subsequent process-group inspection found no remaining processes. Private partial record /tmp/consolidation-checkpoint-recheck.ngzrl6 reached mechanics check-start only and establishes no passing proof. No full integration, image qualification, publication or AWS operation was started. Goal is to be paused, not completed, while remaining retrospective mistakes are discussed. Resume must preserve all three original workstreams and their outstanding registered integration/image qualification/audit requirements. Code and the watchdog correction are committed; prior failed/uncertain evidence remains retained.
+
+
+- Decision: Shared preparation-input refactor implemented locally; complete deployment consolidation remains pending.
+  Rationale: Both persistence preparation and feature alignment use the shared AWS declaration reader for destination, optional profile, package/program/candidate, repository, template and dependency selections. Existing declarations extended; displaced constants removed; imported recovery identity retained as a derived value. Coverage, scope/check inputs and controller source identity updated. No AWS changes, publication or commit. Full image/live and impact-selected integration proof remain paused/deferred. Direct focused class commands have no standalone registered unit and do not seed trusted selector reuse.
+
+
+- Decision: Frozen preparation-input verification completed.
+  Rationale: Final direct focused pass: PreparationInputTests and DeclaredTemplateTests (6 tests) passed in 2.509s; entity alignment fixture passed in 2.039s; infrastructure-route fixture passed in 7.574s; diagnostic coverage passed in 1.245s with no findings; git diff --check passed in 0.049s. All 24 changed non-session paths had identical before/after hashes (including the prior removed adapter marker). Earlier complete persistence target controls passed, including 54 controller, 6 provider CLI, 19 verifier operation and 11 task-operation tests plus shell assertions. Results establish local behavior only. End-to-end delivery budget not established. Changes remain uncommitted; full integration/package/live proof deferred as agreed.
+
+
+- Decision: Shared image-check consolidation implemented; focused local verification passed.
+  Rationale: Existing ecr-scan.py now owns runnable-manifest resolution and scan validation for publication, persistence preparation and entity-smoke alignment. Removed duplicated checks; retained actual recovery manifest callers as a thin wrapper. Preparation does not poll or write proof; publication retains bounded polling and exclusive report writing. Repository security checks remain. Controller fingerprint, both scope impact closures, selector edges and diagnostic reviews updated. Self-review and predicate/consumer inventory are in the existing consolidation plan. Final frozen-input run: ecr-scan-test.py 5 tests 2.703s; alignment-test.py 45 negative cases plus 22 image-policy cases 2.119s; controller-regression.py 55 tests 4.236s; provider-cli-regression.py 6 tests 6.408s; infrastructure-route-test.py 8.001s; PreparationInputTests 4 tests 1.252s; persistence and entity-smoke declaration coverage 4.167s and 8.901s; diagnostic structural review 1.245s, no findings; diff check 0.045s. All passed, approximately 39 seconds combined command time, with all 15 reviewed task paths unchanged across verification. Exploratory input-fixture failure in two tests was corrected by copying the newly required helper. Metadata/preparation passed; read-only helper impact selection planned without findings and selected both callers plus publication. These direct focused tests do not seed registered aggregate reuse. Full affected integration, including package-custody-regression, entity-smoke-composition, persistence-provider-regression and other selected obligations, remains pending; package/live proof remains deferred. No commit, push, publication or AWS operation. End-to-end deployment budget not established.
+
+
+- Decision: Shared foundation, VPC/subnet and private service-discovery checks implemented; focused proof passed.
+  Rationale: Existing consolidation plan records consumer/predicate inventory and self-review. Added foundation-checks.py and adjacent tests; both preparation paths now use it and the older AWS runtime-alignment reporter reuses strict stack/output validation. Preparation inputs derive cluster/log/private namespace expectations through foundation output/resource references, with renamed-resource and unsupported-projection tests. Persistence tuple interfaces remain for actual callers. Endpoints, PostgreSQL, budget, resource templates and deployment execution remain unchanged. Final direct checks passed: alignment-test.py 45 negative plus 22 policy cases (5.224s); controller-regression.py 56 tests (8.021s); provider-cli-regression.py 6 tests (11.803s); infrastructure-route-test.py (11.042s); PreparationInputTests 5 tests (2.231s); diagnostic review no findings (2.176s); diff check (0.102s). Both scope declaration checks passed earlier on unchanged declaration/resolver inputs. Registered aws-foundation-checks (4 test methods with negative matrices) and aws-runtime-alignment-regression passed: .cache/test-runs/20261115T230257Z-bf5f6697fdcf4ab88a078e1a80753fa3/report.json; 24.096s total runner time, 0.548s command execution. Initial registration attempt failed check-argv-invalid; corrected by reusing the existing shell wrapper with --foundation-only, not altering runner admission. An overlapping preparation record then rejected a changed metadata input; completed only its final record-preparation step after freezing inputs, verdict planned with no findings. Metadata headers and process/command drift checks passed. All 19 reviewed task paths remained unchanged across final checks and refreshed selection. Full affected integration and package/live proof remain pending, not waived. No commit, push, publication, AWS observation or mutation. Deployment time budget remains unestablished.
+
+
+- Decision: Endpoint placement and S3 prefix checks consolidated; focused verification passed.
+  Rationale: Extended existing foundation-checks.py; removed duplicate predicates in persistence preparation and feature alignment. Three versus four pre-existing endpoint requirements remain explicit; Secrets Manager is not required before persistence creates it. Permission policies, templates and AWS observation count are unchanged. No new files this slice; net implementation +19 lines, tests +95 lines, plan +40 lines (metadata/review edits separately). Shared finite failures reject malformed, missing, duplicate, unavailable and incorrectly placed endpoints and invalid/ambiguous prefix observations; provider failures preserve original codes without retries. Both declarations covered; registered aws-foundation-checks and aws-runtime-alignment-regression executed and passed in 14.970 seconds total, 0.318 seconds command execution; report .cache/test-runs/20261116T110247Z-06a15c7fa7154056b409ff98fd8ce892/report.json. Direct final feature alignment passed (45 negative and 22 policy cases plus shared wiring/failure assertions); persistence controller 56 tests and provider CLI 6 tests passed. Diagnostic structural check findings empty; six metadata headers, process/command drift, diff check and preparation plan passed. Eight reviewed input hashes remained unchanged throughout final checks and preparation. Full affected integration including entity-smoke-composition and persistence-provider-regression, package/live proof and delivery timing remain pending. Endpoint policy declaration-derived expectations remain follow-up work. No commit, push, publication or AWS observation/mutation.
+
+
+- Decision: Declaration-derived endpoint-policy checks implemented; focused verification passed.
+  Rationale: Normal alignment no longer contains its two-repository list or three-resource limit. Existing preparation-inputs projects policies from selected foundation and dependency templates; shared foundation-checks compares them with independent action, explicit ARN and selected-workload restrictions. Existing parameter parser binds the already observed foundation response; declared secret-output aliases must agree. Both foundation consumers migrated to observation-based checking, without a wrapper or extra AWS reads. Historical two-repository repair recognition stays fixed to its approved historical exception. No new files; net implementation +104 lines and tests +105 lines, plus scoped plan/standards/impact/review metadata. Exploratory checks exposed legitimate secret-output aliases and a fixture closure mutation that was not reaching its provider; both corrected, with actual-caller counterexamples then passing. Final registered aws-foundation-checks (7 methods) and aws-runtime-alignment-regression executed and passed, 18.018 seconds runner total and 0.434 seconds command execution; report .cache/test-runs/20261116T120242Z-3dad30053aa4468896db10870a0fe173/report.json. Final feature alignment passed (51 negative plus 22 ECR policy cases and four-repository/source-safety assertions), preparation inputs 6 tests passed, persistence controller 56 tests passed, provider CLI 6 tests passed. Infrastructure-route fixtures passed on unchanged runtime bodies before metadata-only preparation. Both scope declarations covered; diagnostic structural review findings empty; metadata headers, process/command drift, preparation plan and diff check passed. All reviewed task hashes remained unchanged across final tests and completed preparation. Full affected integration including entity-smoke-composition and persistence-provider-regression, package/live proof and ten-minute delivery timing remain pending. No commits, push, publication or AWS observation/mutation.
+
+
+- Decision: Declaration-derived database settings implemented; focused verification passed
+  Rationale: Extended the existing preparation-inputs RDS dependency projection to read DBName, PostgreSQL engine and administrator-secret Name through the existing output reference. Feature alignment consumes these values; well-shaped wrong database names now reject, secret ARN matching escapes punctuation, and secret metadata must match the declared name. No new files, templates, AWS calls, permissions, version policy or creation-preparation changes. Source self-review and predicate/consumer inventory are in the existing consolidation plan; source-matched partial diagnostic reviews updated. Final focused PreparationInputTests: 8 passed in 5.753 seconds. Alignment fixture passed (55 reported negatives, 22 private-image-policy negatives plus new declaration/full-inspection assertions); infrastructure-route fixture passed. Diagnostic structural check passed; registered diagnostic-adoption executed and passed with no findings. Both feature and persistence declaration coverage returned covered with no findings; lifecycle metadata/drift preparation and git diff --check passed. Task source hashes unchanged across final verification. No standalone registered unit exists for the bounded input/alignment fixtures; direct results do not seed aggregate reuse. Full impact-selected integration, package/live proof and delivery timing remain deferred. Exact PostgreSQL18.3 restriction remains explicitly unresolved compatibility-policy work; budget consolidation is next. No commit, push or AWS operation.
+
+
+- Decision: Budget validation consolidated across three callers; focused verification passed
+  Rationale: Existing foundation-checks now validates the complete declared monthly COST budget: name, type, period, finite positive numeric amount, currency and exact single target filter. Existing preparation-inputs reads budget-control and reconciles the selected foundation template; provisioning uses this reader without image/package inputs. Feature alignment, persistence preparation and foundation budget verification delegate; copied constants and predicates removed. Persistence acceptance preserves its live_budget interface/delegation. Source errors reject before provider work; caller budget failures now preserve shared finite foundation-budget codes. No new files, provider operations, retries, templates, budget configuration or mutation sequencing changes. Both scope declarations, source references and check inputs updated; existing plan contains inventory and source self-review, and partial diagnostic reviews match current sources. Exploratory recovery fixture failed because its disposable copy lacked the new actual imports; fixed fixture imports/declaration, not production recovery. Final registered aws-foundation-checks, foundation-budget-regression and diagnostic-adoption executed/passed with no findings: .cache/test-runs/20261116T131712Z-540b4f7eb8b6488d861e955209561320/report.json (21.516 seconds total, 4.202 seconds command execution). Direct final PreparationInputTests 10 passed in 6.703 seconds; alignment passed 57 reported negatives plus 22 image-policy negatives and new caller assertions; persistence controller 56 passed in 5.431 seconds; provider CLI 6 passed in 7.042 seconds; infrastructure-route fixture passed. Both scope declarations covered without findings; metadata headers, process/command drift, selection preparation and diff check passed. All 17 reviewed task inputs unchanged across final checks/preparation. Full affected integration, package/live proof and ten-minute delivery demonstration remain deferred. PostgreSQL version-policy reconciliation is next. No commit, push or AWS operation.
+
+
+- Decision: PostgreSQL compatibility declared; local version-policy checks passed
+  Rationale: Implemented explicit PostgreSQL major 18 in the source RDS template, preserving automatic minor updates. Both existing image contracts declare major compatibility separately from exact postgres:18.3-bookworm qualification. One shared validator serves preparation, alignment, restore, image qualification and bounded public-image recovery. Persistence and retained rollback qualifiers now observe the actual declared server version; feature and restore reports retain actual engine observations. Existing snapshot lineage, owned cleanup, live SQL and readiness proof requirements remain. One new implementation file; tests extend existing fixtures/wrapper. Final registered postgresql-version-policy and diagnostic-adoption both executed/passed with no findings: .cache/test-runs/20261116T162144Z-bb30bfb701d0445daf9b67e180c79c31/report.json (23.693s total, 2.856s command execution). Direct declaration/version classes passed (14 methods before the additional CLI test, then all 4 version methods including CLI); alignment, restore, simulated feature qualifier, workflow guard/route and 47 public-recovery cases passed. Initial 13-method package-qualification run passed 12 and exposed one fake database missing the new version query; fixture corrected and failing method rerun passed. Exploratory recovery pattern and check catalog registration errors were corrected without weakening gates; failing run receipts remain. Both scope declaration checks covered/findings empty. README skill applied to version/proof wording and corrected the fixture administrator description; links resolve. No real Docker engine, AWS mutation, publication or commit. Actual image/container, integrated and live proof plus ten-minute delivery demonstration remain deferred.
+
+
+- Decision: Durable UPDATE continuation locally verified; full proof remains deferred
+  Rationale: Implemented all five persistence UPDATE callers on the existing shared reserved prepare/execute mechanism; removed nonreserved reviewed_update. Normal retries observe retained execution before healthy-predecessor gates; prepared changes still require current admission before their first execution. Input hashes, creation lineage and terminal root execution events prevent replay or false completion. Distinct reviewed operation labels preserve later releases/rollback and rejected-review correction; historical read-only reconciliation and CREATE records remain supported. No new files, runner or evidence registry. Final registered persistence-provider-regression passed; diagnostic-adoption passed with matching evidence reuse. Report: .cache/test-runs/20261118T201153Z-a632e98b6ff4458bbf275cd8daa79e84/report.json; 96.374637s total, 75.526945s command execution. Wrapper includes 58 controller, 6 provider-CLI, 19 verifier-operation and 11 task-operation tests plus inline assertions. Direct frozen-source entity-smoke deployment fixture passed all 21 named cases; no separately registered narrow feature unit exists, so its broad composition/integration obligations remain pending. Initial registered failure retained at .cache/test-runs/20261118T200239Z-b30b0d7811ec4c2da87b90291810fe7b/report.json: traced to two stale foundation assertions in the wrapper, corrected prerequisite fixtures/exact shared codes without weakening production checks. Source review and metadata/impact preparation refreshed; all 15 frozen task paths unchanged after final checks. Initial preparation was observed exceeding seven minutes in existing command enumeration/impact planning: local overhead, not an excluded provider wait; Batch C efficiency work remains. B07 focused verification is now passed (supersedes the plan's frozen pending marker); A-C and complete integration/package/live proof and ten-minute delivery remain incomplete/deferred. No commit, push, publication or AWS operation.
+
+
+- Decision: Preparation-performance correction locally verified
+  Rationale: Final registered run .cache/test-runs/20261118T205140Z-fec1ebbd717a41f28961acc1caf7c08e/report.json passed all four checks with no findings: check-selection-mechanics and diagnostic-adoption executed; harness-command-drift-regression and harness-governed-runner-regression reused matching evidence. Corrected task inputs remained frozen. The first run passed functional regressions but rejected the missed mechanics-fixture support-review hash; that failure remains retained. Correcting the review binding required another mechanics execution, which took 766.374 seconds; the earlier pass took 373.038 seconds. This regression duration is not a preparation speedup or delivery-budget claim. Representative impact planning improved from 97.29 to 29.00 seconds with identical 29 check entries, dependency IDs, source-reference sets, findings and scheduling; full governed inventory improved from 18.32 to 7.95 seconds with byte-identical output. A sequential same-graph comparison returned the same 741 references in 15.876 versus 1.398 seconds. Six-file lifecycle preparation passed in 95.12 seconds. No new files, runner, registry or persistent cache; two existing production owners and existing tests were changed. Complete affected integration, packaging, AWS proof and the ten-minute end-to-end delivery target remain unestablished. No commit, push or cloud operation occurred.
 
 ## Deployment retrospective — 2026-11-12
 
@@ -1491,6 +1585,18 @@ process used to reach it is not the standard to preserve.
 - Summary: Local checkpoint and bounded diagnostic results; final proof remains pending
   Durable evidence: All 42 C03 paths are preserved in 4bf7a882 with session bookkeeping a3c809e7; its commit gate passed 39 checks and deferred 99 with no findings. Subsequent changes are only the recorded startup watchdog fixture correction and this session log. Corrected qualification-control-test.mjs completed exit 0 with all original exact assertions, fake Docker and no real engine. Direct task-route, failure-route, restart-route and credential-route fixtures all completed exit 0 (/tmp/consolidation-route-diagnostics.sCLtJj); resource/deployment/infrastructure/restore/acceptance control and acceptance-route suffix also passed (/tmp/consolidation-composition-tail.ob81eu). Direct mechanics passed 151 tests in 913.977s, but the original registered failure remains unexplained and is not replaced by this direct result. Frozen registered batch 62464 is finishing its tenth check; retain its original failed observations. No full affected integration, fresh image qualification, publication or AWS execution has occurred. User questioned proof sequencing while other lessons remain; recommendation is record running checks before another broad cycle, and explicit pause preference is pending. No new ADR: watchdog changes only fixture process supervision, not runtime/readiness requirements.
 
+
+- Summary: Batch A plan and complete lesson mapping
+  Durable evidence: Existing consolidation plan now maps all 34 lessons to four ordered batches. Full proof remains paused. The first planned code slice retires the special ECS configuration adapter into the existing generic owner, with declarative sibling-template selection; reference planner completed successfully. Local checkpoint authority previously approved; no push or AWS. No ADR: internal capability reuse, no public namespace change.
+
+
+- Summary: All-lesson programme and first declaration-driven adapter slice
+  Durable evidence: Active worktree remains /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-11-06-17-07-new-chat-session-1937001871; branch chat/2026-11-06-17-07-new-chat-session; HEAD 8c425ce6. Existing consolidation plan now maps all 34 lessons exactly once to A-D, with owners, remaining gaps and proof boundaries; previous broad completion claim corrected. Checkpoint 8c425ce6 preserved prior successor work, user AGENTS instructions and the committed retirement plan; no push. Working diff now replaces the 74-line special ECS normalization adapter with declaration-selected sibling templates in the existing shared adapter (net 42 fewer adapter-file lines), migrates actual feature binding/callers, removes obsolete catalog and dormant recognition entries, and updates source-matched diagnostic ownership. Source review and complete impact plan including deletion passed with no findings. Full integration, actual image qualification and AWS proof remain paused; A shared coordination and B-D remain open. Do not claim the ten-minute delivery objective proved.
+
+
+- Summary: Focused frozen-input results and retained limitations
+  Durable evidence: Final direct focused pass: declared-template callers 1.252s; feature template boundaries 0.378s; package-projection regressions 2.337s (controlled Docker fixture, not actual qualification); historical acceptance reader 3.007s (release-53798ef563be4ce9a8c5b2f0; current_readiness false); diagnostic review structure 1.437s; retired-path reference checker 9.215s; whitespace 0.041s. All passed; changed-source fingerprints remained identical across execution. Direct fixtures do not seed trusted selector reuse; broader registered composition/integration checks are deferred. Preparation passed for surviving files; explicit deleted filename was rejected by metadata preparation as lifecycle-path-missing, so deletion was separately checked by the governed migration checker and full impact plan. Retain this deletion-preparation usability gap for Batch C rather than claiming staged/integration readiness. The earlier final frozen acceptance-control run 20261115T191055Z-bd2698f3f30d4edd94de2a69d96e0ca9 also passed; its prior interrupted/source-changed run remains separate. Current adapter slice is an uncommitted reviewable working diff; no provider operation occurred.
+
 ## Activity Log
 
 ### 2026-11-10 - Actual task-definition empty-default comparison
@@ -2269,6 +2375,405 @@ Decision: User explicitly requested pausing the goal after recording current res
 
 Rationale: All earlier running checks and their exact gaps were already recorded. Before the reply arrived, a four-owner recheck was launched at clean checkpoint 883f8fa64f2746fe607a7779e32b9e853c1cc6ac. On explicit pause, its positively identified process group 69033 was terminated; session 93899 returned 143 and a subsequent process-group inspection found no remaining processes. Private partial record /tmp/consolidation-checkpoint-recheck.ngzrl6 reached mechanics check-start only and establishes no passing proof. No full integration, image qualification, publication or AWS operation was started. Goal is to be paused, not completed, while remaining retrospective mistakes are discussed. Resume must preserve all three original workstreams and their outstanding registered integration/image qualification/audit requirements. Code and the watchdog correction are committed; prior failed/uncertain evidence remains retained.
 
+
+### 2026-11-15T20:14:12Z - Context hygiene
+
+Summary: Batch A plan and complete lesson mapping
+
+Durable evidence: Existing consolidation plan now maps all 34 lessons to four ordered batches. Full proof remains paused. The first planned code slice retires the special ECS configuration adapter into the existing generic owner, with declarative sibling-template selection; reference planner completed successfully. Local checkpoint authority previously approved; no push or AWS. No ADR: internal capability reuse, no public namespace change.
+
+
+### 2026-11-15T20:26:27Z - Commit recorded
+
+Commit: `8c425ce6`
+
+Message: refactor(deploy): checkpoint successor support and remediation plan
+
+Summary: Preserved prior successor-release support and local checks, user strategic/efficiency instructions, all-34-lesson programme and adapter retirement plan. Commit gates passed. Full integration, image qualification and AWS proof remain paused.
+
+ADR impact: No new ADR; existing internal ownership consolidation.
+
+
+### 2026-11-15T20:36:52Z - Context hygiene
+
+Summary: All-lesson programme and first declaration-driven adapter slice
+
+Durable evidence: Active worktree remains /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-11-06-17-07-new-chat-session-1937001871; branch chat/2026-11-06-17-07-new-chat-session; HEAD 8c425ce6. Existing consolidation plan now maps all 34 lessons exactly once to A-D, with owners, remaining gaps and proof boundaries; previous broad completion claim corrected. Checkpoint 8c425ce6 preserved prior successor work, user AGENTS instructions and the committed retirement plan; no push. Working diff now replaces the 74-line special ECS normalization adapter with declaration-selected sibling templates in the existing shared adapter (net 42 fewer adapter-file lines), migrates actual feature binding/callers, removes obsolete catalog and dormant recognition entries, and updates source-matched diagnostic ownership. Source review and complete impact plan including deletion passed with no findings. Full integration, actual image qualification and AWS proof remain paused; A shared coordination and B-D remain open. Do not claim the ten-minute delivery objective proved.
+
+
+### 2026-11-15T20:36:53Z - Context hygiene
+
+Summary: Focused frozen-input results and retained limitations
+
+Durable evidence: Final direct focused pass: declared-template callers 1.252s; feature template boundaries 0.378s; package-projection regressions 2.337s (controlled Docker fixture, not actual qualification); historical acceptance reader 3.007s (release-53798ef563be4ce9a8c5b2f0; current_readiness false); diagnostic review structure 1.437s; retired-path reference checker 9.215s; whitespace 0.041s. All passed; changed-source fingerprints remained identical across execution. Direct fixtures do not seed trusted selector reuse; broader registered composition/integration checks are deferred. Preparation passed for surviving files; explicit deleted filename was rejected by metadata preparation as lifecycle-path-missing, so deletion was separately checked by the governed migration checker and full impact plan. Retain this deletion-preparation usability gap for Batch C rather than claiming staged/integration readiness. The earlier final frozen acceptance-control run 20261115T191055Z-bd2698f3f30d4edd94de2a69d96e0ca9 also passed; its prior interrupted/source-changed run remains separate. Current adapter slice is an uncommitted reviewable working diff; no provider operation occurred.
+
+
+### 2026-11-15T22:06:06Z - Decision
+
+Decision: Shared preparation-input refactor implemented locally; complete deployment consolidation remains pending.
+
+Rationale: Both persistence preparation and feature alignment use the shared AWS declaration reader for destination, optional profile, package/program/candidate, repository, template and dependency selections. Existing declarations extended; displaced constants removed; imported recovery identity retained as a derived value. Coverage, scope/check inputs and controller source identity updated. No AWS changes, publication or commit. Full image/live and impact-selected integration proof remain paused/deferred. Direct focused class commands have no standalone registered unit and do not seed trusted selector reuse.
+
+
+### 2026-11-15T22:06:06Z - Issue
+
+Raised: Preparation refactor exploratory fixture failures and review freshness.
+
+Resolution: The provider fixture initially lacked the new resolver/declaration closure (14 cases); copied actual references. Two update fixture cases used a conflicting synthetic repository; selected the real declared repository. One new coverage assertion incorrectly expected an empty reference field; corrected to the actual report shape. Two diagnostic fixture-source hashes were stale; reviewed setup changes and refreshed their existing records. All corrected focused tests and the complete persistence target-control smoke suite subsequently passed. Both real scope coverage checks passed. Governed surviving-path preparation passed: 21 headers, zero errors, selector planned with no findings; prior deleted-path preparation limitation remains separate. No failures were treated as passes before correction.
+
+
+### 2026-11-15T22:06:25Z - Decision
+
+Decision: Frozen preparation-input verification completed.
+
+Rationale: Final direct focused pass: PreparationInputTests and DeclaredTemplateTests (6 tests) passed in 2.509s; entity alignment fixture passed in 2.039s; infrastructure-route fixture passed in 7.574s; diagnostic coverage passed in 1.245s with no findings; git diff --check passed in 0.049s. All 24 changed non-session paths had identical before/after hashes (including the prior removed adapter marker). Earlier complete persistence target controls passed, including 54 controller, 6 provider CLI, 19 verifier operation and 11 task-operation tests plus shell assertions. Results establish local behavior only. End-to-end delivery budget not established. Changes remain uncommitted; full integration/package/live proof deferred as agreed.
+
+
+### 2026-11-15T22:35:33Z - Decision
+
+Decision: Shared image-check consolidation implemented; focused local verification passed.
+
+Rationale: Existing ecr-scan.py now owns runnable-manifest resolution and scan validation for publication, persistence preparation and entity-smoke alignment. Removed duplicated checks; retained actual recovery manifest callers as a thin wrapper. Preparation does not poll or write proof; publication retains bounded polling and exclusive report writing. Repository security checks remain. Controller fingerprint, both scope impact closures, selector edges and diagnostic reviews updated. Self-review and predicate/consumer inventory are in the existing consolidation plan. Final frozen-input run: ecr-scan-test.py 5 tests 2.703s; alignment-test.py 45 negative cases plus 22 image-policy cases 2.119s; controller-regression.py 55 tests 4.236s; provider-cli-regression.py 6 tests 6.408s; infrastructure-route-test.py 8.001s; PreparationInputTests 4 tests 1.252s; persistence and entity-smoke declaration coverage 4.167s and 8.901s; diagnostic structural review 1.245s, no findings; diff check 0.045s. All passed, approximately 39 seconds combined command time, with all 15 reviewed task paths unchanged across verification. Exploratory input-fixture failure in two tests was corrected by copying the newly required helper. Metadata/preparation passed; read-only helper impact selection planned without findings and selected both callers plus publication. These direct focused tests do not seed registered aggregate reuse. Full affected integration, including package-custody-regression, entity-smoke-composition, persistence-provider-regression and other selected obligations, remains pending; package/live proof remains deferred. No commit, push, publication or AWS operation. End-to-end deployment budget not established.
+
+
+### 2026-11-15T23:06:16Z - Decision
+
+Decision: Shared foundation, VPC/subnet and private service-discovery checks implemented; focused proof passed.
+
+Rationale: Existing consolidation plan records consumer/predicate inventory and self-review. Added foundation-checks.py and adjacent tests; both preparation paths now use it and the older AWS runtime-alignment reporter reuses strict stack/output validation. Preparation inputs derive cluster/log/private namespace expectations through foundation output/resource references, with renamed-resource and unsupported-projection tests. Persistence tuple interfaces remain for actual callers. Endpoints, PostgreSQL, budget, resource templates and deployment execution remain unchanged. Final direct checks passed: alignment-test.py 45 negative plus 22 policy cases (5.224s); controller-regression.py 56 tests (8.021s); provider-cli-regression.py 6 tests (11.803s); infrastructure-route-test.py (11.042s); PreparationInputTests 5 tests (2.231s); diagnostic review no findings (2.176s); diff check (0.102s). Both scope declaration checks passed earlier on unchanged declaration/resolver inputs. Registered aws-foundation-checks (4 test methods with negative matrices) and aws-runtime-alignment-regression passed: .cache/test-runs/20261115T230257Z-bf5f6697fdcf4ab88a078e1a80753fa3/report.json; 24.096s total runner time, 0.548s command execution. Initial registration attempt failed check-argv-invalid; corrected by reusing the existing shell wrapper with --foundation-only, not altering runner admission. An overlapping preparation record then rejected a changed metadata input; completed only its final record-preparation step after freezing inputs, verdict planned with no findings. Metadata headers and process/command drift checks passed. All 19 reviewed task paths remained unchanged across final checks and refreshed selection. Full affected integration and package/live proof remain pending, not waived. No commit, push, publication, AWS observation or mutation. Deployment time budget remains unestablished.
+
+
+### 2026-11-16T11:04:00Z - Decision
+
+Decision: Endpoint placement and S3 prefix checks consolidated; focused verification passed.
+
+Rationale: Extended existing foundation-checks.py; removed duplicate predicates in persistence preparation and feature alignment. Three versus four pre-existing endpoint requirements remain explicit; Secrets Manager is not required before persistence creates it. Permission policies, templates and AWS observation count are unchanged. No new files this slice; net implementation +19 lines, tests +95 lines, plan +40 lines (metadata/review edits separately). Shared finite failures reject malformed, missing, duplicate, unavailable and incorrectly placed endpoints and invalid/ambiguous prefix observations; provider failures preserve original codes without retries. Both declarations covered; registered aws-foundation-checks and aws-runtime-alignment-regression executed and passed in 14.970 seconds total, 0.318 seconds command execution; report .cache/test-runs/20261116T110247Z-06a15c7fa7154056b409ff98fd8ce892/report.json. Direct final feature alignment passed (45 negative and 22 policy cases plus shared wiring/failure assertions); persistence controller 56 tests and provider CLI 6 tests passed. Diagnostic structural check findings empty; six metadata headers, process/command drift, diff check and preparation plan passed. Eight reviewed input hashes remained unchanged throughout final checks and preparation. Full affected integration including entity-smoke-composition and persistence-provider-regression, package/live proof and delivery timing remain pending. Endpoint policy declaration-derived expectations remain follow-up work. No commit, push, publication or AWS observation/mutation.
+
+
+### 2026-11-16T12:04:07Z - Decision
+
+Decision: Declaration-derived endpoint-policy checks implemented; focused verification passed.
+
+Rationale: Normal alignment no longer contains its two-repository list or three-resource limit. Existing preparation-inputs projects policies from selected foundation and dependency templates; shared foundation-checks compares them with independent action, explicit ARN and selected-workload restrictions. Existing parameter parser binds the already observed foundation response; declared secret-output aliases must agree. Both foundation consumers migrated to observation-based checking, without a wrapper or extra AWS reads. Historical two-repository repair recognition stays fixed to its approved historical exception. No new files; net implementation +104 lines and tests +105 lines, plus scoped plan/standards/impact/review metadata. Exploratory checks exposed legitimate secret-output aliases and a fixture closure mutation that was not reaching its provider; both corrected, with actual-caller counterexamples then passing. Final registered aws-foundation-checks (7 methods) and aws-runtime-alignment-regression executed and passed, 18.018 seconds runner total and 0.434 seconds command execution; report .cache/test-runs/20261116T120242Z-3dad30053aa4468896db10870a0fe173/report.json. Final feature alignment passed (51 negative plus 22 ECR policy cases and four-repository/source-safety assertions), preparation inputs 6 tests passed, persistence controller 56 tests passed, provider CLI 6 tests passed. Infrastructure-route fixtures passed on unchanged runtime bodies before metadata-only preparation. Both scope declarations covered; diagnostic structural review findings empty; metadata headers, process/command drift, preparation plan and diff check passed. All reviewed task hashes remained unchanged across final tests and completed preparation. Full affected integration including entity-smoke-composition and persistence-provider-regression, package/live proof and ten-minute delivery timing remain pending. No commits, push, publication or AWS observation/mutation.
+
+
+### 2026-11-16T13:03:00Z - Decision
+
+Decision: Declaration-derived database settings implemented; focused verification passed
+
+Rationale: Extended the existing preparation-inputs RDS dependency projection to read DBName, PostgreSQL engine and administrator-secret Name through the existing output reference. Feature alignment consumes these values; well-shaped wrong database names now reject, secret ARN matching escapes punctuation, and secret metadata must match the declared name. No new files, templates, AWS calls, permissions, version policy or creation-preparation changes. Source self-review and predicate/consumer inventory are in the existing consolidation plan; source-matched partial diagnostic reviews updated. Final focused PreparationInputTests: 8 passed in 5.753 seconds. Alignment fixture passed (55 reported negatives, 22 private-image-policy negatives plus new declaration/full-inspection assertions); infrastructure-route fixture passed. Diagnostic structural check passed; registered diagnostic-adoption executed and passed with no findings. Both feature and persistence declaration coverage returned covered with no findings; lifecycle metadata/drift preparation and git diff --check passed. Task source hashes unchanged across final verification. No standalone registered unit exists for the bounded input/alignment fixtures; direct results do not seed aggregate reuse. Full impact-selected integration, package/live proof and delivery timing remain deferred. Exact PostgreSQL18.3 restriction remains explicitly unresolved compatibility-policy work; budget consolidation is next. No commit, push or AWS operation.
+
+
+### 2026-11-16T13:18:15Z - Decision
+
+Decision: Budget validation consolidated across three callers; focused verification passed
+
+Rationale: Existing foundation-checks now validates the complete declared monthly COST budget: name, type, period, finite positive numeric amount, currency and exact single target filter. Existing preparation-inputs reads budget-control and reconciles the selected foundation template; provisioning uses this reader without image/package inputs. Feature alignment, persistence preparation and foundation budget verification delegate; copied constants and predicates removed. Persistence acceptance preserves its live_budget interface/delegation. Source errors reject before provider work; caller budget failures now preserve shared finite foundation-budget codes. No new files, provider operations, retries, templates, budget configuration or mutation sequencing changes. Both scope declarations, source references and check inputs updated; existing plan contains inventory and source self-review, and partial diagnostic reviews match current sources. Exploratory recovery fixture failed because its disposable copy lacked the new actual imports; fixed fixture imports/declaration, not production recovery. Final registered aws-foundation-checks, foundation-budget-regression and diagnostic-adoption executed/passed with no findings: .cache/test-runs/20261116T131712Z-540b4f7eb8b6488d861e955209561320/report.json (21.516 seconds total, 4.202 seconds command execution). Direct final PreparationInputTests 10 passed in 6.703 seconds; alignment passed 57 reported negatives plus 22 image-policy negatives and new caller assertions; persistence controller 56 passed in 5.431 seconds; provider CLI 6 passed in 7.042 seconds; infrastructure-route fixture passed. Both scope declarations covered without findings; metadata headers, process/command drift, selection preparation and diff check passed. All 17 reviewed task inputs unchanged across final checks/preparation. Full affected integration, package/live proof and ten-minute delivery demonstration remain deferred. PostgreSQL version-policy reconciliation is next. No commit, push or AWS operation.
+
+
+### 2026-11-16T16:22:58Z - Decision
+
+Decision: PostgreSQL compatibility declared; local version-policy checks passed
+
+Rationale: Implemented explicit PostgreSQL major 18 in the source RDS template, preserving automatic minor updates. Both existing image contracts declare major compatibility separately from exact postgres:18.3-bookworm qualification. One shared validator serves preparation, alignment, restore, image qualification and bounded public-image recovery. Persistence and retained rollback qualifiers now observe the actual declared server version; feature and restore reports retain actual engine observations. Existing snapshot lineage, owned cleanup, live SQL and readiness proof requirements remain. One new implementation file; tests extend existing fixtures/wrapper. Final registered postgresql-version-policy and diagnostic-adoption both executed/passed with no findings: .cache/test-runs/20261116T162144Z-bb30bfb701d0445daf9b67e180c79c31/report.json (23.693s total, 2.856s command execution). Direct declaration/version classes passed (14 methods before the additional CLI test, then all 4 version methods including CLI); alignment, restore, simulated feature qualifier, workflow guard/route and 47 public-recovery cases passed. Initial 13-method package-qualification run passed 12 and exposed one fake database missing the new version query; fixture corrected and failing method rerun passed. Exploratory recovery pattern and check catalog registration errors were corrected without weakening gates; failing run receipts remain. Both scope declaration checks covered/findings empty. README skill applied to version/proof wording and corrected the fixture administrator description; links resolve. No real Docker engine, AWS mutation, publication or commit. Actual image/container, integrated and live proof plus ten-minute delivery demonstration remain deferred.
+
+
+### 2026-11-18T20:13:03Z - Decision
+
+Decision: Durable UPDATE continuation locally verified; full proof remains deferred
+
+Rationale: Implemented all five persistence UPDATE callers on the existing shared reserved prepare/execute mechanism; removed nonreserved reviewed_update. Normal retries observe retained execution before healthy-predecessor gates; prepared changes still require current admission before their first execution. Input hashes, creation lineage and terminal root execution events prevent replay or false completion. Distinct reviewed operation labels preserve later releases/rollback and rejected-review correction; historical read-only reconciliation and CREATE records remain supported. No new files, runner or evidence registry. Final registered persistence-provider-regression passed; diagnostic-adoption passed with matching evidence reuse. Report: .cache/test-runs/20261118T201153Z-a632e98b6ff4458bbf275cd8daa79e84/report.json; 96.374637s total, 75.526945s command execution. Wrapper includes 58 controller, 6 provider-CLI, 19 verifier-operation and 11 task-operation tests plus inline assertions. Direct frozen-source entity-smoke deployment fixture passed all 21 named cases; no separately registered narrow feature unit exists, so its broad composition/integration obligations remain pending. Initial registered failure retained at .cache/test-runs/20261118T200239Z-b30b0d7811ec4c2da87b90291810fe7b/report.json: traced to two stale foundation assertions in the wrapper, corrected prerequisite fixtures/exact shared codes without weakening production checks. Source review and metadata/impact preparation refreshed; all 15 frozen task paths unchanged after final checks. Initial preparation was observed exceeding seven minutes in existing command enumeration/impact planning: local overhead, not an excluded provider wait; Batch C efficiency work remains. B07 focused verification is now passed (supersedes the plan's frozen pending marker); A-C and complete integration/package/live proof and ten-minute delivery remain incomplete/deferred. No commit, push, publication or AWS operation.
+
+
+### 2026-11-18T21:11:56Z - Decision
+
+Decision: Preparation-performance correction locally verified
+
+Rationale: Final registered run .cache/test-runs/20261118T205140Z-fec1ebbd717a41f28961acc1caf7c08e/report.json passed all four checks with no findings: check-selection-mechanics and diagnostic-adoption executed; harness-command-drift-regression and harness-governed-runner-regression reused matching evidence. Corrected task inputs remained frozen. The first run passed functional regressions but rejected the missed mechanics-fixture support-review hash; that failure remains retained. Correcting the review binding required another mechanics execution, which took 766.374 seconds; the earlier pass took 373.038 seconds. This regression duration is not a preparation speedup or delivery-budget claim. Representative impact planning improved from 97.29 to 29.00 seconds with identical 29 check entries, dependency IDs, source-reference sets, findings and scheduling; full governed inventory improved from 18.32 to 7.95 seconds with byte-identical output. A sequential same-graph comparison returned the same 741 references in 15.876 versus 1.398 seconds. Six-file lifecycle preparation passed in 95.12 seconds. No new files, runner, registry or persistent cache; two existing production owners and existing tests were changed. Complete affected integration, packaging, AWS proof and the ten-minute end-to-end delivery target remain unestablished. No commit, push or cloud operation occurred.
+
+### 2026-11-18 — Infrastructure resume ordering locally verified
+
+- Corrected the existing entity-smoke infrastructure entrypoint: an execute
+  invocation with matching original intent, source and admission reconciles
+  before fresh source/local/dependency checks. New admission remains unchanged.
+  Reuses ResourceStore, DEPLOY.observe and the existing historical gate reader;
+  extracts shared plan projection and completion retention rather than copying
+  those contracts. Changed-controller repair keeps its checked path.
+- Preserved exact source/receipt/label/delivery, operator identity, approved
+  plan, parameter digest, ownership, execution-token and terminal runtime checks.
+  Earlier six gate timestamps are not restamped. Only actual completion appends
+  seventh-gate evidence; pending, terminal failure and unavailable observations
+  never authorize replay. No new runner, journal, files or AWS operations.
+- Final direct infrastructure-route fixture passed against source SHA-256
+  `c80b1a5d86e31d87dc6e7a5496e87fedfc8edb859407860a98e50a1e890fe0e7`
+  and fixture SHA-256
+  `37476816b801b0f806f2daad0580e1a509cf299bcaf15a51240d9450f7f5ce89`.
+  Output: `/tmp/entity-smoke-resume-focused-20261118.json`. It covers all four
+  phases, pending/failed/unknown outcomes, withdrawn mutation permission,
+  altered/missing evidence, cross-phase approval, wrong account, timestamp
+  preservation and no additional submissions, alongside existing regressions.
+  Controlled provider/source/custody fixtures are not AWS qualification.
+- Registered diagnostic-adoption executed and passed (7.221352 seconds), with
+  no findings:
+  `.cache/test-runs/20261118T212733Z-abaff54d64674ce084f880ef9707b860/report.json`.
+  Review remains partial; existing native/provider/concurrency debt is retained.
+  Strict metadata and whitespace checks passed. The README skill guided only
+  the source-backed correction of admission/resume wording, not new policy.
+- Impact planning found no gaps across 71 entries; no tests were executed by
+  that plan. Output: `/tmp/entity-smoke-resume-impact-20261118.json`.
+  Its 208.166499 seconds are local overhead (107.308425 planning, 58.675880
+  fingerprinting, 42.159307 runtime identity), not cloud-provider waiting.
+  This broader changed-review selection is not the earlier representative
+  29-check benchmark. Further efficiency work remains.
+- No narrow registered infrastructure-route unit exists. Direct focused proof
+  does not seed trusted reuse; the existing broad composition and full affected
+  integration remain pending, as do package/AWS proof and the ten-minute delivery
+  target. No commit, push, publication or cloud mutation. No active sub-agent.
+
+### 2026-11-18 — Focused infrastructure check registered and reuse verified
+
+- Registered `entity-smoke-infrastructure-route` and the remaining
+  `entity-smoke-composition-suite` as members of the existing public
+  `entity-smoke-composition` command. Reused its wrapper and the selector's
+  aggregate mechanism; no new files or runner/cache algorithms. Removed the
+  duplicate direct infrastructure invocation from the suite branch. This
+  supersedes the preceding entry's lack of an independently registered unit.
+- Conservatively shared the original input closure through one catalog anchor;
+  the focused command needs Bash/Python, not application compilation. Broad
+  dependency invalidation remains conservative, not a claimed minimal closure.
+  Closed dispatch, exact membership and development-versus-aggregate feedback
+  are asserted in existing tests. Source-matched support reviews refreshed.
+- Five final focused tests passed in 13.365 seconds. Existing disposable
+  fixtures prove independent receipt reuse, aggregate reuse, input/runtime/
+  contract invalidation and child-failure propagation. The first fixture-copy
+  effects mismatch and inherited development flag were corrected without
+  weakening gates. Full runner regression suites were not rerun in this slice.
+- Registered infrastructure and diagnostic-adoption executed/passed with no
+  findings in 22.057907 seconds; infrastructure fixture itself 7.634587 seconds.
+  Report: `.cache/test-runs/20261118T223123Z-110d2ef8d01547fbb7662d5b64976066/report.json`.
+  Both reused with no command execution in 9.340405 seconds:
+  `.cache/test-runs/20261118T223147Z-e13e86bb3ed4404e9339bfc38217a362/report.json`.
+- Task metadata, shell syntax and scoped whitespace checks passed. Unrelated
+  AGENTS.md whitespace was left untouched. README skill applied to the focused
+  command and honest aggregate/preparation/proof limits. Real full composition,
+  package/AWS proof and ten-minute end-to-end target remain unestablished.
+  No commit, push, publication or AWS action.
+
+### 2026-11-18 — Split-result caller and controller/test identity corrected
+
+- Replaced the infrastructure caller's exact-two-result assumption with the
+  reusable `passed_local_selection` predicate in the existing selector reporting
+  module. It consumes the directly invoked runner's catalog membership and
+  dependency graph; it does not import saved reports as proof. Required roots,
+  every member/dependency, terminal local success and unique valid result rows
+  remain required. Malformed/failed results retain the existing safe diagnostic
+  and bounded report reference, including at the actual main reporter.
+- Controller identity now excludes local `*-test.py`/`*-test.sh` fixtures while
+  preserving production/declaration/provider dependencies and the shared result
+  helper. Test content, addition and removal leave controller identity stable;
+  production changes still invalidate it. Existing catalog inputs continue
+  fingerprinting tests, and explicitly include the helper. Historical receipts
+  were not rewritten; this implementation change itself requires existing
+  controller-change handling. No new files, execution engine or identity registry.
+- Final three focused runner/registration tests passed in 12.382 seconds.
+  Registered infrastructure and diagnostic-adoption both executed/passed with
+  no findings in 23.993654 seconds; infrastructure fixture 7.921824 seconds.
+  Report: `.cache/test-runs/20261118T230938Z-0d099f8c3929475ba2441bd6625bd2d4/report.json`.
+  A matching rerun reused both, executed no commands and took 18.692704 seconds:
+  `.cache/test-runs/20261118T231027Z-84ea15578d8a4d8bbb15e0809a6ef031/report.json`.
+  The shared report checker was also exercised against actual disposable-runner
+  aggregate success/failure reports, not only constructed JSON.
+- An exploratory identity fixture initially put its synthetic files outside
+  the repository path contract; its mapping was corrected without weakening
+  production checks. All six code/catalog metadata headers and scoped whitespace
+  checks passed. Source reviews remain partial/support with existing debt intact.
+- Complete seven-file impact planning found no gaps in 53.063335 seconds and
+  executed no checks (`/tmp/infrastructure-result-impact.json`). This is a plan,
+  not passing evidence for the broad selected suites. Full runner/composition
+  regression, packaging/AWS proof and ten-minute end-to-end delivery remain
+  deferred. No commit, push, publication or AWS operation occurred.
+
+### 2026-11-18 — Credential expiry classification and safe continuation
+
+- Approved bounded slice implemented in existing shared AWS response and
+  deployment-diagnostic owners, plus the entity alignment caller. Explicit
+  ExpiredToken/ExpiredTokenException now report aws-credentials-expired, not
+  access denial. Invalid credentials, unknown responses and genuine denial
+  retain their existing classifications; raw provider messages stay private.
+- Existing preparation/infrastructure forwarding and operation reconciliation
+  are reused, not rewritten. Controlled actual-main tests distinguish expiry
+  before submission from expiry while reconciling an original operation.
+  Original admissions/reservations remain unchanged. Persistence's real
+  observe_update consumer preserves expiry; restoration of controlled access
+  resumes observation with exactly one create and execute in total.
+- Extended six existing fixtures; no new file, login system, runner or catalog
+  entry. Updated four source-matched review records without erasing existing
+  partial-adoption debt. Existing registered inputs already cover this slice.
+  One stale disposable budget fixture lacked the shared PostgreSQL policy
+  helper and was corrected. A new report fixture initially chose an unsupported
+  unknown-outcome retry decision; corrected it to observe-current-operation
+  without changing production safeguards.
+- Final registered checks all executed and passed, zero findings:
+  deployment-operation-diagnostics-regression, diagnostic-adoption,
+  entity-smoke-infrastructure-route, foundation-budget-regression and
+  persistence-provider-regression. Elapsed 104.127273 seconds; command execution
+  78.928138 seconds. Report:
+  `.cache/test-runs/20261118T234445Z-6938583bbbdb4e32a346ca94c175fc98/report.json`.
+  Infrastructure fixture took 11.3905 seconds versus its advisory 10-second
+  expectation; recorded as budget-exceeded, not hidden or relaxed.
+- Final direct alignment fixture passed with its 57 negative cases and 22
+  private image-policy cases; `/tmp/credential-expiry-alignment-final.log`.
+  Exploratory shared recovery (5 tests), persistence controller (58 tests)
+  and provider CLI (6 tests) also passed. All nine code/test metadata headers
+  and scoped whitespace checks passed. These controlled tests establish local
+  behavior, not remote authentication renewal or live AWS delivery.
+- Automatic sign-in renewal, lifetime prediction and unsupported local
+  credential-provider error formats remain outside scope. Full affected
+  integration/package/AWS proof and the end-to-end delivery target remain
+  pending. No commit, push, publication or AWS operation occurred.
+
+### 2026-11-19 — Safe child failure detail, first supported producer
+
+- Extended existing selector/reporting owners; no new file, runner, catalogue
+  schema or cache mechanism. Nonzero diagnostic-adoption results now preserve
+  finite producer-owned findings and recognised input source paths. Unknown
+  paths are unavailable, not copied. Other command formats explicitly report
+  unsupported-format. Raw stdout/stderr, arbitrary messages, child-supplied
+  evidence references and guessed failure explanations remain excluded.
+- Original child status/exit and success-cache admission are unchanged. Parent
+  blocked_by identities come from the actual prerequisite/member graph. JSON
+  and readable summaries retain the same detail. Duplicate/malformed/non-finite
+  input, absent/oversized output, truncation and unexpected projection failures
+  have bounded handling; none triggers replay or alters the original result.
+- Real disposable producer execution establishes the exact unreviewed-source
+  finding/path, one child invocation, blocked parent, both saved formats and
+  original failure after report-retention failure. The empty Git baseline is
+  simulated; discovery, subprocess, filesystem and reports are real. Additional
+  projection tests use synthetic canaries and do not claim remote delivery.
+- Added the consumed diagnostic shell wrapper to the existing mechanics input
+  list and asserted its binding. Separated the adoption script's source review
+  within the existing ledger so its runner-proof requirement does not attach
+  to unrelated runtime export sources. Existing partial debt remains explicit.
+  Updated the execution standard and focused README explanation; README skill
+  kept claims limited to the actual first producer, not every failing check.
+- Four exploratory focused cases passed in 4.201 seconds. Final registered
+  check-selection-mechanics and diagnostic-adoption both executed/passed,
+  zero findings, elapsed 450.220572 seconds (7m30s). Mechanics execution was
+  425.984698 seconds, above its advisory 300-second estimate; the estimate was
+  not raised and this is not a ten-minute delivery claim. Retained report:
+  `.cache/test-runs/20261119T001130Z-aa63161ea928401ebd8404537cc8d583/report.json`.
+  The final direct catalog-binding assertion passed in 0.477 seconds.
+- Eight task metadata headers, four new README link targets and scoped
+  whitespace checks passed. Complete task impact planning found zero gaps,
+  selected 137 obligations and executed none in 48.740835 seconds; capture
+  `/tmp/failure-detail-impact.json`. This is planning, not passing evidence for
+  those obligations. Full repository-contract/catalog-reader integration and
+  package/live proof remain deferred. No commit, push, publication or AWS work.
+
+### 2026-11-19 — Shared retained-execution selection
+
+- Implemented the approved bounded continuation refactor in the existing
+  change_sets.py owner. Persistence begin_update/apply_update and the entity
+  infrastructure request reader now share preparation/execution pair selection.
+  Existing stores own exact identity/integrity; workload admission, observation,
+  finite failures and historical record formats stay with their current owners.
+  Direct persistence submission also rejects an orphan execution record.
+- Three production files and two existing fixtures changed, plus the existing
+  plan/review ledger and this log. No new files, runner, registry, check IDs or
+  deployment declarations. Transition and other persistence update entrypoints
+  already delegate through the changed owner; no redundant wrapper edits.
+- Self-review and diagnostic inventory are in the consolidation plan. Tests
+  prove shared use, absent/prepared/executed selection, unchanged bytes, original
+  read-error identity, missing/corrupt preparation rejection and no new mutation.
+  Existing lost-response, pending/failed/completed, expiry and rollback cases
+  remain. The initial exploratory entity discovery placement changed a diagnostic;
+  restored the original ordering and passed the unchanged counterexample.
+- Three direct persistence cases passed in 14.460 seconds; the full direct
+  infrastructure fixture passed after that correction. Final registered checks
+  all executed/passed: diagnostic-adoption (1.451497s),
+  entity-smoke-infrastructure-route (11.444126s), and
+  persistence-provider-regression (44.584261s). Total 72.174390s, zero findings.
+  Infrastructure exceeded its advisory 10-second estimate by 1.444126s; no
+  estimate or deadline was changed. Retained report:
+  `.cache/test-runs/20261119T003344Z-c6ca22068b584b84b6e73d95dabe6801/report.json`.
+- Six metadata headers and scoped whitespace checks passed. Impact planning
+  selected 79 obligations with zero findings in 44.228525s and executed none;
+  capture `/tmp/retained-execution-impact.json`. Registered result capture:
+  `/tmp/retained-execution-registered.json`. Previous cache entries were invalidated
+  by changed inputs and replaced only after these fresh successful executions.
+- Focused completion only: full affected integration, publication/package/live
+  acceptance and end-to-end delivery timing remain unestablished. The full
+  cross-stage coordinator is not implemented by this reservation-pair refactor.
+  No commit, push, publication or AWS operation.
+
+### Nov19 — connected local proof-policy slice completed
+
+The user approved planning and implementing the full local slice in one pass.
+The implementation inventory and source-review corrections are recorded in
+`.agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md`
+under the approved proof-policy migration. This entry records its final result;
+the plan's earlier test/proposal notes are historical, not outstanding approval
+requests or the final verification verdict.
+
+- Both collectors consume one shared immutable recovery-input comparator in
+  `scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py`.
+  Persistence's existing collector now supports an explicit ordinary-update
+  manifest, four fresh migration/access/read proofs and fresh readiness/current
+  deployment/database observations. Recovery stays attached to the exact
+  accepted predecessor, not recopied or restamped as current proof.
+- New entity successor v3 requires five fresh checks, adding migration-state
+  observation through existing task admission. Historical v1/v2 readers remain;
+  old v2 cannot satisfy a new promotion's migration-proof requirement.
+- Shared succession hashes an optional exact predecessor into the candidate
+  identity and enforces it at promotion and historical validation. Both new
+  ordinary collectors emit it. Old candidates retain their original identities.
+- Removed the old restore-verifier-only writer and active route/input exception.
+  Its historical reader remains because real archived evidence uses that format.
+  Full persistence qualification now retains the recovery binding/observation
+  needed for subsequent reuse. No historic evidence was changed.
+- Updated owning workflow/standards/schema and README instructions together.
+  README changes are limited to the actual five-check sequence and ten retained
+  task phases; they do not imply automatic deployment scheduling.
+
+Final frozen registered checks all passed, zero findings:
+
+| Check | Seconds |
+| --- | ---: |
+| acceptance-route-regression | 188.770687 |
+| diagnostic-adoption | 2.183737 |
+| entity-smoke-acceptance-controls | 45.295121 |
+| release-succession-regression | 13.235605 |
+
+Final report:
+`.cache/test-runs/20261119T012944Z-b1c9a25617bc4b99a91a1aa7ccd70b97/report.json`.
+Total281.715592s; command execution249.485150s. No prior receipt was reused.
+The feature check exceeded its advisory15s estimate; this is recorded, not
+hidden or treated as meeting the deployment-time target. Capture:
+`/tmp/proof-policy-registered-final.json`.
+
+Metadata passed for29 files. Scoped diff whitespace check passed; unrelated
+pre-existing AGENTS trailing whitespace was left untouched. Final impact-plan
+only run selected123 obligations with zero findings in94.226108s, executing
+none (`/tmp/proof-policy-impact-final.json`). The four explicit local passes
+are not complete affected integration, package qualification or live proof.
+
+Initial registered failure remains retained at
+`.cache/test-runs/20261119T011859Z-1bcccc78bb904ad6989bd4143ef237cc/report.json`.
+Its persistence current-observation fixture lacked the already-required ECR
+image identity/type; corrected both affected fixture responses without weakening
+production checks. The final run above includes the correction and the later
+predecessor-binding review fix. Exploratory aggregate, real disposable Git,
+historical reader, full/ordinary collection and promotion checks also passed.
+
+Remaining programme boundaries: older persistence candidates without trustworthy
+recovery bindings require full qualification before reuse; changed inputs still
+require explicitly selected capability requalification. No new automatic
+requalification executor or end-to-end deployment coordinator is claimed.
+Broader integration, image qualification/publication, AWS proof and connected
+ten-minute delivery measurement remain deferred. No commit, push, publication,
+AWS mutation or accepted-history rewrite was performed in this slice. Changes
+remain in the recorded Nov6 worktree, preserving earlier uncommitted work.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2542,6 +3047,13 @@ Rationale: All earlier running checks and their exact gaps were already recorded
   Summary: Preserved the measured startup-only fixture watchdog correction and terminal diagnostic results. Corrected direct fixture passed; commit gate passed 28 checks, deferred 32, findings none, retained at .cache/test-runs/20261115T152221Z-8b1ba3853a644be9a6805090b0cb7ac3/report.json. Full integration and fresh image proof remain pending; no new broad verification was started after the sequencing question.
   ADR impact: No ADR needed: fixture supervision changes only; production behavior and assertions are unchanged.
 
+
+- Commit: `8c425ce6`
+  Time UTC: 2026-11-15T20:26:27Z
+  Message: refactor(deploy): checkpoint successor support and remediation plan
+  Summary: Preserved prior successor-release support and local checks, user strategic/efficiency instructions, all-34-lesson programme and adapter retirement plan. Commit gates passed. Full integration, image qualification and AWS proof remain paused.
+  ADR impact: No new ADR; existing internal ownership consolidation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2555,9 +3067,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-15T15:22:48Z
-Latest commit SHA: a69df9ff
-Chat duration: 771341s (08:22:15:41)
+Latest commit at UTC: 2026-11-15T20:26:27Z
+Latest commit SHA: 8c425ce6
+Chat duration: 789560s (09:03:19:20)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -5877,3 +6389,406 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
   README skill influenced only the bounded ownership paragraph and source links.
   Freeze these task inputs for preparation and affected verification; reuse
   unchanged trusted checks and retain reports outside tracked source.
+
+### Nov19 — connected ordinary-update slice locally verified
+
+The user authorised planning and implementation of the ordinary Deploy-to-Run
+connection, without publication, AWS execution or broad regression. Reused the
+recorded Nov6 worktree; unrelated existing modifications were preserved.
+The bounded inventory, predicate review and correction record are in the
+existing deployment consolidation plan's ordinary-update connection section.
+
+- One shared `60-run/release-succession/ordinary-update.py`/`.sh` sequences both
+  real scope bindings. Existing controllers still own provider operations,
+  reservations, evidence, recovery policy and predecessor-checked promotion.
+- Acceptance-route declarations select the bindings; the existing compiler
+  verifies their ownership against its command-source root. No new operation
+  journal, retry engine or release-evidence registry was introduced.
+- The shared sequence invokes deployment, fresh checks, collection, candidate
+  validation and promotion. Inputs retain exact task predecessors/plan approvals.
+  Interrupted acceptance checks actual accepted history, source/image/predecessor
+  and validated package custody before reporting retained rather than fresh health.
+- Updated the owning Deploy/Run procedures and existing check catalog. New
+  binding tests exercise actual command templates/offline parsers and controlled
+  interruption/failure at child boundaries; they do not establish AWS execution
+  or independently prove each provider controller's reservation implementation.
+
+Final frozen registered run: all five passed, zero findings, no reused receipts.
+
+| Check | Seconds |
+| --- | ---: |
+| acceptance-route-regression | 89.745295 |
+| diagnostic-adoption | 1.328454 |
+| entity-smoke-acceptance-controls | 26.086715 |
+| ordinary-update-regression | 69.763061 |
+| release-succession-regression | 7.214709 |
+
+Run report:
+`.cache/test-runs/20261119T103427Z-583faf835fe44b54b76e02dcc31a2c3e/report.json`.
+Total209.445244s (3m29s), command execution194.138234s. This is local check time,
+not deployment latency. Metadata passed for13 headed task files; scoped
+whitespace checks passed. The final impact-only plan selected117 obligations
+with zero findings in41.777746s and executed none. Complete affected integration,
+image qualification and live proof remain deferred as requested.
+
+The earlier executed batch is retained at
+`.cache/test-runs/20261119T102935Z-e08f11544a39472baa6a1791ad9ee2a3/report.json`:
+three passed, persistence rehearsal and diagnostic adoption failed. Corrected
+the compiler's executable-versus-target-root distinction and removed a test-only
+wrapper from runtime adoption; did not weaken either check. Earlier command
+registration attempts executed no suites; registration now uses the existing
+Bash test wrapper and its actual declared effects. Final results above supersede
+those failures without deleting their evidence.
+
+Remaining limits: feature approvals can depend on earlier live state. The
+connector consumes exact recorded approvals and halts before an unapproved step;
+it cannot manufacture future plan hashes or execution authority. It reports
+failed/uncertain outcomes without automatically rolling back or requalifying a
+capability. These are explicit remaining automation boundaries, not established
+unattended deployment. Original accepted AWS evidence remains untouched. No
+commit, push, publication or AWS operation occurred in this slice, and the
+ten-minute build-to-live objective remains unproved.
+
+### Nov19 — review/execute hand-off corrected; bounded release policy approved
+
+The next local inspection found that the ordinary feature binding invoked
+execute without its prerequisite review. Corrected the existing infrastructure
+owner with an update/rollback-only `apply` mode: reconcile original execution
+first, otherwise review then execute against the same exact approved plan.
+The connector selects it. Individual commands, journals and gates remain.
+No new engine, operation store, provider permission or AWS effect was added.
+
+The actual controlled-provider fixture now exercises pending review, wrong
+approval before writes, one create/execute despite lost response, resume without
+new admission and the corresponding rollback path. The binding fixture rejects
+the former execute-only wiring. A fixture expectation initially confused failed
+baseline inspection with review, then treated pending review as an exception;
+corrected the fixture to assert the actual pending result and no execution.
+
+All three registered focused checks passed, zero findings, no reused receipts:
+`diagnostic-adoption`, `entity-smoke-infrastructure-route`,
+`ordinary-update-regression`. Report:
+`.cache/test-runs/20261119T105916Z-588f4ba8a0be4bc9a72376fb3ad6de54/report.json`.
+Elapsed96.688405s; command execution82.028696s. Six headed task files passed
+metadata checks and scoped whitespace checks passed. The initial sandboxed
+attempt returned an input/runtime OSError; the same local checks completed with
+the normal shared-cache write permission. No AWS or publication was requested.
+
+During this work the user explicitly approved one bounded release approval
+covering declared update/verification and conditional restoration of the exact
+accepted predecessor. Updated the existing AWS execution workflow and reconciled
+the Run workflow's explanation; this is mechanism/policy approval, not approval
+of a concrete future AWS release. The shared connector does not yet enforce it.
+
+An attempted generic recovery branch was rejected by automated action review
+because its trigger was broader than positively terminal verification failure.
+It was not applied. Removed the unused approval-plan scaffolding as well; the
+shared coordinator is byte-identical to the previously reviewed implementation.
+Do not retry that broad trigger. Required next implementation is explicit terminal
+verification-failure evidence, a release-bound approval consumer, and connected
+restoration/readback using the existing owners. Feature task reporting currently
+collapses terminal failure into blocked; feature task readback lacks rollback
+binding; persistence rollback requires a running candidate task. These remain
+real gaps, not passing recovery proof. Broad/package/live proof is still deferred,
+the overarching proof goal remains paused, and no commit/push/AWS operation ran.
+
+After the policy wording update, metadata passed for all seven headed task
+files and scoped whitespace checks passed. The impact-only selector completed
+with exit0 and verdict `planned`; it did not execute broader checks. The focused
+runtime results above remain results of the correction, not proof of the still
+unimplemented bounded-approval/recovery connection.
+
+### Nov19 — terminal failure evidence implemented and focused checks passed
+
+Continued the approved bounded-release work in this recorded worktree. No new
+session, branch, journal or deployment engine was created. The broader goal
+remains paused; this authorised local remediation does not claim full proof.
+
+- Feature task evidence now has a typed terminal-failure outcome only after
+  exact reservation/task/image, stopped state, chronology and bounded log checks.
+  The public task route exposes it only from its current runner call. Failed
+  prerequisites, bare condition strings, missing observations and corrupted
+  retained success receipts cannot impersonate that outcome. Existing diagnostic
+  primary/companions and operation effects remain preserved.
+- The persistence verifier exposes its existing failed receipt path/hash only
+  after both receipt persistence and original-journal retention succeed. A
+  nonterminal task remains uncertain; repeated historical observation preserves
+  the original hash and does not launch another task.
+- The successor task fixture now follows all five declared checks, including
+  migration-state, instead of its obsolete duplicated four-check sequence.
+- Connected verification found two older PostgreSQL-version producer/reader
+  mismatches: restore-route.deployment and acceptance-route.validate_control_facts
+  rejected the engine_version already emitted by restore-control. Both readers
+  now accept only the historical/current closed shapes and reuse PG.version.
+  Current recorded versions remain exactly compared; historical receipts remain
+  byte-preserved, and fresh restore observation still enforces compatibility.
+
+Actual collector/runner/public reporter fixtures cover typed versus generic and
+prerequisite failures, malformed retained receipts, sensitive canaries and
+reconciliation with exactly one original launch. Persistence tests exercise real
+disposable receipt persistence plus retention failures. Restore and acceptance
+fixtures cover malformed/misplaced versions, version drift, historical bytes and
+the connected producer-to-original-control-archive handoff. No AWS was contacted.
+
+Verification history is retained, not relabelled: the first registered run
+(`20261119T113439Z-1522d1ef99174d968737a0012e5660a8`) failed diagnostic adoption
+because the additionally source-censused controller fixture review was stale,
+and failed the feature suite at the restore reader. The standalone adoption
+rerun passed after its review was corrected. The next registered run
+(`20261119T114502Z-8284ffd9faf84e44a75d2aac8f0d4881`) passed adoption/persistence
+but exposed the second mismatch at acceptance. Direct fixture traces identified
+both exact failures; the suite's stored unsupported-format summary alone did not.
+An early new persistence fixture also needed its missing hashlib import corrected.
+
+Final frozen registered result:
+`.cache/test-runs/20261119T115716Z-981c642558924096a45064f8a88ccb43/report.json`.
+All three requested checks passed, zero findings, no cached reuse:
+`diagnostic-adoption`, `entity-smoke-composition-suite`,
+`persistence-provider-regression`. Total runner time 432.806073 seconds;
+command execution 409.922082 seconds. Metadata passed for ten headed task files;
+scoped whitespace checks passed. The earlier impact-only plan was valid and
+executed no broader checks. These are focused local results, not full affected
+integration, image qualification, live acceptance or a ten-minute release proof.
+
+Still unfinished: consume one approved release identity across the exact fresh
+operation plans; validate the terminal verification evidence against that release
+before selecting recovery; connect exact-predecessor rollback and fresh private
+readback (including rollback task binding and the persistence stopped-candidate
+case). The user's bounded-release approval is already recorded; another approval
+for the same repo-side implementation is not needed. No commit, push, publication
+or AWS mutation was performed during this batch.
+
+### Nov19 — all three bounded release/recovery connections locally verified
+
+Implemented the user's approved combined slice in this recorded worktree:
+one release approval, positive candidate-failure attribution, and exact accepted
+predecessor restoration with fresh private readback. The prior entry's three
+unfinished connections are now implemented and focused-locally verified, not
+live-qualified. The broader paused goal was not changed.
+
+- The shared ordinary-update coordinator replaces the draft per-plan approval
+  map with a fingerprinted release boundary. Both existing bindings validate
+  actual generated plans against it before calling their existing controllers.
+  Source/input/package/predecessor changes invalidate that authority.
+- Recovery requires original reserved terminal evidence attributed to the
+  completed candidate deployment. Generic errors, pending/unknown outcomes,
+  mismatched evidence and acceptance/promotion failures cannot select rollback.
+- Both bindings restore the exact compatible accepted predecessor and perform
+  fresh private checks. Retained recovery takes precedence on resume; the failed
+  candidate is not redeployed or promoted. Entity rollback retains candidate
+  controller custody with predecessor workload identity. Persistence permits
+  an owned stable stopped candidate, not arbitrary failed-stack repair.
+- Existing task-journal history preserves original failure evidence when a
+  later recovery task advances the mode head. Administration exposes terminal
+  receipt identity only after successful persistence and journal retention.
+  Existing deployment, reservation, receipt and proof owners were extended;
+  no new deployment engine, execution journal or file was added in this slice.
+- Reconciled obsolete workflow instructions and refreshed thirteen reviewed
+  source hashes without upgrading partial diagnostic-adoption claims.
+
+Consolidated self-review and counterexamples are recorded under `Connected
+bounded release and recovery` in the consolidation plan. Coverage includes
+approval drift, wrong identity/time/event, nonterminal/ambiguous failure,
+interrupted recovery without candidate replay, stopped/foreign service bounds,
+retained original history, exact rollback image/source and non-promotion.
+Exploratory fixture passes are not substituted for registered results.
+
+First registered run:
+`.cache/test-runs/20261119T124129Z-fd9710dd1e784328b09106c12b1156fa/report.json`.
+Diagnostic adoption, ordinary-update and persistence passed; feature composition
+failed. The direct suite trace found a test-fixture omission introduced by the
+new definition-driven image observation: the clone-reader definition was absent
+from the shared job fixture. Registering that actual definition fixed it without
+loosening production checks. The failed report and trace remain part of the
+verification history.
+
+Final registered run:
+`.cache/test-runs/20261119T125757Z-76fe4fe329df485d8e8c75433b15445b/report.json`.
+Verdict passed, zero findings, all four requested checks passed. Fresh execution:
+`entity-smoke-composition-suite` (487.291006 seconds) and
+`ordinary-update-regression` (116.354838 seconds). Matching trusted-cache reuse:
+`diagnostic-adoption` and `persistence-provider-regression` from the first run.
+Runner total 656.516627 seconds; command execution 603.645844 seconds. This is
+focused local regression time, not a measured normal remote deployment cycle.
+Metadata passed for the seventeen originally headed task files and separately
+for the corrected restore fixture; scoped whitespace checks passed. The earlier
+impact-only selector completed with verdict planned and ran no broad checks.
+
+Remaining proof stages: full affected integration, committed source/package
+qualification, and the bounded live update/recovery/acceptance run with timing.
+No AWS changes, commit, push or publication occurred in this slice. Prior AWS
+acceptance remains historical evidence only; it does not qualify this source.
+
+### Nov19 — affected integration and correction batch
+
+The user approved the next full affected local integration step. Kept this
+recorded worktree and HEAD 8c425ce6ed33cc2ebf9d7e1b56170ea7b75417c7; no new
+worktree, commit, push, publication, AWS action or goal-status change.
+
+First registered full run:
+`.cache/test-runs/20261119T145330Z-4fb9d7dd31cb47b9b1c0cffee546c308/report.json`.
+154 entries: 124 passed, seven failed, two blocked, one uncertain, twenty
+later-stage checks deferred. Total 4280.382960 seconds (71.34 minutes), actual
+commands 3821.263448 seconds. These are accumulated local integration costs,
+not a build-to-live deployment measurement.
+
+Traced and corrected the failures using existing owners:
+
+- Bootstrap's copied live acceptance fixture violated canonical custody.
+  Preserve the actual checkout check and make only the unrelated copied
+  entity scope a candidate, following the existing declaration fixture.
+- CloudWatch's redundant runner fixture omitted workspace declarations.
+  Remove it and retain first/later failure and exit-code assertions in the
+  shared runner fixture, including PostgreSQL's normalized failure contract.
+- Both ordinary-update scope declarations omitted the shared public command.
+  Link it through their existing command templates and parser checks. This
+  one gap caused delivery inventory, package custody and both shell client
+  regressions; do not weaken those downstream preflight gates.
+- Selector tests had stale alignment/budget dependency expectations. Update
+  exact lists from real imports. A separate real selection gap covered only
+  one shared persistence file; use the existing folder owner so all siblings
+  select package custody. Keep per-helper selection/invalidation assertions.
+
+The retrieval check refreshed its generated recognition index while running;
+its result correctly remains uncertain. Regenerate before the stable rerun,
+without adding RAG functionality. Review and affected-file inventory are in
+the existing consolidation plan. Scoped whitespace and nine artifact headers
+pass; unrelated pre-existing AGENTS whitespace is preserved.
+
+Exploratory passes: complete CloudWatch adapter, bootstrap release contract,
+the two stale exact-input test cases, real ordinary-route parser/rejection
+cases, and all 31 independent delivery-inventory regressions. These are not
+the final complete registered result. Package qualification and live proof
+remain deferred; the next entry records the final local integration boundary.
+
+### Nov19 — full affected local integration passed
+
+Final registered report:
+`.cache/test-runs/20261119T155919Z-2a4e0c63e66a4dc4abada54f8ddd66b2/report.json`.
+Integration boundary verdict passed with zero findings: 135 passed, 21 deferred,
+zero failed, blocked or uncertain. Of the passing entries, 67 executed freshly
+and 68 reused matching trusted evidence. The two additional selected entries
+cover the shared runner's PostgreSQL consumer and its disposable stage.
+
+All seven original failures, both blocked checks and the uncertain retrieval
+check now pass. Ordinary-update, acceptance routes, package custody, shared
+runtime-runner consumers, selector contracts and both shell clients passed
+without bypassing their existing guards. Source remained frozen throughout
+the final run, including its terminal evidence validation.
+
+Runner total: 3543.131759 seconds (59.05 minutes); command execution:
+3218.166003 seconds (53.64 minutes). This is broad accumulated local regression,
+not normal delivery timing and not proof of the ten-minute build-to-live target.
+The retained report covers the current working changes on unchanged HEAD
+8c425ce6ed33cc2ebf9d7e1b56170ea7b75417c7, not a committed release checkpoint.
+
+Deferred entries are container/image qualification, disposable PostgreSQL,
+remote alignment and live acceptance/proof stages. They have not passed by
+implication. Next: committed-source package qualification, then the bounded
+live update/recovery/acceptance proof with timing. No commit, push, publication,
+AWS action or goal-status change occurred. This outcome entry was appended
+after the completed run; no implementation files were changed afterward.
+
+### Nov19 — resume committed package qualification
+
+User authenticated AWS and directed continuation. Read-only STS confirms the
+declared kanbien-dev profile in account 337159794548, eu-west-1. Docker engine
+and GitHub authentication are available. Retain the existing local-checkpoint
+approval; concrete publication/release identity and protected-main authority
+must be resolved before their external effects. Current accepted feature
+predecessor remains release-53798ef563be4ce9a8c5b2f0; historical acceptance is
+not qualification of this successor.
+
+Checkpoint preparation found eleven stale lifecycle dates from earlier slices.
+The existing metadata owner refreshed those dates; four reviewed-source hashes
+were updated only after reversing the date change reproduced each exact
+previously reviewed hash. Runtime bodies, predicates, adoption statuses and
+remaining diagnostic debt are unchanged. Rephrased an historical plan sentence
+that the process-drift checker misclassified as an executable instruction;
+it records source-review responsibility, not a new check or guard exemption.
+Refresh the existing generated metadata index before staged verification.
+The first preparation attempt rejected a deleted path without writing; the
+second applied metadata then stopped on that prose finding. Preserve the full
+135-pass report as evidence of its earlier exact inputs; commit-boundary checks
+will independently reuse only still-matching receipts. No AWS mutation occurred.
+
+Read-only live-path eligibility investigation found a substantive stop before
+publication/deployment: the actual accepted-state reader validates the original
+release, but the shared recovery policy rejects even existing HEAD against its
+accepted source with `acceptance-recovery-requalification-required`, holding
+all other bindings equal. Accepted recovery tree:
+`sha256:f0b2619bccea69b4b49af49747a66500cf760ab439caae5dd36216900f631ed0`;
+HEAD recovery tree:
+`sha256:439cbea5016952906e5535ec214e4fbe1ccb7e5d7039a3e1aba79f047b4c7c6f`.
+This is an actual policy invocation, not an attempted deployment or a claim
+that a candidate receipt has been qualified. The consolidation has changed
+protected runtime/build inputs since accepted source 96b755b9. Both the owning
+Run workflow and consolidation plan explicitly exclude implementing successor
+capability requalification through the ordinary-update branch. The controller
+calls successor admission before update; no AWS mutation was attempted.
+
+The earlier next-step summary understated this missing implementation boundary.
+Authentication and passing local checks cannot close it. A shared, governed
+successor requalification path must reuse existing capability proof/controllers
+and preserve the accepted predecessor before this consolidated release can be
+accepted. Do not reset accepted history, call it a first release, weaken the
+recovery comparison, or publish/deploy a candidate known to be ineligible.
+Request direction for that bounded implementation/harness extension; avoid
+another broad run or checkpoint/image churn until the route is resolved.
+
+Preparation subsequently passed (119 artifact headers, deterministic process
+drift, governed command drift and commit-boundary impact planning). The
+diagnostic-adoption structural check passed with zero findings after the
+date-only review refresh; no runtime-adoption status changed. These are
+preparation/structural results, not a rerun of the full local integration on
+the refreshed metadata and not image qualification. No task commit, push,
+publication or live deployment was performed in this continuation.
+
+### Nov19 — approved successor recovery connection in progress
+
+The user approved the missing successor requalification implementation and
+directed uninterrupted continuation. The existing Run workflow, acceptance
+schema and consolidation plan now distinguish admission of fresh proof from
+completed acceptance. Shared recovery-input classification keeps ordinary
+reuse strict; changed inputs select the existing task/resource controls through
+the existing coordinator. No initial bootstrap/migration/stop-only substitute.
+Database incarnation, original record and accepted predecessor stay protected.
+
+Exploratory acceptance/history and sequence regressions passed. The connected
+successor fixture passed actual task, negative admission, credential restoration,
+replacement and retained-history owners with controlled provider responses.
+It caught and corrected recursive evidence growth (new task-step v3 uses
+hash-bound prior-packet references) and replacement reconciliation incorrectly
+requiring the old server to remain running after an acknowledged-lost stop.
+Initial v1 and retained delivery v2 readers remain for concrete history.
+
+Additional connected tests are running for terminal failed revoke/unready
+restoration and successor snapshot/clone/readback/cleanup/final read. These
+results are not yet complete. The earlier 135-pass registered report belongs
+to earlier bytes, not these edits. Source reviews, stable-batch registered
+verification, committed-source package qualification and live successor proof
+remain outstanding. No commit, push, publication, AWS mutation or acceptance
+change has occurred in this implementation continuation.
+
+The extended connected fixture subsequently passed the full actual successor
+collector using thirteen task selections (twenty-five phases), four resource
+controls and original retained admissions/gates. It exercised one snapshot,
+one isolated clone, original-record read, owned-clone cleanup and final source
+read, including lost-response reconciliation without duplicate submission.
+Separate failed-revoke and failed-unready scenarios restored access without
+retrying the original failure or producing successful recovery history.
+Reference/namespace negatives and aggregate connection negatives passed.
+Provider, source qualification and accepted-predecessor inputs remain explicitly
+controlled fixtures; this is not live AWS evidence or promotion.
+
+Source responsibility reviews were extended at their existing owners, retaining
+partial adoption and outstanding malformed-input/provider coverage. Removed
+obsolete current-debt claims that this route was unimplemented or still awaiting
+the user's permission to continue. The existing route README now explains the
+ordinary/requalification distinction and evidence limits; write-readme guided
+this scoped correction, not a new documentation or governance layer.
+
+Pre-verification preparation passed for 127 headed artifacts with no process
+or governed-command drift. Final source-matched registered verification follows
+the review update. No AWS mutation, task checkpoint, publication or live
+acceptance is implied by these exploratory passes.

@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.regression
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -89,6 +89,22 @@ def candidate(root: Path, *, source: str, image: str, configuration: str, permis
         source_revision=source, image_digest=image, configuration_contract=contract,
         permission_contract=permission, proofs=proof_set, accepted_at=accepted)
     assert module.rendered(constructed) == yaml.safe_dump(value, sort_keys=False).encode(), "shared construction must match independently built candidate bytes"
+    bound = module.candidate_document(target=identity["target"], scope=identity["scope"],
+        source_revision=source, image_digest=image, configuration_contract=contract,
+        permission_contract=permission, proofs=proof_set, accepted_at=accepted,
+        expected_predecessor="release-" + "1" * 24)
+    _, _, _, bound_identity = module.candidate_identity(bound)
+    assert bound['release']['id'] != constructed['release']['id'], 'predecessor must affect immutable identity'
+    try:
+        module.promote(root,target=identity['target'],scope=identity['scope'],identity=bound_identity,
+            source_path=root/'not-written.yml',source_digest='sha256:'+'0'*64,expected_predecessor='none',legacy=False)
+    except module.SuccessionFailure as error:
+        assert str(error)=='release-succession-candidate-predecessor-mismatch'
+    else: raise AssertionError('bound candidate rebased to another predecessor')
+    damaged = copy.deepcopy(bound); damaged['release'].pop('expected_predecessor')
+    try: module.candidate_identity(damaged)
+    except module.SuccessionFailure as error: assert str(error)=='release-succession-candidate-identity-invalid'
+    else: raise AssertionError('removing predecessor binding kept a valid identity')
     for invalid in ({"proofs": {}}, {"accepted_at": "not-a-timestamp"}, {"permission_contract": {"path": "contracts/permissions.yml", "sha256": "invalid"}}):
         inputs = dict(target=identity["target"], scope=identity["scope"], source_revision=source,
             image_digest=image, configuration_contract=contract, permission_contract=permission,

@@ -31,7 +31,7 @@ def reviewed_change_set(prepare: object, name: str, stack_status: str, digest: s
     CloudFormation can briefly report CREATE_COMPLETE before the `Changes`
     collection is visible. This loop only inspects the fixed named correction;
     it does not authorize repeated execution. After an interrupted submission,
-    the owning command's explicit --reconcile path remains read-only.
+    the same command resumes its recorded attempt; --reconcile is observation-only.
     """
     last_code = "persistence-private-route-update-not-reviewable"
     for attempt in range(6):
@@ -45,12 +45,13 @@ def reviewed_change_set(prepare: object, name: str, stack_status: str, digest: s
             time.sleep(2)
     return None, last_code
 
-def reconcile(prepare, name, digest, revision):
-    verdict, code = prepare.observe_update(name, {"ImageDigest": digest, "SupportImageDigest": digest, "RestoreVerifierImageDigest": digest, "SourceRevision": revision}, lambda change: route_update_reviewable(change, "UPDATE_COMPLETE", name, digest, revision))
+def reconcile(prepare, name, digest, revision, *, reservation=None):
+    verdict, code = prepare.observe_update(name, {"ImageDigest": digest, "SupportImageDigest": digest, "RestoreVerifierImageDigest": digest, "SourceRevision": revision}, lambda change: route_update_reviewable(change, "UPDATE_COMPLETE", name, digest, revision), reservation=reservation)
     return report("updated" if verdict == "complete" else verdict, code, facts={"change_set": name, "candidate_image_digest": digest})
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt", type=Path); parser.add_argument("--json", action="store_true"); parser.add_argument("--reconcile", action="store_true")
+    parser.add_argument("--operation-label")
     args, unknown = parser.parse_known_args()
     if unknown or args.receipt is None: return report("blocked", "persistence-private-route-update-arguments-invalid")
     prepare = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py", "prepare")
@@ -58,8 +59,12 @@ def main() -> int:
     receipt = prepare.validate_receipt(args.receipt)
     if receipt is None: return report("blocked", "package-custody-receipt-invalid")
     digest, revision = receipt["image_digest"], receipt["source_revision"]
-    name = f"kanbien-core-platform-persistence-route-update-{digest[7:19]}"
+    name = prepare.labelled_update_name(f"kanbien-core-platform-persistence-route-update-{digest[7:19]}", args.operation_label)
+    if name is None:return report("blocked", "persistence-private-route-update-arguments-invalid")
     if args.reconcile: return reconcile(prepare, name, digest, revision)
+    request, resumed = prepare.begin_update(name=name, receipt=receipt, controller=__file__, template=TEMPLATE, settings={},
+        observe=lambda reservation:reconcile(prepare,name,digest,revision,reservation=reservation), failure=lambda verdict,code:report(verdict,code))
+    if resumed is not None:return resumed
     if not create.package_gates(args.receipt): return report("blocked", "persistence-declaration-or-package-gate-not-proven")
     foundation, code = prepare.foundation_outputs()
     if foundation is None: return report("blocked", code)
@@ -73,16 +78,15 @@ def main() -> int:
     services = service.get("services", []) if ok and isinstance(service, dict) else []
     if len(services) != 1 or not isinstance(services[0], dict) or services[0].get("desiredCount") != 1 or services[0].get("runningCount") != 1: return report("blocked", "persistence-private-route-update-service-not-healthy")
     digest, revision = receipt["image_digest"], receipt["source_revision"]
-    name = f"kanbien-core-platform-persistence-route-update-{digest[7:19]}"
     parameters = [{"ParameterKey": key, "ParameterValue": value} for key, value in prepare.candidate_parameters(foundation, infrastructure, receipt).items()]
     expected = prepare.candidate_parameters(foundation, infrastructure, receipt)
     def admit(change):
         actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
         return None if prepare.update_parameters_match(actual, expected, current_parameters) else "persistence-update-live-parameters-mismatch"
     return prepare.apply_update(
-        name=name, parameters=parameters, template_arguments=("--template-body", f"file://{TEMPLATE}"),
+        name=name, request=request, parameters=parameters, template_arguments=("--template-body", f"file://{TEMPLATE}"),
         review=lambda _existing, _created: reviewed_change_set(prepare, name, status, digest, revision),
-        admit=admit, observe=lambda: reconcile(prepare, name, digest, revision),
+        admit=admit, observe=lambda reservation: reconcile(prepare, name, digest, revision,reservation=reservation),
         failure=lambda verdict, code: report(verdict, code, facts={"change_set": name} if verdict == "uncertain" else None),
     )
 

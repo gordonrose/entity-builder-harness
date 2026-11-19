@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 11
+version: 12
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -109,6 +109,41 @@ observations: they cannot seed cache reuse or qualify integration/live proof.
 No automatic retention cleanup is added. Trusted receipts remain in private
 worktree Git metadata; durable bounded outcomes/evidence belong in the session
 commit log. Do not copy raw private-cache reports into chat logs.
+
+### Understanding a failed check
+
+A nonzero check exit now has `failure_detail` in the JSON response and retained
+run report. The readable summary explains the same result. For example, the
+existing diagnostic-adoption check can report:
+
+```text
+failure: diagnostic-review-stale at scripts/example.py
+```
+
+This is an illustrative source path: the check found a review that no longer
+matches that file. [script.py](script.py) passes the executed child's bounded
+JSON to the [diagnostic owner](../diagnostic-coverage/script.py)'s `failure_detail`
+projection. The owner accepts only its known finding codes and retains a source
+path only when it matches a known input. [execution_policy.py](execution_policy.py)
+handles parsing and writes the safe result into the existing reports. Raw
+stdout/stderr remain excluded. Processing failure does not change the check's
+exit status, rerun it or make a failed result eligible for cache reuse.
+
+Diagnostic adoption is the first supported producer, selected by its registered
+command owner. Other formats—including ordinary test tracebacks—report
+`failure detail unavailable: unsupported-format`. Empty, malformed, oversized
+and unexpectedly unprocessable supported output have distinct reasons. Input
+is limited to 1,048,576 characters; at most 32 validated findings are retained,
+with explicit truncation. Unrecognised source locations are marked unavailable.
+This does not claim all checks now have detailed explanations.
+
+When a member or prerequisite fails, the combined check reports `blocked_by`
+with the runner-known dependency IDs. Its summary says, for example,
+`blocked by checks: diagnostic-adoption`; the failed child's own result contains
+the explanation. The combined command is not run merely to reproduce the
+failure. Older saved reports without these additive fields remain readable.
+The [mechanics tests](mechanics_test.py) exercise the real producer subprocess,
+retained JSON/text, private-output rejection and report-write failure.
 
 `entity-smoke-runtime` dispatches `app:entity-smoke:check`: the current feature
 typecheck (including nullable/enum/branded-ID assertions), runtime compilation

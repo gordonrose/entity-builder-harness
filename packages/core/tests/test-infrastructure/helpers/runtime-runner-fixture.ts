@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 
-export function verifyRuntimeRunner(owner: string, expectedFailureExitCode = 7): void {
+export function verifyRuntimeRunner(owner: string, expectedFailureExitCode?: number): void {
   const runner = resolve(owner, "tests/run-runtime-tests.mjs");
   type Graph = { packages: Map<string, { directory: string; manifestPath: string; manifest: { exports: Record<string, string> } }> };
   const declarations = createRequire(resolve("package.json"))(resolve("scripts/repo/workspace-build/declarations.mjs")) as {
@@ -93,15 +93,19 @@ export function verifyRuntimeRunner(owner: string, expectedFailureExitCode = 7):
     equal(actual.stdout, "", "missing compilation is detected before other cases execute");
   });
 
-  fixture((root, source) => {
-    source("shared/time/unit/a-runtime.test.ts", 'console.log("failed case"); process.exit(7);');
-    source("z-runtime.test.ts", 'console.log("must not run");');
+  for (const childExitCode of [7, 9]) {
+    fixture((root, source) => {
+      if (childExitCode === 9) source("first-runtime.test.ts", 'console.log("successful case");');
+      source("shared/time/unit/a-runtime.test.ts", `console.log("failed case"); process.exit(${childExitCode});`);
+      source("z-runtime.test.ts", 'console.log("must not run");');
 
-    const actual = run(root);
+      const actual = run(root);
 
-    equal(actual.status, expectedFailureExitCode, "a nested child failure retains the owner's nonzero status");
-    equal(actual.stdout.trim(), "failed case", "the runner stops after a failed case");
-  });
+      equal(actual.status, expectedFailureExitCode ?? childExitCode, "a child failure retains the owner's nonzero status");
+      equal(actual.stdout.trim(), childExitCode === 9 ? "successful case\nfailed case" : "failed case",
+        "the runner stops after either a first or later failed case");
+    });
+  }
 
   fixture((root, source, compiled) => {
     source("shared/time/type-level/time-types.test.ts", "process.exit(91);");

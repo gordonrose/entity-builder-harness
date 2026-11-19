@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.provider.aws.response-classification
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -48,7 +48,9 @@ def classify_error(service: str, operation: str, stderr: str) -> str:
     # The CLI can add this decoration even when AWS_MAX_ATTEMPTS is one.
     match = re.search(r"An error occurred \(([A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*)\) when calling the [A-Za-z0-9]+ operation(?: \(reached max retries: [0-9]+\))?:", stderr)
     code = match.group(1) if match else None
-    if code in {"AccessDenied", "AccessDeniedException", "UnauthorizedOperation", "UnrecognizedClientException", "InvalidClientTokenId", "ExpiredToken", "ExpiredTokenException"}:
+    if code in {"ExpiredToken", "ExpiredTokenException"}:
+        return "aws-credentials-expired"
+    if code in {"AccessDenied", "AccessDeniedException", "UnauthorizedOperation", "UnrecognizedClientException", "InvalidClientTokenId"}:
         return "aws-access-denied"
     if code in MISSING.get((service, operation), set()):
         return "aws-resource-missing"

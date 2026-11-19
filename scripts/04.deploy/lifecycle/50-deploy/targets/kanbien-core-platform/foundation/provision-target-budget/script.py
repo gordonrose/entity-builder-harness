@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.foundation-cost-control
 #   disciplines: [security, sre]
@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-from decimal import Decimal, InvalidOperation
 import json
 import hashlib
 import importlib.util
@@ -36,10 +35,19 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[8]
 PROFILE, STACK_REGION, BUDGET_REGION = "kanbien-dev", "eu-west-1", "us-east-1"
 ACCOUNT_ID, TARGET, STACK = "337159794548", "kanbien-core-platform", "kanbien-core-platform-foundation"
-BUDGET_NAME, EXPECTED_FILTER = "kanbien-core-platform-monthly", "user:Target$kanbien-core-platform"
 TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml"
 TAG_EVIDENCE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-cost-allocation-tag.yml"
 TAG_VALIDATOR = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh"
+
+_input_spec = importlib.util.spec_from_file_location("budget_inputs", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py")
+INPUT_OWNER = importlib.util.module_from_spec(_input_spec)
+_input_spec.loader.exec_module(INPUT_OWNER)
+try:
+    BUDGET = INPUT_OWNER.budget_settings(ROOT, TARGET, INPUT_OWNER.read_document(ROOT, TEMPLATE.relative_to(ROOT).as_posix()))
+    INPUT_ERROR = None
+except INPUT_OWNER.InputFailure as failure:
+    BUDGET, INPUT_ERROR = {}, failure.code
+BUDGET_NAME = BUDGET.get("BudgetName")
 
 def report(verdict: str, *, findings: list[str] | None = None, **fields: Any) -> int:
     print(json.dumps({"schema": "deploy/foundation-budget-provisioning-report/v1", "target": TARGET, "stack": STACK, "budget_name": BUDGET_NAME, "verdict": verdict, "findings": [{"code": code} for code in findings or []], **fields}, sort_keys=True))
@@ -52,6 +60,7 @@ class SafeArgumentParser(argparse.ArgumentParser):
         self.exit(2, "ERROR: foundation-budget-arguments-invalid\n")
 
 def aws(service: str, *arguments: str, budget: bool = False, expect_json: bool = True) -> tuple[bool, Any, str]:
+    if INPUT_ERROR: return False, None, INPUT_ERROR
     global _AWS_RESPONSE
     if _AWS_RESPONSE is None:
         spec=importlib.util.spec_from_file_location("aws_response",ROOT/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
@@ -117,16 +126,15 @@ def review(name: str) -> tuple[dict[str, Any] | None, str | None]:
     return change_set, None
 
 def verify() -> tuple[dict[str, Any] | None, str | None]:
+    if INPUT_ERROR: return None, INPUT_ERROR
     ok, payload, code = aws("budgets", "describe-budget", "--account-id", ACCOUNT_ID, "--budget-name", BUDGET_NAME, budget=True)
     if not ok: return None, code
     budget = payload.get("Budget") if isinstance(payload, dict) else None
-    if not isinstance(budget, dict): return None, "budget-response-invalid"
-    limit, filters = budget.get("BudgetLimit"), budget.get("CostFilters")
-    try: amount_matches = isinstance(limit, dict) and Decimal(str(limit.get("Amount"))) == Decimal("100")
-    except (InvalidOperation, ValueError): amount_matches = False
-    if not (budget.get("BudgetName") == BUDGET_NAME and budget.get("BudgetType") == "COST" and budget.get("TimeUnit") == "MONTHLY" and amount_matches and isinstance(limit, dict) and limit.get("Unit") == "USD" and isinstance(filters, dict) and filters.get("TagKeyValue") == [EXPECTED_FILTER]):
-        return None, "target-budget-provider-configuration-mismatch"
-    return {"budget_type": "COST", "time_unit": "MONTHLY", "amount": "100", "unit": "USD", "target_filter": EXPECTED_FILTER, "checked_at": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")}, None
+    try: INPUT_OWNER.CHECKS.budget(budget, BUDGET)
+    except INPUT_OWNER.CHECKS.FoundationFailure as failure: return None, failure.code
+    return {"budget_type": BUDGET["BudgetType"], "time_unit": BUDGET["TimeUnit"], "amount": str(BUDGET["BudgetLimit"]["Amount"]),
+            "unit": BUDGET["BudgetLimit"]["Unit"], "target_filter": BUDGET["CostFilters"]["TagKeyValue"][0],
+            "checked_at": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")}, None
 
 def reconcile(name: str) -> int:
     """Observe one retained operation identity; never create, execute or delete."""
@@ -159,6 +167,7 @@ def reconcile(name: str) -> int:
 
 def main() -> int:
     parser = SafeArgumentParser(); parser.add_argument("--mode", choices=("create", "review", "execute", "verify", "reconcile"), required=True); parser.add_argument("--change-set"); parser.add_argument("--json", action="store_true"); args = parser.parse_args()
+    if INPUT_ERROR: return report("blocked", findings=[INPUT_ERROR])
     if args.mode in {"review", "execute", "reconcile"} and not args.change_set: return report("blocked", findings=["foundation-budget-change-set-required"])
     if args.mode == "verify" and args.change_set: return report("blocked", findings=["foundation-budget-arguments-invalid"])
     if args.mode == "reconcile":return reconcile(args.change_set)

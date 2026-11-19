@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -89,7 +89,7 @@ def run_case(name,*,package="persistence",environment=None,arguments=None,mutate
  global COUNT
  with tempfile.TemporaryDirectory(prefix='public-recovery-test-') as directory:
   fixture=Path(directory);binaries=fixture/'bin';binaries.mkdir();events=fixture/'events';events.touch()
-  selected=((CORE_BUILD,CORE_SMOKE,CORE_DOCKERFILE,CORE_CONTRACT) if package=='core' else (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER,BUILD_OPERATIONS))+(SAFE_COMMAND,)
+  selected=((CORE_BUILD,CORE_SMOKE,CORE_DOCKERFILE,CORE_CONTRACT) if package=='core' else (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER,BUILD_OPERATIONS,Path("scripts/04.deploy/shared/postgresql-version.py"),Path("scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")))+(SAFE_COMMAND,)
   tag='kanbien-core-server:test' if package=='core' else 'kanbien-core-server-persistence:test'
   for relative in selected:
    path=fixture/relative;path.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,path)
@@ -157,8 +157,8 @@ for name,mutate in (
  ('changed-build-operations',lambda root:(root/BUILD_OPERATIONS).write_text((root/BUILD_OPERATIONS).read_text()+'\n# unreviewed build edit\n')),
  ('private-node',replace(DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
  ('private-frontend',replace(DOCKERFILE,'docker/dockerfile:1.7','private.invalid/frontend:1.7')),
- ('private-postgres',replace(SMOKE,'postgres:16-bookworm','private.invalid/postgres:16-bookworm')),
- ('hidden-tag-comment',replace(SMOKE,'postgres:16-bookworm bash -ec','private.invalid/image bash -ec # "$TAG"')),
+ ('private-postgres',replace(CONTRACT,'postgres:18.3-bookworm','private.invalid/postgres:18.3-bookworm')),
+ ('hidden-tag-comment',replace(SMOKE,'"$POSTGRES_IMAGE" bash -ec','private.invalid/image bash -ec # "$TAG"')),
  ('extra-copy-image',replace(DOCKERFILE,'--from=build','--from=private.invalid/image')),
  ('lowercase-from',lambda root:(root/DOCKERFILE).write_text((root/DOCKERFILE).read_text()+'\n  from private.invalid/image\n')),
  ('lowercase-arg',lambda root:(root/DOCKERFILE).write_text((root/DOCKERFILE).read_text()+'\n  arg BUILD_NODE_IMAGE=private.invalid/image\n')),

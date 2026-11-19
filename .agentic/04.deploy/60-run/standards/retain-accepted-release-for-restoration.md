@@ -4,7 +4,7 @@ id: deploy.standards.accepted-release-and-recovery
 version: 5
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-11-09"
+updated_on: "2026-11-19"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -62,6 +62,21 @@ allowlisted terminal proof receipts. It is additive evidence: it neither edits
 the original acceptance record nor recasts it as permission-compliant. A
 selected rollback must keep administration and ordinary-migration support on a
 qualified support image when the retained image lacks those bounded programs.
+
+For an image-only update that cannot apply migrations or change the permission
+model, a declared accepted-proof reuse path may establish compatibility without
+creating a duplicate compatibility record. Validate the complete live accepted
+proof and exact qualified predecessor package first. The shared proof policy
+must then compare actual immutable Git inputs: unchanged permission template,
+declared schema inputs (including additions/removals/file modes), operational
+configuration and database incarnation. Only YAML comments and the scope's
+top-level `change_impact` test-selection section may differ in configuration;
+caller-selected exclusions are prohibited. Both source configuration hashes
+must match their respective retained/current bindings. The existing deployment
+plan retains the accepted-proof identity and comparison digest. Missing custody,
+changed operational inputs or unavailable source fail closed and require fresh
+compatibility proof, never an automatic fallback. This comparison does not
+establish current health or qualify changed candidate recovery implementation.
 
 Restoration selects only a retained immutable digest whose application schema,
 configuration and permission contract are explicitly compatible with the

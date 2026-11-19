@@ -26,6 +26,7 @@ Disposition: **retired**, after migrating active callers. This is a merge into
 an inspected existing implementation, not a move overwriting that destination.
 No external/public API, namespace or bootstrap contract changes; no ADR needed.
 Existing local-checkpoint authority covers this checked plan before retirement.
+Checkpoint `8c425ce6` committed this slice before active references changed.
 
 The reference planner completed with exit 0: both paths exist; nine exact old
 path references were found. Three are dormant generated recognition entries;
@@ -35,7 +36,7 @@ and the implementation plan. Preserve the inventory's historical finding,
 but explicitly mark the adapter recommendation superseded. Remove only the
 obsolete generated recognition entry, without running dormant RAG machinery.
 
-The shared adapter will accept a per-workload sibling `provider_template`,
+The shared adapter now accepts a per-workload sibling `provider_template`,
 defaulting to the caller's template. Entity-smoke's restore-reader binding
 declares its different template; all other callers keep existing defaults.
 Reject invalid paths, symlinks, duplicate IDs and missing resources. Retain the

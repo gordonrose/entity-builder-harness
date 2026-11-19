@@ -4,7 +4,7 @@ id: deploy.inventory.core-platform-deployment-routes
 version: 1
 status: draft
 created_on: "2026-11-14"
-updated_on: "2026-11-15"
+updated_on: "2026-11-18"
 layer: 04.deploy
 domain: deployment.consolidation
 disciplines: [architecture, sre, security]
@@ -16,6 +16,18 @@ used_by:
   path: .agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md
 -->
 # Core platform deployment route inventory
+
+## UPDATE continuation checkpoint — 2026-11-18
+
+The B07 extraction described below is superseded by the plan's durable UPDATE
+slice: all five persistence UPDATE callers use the existing reserved
+`change_sets.prepare/execute` primitives, and `reviewed_update` is removed.
+New executions resume through the ordinary command, retain their input binding,
+and require exact execution-event lineage before completion. Historical explicit
+readers stay read-only. Distinct reviewed operation labels support later releases
+and correction after rejected-review cleanup without resetting old reservations.
+No provider call, publication or full proof was performed as part of this
+checkpoint. Focused results are recorded separately in the session log.
 
 ## Findings and recommended starting point
 
@@ -103,7 +115,7 @@ third implementation.
 | Shared owner | Observed reuse and boundary |
 | --- | --- |
 | [Declaration coverage](../../../scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py), [runnable program validation](../../../scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh) and [delivery inventory](../../../scripts/04.deploy/inventory-deploy-control/script.py) | Both packaging routes invoke existing checks. Workload declarations remain inputs. |
-| [ECS configuration normalisation](../../../scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py) | The feature's `entity-smoke-runtime-configuration.py` delegates to it for two templates. Preserve that adapter rather than rewriting normalisation. |
+| [ECS configuration normalisation](../../../scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py) | At the inventoried checkpoint the feature's `entity-smoke-runtime-configuration.py` delegated to it for two templates. The recommendation to preserve that special adapter is superseded by Batch A: the shared owner reads per-workload template selection from the binding. The original observation remains historical evidence. |
 | [Package qualification](../../../scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py), [receipt validation](../../../scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py) and [workflow guards](../../../scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py) | Both package routes reuse these. Their surrounding build/publication orchestration still differs. |
 | [AWS response classification](../../../scripts/04.deploy/shared/provider-adapters/aws/response.py), [CloudFormation parser](../../../scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py), [ECR scanning](../../../scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py) | Existing provider helpers. AWS CLI invocation is still repeated in controllers. Feature template controls use the shared parser. |
 | [Release succession](../../../scripts/04.deploy/lifecycle/60-run/release-succession/script.py), [acceptance route validation](../../../scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py), [scope promotion](../../../scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.py) | Release identity/history machinery already exists; the feature promotion delegates to succession and scope promotion. Do not create another accepted-release ledger. |

@@ -7,12 +7,12 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Prove the AWS runtime alignment adapter recognises only stable successful CloudFormation states.
+#   purpose: Exercise AWS runtime alignment reporting or the focused shared foundation checks without provider access.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   used_by:
 #   - id: deploy.adapter.aws.runtime-alignment
@@ -20,9 +20,17 @@ set -euo pipefail
 #   effects: [read-only, writes-files]
 
 ROOT="$(git rev-parse --show-toplevel)"
+if [[ "$#" -eq 1 && "$1" == "--postgresql-version-only" ]]; then
+  exec python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py" PostgreSqlVersionTests
+fi
+if [[ "$#" -eq 1 && "$1" == "--foundation-only" ]]; then
+  exec python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/foundation-checks-test.py"
+fi
+[[ "$#" -eq 0 ]] || { echo 'Unsupported alignment test arguments.' >&2; exit 2; }
 python3 - "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py" <<'PY'
 import contextlib, copy, importlib.util, io, json, sys, tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("runtime_alignment", sys.argv[1])
 module = importlib.util.module_from_spec(spec)
@@ -43,7 +51,7 @@ release:
 responses = {
     "sts": {"Account": "337159794548"},
     "ecr": {"imageDetails": [{}]},
-    "foundation": {"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": [{"OutputKey": key} for key in {"VpcId", "PrivateSubnetIds", "RepositoryUri", "ClusterArn", "LogGroupName", "TaskExecutionRoleArn", "ServiceSecurityGroupId", "VerifierSecurityGroupId", "ServiceDiscoveryArn"}]}]},
+    "foundation": {"Stacks": [{"StackStatus": "UPDATE_COMPLETE", "Outputs": [{"OutputKey": key, "OutputValue": "fixture-value"} for key in {"VpcId", "PrivateSubnetIds", "RepositoryUri", "ClusterArn", "LogGroupName", "TaskExecutionRoleArn", "ServiceSecurityGroupId", "VerifierSecurityGroupId", "ServiceDiscoveryArn"}]}]},
     "runtime": {"Stacks": [{"StackStatus": "UPDATE_COMPLETE"}]},
     "clusters": {"clusters": [{"status": "ACTIVE"}]},
     "services": {"services": [{"runningCount": 1, "taskDefinition": "kanbien-core-platform-bootstrap-runtime:8", "deployments": [{"rolloutState": "COMPLETED"}]}]},
@@ -84,8 +92,8 @@ sys.argv = argv; stream = io.StringIO()
 with contextlib.redirect_stdout(stream): assert module.main() == 1
 sys.argv = old
 assert "accepted-runtime-not-healthy" in stream.getvalue()
-# Differential anchors are the original predicates: later stack/cluster rows
-# were ignored, service length short-circuited, restore ignored image mismatch.
+# Unchanged runtime/cluster orchestration retains its existing predicates.
+# Foundation parsing now rejects ambiguity through the shared owner.
 def observe(body_changes, operation='update'):
     responses.clear(); responses.update(copy.deepcopy(original_responses)); responses.update(body_changes); calls.clear()
     arguments=argv[:]; arguments[arguments.index('--operation')+1]=operation
@@ -94,14 +102,27 @@ def observe(body_changes, operation='update'):
         with contextlib.redirect_stdout(stream): status=module.main()
     finally: sys.argv=old
     return status,json.loads(stream.getvalue())
-for owner in ['foundation','runtime','clusters']:
+for owner in ['runtime','clusters']:
     body=copy.deepcopy(original_responses[owner]); key='clusters' if owner=='clusters' else 'Stacks'; body[key].extend([None,{'ignored':[]}])
     first=body[key][0]
     assert (first.get('status')=='ACTIVE' if owner=='clusters' else first.get('StackStatus') in module.STABLE_SUCCESSFUL_STACK_STATUSES)
     status,report=observe({owner:body}); assert status==0 and all(item['outcome']=='match' for item in report['assertions']) and len(calls)==9
 status,report=observe({'foundation':{'Stacks':{}}})
 foundation=next(item for item in report['assertions'] if item['id']=='right-application')
-assert status==1 and foundation=={'id':'right-application','outcome':'missing','finding_code':'foundation-runtime-output-missing'} and len(calls)==9
+assert status==1 and foundation=={'id':'right-application','outcome':'unknown','finding_code':'foundation-stack-observation-invalid'} and len(calls)==9
+for mutate,code,outcome in [
+    (lambda d:d['Stacks'].append({}), 'foundation-stack-observation-invalid', 'unknown'),
+    (lambda d:d['Stacks'][0]['Outputs'].append(copy.deepcopy(d['Stacks'][0]['Outputs'][0])), 'foundation-outputs-ambiguous', 'unknown'),
+    (lambda d:d['Stacks'][0]['Outputs'].pop(), 'foundation-outputs-missing', 'missing'),
+    (lambda d:d['Stacks'][0].update(StackStatus='UPDATE_IN_PROGRESS'), 'foundation-stack-not-ready', 'mismatch'),
+    (lambda d:d['Stacks'][0]['Outputs'][0].update(OutputValue=''), 'foundation-outputs-invalid', 'unknown')]:
+    body=copy.deepcopy(original_responses['foundation']);mutate(body)
+    status,report=observe({'foundation':body})
+    assert status==1 and next(item for item in report['assertions'] if item['id']=='right-application')=={'id':'right-application','outcome':outcome,'finding_code':code}
+with patch.object(module.FOUNDATION_CHECKS,'stack_outputs',side_effect=module.FOUNDATION_CHECKS.FoundationFailure('foundation-outputs-ambiguous')) as shared:
+    status,report=observe({})
+    assert status==1 and next(item for item in report['assertions'] if item['id']=='right-application')['finding_code']=='foundation-outputs-ambiguous'
+    assert shared.call_count==1
 for services in [[None,None], {'ignored-first':None,'ignored-second':None}, [{'runningCount':0,'deployments':None}]]:
     # Preserve the original short-circuit, including never touching entries
     # when length is not one and never iterating deployments when count differs.
@@ -133,7 +154,7 @@ for owner,body,identifier in [
     sys.argv=argv; stream=io.StringIO()
     with contextlib.redirect_stdout(stream): assert module.main()==1
     sys.argv=old; report=json.loads(stream.getvalue()); item=next(item for item in report['assertions'] if item['id']==identifier)
-    assert item['outcome']=='unknown' and item['finding_code']=='invalid-response', item
+    assert item['outcome']=='unknown' and item['finding_code']==('foundation-stack-observation-invalid' if owner=='foundation' else 'invalid-response'), item
     assert calls[-2:]==[['aws','iam','get-role','--role-name','delivery','--profile','x','--region','eu-west-1','--output','json'],['aws','iam','get-role','--role-name','execution','--profile','x','--region','eu-west-1','--output','json']]
     assert len(calls)==(8 if owner=='services' else 9)
 module.subprocess.run=lambda *_args,**_kwargs: (_ for _ in ()).throw(OSError('https://private.invalid/provider-canary'))

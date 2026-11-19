@@ -4,7 +4,7 @@
   version: 6
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-11-15"
+  updated_on: "2026-11-19"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -143,13 +143,17 @@ actual affected boundary, not just the changed filename. Reusing a capability
 must neither trigger a full infrastructure rehearsal solely because a feature
 has a new name nor substitute capability proof for its new workload obligations.
 
-Migration boundary: currently declared first-acceptance replacement/restore
-requirements and exact target collector proof sets remain effective. Adopting
-more selective proof requires the owning declaration/schema, validator,
-collector and tests to agree in the same change, with historical readers
-preserved. A plan label, timing report or this classification cannot bypass
-them. Report unsupported selective reuse as a remaining implementation gap;
-do not claim the routine route or delivery budget has been achieved.
+First-acceptance replacement/restore requirements remain effective. Persistence
+and entity-smoke ordinary updates use their acceptance schema's `ordinary_update`
+policy and the shared immutable-input comparator. Fresh deployed identity,
+migration state, effective access, meaningful operation and readiness are never
+replaced by recovery history. Reuse requires exact validated accepted-predecessor
+custody and unchanged declared recovery inputs, contracts and database incarnation.
+Absent or unverifiable bindings require requalification; old records are not
+retroactively upgraded. Changed-capability execution remains separately selected,
+not an implicit effect of collection. Other routes keep their declared proof sets.
+Any further selective policy must migrate its declaration, validator, collector
+and tests together. These local controls do not establish live delivery timing.
 
 ## Mandatory Gate Sequence
 

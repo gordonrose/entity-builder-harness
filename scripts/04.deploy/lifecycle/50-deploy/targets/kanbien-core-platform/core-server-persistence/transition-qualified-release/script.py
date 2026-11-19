@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
-#   version: 7
+#   version: 8
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -104,13 +104,14 @@ def wait_reviewable(prepare,name,status,digest,revision,support_digest=None):
         if reviewable(change,status,name,digest,revision,support_digest): return change,"ok"
         if attempt<5: time.sleep(2)
     return None,"persistence-release-transition-not-reviewable"
-def reconcile(prepare,name,digest,revision,support_digest=None):
-    verdict,code=prepare.observe_update(name,{"ImageDigest":digest,"SupportImageDigest":support_digest or digest,"RestoreVerifierImageDigest":support_digest or digest,"SourceRevision":revision},lambda change:reviewable(change,"UPDATE_COMPLETE",name,digest,revision,support_digest))
+def reconcile(prepare,name,digest,revision,support_digest=None,*,reservation=None):
+    verdict,code=prepare.observe_update(name,{"ImageDigest":digest,"SupportImageDigest":support_digest or digest,"RestoreVerifierImageDigest":support_digest or digest,"SourceRevision":revision},lambda change:reviewable(change,"UPDATE_COMPLETE",name,digest,revision,support_digest),reservation=reservation)
     finding=retain_failure_diagnostic(prepare,name,digest,code,verdict) if verdict in {"failed","uncertain"} else None
     return emit("transitioned" if verdict=="complete" else verdict,code,*((finding,) if finding else ()),facts={"change_set":name,"image_digest":digest,"source_revision":revision})
 def main():
     parser=argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt",type=Path); parser.add_argument("--operation",choices=("update","rollback","discard-rejected-review")); parser.add_argument("--json",action="store_true"); parser.add_argument("--reconcile",action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
+    parser.add_argument("--operation-label")
     parser.add_argument("--rollback-compatibility-id")
     parser.add_argument("--support-receipt",type=Path)
     args,unknown=parser.parse_known_args()
@@ -130,7 +131,8 @@ def main():
         if support is None:return emit("blocked","persistence-rollback-support-package-not-proven")
         support_digest=support["image_digest"]
     digest,revision=receipt["image_digest"],receipt["source_revision"]
-    name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
+    name=prepare.labelled_update_name(f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}", args.operation_label)
+    if name is None:return emit("blocked","persistence-release-transition-arguments-invalid")
     if args.operation == "discard-rejected-review":
         if args.reconcile:return emit("blocked", "persistence-release-transition-discard-reconcile-unsupported")
         # A rejected review has not touched the target.  Its bounded cleanup
@@ -141,9 +143,15 @@ def main():
         if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
         current_parameters=CHANGE_SETS.parameter_values(stack.get("Stacks",[{}])[0].get("Parameters"))
         if current_parameters is None:return emit("blocked","persistence-release-transition-update-parameter-inputs-invalid")
-        name=f"kanbien-core-platform-persistence-update-{digest[7:19]}"
+        name=prepare.labelled_update_name(f"kanbien-core-platform-persistence-update-{digest[7:19]}", args.operation_label)
         return discard_rejected_review(prepare, name, current_parameters, digest, revision)
     if args.reconcile:return reconcile(prepare,name,digest,revision,support_digest)
+    request, resumed = prepare.begin_update(name=name, receipt=receipt, controller=__file__,
+        template=ROOT/"infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        settings={"operation":args.operation,"support":support if args.operation=="rollback" else None,"compatibility":args.rollback_compatibility_id},
+        observe=lambda reservation:reconcile(prepare,name,digest,revision,support_digest,reservation=reservation),
+        failure=lambda verdict,code:emit(verdict,code))
+    if resumed is not None:return resumed
     if not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return emit("blocked","persistence-release-transition-preconditions-not-proven")
     ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
     if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
@@ -155,13 +163,18 @@ def main():
         support_ok,support_code=prepare.candidate_image(support)
         if not support_ok:return emit("blocked","persistence-rollback-support-package-not-proven",support_code)
     ok,service,code=prepare.aws("ecs","describe-services","--cluster",CLUSTER,"--services",SERVICE); services=service.get("services",[]) if ok and isinstance(service,dict) else []
-    if len(services)!=1 or not isinstance(services[0],dict) or services[0].get("desiredCount")!=1 or services[0].get("runningCount")!=1: return emit("blocked","persistence-release-transition-service-not-healthy")
+    if len(services)!=1 or not isinstance(services[0],dict) or services[0].get("desiredCount")!=1 or type(services[0].get("runningCount")) is not int or services[0]["runningCount"] not in ({0,1} if args.operation=="rollback" else {1}): return emit("blocked","persistence-release-transition-service-not-healthy")
+    if args.operation=="rollback":
+        owned_outputs={row.get("OutputKey"):row.get("OutputValue") for row in stack["Stacks"][0].get("Outputs",[]) if isinstance(row,dict)}
+        if (current_parameters.get("ImageDigest")!=support["image_digest"] or current_parameters.get("SourceRevision")!=support["source_revision"]
+                or services[0].get("serviceName")!=SERVICE or services[0].get("taskDefinition")!=owned_outputs.get("CoreServerPersistenceTaskDefinitionArn")
+                or not isinstance(services[0].get("taskDefinition"),str)):
+            return emit("blocked","persistence-rollback-current-candidate-mismatch")
     outputs,code=prepare.foundation_outputs(); infra,code2=prepare.infrastructure_parameters(outputs) if outputs else (None,code)
     if infra is None:return emit("blocked","persistence-release-transition-alignment-not-proven",code2)
     image_ok,image_code=prepare.candidate_image(receipt)
     if not image_ok:return emit("blocked","persistence-release-transition-alignment-not-proven",image_code)
     digest,revision=receipt["image_digest"],receipt["source_revision"]
-    name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
     expected=prepare.candidate_parameters(outputs,infra,receipt)
     if args.operation=="rollback":
         expected["SupportImageDigest"]=support_digest
@@ -172,9 +185,9 @@ def main():
         actual=CHANGE_SETS.parameter_values(change.get("Parameters"))
         return None if prepare.update_parameters_match(actual,expected,current_parameters) else "persistence-update-live-parameters-mismatch"
     return prepare.apply_update(
-        name=name, parameters=parameters, template_arguments=("--use-previous-template",),
+        name=name, request=request, parameters=parameters, template_arguments=("--use-previous-template",),
         review=lambda _existing,_created:wait_reviewable(prepare,name,status,digest,revision,support_digest),
-        admit=admit, observe=lambda:reconcile(prepare,name,digest,revision,support_digest),
+        admit=admit, observe=lambda reservation:reconcile(prepare,name,digest,revision,support_digest,reservation=reservation),
         failure=lambda verdict,code:emit(verdict,code,facts={"change_set":name} if verdict=="uncertain" else None),
     )
 

@@ -4,7 +4,7 @@ id: deploy.standards.declaration-coverage
 version: 2
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-26"
+updated_on: "2026-11-16"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -53,6 +53,22 @@ scope is complete only when every in-scope requirement has this chain and every
 out-of-scope dependency is named explicitly. A declaration contract must not
 claim coverage for PostgreSQL, queues, workers, identity, ingress, or another
 dependency merely because it names a general platform service.
+
+## PostgreSQL version declarations
+
+For PostgreSQL-backed images, the existing image contract owns a `postgresql`
+mapping with `compatible_major` and an exact `qualification_image`. The shared
+`scripts/04.deploy/shared/postgresql-version.py` validates the mapping. The
+provider template selects the target major; preparation rejects disagreement
+between that selection and application compatibility. Do not copy an observed
+minor into another hardcoded alignment or restore predicate.
+
+Package qualification must observe and check the exact declared test version.
+Target alignment and restore must validate the observed version against the
+declared major and record the actual observation. Major compatibility alone
+does not prove a minor release works: existing SQL, permissions, readiness and
+restoration readback obligations remain. Automatic minor upgrades do not grant
+major-upgrade authority, remove proof requirements or rewrite historical receipts.
 
 ## Boundaries
 
@@ -107,6 +123,14 @@ adapter under `scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters
 It normalizes provider templates without target reads. The neutral checker
 compares every normalized alternative with workload requirements; provider
 permission names and conditional syntax remain in the adapter and binding.
+For the shared AWS ECS adapter, each workload's `provider_reference` selects
+its service or task definition in the supplied template. Optional
+`provider_template` selects a regular, non-symlink sibling file by filename;
+omitting it uses the supplied template. Absolute paths, directory traversal,
+missing files and duplicate workload identities are rejected. This supports
+separate restore templates without a workload-specific adapter or a second
+mapping of workload names in executable code. It proves local configuration
+shape only, never current access, health or authority to deploy that template.
 Dynamic task inputs bind `source`, a `command` ID from the existing acceptance
 route, and a
 `proof` check ID. The producer command must be a declared consumer; its selected
@@ -124,6 +148,49 @@ expensive work. New scopes inherit the same checks through their declarations.
 
 
 ## Discovery and automatic enforcement
+
+### AWS preparation selections
+
+The target profile's existing `provider` mapping owns `account_id`, `region`,
+optional `profile` and `foundation: {stack, template}`. Absence of `profile`
+uses the AWS credential chain; an explicitly empty or malformed profile is
+invalid. It is not a credential or permission grant. Workload
+`proposed_provider_binding` owns `stack`, `publication_pipeline` and
+`dependencies`; other program/image/template settings retain their existing
+owners. Select a pipeline by exact ID and verify its scope and region, never
+choose the first scope match. Package candidates come from the selected image's
+existing runnable-program contract, not a copied list in a controller.
+
+The shared AWS preparation-input adapter resolves these selections offline.
+Dependencies reference `{scope, output}` within the target. Its currently
+supported output projection is an RDS DBInstance `Ref` with a declared literal
+`DBInstanceIdentifier`; unsupported expressions fail rather than being guessed.
+Live preparation still compares the supplying stack output and actual database.
+No static resolution establishes current ownership, access or health.
+Coverage validates bindings using these preparation fields; both migrated
+preparation callers independently require them before provider work. Historical
+routes without these fields are not silently claimed as migrated. Stack,
+template and publication facts remain declarations; reusable preparation code
+must not maintain another target-specific table of the same facts.
+
+Foundation preparation follows the template's ClusterArn (GetAtt Arn),
+LogGroupName (Ref) and ServiceDiscoveryArn (GetAtt Arn) outputs to their
+resources. The ECS cluster/log-group names and the service's referenced
+private-DNS namespace name must be declared literals in this supported
+projection. Unsupported resource types, references or expressions reject;
+this is not a general CloudFormation evaluator. The shared AWS foundation
+checker compares those expectations with live observations and validates
+private subnets and DNS/VPC association. These read checks prove configuration,
+not application connectivity or release acceptance. Endpoint prerequisites
+remain stage-specific: a resource created by the selected operation is not
+automatically a prerequisite that must already exist.
+
+Endpoint policy expectations come from the selected templates, not copied
+repository lists. The bounded projection supports literals, account/region
+substitution, declared string parameters and secret references exposed through
+stack outputs. Output aliases must agree; unsupported expressions reject.
+Matching declarations does not establish safe access: service-specific action,
+resource and selected-workload restrictions remain independently enforced.
 
 Declared consequential effects override filename-based fixture heuristics.
 Public package wrappers and aliases inherit the delivery requirement of each

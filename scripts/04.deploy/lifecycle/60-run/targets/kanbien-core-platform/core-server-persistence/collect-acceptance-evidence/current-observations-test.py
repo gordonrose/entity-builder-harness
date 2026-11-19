@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-current-acceptance-observations
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -92,7 +92,7 @@ def reset():
     collector.task_definition.cache_clear()
 def observe(*parts):
     action = parts[1]
-    if action == 'batch-get-image': return {'images': [{'imageManifest': json.dumps({'manifests': [{'digest': child, 'mediaType': 'application/vnd.oci.image.manifest.v1+json', 'platform': {'architecture': 'amd64', 'os': 'linux'}}]})}]}
+    if action == 'batch-get-image': return {'images': [{'imageId': {'imageDigest': candidate['image_digest']}, 'imageManifest': json.dumps({'mediaType': 'application/vnd.oci.image.index.v1+json', 'manifests': [{'digest': child, 'mediaType': 'application/vnd.oci.image.manifest.v1+json', 'platform': {'architecture': 'amd64', 'os': 'linux'}}]})}]}
     if action == 'describe-services': return {'services': [state['service']]}
     if action == 'list-tasks': return {'taskArns': [arn]}
     if action == 'describe-tasks': return {'tasks': [state['server'] if parts[-1] == arn else state['health']]}

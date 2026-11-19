@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -36,6 +36,11 @@ runtime_base:
     blocked_severities: [CRITICAL, HIGH]
     required_evidence: published-ecr-scan
     exception: explicit-approved-package-exception-only
+# Compatibility is a major-version policy, not a claim that every minor was tested.
+# Qualification records the exact disposable server version checked from this image.
+postgresql:
+  compatible_major: 18
+  qualification_image: postgres:18.3-bookworm
 health:
   liveness_path: /livez
   readiness_path: /readyz

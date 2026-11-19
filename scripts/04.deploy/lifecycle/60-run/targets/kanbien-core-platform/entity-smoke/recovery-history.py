@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -132,32 +132,46 @@ def validate(route, context, args, value):
             and plan.get("controller_sha256") == value["controller_sha256"] and plan.get("proof_stage") == "credential-recovery"
             and (plan.get("workload"), plan.get("operation"), plan.get("phase")) == ("database-proof", "permissions", "operation")
             and plan.get("expected_record_digest") == args.expected_digest and isinstance(prerequisites, dict)
-            and plan.get("prerequisites_sha256") == C.DEPLOY.fingerprint(prerequisites), "history-final-plan-mismatch")
+            and plan.get("prerequisites_sha256") == C.DEPLOY.fingerprint(route.STEPS.prerequisite_custody(C, prerequisites) if context.get("delivery") else prerequisites), "history-final-plan-mismatch")
     require(isinstance(references, dict) and 1 <= len(references) <= MAX_DEPENDENCIES, "history-reference-set-invalid")
     for name, digest in references.items():
         require(isinstance(digest, str) and route.re.fullmatch(r"sha256:[a-f0-9]{64}", digest) and C.digest_file(local(route, context["cache"], name)) == digest, "history-dependency-changed")
     require(value["final_step"] == str(step.relative_to(context["cache"])) and value["final_step"] in references, "history-final-step-not-bound")
     packets = prerequisites.get("packets")
-    require(isinstance(packets, dict) and {"initial-stop", "initial-restart", "initial-recovery-original-read", "initial-recovery-applied-history", "credential-permission-state", "credential-revoke", "credential-unready", "credential-restore", "credential-replacement", "credential-read"} <= set(packets), "history-prerequisite-set-incomplete")
-    required = {"initial-restart-receipt.json", "initial-restart-plan.json", "credential-replacement-receipt.json", "credential-replacement-plan.json", "failure-attempts/root.json", "failure-receipts/stopped.json", "receipts/create.json"}
-    for phase in ("start-runtime", "credential-replacement"):
+    delivery = context.get("delivery")
+    baseline = {"deployment", "predecessor", "recovery-baseline-read", "recovery-applied-history", "recovery-runtime"} if delivery else {"initial-stop", "initial-restart", "initial-recovery-original-read", "initial-recovery-applied-history"}
+    require(isinstance(packets, dict) and baseline | {"credential-permission-state", "credential-revoke", "credential-unready", "credential-restore", "credential-replacement", "credential-read"} <= set(packets), "history-prerequisite-set-incomplete")
+    required = {"credential-replacement-receipt.json", "credential-replacement-plan.json"}
+    if delivery:
+        require(plan.get("delivery") == delivery, "history-source-or-binding-mismatch")
+        C.validate_deployment_receipt(packets["deployment"], context["binding"], delivery)
+        require(C.read_json(context["cache"] / "receipts/update.json") == packets["deployment"], "history-source-or-binding-mismatch")
+        required.add("receipts/update.json")
+        prior_steps = (("verifier", "read", "baseline"), ("administration", "observe-migration-state", "initial-recovery"))
+    else:
+        required.update({"initial-restart-receipt.json", "initial-restart-plan.json", "failure-attempts/root.json", "failure-receipts/stopped.json", "receipts/create.json"})
+        prior_steps = (("verifier", "read", "server-replacement"), ("verifier", "read", "initial-recovery"), ("administration", "observe-migration-state", "initial-recovery"))
+    for phase in (("credential-replacement",) if delivery else ("start-runtime", "credential-replacement")):
         required.add("attempts/" + args.proof_label + "-" + phase + ".json")
-    for workload, operation, stage in (("verifier", "read", "server-replacement"), ("verifier", "read", "initial-recovery"), ("administration", "observe-migration-state", "initial-recovery"),
+    for workload, operation, stage in (*prior_steps,
                                       *((workload, operation, "credential-recovery") for _, workload, operation in route.CREDENTIAL.STEPS)):
         for phase in (("operation",) if operation == "unready" else ("preflight", "operation")):
             prior = SimpleNamespace(**{**vars(selected), "workload": workload, "operation": operation, "proof_stage": stage, "phase": phase})
             prior_step = route.STEPS.path(context, prior)
             required.update(str(path.relative_to(context["cache"])) for path in (prior_step, route.COMPLETION.path(prior_step)))
             packet = C.read_json(local(route, context["cache"], str(prior_step.relative_to(context["cache"]))))
-            require(isinstance(packet, dict) and set(packet) == {"schema", "plan_sha256", "binding", "reservation", "receipt"}
-                    and packet["schema"] == "deploy/entity-smoke-task-step/v1" and packet["binding"] == context["binding"], "history-step-packet-invalid")
+            if delivery:
+                route.STEPS.validate_delivery_step(route, packet, context["binding"], delivery, prior)
+            else:
+                require(isinstance(packet, dict) and set(packet) == {"schema", "plan_sha256", "binding", "reservation", "receipt"}
+                        and packet["schema"] == "deploy/entity-smoke-task-step/v1" and packet["binding"] == context["binding"], "history-step-packet-invalid")
             reservation = packet["reservation"]
             receipt = route.RUNNER.EVIDENCE.validate_retained(packet["receipt"], reservation)
             store = route.RUNNER.CONTROL.AttemptStore(context["cache"] / "task-attempts")
-            require(store.read(route.STEPS.key(prior), reservation["request"]) == reservation
+            require(store.read(route.STEPS.key(prior, delivery), reservation["request"]) == reservation
                     and route.RUNNER.read_receipt(route.RUNNER.receipt_path(context["cache"] / "task-receipts", reservation["request"], reservation), reservation) == receipt, "history-step-custody-mismatch")
             route.COMPLETION.read(route, context, prior, prior_step)
-            required.update(str(path.relative_to(context["cache"])) for path in (store.path_for(route.STEPS.key(prior), reservation["request"]), route.RUNNER.receipt_path(context["cache"] / "task-receipts", reservation["request"], reservation)))
+            required.update(str(path.relative_to(context["cache"])) for path in (store.path_for(route.STEPS.key(prior, delivery), reservation["request"]), route.RUNNER.receipt_path(context["cache"] / "task-receipts", reservation["request"], reservation)))
             if phase == "operation":
                 path = route.RUNNER.UNREADY.path_for(context["cache"] / "task-receipts", reservation) if operation == "unready" else route.RUNNER.PREFLIGHT.admission_path(context["cache"] / "task-receipts", reservation)
                 required.add(str(path.relative_to(context["cache"])))

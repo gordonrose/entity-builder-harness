@@ -4,7 +4,7 @@ id: deploy.guide.entity-smoke.image-qualification
 version: 1
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-09"
+updated_on: "2026-11-16"
 layer: 04.deploy
 domain: deployment.entity-smoke
 disciplines: [security, sre]
@@ -17,8 +17,13 @@ used_by:
 -->
 # Entity-smoke image qualification
 
-This command tests the packaged feature against disposable TLS PostgreSQL 18.3,
-matching the existing AWS dependency observed on 2026-11-08.
+This command tests the packaged feature against the exact disposable PostgreSQL
+image selected in its [image contract](../../../../../infra/04.deploy/03.product/image/entity-smoke/image-contract.yml).
+That contract separately declares the compatible major. The shared
+[version validator](../../../shared/postgresql-version.py) checks both settings;
+the qualifier checks the running server and records its exact version. A compatible
+AWS minor update does not mean it was tested by this package run: live SQL,
+permissions and readiness proofs remain required.
 It does not publish an image, deploy AWS resources or accept a release. A source
 checkpoint and complete scope/delivery declarations are prerequisites; source
 availability alone does not mean those prerequisites have passed.
@@ -39,8 +44,9 @@ bash scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script
 | `qualification-control-test.mjs` | Test reservation and cleanup control with a simulated Docker interface. This is not container proof. |
 
 The actual image check creates an internal network, certificate volume, two
-named data volumes, disposable databases and feature containers. Its restricted
-administrator has database-local grant authority, not superuser or CREATEDB.
+named data volumes, disposable databases and feature containers. Its fixture
+administrator is a superuser approximation of RDS administration; migration and
+runtime identities remain restricted. This does not prove RDS managed-role authority.
 Proof covers matching server version, checksum-preserving already-applied
 migration, rejection of a changed checksum on the disposable restored fixture,
 attribute mapping, lifecycle timing, effective denied SQL, original

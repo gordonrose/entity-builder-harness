@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.composition.wrapper
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -19,6 +19,18 @@ set -euo pipefail
 #     path: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+if [ "$#" -eq 0 ]; then
+  exec bash scripts/repo/check-selection/script.sh --aggregate-members entity-smoke-composition --execute-local --json
+fi
+if [ "$#" -ne 2 ] || [ "$1" != "--unit" ]; then
+  echo "Usage: smoke-test.sh [--unit infrastructure|suite]" >&2
+  exit 2
+fi
+case "$2" in
+  infrastructure) exec python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py ;;
+  suite) ;;
+  *) echo "Usage: smoke-test.sh [--unit infrastructure|suite]" >&2; exit 2 ;;
+esac
 entity_smoke_build="$(mktemp -d /tmp/kanbien-entity-smoke-build.XXXXXXXX)"
 [[ "$entity_smoke_build" == /tmp/kanbien-entity-smoke-build.* && -d "$entity_smoke_build" && ! -L "$entity_smoke_build" ]]
 trap 'rm -rf -- "$entity_smoke_build"' EXIT
@@ -58,7 +70,6 @@ wait "$entity_smoke_credential_fixture_pid" || entity_smoke_fixture_status=$?
 [[ "$entity_smoke_fixture_status" -eq 0 ]]
 python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/resource-control-test.py
 python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/deployment-control-test.py
-python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py
 python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-control-test.py
 python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.py
 python3 -B scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route-test.py

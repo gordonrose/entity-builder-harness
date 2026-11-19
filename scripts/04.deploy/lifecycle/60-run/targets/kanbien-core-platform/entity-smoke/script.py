@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.infrastructure.implementation
-#   version: 3
+#   version: 7
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -26,6 +26,7 @@ from pathlib import Path
 import re
 import subprocess
 import time
+from types import SimpleNamespace
 import uuid
 import yaml
 from types import SimpleNamespace
@@ -49,6 +50,7 @@ CONTRACT = ROOT / ALIGN.TARGET / "20-scopes/entity-smoke/00-declaration/infrastr
 TRANSITION = module("entity_smoke_source_transition", DIRECTORY / "source-transition.py")
 CONTROL_COMPLETION = module("entity_smoke_control_completion", DIRECTORY / "control-completion.py")
 SUCCESSION = module("entity_smoke_infrastructure_succession", ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
+CHECK_RESULTS = module("entity_smoke_check_results", ROOT / "scripts/repo/check-selection/execution_policy.py")
 READS = ALIGN.READS | {("cloudformation", operation) for operation in ("describe-change-set", "get-template", "list-stack-resources", "describe-stack-events", "validate-template")} | {
     ("iam", "get-role"), ("iam", "simulate-principal-policy"), ("ecs", "describe-services"), ("ecs", "describe-tasks"),
     ("ecs", "list-tasks"), ("logs", "get-log-events"),
@@ -123,12 +125,13 @@ class Provider:
         return self._invoke(service, operation, parameters)
 
     def _invoke(self, service, operation, parameters):
+        ALIGN.preparation_ready()
         global_services = {"iam": "iam.amazonaws.com", "route53": "route53.amazonaws.com", "budgets": "budgets.amazonaws.com"}
         hostname = global_services.get(service, ("api.ecr" if service == "ecr" else service) + "." + ALIGN.REGION + ".amazonaws.com")
         signing_region = "us-east-1" if service in global_services else ALIGN.REGION
         def failure(code):
             return InfrastructureFailure(code, provider_operation=(service, operation))
-        arguments = ["aws", service, operation, "--profile", ALIGN.PROFILE, "--region", signing_region,
+        arguments = ["aws", service, operation, *(["--profile", ALIGN.PROFILE] if ALIGN.PROFILE else []), "--region", signing_region,
                      "--endpoint-url", "https://" + hostname, "--output", "json", "--no-paginate", "--no-cli-pager",
                      "--cli-connect-timeout", "10", "--cli-read-timeout", "20", "--cli-input-json", json.dumps(parameters)]
         attempts = 3 if (service, operation) in READS else 1
@@ -169,12 +172,12 @@ def local_checks():
     # The runner reuses current input-bound receipts itself. Cold composition has
     # taken 467s; retain a finite host-only bound that also admits its second check.
     # This does not change provider timeouts or ECS task deadlines.
-    arguments = ["python3", "-B", "scripts/repo/check-selection/script.py", "--checks", "entity-smoke-composition", "secret-dependency-declaration-regression", "--execute-local", "--json"]
+    requested = ["entity-smoke-composition", "secret-dependency-declaration-regression"]
+    arguments = ["python3", "-B", "scripts/repo/check-selection/script.py", "--checks", *requested, "--execute-local", "--json"]
     try:
         result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=900)
         value = json.loads(result.stdout)
     except (OSError, ValueError, TypeError, UnicodeError, subprocess.SubprocessError): raise InfrastructureFailure("infrastructure-local-proof-unavailable") from None
-    checks = value.get("checks") if isinstance(value, dict) else None
     reference = value.get("run_report_path") if isinstance(value, dict) else None
     retained = isinstance(reference, str) and re.fullmatch(r"\.cache/test-runs/[0-9]{8}T[0-9]{6}Z-[a-f0-9]{32}/report\.json", reference) is not None
     if retained:
@@ -182,24 +185,31 @@ def local_checks():
         retained = (ROOT / reference).is_file()
     if result.returncode != 0:
         raise InfrastructureFailure("infrastructure-local-proof-not-passed", reference if retained else None)
-    require(result.returncode == 0 and isinstance(value, dict) and value.get("findings") == [] and isinstance(checks, list)
-            and {item.get("check_id") for item in checks if isinstance(item, dict)} == {"entity-smoke-composition", "secret-dependency-declaration-regression"}
-            and all(isinstance(item, dict) and item.get("status") == "passed" for item in checks), "infrastructure-local-proof-not-passed")
+    if not CHECK_RESULTS.passed_local_selection(value, requested):
+        raise InfrastructureFailure("infrastructure-local-proof-not-passed", reference if retained else None)
 
 
 def source_digest():
-    paths = sorted([*DIRECTORY.glob("*.py"), *DIRECTORY.glob("*.sh"), CONTRACT, DEPLOY.SOURCE,
+    ALIGN.preparation_ready()
+    controller_files = [path for path in DIRECTORY.iterdir()
+                        if path.suffix in {".py", ".sh"} and not path.name.endswith(("-test.py", "-test.sh"))]
+    paths = sorted([*controller_files, CONTRACT, DEPLOY.SOURCE, Path(CHECK_RESULTS.__file__),
                     CONTRACT.parent / "acceptance-record-schema.yml", CONTRACT.parent / "acceptance-route-contract.yml",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py",
+                    ROOT / "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py",
+                    ROOT / "scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/tasks.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py",
                     ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+                    ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py",
                     ROOT / "scripts/04.deploy/operational-realization-gate/script.py",
                     Path(ALIGN.__file__)])
+    paths.extend([Path(ALIGN.INPUT_OWNER.__file__), Path(ALIGN.INPUT_OWNER.PATHS.__file__),
+                  *(ROOT / reference for reference in ALIGN.INPUTS["references"])])
     return DEPLOY.fingerprint({str(path.relative_to(ROOT)): digest_file(path) for path in paths})
 
 
@@ -215,19 +225,21 @@ def filesystem_preflight(cache):
     finally: os.close(descriptor)
 
 
-def operator_preflight(provider):
+def operator_preflight(provider, *, mutation=True):
     caller = provider("sts", "get-caller-identity")
     arn = caller.get("Arn") if isinstance(caller, dict) else None
     require(caller.get("Account") == ALIGN.ACCOUNT and isinstance(arn, str) and re.fullmatch(r"arn:aws:sts::" + ALIGN.ACCOUNT + r":assumed-role/[A-Za-z0-9+=,.@_-]+/[A-Za-z0-9+=,.@_-]+", arn) is not None, "infrastructure-operator-identity-not-confirmed")
     name = arn.split("/")[1]
     role = provider("iam", "get-role", RoleName=name).get("Role")
     require(isinstance(role, dict) and role.get("RoleName") == name and isinstance(role.get("Arn"), str) and role["Arn"].startswith("arn:aws:iam::" + ALIGN.ACCOUNT + ":role/") and role["Arn"].endswith("/" + name), "infrastructure-operator-role-not-confirmed")
+    identity = DEPLOY.fingerprint({"account": caller["Account"], "role": role["Arn"]})
+    if not mutation: return identity
     actions = {"cloudformation:CreateChangeSet", "cloudformation:ExecuteChangeSet"}
     result = provider("iam", "simulate-principal-policy", PolicySourceArn=role["Arn"], ActionNames=sorted(actions), ResourceArns=["arn:aws:cloudformation:" + ALIGN.REGION + ":" + ALIGN.ACCOUNT + ":stack/" + DEPLOY.STACK + "/*"])
     evaluations = result.get("EvaluationResults") if isinstance(result, dict) else None
     require(isinstance(evaluations, list) and len(evaluations) == len(actions) and result.get("IsTruncated", False) is False and {item.get("EvalActionName") for item in evaluations if isinstance(item, dict)} == actions and all(isinstance(item, dict) and item.get("EvalDecision") == "allowed" and not item.get("MissingContextValues") for item in evaluations), "infrastructure-operator-policy-preflight-not-confirmed")
     # Policy simulation is a preflight, never a claim that execution succeeded.
-    return DEPLOY.fingerprint({"account": caller["Account"], "role": role["Arn"]})
+    return identity
 
 
 class GateBook:
@@ -379,9 +391,12 @@ def validate_deployment_receipt(packet, binding, delivery, *, rollback=False):
             and all(plan[key] is False for key in ("database_data_or_schema_changes", "source_database_replacement", "automatic_rollback")), "infrastructure-delivery-plan-mismatch")
     compatibility = plan["rollback_compatibility"]
     require(isinstance(compatibility, dict) and set(compatibility) == {"compatibility_id", "compatibility_sha256", "receipt_reference"}
-                and isinstance(compatibility["compatibility_id"], str) and re.fullmatch(r"rollback-compatibility-[a-f0-9]{24}", compatibility["compatibility_id"]) is not None
+                and isinstance(compatibility["compatibility_id"], str) and re.fullmatch(r"(?:rollback-compatibility|accepted-proof)-[a-f0-9]{24}", compatibility["compatibility_id"]) is not None
                 and isinstance(compatibility["compatibility_sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", compatibility["compatibility_sha256"]) is not None
                 and isinstance(compatibility["receipt_reference"], str) and re.fullmatch(r"github-actions-run:[0-9]+", compatibility["receipt_reference"]) is not None, "infrastructure-delivery-compatibility-invalid")
+    require(not compatibility["compatibility_id"].startswith("accepted-proof-")
+        or compatibility["compatibility_id"] == "accepted-proof-" + delivery["predecessor"]["release_id"].removeprefix("release-"),
+        "infrastructure-delivery-compatibility-invalid")
     facts = result.get("facts")
     require(set(result) == {"status", "reservation", "facts"} and isinstance(facts, dict)
             and set(facts) == {"stack_arn", "desired_count", "resources", "resources_sha256", "completed_at"}
@@ -420,6 +435,8 @@ def rollback_selection(args, delivery, binding):
     path, identifier = getattr(args, "rollback_receipt", None), getattr(args, "rollback_compatibility_id", None)
     require(delivery is not None and path is not None and isinstance(identifier, str), "infrastructure-rollback-compatibility-required")
     receipt = ALIGN.read_receipt(path.absolute())
+    if identifier.startswith("accepted-proof-"):
+        return accepted_rollback_selection(identifier, receipt, delivery, binding)
     root = CONTRACT.parent.parent / "30-release-evidence"
     try: record, checked = SUCCESSION.compatibility_record(root, identifier)
     except SUCCESSION.SuccessionFailure as failure:
@@ -435,6 +452,36 @@ def rollback_selection(args, delivery, binding):
         require(identity[name] == {"path": str(path.relative_to(ROOT)), "sha256": binding[field]}, "infrastructure-rollback-contract-mismatch")
     return {**binding, **{key: predecessor[key] for key in ("source_revision", "image_digest")}}, {
         "compatibility_id": identifier, "compatibility_sha256": checked["sha256"], "receipt_reference": receipt["receipt_reference"]}
+
+
+def accepted_rollback_selection(identifier, receipt, delivery, binding):
+    """Reuse validated accepted proof, not a manufactured compatibility record."""
+    owner = module("entity_smoke_rollback_state", DIRECTORY / "acceptance-state.py")
+    try:
+        accepted = owner.State().current()
+        predecessor = delivery["predecessor"]
+        require(accepted["reference"]["release_id"] == predecessor["release_id"]
+            and identifier == "accepted-proof-" + predecessor["release_id"].removeprefix("release-")
+            and all(accepted["identity"][key] == predecessor[key] for key in ("source_revision", "image_digest", "proof_set_sha256"))
+            and all(receipt[key] == accepted["packet"]["package"][key]
+                    for key in ("source_revision", "image_digest", "receipt_reference", "program_id", "package_contract_id")),
+            "infrastructure-rollback-predecessor-mismatch")
+        schema = yaml.safe_load((CONTRACT.parent / "acceptance-record-schema.yml").read_text())
+        policy = schema.get("accepted_rollback_reuse")
+        require(isinstance(policy, dict) and set(policy) == {"selection", "configuration_exclusion", "execution", "schema_input_paths"}
+            and policy["selection"] == "exact-accepted-proof"
+            and policy["configuration_exclusion"] == "top-level-change_impact-only"
+            and policy["execution"] == "image-only-no-schema-or-permission-model-change", "infrastructure-rollback-reuse-policy-invalid")
+        applicability = owner.A.POLICY.rollback_applicability(accepted["packet"]["binding"], binding,
+            ALIGN.SCOPE, str(DEPLOY.SOURCE.relative_to(ROOT)), policy["schema_input_paths"], root=ROOT)
+        evidence = {"accepted_candidate_sha256": accepted["sha256"],
+            "accepted_proof_set_sha256": predecessor["proof_set_sha256"], "applicability": applicability}
+    except Exception as failure:
+        details = owner.K.failure_details(failure)
+        if isinstance(failure, InfrastructureFailure): raise
+        raise InfrastructureFailure(details["condition"]) from None
+    return {**binding, **{key: predecessor[key] for key in ("source_revision", "image_digest")}}, {
+        "compatibility_id": identifier, "compatibility_sha256": DEPLOY.fingerprint(evidence), "receipt_reference": receipt["receipt_reference"]}
 
 
 def successor_admission(delivery, binding):
@@ -528,13 +575,155 @@ def read_execution_reservation(store, binding, parameters, activate, *, delivery
     if not path.exists(): return None
     value = read_json(path)
     require(isinstance(value, dict) and isinstance(value.get("request"), dict), "infrastructure-execution-reservation-invalid")
-    original = store.read(phase, value["request"])
-    require(original is not None and all(original["request"].get(key) == item for key, item in DEPLOY.request(binding, parameters, activate, delivery=delivery, previous_parameters=previous_parameters, rollback=rollback).items()), "infrastructure-execution-reservation-mismatch")
+    intent = DEPLOY.request(binding, parameters, activate, delivery=delivery, previous_parameters=previous_parameters, rollback=rollback)
+    original = DEPLOY.CHANGE_SETS.retained_execution(store,
+        preparation_phase="deploy-" + DEPLOY.selection(activate, delivery, rollback) + "-change-set", preparation_request=intent,
+        execution_phase=phase, execution_request=value["request"],
+        missing_preparation=lambda: InfrastructureFailure("infrastructure-reviewed-attempt-required"))
+    require(original is not None and all(original["request"].get(key) == item for key, item in intent.items()), "infrastructure-execution-reservation-mismatch")
     return original
 
 
+def infrastructure_plan(args, receipt, binding, parameters, operator, artifact, book, *, delivery=None, previous_parameters=None, compatibility=None):
+    activate = args.phase != "create"
+    plan = {"schema": "deploy/entity-smoke-infrastructure-plan/v1", "target": RESOURCE.CLUSTER, "scope": "entity-smoke", "account": ALIGN.ACCOUNT, "region": ALIGN.REGION,
+            "phase": args.phase, "binding": binding, "operator_sha256": operator, "controller_sha256": artifact, "graph_sha256": DEPLOY.fingerprint(book.contract) if delivery else digest_file(CONTRACT),
+            "parameters_sha256": DEPLOY.fingerprint(parameters), "template_sha256": digest_file(DEPLOY.SOURCE),
+            "package_custody_reference": receipt["receipt_reference"], "resource_additions": 0 if activate else 30, "resource_modifications": 1 if activate else 0,
+            "server_desired_count": 1 if activate else 0, "database_data_or_schema_changes": False, "source_database_replacement": False,
+            "baseline_database_ingress_additions": 0 if activate else 4, "baseline_endpoint_ingress_additions": 0 if activate else 5, "automatic_rollback": False}
+    if delivery:
+        plan.update(schema="deploy/entity-smoke-infrastructure-plan/v2", delivery=delivery, previous_parameters_sha256=DEPLOY.fingerprint(previous_parameters),
+                    resource_modifications=1, resource_replacements=5, rollback_compatibility=compatibility)
+    return plan
+
+
+def retain_deployment(args, cache, binding, result, plan_digest, plan=None):
+    path = cache / "receipts" / (args.phase + ".json")
+    retained = {"schema": "deploy/entity-smoke-infrastructure-receipt/v1", "binding": binding, "result": result}
+    if plan is not None:
+        retained.update(schema="deploy/entity-smoke-infrastructure-receipt/v2", delivery=plan["delivery"], plan_sha256=plan_digest, plan=plan)
+        validate_deployment_receipt(retained, binding, plan["delivery"], rollback=args.phase == "rollback")
+    if not RESOURCE.write_exclusive(path, retained): require(read_json(path) == retained, "infrastructure-receipt-conflict")
+    return {"verdict": "completed", "phase": args.phase, "plan_sha256": plan_digest, "receipt": str(path.relative_to(ROOT)), "effect": "owned-infrastructure-observed"}
+
+
+def resume_execution(args, provider, receipt):
+    """Observe admitted intent before new-submission checks; never enable writes."""
+    if args.mode != "execute": return None
+    base = delivery_cache(args.proof_label)
+    phase = "deploy-execute-" + args.phase
+    name = args.proof_label + "-" + phase + ".json"
+    successor = args.phase in {"update", "rollback"}
+    paths = sorted(base.glob("releases/*/attempts/" + name)) if successor else [base / "attempts" / name]
+    matches = []
+    for path in paths:
+        RESOURCE.CONTROL.no_symlinks(path)
+        if not path.exists(): continue
+        value = read_json(path)
+        require(isinstance(value, dict) and isinstance(value.get("request"), dict), "infrastructure-execution-reservation-invalid")
+        store = RESOURCE.ResourceStore(path.parent)
+        original = store.read(phase, value["request"])
+        require(original is not None and store.path_for(phase, original["request"]) == path, "infrastructure-execution-reservation-mismatch")
+        request = original["request"]
+        delivery = request.get("delivery")
+        if successor and (delivery["expected_predecessor"] != getattr(args, "expected_predecessor", None)
+                          or delivery["candidate"] != {key: receipt[key] for key in ("source_revision", "image_digest", "receipt_reference")}):
+            continue
+        binding = request["binding"]
+        expected = binding_for(receipt, binding)
+        if args.phase == "rollback":
+            expected.update({key: delivery["predecessor"][key] for key in ("source_revision", "image_digest")})
+        require(binding == {**expected, "proof_label": args.proof_label}
+                and path.parent.parent == delivery_cache(args.proof_label, delivery), "infrastructure-execution-reservation-mismatch")
+        matches.append((store, original))
+    require(len(matches) <= 1, "infrastructure-execution-reservation-mismatch")
+    if not matches: return None
+    store, original = matches[0]
+    provider.effect = "original-operation-reconcile-only"
+    request, cache = original["request"], store.root.parent
+    binding, delivery = request["binding"], request.get("delivery")
+    artifact = source_digest()
+    book = GateBook(artifact, cache / "realization", delivery=delivery)
+    # Reuse the original admission, not a new timestamp or a claim that current
+    # source checks ran. A reviewed controller repair still takes the checked
+    # admission path below when its source/approved plan differs.
+    admissions, repair = [], False
+    paths = sorted(book.cache.glob("execution-preflight-*.json"))
+    require(paths, "infrastructure-original-admission-required")
+    for path in paths:
+        value = read_json(path)
+        require(isinstance(value, dict) and isinstance(value.get("facts"), dict), "infrastructure-execution-reservation-invalid")
+        artifacts = value["facts"].get("artifact_bindings")
+        require(isinstance(artifacts, list) and len(artifacts) == 1 and isinstance(artifacts[0], dict), "infrastructure-execution-reservation-invalid")
+        gates = value["facts"].get("gate_evidence")
+        require(isinstance(gates, list) and len(gates) == 6 and isinstance(gates[-1], dict), "infrastructure-execution-reservation-invalid")
+        admitted = RESOURCE.timestamp(gates[-1].get("timestamp"))
+        if admitted > RESOURCE.timestamp(original["reserved_at"]): continue
+        repair = repair or artifacts[0].get("immutable_reference") != artifact
+        if value.get("plan_sha256") == args.approved_plan and artifacts[0].get("immutable_reference") == artifact:
+            admissions.append(value)
+    if not admissions:
+        # Only a changed controller may seek fresh repair admission. Missing
+        # original evidence or a wrong approved plan is not a new submission.
+        require(repair, "infrastructure-approved-plan-mismatch")
+        return None
+    completion = module("entity_smoke_infrastructure_gate_custody", DIRECTORY / "task-completion.py")
+    reader = SimpleNamespace(C=SimpleNamespace(GATE=GATE), STEPS=SimpleNamespace(require=require))
+    evidence = completion.validate_gate(reader, book.contract, admissions[-1], args.approved_plan,
+                                        {"infrastructure-controller-source": artifact}, through="execution-preflight")
+    require(RESOURCE.timestamp(evidence["facts"]["gate_evidence"][-1]["timestamp"]) <= RESOURCE.timestamp(original["reserved_at"]), "infrastructure-execution-reservation-mismatch")
+    operator = operator_preflight(provider, mutation=False)
+    state = RESOURCE.only(provider("cloudformation", "describe-stacks", StackName=request["stack_arn"]), "Stacks")
+    if state.get("StackStatus") == "REVIEW_IN_PROGRESS":
+        state = provider("cloudformation", "describe-change-set", StackName=request["stack_arn"], ChangeSetName=request["change_set_arn"])
+    parameters = DEPLOY.CHANGE_SETS.parameter_values(state.get("Parameters"))
+    require(parameters is not None, "infrastructure-execution-reservation-mismatch")
+    activate, rollback = args.phase != "create", args.phase == "rollback"
+    parameters.update(ImageDigest=binding["image_digest"], SourceRevision=binding["source_revision"], ServerDesiredCount="1" if activate else "0")
+    options = {"delivery": delivery, "previous_parameters": previous_delivery_parameters(parameters, delivery, rollback=rollback), "rollback": rollback} if delivery else {}
+    require(read_execution_reservation(store, binding, parameters, activate, **options) == original, "infrastructure-execution-reservation-mismatch")
+    plan = read_json(cache / "plans" / (args.phase + ".json")) if successor else None
+    require(not successor or isinstance(plan, dict), "infrastructure-delivery-plan-mismatch")
+    expected_plan = infrastructure_plan(args, receipt, binding, parameters, operator, artifact, book, delivery=delivery,
+                                        previous_parameters=options.get("previous_parameters"), compatibility=plan.get("rollback_compatibility") if plan else None)
+    require(DEPLOY.fingerprint(expected_plan) == args.approved_plan and (not successor or plan == expected_plan), "infrastructure-approved-plan-mismatch")
+    summary = evidence["change_summary"]
+    require(isinstance(summary, dict) and summary == {
+        "schema": GATE.CHANGE_SCHEMA, "contract_id": book.identity, "check_id": book.contract["gates"][4]["evidence"][0],
+        "timestamp": summary.get("timestamp"), "input_sha256": GATE.evidence_bindings(book.contract, evidence["facts"])["gates"]["change-set"],
+        "operation_counts": {"create": expected_plan["resource_additions"], "update": expected_plan["resource_modifications"],
+                             "replace": expected_plan.get("resource_replacements", 0), "delete": 0, "broaden-permission": 0}},
+        "infrastructure-original-admission-required")
+    require(RESOURCE.timestamp(summary["timestamp"]) <= RESOURCE.timestamp(original["reserved_at"]), "infrastructure-original-admission-required")
+    deadline = time.monotonic() + args.wait_seconds
+    while True:
+        result = DEPLOY.observe(provider, store, binding, parameters, request["change_set_arn"], request["stack_arn"], activate=activate, **options)
+        if result["status"] == "completed": break
+        if time.monotonic() >= deadline:
+            return {"verdict": "pending", "phase": args.phase, "plan_sha256": args.approved_plan, "effect": "original-operation-not-terminal"}
+        time.sleep(2)
+    book.facts, book.gates = evidence["facts"], list(GATE.GATE_ORDER[:6])
+    book.gate("controlled-execution")
+    completed = {**evidence, "facts": book.facts}
+    completion.validate_gate(reader, book.contract, completed, args.approved_plan, {"infrastructure-controller-source": artifact})
+    require(RESOURCE.write_exclusive(book.cache / ("controlled-execution-" + uuid.uuid4().hex + ".json"), completed), "infrastructure-gate-evidence-retention-failed")
+    return retain_deployment(args, cache, binding, result, args.approved_plan, plan)
+
+
 def run(args, provider):
+    if args.mode == "apply":
+        # Preserve the existing owner paths and original admission on resume.
+        # A newly reviewed change is never inferred from execute-only failure.
+        execution = argparse.Namespace(**{**vars(args), "mode": "execute"})
+        resumed = resume_execution(execution, provider, ALIGN.read_receipt(args.receipt.absolute()))
+        if resumed is not None: return resumed
+        reviewed = run(argparse.Namespace(**{**vars(args), "mode": "review"}), provider)
+        if reviewed["verdict"] != "reviewed": return reviewed
+        return run(execution, provider)
     receipt = ALIGN.read_receipt(args.receipt.absolute())
+    resumed = resume_execution(args, provider, receipt)
+    if resumed is not None: return resumed
     ALIGN.source_preflight(receipt)
     local_checks()
     artifact = source_digest()
@@ -590,15 +779,8 @@ def run(args, provider):
             require(original_review is not None, "infrastructure-existing-stack-not-owned-by-attempt")
             DEPLOY.initial_stack(provider, state, binding, parameters, original_review, executed=existing_execution is not None)
     book.component("resource-control-state")
-    plan = {"schema": "deploy/entity-smoke-infrastructure-plan/v1", "target": RESOURCE.CLUSTER, "scope": "entity-smoke", "account": ALIGN.ACCOUNT, "region": ALIGN.REGION,
-            "phase": args.phase, "binding": binding, "operator_sha256": operator, "controller_sha256": artifact, "graph_sha256": DEPLOY.fingerprint(book.contract) if successor else digest_file(CONTRACT),
-            "parameters_sha256": DEPLOY.fingerprint(parameters), "template_sha256": digest_file(DEPLOY.SOURCE),
-            "package_custody_reference": receipt["receipt_reference"], "resource_additions": 0 if activate else 30, "resource_modifications": 1 if activate else 0,
-            "server_desired_count": 1 if activate else 0, "database_data_or_schema_changes": False, "source_database_replacement": False,
-            "baseline_database_ingress_additions": 0 if activate else 4, "baseline_endpoint_ingress_additions": 0 if activate else 5, "automatic_rollback": False}
-    if successor:
-        plan.update(schema="deploy/entity-smoke-infrastructure-plan/v2", delivery=delivery, previous_parameters_sha256=DEPLOY.fingerprint(previous_parameters),
-                    resource_modifications=1, resource_replacements=5, rollback_compatibility=compatibility)
+    plan = infrastructure_plan(args, receipt, binding, parameters, operator, artifact, book,
+                               delivery=delivery, previous_parameters=previous_parameters, compatibility=compatibility)
     plan_digest = DEPLOY.fingerprint(plan)
     book.bind_plan(plan_digest); book.component("infrastructure-inputs")
     book.gate("live-read"); book.validate("live-read")
@@ -628,6 +810,9 @@ def run(args, provider):
             require(reserved is not None and supplied["ClientRequestToken"] == reserved["operation_id"], "infrastructure-submission-does-not-match-plan")
     if args.mode == "review": provider.enable(("cloudformation", "create-change-set"), prewrite)
     if existing_execution is not None:
+        # Same-controller continuation returned above. This branch is retained
+        # for the separately checked controller repair (or a concurrent original
+        # reservation discovered after admission), never ordinary polling.
         review_reservation = store.read(phase, intent)
         require(review_reservation is not None, "infrastructure-reviewed-attempt-required")
         original = existing_execution["request"]
@@ -662,19 +847,13 @@ def run(args, provider):
         result = DEPLOY.observe(provider, store, binding, parameters, facts["change_set_arn"], facts["stack_arn"], activate=activate, **options)
     if result["status"] != "completed": return {"verdict": "pending", "phase": args.phase, "plan_sha256": plan_digest, "effect": "original-operation-not-terminal"}
     book.gate("controlled-execution"); book.validate("controlled-execution", facts["resource_count"], activate, **counts)
-    path = cache / "receipts" / (args.phase + ".json")
-    retained = {"schema": "deploy/entity-smoke-infrastructure-receipt/v1", "binding": binding, "result": result}
-    if successor:
-        retained.update(schema="deploy/entity-smoke-infrastructure-receipt/v2", delivery=delivery, plan_sha256=plan_digest, plan=plan)
-        validate_deployment_receipt(retained, binding, delivery, rollback=rollback)
-    if not RESOURCE.write_exclusive(path, retained): require(read_json(path) == retained, "infrastructure-receipt-conflict")
-    return {"verdict": "completed", "phase": args.phase, "plan_sha256": plan_digest, "receipt": str(path.relative_to(ROOT)), "effect": "owned-infrastructure-observed"}
+    return retain_deployment(args, cache, binding, result, plan_digest, plan if successor else None)
 
 
 def parse(arguments=None):
     parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     parser.error = lambda _message: (_ for _ in ()).throw(InfrastructureFailure("infrastructure-arguments-invalid"))
-    parser.add_argument("--mode", choices=("plan", "review", "execute"), required=True)
+    parser.add_argument("--mode", choices=("plan", "review", "execute", "apply"), required=True)
     parser.add_argument("--phase", choices=("create", "activate", "update", "rollback"), required=True)
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--proof-label", required=True)
@@ -687,6 +866,7 @@ def parse(arguments=None):
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args = parser.parse_args(arguments)
+    require(args.mode != "apply" or args.phase in {"update", "rollback"}, "infrastructure-arguments-invalid")
     require(re.fullmatch(r"entity-smoke-[a-f0-9]{24}", args.proof_label) is not None and 0 <= args.wait_seconds <= 60, "infrastructure-arguments-invalid")
     require(args.mode == "plan" or isinstance(args.approved_plan, str) and re.fullmatch(r"sha256:[a-f0-9]{64}", args.approved_plan) is not None, "infrastructure-approved-plan-required")
     require(args.phase != "activate" or args.prerequisites is not None, "infrastructure-activation-proof-required")

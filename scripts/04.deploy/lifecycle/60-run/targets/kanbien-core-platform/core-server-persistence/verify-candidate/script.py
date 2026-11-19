@@ -248,6 +248,8 @@ def accepted_completion(task: dict[str, object], seconds: int, mode: str, on_rec
                                ("operation_id", task.get("startedBy"), r"kp-[0-9a-f]{32}")):
         if isinstance(item, str) and re.fullmatch(pattern, item):
             facts[key] = item
+    if task.get("lastStatus") != "STOPPED":
+        return report("uncertain", "private-persistence-verifier-reconciliation-task-not-terminal", facts=facts)
     observed_duration = duration(task)
     if observed_duration is None:
         return report("uncertain", "private-persistence-verifier-duration-unavailable", facts=facts)
@@ -263,7 +265,14 @@ def accepted_completion(task: dict[str, object], seconds: int, mode: str, on_rec
                 digest = image_digest(task.get("taskDefinitionArn"))
                 if digest is None: raise ValueError()
                 receipt = proof_receipts().make(proof_type="verifier", operation=mode, task=task, image_digest=digest, result_code=failure, context={"record_id": RECORD_ID, "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration}, controller="verify-candidate", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
-                on_receipt(proof_receipts().persist(receipt))
+                path = proof_receipts().persist(receipt)
+                on_receipt(path)
+                # Publish a usable failure reference only after both immutable
+                # receipt and the original operation journal retain it. A mere
+                # failed verdict (including persistence failure) is not proof.
+                facts.update(mode=mode, proof_receipt=path.relative_to(ROOT).as_posix(),
+                             proof_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                             evidence_reuse="fresh-terminal-observation")
             except Exception:
                 return report("failed", failure, "private-persistence-verifier-receipt-persistence-failed", facts=facts)
         return report("failed", failure, facts=facts)
@@ -379,7 +388,7 @@ def observe_reserved(value: dict, path: Path, seconds: int, mode: str, *, wait: 
     proof = retained_completion(value)
     if proof is not None:
         accepted = proof["task"]["exit_code"] == 0 and proof["task"]["result_code"] == SUCCESS[mode]
-        facts = {"operation_id": value["operation_id"], "mode": mode, "proof_receipt": value["proof_receipt"], "evidence_reuse": "historical-completion", "completed_at": proof["task"]["stopped_at"], "verifier_task": proof["task"]["arn"]}
+        facts = {"operation_id": value["operation_id"], "mode": mode, "proof_receipt": value["proof_receipt"], "proof_sha256": value["proof_sha256"], "evidence_reuse": "historical-completion", "completed_at": proof["task"]["stopped_at"], "verifier_task": proof["task"]["arn"]}
         if proof["task"]["exit_code"] != 0:
             facts.update(failed_task_log(proof["task"]["arn"]))
         return report("accepted" if accepted else "failed", proof["task"]["result_code"], facts=facts)

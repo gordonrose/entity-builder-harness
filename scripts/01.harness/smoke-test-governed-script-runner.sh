@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-18"
 #   layer: 01.harness
 #   domain: validation
 #   disciplines:
@@ -100,6 +100,13 @@ make_fixture "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "danger
 make_fixture "scripts/01.harness/check-deterministic-process-drift.sh" "allowed-harness"
 make_fixture "scripts/02.rag-rulebook/run-local-service/smoke-test.sh" "canonical-rag-smoke" "writes-files network"
 make_fixture "scripts/local/not-governed.sh" "local-script"
+for effect in destructive push history-rewrite overwrites cloud database; do
+  make_fixture "scripts/01.harness/blocked-$effect.sh" "blocked-$effect" "read-only $effect"
+done
+for effect in writes-files commits network; do
+  make_fixture "scripts/01.harness/approved-$effect.sh" "approved-$effect" "read-only $effect"
+done
+make_fixture "scripts/01.harness/not-an-effect.sh" "not-an-effect" "read-only network-extra"
 
 git -C "$REPO" init --quiet
 git -C "$REPO" add scripts
@@ -193,6 +200,22 @@ if bash scripts/01.harness/run-governed-script.sh /bin/echo >"$TMP_ROOT/absolute
 fi
 
 LIST="$(bash scripts/01.harness/run-governed-script.sh --list)"
+for effect in destructive push history-rewrite overwrites cloud database; do
+  [[ "$LIST" != *"scripts/01.harness/blocked-$effect.sh"* ]] || fail "listed forbidden $effect"
+  if bash scripts/01.harness/run-governed-script.sh --approved-action "scripts/01.harness/blocked-$effect.sh" >"$TMP_ROOT/blocked.out" 2>&1; then
+    fail "explicit approval bypassed forbidden $effect"
+  fi
+done
+for effect in writes-files commits network; do
+  [[ "$LIST" == *"approved scripts/01.harness/approved-$effect.sh"* ]] || fail "lost mixed read-only/$effect classification"
+done
+[[ "$LIST" == *"always scripts/01.harness/not-an-effect.sh"* ]] || fail "matched an effect prefix instead of a complete line"
+
+# A later invocation must read changed effects, not reuse a previous decision.
+make_fixture "scripts/01.harness/not-an-effect.sh" "not-an-effect" "read-only cloud"
+if bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/not-an-effect.sh >"$TMP_ROOT/changed.out" 2>&1; then
+  fail "reused stale permission metadata"
+fi
 case "$LIST" in
   *"always scripts/00.chat/worktree/check-write-location/script.sh"*)
     ;;
@@ -247,14 +270,17 @@ case "$LIST" in
     ;;
 esac
 
-export REAL_GIT="$(command -v git)" REAL_SED="$(command -v sed)" REAL_GREP="$(command -v grep)"
+export REAL_GIT="$(command -v git)" REAL_SED="$(command -v sed)"
 mkdir "$TMP_ROOT/fault-bin"
-for command in git sed grep; do
+for command in git sed; do
   printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
   cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
 fault=no
+if [ "$command" = sed ] && [ -n "${READ_COUNTER:-}" ]; then
+  printf '%s\n' "${2:-}" >> "$READ_COUNTER"
+fi
 case "$FAULT:$command:${1:-}" in
-  root:git:rev-parse|inventory:git:ls-files|match:grep:-Eq)
+  root:git:rev-parse|inventory:git:ls-files)
     fault=yes ;;
 esac
 case "$FAULT:$command:${2:-}" in
@@ -268,13 +294,12 @@ fi
 case "$command" in
   git) exec "$REAL_GIT" "$@" ;;
   sed) exec "$REAL_SED" "$@" ;;
-  grep) exec "$REAL_GREP" "$@" ;;
 esac
 EOF
   chmod +x "$TMP_ROOT/fault-bin/$command"
 done
 for mode in run list; do
-  for stage in root inventory header effects match; do
+  for stage in root inventory header effects; do
     [ "$mode:$stage" != run:inventory ] || continue
     args=(scripts/00.chat/worktree/check-write-location/script.sh)
     [ "$mode" != list ] || args=(--list)
@@ -284,9 +309,12 @@ for mode in run list; do
       [ "$?" -eq 2 ] || fail "$mode $stage read failure became policy rejection"
     fi
     expected="$stage"
-    [ "$stage" != match ] || expected=effects
     [[ "$failure" == *"governed-$expected-read-failed"* && "$failure" != *private-governance-canary* && "$failure" != *canonical-check:* ]] || fail "$mode lost exact read reason or executed child"
   done
 done
+
+PATH="$TMP_ROOT/fault-bin:$PATH" FAULT=none READ_COUNTER="$TMP_ROOT/reads" \
+  bash scripts/01.harness/run-governed-script.sh scripts/00.chat/worktree/check-write-location/script.sh > "$TMP_ROOT/count.out"
+[[ "$(<"$TMP_ROOT/reads")" == $'1,80p\n1,140p' ]] || fail "permission classification reread the same effects"
 
 echo "governed script runner smoke test passed"

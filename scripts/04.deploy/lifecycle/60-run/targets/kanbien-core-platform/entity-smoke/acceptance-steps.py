@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.acceptance-steps
-#   version: 2
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -21,7 +21,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 SUCCESSOR_STEPS = (("baseline", "database-proof", "permissions"), ("baseline", "verifier", "lifecycle"),
-                   ("baseline", "database-proof", "collision"), ("acceptance", "verifier", "read"))
+                   ("baseline", "database-proof", "collision"), ("initial-recovery", "administration", "observe-migration-state"),
+                   ("acceptance", "verifier", "read"))
+REQUALIFICATION_PREFIX = (*SUCCESSOR_STEPS[:-1], ("baseline", "verifier", "read"))
 
 
 class AcceptanceFailure(Exception):
@@ -39,7 +41,7 @@ def require(value, code):
 
 def supported(args):
     if getattr(args, "expected_predecessor", None) is not None:
-        return (getattr(args, "proof_stage", "baseline"), args.workload, args.operation) in SUCCESSOR_STEPS
+        return (getattr(args, "proof_stage", "baseline"), args.workload, args.operation) in (*SUCCESSOR_STEPS, *REQUALIFICATION_PREFIX, ("rollback", "verifier", "read"))
     return (getattr(args, "proof_stage", "baseline"), args.workload, args.operation) == ("acceptance", "verifier", "read")
 
 
@@ -55,9 +57,19 @@ def acceptance_owner():
     return value
 
 
+def predecessor(context, args):
+    owner = acceptance_owner()
+    try: return owner.successor_parent(context, args)
+    except Exception as failure:
+        detail = owner.failure_details(failure)
+        raise AcceptanceFailure(detail["condition"], context=detail.get("context")) from None
+
+
 def prerequisites(route, context, args, provider):
     if context.get("delivery") is not None:
-        return successor_prerequisites(route, context, args, provider)
+        parent = predecessor(context, args)
+        if parent["applicability"].get("mode") != "requalify" or (args.proof_stage, args.workload, args.operation) != ("acceptance", "verifier", "read"):
+            return successor_prerequisites(route, context, args, provider)
     require(supported(args) and args.expected_digest is not None, "acceptance-final-read-selection-invalid")
     owner = restore_owner()
     def observation(service, operation, **parameters):
@@ -95,18 +107,17 @@ def prerequisites(route, context, args, provider):
 def successor_prerequisites(route, context, args, provider):
     """Fresh release checks use existing task admission, not initial setup replay."""
     selection = (getattr(args, "proof_stage", "baseline"), args.workload, args.operation)
-    require(selection in SUCCESSOR_STEPS and args.expected_digest is not None,
+    rollback = selection == ("rollback", "verifier", "read")
+    require((selection in (*SUCCESSOR_STEPS, *REQUALIFICATION_PREFIX) or rollback) and args.expected_digest is not None,
             "acceptance-successor-selection-invalid")
-    owner = acceptance_owner()
-    try: predecessor = owner.successor_parent(context, args)
-    except Exception as failure:
-        detail = owner.failure_details(failure)
-        raise AcceptanceFailure(detail["condition"], context=detail.get("context")) from None
-    deployed = route.C.completed_deployment(provider, context["binding"], context["parameters"], context["delivery"])
+    parent = predecessor(context, args)
+    steps = REQUALIFICATION_PREFIX if parent["applicability"].get("mode") == "requalify" else SUCCESSOR_STEPS
+    require(rollback or selection in steps, "acceptance-successor-selection-invalid")
+    deployed = route.C.completed_deployment(provider, context["binding"], context["parameters"], context["delivery"], rollback=rollback)
     required_after = deployed["required_after"]
-    packets = {"deployment": deployed["receipt"], "predecessor": predecessor}
+    packets = {"deployment": deployed["receipt"], "predecessor": parent}
     timestamp = route.RUNNER.EVIDENCE.timestamp
-    for stage, workload, operation in SUCCESSOR_STEPS[:SUCCESSOR_STEPS.index(selection)]:
+    for stage, workload, operation in (() if rollback else steps[:steps.index(selection)]):
         selected = SimpleNamespace(**{**vars(args), "proof_stage": stage, "workload": workload,
                                      "operation": operation, "phase": "operation"})
         checked = route.BINDING.inspect(provider, workload, context["parameters"], context["resources"], context.get("binding_snapshot"))

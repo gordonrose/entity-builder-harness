@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -235,6 +235,7 @@ def parse(arguments=None):
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--proof-label", required=True)
     parser.add_argument("--expected-digest", required=True)
+    parser.add_argument("--expected-predecessor")
     parser.add_argument("--proof-stage", choices=("baseline", "credential-recovery"), default="baseline")
     parser.add_argument("--approved-plan")
     parser.add_argument("--wait-seconds", type=int, default=30)

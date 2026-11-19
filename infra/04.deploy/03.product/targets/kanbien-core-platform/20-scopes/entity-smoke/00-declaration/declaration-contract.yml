@@ -4,7 +4,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -1044,6 +1044,20 @@ excludes:
 change_impact:
   schema: "deploy/change-impact/v1"
   inputs:
+    - "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py"
+    - "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage"
+    - "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py"
+    - "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py"
+    - "scripts/04.deploy/shared/postgresql-version.py"
+    - "scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py"
+    - "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml"
+    - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+    - "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml"
     - "apps/entity-smoke"
     - "infra/04.deploy/03.product/entrypoints/entity-smoke"
     - "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts"
@@ -1056,7 +1070,7 @@ change_impact:
     - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml"
     - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml"
     - "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml"
-    - "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/entity-smoke-runtime-configuration.py"
+    - "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py"
     - "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition"
     - "scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image"
     - "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image"

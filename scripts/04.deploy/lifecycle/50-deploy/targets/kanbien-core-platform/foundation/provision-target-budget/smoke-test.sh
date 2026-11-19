@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.foundation-cost-control
 #   disciplines: [security, sre]
@@ -48,6 +48,11 @@ from types import SimpleNamespace
 from unittest.mock import patch
 spec=importlib.util.spec_from_file_location('budget_boundaries',sys.argv[1]);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 module._AWS_RESPONSE=SimpleNamespace(inventory_covered=lambda _root:True)
+with patch.object(module,'aws',return_value=(True,{'Budget':module.BUDGET},'ok')),patch.object(module.INPUT_OWNER.CHECKS,'budget',side_effect=module.INPUT_OWNER.CHECKS.FoundationFailure('foundation-budget-configuration-mismatch')) as shared:
+    assert module.verify()==(None,'foundation-budget-configuration-mismatch')
+    shared.assert_called_once_with(module.BUDGET,module.BUDGET)
+with patch.object(module,'aws',return_value=(False,None,'aws-access-denied')):
+    assert module.verify()==(None,'aws-access-denied')
 for error,code in [(OSError('private-native-canary'),'aws-command-unavailable'),(UnicodeDecodeError('utf8',b'\xff',0,1,'private-native-canary'),'aws-response-invalid'),(subprocess.TimeoutExpired(['private-native-canary'],1),'aws-command-timeout')]:
     with patch.object(module.subprocess,'run',side_effect=error) as call:
         assert module.aws('cloudformation','execute-change-set')==(False,None,code)

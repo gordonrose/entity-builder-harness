@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-route
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -77,18 +77,47 @@ def recovery_applicability_protocols():
         protected = root / "runtime"; protected.mkdir()
         source = protected / "adapter.ts"; source.write_text("original recovery boundary\n")
         feature = root / "feature.ts"; feature.write_text("first feature\n")
+        config = root / "scope.yml"; config.write_text("runtime: {schema: feature}\nchange_impact: {inputs: [old]}\n")
+        permission = root / "permissions.yml"; permission.write_text("roles: bounded\n")
+        schema = root / "schema"; schema.mkdir(); (schema / "v1.sql").write_text("original schema\n")
         git("add", "."); git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture baseline")
         first = git("rev-parse", "HEAD")
+        sha = lambda path: "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+        prior_rollback = {"source_revision": first, "configuration_contract_sha256": sha(config),
+            "permission_contract_sha256": sha(permission), "dependency_incarnation_sha256": "sha256:" + "c" * 64}
         feature.write_text("changed feature behaviour needs fresh functional proof\n")
+        config.write_text("# new metadata\nruntime: {schema: feature}\nchange_impact: {inputs: [new]}\n")
         git("add", "."); git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture feature update")
         second = git("rev-parse", "HEAD")
+        candidate_rollback = {**prior_rollback, "source_revision": second, "configuration_contract_sha256": sha(config)}
+        def reuse(candidate=candidate_rollback):
+            return A.POLICY.rollback_applicability(prior_rollback, candidate, "scope.yml", "permissions.yml", ["schema"], root=root)
+        applicable = reuse()
+        assert applicable["schema"] == "deploy/accepted-rollback-applicability/v1"
+        assert applicable["predecessor_configuration_sha256"] != applicable["configuration_sha256"]
+        assert not any(k in applicable for k in ("accepted", "passed", "current_health", "approval"))
+        rejection(lambda: A.POLICY.rollback_applicability(prior_rollback, candidate_rollback,
+            "scope.yml", "permissions.yml", ["missing-schema"], root=root), A.POLICY.PolicyFailure,
+            "acceptance-recovery-inputs-empty")
+        for replacement, code in (({"configuration_contract_sha256": "sha256:" + "e" * 64}, "acceptance-rollback-contract-hash-mismatch"),
+            ({"permission_contract_sha256": "sha256:" + "e" * 64}, "acceptance-rollback-contract-hash-mismatch"),
+            ({"dependency_incarnation_sha256": "sha256:" + "e" * 64}, "acceptance-rollback-incarnation-changed"),
+            ({"source_revision": "e" * 40}, "acceptance-rollback-contract-unavailable"),
+            ({"source_revision": "--private-canary"}, "acceptance-rollback-source-invalid")):
+            rejection(lambda: reuse({**candidate_rollback, **replacement}), A.POLICY.PolicyFailure, code)
         binding = {"source_revision": first, "configuration_contract_sha256": "sha256:" + "a" * 64,
                    "permission_contract_sha256": "sha256:" + "b" * 64, "dependency_incarnation_sha256": "sha256:" + "c" * 64,
                    "proof_label": "entity-smoke-" + "a" * 24, "record_digest": "d" * 64}
         candidate = {**binding, "source_revision": second}
         result = A.recovery_applicability(binding, candidate, ["runtime", "new-lockfile"], root=root)
+        with patch.object(A.POLICY, "recovery_applicability", wraps=A.POLICY.recovery_applicability) as shared:
+            assert A.recovery_applicability(binding, candidate, ["runtime", "new-lockfile"], root=root) == result
+            assert shared.call_count == 1 and shared.call_args.kwargs['additional_bindings'] == ('proof_label', 'record_digest')
         assert result["predecessor_source"] == first and result["candidate_source"] == second
         assert result["input_paths"] == ["new-lockfile", "runtime"]
+        requirements = A.POLICY.recovery_requirements(binding, candidate, ["runtime", "new-lockfile"],
+            root=root, additional_bindings=("proof_label", "record_digest"))
+        assert requirements["mode"] == "reuse" and requirements["changed_bindings"] == []
         # A new input, changed input and deletion must all invalidate retained
         # capability proof even though the deployment template did not change.
         for filename, content in (("new-lockfile", "new dependency"), ("runtime/adapter.ts", "changed adapter"), ("runtime/adapter.ts", None)):
@@ -99,6 +128,25 @@ def recovery_applicability_protocols():
             changed = {**candidate, "source_revision": git("rev-parse", "HEAD")}
             rejection(lambda: A.recovery_applicability(binding, changed, ["runtime", "new-lockfile"], root=root),
                       A.EvidenceFailure, "acceptance-recovery-requalification-required")
+            requirements = A.POLICY.recovery_requirements(binding, changed, ["runtime", "new-lockfile"],
+                root=root, additional_bindings=("proof_label", "record_digest"))
+            assert requirements["mode"] == "requalify"
+            assert requirements["changed_bindings"] == ["recovery_inputs"]
+            assert requirements["candidate_inputs_sha256"] != requirements["predecessor_inputs_sha256"]
+            assert not any(key in requirements for key in ("passed", "accepted", "evidence", "approval"))
+        for field in ("configuration_contract_sha256", "permission_contract_sha256"):
+            requirements = A.POLICY.recovery_requirements(binding, {**candidate, field: "sha256:" + "e" * 64},
+                ["runtime"], root=root, additional_bindings=("proof_label", "record_digest"))
+            assert requirements["mode"] == "requalify" and requirements["changed_bindings"] == [field]
+        for field in ("dependency_incarnation_sha256", "proof_label", "record_digest"):
+            replacement = "sha256:" + "e" * 64 if field.endswith("sha256") else "different"
+            rejection(lambda: A.POLICY.recovery_requirements(binding, {**candidate, field: replacement},
+                ["runtime"], root=root, additional_bindings=("proof_label", "record_digest")),
+                A.POLICY.PolicyFailure, "acceptance-recovery-binding-changed")
+        for field in A.POLICY.BINDINGS:
+            for invalid in (None, "", 42, [], "sha256:wrong"):
+                rejection(lambda: A.POLICY.recovery_requirements(binding, {**candidate, field: invalid},
+                    ["runtime"], root=root), A.POLICY.PolicyFailure, "acceptance-recovery-binding-invalid")
         for field in ("configuration_contract_sha256", "permission_contract_sha256", "dependency_incarnation_sha256", "proof_label", "record_digest"):
             rejection(lambda: A.recovery_applicability(binding, {**candidate, field: "changed"}, ["runtime"], root=root),
                       A.EvidenceFailure, "acceptance-recovery-binding-changed")
@@ -107,10 +155,31 @@ def recovery_applicability_protocols():
         rejection(lambda: A.recovery_input_tree(first, ["nonexistent"], root=root), A.EvidenceFailure, "acceptance-recovery-inputs-empty")
         rejection(lambda: A.recovery_input_tree("e" * 40, ["runtime"], root=root), A.EvidenceFailure, "acceptance-recovery-inputs-unavailable")
         rejection(lambda: A.recovery_input_tree("--private-canary", ["runtime"], root=root), A.EvidenceFailure, "acceptance-recovery-input-source-invalid")
+        # Reuse is bound to immutable sources: present working-tree contents
+        # cannot conceal a committed operational change or missing contract.
+        for filename, content, code in (("scope.yml", "runtime: {schema: other}\n", "acceptance-rollback-fresh-compatibility-required"),
+                ("scope.yml", "runtime: {schema: feature}\nruntime: {schema: feature}\n", "acceptance-rollback-configuration-invalid"),
+                ("permissions.yml", "roles: broadened\n", "acceptance-rollback-fresh-compatibility-required"),
+                ("schema/v2.sql", "new migration\n", "acceptance-rollback-fresh-compatibility-required"),
+                ("schema/v1.sql", "changed schema\n", "acceptance-rollback-fresh-compatibility-required"),
+                ("schema/v1.sql", None, "acceptance-rollback-fresh-compatibility-required"),
+                ("scope.yml", None, "acceptance-rollback-contract-unavailable")):
+            target = root / filename; original = target.read_bytes() if target.exists() else None
+            if content is None: target.unlink()
+            else: target.write_text(content)
+            git("add", "-A"); git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture rollback boundary change")
+            changed = {**candidate_rollback, "source_revision": git("rev-parse", "HEAD"),
+                "configuration_contract_sha256": sha(config) if config.exists() else candidate_rollback["configuration_contract_sha256"],
+                "permission_contract_sha256": sha(permission)}
+            if original is None: target.unlink()
+            else: target.write_bytes(original)
+            rejection(lambda: reuse(changed), A.POLICY.PolicyFailure, code)
+            git("add", "-A"); git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture restored boundary")
 
 
 def candidate_construction_protocols():
     """Actual feature caller preserves its prior bytes without live collection."""
+    recovery_namespace_protocols()
     canonical = lambda value: json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
     digest = lambda value: "sha256:" + hashlib.sha256(value).hexdigest()
     packet = {"binding": {"source_revision": "a" * 40, "image_digest": "sha256:" + "b" * 64,
@@ -147,6 +216,55 @@ def candidate_construction_protocols():
         rejection(lambda: K.candidate_material(packet), K.S.SuccessionFailure, "release-succession-candidate-proof-invalid")
 
 
+def recovery_namespace_protocols():
+    policy = K.A.POLICY
+    prior = {"schema": "deploy/entity-smoke-task-step/v3", "proof": "independently-validated"}
+    tree = {"packets": [prior, {"schema": ["wrong-type"], "unchanged": True}]}
+    compact = policy.prerequisite_references(tree, {prior["schema"]}, K.A.digest)
+    digest = K.A.digest(prior)
+    assert compact["packets"][0] == {"schema": "deploy/proof-prerequisite-reference/v1", "packet_sha256": digest}
+    assert compact["packets"][1] == tree["packets"][1] and tree["packets"][0] == prior
+    policy.validate_prerequisite_references(compact, {digest})
+    rejection(lambda: policy.validate_prerequisite_references(compact, set()), policy.PolicyFailure, "acceptance-task-prerequisite-mismatch")
+    for malformed in ({"schema": "deploy/proof-prerequisite-reference/v1"},
+                      {**compact["packets"][0], "extra": True},
+                      {**compact["packets"][0], "packet_sha256": []}):
+        rejection(lambda: policy.validate_prerequisite_references(malformed, {digest}), policy.PolicyFailure, "acceptance-task-prerequisite-mismatch")
+    aggregate = module("recovery_namespace_fixture", DIRECTORY / "acceptance-aggregate-test.py")
+    packet = aggregate.successor_fixture(K)
+    original, delivery = packet["binding"], packet["delivery"]
+    resource = K.C.RESOURCE.recovery_binding(original, delivery)
+    assert resource["proof_label"] == original["proof_label"] and resource["record_digest"] == original["record_digest"]
+    assert K.C.RESOURCE.resource_label(resource) == delivery["smoke_label"] != original["proof_label"]
+    assert "recovery_id" not in original and K.C.RESOURCE.resource_label(original) == original["proof_label"]
+    context = {"delivery": delivery, "restore_binding": resource,
+        "cache": K.C.delivery_cache(original["proof_label"], delivery),
+        "custody": {"receipt_reference": delivery["candidate"]["receipt_reference"]}}
+    assert K.C.RESOURCE.recovery_namespace(K.C, context) == delivery
+    for changed in (
+        {**context, "cache": context["cache"].parent},
+        {**context, "custody": {"receipt_reference": "github-actions-run:1"}},
+        {**context, "restore_binding": original},
+        {**context, "restore_binding": {**resource, "recovery_id": "0" * 64}},
+    ):
+        rejection(lambda: K.C.RESOURCE.recovery_namespace(K.C, changed), K.C.RESOURCE.ResourceFailure, "resource-delivery-binding-mismatch")
+    stack, change, database = K.D.RESTORE.names(resource)
+    assert K.D.RESTORE.names(original) != (stack, change, database)
+    snapshot = {"binding": resource, "source_resource_id": "db-CONTROLLEDORIGINAL",
+        "snapshot": "kanbien-core-platform-" + delivery["smoke_label"], "original_commit_observed_at": "2026-11-19T00:00:00Z"}
+    K.C.RESOURCE.validate_request("create-recovery-point", snapshot)
+    rejection(lambda: K.C.RESOURCE.validate_request("create-recovery-point", {**snapshot,
+        "snapshot": "kanbien-core-platform-" + original["proof_label"]}), K.C.RESOURCE.ResourceFailure, "resource-request-invalid")
+    request = {"binding": resource, "parameters_sha256": "sha256:" + "a" * 64, "template_sha256": "sha256:" + "b" * 64,
+        "stack_arn": "arn:aws:cloudformation:eu-west-1:337159794548:stack/" + stack + "/fixture",
+        "change_set_arn": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/" + change + "/fixture"}
+    K.C.RESOURCE.validate_request("execute-restore", request)
+    rejection(lambda: K.C.RESOURCE.validate_request("execute-restore", {**request,
+        "stack_arn": "arn:aws:cloudformation:eu-west-1:337159794548:stack/" + K.D.RESTORE.names(original)[0] + "/fixture"}), K.C.RESOURCE.ResourceFailure, "resource-request-invalid")
+    for invalid in (None, "", "a" * 63, "../../source", 42):
+        rejection(lambda: K.C.RESOURCE.validate_binding({**resource, "recovery_id": invalid}), K.C.RESOURCE.ResourceFailure, "resource-binding-invalid")
+
+
 def successor_state_protocols():
     """Real local succession/history with explicitly controlled typed proof packets."""
     K, S = STATE.K, STATE.S
@@ -180,6 +298,12 @@ def successor_state_protocols():
             second["predecessor"] = {"release_id": initial_id, "candidate_record": str(initial["path"].relative_to(root)),
                 "candidate_sha256": initial["sha256"], "applicability": {"fixture": "source-comparison-tested-separately"}}
             successor = retain(second)
+            legacy = copy.deepcopy(second)
+            legacy["schema"] = K.LEGACY_SUCCESSOR_SCHEMA
+            historical = retain(legacy)
+            assert owner.candidate(historical["path"], current_contracts=False)["packet"] == legacy
+            rejection(lambda: owner.candidate(historical["path"]), STATE.StateFailure,
+                      "acceptance-current-migration-proof-required")
             successor_id = S.release_id(successor["identity"])
             assert successor_id != initial_id
             for mutate, code in (
@@ -421,8 +545,49 @@ def source_boundary_protocols(base):
         "proof_primitives": "controlled-not-live-evidence", "candidate_retention": "temporary-fixture-only", "aws_mutation": False}))
 
 
+def accepted_rollback_protocols():
+    """Real selector; explicit custody/comparison doubles, never live proof."""
+    C = K.C
+    predecessor = {"release_id": "release-" + "a" * 24, "source_revision": "b" * 40,
+        "image_digest": "sha256:" + "c" * 64, "proof_set_sha256": "sha256:" + "d" * 64}
+    receipt = {key: predecessor[key] for key in ("source_revision", "image_digest")}
+    receipt.update(receipt_reference="github-actions-run:123", program_id="fixture-program", package_contract_id="fixture-package")
+    accepted = {"reference": {"release_id": predecessor["release_id"]}, "identity": dict(predecessor),
+        "packet": {"package": dict(receipt), "binding": {"fixture": "prior"}}, "sha256": "sha256:" + "e" * 64}
+    owner = SimpleNamespace(State=lambda: SimpleNamespace(current=lambda: accepted), A=K.A, K=K)
+    binding = {"source_revision": "f" * 40, "image_digest": "sha256:" + "0" * 64}
+    args = SimpleNamespace(rollback_receipt=Path("/tmp/controlled-rollback-receipt.json"),
+        rollback_compatibility_id="accepted-proof-" + "a" * 24)
+    with patch.object(C, "module", return_value=owner), patch.object(C.ALIGN, "read_receipt", return_value=receipt), \
+         patch.object(K.A.POLICY, "rollback_applicability", return_value={"comparison": "controlled"}) as compare:
+        selected, metadata = C.rollback_selection(args, {"predecessor": predecessor}, binding)
+        assert selected == {**binding, **{key: predecessor[key] for key in ("source_revision", "image_digest")}}
+        assert metadata["compatibility_id"] == args.rollback_compatibility_id
+        assert compare.call_args.args[:2] == (accepted["packet"]["binding"], binding)
+        assert compare.call_args.args[2:4] == (C.ALIGN.SCOPE, str(C.DEPLOY.SOURCE.relative_to(C.ROOT)))
+        expected = C.DEPLOY.fingerprint({"accepted_candidate_sha256": accepted["sha256"],
+            "accepted_proof_set_sha256": predecessor["proof_set_sha256"], "applicability": {"comparison": "controlled"}})
+        assert metadata["compatibility_sha256"] == expected
+        for mapping, field, invalid in ((accepted["reference"], "release_id", "release-" + "9" * 24),
+            (accepted["identity"], "proof_set_sha256", "sha256:" + "9" * 64),
+            (receipt, "image_digest", "sha256:" + "9" * 64), (receipt, "receipt_reference", "github-actions-run:999"),
+            (receipt, "program_id", "foreign-program")):
+            original = mapping[field]; mapping[field] = invalid
+            rejection(lambda: C.rollback_selection(args, {"predecessor": predecessor}, binding),
+                C.InfrastructureFailure, "infrastructure-rollback-predecessor-mismatch")
+            mapping[field] = original
+        args.rollback_compatibility_id = "accepted-proof-" + "9" * 24
+        rejection(lambda: C.rollback_selection(args, {"predecessor": predecessor}, binding), C.InfrastructureFailure, "infrastructure-rollback-predecessor-mismatch")
+        args.rollback_compatibility_id = metadata["compatibility_id"]
+        compare.side_effect = K.A.POLICY.PolicyFailure("acceptance-rollback-fresh-compatibility-required")
+        rejection(lambda: C.rollback_selection(args, {"predecessor": predecessor}, binding), C.InfrastructureFailure, "acceptance-rollback-fresh-compatibility-required")
+        owner.State = lambda: (_ for _ in ()).throw(STATE.StateFailure("acceptance-state-proof-hash-mismatch"))
+        rejection(lambda: C.rollback_selection(args, {"predecessor": predecessor}, binding), C.InfrastructureFailure, "acceptance-state-proof-hash-mismatch")
+
+
 def run():
     recovery_applicability_protocols()
+    accepted_rollback_protocols()
     candidate_construction_protocols()
     successor_state_protocols()
     module("entity_smoke_route_aggregate_fixture", DIRECTORY / "acceptance-aggregate-test.py").run(K)

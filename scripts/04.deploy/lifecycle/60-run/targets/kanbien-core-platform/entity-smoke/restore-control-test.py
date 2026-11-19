@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -141,6 +141,15 @@ def run():
         def prepare(provider, owner): return M.prepare_restore(provider, owner, BINDING, PARAMETERS)
         def execute(provider, owner): return M.execute_restore(provider, owner, BINDING, PARAMETERS, CHANGE_ARN, STACK_ARN)
         def cleanup(provider, owner, deployment): return M.cleanup_restore(provider, owner, BINDING, PARAMETERS, deployment, provider.reader_reservation, provider.reader_receipt)
+        for index, (version, reason) in enumerate([("18.4", None), ("18.4-rds.20261116", None), ("19.1", "postgresql-version-major-incompatible"), ("18.3canary", "postgresql-version-observation-invalid")]):
+            provider, owner = Provider(), store("engine-" + str(index))
+            def observed(service, operation, **parameters):
+                result = provider(service, operation, **parameters)
+                if operation == "describe-db-instances": result["DBInstances"][0]["EngineVersion"] = version
+                return result
+            prepare(observed, owner)
+            if reason: fails(lambda: execute(observed, owner), reason)
+            else: assert execute(observed, owner)["facts"]["engine_version"] == version
         provider, owner = Provider(), store("normal")
         reviewed = prepare(provider, owner)
         assert reviewed["status"] == "reviewed" and reviewed["facts"]["resource_count"] == 8

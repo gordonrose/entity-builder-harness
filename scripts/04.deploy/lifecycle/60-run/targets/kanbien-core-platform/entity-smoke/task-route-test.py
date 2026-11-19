@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-route
-#   version: 3
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -58,6 +58,7 @@ class Provider(F.Provider):
         self.missing_create_result, self.created_record = False, False
         self.server_states, self.replacement_lost = None, False
         self.history_applied = True
+        self.fail_operation = None
     def __call__(self, service, operation, **parameters):
         self.observed.append((service, operation, parameters))
         if self.server_states is not None:
@@ -84,7 +85,7 @@ class Provider(F.Provider):
             observed_at = datetime.now(timezone.utc).isoformat()
             task = {"taskArn": arn, "taskDefinitionArn": parameters["taskDefinition"], "startedBy": parameters["startedBy"], "overrides": parameters["overrides"],
                     "lastStatus": "STOPPED", "launchType": "FARGATE", "createdAt": observed_at, "startedAt": observed_at, "stoppedAt": observed_at,
-                    "containers": [{"name": "entity-smoke-" + workload, "imageDigest": F.BINDING["image_digest"], "exitCode": 0}]}
+                    "containers": [{"name": "entity-smoke-" + workload, "imageDigest": self.bindings[workload].task["containerDefinitions"][0]["image"].split("@")[-1], "exitCode": 0}]}
             if selected == "preflight":
                 result = {"verdict": "passed", "code": "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED"}
                 if workload == "administration": result["operation"] = "preflight"
@@ -109,10 +110,11 @@ class Provider(F.Provider):
                 if selected == "create": steps += ["create", "read"]; self.created_record = True
                 if selected in {"read", "observe-create"}: steps += ["read"]; assert self.created_record
                 if selected == "lifecycle": steps += ["create", "read", "update", "list", "archive", "restore-archive", "delete", "restore-deleted", "purge-eligibility"]
-                result = {"schema": "deploy/entity-smoke-task-proof/v1", "verdict": "passed", "operation": selected, "code": codes[selected], "source_revision": F.BINDING["source_revision"],
+                result = {"schema": "deploy/entity-smoke-task-proof/v1", "verdict": "passed", "operation": selected, "code": codes[selected], "source_revision": environment["ENTITY_SMOKE_EXPECTED_SOURCE"],
                           "proof_label_sha256": hashlib.sha256(environment["ENTITY_SMOKE_PROOF_LABEL"].encode()).hexdigest(), "steps": steps, "checked_at": observed_at}
                 if selected not in {"ready", "unready"}: result["record_digest"] = ("2" if selected == "lifecycle" else "1") * 64
                 if selected == "create" and self.missing_create_result: result = None
+            if selected == self.fail_operation: task["containers"][0]["exitCode"] = 1
             self.remote[arn], self.results[identifier] = task, result
             if self.lost_next:
                 self.lost_next = False
@@ -312,6 +314,27 @@ def run():
                 fails(lambda: M.execute(execute_args, live), "task-submission-uncertain-reconcile-required")
                 assert live.effect == "unknown-reconcile-only"
                 live = M.Provider(); live._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
+                # Observe a controlled failed outcome through the real execute,
+                # runner, evidence and public reporter. Repeating the observation
+                # must reconcile the original lost submission, not launch again.
+                observed_task = next(iter(provider.remote.values()))
+                observed_task["containers"][0]["exitCode"] = 1
+                submitted = sum(op == "run-task" for _, op, _ in provider.observed)
+                try:
+                    for _ in range(2):
+                        output = io.StringIO()
+                        with patch.object(M, "parse", return_value=SimpleNamespace(**{**vars(execute_args), "execute": True, "validate_arguments": False})), patch.object(M, "Provider", return_value=live), redirect_stdout(output):
+                            status = M.main()
+                        failure_report = json.loads(output.getvalue())
+                        assert status == 1 and failure_report["verdict"] == "failed"
+                        terminal = failure_report["terminal_failure"]
+                        assert terminal["task_arn"] == observed_task["taskArn"] and terminal["operation_id"] == observed_task["startedBy"]
+                        assert terminal["workload"] == "administration" and terminal["operation"] == "preflight" and terminal["exit_code"] == 1
+                        assert terminal["failure_basis"] == "nonzero-exit" and CANARY not in output.getvalue()
+                    assert sum(op == "run-task" for _, op, _ in provider.observed) == submitted
+                finally:
+                    # Return the fixture to its success branch, not a real retry.
+                    observed_task["containers"][0]["exitCode"] = 0
             if number == 0:
                 # A closed incident can observe the original lost submission,
                 # but cannot reserve another task under the retired identity.
@@ -615,6 +638,13 @@ def run():
         rejected = json.loads(output.getvalue())
         assert status == 1 and rejected["condition"] == "task-unsuccessful-completion" and rejected["observations"] == [bundle]
         assert rejected["diagnostic"] == diagnostic and rejected["related_diagnostics"] == []
+        assert rejected["verdict"] == "blocked" and "terminal_failure" not in rejected
+        for evidence_owner in (M.C.RESOURCE.EVIDENCE, M.RUNNER.EVIDENCE):
+            prerequisite = evidence_owner.TerminalTaskFailure(terminal, diagnostic, [], [bundle])
+            with patch.object(M, "execute", side_effect=prerequisite), redirect_stdout(output := io.StringIO()):
+                status = M.main()
+            rejected = json.loads(output.getvalue())
+            assert status == 1 and rejected["verdict"] == "blocked" and "terminal_failure" not in rejected, "terminal prerequisite evidence is not the current task's outcome"
         assert CANARY not in output.getvalue(), "the existing activation consumer's own evidence class must not lose its supported meaning"
         # Exercise the actual provider -> runner -> evidence -> public reporter
         # path with a task that never starts, including original reconciliation.
@@ -699,12 +729,12 @@ def run():
                       "prerequisites": "controlled-source-custody-local-proof-and-target-responses-not-qualification", "checks": ["actual-selected-graph-and-generic-gates", "all-reachable-callees-retained", "deployed-resource-lineage", "exact-task-role-network-binding", "preflight-and-business-plan-binding", "no-sixth-gate-before-probe", "planning-no-write-capability", "actual-offline-cli", "actual-execute-provider-runner-collector", "lost-launch-no-replay", "four-ordered-prerequisites-and-activation-consumer", "changed-prerequisite-rejected", "exact-reserved-payload", "known-prewrite-versus-unknown-effect-reporter", "named-missing-prerequisite", "activated-feature-prerequisites", "uncertain-create-observed-never-replayed", "terminal-qualified-original-before-observer", "lifecycle-digest-cannot-replace-original", "collision-and-original-read", "selected-primary-diagnostic-preserved", "public-replacement-requires-baseline-read", "lost-stop-reconciles-original-not-successor", "separate-post-replacement-ready-and-read", "baseline-receipt-substitution-rejected", "changed-replacement-gate-rejected", "replacement-exact-payload", "replacement-public-main-preserves-guard-context", "no-original-record-recreation"]}))
 
 
-def successor_task_protocols():
+def successor_task_protocols(*, requalify=False, failed_recovery=None):
     """Actual controller/task/collector chain; source/applicability are doubles."""
     evidence = module("successor_task_actual_evidence", DIRECTORY / "acceptance-evidence.py")
     with tempfile.TemporaryDirectory(prefix="entity-smoke-successor-tasks-") as temporary:
         root = Path(temporary)
-        receipt = {**F.delivery_fixture()["candidate"]}
+        receipt = {**F.delivery_fixture()["candidate"], "program_id": "kanbien-entity-smoke", "package_contract_id": "kanbien-entity-smoke-image"}
         prior = F.delivery_fixture()["predecessor"]
         current = {"target": M.C.RESOURCE.CLUSTER, "scope": "entity-smoke", "release_id": prior["release_id"]}
         history = {"release": {"id": prior["release_id"], **{key: prior[key] for key in ("source_revision", "image_digest", "proof_set_sha256")}}}
@@ -731,12 +761,41 @@ def successor_task_protocols():
             delivery, binding = planned["plan"]["delivery"], planned["plan"]["binding"]
             cache = M.C.delivery_cache(binding["proof_label"], delivery)
             deployment = M.C.read_json(cache / "receipts/update.json")
+            if requalify:
+                original = M.C.RESOURCE.running_service_tasks(provider)[0]
+                row = provider("ecs", "describe-tasks", tasks=[original])["tasks"][0]
+                row.update(createdAt=deployment["result"]["facts"]["completed_at"], startedAt=deployment["result"]["facts"]["completed_at"])
+                provider.server_states = {original: row}
+            coordinator = module("task_delivery_coordinator", DIRECTORY.parents[2] / "release-succession/ordinary-update.py")
+            adapter = module("task_delivery_adapter", DIRECTORY / "ordinary-update.py")
+            consumer = object.__new__(adapter.Consumer)
+            consumer.K = SimpleNamespace(C=M.C, T=M, A=evidence, SUCCESSOR_TASKS=("baseline-permissions", "lifecycle", "collision", "migration-state", "final-read"))
+            consumer.require, consumer.halt = coordinator.require, coordinator.Halt
+            consumer.rollback = root / "prior.json"
+            consumer.context = SimpleNamespace(package=receipt, expected=prior["release_id"], route={"target": M.C.RESOURCE.CLUSTER, "scope": "entity-smoke"},
+                values={"proof_label": binding["proof_label"], "expected_digest": "1" * 64, "rollback_compatibility_id": "rollback-compatibility-" + "8" * 24}, check_authority=lambda: None)
+            consumer.release_context = lambda: (binding, delivery, cache)
+            assert consumer.approved_plan(planned, phase="update") == planned["plan_sha256"]
+            for key, bad in (("resource_additions", 1), ("database_data_or_schema_changes", True), ("phase", "create"),
+                             ("package_custody_reference", "github-actions-run:1"), ("account", "000000000000")):
+                changed = copy.deepcopy(planned); changed["plan"][key] = bad
+                changed["plan_sha256"] = M.C.DEPLOY.fingerprint(changed["plan"])
+                try: consumer.approved_plan(changed, phase="update")
+                except coordinator.Halt as error: assert error.condition == "delivery-plan-outside-approval"
+                else: raise AssertionError("generated broader plan obtained approval")
             # Only typed predecessor/applicability is controlled. Actual ordering,
             # deployed receipt, task observations and retained archive validation run.
-            predecessor_owner = SimpleNamespace(successor_parent=lambda *args: {"release_id": prior["release_id"]})
+            predecessor = {"release_id": prior["release_id"], "candidate_record": "release-candidates/" + prior["release_id"] + ".yml",
+                "candidate_sha256": "sha256:" + "9" * 64, "applicability": {"mode": "requalify" if requalify else "reuse"}}
+            if requalify:
+                predecessor["applicability"].update(schema="deploy/recovery-requirements/v1",
+                    predecessor_source=prior["source_revision"], candidate_source=receipt["source_revision"], input_paths=["platform"],
+                    predecessor_inputs_sha256="sha256:" + "8" * 64, candidate_inputs_sha256="sha256:" + "9" * 64,
+                    changed_bindings=["recovery_inputs"])
+            predecessor_owner = SimpleNamespace(successor_parent=lambda *args: predecessor)
             with patch.object(M.ACCEPTANCE, "acceptance_owner", lambda: predecessor_owner), patch.object(M.C.TRANSITION, "RETIRED_PROOF_LABEL", binding["proof_label"]):
                 previous_stop = deployment["result"]["facts"]["completed_at"]
-                for workload, operation, stage in (("database-proof", "permissions", "baseline"), ("verifier", "lifecycle", "baseline"), ("database-proof", "collision", "baseline"), ("verifier", "read", "acceptance")):
+                for stage, workload, operation in (M.ACCEPTANCE.REQUALIFICATION_PREFIX if requalify else M.ACCEPTANCE.SUCCESSOR_STEPS):
                     args = SimpleNamespace(receipt=root / "candidate.json", proof_label=binding["proof_label"], expected_predecessor=prior["release_id"],
                                            workload=workload, operation=operation, proof_stage=stage, phase="preflight", expected_digest="1" * 64)
                     for phase in ("preflight", "operation"):
@@ -744,18 +803,37 @@ def successor_task_protocols():
                         context = M.prepare(args, live())
                         assert context["delivery"] == delivery and context["report"]["plan"]["execution_route_available"]
                         args.approved_plan = context["report"]["plan_sha256"]
+                        assert consumer.approved_plan(context["report"], selection=(stage, workload, operation, phase)) == args.approved_plan
+                        if not requalify and operation == "permissions" and phase == "preflight":
+                            provider.lost_next = True
+                            fails(lambda: M.execute(args, live()), "task-submission-uncertain-reconcile-required")
+                            failed = list(provider.remote.values())[-1]
+                            failed["containers"][0]["exitCode"] = 1
+                            observer = live()
+                            with patch.object(M, "Provider", return_value=observer):
+                                terminal = consumer.terminal_failure("baseline-permissions.preflight")
+                                assert terminal["task_arn"] == failed["taskArn"]
+                                error = coordinator.Halt("delivery-child-not-successful", verdict="failed", evidence={"schema": "deploy/entity-smoke-task-report/v1", "terminal_failure": terminal})
+                                assert consumer.confirm_failure("baseline-permissions.preflight", error)
+                                assert not consumer.confirm_failure("collect", error)
+                                error.evidence["terminal_failure"] = {**terminal, "operation_id": "es-" + "0" * 32}
+                                assert not consumer.confirm_failure("baseline-permissions.preflight", error)
+                            assert sum(op == "run-task" for _, op, _ in provider.observed) == 1
+                            failed["containers"][0]["exitCode"] = 0  # Controlled fixture alternate, never a live retry.
                         completed = M.execute(args, live())
                         assert completed["verdict"] == "completed"
                         step = M.C.read_json(root / completed["receipt"])
-                        assert step["schema"] == "deploy/entity-smoke-task-step/v2" and step["prerequisites"]["packets"]["deployment"] == deployment
+                        assert step["schema"] == "deploy/entity-smoke-task-step/v3" and step["prerequisites"]["packets"]["deployment"] == deployment
                         assert M.RUNNER.EVIDENCE.timestamp(step["prerequisites"]["required_after"]) >= M.RUNNER.EVIDENCE.timestamp(previous_stop)
                         M.STEPS.validate_delivery_step(M.dependencies(), step, binding, delivery, args)
-                        proof_name = {"permissions": "baseline-permissions", "lifecycle": "lifecycle", "collision": "collision", "read": "final-read"}[operation]
+                        proof_name = {"permissions": "baseline-permissions", "lifecycle": "lifecycle", "collision": "collision", "observe-migration-state": "migration-state", "read": "baseline-read" if requalify else "final-read"}[operation]
                         archive = evidence.capture_task(M, context, args, live(), proof_name, {**binding, "record_digest": "1" * 64})
                         assert archive["packet"] == step and archive["delivery"] == delivery
                         request = step["reservation"]["request"]
                         label = M.C.delivery_preflight_label(delivery, stage, workload, operation) if phase == "preflight" else M.C.delivery_operation_label(delivery, workload, operation)
-                        assert request["environment"]["ENTITY_SMOKE_PROOF_LABEL"] == label
+                        assert request["proof_label"] == label
+                        if workload in {"verifier", "database-proof"}:
+                            assert request["environment"]["ENTITY_SMOKE_PROOF_LABEL"] == label
                         assert M.STEPS.key(args, delivery) != M.STEPS.key(args)
                         if operation == "lifecycle" and phase == "operation": assert label == delivery["smoke_label"] != binding["proof_label"]
                         if phase == "operation" and operation in {"permissions", "lifecycle"}: assert "ENTITY_SMOKE_EXPECTED_DIGEST" not in request["environment"]
@@ -774,6 +852,9 @@ def successor_task_protocols():
                         assert M.execute(args, live())["reused"] is True
                         assert sum(op == "run-task" for _, op, _ in provider.observed) == observed
                     previous_stop = step["receipt"]["task"]["stopped_at"]
+                if requalify:
+                    successor_recovery_protocols(provider, live, args, binding, delivery, cache, evidence, failed_recovery=failed_recovery)
+                    return
                 # Actual prerequisite owner rejects absent and stale predecessors.
                 with patch.object(M.STEPS, "observe_packet", lambda *args, **kwargs: None):
                     try: M.ACCEPTANCE.successor_prerequisites(M.dependencies(), context, args, live())
@@ -785,10 +866,160 @@ def successor_task_protocols():
                     try: M.ACCEPTANCE.successor_prerequisites(M.dependencies(), context, args, live())
                     except M.ACCEPTANCE.AcceptanceFailure as failure: assert failure.code == "acceptance-successor-task-order-invalid"
                     else: raise AssertionError("stale successor prerequisite admitted")
-            assert sum(op == "run-task" for _, op, _ in provider.observed) == 8
+                # Restore through the actual infrastructure owner, then prove a
+                # distinct read bound to its completion and predecessor image.
+                deploy_args.phase, deploy_args.mode = "rollback", "plan"
+                rollback_plan = M.C.run(deploy_args, live(M.C))
+                deploy_args.approved_plan, deploy_args.mode = rollback_plan["plan_sha256"], "apply"
+                assert M.C.run(deploy_args, live(M.C))["verdict"] == "completed"
+                restored = M.C.read_json(cache / "receipts/rollback.json")
+                restored_parameters = {**F.PARAMETERS, "ServerDesiredCount": "1", "ImageDigest": prior["image_digest"], "SourceRevision": prior["source_revision"]}
+                for workload, fixture in provider.bindings.items():
+                    if workload == "restore-reader": continue
+                    fixture.task = {**fixture.task, **M.BINDING.expected_task(workload, restored_parameters, restored["result"]["facts"]["resources"]),
+                                    "taskDefinitionArn": fixture.task["taskDefinitionArn"], "status": "ACTIVE"}
+                args = SimpleNamespace(receipt=root / "candidate.json", proof_label=binding["proof_label"], expected_predecessor=prior["release_id"],
+                    workload="verifier", operation="read", proof_stage="rollback", phase="preflight", expected_digest="1" * 64,
+                    rollback_receipt=root / "prior.json", rollback_compatibility_id="rollback-compatibility-" + "8" * 24)
+                for phase in ("preflight", "operation"):
+                    args.phase = phase
+                    context = M.prepare(args, live())
+                    assert context["binding"]["source_revision"] == prior["source_revision"]
+                    assert context["custody"] == receipt and context["delivery"] == delivery
+                    assert context["prerequisites"]["packets"]["deployment"] == restored
+                    assert set(context["prerequisites"]["packets"]) == {"deployment", "predecessor"}, "failed candidate prefix must not gate restoration read"
+                    args.approved_plan = context["report"]["plan_sha256"]
+                    completed = M.execute(args, live())
+                    step = M.C.read_json(root / completed["receipt"])
+                    assert step["receipt"]["image_digest"] == prior["image_digest"]
+                    assert step["reservation"]["request"]["environment"]["ENTITY_SMOKE_EXPECTED_SOURCE"] == prior["source_revision"]
+                    before = sum(op == "run-task" for _, op, _ in provider.observed)
+                    assert M.execute(args, live())["reused"] is True
+                    assert sum(op == "run-task" for _, op, _ in provider.observed) == before
+            assert sum(op == "run-task" for _, op, _ in provider.observed) == 2 * len(M.ACCEPTANCE.SUCCESSOR_STEPS) + 2
             assert not (root / ".cache/entity-smoke-live" / binding["proof_label"] / "task-steps").exists()
             for path in cache.rglob("*.json"):
                 assert CANARY not in path.read_text() and F.PARAMETERS["AdministratorSecretArn"] not in path.read_text()
+
+
+def successor_recovery_protocols(provider, live, args, binding, delivery, cache, evidence, *, failed_recovery=None):
+    """Actual task/replacement/history owners after update, not initial setup."""
+    replacement = module("successor_credential_replacement", DIRECTORY / "replacement-route.py")
+    replacement.TASK, replacement.C = M, M.C
+    selected = lambda workload, operation, phase: SimpleNamespace(**{**vars(args), "proof_stage": "credential-recovery",
+        "workload": workload, "operation": operation, "phase": phase})
+    observed = sum(op == "run-task" for _, op, _ in provider.observed)
+    with patch.object(M.RECOVERY.STATE.STOP.B, "services", return_value=({}, {})), \
+         patch.object(M.RECOVERY, "restart", side_effect=AssertionError("accepted successor used initial restart")):
+        for name, workload, operation in M.CREDENTIAL.STEPS:
+            if name == "read":
+                current = SimpleNamespace(**{**vars(args), "mode": "plan", "proof_stage": "credential-recovery", "approved_plan": None, "wait_seconds": 0})
+                planned = replacement.run(current, live(replacement))
+                current.mode, current.approved_plan = "execute", planned["plan_sha256"]
+                provider.replacement_lost = True
+                try: replacement.run(current, live(replacement))
+                except M.C.RESOURCE.ResourceFailure as error: assert error.code == "resource-submission-uncertain-reconcile-only"
+                else: raise AssertionError("lost replacement was reported complete")
+                provider.replacement_lost = False
+                assert replacement.run(current, live(replacement))["verdict"] == "completed"
+                assert sum(op == "stop-task" for _, op, _ in provider.observed) == 1
+            for phase in (("operation",) if name == "unready" else ("preflight", "operation")):
+                current = selected(workload, operation, phase)
+                context = M.prepare(current, live())
+                assert context["prerequisites"] is not None
+                current.approved_plan = context["report"]["plan_sha256"]
+                if phase == "operation" and operation == failed_recovery:
+                    provider.fail_operation = operation
+                    try: M.execute(current, live())
+                    except M.CurrentTaskFailure as failure:
+                        assert failure.evidence.terminal["operation"] == operation and failure.evidence.terminal["exit_code"] == 1
+                    else: raise AssertionError("expected controlled terminal failure")
+                    before = sum(op == "run-task" for _, op, _ in provider.observed)
+                    for restore_phase in ("preflight", "operation"):
+                        restore_args = selected("administration", "restore-runtime", restore_phase)
+                        restore_context = M.prepare(restore_args, live())
+                        assert "credential-" + name + "-terminal-failure" in restore_context["prerequisites"]["packets"]
+                        restore_args.approved_plan = restore_context["report"]["plan_sha256"]
+                        assert M.execute(restore_args, live())["verdict"] == "completed"
+                        assert M.execute(restore_args, live())["reused"] is True
+                    assert sum(op == "run-task" for _, op, _ in provider.observed) == before + 2
+                    assert not (cache / "credential-history.json").exists()
+                    print("ENTITY_SMOKE_SUCCESSOR_FAILED_" + name.upper() + "_ACCESS_RESTORATION_PASSED")
+                    return
+                completed = M.execute(current, live())
+                assert completed["verdict"] == "completed"
+                proof_name = {"permission-state": "permission-state", "revoke": "credential-revoke", "unready": "credential-unready",
+                    "restore": "credential-restore", "read": "credential-read", "permissions": "credential-permissions"}[name]
+                archive = evidence.capture_task(M, context, current, live(), proof_name, {**binding, "record_digest": args.expected_digest})
+                assert archive["delivery"] == delivery
+                before = sum(op == "run-task" for _, op, _ in provider.observed)
+                assert M.execute(current, live())["reused"] is True
+                assert sum(op == "run-task" for _, op, _ in provider.observed) == before
+        history = M.HISTORY.read(M.dependencies(), {**context, "provider": live()}, current)
+        assert history["prerequisites"]["packets"]["deployment"] == M.C.read_json(cache / "receipts/update.json")
+        assert "initial-stop" not in history["prerequisites"]["packets"] and not (cache / "receipts/create.json").exists()
+        assert sum(op == "run-task" for _, op, _ in provider.observed) == observed + 11
+        assert history["current_readiness"] is False and history["scope_acceptance"] is False
+        before = sum(op == "run-task" for _, op, _ in provider.observed)
+        for phase in ("preflight", "operation"):
+            restore_args = selected("administration", "restore-runtime", phase)
+            restore_args.approved_plan = M.plan(restore_args, live())["plan_sha256"]
+            assert M.execute(restore_args, live())["reused"] is True
+        assert sum(op == "run-task" for _, op, _ in provider.observed) == before
+        successor_restore_protocols(provider, args, binding, delivery, cache)
+    print("ENTITY_SMOKE_SUCCESSOR_CREDENTIAL_REQUALIFICATION_PROTOCOLS_PASSED")
+
+
+def successor_restore_protocols(tasks, args, binding, delivery, cache):
+    """Reuse the existing clone fixture with actual successor task/history custody."""
+    snapshot = module("successor_snapshot_owner", DIRECTORY / "snapshot-route.py")
+    snapshot.TASK, snapshot.C = M, M.C
+    clone_fixture = module("successor_restore_fixture", DIRECTORY / "restore-route-test.py")
+    class Transport:
+        snapshot = None
+        jobs, task_rows, other = tasks, tasks.remote, {}
+        bindings = tasks.bindings
+        def __call__(self, service, operation, **parameters):
+            if operation == "describe-db-instances":
+                return {"DBInstances": [{"DBInstanceIdentifier": M.C.RESOURCE.SOURCE_DATABASE,
+                    "DbiResourceId": F.PARAMETERS["DatabaseResourceId"], "DBName": F.PARAMETERS["DatabaseName"],
+                    "DBInstanceStatus": "available", "StorageEncrypted": True, "PubliclyAccessible": False}]}
+            if operation == "describe-db-snapshots":
+                assert parameters["DBSnapshotIdentifier"] == "kanbien-core-platform-" + delivery["smoke_label"]
+                if self.snapshot is None: raise M.C.RESOURCE.ResourceMissing()
+                return {"DBSnapshots": [copy.deepcopy(self.snapshot)]}
+            if operation == "create-db-snapshot":
+                tasks.observed.append((service, operation, parameters))
+                assert self.snapshot is None and parameters["DBInstanceIdentifier"] == M.C.RESOURCE.SOURCE_DATABASE
+                name = parameters["DBSnapshotIdentifier"]
+                self.snapshot = {"DBSnapshotIdentifier": name, "DBSnapshotArn": "arn:aws:rds:eu-west-1:337159794548:snapshot:" + name,
+                    "DBInstanceIdentifier": M.C.RESOURCE.SOURCE_DATABASE, "DbiResourceId": F.PARAMETERS["DatabaseResourceId"],
+                    "Encrypted": True, "SnapshotType": "manual", "SnapshotCreateTime": datetime.now(timezone.utc).isoformat(), "Status": "available"}
+                self.tags = parameters["Tags"]
+                return {}
+            if operation == "list-tags-for-resource" and self.snapshot and parameters["ResourceName"] == self.snapshot["DBSnapshotArn"]:
+                return {"TagList": copy.deepcopy(self.tags)}
+            result = tasks(service, operation, **parameters)
+            if operation == "describe-services":
+                for row in result["services"]:
+                    row.update(launchType="FARGATE", networkConfiguration={"awsvpcConfiguration": {
+                        "assignPublicIp": "DISABLED", "subnets": F.PARAMETERS["PrivateSubnetIds"].split(","),
+                        "securityGroups": [BF.RESOURCES["ServerSecurityGroup"]["physical_id"]]}})
+            return result
+    transport = Transport()
+    def capability():
+        value = snapshot.Provider()
+        value._invoke = lambda service, operation, parameters: transport(service, operation, **parameters)
+        return value
+    selected = SimpleNamespace(**{**vars(args), "mode": "plan", "approved_plan": None, "wait_seconds": 0})
+    plan = snapshot.run(selected, capability())
+    selected.mode, selected.approved_plan = "execute", plan["plan_sha256"]
+    assert snapshot.run(selected, capability())["verdict"] == "completed"
+    assert snapshot.run(selected, capability())["verdict"] == "completed"
+    assert sum(op == "create-db-snapshot" for _, op, _ in tasks.observed) == 1
+    case = SimpleNamespace(transport=transport, root=M.C.ROOT, cache=cache, binding=binding,
+        predecessor=M.ACCEPTANCE.acceptance_owner().successor_parent(None, args))
+    clone_fixture.run(case, selected, snapshot, M, CANARY)
 
 
 def transport_read_protocols():
@@ -847,5 +1078,8 @@ def transport_read_protocols():
 
 if __name__ == "__main__":
     successor_task_protocols()
+    successor_task_protocols(requalify=True)
+    successor_task_protocols(requalify=True, failed_recovery="revoke-runtime")
+    successor_task_protocols(requalify=True, failed_recovery="unready")
     transport_read_protocols()
     run()

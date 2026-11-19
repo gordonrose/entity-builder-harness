@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 4
+#   version: 7
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -843,10 +843,101 @@ PY
             item = failed['checks'][0]
             self.assertEqual((item['status'], item['exit_code']), ('failed', 17))
             self.assertEqual((item['stdout_tail'], item['stderr_tail']), ('not-retained', 'not-retained'))
+            self.assertEqual(item['failure_detail'], {'status': 'unavailable', 'reason': 'unsupported-format'})
             self.assertNotIn(canary, json.dumps(failed) + Path(failed['local_report_path']).read_text())
             self.assertFalse(cache.read(item['evidence_key']))
         self.assertEqual((self.root / 'output-counts').read_text().splitlines(), ['attempt'] * 3)
 
+
+    def test_child_failure_projection_rejects_private_malformed_and_oversized_output(self):
+        spec = importlib.util.spec_from_file_location('failure_producer', ROOT / 'scripts/repo/diagnostic-coverage/script.py')
+        producer = importlib.util.module_from_spec(spec); spec.loader.exec_module(producer)
+        project = selection.execution_policy.child_failure_detail
+        payload = {'schema': 'repo/diagnostic-coverage-report/v1', 'verdict': 'failed',
+                   'findings': [{'code': 'diagnostic-review-stale', 'path': 'src/main.ts'}]}
+        expected = {'status': 'available', 'findings': payload['findings'], 'truncated': False}
+        self.assertEqual(project(json.dumps(payload), producer.failure_detail, {'src/main.ts'}), expected)
+        hidden = copy.deepcopy(payload); hidden['findings'][0]['path'] = 'PRIVATE_CHILD_CANARY'
+        self.assertEqual(project(json.dumps(hidden), producer.failure_detail, {'src/main.ts'})['findings'],
+                         [{'code': 'diagnostic-review-stale', 'location': 'unavailable'}])
+        cases = [('', 'output-absent'), ('PRIVATE_CHILD_CANARY', 'invalid-structured-output'),
+                 ('{' * 1048577, 'output-limit-exceeded'), ('[]', 'unsupported-format'),
+                 ('{"schema":"x","schema":"y"}', 'invalid-structured-output'),
+                 ('{"private":NaN}', 'invalid-structured-output'),
+                 ('[' * 2000, 'invalid-structured-output')]
+        for value, reason in cases:
+            with self.subTest(reason=reason):
+                self.assertEqual(project(value, producer.failure_detail), {'status': 'unavailable', 'reason': reason})
+        for mutate in (
+            lambda value: value.update(verdict='passed'),
+            lambda value: value.update(findings=[]),
+            lambda value: value['findings'][0].update(code='PRIVATE_CHILD_CANARY'),
+            lambda value: value['findings'][0].update(message='PRIVATE_CHILD_CANARY'),
+            lambda value: value['findings'][0].update(path=['PRIVATE_CHILD_CANARY']),
+            lambda value: value['findings'][0].pop('path'),
+        ):
+            changed = copy.deepcopy(payload); mutate(changed)
+            self.assertEqual(project(json.dumps(changed), producer.failure_detail),
+                             {'status': 'unavailable', 'reason': 'invalid-structured-output'})
+        many = {**payload, 'findings': payload['findings'] * 33}
+        bounded = project(json.dumps(many), producer.failure_detail, {'src/main.ts'})
+        self.assertEqual(bounded, {**expected, 'findings': payload['findings'] * 32, 'truncated': True})
+        many['findings'] = many['findings'] + [{'code': 'PRIVATE_CHILD_CANARY'}]
+        self.assertEqual(project(json.dumps(many), producer.failure_detail)['status'], 'unavailable')
+        self.assertEqual(project(json.dumps(payload)), {'status': 'unavailable', 'reason': 'unsupported-format'})
+        def broken(*_args): raise RuntimeError('PRIVATE_CHILD_CANARY')
+        self.assertEqual(project(json.dumps(payload), broken),
+                         {'status': 'unavailable', 'reason': 'diagnostic-processing-failed'})
+
+    def test_real_diagnostic_child_failure_survives_reports_and_blocks_aggregate(self):
+        self.prepare_selector_cli()
+        # Empty baseline tree is the only simulated Git observation. The real
+        # producer discovers disposable files and detects their absent reviews.
+        shim = self.root / '.selector-test-bin/git'
+        shim.write_text(shim.read_text().replace('case "$*" in', 'case "$*" in *"ls-tree"*) exit 0;;'))
+        folder = self.root / 'scripts/repo/diagnostic-coverage'
+        folder.mkdir(parents=True)
+        for name in ('script.py', 'script.sh'):
+            shutil.copyfile(ROOT / 'scripts/repo/diagnostic-coverage' / name, folder / name)
+        (folder / 'reviews.v1.json').write_text(json.dumps({'schema': 'repo/diagnostic-adoption/v1',
+            'baseline': 'd94da2b9401d3abcf86618b5d497e9b93903490a', 'reviews': []}))
+        (self.root / 'package.json').write_text('{"workspaces":[]}')
+        self.catalog['checks']['diagnostic-adoption'] = {**copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/repo/diagnostic-coverage/script.sh'],
+            'owner': 'repo.diagnostics.coverage', 'effects': ['read-only'],
+            'scope_inputs': False, 'inputs': ['scripts/repo/diagnostic-coverage', 'package.json']}
+        self.catalog['checks']['local'].update(members=['diagnostic-adoption'], aggregate_branch='whole')
+        self.check_script('local', ['read-only', 'writes-files'], 'set -euo pipefail\nROOT="$(git rev-parse --show-toplevel)"\ncd "$ROOT"\nexec bash scripts/repo/check-selection/script.sh --aggregate-members local --execute-local --json\n')
+        self.save()
+        real_run, calls = subprocess.run, []
+        def run(argv, *args, **kwargs):
+            if argv == self.catalog['checks']['diagnostic-adoption']['argv']: calls.append(argv)
+            return real_run(argv, *args, **kwargs)
+        with patch.dict(os.environ, self.cli_environment), patch.object(selection.subprocess, 'run', side_effect=run):
+            report = self.run_plan(execute=True)
+        child = next(item for item in report['checks'] if item['check_id'] == 'diagnostic-adoption')
+        parent = next(item for item in report['checks'] if item['check_id'] == 'local')
+        self.assertEqual(len(calls), 1)
+        self.assertEqual((child['status'], child['exit_code']), ('failed', 1))
+        self.assertIn({'code': 'diagnostic-new-or-changed-code-unreviewed',
+                       'path': 'scripts/repo/diagnostic-coverage/script.py'}, child['failure_detail']['findings'])
+        self.assertEqual((parent['status'], parent['blocked_by']), ('blocked', ['diagnostic-adoption']))
+        retained = self.root / report['run_report_path']
+        saved = json.loads(retained.read_text())
+        saved_child = next(item for item in saved['checks'] if item['check_id'] == 'diagnostic-adoption')
+        self.assertEqual(saved_child['failure_detail'], child['failure_detail'])
+        self.assertEqual(next(item for item in saved['checks'] if item['check_id'] == 'local')['blocked_by'], ['diagnostic-adoption'])
+        summary = retained.with_name('summary.txt').read_text()
+        self.assertIn('failure: diagnostic-new-or-changed-code-unreviewed at scripts/repo/diagnostic-coverage/script.py', summary)
+        self.assertIn('blocked by checks: diagnostic-adoption', summary)
+        self.assertFalse(selection.LocalCache(self.root).read(child['evidence_key']))
+        with patch.dict(os.environ, self.cli_environment), patch.object(selection.execution_policy, 'retain_run', side_effect=OSError('PRIVATE_CHILD_CANARY')):
+            failed_retention = self.run_plan(execute=True)
+        after = next(item for item in failed_retention['checks'] if item['check_id'] == 'diagnostic-adoption')
+        self.assertEqual((after['status'], after['exit_code'], after['failure_detail']),
+                         ('failed', 1, child['failure_detail']))
+        self.assertIn('test-run-retention-unavailable', self.codes(failed_retention))
+        self.assertNotIn('PRIVATE_CHILD_CANARY', json.dumps(failed_retention))
 
     def test_nested_summary_rejects_unknown_fields_values_and_unbounded_observations(self):
         valid = {
@@ -2093,6 +2184,39 @@ used_by:
         self.assertIn('new-consumer', second['affected_consumers'])
 
 
+    def test_upstream_frontier_preserves_all_edges_without_repeated_sweeps(self):
+        import random
+        def original(references, graph):
+            reached = set(references)
+            while True:
+                sources = {source for source, targets in graph.items() if any(
+                    selection.below(target, ref) or selection.below(ref, target)
+                    for target in targets for ref in reached)}
+                if sources <= reached:
+                    return reached
+                reached |= sources
+
+        paths = ['a', 'a/b', 'a/b/c', 'a/bb', 'b', 'b/c', 'c', 'c/d', 'isolated']
+        rng = random.Random(118)
+        for _ in range(80):
+            graph = {source: set(rng.sample(paths, rng.randrange(4))) for source in paths[:-1]}
+            refs = set(rng.sample(paths, rng.randrange(5)))
+            saved_graph, saved_refs = copy.deepcopy(graph), refs.copy()
+            self.assertEqual(selection.upstream_closure(refs, graph), original(refs, graph))
+            self.assertEqual((graph, refs), (saved_graph, saved_refs))
+
+        graph = {f'node-{i}': {f'node-{i + 1}'} for i in range(40)}
+        graph['node-40'] = {'node-0'}  # Cycle plus disconnected component.
+        graph['unrelated'] = {'other'}
+        with patch.object(selection, 'below', wraps=selection.below) as compare:
+            expected = original({'node-40'}, graph)
+            original_calls = compare.call_count
+            compare.reset_mock()
+            self.assertEqual(selection.upstream_closure({'node-40'}, graph), expected)
+            self.assertLess(compare.call_count, original_calls // 5)
+        self.assertEqual(expected, {f'node-{i}' for i in range(41)})
+
+
     def test_mutation_during_check_is_uncertain_and_not_cached(self):
         self.check_script('local', ['read-only', 'writes-files'], 'echo changed >> src/main.ts\necho local >> counts\n')
         for _ in range(2):
@@ -2408,13 +2532,26 @@ used_by:
 
 
     def test_split_component_receipt_is_independent_and_aggregate_reuses_it(self):
+        self.assert_split_component_receipts(
+            'check-selection-regression', 'scripts/repo/check-selection/smoke-test.sh',
+            'check-selection-mechanics', 'mechanics')
+
+    def test_infrastructure_receipt_is_independent_and_composition_reuses_it(self):
+        self.assert_split_component_receipts(
+            'entity-smoke-composition', 'scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh',
+            'entity-smoke-infrastructure-route', 'infrastructure')
+
+    def test_infrastructure_leaf_failure_reuse_and_invalidation(self):
+        self.assert_owned_adapter_leaf_receipts('entity-smoke-infrastructure-route', 'infrastructure')
+
+    def assert_split_component_receipts(self, aggregate_id, wrapper_path, unit, unit_argument):
         # Exercise the real default aggregate dispatch with cheap fixture children.
         # Actual repository membership and input ownership are proved separately.
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
-        aggregate_id = 'check-selection-regression'
         members = catalog[aggregate_id]['members']
-        wrapper = self.root / 'scripts/repo/check-selection/smoke-test.sh'
-        shutil.copyfile(ROOT / 'scripts/repo/check-selection/smoke-test.sh', wrapper)
+        wrapper = self.root / wrapper_path
+        wrapper.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / wrapper_path, wrapper)
         # Keep the exact default branch; replace only component work with bounded
         # counters. This fixture cannot recursively launch the actual test suite.
         text = wrapper.read_text()
@@ -2426,13 +2563,12 @@ used_by:
         base = copy.deepcopy(self.catalog['checks']['local'])
         for identity in [*members, aggregate_id]:
             self.catalog['checks'][identity] = copy.deepcopy(base)
-            self.catalog['checks'][identity].update(argv=catalog[identity]['argv'], inputs=['scripts/repo/check-selection/smoke-test.sh'], owner='repo.test.check-selection.wrapper', scope_inputs=False)
+            self.catalog['checks'][identity].update(argv=catalog[identity]['argv'], effects=catalog[identity]['effects'], inputs=[wrapper_path], owner=catalog[identity]['owner'], scope_inputs=False)
         self.catalog['checks'][aggregate_id].update(members=members, aggregate_branch='default')
         self.catalog['repository_inputs'] = [{'inputs': ['src'], 'checks': [aggregate_id]}]
         self.save()
         subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
         subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'fixture baseline'], check=True)
-        unit = 'check-selection-mechanics'
         first = self.run_plan(checks=[unit], execute=True)
         self.assertFalse(first['findings'], first['findings'])
         (self.root / 'unrelated-runtime.ts').write_text('unrelated body change\n')
@@ -2442,6 +2578,7 @@ used_by:
         self.assertFalse(prepared['findings'], prepared['findings'])
         combined = self.run_plan(checks=[aggregate_id], task_paths=['src/main.ts'], execute=True)
         self.assertFalse(combined['findings'], combined['findings'])
+        self.assertTrue(selection.execution_policy.passed_local_selection(combined, [aggregate_id]))
         self.assertEqual(combined['execution_summary']['reused_check_ids'], [unit])
         item = next(item for item in combined['checks'] if item['check_id'] == aggregate_id)
         self.assertEqual(set(item['nested_execution_summary']['reused_check_ids']), set(members))
@@ -2457,9 +2594,10 @@ used_by:
         self.assertEqual(set(changed['execution_summary']['executed_check_ids']), {unit, aggregate_id})
         self.assertEqual(len((self.root / 'counts').read_text().splitlines()), len(members) + 1)
         # A failed real child dispatch cannot produce a passing aggregate receipt.
-        wrapper.write_text(wrapper.read_text().replace('printf "%s\\n" "$2" >> counts', 'if [ "$2" = "mechanics" ]; then exit 7; fi\nprintf "%s\\n" "$2" >> counts'))
+        wrapper.write_text(wrapper.read_text().replace('printf "%s\\n" "$2" >> counts', 'if [ "$2" = "' + unit_argument + '" ]; then exit 7; fi\nprintf "%s\\n" "$2" >> counts'))
         self.assertFalse(self.run_plan(paths=['src/main.ts'], record_preparation=True)['findings'])
         failed = self.run_plan(checks=[aggregate_id], task_paths=['src/main.ts'], execute=True)
         self.assertIn('required-check-failed', self.codes(failed))
         self.assertIn('verification-prerequisite-not-passed', self.codes(failed))
         self.assertNotEqual(next(item for item in failed['checks'] if item['check_id'] == aggregate_id)['status'], 'passed')
+        self.assertFalse(selection.execution_policy.passed_local_selection(failed, [aggregate_id]))

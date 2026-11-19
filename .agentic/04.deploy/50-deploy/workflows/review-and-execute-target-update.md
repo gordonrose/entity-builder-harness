@@ -4,7 +4,7 @@ id: deploy.workflow.release-update-and-recovery
 version: 5
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -69,6 +69,12 @@ independent local work when an external prerequisite blocks mutation.
    baseline to
    `.agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md`.
 
+For a scope declaring `ordinary_delivery`, the connected invocation documented
+in that Run workflow performs this hand-off and subsequent acceptance through
+the existing controllers. Do not launch a separate deployment before invoking
+it merely to satisfy this procedural list. Original operation receipts remain
+the resume authority; the connector grants no additional execution approval.
+
 For the entity-smoke adapter, use its existing infrastructure command with
 `--phase update` and the exact `--expected-predecessor`; create/activate are
 initial deployment operations, not aliases for an update. The same shared
@@ -76,6 +82,14 @@ change-set and reservation owners review, submit once and reconcile updates.
 Supply `--rollback-receipt` and `--rollback-compatibility-id` for the update
 too: compatible recovery is checked before deploying, not discovered only
 after the candidate fails.
+For the declared unchanged-target reuse path, the compatibility selector is
+`accepted-proof-<accepted-release-suffix>` rather than a fabricated compatibility
+record ID. The existing rollback selector validates complete accepted custody,
+the exact qualified old package, immutable operational configuration/permission/
+schema inputs and unchanged database incarnation through the shared proof
+policy. Any operational difference requires a real fresh compatibility record.
+The update remains image-only: no migration execution, permission-model change
+or non-image parameter change is admitted by this selection.
 Before submission, the adapter checks the existing acceptance schema's
 recovery-input boundary against both immutable source revisions. Changes to
 that boundary require affected capability requalification, not a silent

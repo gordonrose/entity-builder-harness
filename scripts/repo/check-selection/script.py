@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 9
+#   version: 10
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -247,10 +247,17 @@ def closure(changed: list[str], graph: dict[str, set[str]]) -> set[str]:
 def upstream_closure(references: set[str], graph: dict[str, set[str]]) -> set[str]:
     """Fingerprint the source inputs that feed selected consumers, not just the consumers."""
     reached = set(references)
-    while True:
-        sources = {source for source, targets in graph.items() if any(below(target, ref) or below(ref, target) for target in targets for ref in reached)}
-        if sources <= reached: return reached
+    frontier = reached.copy()
+    remaining = {source: targets for source, targets in graph.items() if source not in reached}
+    # Only new references can discover an unreached source. A source's edges
+    # can be retired once reached; cycles do not require another full sweep.
+    while frontier and remaining:
+        sources = {source for source, targets in remaining.items() if any(below(target, ref) or below(ref, target) for target in targets for ref in frontier)}
         reached |= sources
+        for source in sources:
+            del remaining[source]
+        frontier = sources
+    return reached
 
 
 def discover(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
@@ -847,7 +854,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             except (ValueError, OSError, subprocess.SubprocessError): fresh = False
             if not fresh: blocked.append(child)
         if blocked:
-            item.update(status='blocked', reason='focused-or-member-proof-missing-or-stale')
+            item.update(status='blocked', reason='focused-or-member-proof-missing-or-stale', blocked_by=sorted(blocked))
             findings.append({'code': 'verification-prerequisite-not-passed', 'check_id': item['check_id'], 'check_ids': blocked})
             return False
         if not catalog_unchanged():
@@ -931,6 +938,10 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             timings['command_execution_seconds'] += item['elapsed_seconds']
             item['stdout_tail'] = 'not-retained' if completed.stdout else ''
             item['stderr_tail'] = 'not-retained' if completed.stderr else ''
+            if completed.returncode:
+                projector = (diagnostic_owner.failure_detail if diagnostic_owner is not None and
+                             any(entry.get('owner') == 'repo.diagnostics.coverage' for entry in item['catalog_entries'].values()) else None)
+                item['failure_detail'] = execution_policy.child_failure_detail(completed.stdout, projector, item['references'])
             if any(entry.get('members') for entry in item['catalog_entries'].values()):
                 try:
                     nested = json.loads(completed.stdout)

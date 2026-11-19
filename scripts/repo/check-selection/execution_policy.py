@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.execution-policy
-#   version: 2
+#   version: 4
 #   status: active
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 06.shared
 #   domain: testing
 #   disciplines: [agentic, security, sre]
@@ -15,7 +15,9 @@
 #   used_by:
 #   - id: repo.compiler.check-selection
 #     path: scripts/repo/check-selection/script.py
-"""Scheduling observations only; selector/cache remain the execution/proof owners."""
+#   - id: deploy.command.entity-smoke.infrastructure.implementation
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py
+"""Consume and retain runner observations; selector/cache own execution and proof."""
 from __future__ import annotations
 
 import hashlib
@@ -25,6 +27,75 @@ import stat
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def child_failure_detail(output: str, projector=None, allowed_paths=()) -> dict:
+    """Read one bounded structured result through its existing producer owner."""
+    def unavailable(reason):
+        return {'status': 'unavailable', 'reason': reason}
+    if projector is None:
+        return unavailable('unsupported-format')
+    if not output.strip():
+        return unavailable('output-absent')
+    if len(output) > 1048576:
+        return unavailable('output-limit-exceeded')
+    def closed_object(pairs):
+        result = dict(pairs)
+        if len(result) != len(pairs):
+            raise ValueError('duplicate-key')
+        return result
+    def reject_constant(_value):
+        raise ValueError('non-finite-number')
+    try:
+        payload = json.loads(output, object_pairs_hook=closed_object, parse_constant=reject_constant)
+        detail = projector(payload, set(allowed_paths))
+        return detail if detail is not None else unavailable('unsupported-format')
+    except (ValueError, TypeError, RecursionError):
+        return unavailable('invalid-structured-output')
+    except Exception:
+        return unavailable('diagnostic-processing-failed')
+
+
+def passed_local_selection(report: object, requested: list[str]) -> bool:
+    """Check a directly invoked runner response, never qualify an imported report.
+
+    The runner supplies catalog entries and resolved dependencies. Consume that
+    graph instead of assuming one result row per requested check.
+    """
+    if not isinstance(report, dict) or report.get('schema') != 'repo/check-selection-report/v1' or report.get('stage') != 'local' or report.get('verdict') != 'passed' or report.get('findings') != []:
+        return False
+    if not requested or report.get('selection_mode') != 'explicit-checks' or report.get('requested_check_ids') != requested:
+        return False
+    rows = report.get('checks')
+    if not isinstance(rows, list) or not rows:
+        return False
+    by_identity = {}
+    for row in rows:
+        if not isinstance(row, dict) or row.get('status') != 'passed' or row.get('stage') != 'local':
+            return False
+        entries, dependencies = row.get('catalog_entries'), row.get('dependency_ids')
+        if not isinstance(entries, dict) or not entries or not isinstance(dependencies, list) or any(not isinstance(item, str) for item in dependencies):
+            return False
+        if not isinstance(row.get('check_id'), str) or row['check_id'] not in entries:
+            return False
+        for identity, entry in entries.items():
+            if not isinstance(identity, str) or identity in by_identity or not isinstance(entry, dict):
+                return False
+            members = entry.get('members', [])
+            if not isinstance(members, list) or any(not isinstance(item, str) for item in members) or not set(members) <= set(dependencies):
+                return False
+            by_identity[identity] = row
+    pending, seen = list(requested), set()
+    while pending:
+        identity = pending.pop()
+        if identity in seen:
+            continue
+        if identity not in by_identity:
+            return False
+        seen.add(identity)
+        row = by_identity[identity]
+        pending.extend(set(row['dependency_ids']) | (set(row['catalog_entries']) - seen))
+    return seen == set(by_identity)
 
 
 def validate_feedback(identity: str, check: dict) -> list[dict]:
@@ -71,6 +142,7 @@ def execution_view(results: list[dict], checks: dict, *, development: bool, expl
             'elapsed_seconds': item.get('elapsed_seconds'), 'evidence_source': item.get('evidence_source'),
             'source_inputs': sorted(checks[item['check_id']].get('inputs', [])),
             'budget_exceeded': bool(feedback and item.get('elapsed_seconds', 0) > feedback['expected_seconds']),
+            **{key: item[key] for key in ('failure_detail', 'blocked_by') if key in item},
         })
     pending = sorted(item['check_id'] for item in results if item['status'] != 'passed')
     return {
@@ -143,7 +215,8 @@ def safe_run(report: dict, run_id: str) -> dict:
         'integration_claim': False if report['execution_policy']['mode'] in ('development', 'explicit') else None,
         'changed_inputs': report['changed_inputs'],
         'checks': [{**{key: item[key] for key in ('check_id', 'stage', 'boundary', 'status', 'exit_code', 'elapsed_seconds',
-                                                   'input_digest', 'evidence_key', 'evidence_source', 'cache_invalidation_reasons') if key in item},
+                                                   'input_digest', 'evidence_key', 'evidence_source', 'cache_invalidation_reasons',
+                                                   'failure_detail', 'blocked_by') if key in item},
                     'runtime_digest': hashlib.sha256(json.dumps(item['runtime_identity'], sort_keys=True).encode()).hexdigest() if item.get('runtime_identity') else None}
                    for item in report['checks']],
         'pending_check_ids': report['execution_policy']['pending_check_ids'],
@@ -172,6 +245,17 @@ def render(report: dict) -> str:
             lines.append('  selected: ' + item['selection_basis'] + '; required by: ' + (', '.join(item['required_by']) or 'impact seed'))
         if item.get('evidence_source'):
             lines.append(f"  result: {item['evidence_source']}; command seconds: {item.get('elapsed_seconds')}; estimate exceeded: {item['budget_exceeded']}")
+        if item.get('blocked_by'):
+            lines.append('  blocked by checks: ' + ', '.join(item['blocked_by']))
+        detail = item.get('failure_detail', {})
+        if detail.get('status') == 'unavailable':
+            lines.append('  failure detail unavailable: ' + detail['reason'])
+        elif detail.get('status') == 'available':
+            for finding in detail['findings']:
+                lines.append('  failure: ' + finding['code'] + (' at ' + finding['path'] if 'path' in finding else '')
+                    + ('; location unavailable' if finding.get('location') == 'unavailable' else ''))
+            if detail['truncated']:
+                lines.append('  additional findings omitted (detail limit)')
     if policy.get('pending_check_ids'):
         lines.append('Pending: ' + ', '.join(policy['pending_check_ids']))
     if report.get('findings'):

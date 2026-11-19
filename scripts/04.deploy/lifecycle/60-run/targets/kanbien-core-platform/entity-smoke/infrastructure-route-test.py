@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.infrastructure-route
-#   version: 3
+#   version: 8
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -111,6 +111,18 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     M.ALIGN.inspect = lambda provider, receipt, checked_at: ({"dependency_incarnation_sha256": F.BINDING["dependency_incarnation_sha256"]}, copy.deepcopy(F.PARAMETERS), "private-group")
     def arguments(mode="plan", label=None, approved=None, phase="create", prerequisites=None):
         return SimpleNamespace(mode=mode, phase=phase, receipt=root / "controlled-receipt.json", proof_label=label or F.BINDING["proof_label"], approved_plan=approved, wait_seconds=0, prerequisites=prerequisites, validate_arguments=False)
+    def expiry_at_main(args, expected_effect):
+        response = SimpleNamespace(returncode=254, stdout="", stderr="An error occurred (ExpiredToken) when calling the GetCallerIdentity operation: " + CANARY)
+        output = io.StringIO()
+        with patch.object(M.CLI.subprocess, "run", return_value=response) as call, \
+             patch.object(M, "parse", lambda: args), redirect_stdout(output):
+            status = M.main()
+        report = json.loads(output.getvalue())
+        assert status == 1 and report["condition"] == "aws-credentials-expired"
+        assert report["effect"] == expected_effect and CANARY not in output.getvalue()
+        assert report["context"]["provider_operation"] == "sts/get-caller-identity"
+        assert call.call_count == 1 and call.call_args.args[0][1:3] == ["sts", "get-caller-identity"]
+    expiry_at_main(arguments(), "not-started")
     provider = Provider()
     plan = M.run(arguments(), provider)
     assert plan["verdict"] == "planned" and not any(operation in {"create-change-set", "execute-change-set"} for _, operation, _ in provider.calls)
@@ -148,7 +160,84 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     # observe the reserved operation, never submit a second execute request.
     provider.lost_execute = True
     failed(lambda: M.run(arguments("execute", approved=plan["plan_sha256"]), provider), "deployment-execution-uncertain-reconcile-only")
-    completed = M.run(arguments("execute", approved=plan["plan_sha256"]), provider)
+    # Once admitted, unavailable NEW-admission checks and lost write permission
+    # must not obstruct observation. Completion still proves real owned state.
+    def admission_unavailable(*args, **kwargs):
+        raise M.InfrastructureFailure("infrastructure-local-proof-unavailable")
+    resume_args = arguments("execute", approved=plan["plan_sha256"])
+    gate_root = root / ".cache/entity-smoke-live" / F.BINDING["proof_label"] / "realization"
+    admission_bytes = {path: path.read_bytes() for path in gate_root.glob("execution-preflight-*.json")}
+    reserved_bytes = {path: path.read_bytes() for path in (gate_root.parent / "attempts").glob("*.json")}
+    preparation_path = gate_root.parent / "attempts" / (F.BINDING["proof_label"] + "-deploy-create-change-set.json")
+    preparation_bytes = preparation_path.read_bytes()
+    # A real execution alone is not enough. Reject missing/malformed preparation
+    # without another mutation and never replace either reservation.
+    calls_before = len(provider.calls)
+    preparation_path.unlink()
+    failed(lambda: M.run(resume_args, provider), "infrastructure-reviewed-attempt-required")
+    preparation_path.write_text("{malformed-private-canary")
+    failed(lambda: M.run(resume_args, provider), "resource-reservation-unavailable")
+    preparation_path.write_bytes(preparation_bytes)
+    assert all(operation.startswith(("describe-", "get-", "list-", "simulate-")) for _, operation, _ in provider.calls[calls_before:])
+    assert all(path.read_bytes() == raw for path, raw in reserved_bytes.items())
+    expiry_at_main(resume_args, "original-operation-reconcile-only")
+    assert all(path.read_bytes() == raw for path, raw in {**admission_bytes, **reserved_bytes}.items())
+    assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
+    provider.deny_policy = True
+    with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "source_preflight", admission_unavailable), \
+         patch.object(M.ALIGN, "inspect", admission_unavailable), patch.object(M, "now", lambda: "2099-01-01T00:00:00Z"):
+        provider.stack["StackStatus"] = "CREATE_IN_PROGRESS"
+        with patch.object(M.DEPLOY.CHANGE_SETS, "retained_execution", wraps=M.DEPLOY.CHANGE_SETS.retained_execution) as selection:
+            pending = M.run(resume_args, provider)
+            assert selection.call_count == 1  # Validated reconstructed intent.
+        assert pending["verdict"] == "pending" and pending["effect"] == "original-operation-not-terminal"
+        provider.stack["StackStatus"] = "CREATE_FAILED"
+        failed(lambda: M.run(resume_args, provider), "deployment-execution-not-successful")
+        provider.stack["StackStatus"] = "CREATE_COMPLETE"
+        completed = M.run(resume_args, provider)
+        assert completed["verdict"] == "completed"
+        assert M.run(resume_args, provider) == completed
+        assert provider.write_operation is None
+        failed(lambda: M.run(arguments("execute", approved="sha256:" + "0" * 64), provider), "infrastructure-approved-plan-mismatch")
+        admission_path = next(iter(admission_bytes))
+        changed = json.loads(admission_bytes[admission_path])
+        changed["facts"]["gate_evidence"][0]["input_sha256"] = "sha256:" + "0" * 64
+        admission_path.write_text(json.dumps(changed))
+        failed(lambda: M.run(resume_args, provider), "task-step-completion-facts-mismatch")
+        admission_path.unlink()
+        failed(lambda: M.run(resume_args, provider), "infrastructure-original-admission-required")
+        admission_path.write_bytes(admission_bytes[admission_path])
+        changed = json.loads(admission_bytes[admission_path])
+        changed["change_summary"]["operation_counts"]["delete"] = 1
+        admission_path.write_text(json.dumps(changed))
+        failed(lambda: M.run(resume_args, provider), "infrastructure-original-admission-required")
+        admission_path.write_bytes(admission_bytes[admission_path])
+        def wrong_account(service, operation, **parameters):
+            if operation == "get-caller-identity": return {"Account": "000000000000", "Arn": CANARY}
+            return provider(service, operation, **parameters)
+        failed(lambda: M.run(resume_args, wrong_account), "infrastructure-operator-identity-not-confirmed")
+        assert all(path.read_bytes() == raw for path, raw in admission_bytes.items())
+        admission_facts = json.loads(next(iter(admission_bytes.values())))["facts"]
+        resumed_gates = [M.read_json(path) for path in gate_root.glob("controlled-execution-*.json")]
+        assert any(item["facts"]["gate_evidence"][:6] == admission_facts["gate_evidence"]
+                   and item["facts"]["component_evidence"] == admission_facts["component_evidence"] for item in resumed_gates)
+        # Unknown reads stay unknown at the real reporting boundary; never retry
+        # the mutation or turn a failed observation into missing intent.
+        def unavailable_read(service, operation, **parameters):
+            if operation == "describe-stacks":
+                raise M.InfrastructureFailure("infrastructure-provider-observation-unavailable", provider_operation=(service, operation))
+            return provider(service, operation, **parameters)
+        unavailable_read.effect = "not-started"
+        output = io.StringIO()
+        with patch.object(M, "Provider", lambda: unavailable_read), patch.object(M, "parse", lambda: resume_args), redirect_stdout(output):
+            status = M.main()
+        report = json.loads(output.getvalue())
+        assert status == 1 and report["condition"] == "infrastructure-provider-observation-unavailable"
+        assert report["effect"] == "original-operation-reconcile-only" and CANARY not in output.getvalue()
+        # An absent attempt does not gain this continuation privilege.
+        failed(lambda: M.run(arguments("execute", label="entity-smoke-" + "7" * 24, approved=plan["plan_sha256"]), Provider()),
+               "infrastructure-local-proof-unavailable")
+    provider.deny_policy = False
     assert completed["verdict"] == "completed"
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
     assert M.run(arguments("execute", approved=plan["plan_sha256"]), provider)["receipt"] == completed["receipt"]
@@ -291,6 +380,11 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     activation.mode = "execute"; provider.lost_execute = False
     assert M.run(activation, provider)["verdict"] == "completed"
     assert M.run(activation, provider)["verdict"] == "completed"
+    # An older valid CREATE approval cannot be attached to ACTIVATE intent.
+    activation.approved_plan = plan["plan_sha256"]
+    with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "inspect", admission_unavailable):
+        failed(lambda: M.run(activation, provider), "infrastructure-approved-plan-mismatch")
+    activation.approved_plan = activation_plan["plan_sha256"]
     original_execution = M.read_execution_reservation(store, plan["plan"]["binding"], active_parameters, True)
     M.datetime = Later
     M.activation_prerequisites(provider, prerequisites, plan["plan"]["binding"], active_parameters, cache, store, resuming=True, admitted_at=original_execution["reserved_at"])
@@ -417,10 +511,49 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-local-proof-reference-") a
     failed(M.local_checks, "infrastructure-local-proof-unavailable")
     # Success comes only from the existing selected runner, never an imported
     # report or force/reuse override. The runner owns input-bound cache reuse.
-    M.subprocess.run = lambda arguments, **options: SimpleNamespace(returncode=0, stdout=json.dumps({"findings": [], "checks": [{"check_id": identity, "status": "passed"} for identity in ("entity-smoke-composition", "secret-dependency-declaration-regression")]}), stderr="")
+    requested = ["entity-smoke-composition", "secret-dependency-declaration-regression"]
+    catalog = M.yaml.safe_load((REAL_ROOT / "scripts/repo/check-selection/checks.yml").read_text())["checks"]
+    identities = requested + catalog[requested[0]]["members"]
+    successful = {"schema": "repo/check-selection-report/v1", "stage": "local", "verdict": "passed",
+                  "selection_mode": "explicit-checks", "requested_check_ids": requested, "findings": [],
+                  "run_report_path": reference,
+                  "checks": [{"check_id": identity, "status": "passed", "stage": "local",
+                              "catalog_entries": {identity: catalog[identity]},
+                              "dependency_ids": list(catalog[identity].get("members", []))} for identity in identities]}
+    response_value = successful
+    M.subprocess.run = lambda arguments, **options: SimpleNamespace(returncode=0, stdout=json.dumps(response_value), stderr=CANARY)
     M.local_checks()
-    M.subprocess.run = lambda arguments, **options: SimpleNamespace(returncode=0, stdout=json.dumps({"findings": [], "checks": [{"check_id": "other-check", "status": "passed"}]}), stderr="")
+    for ordinal in range(len(successful["checks"])):
+        response_value = copy.deepcopy(successful)
+        response_value["checks"].pop(ordinal)
+        failed(M.local_checks, "infrastructure-local-proof-not-passed")
+        for status in ("failed", "blocked", "running", "deferred"):
+            response_value = copy.deepcopy(successful)
+            response_value["checks"][ordinal]["status"] = status
+            failed(M.local_checks, "infrastructure-local-proof-not-passed")
+    for field, invalid in (("verdict", "planned"), ("stage", "deploy"), ("findings", [{}]),
+                           ("requested_check_ids", ["other-check"]), ("checks", [None])):
+        response_value = {**successful, field: invalid}
+        failed(M.local_checks, "infrastructure-local-proof-not-passed")
+    response_value = copy.deepcopy(successful)
+    response_value["checks"].append(response_value["checks"][0])
     failed(M.local_checks, "infrastructure-local-proof-not-passed")
+    response_value = copy.deepcopy(successful)
+    response_value["checks"][0]["dependency_ids"] = []
+    failed(M.local_checks, "infrastructure-local-proof-not-passed")
+    output = io.StringIO()
+    with redirect_stdout(output): status = M.main()
+    failure = json.loads(output.getvalue())
+    assert status == 1 and failure["condition"] == "infrastructure-local-proof-not-passed"
+    assert failure["evidence_reference"] == reference and failure["effect"] == "not-started"
+    assert CANARY not in output.getvalue()
+    # Future catalog members work without another workload-specific name list.
+    response_value = copy.deepcopy(successful)
+    response_value["checks"][0]["dependency_ids"].append("future-member")
+    response_value["checks"][0]["catalog_entries"][requested[0]]["members"].append("future-member")
+    response_value["checks"].append({"check_id": "future-member", "status": "passed", "stage": "local",
+                                    "catalog_entries": {"future-member": {}}, "dependency_ids": []})
+    M.local_checks()
     M.ROOT, M.subprocess.run, M.parse = old_root, old_run, old_parse
     M.ALIGN.read_receipt, M.ALIGN.source_preflight = old_read, old_source
 
@@ -442,20 +575,51 @@ M.parse, M.run = old_parse, old_run
 # Actual controller source identity includes the extracted execution dependency.
 original_digest = M.digest_file
 identity_paths = []
-dependency_paths = [REAL_ROOT / "scripts/04.deploy/shared/provider-adapters/aws" / name for name in ("cli.py", "tasks.py", "resource_reservation.py", "snapshots.py", "change_sets.py")]
+dependency_paths = [REAL_ROOT / "scripts/04.deploy/shared/provider-adapters/aws" / name for name in ("cli.py", "tasks.py", "resource_reservation.py", "snapshots.py", "change_sets.py", "ecr-scan.py", "foundation-checks.py")]
 dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
+dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py")
+dependency_paths.append(Path(M.CHECK_RESULTS.__file__))
+dependency_paths.extend([Path(M.ALIGN.INPUT_OWNER.__file__), Path(M.ALIGN.INPUT_OWNER.PATHS.__file__),
+                         *(REAL_ROOT / reference for reference in M.ALIGN.INPUTS["references"])])
 try:
     def fixed_digest(path):
         identity_paths.append(path)
         return "sha256:" + "1" * 64
     M.digest_file = fixed_digest
     original_identity = M.source_digest()
+    assert not any(path.name.endswith(("-test.py", "-test.sh")) for path in identity_paths)
+    for source in (DIRECTORY / "script.py", DIRECTORY / "script.sh", DIRECTORY / "task-control.py"):
+        assert source in identity_paths
+    for fixture in DIRECTORY.glob("*-test.*"):
+        M.digest_file = lambda path: "sha256:" + ("2" if path == fixture else "1") * 64
+        assert M.source_digest() == original_identity
     for dependency in dependency_paths:
         assert dependency in identity_paths
         M.digest_file = lambda path: "sha256:" + ("2" if path == dependency else "1") * 64
         assert M.source_digest() != original_identity
 finally:
     M.digest_file = original_digest
+
+# Test-file addition/removal also leaves controller identity stable, while the
+# unchanged registered input directory continues to fingerprint test contents.
+with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-inputs-") as temporary:
+    directory = Path(temporary)
+    production = directory / "controller.py"; production.write_text("first")
+    virtual = REAL_ROOT / ".cache/controller-input-fixture"
+    listing = SimpleNamespace(iterdir=lambda: (virtual / path.name for path in directory.iterdir()))
+    with patch.object(M, "DIRECTORY", listing), patch.object(M, "digest_file",
+            lambda path: original_digest(directory / path.name if path.parent == virtual else path)):
+        initial = M.source_digest()
+        fixture = directory / "future-test.py"; fixture.write_text("first")
+        assert M.source_digest() == initial
+        fixture.write_text("second")
+        assert M.source_digest() == initial
+        shell_fixture = directory / "future-test.sh"; shell_fixture.write_text("exit 0")
+        assert M.source_digest() == initial
+        fixture.unlink(); shell_fixture.unlink()
+        assert M.source_digest() == initial
+        production.write_text("second")
+        assert M.source_digest() != initial
 
 # Exercise the real provider adapter with a controlled subprocess response,
 # checking that the caller cannot choose another endpoint or enable retries.
@@ -596,17 +760,38 @@ def successor_protocols():
             cache = M.delivery_cache(args.proof_label, delivery)
             assert str(cache).endswith("/releases/" + delivery["delivery_id"])
             assert not any(op in {"create-change-set", "execute-change-set"} for _, op, _ in provider.calls)
-            args.mode, args.approved_plan = "review", planned["plan_sha256"]
-            assert M.run(args, provider)["verdict"] == "reviewed"
-            args.mode = "execute"
+            args.mode, args.approved_plan = "apply", "sha256:" + "0" * 64
+            failed(lambda: M.run(args, provider), "infrastructure-approved-plan-mismatch")
+            assert not any(op in {"create-change-set", "execute-change-set"} for _, op, _ in provider.calls)
+            args.approved_plan = planned["plan_sha256"]
+            # A pending review must not reach execution. Correct observation
+            # of the same reserved review may continue without creating again.
+            provider.mutate_change = lambda change: change.update(Status="CREATE_IN_PROGRESS")
+            assert M.run(args, provider)["verdict"] == "pending"
+            assert not any(op == "execute-change-set" for _, op, _ in provider.calls)
+            provider.mutate_change = lambda change: None
             failed(lambda: M.run(args, provider), "deployment-execution-uncertain-reconcile-only")
-            assert M.run(args, provider)["verdict"] == "completed"
+            assert [op for _, op, _ in provider.calls if op in {"create-change-set", "execute-change-set"}] == ["create-change-set", "execute-change-set"]
+            with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "source_preflight", admission_unavailable), \
+                 patch.object(M.ALIGN, "inspect", admission_unavailable), patch.object(M, "successor_admission", admission_unavailable), \
+                 patch.object(M, "rollback_selection", admission_unavailable):
+                provider.stack["StackStatus"] = "UPDATE_IN_PROGRESS"
+                assert M.run(args, provider)["verdict"] == "pending"
+                provider.stack["StackStatus"] = "UPDATE_COMPLETE"
+                assert M.run(args, provider)["verdict"] == "completed"
             assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 1
             packet = M.read_json(cache / "receipts/update.json")
             assert packet["plan"]["rollback_compatibility"] == compatibility_metadata
             for gate in (cache / "realization").glob("controlled-execution-*.json"):
                 assert M.read_json(gate)["change_summary"]["operation_counts"] == {"create": 0, "update": 1, "delete": 0, "replace": 5, "broaden-permission": 0}
             assert M.validate_deployment_receipt(packet, binding, delivery) is packet
+            reused = copy.deepcopy(packet)
+            reused["plan"]["rollback_compatibility"]["compatibility_id"] = "accepted-proof-" + predecessor["release_id"].removeprefix("release-")
+            reused["plan_sha256"] = M.DEPLOY.fingerprint(reused["plan"])
+            assert M.validate_deployment_receipt(reused, binding, delivery) is reused
+            reused["plan"]["rollback_compatibility"]["compatibility_id"] = "accepted-proof-" + "9" * 24
+            reused["plan_sha256"] = M.DEPLOY.fingerprint(reused["plan"])
+            failed(lambda: M.validate_deployment_receipt(reused, binding, delivery), "infrastructure-delivery-compatibility-invalid")
             checked = M.completed_deployment(provider, binding, {**F.PARAMETERS, "ServerDesiredCount": "1"}, delivery)
             assert checked["receipt"] == packet and checked["required_after"] == packet["result"]["facts"]["completed_at"]
             for mutate, code in (
@@ -644,18 +829,32 @@ def successor_protocols():
                 with patch.object(M, "rollback_selection", lambda *arguments: (selected, metadata)):
                     rollback_plan = M.run(args, provider)
                     assert rollback_plan["plan"]["binding"] == selected and rollback_plan["plan"]["delivery"] == delivery
-                    args.approved_plan, args.mode = rollback_plan["plan_sha256"], "review"
-                    assert M.run(args, provider)["verdict"] == "reviewed"
+                    args.approved_plan, args.mode = rollback_plan["plan_sha256"], "apply"
                     provider.lost_execute = False
-                    args.mode = "execute"
                     assert M.run(args, provider)["verdict"] == "completed"
+                    with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "inspect", admission_unavailable):
+                        assert M.run(args, provider)["verdict"] == "completed"
                     assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 2
             assert admission and current["release_id"] == predecessor["release_id"]
             for path in cache.rglob("*.json"):
                 assert CANARY not in path.read_text() and F.PARAMETERS["AdministratorSecretArn"] not in path.read_text()
 
 
+# A returned non-success review is also terminal for the connected invocation;
+# no execute call follows, even if a future review owner returns rather than raises.
+actual_run = M.run
+failed(lambda: M.parse(["--mode", "apply", "--phase", "create", "--receipt", "fixture.json",
+    "--proof-label", F.BINDING["proof_label"], "--approved-plan", "sha256:" + "1" * 64]), "infrastructure-arguments-invalid")
+for verdict in ("pending", "blocked", "failed", "uncertain"):
+    args = SimpleNamespace(mode="apply", receipt=Path("fixture.json"))
+    report = {"verdict": verdict, "effect": "not-started"}
+    with patch.object(M.ALIGN, "read_receipt", return_value={}), \
+         patch.object(M, "resume_execution", return_value=None), \
+         patch.object(M, "run", return_value=report) as child:
+        assert actual_run(args, Provider()) is report
+        assert child.call_count == 1 and child.call_args.args[0].mode == "review"
+
 successor_protocols()
 print(json.dumps({"schema": "deploy/entity-smoke-infrastructure-route-fixture/v1", "verdict": "passed", "provider_observation": False,
                   "prerequisites": "controlled-source-custody-alignment-and-policy-responses-not-qualification",
-                  "checks": ["actual-generic-gates", "plan-is-not-approval", "changed-plan-rejected", "review-before-execute", "lost-execution-observe-only", "completed-receipt-reconciliation", "no-fictional-runtime-facts", "same-label-ownership", "activation-proof-required", "activation-binds-four-real-collector-receipts", "activation-resume-no-old-zero-count-requirement", "submission-must-match-plan", "missing-gate-observation-rejected", "actual-cli-safe-rejection", "no-provider-on-offline-failure", "fixed-provider-endpoint", "no-automatic-mutation-retry"]}))
+                  "checks": ["actual-generic-gates", "plan-is-not-approval", "changed-plan-rejected", "review-before-execute", "lost-execution-observe-only", "resume-before-new-admission", "original-admission-not-restamped", "resume-pending-failed-and-unknown", "successor-and-rollback-resume", "completed-receipt-reconciliation", "no-fictional-runtime-facts", "same-label-ownership", "activation-proof-required", "activation-binds-four-real-collector-receipts", "activation-resume-no-old-zero-count-requirement", "submission-must-match-plan", "missing-gate-observation-rejected", "actual-cli-safe-rejection", "no-provider-on-offline-failure", "fixed-provider-endpoint", "no-automatic-mutation-retry"]}))

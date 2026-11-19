@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-evidence
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -136,7 +136,8 @@ for change, code in [
     ({"containers": []}, "task-container-evidence-invalid"),
     ({"containers": [{"name": "entity-smoke-verifier", "imageDigest": "sha256:" + "0" * 64, "exitCode": 0}]}, "task-container-identity-not-confirmed"),
 ]:
-    fails(lambda change=change: collect({**task, **change}, reservation, result), code)
+    failure = fails(lambda change=change: collect({**task, **change}, reservation, result), code)
+    assert not isinstance(failure, EVIDENCE.TerminalTaskFailure)
 for change, code in [
     ({"source_revision": "0" * 40}, "task-http-result-not-confirmed"),
     ({"record_digest": CANARY}, "task-result-digest-invalid"),
@@ -147,18 +148,32 @@ for change, code in [
     ({"native_error": CANARY}, "task-result-fields-invalid"),
 ]:
     fails(lambda change=change: collect(task, reservation, {**result, **change}), code)
-fails(lambda: collect(task, reservation), "task-success-observation-not-confirmed")
+missing = fails(lambda: collect(task, reservation), "task-success-observation-not-confirmed")
+assert not isinstance(missing, EVIDENCE.TerminalTaskFailure)
 fails(lambda: collect(task, reservation, result, result), "task-success-observation-not-confirmed")
 fails(lambda: collect(task, {**reservation, "request_sha256": "0" * 64}, result), "task-reservation-input-mismatch")
 retained = collect(task, reservation, result)
 fails(lambda: EVIDENCE.validate_retained({**retained, "permission_contract_sha256": "sha256:" + "0" * 64}, reservation), "task-retained-receipt-mismatch")
+tampered = copy.deepcopy(retained); tampered["task"]["exit_code"] = 1
+invalid_retained = fails(lambda: EVIDENCE.validate_retained(tampered, reservation), "task-retained-receipt-mismatch")
+assert not isinstance(invalid_retained, EVIDENCE.TerminalTaskFailure)
 failed = copy.deepcopy(task); failed["containers"][0]["exitCode"] = 1
-fails(lambda: collect(failed, reservation, result), "task-unsuccessful-completion")
+exited = fails(lambda: collect(failed, reservation, result), "task-unsuccessful-completion")
+assert isinstance(exited, EVIDENCE.TerminalTaskFailure)
+assert exited.terminal == {"operation_id": reservation["operation_id"], "request_sha256": reservation["request_sha256"],
+    "task_arn": task["taskArn"], "task_definition": task["taskDefinitionArn"], "source_revision": SOURCE,
+    "image_digest": IMAGE, "workload": "verifier", "operation": "create", "proof_label_sha256": hashlib.sha256(LABEL.encode()).hexdigest(),
+    "exit_code": 1, "stopped_at": "2026-11-08T12:00:05+00:00", "failure_basis": "nonzero-exit"}
+assert not hasattr(EVIDENCE.EvidenceFailure(exited.code), "terminal"), "a reason string alone cannot establish terminal evidence"
+assert CANARY not in json.dumps(exited.terminal) and LABEL not in json.dumps(exited.terminal)
 primary = {"schema": "core/diagnostic-record/v1", "code": "entity-smoke-target.proof-failed", "definitionVersion": 1, "detail": {"operation": "create", "step": "create", "condition": "request-failed", "effect": "unknown"}}
 companion = {"schema": "core/diagnostic-record/v1", "code": "entity-smoke-target.boundary-failed", "definitionVersion": 1, "detail": {"operation": "close", "effect": "not-assessed"}}
 envelope = {"verdict": "failed", "code": "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED", "diagnostic": primary, "related_diagnostics": [companion]}
 observed = fails(lambda: collect(failed, reservation, envelope), "task-unsuccessful-completion")
 assert observed.diagnostic == primary and observed.related == [companion]
+assert isinstance(observed, EVIDENCE.TerminalTaskFailure) and observed.terminal["failure_basis"] == "validated-failure-report"
+zero_exit_failure = fails(lambda: collect(task, reservation, envelope), "task-unsuccessful-completion")
+assert isinstance(zero_exit_failure, EVIDENCE.TerminalTaskFailure) and zero_exit_failure.terminal["exit_code"] == 0
 second = {"verdict": "failed", "code": "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED", "diagnostic": companion}
 multiple = fails(lambda: collect(failed, reservation, envelope, second), "task-unsuccessful-completion")
 assert len(multiple.observations) == 2 and multiple.observations[0]["related_diagnostics"] == [companion]
@@ -166,7 +181,8 @@ rollback = {"schema": "core/diagnostic-record/v1", "code": "entity-smoke-target.
 rollback_envelope = {"verdict": "failed", "code": "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED", "diagnostic": rollback}
 preserved = fails(lambda: collect(failed, reservation, rollback_envelope, envelope, second), "task-unsuccessful-completion")
 assert preserved.diagnostic == primary and preserved.related == [companion] and len(preserved.observations) == 3
-fails(lambda: collect(failed, reservation, {**envelope, "native_error": CANARY}), "task-failure-envelope-invalid")
+malformed_failure = fails(lambda: collect(failed, reservation, {**envelope, "native_error": CANARY}), "task-failure-envelope-invalid")
+assert not isinstance(malformed_failure, EVIDENCE.TerminalTaskFailure)
 fails(lambda: collect(failed, reservation, {**envelope, "related_diagnostics": [primary]}), "task-failure-companions-invalid")
 unsafe = copy.deepcopy(envelope); unsafe["diagnostic"]["detail"]["condition"] = CANARY
 fails(lambda: collect(failed, reservation, unsafe), "task-diagnostic-not-confirmed")

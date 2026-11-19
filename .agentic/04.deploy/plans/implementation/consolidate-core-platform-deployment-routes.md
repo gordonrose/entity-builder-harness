@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.consolidate-core-platform-deployment-routes
-version: 1
+version: 3
 status: draft
 created_on: "2026-11-14"
-updated_on: "2026-11-15"
+updated_on: "2026-11-19"
 layer: 04.deploy
 domain: deployment.consolidation
 disciplines: [architecture, sre, security]
@@ -17,7 +17,146 @@ used_by:
 -->
 # Consolidate core platform deployment routes
 
+## Nov19 accepted-proof rollback reuse — approved correction
+
+The user approved strictly checked accepted-proof reuse after review found that
+the feature update requires a compatibility record but has no producer for an
+unchanged accepted predecessor. Implement this in the existing shared proof
+policy and existing feature rollback selector, not a new qualification engine
+or evidence registry. Explicit selection uses the accepted release identity.
+
+Before reuse, the feature's existing state reader must validate complete live
+accepted custody and the exact qualified predecessor package. The shared policy
+compares immutable Git sources: the permission template and declared schema
+inputs must be unchanged; configuration must match except the top-level
+`change_impact` test-selection section and YAML comments. Both configuration
+hashes must match their respective retained/current bindings. Missing source,
+wrong hashes, changed schema, changed permissions, operational configuration
+changes or database-incarnation changes reject reuse. The image-only controller
+still rejects non-image parameter updates, migration execution and privilege
+model changes. Application/controller implementation changes are separately
+qualified; reuse is not a claim that new recovery code was tested or that live
+health is current. Fresh successor capability proof remains required.
+
+Consumers: the shared comparison, the feature rollback selector and captured
+deployment receipt validator, existing acceptance schema and the two owning
+workflows/standard/README. Preserve explicit fresh compatibility records for
+changed operational inputs. Tests must exercise real Git metadata-only reuse,
+changed/missing/added schema, template and configuration rejection, source/hash
+and incarnation mismatch, exact accepted identity and package matching, and the
+actual selector/receipt path. Existing safe policy failures must reach the
+infrastructure reporter without raw YAML, SQL, endpoints or provider output.
+No AWS mutation, new credentials, acceptance promotion or historical evidence
+rewrite is authorized by this local correction.
+
+## Nov19 integration correction batch
+
+The full affected local run retained at
+`.cache/test-runs/20261119T145330Z-4fb9d7dd31cb47b9b1c0cffee546c308/report.json`
+completed in 4280.382960 seconds: 124 passed, seven failed, two blocked, one
+uncertain and twenty later-stage entries deferred. This is accumulated local
+integration work, not a measured deployment or live acceptance.
+
+Before editing, the actual failing callers and existing reusable mechanisms were
+reviewed. Correct the following together, then rerun affected registered proof:
+
+- Bootstrap release-contract fixture: copied live entity acceptance fails the
+  canonical-record guard. Preserve the real-checkout positive check; make only
+  the copied unrelated feature scope a candidate, following the existing target
+  declaration fixture. Do not weaken acceptance-state or copy live authority.
+- CloudWatch runner fixture: its redundant hand-built workspace lacks the
+  declarations now required by the real runner. Remove it and preserve first-
+  and later-child failure/exit-status assertions in the existing shared runner
+  fixture. Core and all adapter/package callers consume that shared fixture;
+  keep PostgreSQL's deliberately normalized failure status.
+- Route declaration: both ordinary-update bindings exist, but the shared public
+  command is unbound in the independent delivery census. Declare the command in
+  both existing acceptance routes and link it from `ordinary_delivery`. Reuse
+  the compiler's existing command-owner/effects/offline-parser checks and a
+  separate synthetic ordinary-input placeholder; do not create another registry
+  or execute a release. Missing/undefined links retain the existing delivery
+  owner finding; malformed metadata/effects retain existing command findings.
+  Assert actual parser acceptance, negative owner/effects/link cases and census
+  membership for both wrapper and implementation under both scopes. This same
+  gap causes package-custody and both shell-client fixture failures; preserve
+  their real preflight gates and fix their shared input, not those consumers.
+- Check-selection contracts: actual alignment and budget imports gained shared
+  helpers, but exact-input assertions retain the old lists. Update those reviewed
+  expectations without weakening equality. A distinct real selection gap names
+  only `shared/persistence/configuration-implementation.ts`; select its existing
+  four-file owner folder so sibling configuration, credentials and diagnostics
+  changes also trigger package custody. Preserve the per-helper selection and
+  fingerprint counterexamples, and add failing-source/missing-check context to
+  the assertion. No runtime selection or scheduler is added.
+
+The retrieval regression refreshed its existing generated recognition index
+during execution, correctly leaving that result uncertain. Complete generated
+freshness before the stable rerun; no RAG functionality is being developed.
+These changes affect local test setup and declaration validation, not provider
+permissions, data, runtime diagnostics, release history or AWS state. Refresh
+only the reviewed compiler and verification-support source entries in their
+existing diagnostic reviews, retaining their limits. Full source-matched integration remains pending
+until a new complete report passes; the original failures remain retained.
+
+Implemented review: the two route declarations now connect the same existing
+command through ordinary_delivery.command, with the existing command parser
+owning argument/metadata/effect checks. No second probe loop or execution path
+was added. Historical acceptance records are unchanged. The draft binding
+shape and both of its existing consumers were changed together; no unsupported
+legacy shape is retained. The shared runner now checks native child statuses
+7 and 9, or the owner's explicit normalized status, and asserts no later case
+runs. The duplicate CloudWatch fixture was removed. The catalog selects the
+shared persistence folder rather than enumerating its four sibling files.
+
+Exploratory results: CloudWatch's complete local adapter check passed; bootstrap
+release-contract cases passed with the real-checkout positive and isolated
+negative cases; both corrected exact-input assertions passed; actual route
+parser/owner/effects/link cases passed; the independent delivery inventory
+passed all 31 tests. Two additional wrong-type link cases are included for the
+registered rerun. Metadata passed for all nine headed files changed in this
+batch; scoped whitespace checks passed. Existing unrelated AGENTS trailing
+whitespace was not changed. Final registered outcomes and the stable-source
+report reference are recorded in the active session log, not inferred from
+these exploratory results.
+
 ## Outcome and current authority
+
+### Nov19 — authorised successor recovery requalification
+
+The user approved implementing the missing shared successor-requalification
+path and continuing qualification/live proof without intermediate milestone
+stops. Preserve the accepted predecessor and data throughout; do not select
+first-release creation/activation, reset custody, or relabel old proof as fresh.
+Reuse release-succession policy/coordination, existing scope bindings, task
+reservations, snapshot/restore controls and acceptance archives. No parallel
+deployment engine, approval ledger or proof store is authorised or needed.
+
+Pre-edit consumer/predicate inventory: the shared proof policy currently rejects
+changed recovery input trees and contract bindings. Entity successor admission,
+task prerequisites, collection and historical validation consume that decision;
+persistence applicability/collection consumes the same policy. Distinguish
+ordinary reuse from explicit requalification requirements, never interpret a
+missing or failed proof as reuse. Admission may approve a declared fresh-proof
+sequence, but acceptance must independently validate its completed original
+receipts, exact candidate/predecessor/controller/database bindings and order.
+Wrong or changed source, missing/foreign/uncertain evidence, changed ownership,
+unapproved effects, incomplete cleanup and concurrent predecessor changes must
+reject. Historical accepted bytes remain immutable and readable.
+
+Implementation proceeds through existing policy/schema owners, the successor
+controller bindings and their existing proof/control consumers. Review actual
+recovery dependencies before selecting operations: first-release failure-stop
+is not an accepted-release rollback, and migration/bootstrap must not replay.
+Retain exact prior-image compatibility, single-submission reconciliation and
+safe original failure reporting. Extend the existing policy, ordinary-update,
+acceptance, infrastructure/task and restore fixtures; qualify real containers
+and the declared AWS proof separately. Record source reviews and prepare the
+complete stable batch before selected final verification/publication.
+
+This supersedes earlier entries declaring successor requalification out of
+implementation scope. Concrete external release identity remains bound through
+the existing publication and bounded release controls; implementation approval
+does not manufacture image receipts or successful cloud operations.
 
 Both `kanbien-core-platform/core-server-persistence` and `entity-smoke` should
 use common release machinery with explicit workload inputs, not parallel
@@ -41,6 +180,466 @@ and enforcement. Neither follow-on makes unfinished consolidation complete or
 expands the existing no-push, no-publication and no-AWS authority boundary.
 
 ## Current programme: remaining pieces and all 34 lessons
+
+### C — bounded preparation cost correction (2026-11-18)
+
+User approved measuring and correcting preparation overhead before the next
+deployment refactor. Reuse the existing governed runner, command-drift consumer,
+selector and their registered regression fixtures; no new runner, registry or
+persistent cache. Measure permission classification and path-impact planning
+separately. The initial full governed inventory took 18.32 seconds. Profiling
+of the same path-scoped impact plan is in progress; no planner cause is claimed
+until measured.
+
+Consumer/predicate inventory: runner direct execution and `--list` must retain
+identical permission classes, path exclusions, bounded header/effect reads,
+read failure versus policy rejection, child exit status and private-output
+exclusion. Command-drift and lifecycle preparation consume that classification.
+The selector's downstream/upstream dependency closure must retain all existing
+selection and input-invalidation edges, including cycles and directory overlap;
+no cross-invocation graph cache or narrowed check inputs is authorised. Extend
+existing fixtures to reject skipped effects/edges and repeated-work regressions.
+Any eliminated read-processing subprocess requires corresponding fixture review,
+not retaining an obsolete injected failure as if that operation still existed.
+Existing script/function ownership is retained; no public module move, product
+runtime contract, provider effect or package change is needed. Record measured
+results and consolidated self-review here before final focused verification;
+connected integration/package/AWS proof remains deferred.
+
+Measured correction and self-review: the initial profiled plan spent 293.8 of
+367.3 instrumented seconds in upstream closure (profiling adds overhead; normal
+baseline wall time was 97.29 seconds). Replace repeated full-reached-set sweeps
+with a frontier of new references, retiring already reached sources. Directional
+and parent/child path matching are unchanged, as are metadata discovery,
+fingerprints, check declarations, invalidation and execution permissions. The
+same real plan now took 29.00 seconds and retained all 29 check entries, their
+source-reference sets, dependency IDs, consumers, findings and scheduling.
+The governed inventory fell from 18.32 to 7.95 seconds with byte-identical output.
+An exploratory per-effect in-memory scan took 33.34 seconds and was replaced by
+one line parse per script; no unsuccessful optimisation is retained.
+
+Self-review covers both production edits and existing consumers. Runner root,
+inventory, header and effect read failures retain safe exit 2 and cannot execute
+the child; policy rejection remains exit 1. Removed grep processing has no
+remaining injected match-failure operation; failed source reads remain tested.
+All six forbidden effects, mixed read-only approval effects, exact-token matching,
+fresh invocation reads and a deterministic two-read bound are asserted in the
+existing runner fixture. The existing command-drift fixture passes unchanged.
+Selector tests compare 80 deterministic graphs with the original algorithm,
+including overlapping paths, cycles and disconnected nodes; a chain/cycle fixture
+requires at least fivefold fewer comparisons without a machine-speed threshold.
+Existing metadata/workspace discovery, transitive invalidation and plan-local
+cache tests passed alongside it (five focused cases, 11.364 seconds). No source
+predicate, diagnostic vocabulary, persistent cache, rule or check was removed.
+The only additional production logic replaces repeated work inside existing
+owners. Source-matched reviews and final registered regression are prepared next;
+these timings do not establish the whole preparation or ten-minute delivery budget.
+
+Final-pass correction: the registered mechanics suite passed in 373.038 seconds
+and both harness regressions passed, but adoption rejected the stale support-review
+hash for the changed mechanics fixture. Its production reviews were current; the
+fixture's separate support owner was missed during preparation. Re-reviewed that
+test and updated only its support reason/hash. No executable or assertion changed.
+The original failed run is retained at
+`.cache/test-runs/20261118T203559Z-bc5e51e9cbe74ac2a85f2d41a60c3d88/report.json`.
+Preparation itself passed in 95.12 seconds for this six-file task (96 planned
+check entries, no findings). A sequential same-graph comparison returned the
+same 741 references in 15.876 seconds with the old traversal and 1.398 seconds
+with the replacement. Refresh preparation and registered proof for changed
+review bindings; do not overwrite the original failure or claim cache reuse
+where the review contract changed. Record terminal results in the session log.
+
+### Declared PostgreSQL compatibility and exact qualification (2026-11-16)
+
+Approved connected slice: the source RDS template selects major 18 and retains
+automatic minor upgrades; each existing image contract declares its compatible
+major and exact disposable qualification image. A shared PostgreSQL validator
+owns parsing/compatibility for preparation, alignment, restore and package tests.
+Compatibility is not evidence: receipts retain exact tested/observed versions;
+live SQL, permissions, readiness and restoration readback remain mandatory.
+No source change applies an AWS upgrade, and historical receipts stay untouched.
+
+Consumer inventory: both image qualifiers, retained rollback qualification,
+public-image recovery's source review, package custody input fingerprints,
+preparation-inputs/database alignment, restore observation, scope impact and
+controller source closure, existing fixture suites and diagnostic reviews.
+Integration tests on other majors remain additional coverage, not target proof.
+Finite rejection predicates cover malformed declarations/version strings,
+incompatible target/observed majors, and exact qualification-image mismatch.
+Raw source/provider/SQL errors must not enter public diagnostics. Local fixture
+tests will exercise changed declarations and minor/major boundaries; actual
+container qualification and live proof remain deferred with the programme.
+
+Self-review: one new shared version helper replaces hardcoded version predicates;
+existing fixtures own its unit tests and changed-declaration cases, with a small
+registered unit for quick feedback. Both normal package qualifiers and retained
+rollback qualification read image contracts, verify actual server_version_num,
+and report exact observations. TCP readiness avoids the transient initialization
+server. PostgreSQL 18's versioned data directory is derived, including downstream
+log inspection. Source-template major and application major must agree before
+provider work. Restore keeps snapshot/readback/ownership/no-replay checks and
+accepts the historical cleanup-receipt shape only because retained receipts exist.
+Current restore observations include the engine version. Qualification fingerprints,
+public-image recovery reviewed-source hashes, scope inputs and diagnostic reviews
+must include the new helper and its existing duplicate-safe YAML parser.
+The old staging platform-shell qualifier and PostgreSQL17 adapter integration
+tests remain separate consumers, not evidence for this target's PostgreSQL18.
+
+The feature qualifier README now distinguishes exact local qualification from
+live major compatibility; its relative links were checked against real owners.
+AWS documents major-only selection in its
+[PostgreSQL version guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/PostgreSQL.Concepts.General.DBVersions.html).
+This source declaration does not apply an update to AWS. Package/container and
+live proof remain pending, including demonstration of the delivery-time target.
+
+### Shared declared budget checks (2026-11-16)
+
+Scope: remove budget predicates/constants from feature alignment, persistence
+preparation and foundation budget verification. Existing foundation-checks owns
+one complete configuration comparator; preparation-inputs reads budget-control
+and reconciles the selected foundation template, without package inputs for the
+budget provisioner. Preserve creation/review/reconciliation, tag activation,
+retained evidence and acceptance's existing live_budget interface. No new files,
+provider reads, resources, approval changes or full proof. Numeric spelling is
+not a mismatch; non-finite/boolean/non-positive amounts and extra filters reject.
+Name, COST type and MONTHLY period become required in both preparation callers.
+
+Consumers: three direct callers, persistence acceptance via live_budget, isolated
+provider fixtures, source fingerprints, both scope impact declarations, existing
+foundation-budget/shared-foundation/feature/persistence test registrations and
+diagnostic reviews. Source declarations must agree before provider work; do not
+trust either a stale evidence record or a matching unsafe source. Shared finite
+foundation-budget reasons distinguish malformed shape/amount and configuration
+mismatch; input failures use preparation-inputs budget declaration/selection/
+template codes. Preserve existing caller envelopes and provider failures; never
+include raw budget, filter, native errors or source contents in diagnostics.
+Planned tests: all callers use the shared comparator; renamed/changed declaration
+values reach actual calls; source/template drift and malformed observations
+reject; equivalent decimal amounts pass; read failure stays failure; acceptance
+delegation, mutation ordering and no replay remain unchanged. Full integration,
+package/live proof and the ten-minute delivery demonstration remain deferred.
+
+Self-review: all three callers now consume the same budget comparator; their
+tuple/exception/report interfaces remain, while local budget rejection codes are
+replaced by the shared finite reason family. Persistence acceptance intentionally
+keeps its existing delegation and acceptance-level failure mapping. Source reads
+reuse the duplicate-safe parser/path validator; the provisioner loads only its
+budget/template, not application/image declarations. Selection follows declared
+budget name, not template logical ID; exact source mismatch/duplicate selection,
+numeric equivalence and unsafe values have counterexamples. The provisioner's
+mutation sequencing is unchanged; its disposable lost-response fixture required
+the new real imports and declaration, not a production workaround. Existing
+creation/reconciliation regressions pass after that fixture correction.
+Both scope closures and the budget/feature test inputs now include the declaration;
+controller identity already follows resolved references. No extra AWS read/poll,
+new runner or file. Focused direct input/alignment/controller/CLI tests supplement
+registered foundation-budget/shared-foundation checks; full aggregates stay open.
+
+### Declaration-derived database preparation settings (2026-11-16)
+
+Bounded scope: extend existing preparation-inputs dependency projection with the
+supplying database's declared name/engine and administrator secret name, resolved
+through its existing output reference. Feature alignment consumes these settings
+instead of a copied secret name or accepting any well-shaped database name.
+PostgreSQL remains the only supported engine. Creation preparation has no matching
+existing-database prerequisite and stays unchanged; no new helper, registry,
+template, provider operation or runtime/package surface is needed.
+
+Consumers: preparation-inputs, declaration coverage, feature database_facts and
+secret metadata comparison, existing copied-input/alignment fixtures and diagnostic
+reviews. Existing template references already participate in impact/fingerprints.
+Source failures use finite preparation-inputs-dependency-{name,engine,administrator
+-output,administrator-secret,administrator-name}-unsupported reasons (suffixes
+joined without whitespace). Existing observed engine/secret codes remain; a
+well-shaped but mismatched DBName uses alignment-dependency-name-not-confirmed.
+Malformed names retain the existing incarnation diagnostic. No supplied values or
+secret contents enter public output; all rejection remains before mutation.
+
+Planned proof: renamed secret logical resource/output reference and declared names
+reach the imported actual caller; old/wrong values reject; missing, empty, wrong
+type and unsupported source values fail before provider work with safe reasons.
+Preserve encryption/private/IAM/TLS/availability checks and exact 18.3 behavior.
+The undeclared version restriction shared with restore verification is explicitly
+outside this change, pending compatibility-policy work; do not silently pin the
+provider template or weaken it. Focused existing fixtures and structural reviews
+only; full integration/package/live proof and delivery timing remain deferred.
+
+Self-review: existing database and administrator-output references remain the
+selection authority; no resource logical name is assumed. Only PostgreSQL is
+supported, not arbitrary engines. Secret names are escaped before ARN matching;
+the renamed-source fixture includes regex punctuation and rejects a near-match.
+The full inspection fixture proves the secret metadata comparison uses the same
+resolved name and retains safe output. Wrong but well-formed database names now
+reject instead of silently becoming runtime inputs. Existing malformed-name,
+engine-version, security, TLS, output-ownership and policy checks are preserved.
+PreparationInputTests has no standalone registered unit; run it and the existing
+alignment/infrastructure fixtures directly for this bounded pass, with structural
+diagnostic validation and scope declaration checks. Their owning broad aggregates
+remain deferred. No new provider calls or delivery stages; static source reads
+reuse already parsed documents. Focused exploration passed before this review.
+
+### Declaration-derived endpoint policies (2026-11-16)
+
+Replace feature alignment's hardcoded ECR repository list/three-resource cap and
+local ECR/secret policy comparison. Existing preparation-inputs projects ECR and
+Secrets Manager policies from selected templates; foundation-checks owns bounded
+comparison and independent service-specific least-access restrictions. Reuse the
+existing CloudFormation parser and change_sets.parameter_values, not task-bound
+execution-stage policy machinery or a general intrinsic/IAM evaluator. Resolve
+literal values, account/region substitutions, declared string parameters and
+secret references exposed by template output aliases that must agree; reject other forms.
+The existing foundation observation is retained by its caller for parameters;
+both actual foundation consumers migrate to observation-based validation, with
+no compatibility wrapper, extra AWS call, output-shape or mutation change.
+
+Consumers: preparation-inputs and declaration coverage; feature alignment ECR
+and secret checks; persistence foundation caller; source fingerprints and copied
+provider/input fixtures. Existing policy diagnostics remain per service; source
+resolution failures use finite preparation-inputs reasons. No raw policy, ARN,
+parameter value or native exception enters public reports. Historical receipts,
+templates, task-role policy behavior, deployment sequencing and permissions stay
+unchanged. Existing policy-check gaps in persistence are not silently qualified.
+
+Tests: changed/renamed declarations reach the actual caller; four repositories
+work without checker changes; missing/extra access, duplicate JSON keys, wildcard
+permissions (including source wildcards), unsupported references, wrong account,
+missing/ambiguous parameters/outputs and absent selected repository reject. Preserve
+action-specific authorization-token wildcard only. Source/reference checks and
+failure propagation precede dependent work. Use existing shared/alignment/input
+and persistence fixtures, reviews and registrations; full integration/live proof
+and ten-minute delivery timing remain pending.
+
+Self-review: source names and the three-resource ceiling are removed from normal
+alignment; historical two-repository repair recognition remains intentionally
+fixed to its original exception and cannot authorise new policy changes. Existing
+parameter reader, source fingerprints and selector coverage are reused; add its
+new direct alignment dependency to the scope impact inputs and isolated input
+fixture. Raw stack data stays in-memory. Both foundation callers migrate together
+without a compatibility shim. ECR and secret callers share one comparator but
+retain existing service-specific public rejection codes; source-binding failures
+retain precise finite source reasons. Four-resource and unsafe-source fixtures
+reject copied lists and blind source equality. Alias consistency and supported
+source rejection fixtures cover the observed two-name secret output. No new files,
+policy mutation, provider operation or generic evaluator. Full proof stays pending.
+
+### Shared endpoint placement slice (2026-11-16)
+
+Scope: extend existing foundation-checks.py with shared interface-endpoint
+selection/posture and S3 prefix-list lookup; delete the equivalent blocks in
+persistence prepare-candidate and feature target alignment. Callers supply their
+prerequisites: persistence needs ECR API/registry and Logs; feature alignment also
+needs the Secrets Manager endpoint that persistence creates. Keep policy checks,
+templates, database/budget checks and deployment sequencing unchanged. No new
+files, registry, provider calls, retries or full proof. ECR policy's hardcoded
+repository expectations remain explicitly deferred declaration-driven work.
+
+Consumers: existing preparation return shapes and feature endpoint-policy inputs;
+controller source identity, declaration impact and selector already cover the
+shared file. Existing shared tests own common negative cases; actual-caller tests
+prove distinct prerequisites, shared use, safe reasons and stopped dependent work.
+No product exports or compiled runtime changes; this is existing Python AWS tooling.
+
+Predicates: foundation-endpoint-* distinguishes invalid prerequisite selection,
+malformed observation, missing/duplicate service, unavailable endpoint, wrong VPC,
+non-interface type, absent/invalid private-DNS flag versus disabled DNS, malformed
+security group versus differing groups. foundation-s3-prefix-* rejects malformed,
+absent or ambiguous prefix observations. Provider failures preserve caller codes;
+no raw evidence appears in reasons. Current tuple/report envelopes remain; old
+endpoint-specific reasons are replaced at these callers, not in historical proof.
+Persistence no longer hides an unavailable duplicate before uniqueness checking.
+Unchecked malformed groups/prefix rows no longer crash or disappear silently.
+These bounded validation corrections are separate from the extraction itself.
+
+Focused proof: shared foundation registered unit, feature alignment and persistence
+controller/provider fixtures, structural diagnostic review and selection planning.
+Full affected integration/package/live proof and delivery timing remain pending.
+
+Self-review: both callers consume shared endpoint group and prefix results; feature
+policies still receive the selected original endpoint documents. Provider calls
+remain two bounded observations in the same order; failures stop before dependent
+work. Shared tests reject hidden unavailable duplicates and malformed groups/IDs;
+caller tests prove three/four prerequisites, shared invocation, finite reason and
+provider-failure preservation. Replaced predicates and obsolete fixture reasons
+are removed. Existing registrations/source identity cover the extended helper.
+
+### Shared foundation/network slice (2026-11-15, implementation in progress)
+
+Approved bounded scope: shared foundation output validation, VPC identity/state
+and CIDR, private subnet membership/state/no-public-IP, private service discovery
+and hosted-zone/VPC binding. Endpoints/policies, budget, PostgreSQL checks and
+creation-versus-consumption orchestration are excluded; no provider execution.
+Reuse the existing AWS CLI, response and CloudFormation parser owners. Add one
+cohesive foundation-checks.py and adjacent tests, not an execution framework.
+Preparation inputs project literal cluster/log/namespace expectations from the
+selected foundation template through its actual output/resource references;
+unsupported expressions reject rather than introducing a general CF evaluator.
+
+Consumers: persistence foundation_outputs/infrastructure_parameters and their
+create/deploy/update/transition callers retain their tuple interfaces; entity
+alignment retains its report envelope and separate endpoint/database policies.
+The existing AWS runtime-alignment reporter also consumes shared stack/output
+validation, without acquiring new network checks or changing its release
+orchestration. Its former permissive duplicate/malformed stack/output cases
+must reject. Existing controller identity, dependency fixtures, both scope
+impact closures, selector and diagnostic reviews must include the shared owner.
+No Core/runtime package exports or resource templates change.
+
+Predicate inventory: finite foundation-* codes distinguish invalid/missing
+stack/output evidence, nonready stack, wrong declared cluster/log identity,
+unavailable/wrong VPC, invalid CIDR, missing/duplicate/wrong/public subnets,
+invalid service/namespace/zone responses, wrong namespace and zone/VPC binding.
+Source errors retain preparation-inputs-* reasons and provider failures retain
+their existing caller classifications. No raw response/exception text in reports.
+Runtime-alignment preserves its assertion shape and distinguishes observed
+nonready state from malformed/unknown evidence; exact shared reasons are kept.
+Checked network facts feed parameters; no helper polls, writes, mutates or
+claims actual connectivity. Real provider IAM/readability remains live proof.
+
+Planned tests: shared negative matrix, two actual callers using stronger checks
+and declared names, wrong/private/public/duplicate observations, finite reasons,
+canary exclusion, no dependent calls after rejection, shared-use substitution,
+existing runtime reporter and source fingerprint invalidation. Use existing
+registered check selection; add only a focused unit for the new shared tests.
+Final integration, package/live proof and delivery timing remain pending.
+
+Self-review: cluster/log identity is projected via selected outputs and namespace
+via the selected service's Ref, so resource logical names are not another
+selection table. Both callers use shared foundation/private_network operations;
+legacy runtime alignment uses only stack_outputs, preserving its unrelated
+release observations. Malformed/absent private flags are not reported as proof
+of public configuration. Persistence gains three bounded reads (subnets,
+namespace, hosted zone); feature read count is unchanged. Provider failures
+retain caller codes and no helper retries. Extra/malformed stack rows and
+duplicate outputs now reject; historical evidence is untouched. Endpoint,
+PostgreSQL and budget policy remain unchanged. No new executor, config registry
+or compatibility file; existing imported preparation interfaces have concrete
+callers. Unit negative matrices and actual-caller substitution reject copied
+checks, malformed evidence, public placement and dropped reasons. Runtime
+reporter fixtures now supply actual output values and reject formerly ignored
+extra stack rows. All exploratory suites passed; final results belong in the
+session log. New source/test metadata, reviews and impact declarations are
+included before final verification.
+
+Registration correction: the selector accepts governed shell entrypoints, not
+direct Python argv. The new focused unit therefore uses --foundation-only on
+the existing runtime-alignment smoke wrapper; its default reporter fixture is
+unchanged. The first registered attempt reported check-argv-invalid and did not
+execute either check. Corrected the catalog/entrypoint rather than altering
+runner admission or adding another wrapper. This correction reopens selection
+preparation; unchanged code-level test results remain separately recorded.
+
+### Shared image-check slice (2026-11-15, implementation in progress)
+
+Scope: refactor existing shared AWS ecr-scan.py into reusable runnable-manifest
+resolution and single scan observation; retain the publication CLI's bounded
+polling and exclusive evidence writing. Both preparation callers consume it;
+delete their duplicate manifest/scan predicates. No AWS execution, new engine,
+registry, dependency installation or full integrated proof in this slice.
+
+Consumers: publication commands and package-custody smoke tests; persistence
+prepare-candidate and its create/deploy/update/transition callers; persistence
+replacement and observability callers of candidate_runnable_manifest (retain
+that function as a thin wrapper); entity-smoke alignment, controller source
+identity, controlled-provider fixtures, both declaration impact closures,
+selector inputs and diagnostic reviews. Repository immutability and other
+alignment policy checks remain separate. No TypeScript public-index/package
+change: cohesive AWS operations remain in the existing named Python module.
+
+Predicate inventory: reuse existing ecr-* reasons for absent/invalid manifests,
+wrong image identity, unsupported media type, ambiguous runnable variant,
+scan identity mismatch, absent/pending/incomplete scan, invalid severity counts
+and high/critical findings. Preserve provider-owned safe failure codes; never
+report raw response/exception text. Preparation returns these finite reasons
+inside its existing findings/condition envelope rather than its duplicated,
+less precise scan predicates. Historical receipts are unchanged. Publication
+keeps its existing proof schema, CLI flags, polling limits and no-overwrite rule.
+All operations here are observations; passing is not runtime acceptance.
+
+Planned proof: shared success/negative predicates and single-observation
+behaviour; actual caller destination/digest propagation and failure blocking;
+bounded substitution rejecting copied checking; publication pending-to-complete,
+terminal failures and evidence no-overwrite. Extend existing tests, selector
+connections and source-matched reviews. Shared preparation adds no polling;
+entity-smoke gains manifest resolution to check the exact runnable image.
+Full integration/package/live proof and the delivery budget remain unestablished.
+
+Self-review: both callers now use check_image; the retained persistence manifest
+interface delegates to runnable_digest for its actual recovery consumers.
+Shared scan_complete is used by preparation and publication; only publication
+polls or writes evidence. Explicit empty severity counts remain valid; missing,
+noninteger/boolean or negative counts reject, retaining the stricter feature
+policy instead of publication's former missing-count default. OCI/Docker index
+and plain-image handling now agree across callers. Repository security checks
+remain in alignment. Shared finite scan reasons reach caller failure envelopes;
+existing provider error mapping is unchanged. Controller identity and both scope
+impact closures include the shared owner; no repair-authority allowlist expanded.
+Actual-call substitution asserts shared use; returned child-digest, wrong-image,
+denied, pending and severity counterexamples assert behaviour and no scan polling.
+One exploratory failure (two input-resolution tests) exposed a missing helper in
+their disposable repo; corrected the copy list rather than weakening assertions.
+Focused tests have no separately registered scan/alignment/controller unit;
+direct focused commands do not seed trusted selector reuse. The existing
+package-custody-regression, entity-smoke-composition and persistence-provider-
+regression owners retain their integration obligations.
+
+### Preparation-input slice (2026-11-15, implementation in progress)
+
+Both preparation callers will resolve account/region, optional CLI profile,
+foundation and scope stacks, template, package/program/candidate and selected
+publication pipeline from existing target/binding/program/image declarations.
+The AWS input resolver belongs with the existing alignment provider adapters;
+it reuses declaration-coverage path checking and the CloudFormation parser.
+No new registry, runtime package or deployment executor is introduced.
+The existing staging profile demonstrates account_id/region/profile ownership;
+its larger workload-specific structure is not copied or changed here.
+
+Consumers: persistence prepare-candidate (including imported helpers), feature
+alignment (including recovery's DATABASE reference and provider PROFILE),
+declaration coverage, both scope impact closures, source review and selector
+inputs. Preserve imported constants as derived values where real consumers
+need them. Resolve the database through the declared supplying scope/output
+and its existing RDS resource property, retaining the independent live output
+comparison; no copied database identifier. Accepted evidence is untouched.
+
+Predicate inventory: shared preparation-inputs-* codes distinguish unavailable
+source, invalid document/path, missing/ambiguous selection, mismatched identity,
+invalid destination and unsupported dependency output. Rejected text/native
+exceptions never enter reports. Both callers preserve the finite code before
+provider work; the coverage reader reports it as a gap. Optional profile absence
+uses the AWS default credential chain, not a fabricated profile. Existing
+provider failure meanings and mutation/replay rules remain unchanged.
+
+Proof scope: actual two callers, different declared destination/repository,
+missing/duplicate pipeline or candidate, invalid account/path/symlink/document,
+dependency mismatch, safe canary exclusion and no provider work on invalid
+inputs. Existing alignment and persistence regressions remain the behavioral
+owners. Python tooling has no TypeScript public index or generated catalogue;
+one cohesive AWS input-resolution file is appropriate. Expected delivery cost:
+bounded local YAML reads only, no new subprocess/provider stage. Full local
+integration, image and AWS proof remain deferred, not passed by these tests.
+
+Source self-review: both callers consume checked returned settings; source
+errors stop their provider boundaries. Existing exported constants remain only
+for inspected imports (including recovery); no fallback hardcoded values remain
+for the migrated selections. The feature controller fingerprints the resolver,
+path checker and all resolved declaration sources. Two fixture corrections were
+required: the isolated provider test now copies the resolver's actual source
+references, and update tests use the declared repository rather than a conflicting
+synthetic repository. No production recovery policy changed. The preparation
+reader is AWS-specific Python tooling; importing Core's TypeScript configuration
+runtime would add a second language/toolchain boundary, so existing Python path
+and duplicate-safe CloudFormation document readers are reused instead.
+
+Counterexamples: changed account/region/repository must reach both real CLI
+builders; absent profile must omit the CLI option; malformed account must reach
+both preparation and coverage reporters without provider work or canary text;
+duplicate pipeline/candidate must not select the first match; changed template
+identifier must reach recovery's imported database value; changed resolved
+sources must alter controller identity. A different target/scope fixture proves
+the reader has no name table, not that the still-specialized deployment engine
+supports arbitrary targets. Deployment sequencing, remaining workload-specific
+checks and full lifecycle consolidation remain subsequent work. Final focused
+results are recorded in the session log rather than mutating frozen test inputs.
 
 The user has authorised repository remediation in the order below. Full image,
 publication and AWS proof remain paused until these corrections are integrated.
@@ -130,8 +729,33 @@ invalid provider resources before yielding normalized facts. Preserve the
 existing caller's `runtime-provider-configuration-invalid` safe projection;
 never expose supplied paths, template contents or secret values. Tests must use
 two real bindings, a differently named multi-template fixture, invalid-path and
-symlink canaries, and unchanged package projection. These checks are planned
-until terminal results are recorded.
+symlink canaries, and unchanged package projection.
+
+Source review: the parent reviewed this slice without delegation after local
+checkpoint `8c425ce6` committed its migration plan and prior successor work.
+The shared normalizer remains a cohesive existing Python adapter, with a private
+single-template helper; no new package/index/module registry is needed. Both
+actual bindings now use it. The source/restore provider references and permission
+requirements remain distinct. The obsolete adapter, catalog input references
+and dormant recognition entry are removed; the pinned inventory's old retention
+recommendation is explicitly superseded. Historical records are unchanged.
+
+Material counterexamples: silently ignoring the sibling selector would give
+both fixture workloads the same database value; actual tests assert distinct
+values even with identical logical resource IDs. Duplicate IDs cannot silently
+overwrite normalized facts. Invalid filenames, symlinked sources/parents,
+malformed bindings and absent resources must reach the caller as the exact
+safe configuration-invalid finding. Existing template fixtures also reject
+assigning a source-server resource to the restore reader. Package-projection
+code is unchanged and retains its own qualification fixture. Source-matched
+diagnostic ownership moves to the existing generic review, not a new registry.
+
+Exploratory focused tests, diagnostic structure and the retirement checker
+passed. Final frozen-input results belong in the session log. These direct
+focused tests do not seed trusted selector reuse: their registered containers
+are the broader composition checks, deferred with full integration. Source
+review found no remaining correction in this slice. Shared coordination and
+the rest of A–D remain incomplete; no ten-minute delivery result is claimed.
 
 ## Earlier consolidation progress (historical scope)
 
@@ -556,7 +1180,72 @@ passed. None of those structural checks establishes live behaviour.
 
 ## Preservation boundaries
 
-### B07 update-controller comparison and implementation boundary (2026-11-15)
+### B07 durable UPDATE continuation (2026-11-18, focused verification pending)
+
+This approved slice supersedes the explicit-only continuation limitation of the
+Nov15 extraction below. Reuse `change_sets.prepare/execute` and the existing
+immutable reservation store for all five UPDATE callers. Remove
+`change_sets.reviewed_update`, not add another execution engine. Keep resource,
+parameter, image and rollback admission in their existing callers. No AWS,
+publication, package qualification or full regression is selected for this slice.
+
+Consumer/diagnostic inventory: `change-set-operations.py` owns CLI transport,
+closed immutable request binding and safe reservation/submission failures;
+`prepare-candidate` supplies its existing shared binding to the five commands
+listed below. Each command checks retained execution before fresh deployment
+health gates, while an unexecuted prepared change still requires current gates
+and exact review before its first execution. Existing CREATE reservation schema,
+historical read-only `--reconcile`, rejected-review cleanup, resource guards and
+report shapes remain supported. A separately reviewed `--operation-label` names
+a new attempt when returning to a prior image or replacing a rejected review;
+it is never generated automatically after uncertainty and grants no authority.
+
+Predicates/proof: missing local input, malformed/mismatching reservation, foreign
+named change, uncertain create/execute, reservation before submission, delayed
+review, parameter/resource rejection, pending/failed/completed execution and
+changed source/settings must retain finite safe findings and forbid replay.
+Use existing controller regressions with temporary stores, both shared primitive
+call assertions, sensitive canaries, normal-command retries before health gates,
+historical observation and distinct-label cases. Existing entity-smoke deployment
+fixtures prove its unchanged shared primitive contract. Unknown provider outcome
+is not absence; missing creation after reservation never permits another create.
+Only hashes of configuration/receipt/template inputs enter update reservations.
+Both routes share root-event selection in `change_sets.execution_events`; newly
+reserved persistence completion requires UPDATE_COMPLETE for its execution
+token, while historical explicit reconciliation retains its former contract.
+
+Self-review (primary agent): all five mutation callers migrated; the old
+`reviewed_update` implementation has no remaining runtime consumer and is
+removed. CREATE request/record compatibility is unchanged. The initial fixture
+pass exposed synthetic providers lacking the newly required creation token and
+shared stores leaking across independent subcases; fixtures now retain actual
+submitted tokens in disposable stores. No production guard was weakened to
+accommodate those failures. Added counterexamples reject absent/wrong-token,
+wrong-stack and nonterminal completion; creation reservation is not execution.
+Retries of pending/failed execution must bypass fresh healthy-predecessor gates
+without replay. Rejected-review cleanup targets the supplied original label and
+leaves reservations intact. New labels require separate review, not automatic
+recovery. Restoration's bounded polling runs only while creation is pending,
+avoiding an added wait for already-ready reviews. Source/configuration changes
+invalidate the attempt rather than silently rebind it. Full lifecycle
+coordination, credential renewal, package/live proof and ten-minute measurement
+remain outside this slice; no broad-completion claim.
+
+Focused registered verification reopened review: the persistence wrapper still
+contained two pre-consolidation foundation fixtures. Tracing the wrapper proved
+the failure was its old foundation-output assertion, not the observability
+review (that isolated fixture passed unchanged). Supply a healthy stack before
+testing invalid outputs and valid VPC/subnet prerequisites before testing an
+absent namespace reference; assert the shared owner's exact finite reasons and
+call counts. Production foundation guards are unchanged. The failed registered
+run is retained; this fixture correction must pass the same registered owner.
+
+This is tooling-only: no app package, runtime module or provider template changes.
+No new runner, registry, schema file or mandatory full proof. Existing registered
+`persistence-provider-regression`, feature deployment fixtures and diagnostic
+adoption are the focused proof owners; package/live/timing remain pending.
+
+### B07 update-controller comparison and implementation boundary (2026-11-15, historical)
 
 The five effectful baseline UPDATE consumers are `transition-qualified-release`,
 `apply-database-permission-surface`, `apply-private-verifier-route-update`,
@@ -3136,3 +3825,770 @@ UPDATE_COMPLETE stack; recovery of a partially failed CloudFormation transition
 is not claimed by this image-only route. Parent acceptance/source eligibility
 and registered proof remain independently required. Full proof and AWS remain
 paused; no commit, push, publication or cloud mutation was performed.
+
+### Infrastructure execution reconciliation ordering — bounded implementation
+
+The public entity-smoke infrastructure command currently runs source/local
+admission and dependency alignment before discovering its execution reservation.
+Correct the existing caller, reusing ResourceStore, DEPLOY.observe and the
+historical sixth/seventh-gate reader. No runner, journal or AWS operation is added.
+The ordinary same-controller resume must read the original reservation and
+approved admission evidence first, observe only that stack/operation, and retain
+completion without restamping admission. Preserve the existing checked
+controller-repair path when original evidence does not match the current source.
+
+Predicate/consumer inventory: execute versus new plan/review; missing versus
+malformed reservation; matching versus foreign receipt, label, delivery and
+contract; original versus changed parameter digest; retained sixth-gate approval
+and source identity versus missing/changed evidence; pending, successful,
+terminal-failed and unavailable provider observation. Existing finite adapter
+reasons flow through main's safe report; endpoints, parameters and raw provider
+errors stay out of retained reports. Reservation is never completion or replay
+authority. New admission retains all current checks. Actual caller fixtures must
+reject duplicate writes and altered ownership/lineage, exercise stale admission
+with current completion, and show failed new-admission checks cannot prevent
+observation of a matching already-admitted attempt. Existing composition owns
+these tests; broader integration and live proof remain pending.
+
+Implemented and locally verified on 2026-11-18. Original same-controller
+execution is now recognised before fresh admission; current operator identity,
+exact plan reconstruction, reservation/parameter equality, original gate custody
+and observed ownership/lineage remain required. The old checked branch remains
+only for controller repair or a reservation appearing concurrently with admission.
+Plan projection and receipt retention are shared by both paths. No new files,
+engine, journal, provider operation or mutation permission were added.
+
+The existing infrastructure-route fixture passes, including pending/failed/
+unknown observations, withdrawn write permission, missing/altered admission,
+cross-phase approval, wrong account, unchanged timestamps, original create/
+activation and successor update/rollback. Final direct fixture output is
+`/tmp/entity-smoke-resume-focused-20261118.json`; it does not seed trusted cache.
+At that checkpoint there was no separately registered infrastructure-route unit;
+the registration slice below supersedes that limitation. Full composition
+remains pending for the final connected verification.
+Registered diagnostic-adoption passed in 7.221352 seconds, report
+`.cache/test-runs/20261118T212733Z-abaff54d64674ce084f880ef9707b860/report.json`.
+Strict task metadata and whitespace checks passed. The existing impact selector
+planned 71 entries with no findings and executed none; it took 208.166499 seconds
+(107.308425 planning, 58.675880 fingerprinting, 42.159307 runtime identity).
+That local overhead remains an efficiency concern, not excluded cloud time.
+The bounded README correction now explains admission versus reconciliation.
+Full integration, image/AWS proof and the ten-minute delivery target remain
+unproved; no commit, push, publication or AWS call occurred.
+
+### Infrastructure fixture registration — bounded next slice
+
+Reuse the existing selector aggregate/member contract. Preserve the public
+entity-smoke-composition identity as an aggregate of the existing infrastructure
+fixture and the remaining composition suite. Both are closed unit branches in
+the existing wrapper; remove the old duplicate direct fixture invocation.
+Reuse the existing conservative input closure through one YAML anchor, rather
+than introduce a dependency scanner or prematurely omit source-custody inputs.
+The infrastructure leaf requires only Bash/Python, not application compilation.
+
+Consumers: existing catalog mappings, direct composition callers, diagnostic
+review check references and preparation-bound aggregate execution. Predicates:
+default versus valid/invalid unit dispatch, exact membership, standalone success
+reused by aggregate, changed inputs/runtime/contract invalidating receipts, and
+failed child preventing aggregate success. Extend existing disposable runner
+fixtures and actual repository contract assertions. No runner engine changes,
+new files, commits or AWS actions. Full composition/package/live proof stays
+deferred; focused registered execution and cache reuse are the bounded evidence.
+
+Implemented and bounded verification passed on 2026-11-18. No new files or
+selector/cache algorithm changes. The public aggregate retains all original
+commands across two members; the infrastructure fixture appears in exactly one
+dispatch branch. Existing conservative input coverage is shared rather than
+copied, so unrelated declared application edits can still invalidate this
+focused receipt. Narrowing that dependency declaration is not claimed here.
+
+Five frozen-source focused tests passed in 13.365 seconds: real catalog/closed
+dispatch, real aggregate reuse with cheap children, leaf failure and input/
+runtime/contract invalidation, the preexisting split aggregate, and development
+eligibility. The initial disposable-copy effects mismatch and inherited
+development flag on the aggregate were corrected; no enforcement was relaxed.
+Registered infrastructure-route and diagnostic-adoption both executed/passed
+with no findings in 22.057907 seconds (fixture itself 7.634587 seconds):
+`.cache/test-runs/20261118T223123Z-110d2ef8d01547fbb7662d5b64976066/report.json`.
+A matching second run reused both and executed no commands in 9.340405 seconds:
+`.cache/test-runs/20261118T223147Z-e13e86bb3ed4404e9339bfc38217a362/report.json`.
+The earlier rejected registration remains a failed run, not passing proof.
+Task metadata, shell syntax and scoped whitespace checks passed. README skill
+guided the focused command, aggregate preparation/reuse explanation and limits.
+The complete runner regression suites, real composition suite, package/AWS proof
+and end-to-end delivery timing remain deferred; fixture aggregate proof is not
+a passing real composition receipt. No commit, push or AWS operation occurred.
+
+### Split-result consumption and controller/test identity
+
+Repair the public infrastructure local_checks caller: its exact two-row
+expectation conflicts with the newly registered aggregate members. Reuse the
+selector's existing execution_policy report owner for a bounded predicate over
+the directly invoked runner's result, including returned catalog memberships
+and dependency IDs. Do not import saved reports as proof, copy member names
+into the controller or add another execution engine.
+
+Predicates/consumers: successful local explicit selection versus missing roots,
+missing/failed/blocked members, duplicate/malformed rows, wrong stage/verdict/
+requested selection and unavailable subprocess/JSON. Keep the existing safe
+failure reason and retained reference; no native output disclosure. The real
+runner/cache remains proof authority. Infrastructure-route and existing
+disposable aggregate fixtures prove the connected caller and actual report.
+
+Separately exclude only existing *-test.py/*-test.sh naming conventions from
+the controller's broad local executable enumeration; retain all production
+files, declared dependencies and the new report-consumption helper. Tests stay
+in registered check inputs. Verify test-content/add/remove stability for
+controller identity, production/dependency-change invalidation and changed
+test-evidence fingerprints. Old receipts are not rewritten: this implementation
+change itself changes controller identity and retains existing repair gates.
+No packaging/AWS proof, Git action, new files or new identity registry.
+
+Source self-review: the report predicate lives with existing selector report
+handling and consumes catalog bindings/dependency IDs returned by the directly
+invoked process. It does not reread or promote arbitrary saved reports. Current
+roots stay explicit in the deployment operation; expanded member names are not
+duplicated there. Missing roots/members, nonterminal/failed rows, malformed or
+duplicate rows and mismatched selection/stage/verdict reject before provider
+work. Native child text remains excluded; both nonzero exits and rejected
+zero-exit reports preserve the bounded retained-report reference at main.
+
+The common source_digest consumer set includes infrastructure, task completion,
+failure/restart/replacement, snapshot/restore and acceptance. They retain the
+same function and digest envelope. Only named test fixtures leave its local
+enumeration; production files and declared/shared dependencies remain, including
+the newly consumed execution_policy.py. Registered composition inputs explicitly
+include that helper and still include the fixture directory. Existing receipts
+are untouched, so the changed implementation goes through existing controller
+repair checks rather than being relabelled as the original controller.
+Exploratory actual-caller and real-runner report tests passed after correcting
+one disposable fixture's outside-repository path setup; production path checks
+were not weakened. Final focused registered proof follows on frozen sources.
+Terminal focused results are recorded in the current session log; they do not
+close the deferred full integration/package/live proof.
+
+### Credential expiry classification and observation continuation
+
+Reuse shared AWS response.py and deployment-operation-diagnostics.py: explicit
+ExpiredToken/ExpiredTokenException become aws-credentials-expired and the safe
+provider-credentials-expired classification. Genuine AccessDenied remains
+denied; invalid credentials, arbitrary prose and unknown failures are not
+inferred to be expiry. This slice does not implement login renewal, credential
+lifetime prediction or every local credential-provider error format.
+
+Consumer inventory: cli.py and persistence prepare-candidate already forward
+the finite shared code; entity infrastructure does too. Entity alignment
+currently disables classification and erases the result: enable classification
+and retain expiry/access denial while preserving other existing mappings.
+Shared deployment diagnostic collection must preserve expiry with unknown
+remote outcome. Existing operation reservations, ownership and reconciliation
+stay authoritative; expiry never implies resource absence or replay authority.
+
+Extend existing recovery/provider CLI, diagnostic, alignment, infrastructure
+and persistence controller fixtures. Prove exact codes, single invocation,
+private-canary exclusion, rejection before submission and expiry during
+observation of a submitted operation. Restore controlled authentication and
+observe the same reservation without a second mutation. Preserve source-review
+debt and accepted records; no new files, login system, runner, cloud operation
+or full integration proof. Existing source-matched reviews and registered
+focused checks own evidence. Catalog-input changes depend on source review
+establishing a missing binding; this inventory does not propose such a change.
+
+Credential-expiry source review: production changes are limited to the shared
+explicit-code classifier, its safe diagnostic mapping and alignment's existing
+CLI error-preservation boundary. Preparation and infrastructure already forward
+the finite code; their reconciliation machinery is reused without rewriting.
+Controlled actual-main tests reject expiry before submission and during resumed
+observation, retaining admissions/reservations and exactly one original execute.
+Persistence tests connect the real observe_update consumer to the existing
+reservation flow and prove continuation without a second create/execute.
+Existing partial diagnostic reviews retain their outstanding debt. The shared
+report remains unknown-outcome and permits observing the original operation,
+not declaring a new one. No authentication renewal is implemented or claimed.
+Exploratory fixtures exposed one stale budget-recovery dependency copy; include
+the already-shared PostgreSQL policy helper in that disposable fixture. One new
+report test initially chose an unsupported unknown-outcome retry decision; fix
+the fixture to observe-current-operation, preserving the production safeguard.
+Final focused checks run on the reviewed source; broader integration stays pending.
+
+### Safe child failure detail — bounded implementation
+
+Reuse check-selection/script.py and execution_policy.py for the executed result,
+retained JSON and readable summary. Diagnostic adoption already emits structured
+findings; its existing diagnostic-coverage/script.py will own the finite finding
+projection, rather than copying its vocabulary into the runner or retaining raw
+output. Bind that projection to the registered producer owner. Unknown commands
+remain explicitly unsupported. No general traceback parser, new registry,
+catalog format, cache authority or automatic retry is introduced.
+
+Only nonzero actual child exits request detail. Bound JSON size and finding
+count, reject duplicate keys/malformed values, and omit unrecognised source
+paths; match retained locations against the runner's existing input identities.
+Distinguish absent/unsupported/invalid/oversized output and processing failure.
+Keep original status/exit even if projection or report retention fails. The
+parent already knows failed prerequisite/member IDs: preserve those identities
+in combined reports, without trusting child-supplied check IDs or report paths.
+The retained run path is the existing runner-owned evidence reference.
+
+Extend existing mechanics fixtures with a real diagnostic-adoption subprocess,
+safe canaries, actual producer failures, blocked aggregate/member attribution,
+unknown output, projection failure and retention failure. Reuse existing
+registered mechanics/adoption checks; no provider work or full delivery proof.
+Update the execution standard, focused README section and source reviews.
+The only additional producer file is the existing diagnostic coverage compiler;
+other formats are explicitly not migrated in this slice.
+
+Source self-review (Nov19): supported producer codes stay with their existing
+Python owner; no Core runtime definition, deployment vocabulary or application
+contract changes. The runner binds projection to the validated command owner
+and only a nonzero completed invocation. Parent-known prerequisite/member IDs
+explain blocking without parsing untrusted nested failure identities. JSON
+duplicate keys, non-finite values, bad shapes/codes, oversized output and bounded
+truncation are covered separately from normal producer errors and processing
+exceptions. Report fields remain additive; historical records and raw-output
+markers retain their existing meaning. No failure report can seed success reuse.
+
+The connected fixture runs the actual producer with an empty simulated baseline
+tree and real disposable source discovery, hashing, subprocess status and report
+writes. It verifies the precise unreviewed-source reason/path, one invocation,
+blocked parent identity, both saved formats and original failure after retention
+error. Supporting tests reject private/unknown fields and preserve unavailable
+detail on ordinary commands. Four exploratory tests passed in 4.201 seconds.
+The fixture newly consumes the existing diagnostic shell wrapper, so add that
+one dependency to the existing mechanics catalog entry and assert its binding
+in the existing repository-contract test. No new check ID or declaration schema.
+
+README skill applied only to the failed-check explanation and its current limits.
+Delivery cost is bounded parsing of failed output only; success execution/reuse
+and provider authority are unchanged. Final focused checks and run evidence are
+recorded in the session log; complete runner/integration/package/live coverage
+must not be inferred from a focused pass.
+
+Review ownership: isolate the existing diagnostic-adoption script's source
+entry from the broad runtime-export review into its own partial review in the
+same ledger, retaining the existing catalogue-reader proof and adding mechanics
+proof. This avoids making unrelated runtime catalogue changes require runner
+tests merely because this producer now supplies runner failure detail. Other
+source ownership and existing debt are unchanged; no new registry is created.
+
+### Shared retained-execution selection — bounded implementation (Nov19)
+
+Reuse shared/provider-adapters/aws/change_sets.py for the preparation/execution
+reservation-pair decision. Persistence change-set-operations.py consumes it in
+begin_update and apply_update; entity-smoke/script.py consumes it when rechecking
+the original execution against its reconstructed request. Their
+existing stores still validate exact identities, hashes and paths. Preparation
+alone is not execution; an execution without its preparation is rejected.
+No reservation read creates a journal, calls AWS or grants fresh submission.
+
+Keep workload admission, controller-repair handling, operator validation,
+bounded observation and result projection with their current owners. Preserve
+public commands, on-disk schemas and historical readers. The transition command
+already delegates through begin_update/apply_update and needs no wrapper edit.
+Other persistence update consumers inherit the same helper through that owner.
+No build/package, declaration, runtime, TypeScript export or image change.
+This cohesive Python provider helper does not need a new module/folder.
+
+Diagnostic inventory: absence of execution returns no continuation; a valid
+pair returns the original execution unchanged; orphan execution retains the
+existing persistence-change-set-reservation-mismatch or entity
+infrastructure-reviewed-attempt-required diagnosis. Malformed, unreadable or
+different-intent records retain existing store/caller failures, never becoming
+absence. Provider expiry/unknown outcomes remain observation failures with no
+replay. No new diagnostic vocabulary, arbitrary detail or raw output.
+
+Extend existing controller-regression and infrastructure-route fixtures to
+prove actual shared invocation, preparation-only versus executed selection,
+orphan/mismatched evidence rejection and unchanged reservation bytes. Retain
+existing lost-response, pending/failed/completed, credential-expiry and
+successor/rollback assertions. Focused registered persistence-provider-regression,
+entity-smoke-infrastructure-route and diagnostic-adoption are planned, not
+passed yet. Inspect their existing input closure before adding any catalog
+entry. Full integration/package/live proof remains deferred.
+
+The extraction removes duplicated pair checks, not the workload evidence
+validators. No new runner, state registry, migration or compatibility bridge.
+The shared pair lookup is local; no new cloud call or
+test stage is introduced. End-to-end ten-minute delivery remains unestablished.
+
+Source self-review: the retained_execution helper only reads the original
+store's two records; it does not normalize schemas, catch store failures,
+reserve work or invoke a provider. Exact caller-owned missing-preparation
+exceptions are preserved. Both persistence entry paths consume it; the existing
+transition command and four other update entrypoints need no changes. Entity
+discovery stays with its existing path/binding validator; shared pair selection
+runs only after reconstructing the expected intent. An exploratory attempt to
+move it into discovery changed the existing altered-intent diagnosis; revert
+that ordering change rather than weakening the regression assertion.
+
+Focused exploratory evidence: three persistence tests passed in 14.460s,
+including all five actual update entrypoints, interrupted/reserved operations
+and shared read-only selection. The full existing infrastructure-route fixture
+then passed with its original changed-intent assertion intact. New assertions
+reject orphan/corrupt preparation without another mutation, prove both callers
+use the shared selection and retain original bytes. Direct apply_update now
+also rejects an orphan pair instead of relying only on begin_update to do so.
+Original single-submission, expiry, pending/failed/completed and rollback tests
+remain. Existing catalog inputs cover all edited sources; no check or catalog
+change is needed. Update the existing partial reviews, then freeze this slice
+for registered focused checks and an impact-plan-only run. Full lifecycle
+coordination and broader integration remain subsequent work.
+
+### Deployment-to-acceptance hand-off inventory (Nov19)
+
+Trace finding: shared reservation selection is not sufficient to connect the
+next stage. The two acceptance routes do not yet expose equivalent release-mode
+contracts. Do not wrap their existing commands in an automatic loop and call
+that ordinary delivery.
+
+- Entity's acceptance-record-schema.yml already declares ordinary_update,
+  four fresh tasks, exact accepted predecessor custody and recovery-input
+  selectors. acceptance-route.py/successor_parent and acceptance-steps.py
+  enforce it against the completed update. The policy/selection is still
+  workload-owned; changed protected inputs reject and do not implement
+  requalification.
+- Persistence acceptance-route-contract.yml and the persistence accepted-record
+  schema require the full proof set. collect-acceptance-evidence/script.py
+  resolves every proof against candidate/rollback/restoration image roles.
+  qualify-proof-applicability/script.py supports only a restore-verifier-only
+  source change (plus its exact historical test-hook exception), not ordinary
+  application updates. Supplying that mechanism as general reuse would be false.
+- validate-acceptance-route/script.py checks declarations and actual offline
+  argument contracts; it is not an executor and must not silently become one.
+  Entity's declared route exposes one aggregate proof, whereas persistence
+  declares individual proof steps. Their sequence fields cannot currently
+  drive an equivalent shared execution plan.
+- release-succession/script.py already owns immutable candidate/history and
+  predecessor-checked promotion. promote-accepted-scope/script.py owns scope
+  activation, not workload verification. Reuse these; no parallel lifecycle
+  state file, acceptance registry or evidence store is needed.
+
+Required ordering correction: reconcile initial qualification versus ordinary
+update versus affected-capability requalification in the existing acceptance
+declarations, readers and collectors before connecting automatic progression.
+The run workflow currently describes ordinary entity acceptance specifically,
+and the proof standard explicitly preserves the exact persistence proof set
+until its declaration/schema/validator/collector are migrated together.
+
+Proposed policy boundary for confirmation: ordinary updates must obtain fresh
+deployed-image identity, required migration-state/effective-access observations,
+workload smoke and readiness. Retain recovery qualification only through
+validated accepted-predecessor evidence and matching declared recovery inputs,
+configuration/permission contracts and database incarnation. A missing,
+changed or unverifiable dependency cannot silently select routine acceptance;
+require explicit affected-capability qualification. First acceptance retains
+full qualification. This changes persistence proof-applicability policy, not
+just command plumbing, and must be explicit before implementation.
+
+Affected owners for that migration: the existing Run workflow and proof
+standard; both acceptance-route and record-schema declarations; the shared
+acceptance-route validator and release-succession evidence owner; persistence
+required_proofs/applicability/collector and feature successor readers. Extend
+existing acceptance-route rehearsal and feature acceptance-route tests and
+their catalog/review bindings. Preserve historical accepted records/readers;
+remove superseded policy/selection logic only after consumers use the shared
+owner. Publication and cloud execution remain outside this local change.
+
+This entry records source inspection and a policy proposal only. No controller,
+proof requirement or accepted evidence has been changed; no tests or provider
+commands were executed for this inventory.
+
+### Approved proof-policy migration (Nov19)
+
+The user approved planning and implementing the connected local slice in one
+pass. The preceding proposal is now approved, not an outstanding permission
+request. No publication, cloud execution or full integrated proof is selected.
+
+Implementation plan: extract immutable recovery-input comparison into one
+shared Run owner; declare fresh obligations alongside each existing acceptance
+schema; migrate the feature collector/admission and persistence collector to
+consume that owner; retain exact predecessor references through release
+succession. First qualification remains complete. Routine collection requires
+fresh migration state, effective runtime access, workload behaviour, deployed
+identity and readiness. Changed or unavailable recovery bindings require
+requalification, never permissive reuse. Historical formats keep their original
+readers; records missing the new custody facts cannot be upgraded by inference.
+
+Consumers: acceptance-route compiler and input manifests; both route/schema
+declarations; feature evidence, task admission, collector and retained-state
+reader; persistence applicability, collector and retained-record reader;
+existing release-succession and scope-promotion boundaries. Keep proof selection
+out of provider submission code and do not add a runner, registry or state store.
+
+Diagnostic inventory: invalid/empty/unsafe selectors, unavailable Git objects,
+changed recovery trees, changed configuration/permission/database identity,
+missing or wrong predecessor, changed evidence bytes, stale or wrongly attributed
+fresh proof, and incomplete selected proof sets must fail before publication.
+Preserve existing caller-owned safe conditions and no-effect reports; shared
+selection exposes bounded condition codes, not Git output or supplied paths.
+Original historical evidence is read-only. No unsupported cause or live-health
+claim is inferred from local fixtures. Extend actual caller fixtures, including
+same-image stale proof, foreign predecessor, corrupted retained bytes, changed
+inputs, missing qualification and successful unchanged-input succession.
+
+Verification plan: existing acceptance/release-succession fixtures and registered
+focused units, metadata and source-matched diagnostic reviews, then an impact
+plan without executing deferred broad/package/live suites. Reconcile docs and
+remove superseded comparisons in this slice. Record observed results separately
+from planned assertions and the still-unestablished ten-minute delivery target.
+
+Source review and implementation disposition: one shared immutable-input owner
+now replaces the feature-local comparison. The feature's new v3 successor adds
+a migration-state observation through existing admission and retained-task
+validation; v1/v2 historical readers remain, and v2 cannot qualify a new
+promotion without current migration proof. Persistence's existing collector
+now accepts a bounded ordinary-update manifest, obtains four fresh task proofs
+and readiness, and records a reference to its exact accepted predecessor.
+Its scope adapter consumes the shared policy and existing provider/receipt/
+succession owners; it is not another submission engine. Full qualification now
+retains its observation and source/contract/database-resource binding for later
+reuse. Older candidates missing that binding require full qualification.
+
+Removed the restore-verifier-only writer and its active route/input exception.
+The concrete historical records still need its v1 reader and exact old delta
+validation, so those remain. Retained evidence was not rewritten. The source
+database observation is shared by full and ordinary collection. Repeated
+collection of the same terminal proof/current facts keeps its original capture
+and candidate; a wall-clock change alone no longer produces another identity.
+Scope activation remains its existing first-acceptance operation; ordinary
+release custody still advances only through predecessor-checked succession.
+
+Counterexample review: actual collector fixtures reject old same-image task
+proofs, changed predecessor bytes/identity, missing legacy qualification,
+changed immutable inputs and changed database resource identity. Fresh receipts
+must match the current task definitions and start after both the deployed
+server and predecessor acceptance; readiness follows their completion. The
+read proof retains the stable workload record identity. Recovery snapshots and
+historical ECS tasks are not queried by ordinary collection. The feature's
+actual shared-call assertion prevents an equivalent-looking copied comparator;
+real disposable Git tests cover additions/removals/unsafe selectors/unavailable
+objects. Historical-v2/current-v3 state cases distinguish reading history from
+authorizing new promotion. Source review retains partial diagnostic coverage;
+no fixture establishes provider execution or the delivery-time target.
+
+Exploratory results: feature route/aggregate and persistence full/ordinary route
+fixtures passed. The connected persistence fixture initially omitted the ECR
+response image ID/media type required by the already-shared manifest reader;
+fixed that provider fixture, not the production validator. The historical
+applicability reader fixture passes after removing its writer. These direct
+runs are not trusted registered proof. Finish metadata/review freshness, then
+freeze for the registered acceptance units and impact planning.
+
+Final-review correction: exact predecessor comparison at collection also needs
+to survive the later shared promotion boundary. The generic candidate now
+supports an optional expected_predecessor in its immutable identity. Both new
+ordinary collectors emit it; shared promotion/history validation rejects any
+different predecessor, including attempted rebase after collection. Old
+candidates keep their original identity and reader semantics. Generic tests
+prove removing the field invalidates identity and wrong-predecessor promotion
+fails before a write; the persistence route actually promotes its bound
+candidate and validates the resulting history. No new evidence format/file or
+promotion controller was introduced.
+
+Initial registered batch retained at
+`.cache/test-runs/20261119T011859Z-1bcccc78bb904ad6989bd4143ef237cc/report.json`:
+diagnostic-adoption and feature acceptance controls passed; persistence
+acceptance regression failed in its older current-observation ECR fixture,
+which also omitted the already-required image identity/type. Corrected that
+fixture and preserved all production checks. The source-review correction
+reopens affected verification; this batch is not the final proof. Direct
+succession regression and the corrected current-observation fixture passed.
+
+### Ordinary-update connection: authorised implementation inventory
+
+The next approved slice connects existing Deploy and Run owners for persistence
+and entity-smoke. It is local implementation/verification only: no publication,
+AWS execution or full regression. The acceptance-route compiler validates
+declarations; it is not an executor. Existing change-set controllers, task
+reservations, collectors and predecessor-checked succession retain ownership of
+effects and evidence. Do not introduce a competing operation journal or treat
+orchestration output as acceptance proof.
+
+Inspect the concrete command hand-offs before choosing the connection surface.
+The bounded consumer inventory is the two existing acceptance-route contracts,
+their shared compiler, both deployment update entrypoints, task controllers,
+collectors, promotion/current readers and registered acceptance regressions.
+Persistence tasks use explicit operation predecessor reservations; feature tasks
+use delivery-bound labels and exact reviewed plan hashes. Both must retain those
+identities across interruption. A coordinator must not manufacture approval,
+rebase to a newer accepted release, replay uncertain mutations, or classify
+readiness alone as successful delivery. Existing failure/restore owners remain
+authoritative; restoration must not turn a rejected candidate into acceptance.
+
+Diagnostic review covers invalid/missing route/input identity before effects,
+unchanged versus changed predecessor, pending/failed/uncertain child results,
+malformed or absent child reports, and interruption before/after submission or
+promotion. Preserve safe owning findings; do not print arbitrary child stdout,
+stderr, supplied strings or exception messages. Tests must reject progression
+after each non-success condition and demonstrate real consumer wiring, not only
+a synthetic ordered callback list. Exact file changes and final evidence follow
+source inspection; no completion or ten-minute claim is made by this inventory.
+
+File-level disposition: add one shared sequencing implementation/public command
+under `60-run/release-succession/ordinary-update.py` and `.sh`; add thin command
+bindings alongside each existing scope collector. The two acceptance-route
+contracts select those bindings; extend the existing compiler to reject missing
+or mismatched owners. Reuse actual proof names/commands from existing schemas,
+route declarations and feature task mappings. Common collect/validate/promote
+sequencing lives only in the shared owner. There was no existing cross-stage
+executor to delete: these additions implement the previously missing connection,
+not a second provider controller. Preserve current single-stage commands as
+needed operational/reconciliation interfaces, not competing automatic pipelines.
+
+Update the two owning Deploy/Run workflows to replace the mandatory manual
+hand-off for these routes. Register `ordinary-update-regression` in the existing
+selector and extend existing diagnostic review records. No new runtime/product
+public index or compiled asset changes apply; Python files remain grouped with
+their cohesive lifecycle and concrete binding owners. Historical evidence and
+existing operation-journal formats are unchanged.
+
+Predicate inventory: shared input reader distinguishes missing, inaccessible,
+unreadable, empty, malformed JSON, wrong shape, oversized and symlink references;
+subject/predecessor/owner/input-change checks reject before dependent effects.
+Current accepted custody must match source, image, exact predecessor and the
+validated collector's package receipt, not only image equality. Child reports
+require explicit successful verdict and zero exit; pending, failed, blocked,
+uncertain, malformed output and source exceptions never select the next stage.
+Safe owning condition codes survive; stdout/stderr and native exceptions do not.
+The report identifies stage/completed stages and a bounded next observation,
+without claiming rollback occurred or full Core diagnostic adoption. Initial
+local tests exercise real binding constructors and offline parsers, controlled
+child failure and interruption at each boundary, and wrong custody/source/input
+counterexamples. Child reservation/provider correctness remains in its existing
+regressions, not proved by a coordinator fixture simulating retained results.
+
+Source review identifies a genuine remaining automation boundary: feature plan
+hashes can depend on prior operations. The connector consumes existing exact
+approvals; it cannot generate authority or promise all those hashes are available
+before the first operation. Missing approval stops only that operation. This
+slice does not claim a fully unattended live factory or the ten-minute target.
+Automatic authorised recovery/requalification remains outside this connector.
+Final registered evidence and remaining coverage are recorded in the session log.
+
+Consolidated self-review: the original draft looked for package custody on the
+generic history release, whose actual schema deliberately lacks that field.
+Corrected it to require the same equality against the existing collector's
+validated accepted package; no custody check was waived. Removed duplicated
+collect/validate/promote sequencing from the bindings into the shared owner.
+Added exact metadata owner validation in the existing route compiler and
+explicit impact selection for both bindings and declarations. Tests distinguish
+failure from nominal success/exit mismatch, retained acceptance from current
+health, and exact custody from image-only matching. Known collector/policy
+failures preserve their owned reason; unknown failures remain uncertain.
+The source review covers the 14 task paths listed by this slice, not unrelated
+dirty work. No deferred broad/package/live check is represented as passed.
+Registered-selection correction: this repository's catalog requires a Bash
+entrypoint. Use the existing succession test wrapper's explicit ordinary-update
+mode instead of registering a direct Python command or loosening the catalog.
+Default succession tests retain their existing command. The initial registration
+attempt did not execute the requested suites and is not passing evidence.
+The first executing batch passed feature acceptance, succession and the new
+connection tests; persistence rehearsal exposed a genuine compiler regression.
+Delivery implementation ownership must resolve against the existing
+`command_root`, like every other executable, rather than the disposable target
+data root. Corrected that production distinction without relaxing missing-owner
+or metadata checks. Removed the test-only wrapper from runtime diagnostic
+adoption because test files are intentionally outside that inventory. Added a
+CLI counterexample rejecting noncanonical/outside-root scope paths before loading
+any binding. Reviewed these corrections together; reopen affected registered
+checks. Initial failed batch remains retained at
+`.cache/test-runs/20261119T102935Z-e08f11544a39472baa6a1791ad9ee2a3/report.json`.
+
+### Approval/recovery hand-off inspection (Nov19)
+
+The user authorised the next local slice; no AWS execution is selected. Inspection
+found that the ordinary feature binding invokes infrastructure `execute` without
+the prerequisite `review`. The prior command-parser fixture could not catch this:
+it modelled deployment as an unconditional completed response. Correct that
+connection before widening automation. Existing exact-plan authority remains;
+bounded whole-release approval/recovery policy is a separate question now raised.
+
+Reuse the infrastructure controller's existing review, execution and read-only
+reconciliation owners. Add a connected `apply` mode there, consuming the same
+exact approved plan: reconcile an existing execution first; otherwise review
+and only then execute. A pending/failed/unknown review cannot execute. Keep the
+individual modes for actual operator/reconciliation consumers. The ordinary
+binding selects this connected mode; no new journal, provider operation or
+approval store is needed. Persistence already owns review in its transition
+controller and needs no equivalent edit. The public CLI, binding, infrastructure
+fixture, connector fixture, Run workflow and existing diagnostic ledger are the
+affected consumers. No product public exports or package assets change.
+
+Diagnostic/test predicates: unchanged exact approval is required before review;
+review success permits execution, while pending/failure/uncertainty does not.
+An original execution is reconciled before fresh admission/review; successful
+resume retains its evidence and cannot submit twice. Existing finite controller
+conditions and effect reporting remain unchanged. Exercise the actual controller
+with its controlled provider, including interruption and changed-plan rejection;
+the connector test must require the connected mode and reject execute-only.
+This is local wiring/provider-double proof, not AWS qualification. Use existing
+ordinary-update and infrastructure-route registered checks plus source-matched
+diagnostic adoption after consolidated review. No broad proof is selected.
+
+Consolidated self-review: the correction changes only command sequencing in the
+existing owner (ten implementation lines plus the CLI choice/phase guard), not
+review policy or reservation mechanics. The connector selects `apply`; the
+fixture explicitly rejects its old execute-only selection. Actual controlled
+update and rollback tests cover the owner sequence, pending review, exact-plan
+rejection and interrupted execution with new admission deliberately unavailable.
+Returned pending/blocked/failed/uncertain review reports are separately checked
+to prevent accidental continuation. Initial create/activate cannot select apply.
+The first exploratory fixture incorrectly injected a template mismatch during
+baseline admission rather than review; corrected the fixture to exercise an
+actual pending change-set review. The final exploratory controller run passed.
+Review records retain partial diagnostic adoption and no-live-proof limits.
+Freeze these seven task paths for the focused registered run; do not count the
+unrelated existing worktree diff as code added by this correction. Whole-release
+approval and automatic recovery remain unimplemented pending the policy choice.
+
+The user has now approved bounded release approval and recovery. Implement it
+in the existing connection/owners, not a second approval service. One reviewed
+release identity must bind the selected scope, candidate package, exact accepted
+predecessor, rollback package/compatibility, controller inputs and declared
+operation sequence. Per-operation plans remain fresh and exact; the connection
+may supply their hashes only after matching them to that approved release.
+Unknown or broader plans, input drift and concurrent acceptance stop before
+dependent effects. Direct single-step commands retain their exact-plan interface.
+
+Recovery is a distinct labelled branch, never acceptance of the failed candidate.
+Only a positively terminal verification failure after completed deployment may
+select it automatically. Pending/unknown/malformed outcomes reconcile first;
+admission failures and collection/promotion conflicts cannot imply failed runtime.
+Reuse existing rollback reservations and privately verify the restored predecessor.
+Inspection found additional prerequisite work: task reporters currently collapse
+terminal failure and admission blocks; the feature task route does not yet bind
+a fresh read to a rollback receipt; persistence rollback requires one running
+candidate task. These are implementation gaps to correct and prove, not excuses
+to treat every blocked report as rollback authority. Failed CloudFormation stack
+recovery remains separate from supported stable-stack image restoration.
+
+### Connected bounded release and recovery (Nov19, focused local verification passed)
+
+Implement the three approved connections together, with no AWS execution in
+this slice. Reuse ordinary-update's shared sequencing, existing scope bindings,
+change-set/task reservations, package/accepted-history readers and compatibility
+records. Do not add an operation journal or another deployment engine.
+
+Consumer/predicate inventory: shared ordinary-update consumes a fingerprinted
+release approval (exact inputs, packages, predecessor, controller/configuration,
+declared operations); changed/missing approval blocks before effects. Scope
+bindings validate generated plans against that boundary before passing their
+exact hash to existing controllers. Only declared verifier stages with original
+reserved terminal evidence for the deployed candidate may select recovery;
+generic failed reports, prerequisite failures, pending/unknown outcomes and
+collection/promotion errors cannot. Existing rollback reservations take priority
+on resume; never redeploy the candidate after recovery has begun. Entity task
+binding/steps gain a rollback read using the original candidate controller and
+compatible predecessor workload. Persistence restores only a stable owned stack,
+including a stopped candidate, then uses existing private health/read commands.
+No migration, grant expansion, data deletion or failed-stack repair is admitted.
+
+Proof: extend ordinary-update connected fixtures, entity task/infrastructure
+fixtures and persistence controller regression. Assert exact identities, approval
+drift rejection, failure attribution, interrupted recovery/no replay, predecessor
+readback and rejected-candidate non-promotion. Keep private child evidence out of
+public reports. Existing bounded reason codes and partial diagnostic reviews
+remain; review changed producers/readers and source hashes before final checks.
+Reconcile obsolete exact-plan-map/no-recovery workflow descriptions. Python
+capability files retain their existing responsibility boundaries; no TS public
+index or runtime package changes. Full package/live proof and timing remain
+separate after focused local verification; no per-edit full regression.
+
+Connected-slice source review (Nov19): implementation now replaces the draft
+per-step approval map with one reviewed release fingerprint and exact generated
+plan checks. Both bindings use their existing deployment/rollback commands;
+the shared sequence owns recovery selection and prioritizes retained recovery
+on resume. Entity extends its existing task stage to predecessor-bound rollback
+readiness/read, retaining candidate controller/package custody. Persistence
+validates the original execution token's root-stack UPDATE_COMPLETE event and
+task chronology, including after AWS removes an executed change set. Stable
+owned stopped-candidate restoration retains all template/permission guards.
+
+Two necessary connected corrections extend this inventory: administration's
+failure reporter now supplies a terminal receipt/hash only after actual receipt
+and journal retention, matching the verifier boundary; shared task_journal
+archives the completed original entry before advancing its existing mode head.
+This is history inside the existing journal, not another execution store.
+Incomplete/malformed receipt, callback failure, foreign event/task/image,
+pre-deployment evidence and changed approval remain non-recovery outcomes.
+Source exceptions retain recognised owner reasons with unknown outcome, never
+raw exception text. Existing historical receipt schemas remain unchanged.
+
+Self-review counterexamples are covered by ordinary-update-test.py (approval
+drift, positive/negative selection, interruption/no candidate replay, original
+receipt/history and execution-event attribution), task-route-test.py (real
+generated-plan bounds, terminal reobservation and rollback read), controller-
+regression.py (stopped/foreign service/candidate, terminal admin retention) and
+verify-candidate/operation-test.py (actual CLI/history preservation/no replay).
+One fixture initially dropped the provider task revision/FARGATE metadata while
+switching its image, and another redirected its module loader before loading
+the receipt owner; both fixture errors were corrected without loosening checks.
+Exploratory passes are recorded separately from the pending registered final run.
+The workflow's obsolete no-recovery/map instructions are replaced, not kept as
+another route. Release identity is pinned once per invocation; original child
+freshness/admission gates still run, avoiding extra repeated full alignment reads.
+No new files, AWS changes, migration, package publication or accepted release
+are introduced by this slice. Final registered focused verification passed:
+`.cache/test-runs/20261119T125757Z-76fe4fe329df485d8e8c75433b15445b/report.json`.
+All four selected checks passed; feature composition and ordinary-update ran
+afresh, diagnostic adoption and persistence provider regression reused matching
+passing receipts. The first registered run failed feature composition because
+the restore fixture had not registered its clone-reader definition with the
+shared job fixture after image observation became definition-driven. The direct
+trace identified that fixture omission; registering the actual clone definition
+corrected it without changing production guards. Its metadata/whitespace checks
+also pass. The failed run remains retained, not relabelled. Full affected
+integration, frozen package qualification and live acceptance remain separate;
+this is not evidence of a ten-minute remote release.
+
+### Terminal verification evidence connection (Nov19)
+
+Continue the approved bounded-release work without adding an approval service or
+operation journal. This batch implements the producer prerequisite identified
+above, not automatic recovery itself. The existing feature task evidence/route,
+persistence verifier, their fixtures and diagnostic reviews are affected.
+
+Predicate/consumer inventory: a nonzero exit or validated application failure
+from the exact reserved STOPPED feature task is distinguishable only after task,
+definition/image, time and log checks. Its typed bounded projection reaches the
+public reporter only through the current runner call; prerequisite evidence and
+bare reason strings cannot impersonate that outcome. Reconstructing a corrupt
+retained success receipt cannot establish a new live task failure. Existing
+diagnostic primary/companions and uncertainty effects are preserved. No raw
+logs, native reasons, secrets or record contents enter the added projection.
+
+The persistence verifier reuses its existing immutable receipt and journal.
+Only successful persistence of both exposes a failure receipt path/hash; missing
+duration/exit, nonterminal state and failed retention expose no usable reference.
+Historical reconciliation preserves that hash and explicitly labels historical
+evidence. The receiving release binding must still validate the exact reserved
+operation/candidate and declared verification stage; neither a failed verdict nor
+the added task facts authorize a recovery mutation by themselves.
+
+Tests: extend task-evidence-test.py, task-route-test.py and the existing persistence
+controller regression. Cover actual current-task reporting, prerequisite
+rejection, corrupted historical input, receipt retention failures, safe context
+and original-operation reconciliation without another launch. Inspection also
+found the successor fixture omitted the already-required migration-state step;
+it now follows SUCCESSOR_STEPS instead of duplicating the obsolete sequence.
+Use registered entity-smoke-composition-suite, persistence-provider-regression
+and diagnostic-adoption for the focused batch. Full package/live proof remains
+deferred; whole-release approval and restored-predecessor verification remain
+the next connection work, with the user's approval already recorded.
+
+Focused verification exposed one earlier consolidation mismatch: restore-control
+already emits `engine_version`, but restore-route's closed deployment reader
+rejected it. Correct that existing consumer, not the producer or gates. Accept
+only the historical/current field sets, validate supplied versions with shared
+PG.version, and compare recorded versions exactly on current observation. The
+existing live observer still enforces image-major compatibility. Historical
+receipts lacking the field remain byte-preserved; do not fabricate observations.
+Extend the connected restore fixture for invalid versions, extra fields, changed
+observed version and historical readback. No new provider operation or authority.
+The same producer field also reaches acceptance-route.control_receipt; its
+independent validate_control_facts reader had the same old-shape rejection.
+Correct that second consumer, preserving version observations and shared grammar,
+and restrict the additive field to restore-deployment only. Existing historical
+archives remain valid; complete control validation still requires original
+custody. Focused acceptance controls test both shapes and malformed/misplaced
+values; the connected restore fixture covers the actual archive handoff.

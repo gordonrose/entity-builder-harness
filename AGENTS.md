@@ -8,7 +8,9 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 
 The strategic objective of this repo is to build a software factory that can generate software in a modular and predictable way based on chat based instructions.
 
-The long term goal is for those instructions to be delivered via MCP to a deployed software builder that can modify individual apps on multiple types of cloud vendor infrastructure - and for the majority of code edits that need to be made, to be done via functionality, rather than improvisded by the LLM. When this project is finished LLMs will act as interfaces and classifiers, but should not impelement new code - that should be done deterministically through existing code.
+The long term goal is for those instructions to be delivered via MCP to a deployed software builder that can modify individual apps on multiple types of cloud vendor infrastructure. The vast majority of code changes will be done via functionality, rather than improvisded by the LLM. 
+
+When this project is finished LLMs will act as interfaces and classifiers, but should not impelement new code - that should be done deterministically through existing code.
 
 No short term implementation work should work against this goal unless explicitly approved.
 
@@ -76,8 +78,9 @@ Keep `AGENTS.md` under 100 lines unless a harness ADR approves a larger router. 
 ## Effiency Rule
 Each change made to the repo should attempt to reduce tech debt, bloat and quality debt as part of the implementation.
 
-All changes must be made assessed against a risk of duplication, or missed opportunities for reuse. 
-When updating our repo, every effort should be made such that previous code and/or instructions, rules, or checks that may confuse or contradict newly planned instructions is actively sought out and accounted for when planning and implementing changes.
+All changes must be assessed against a risk of duplication, or missed opportunities for reuse. 
+
+When updating our repo, every effort should be made to find existing code and/or instructions, rules, or checks that may confuse or contradict newly planned instructions. Changes must account for any such contradictory/confusing content when planning and performing work on the repo.
 
 Under no circumstance must workload-specific or scope specific checks, tests, machinery be built for situations that will likely be reusable scenarios moving forward, given the strategic goal of this repo. 
 

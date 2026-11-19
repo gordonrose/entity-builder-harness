@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -40,6 +40,7 @@ RESOURCE = module("entity_smoke_restore_resource_control", Path(__file__).with_n
 ROOT = Path(__file__).resolve().parents[7]
 CF = module("entity_smoke_restore_cf", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
 CHANGES = module("entity_smoke_restore_changes", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py")
+PG = module("restore_postgresql_version", ROOT / "scripts/04.deploy/shared/postgresql-version.py")
 SOURCE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml"
 RESOURCE_TYPES = {"RestoreDatabaseSecurityGroup": "AWS::EC2::SecurityGroup", "RestoredDatabase": "AWS::RDS::DBInstance", "RestoreReaderSecurityGroup": "AWS::EC2::SecurityGroup", "EndpointIngressFromRestoreReader": "AWS::EC2::SecurityGroupIngress", "RestoreReaderExecutionRole": "AWS::IAM::Role", "RestoreReaderTaskRole": "AWS::IAM::Role", "RestoreReaderTaskDefinition": "AWS::ECS::TaskDefinition", "RestoreDatabaseIngressFromReader": "AWS::EC2::SecurityGroupIngress"}
 PARAMETERS = {"VpcId", "VpcCidr", "EndpointSecurityGroupId", "S3ArtifactPrefixListId", "LogGroupName", "DatabaseSubnetGroupName", "RestoredDatabaseName", "RestoredDatabaseIdentifier", "SourceSnapshotArn", "ProofLabel", "ImageRepositoryUri", "ImageRepositoryArn", "ImageDigest", "SourceRevision"}
@@ -52,7 +53,7 @@ def digest(value):
 
 def names(binding):
     RESOURCE.validate_binding(binding)
-    label = binding["proof_label"].removeprefix("entity-smoke-")
+    label = RESOURCE.resource_label(binding).removeprefix("entity-smoke-")
     return "kanbien-core-platform-entity-smoke-restore-" + label, "entity-smoke-restore-" + label, "kanbien-core-platform-entity-smoke-restore-" + label[:16]
 
 
@@ -71,7 +72,7 @@ def parameters_for(binding, parameters):
     _, template = source()
     require(isinstance(parameters, dict) and set(parameters) == PARAMETERS and all(isinstance(value, str) and value and "\n" not in value and "\0" not in value for value in parameters.values()), "restore-parameters-invalid")
     fixed = {"ProofLabel": binding["proof_label"], "ImageDigest": binding["image_digest"], "SourceRevision": binding["source_revision"], "RestoredDatabaseIdentifier": database,
-             "SourceSnapshotArn": "arn:aws:rds:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":snapshot:kanbien-core-platform-" + binding["proof_label"],
+             "SourceSnapshotArn": "arn:aws:rds:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":snapshot:kanbien-core-platform-" + RESOURCE.resource_label(binding),
              "ImageRepositoryUri": RESOURCE.ACCOUNT + ".dkr.ecr." + RESOURCE.REGION + ".amazonaws.com/kanbien-core-platform/entity-smoke",
              "ImageRepositoryArn": "arn:aws:ecr:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":repository/kanbien-core-platform/entity-smoke", "LogGroupName": "/aws/ecs/kanbien-core-platform"}
     require(all(parameters[key] == value for key, value in fixed.items()), "restore-parameters-invalid")
@@ -190,12 +191,17 @@ def observe_restore(provider, store, binding, parameters, change_set_arn, stack_
     identifier = names(binding)[2]
     require(resources["RestoredDatabase"]["physical_id"] == identifier and identifier != RESOURCE.SOURCE_DATABASE, "restore-database-identity-not-confirmed")
     database = only(provider("rds", "describe-db-instances", DBInstanceIdentifier=identifier), "DBInstances")
-    require(database.get("DBInstanceIdentifier") == identifier and database.get("DBInstanceStatus") == "available" and database.get("StorageEncrypted") is True and database.get("PubliclyAccessible") is False and database.get("IAMDatabaseAuthenticationEnabled") is True and database.get("DeletionProtection") is False and database.get("Engine") == "postgres" and database.get("EngineVersion") == "18.3" and database.get("DBName") == parameters["RestoredDatabaseName"], "restore-database-posture-not-confirmed")
+    require(database.get("DBInstanceIdentifier") == identifier and database.get("DBInstanceStatus") == "available" and database.get("StorageEncrypted") is True and database.get("PubliclyAccessible") is False and database.get("IAMDatabaseAuthenticationEnabled") is True and database.get("DeletionProtection") is False and database.get("Engine") == "postgres" and database.get("DBName") == parameters["RestoredDatabaseName"], "restore-database-posture-not-confirmed")
+    try:
+        # Snapshot lineage remains mandatory; the image owns compatibility.
+        policy = PG.read(ROOT / "infra/04.deploy/03.product/image/entity-smoke/image-contract.yml")
+        PG.compatible(database.get("EngineVersion"), policy["compatible_major"])
+    except PG.VersionFailure as failure: raise RESOURCE.ResourceFailure(failure.code) from None
     require(isinstance(database.get("DbiResourceId"), str) and re.fullmatch(r"db-[A-Za-z0-9]+", database["DbiResourceId"]) is not None, "restore-database-identity-not-confirmed")
     require(digest({"resource_id": database["DbiResourceId"], "database": database["DBName"], "schema": "entity_smoke"}) != binding["dependency_incarnation_sha256"], "restore-database-not-isolated")
     own_tags = provider("rds", "list-tags-for-resource", ResourceName=database.get("DBInstanceArn"))
     exact_tags(own_tags.get("TagList") if isinstance(own_tags, dict) else None, binding)
-    return {"status": "completed", "reservation": execution, "facts": {"stack_arn": value["StackId"], "database_identifier": identifier, "restored_resource_id": database["DbiResourceId"], "resources": resources, "resources_sha256": digest(resources)}}
+    return {"status": "completed", "reservation": execution, "facts": {"stack_arn": value["StackId"], "database_identifier": identifier, "restored_resource_id": database["DbiResourceId"], "engine_version": database["EngineVersion"], "resources": resources, "resources_sha256": digest(resources)}}
 
 
 def execute_restore(provider, store, binding, parameters, change_set_arn, stack_arn):
@@ -260,7 +266,9 @@ def absent(provider, service_name, operation, **parameters):
 def cleanup_identity(binding, parameters, deployment, reader_reservation, reader_receipt):
     """Validate retained ownership/readback without provider calls or writes."""
     stack_name, _, identifier = parameters_for(binding, parameters)
-    require(isinstance(deployment, dict) and set(deployment) == {"stack_arn", "database_identifier", "restored_resource_id", "resources", "resources_sha256"} and deployment["database_identifier"] == identifier and deployment["resources_sha256"] == digest(deployment["resources"]), "restore-cleanup-deployment-not-confirmed")
+    # Existing retained restore receipts predate engine_version. Cleanup still
+    # requires their exact owned resources and successful reader; never rewrite them.
+    require(isinstance(deployment, dict) and set(deployment) in ({"stack_arn", "database_identifier", "restored_resource_id", "resources", "resources_sha256"}, {"stack_arn", "database_identifier", "restored_resource_id", "engine_version", "resources", "resources_sha256"}) and deployment["database_identifier"] == identifier and deployment["resources_sha256"] == digest(deployment["resources"]), "restore-cleanup-deployment-not-confirmed")
     resources = deployment["resources"]
     require(isinstance(resources, dict) and set(resources) == set(RESOURCE_TYPES) and all(isinstance(value, dict) and set(value) == {"type", "physical_id"} and value["type"] == RESOURCE_TYPES[key] and isinstance(value["physical_id"], str) and value["physical_id"] for key, value in resources.items()) and resources["RestoredDatabase"]["physical_id"] == identifier and identifier != RESOURCE.SOURCE_DATABASE, "restore-cleanup-ownership-not-confirmed")
     for logical in ("RestoreDatabaseSecurityGroup", "RestoreReaderSecurityGroup"):

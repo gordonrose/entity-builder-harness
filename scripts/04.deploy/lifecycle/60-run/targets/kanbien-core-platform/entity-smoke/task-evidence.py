@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.task-evidence
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -53,6 +53,13 @@ class EvidenceFailure(Exception):
         super().__init__(code)
         self.code, self.diagnostic, self.related = code, diagnostic, related
         self.observations = observations or []
+
+
+class TerminalTaskFailure(EvidenceFailure):
+    """A failed, positively identified terminal task, not recovery authority."""
+    def __init__(self, terminal, diagnostic=None, related=None, observations=None):
+        super().__init__("task-unsuccessful-completion", diagnostic, related, observations)
+        self.terminal = terminal
 
 
 def require(allowed, code):
@@ -213,6 +220,16 @@ def collect(task, reservation, response, collected_at):
             # failures. More is a broken protocol, never silent truncation.
             require(len(failures) <= 3, "task-failure-observation-limit")
         if isinstance(value, dict) and value.get("verdict") == "passed": successes.append(success(value, request, start, stop))
+    # Only this point has confirmed the reservation, exact stopped task/image,
+    # chronology and bounded log protocol. Admission/observation errors above
+    # must never become a terminal failure just because they share a code.
+    terminal = {"operation_id": reservation["operation_id"], "request_sha256": reservation["request_sha256"],
+                "task_arn": task["taskArn"], "task_definition": task["taskDefinitionArn"],
+                "source_revision": request["source_revision"], "image_digest": request["image_digest"],
+                "workload": request["workload"], "operation": request["environment"][CONTROL.OPERATIONS[request["workload"]][0]],
+                "proof_label_sha256": hashlib.sha256(request["proof_label"].encode()).hexdigest(),
+                "exit_code": container["exitCode"], "stopped_at": stop.isoformat(),
+                "failure_basis": "validated-failure-report" if failures else "nonzero-exit"}
     if failures:
         # The supported entrypoints emit rollback failure before rethrowing
         # the body error, and pool-close failure afterwards. Preserve the body
@@ -221,8 +238,9 @@ def collect(task, reservation, response, collected_at):
             bundle["diagnostic"]["code"] == "entity-smoke-target.boundary-failed" and bundle["diagnostic"]["detail"].get("operation") == "close"
             or bundle["diagnostic"]["code"] == "entity-smoke-target.database-proof-failed" and bundle["diagnostic"]["detail"].get("step") == "rollback")]
         primary = meaningful[-1] if meaningful else failures[0]
-        raise EvidenceFailure("task-unsuccessful-completion", primary["diagnostic"], primary["related_diagnostics"], failures)
-    require(container["exitCode"] == 0, "task-unsuccessful-completion")
+        raise TerminalTaskFailure(terminal, primary["diagnostic"], primary["related_diagnostics"], failures)
+    if container["exitCode"] != 0:
+        raise TerminalTaskFailure(terminal)
     require(len(successes) == 1, "task-success-observation-not-confirmed")
     return {"schema": "deploy/entity-smoke-task-proof-receipt/v1", "target": "kanbien-core-platform", "scope": "entity-smoke",
             "source_revision": request["source_revision"], "image_digest": request["image_digest"], "workload": request["workload"],
@@ -256,5 +274,9 @@ def validate_retained(value, reservation):
         expected = collect(observed, reservation, {"events": [{"message": json.dumps(result)}]}, value["collected_at"])
         require(expected == value, "task-retained-receipt-mismatch")
         return expected
+    except TerminalTaskFailure:
+        # A malformed retained success receipt is not a live failed task. Do
+        # not turn reconstructed stored fields into a new operational signal.
+        raise EvidenceFailure("task-retained-receipt-mismatch") from None
     except EvidenceFailure: raise
     except (OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError): raise EvidenceFailure("task-retained-receipt-invalid") from None

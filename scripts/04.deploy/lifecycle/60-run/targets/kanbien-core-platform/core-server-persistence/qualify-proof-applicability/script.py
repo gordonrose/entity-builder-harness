@@ -1,33 +1,31 @@
 #!/usr/bin/env python3
-"""Qualify the only safe retained-proof reuse after a restore-verifier-only change."""
+"""Read historical restore-verifier-only applicability; new releases use shared policy."""
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Retain and validate a narrowly bounded predecessor-proof applicability record for a restore-verifier image change, including one exact test-only IAM qualification helper.
+#   purpose: Validate historical restore-verifier-only applicability without authorizing new proof reuse or generating records.
 #   portability: { class: internal, targets: [] }
 #   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py
-#   effects: [writes-files]
+#   effects: [read-only]
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
-import tempfile
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[8]
@@ -162,30 +160,6 @@ def restore_only_delta(paths: list[str], predecessor: str | None = None, candida
         and test_only_iam_qualification_delta(predecessor, candidate)
     )
 
-def receipt_destination(identity: dict[str, str]) -> Path: return PACKAGE_RECEIPTS / f"package-custody-{identity['receipt_reference'].removeprefix('github-actions-run:')}.json"
-
-def persist_receipt(identity: dict[str, str], raw: dict[str, Any]) -> tuple[str, str]:
-    destination = receipt_destination(identity); destination.parent.mkdir(parents=True, exist_ok=True); rendered = json.dumps(raw, sort_keys=True, indent=2) + "\n"
-    if destination.exists():
-        try: current = json.loads(destination.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError) as error: raise ApplicabilityError("persistence-proof-applicability-retained-package-receipt-invalid") from error
-        if current != raw: raise ApplicabilityError("persistence-proof-applicability-retained-package-receipt-conflict")
-    else:
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=destination.parent, prefix=f".{destination.name}.", suffix=".tmp", delete=False) as handle:
-            temporary = Path(handle.name); handle.write(rendered); handle.flush(); os.fsync(handle.fileno())
-        os.replace(temporary, destination)
-    return safe_relative(destination), sha(raw)
-
-def make(predecessor: tuple[dict[str, str], dict[str, Any]], candidate: tuple[dict[str, str], dict[str, Any]]) -> dict[str, Any]:
-    old, old_raw = predecessor; new, new_raw = candidate
-    if old["source_revision"] == new["source_revision"] or old["image_digest"] == new["image_digest"]: raise ApplicabilityError("persistence-proof-applicability-identity-not-changed")
-    paths = source_paths(old["source_revision"], new["source_revision"])
-    if not restore_only_delta(paths, old["source_revision"], new["source_revision"]): raise ApplicabilityError("persistence-proof-applicability-change-not-restore-only")
-    old_path, old_sha = persist_receipt(old, old_raw); new_path, new_sha = persist_receipt(new, new_raw)
-    body: dict[str, Any] = {"schema": SCHEMA, "target": TARGET, "scope": SCOPE, "change_class": "restore-verifier-only", "predecessor": {**old, "receipt_path": old_path, "receipt_sha256": old_sha}, "candidate": {**new, "receipt_path": new_path, "receipt_sha256": new_sha}, "source_delta": {"paths": paths, "sha256": sha(paths)}, "reused_proofs": sorted(REUSABLE)}
-    body["integrity"] = {"algorithm": "sha256", "payload_sha256": sha(body)}
-    return validate(body)
-
 def retained_package(binding: object) -> dict[str, str]:
     if not isinstance(binding, dict) or set(binding) != PACKAGE_FIELDS | {"receipt_path", "receipt_sha256"}: raise ApplicabilityError("persistence-proof-applicability-package-binding-invalid")
     identity = {key: binding.get(key) for key in PACKAGE_FIELDS}
@@ -212,26 +186,19 @@ def validate(value: object, expected_candidate: dict[str, str] | None = None) ->
     if not isinstance(reused, list) or set(reused) != REUSABLE or len(reused) != len(REUSABLE) or reused != sorted(reused): raise ApplicabilityError("persistence-proof-applicability-reused-proof-set-invalid")
     return value
 
-def persist(value: dict[str, Any]) -> Path:
-    validated = validate(value); destination = RECORDS / f"restore-verifier-only-{validated['candidate']['image_digest'][7:19]}.json"; destination.parent.mkdir(parents=True, exist_ok=True); rendered = json.dumps(validated, sort_keys=True, indent=2) + "\n"
-    if destination.exists():
-        try: existing = validate(json.loads(destination.read_text(encoding="utf-8")))
-        except (OSError, UnicodeError, json.JSONDecodeError, ApplicabilityError) as error: raise ApplicabilityError("persistence-proof-applicability-existing-record-invalid") from error
-        if existing != validated: raise ApplicabilityError("persistence-proof-applicability-existing-record-conflict")
-        return destination
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=destination.parent, prefix=f".{destination.name}.", suffix=".tmp", delete=False) as handle:
-        temporary = Path(handle.name); handle.write(rendered); handle.flush(); os.fsync(handle.fileno())
-    os.replace(temporary, destination); return destination
-
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False, exit_on_error=False); parser.add_argument("--predecessor-receipt", type=Path); parser.add_argument("--candidate-receipt", type=Path); parser.add_argument("--write", action="store_true"); parser.add_argument("--json", action="store_true"); parser.add_argument("--validate-arguments", action="store_true")
+    parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
+    parser.add_argument("--record", type=Path)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     try:
         args, unknown = parser.parse_known_args()
-        if args.validate_arguments: print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []})); return 0
-        if unknown or args.predecessor_receipt is None or args.candidate_receipt is None: raise ApplicabilityError("persistence-proof-applicability-arguments-invalid")
-        value = make(receipt(args.predecessor_receipt), receipt(args.candidate_receipt))
-        if not args.write: print(json.dumps({"schema": SCHEMA, "target": TARGET, "scope": SCOPE, "verdict": "ready", "findings": []}, sort_keys=True)); return 0
-        path = persist(value); print(json.dumps({"schema": SCHEMA, "target": TARGET, "scope": SCOPE, "verdict": "recorded", "findings": [], "record": safe_relative(path)}, sort_keys=True)); return 0
+        if unknown or args.record is None:
+            raise ApplicabilityError("persistence-proof-applicability-historical-reader-only")
+        if args.validate_arguments:
+            print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []})); return 0
+        validate(json.loads(args.record.read_text()))
+        print(json.dumps({"schema": SCHEMA, "target": TARGET, "scope": SCOPE, "verdict": "validated", "findings": []})); return 0
     except (ApplicabilityError, OSError, ValueError, subprocess.SubprocessError) as error:
         print(json.dumps({"schema": SCHEMA, "target": TARGET, "scope": SCOPE, "verdict": "blocked", "findings": [{"code": str(error) if isinstance(error, ApplicabilityError) else "persistence-proof-applicability-malformed-input"}]}, sort_keys=True)); return 1
 

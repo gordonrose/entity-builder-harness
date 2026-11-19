@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.release-contract
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -19,11 +19,27 @@ set -euo pipefail
 #   effects: [read-only, writes-files]
 ROOT="$(git rev-parse --show-toplevel)"
 CHECK="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh"
+"$CHECK" --json | grep -q '"verdict": "passed"'
 fixture="$(mktemp -d)"; trap 'rm -rf "$fixture"' EXIT
 mkdir -p "$fixture/infra/04.deploy/03.product"
 cp -R "$ROOT/infra/04.deploy/03.product/image" "$fixture/infra/04.deploy/03.product/"
 cp -R "$ROOT/infra/04.deploy/03.product/entrypoints" "$fixture/infra/04.deploy/03.product/"
 cp -R "$ROOT/infra/04.deploy/03.product/targets" "$fixture/infra/04.deploy/03.product/"
+# Live acceptance belongs to its canonical checkout, not this copied fixture.
+# Keep unrelated feature custody out of bootstrap incompatibility cases, as in
+# the existing target-declaration fixture; the real checkout is checked above.
+python3 - "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/scope-index.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+path = Path(sys.argv[1])
+value = yaml.safe_load(path.read_text())
+for scope in value["scopes"]:
+    if scope["id"] == "entity-smoke":
+        scope["lifecycle"] = "candidate"
+path.write_text(yaml.safe_dump(value, sort_keys=False))
+PY
 expect() {
   local code="$1"; shift
   local result

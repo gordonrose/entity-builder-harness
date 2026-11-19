@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-aggregate
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -105,6 +105,7 @@ def fixture(K, source_revision=None):
 
 def run(K):
     successor_protocols(K)
+    requalification_protocols(K)
     value = fixture(K)
     A, M = K.A, K.CONTROL
     assert K.T.RECOVERY.STATE.STOP.artifact(K.C) == A.digest(value["controller_basis"])
@@ -213,8 +214,7 @@ def run(K):
         "negative_connections": len(cases), "historical_file_or_provider_queries": False, "candidate_retention": False}))
 
 
-def successor_protocols(K):
-    """Actual successor aggregate; primitive custody readers explicitly controlled."""
+def successor_fixture(K):
     value = fixture(K)
     A = K.A
     value["schema"] = K.SUCCESSOR_SCHEMA
@@ -252,6 +252,12 @@ def successor_protocols(K):
         operation = value["tasks"][name]["operation"]["packet"]
         earlier[workload + "-" + operations[0]] = copy.deepcopy(operation)
         after = operation["receipt"]["task"]["stopped_at"]
+    return value
+
+
+def successor_protocols(K):
+    """Actual successor aggregate; primitive custody readers explicitly controlled."""
+    value, A = successor_fixture(K), K.A
     def reject(mutator, expected):
         invalid = copy.deepcopy(value); mutator(invalid)
         try: K.validate_packet(invalid, evidence_class="simulated")
@@ -262,7 +268,7 @@ def successor_protocols(K):
     with patch.object(A, "validate_task", side_effect=lambda task, *args, **kw: task) as tasks, \
             patch.object(K.C, "validate_deployment_receipt", return_value=value["deployment"]) as deployment:
         assert K.validate_packet(value, evidence_class="simulated") is value
-        assert tasks.call_count == 8 and deployment.call_count == 1
+        assert tasks.call_count == 10 and deployment.call_count == 1
         assert all(call.kwargs["delivery"] == value["delivery"] for call in tasks.call_args_list)
         reject(lambda v: v["tasks"].pop("lifecycle"), "acceptance-proof-set-incomplete")
         reject(lambda v: v["predecessor"].update(candidate_record="../private-successor-canary"), "acceptance-predecessor-reference-invalid")
@@ -273,8 +279,90 @@ def successor_protocols(K):
         reject(lambda v: v["tasks"]["final-read"]["operation"]["admission"]["preflight"].update(reservation={"other": True}), "acceptance-original-preflight-mismatch")
         reject(lambda v: v["runtime"].update(definition="private-successor-canary"), "acceptance-current-server-mismatch")
     print(json.dumps({"schema": "deploy/entity-smoke-successor-aggregate-fixture/v1", "verdict": "passed",
-        "primitive_owners": "controlled-prevalidated-protocols-not-live-proof", "fresh_task_phases": 8,
+        "primitive_owners": "controlled-prevalidated-protocols-not-live-proof", "fresh_task_phases": 10,
         "candidate_retention": False, "provider_observation": False}))
+
+
+def requalification_protocols(K):
+    """Real connection validators; underlying archive/provider protocols are doubles."""
+    A = K.A
+    value, first = successor_fixture(K), fixture(K)
+    value.update(schema=K.REQUALIFIED_SCHEMA, controller_basis=first["controller_basis"], restored_binding=first["restored_binding"],
+        controls={k: v for k, v in first["controls"].items() if k in K.REQUALIFICATION_CONTROLS},
+        tasks={k: v for k, v in first["tasks"].items() if k in K.REQUALIFICATION_TASKS})
+    requirement = {"schema": "deploy/recovery-requirements/v1", "mode": "requalify", "predecessor_source": "b" * 40,
+        "candidate_source": value["binding"]["source_revision"], "input_paths": ["platform"],
+        "predecessor_inputs_sha256": "sha256:" + "8" * 64, "candidate_inputs_sha256": "sha256:" + "9" * 64,
+        "changed_bindings": ["recovery_inputs"]}
+    value["predecessor"]["applicability"] = requirement
+    # Read follows the migration observation, before access-failure rehearsal.
+    for proof in value["tasks"]["baseline-read"].values():
+        receipt = proof["packet"]["receipt"]
+        for key in ("created_at", "started_at", "stopped_at"):
+            receipt["task"][key] = (datetime.fromisoformat(receipt["task"][key]) + timedelta(seconds=45)).isoformat()
+        receipt["collected_at"] = (datetime.fromisoformat(receipt["collected_at"]) + timedelta(seconds=45)).isoformat()
+    admission = value["tasks"]["baseline-read"]["operation"]["admission"]
+    admission["required_after"] = (datetime.fromisoformat(admission["required_after"]) + timedelta(seconds=45)).isoformat()
+    after, earlier = value["deployment"]["result"]["facts"]["completed_at"], {}
+    packet = lambda name: value["tasks"][name]["operation"]["packet"]
+    for name in K.REQUALIFICATION_TASKS:
+        for proof in value["tasks"][name].values():
+            proof["packet"]["plan"] = {**value["deployment"]["plan"], "controller_sha256": value["controller_sha256"],
+                "package_custody_reference": value["package"]["receipt_reference"]}
+            proof["packet"]["prerequisites"] = copy.deepcopy({"required_after": after, "packets": {
+                "deployment": value["deployment"], "predecessor": value["predecessor"], **earlier}})
+        if name in K.REQUALIFICATION_TASKS[:5]:
+            _, workload, operations = A.TASKS[name]
+            earlier[workload + "-" + operations[0]] = copy.deepcopy(packet(name))
+        after = packet(name)["receipt"]["task"]["stopped_at"]
+    start = {"deployment": value["deployment"], "predecessor": value["predecessor"],
+        "recovery-baseline-read": packet("baseline-read"), "recovery-applied-history": packet("migration-state"),
+        "recovery-runtime": {**first["controls"]["initial-restart"]["facts"]["server"],
+            "definition": value["runtime"]["definition"], "other_services": "sha256:" + "a" * 64}}
+    start["recovery-runtime"].pop("started_at")
+    packet("permission-state")["prerequisites"]["packets"] = copy.deepcopy(start)
+    controls = value["controls"]
+    for name, control in controls.items():
+        control["custody"]["plan"]["package_custody_reference"] = value["package"]["receipt_reference"]
+    controls["credential-replacement"]["custody"]["plan"]["baseline_read_sha256"] = A.digest(packet("baseline-read"))
+    resource = K.C.RESOURCE.recovery_binding(value["binding"], value["delivery"])
+    stack, _, database = K.D.RESTORE.names(resource)
+    controls["snapshot"]["facts"]["snapshot_arn"] = "arn:aws:rds:eu-west-1:337159794548:snapshot:kanbien-core-platform-" + K.C.RESOURCE.resource_label(resource)
+    for name in ("restore-deployment", "restore-cleanup"):
+        controls[name]["facts"].update(stack_arn="arn:aws:cloudformation:eu-west-1:337159794548:stack/" + stack + "/fixture", database_identifier=database)
+    controls["restore-cleanup"]["custody"]["plan"]["reader_sha256"] = A.digest(packet("restore-read"))
+    for proof in value["tasks"]["final-read"].values():
+        proof["packet"]["prerequisites"] = {"required_after": controls["restore-cleanup"]["facts"]["observed_at"], "packets": {
+            "credential-history-sha256": controls["snapshot"]["custody"]["plan"]["history_sha256"],
+            "source-snapshot-sha256": controls["snapshot"]["source_receipt_document_sha256"],
+            "restore-cleanup-sha256": controls["restore-cleanup"]["source_receipt_document_sha256"],
+            "restore-reader-sha256": A.digest(packet("restore-read"))}}
+    # No real proof owner is bypassed by production. These explicit test doubles
+    # isolate the aggregate connections; dedicated fixtures cover owner custody.
+    with patch.object(A, "validate_task", side_effect=lambda task, *a, **kw: task) as task_owner, \
+         patch.object(K, "validate_control", side_effect=lambda *a: None) as control_owner, \
+         patch.object(K.C, "validate_deployment_receipt", return_value=value["deployment"]), \
+         patch.object(A.C, "validate_deployment_receipt", return_value=value["deployment"]):
+        assert K.validate_packet(value, evidence_class="simulated") is value
+        assert task_owner.call_count == 25 and control_owner.call_count == 4
+        cases = [
+            (lambda v: v.pop("controller_basis"), "acceptance-collection-envelope-invalid"),
+            (lambda v: v["controller_basis"].update(controller="sha256:" + "0" * 64), "acceptance-controller-basis-invalid"),
+            (lambda v: v["tasks"].pop("credential-unready"), "acceptance-proof-set-incomplete"),
+            (lambda v: v["controls"].pop("restore-cleanup"), "acceptance-proof-set-incomplete"),
+            (lambda v: v["predecessor"]["applicability"].update(mode="reuse"), "acceptance-recovery-applicability-invalid"),
+            (lambda v: v["controls"]["snapshot"]["facts"].update(snapshot_arn="arn:aws:rds:eu-west-1:337159794548:snapshot:kanbien-core-platform-" + v["binding"]["proof_label"]), "acceptance-isolated-restore-mismatch"),
+            (lambda v: v["tasks"]["final-read"]["operation"]["packet"]["prerequisites"]["packets"].update(**{"restore-reader-sha256": "sha256:" + "0" * 64}), "acceptance-task-prerequisite-mismatch"),
+            (lambda v: v["controls"]["credential-replacement"]["custody"]["reservation"].update(reserved_at="2026-11-09T00:00:00Z"), "acceptance-proof-order-invalid"),
+            (lambda v: v["tasks"]["permission-state"]["operation"]["packet"]["prerequisites"]["packets"].update(deployment={}), "acceptance-control-predecessor-mismatch"),
+        ]
+        for mutate, condition in cases:
+            invalid = copy.deepcopy(value); mutate(invalid)
+            try: K.validate_packet(invalid, evidence_class="simulated")
+            except (K.CollectionFailure, K.CONTROL.ControlFailure, A.EvidenceFailure) as failure: assert failure.code == condition, (failure.code, condition)
+            else: raise AssertionError("requalification connection accepted " + condition)
+    print(json.dumps({"schema": "deploy/entity-smoke-requalification-aggregate-fixture/v1", "verdict": "passed",
+        "primitive_owners": "controlled-not-live-proof", "negative_connections": len(cases), "provider_observation": False}))
 
 
 if __name__ == "__main__":

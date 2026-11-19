@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.task-steps
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -27,6 +27,8 @@ from pathlib import Path
 
 _spec = importlib.util.spec_from_file_location("entity_smoke_step_recovery_selection", Path(__file__).with_name("source-transition.py"))
 TRANSITION = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(TRANSITION)
+_policy = importlib.util.spec_from_file_location("entity_smoke_step_proof_policy", Path(__file__).resolve().parents[3] / "release-succession/proof-policy.py")
+POLICY = importlib.util.module_from_spec(_policy); _policy.loader.exec_module(POLICY)
 
 STEPS = (
     ("bootstrap", "administration", "bootstrap", "AdministrationTaskDefinition"),
@@ -62,6 +64,7 @@ def stage(args):
     allowed["credential-recovery"] = {("administration", value) for value in ("observe-permissions", "revoke-runtime", "restore-runtime")} | {("verifier", "unready"), ("verifier", "read"), ("database-proof", "permissions")}
     allowed["isolated-restore"] = {("restore-reader", "restore-read")}
     allowed["acceptance"] = {("verifier", "read")}
+    allowed["rollback"] = {("verifier", "read")}
     allowed["activation"] = {("database-proof", "permissions")}
     require(value in allowed and (allowed[value] is None or (args.workload, args.operation) in allowed[value]), "task-proof-stage-not-supported")
     require(not (value == "credential-recovery" and args.operation == "unready") or args.phase == "operation", "task-unready-preflight-phase-prohibited")
@@ -117,12 +120,17 @@ def request(route, context, args):
            "deadline_seconds": deadline, "proof_label": label})
 
 
+def prerequisite_custody(C, value):
+    """Retain prerequisite identity once; do not recursively copy prior steps."""
+    return POLICY.prerequisite_references(value, {"deploy/entity-smoke-task-step/v2", "deploy/entity-smoke-task-step/v3"}, C.DEPLOY.fingerprint)
+
+
 def validate_delivery_step(route, value, binding, delivery, args):
     """Captured delivery custody only; callers validate actual task evidence."""
     C = route.C
     C.RESOURCE.validate_delivery(delivery)
     require(isinstance(value, dict) and set(value) == {"schema", "plan_sha256", "binding", "reservation", "receipt", "delivery", "plan", "prerequisites"}
-            and value["schema"] == "deploy/entity-smoke-task-step/v2" and value["binding"] == binding
+            and value["schema"] in {"deploy/entity-smoke-task-step/v2", "deploy/entity-smoke-task-step/v3"} and value["binding"] == binding
             and isinstance(value["reservation"], dict) and isinstance(value["reservation"].get("request"), dict), "task-step-binding-mismatch")
     plan, expected = value["plan"], value["reservation"]["request"]
     fields = {"schema", "target", "scope", "account", "region", "workload", "phase", "operation", "prepared_operation", "proof_stage", "preflight_label", "database_effect",
@@ -154,7 +162,7 @@ def observe_packet(route, context, args, provider, *, completion_required=True, 
     delivery = context.get("delivery")
     fields = {"schema", "plan_sha256", "binding", "reservation", "receipt"} | ({"delivery", "plan", "prerequisites"} if delivery else set())
     require(isinstance(value, dict) and set(value) == fields
-            and value["schema"] == "deploy/entity-smoke-task-step/" + ("v2" if delivery else "v1") and value["binding"] == context["binding"], "task-step-binding-mismatch")
+            and value["schema"] in ({"deploy/entity-smoke-task-step/v2", "deploy/entity-smoke-task-step/v3"} if delivery else {"deploy/entity-smoke-task-step/v1"}) and value["binding"] == context["binding"], "task-step-binding-mismatch")
     require(isinstance(value["plan_sha256"], str) and route.re.fullmatch(r"sha256:[a-f0-9]{64}", value["plan_sha256"]), "task-step-plan-invalid")
     reservation = value["reservation"]
     require(isinstance(reservation, dict) and isinstance(reservation.get("request"), dict), "task-step-reservation-invalid")
@@ -182,7 +190,7 @@ def observe_packet(route, context, args, provider, *, completion_required=True, 
 def prerequisites(route, context, args, provider):
     """Return the exact prefix or absence; malformed evidence is never absence."""
     from types import SimpleNamespace
-    if context.get("delivery"): return route.ACCEPTANCE.prerequisites(route, context, args, provider)
+    if context.get("delivery") and stage(args) != "credential-recovery": return route.ACCEPTANCE.prerequisites(route, context, args, provider)
     if stage(args) == "acceptance": return route.ACCEPTANCE.prerequisites(route, context, args, provider)
     if stage(args) == "initial-recovery": return route.RECOVERY.prerequisites(route, context, args, provider)
     if stage(args) == "credential-recovery": return route.CREDENTIAL.prerequisites(route, context, args, provider)
@@ -219,7 +227,8 @@ def retain(route, context, args, reservation, receipt):
     value = {"schema": "deploy/entity-smoke-task-step/v1", "plan_sha256": context["report"]["plan_sha256"],
              "binding": context["binding"], "reservation": reservation, "receipt": receipt}
     if context.get("delivery"):
-        value.update(schema="deploy/entity-smoke-task-step/v2", delivery=context["delivery"], plan=context["report"]["plan"], prerequisites=context["prerequisites"])
+        value.update(schema="deploy/entity-smoke-task-step/v3", delivery=context["delivery"], plan=context["report"]["plan"],
+            prerequisites=prerequisite_custody(route.C, context["prerequisites"]))
     target = path(context, args)
     if not route.C.RESOURCE.write_exclusive(target, value):
         previous = route.C.read_json(target)

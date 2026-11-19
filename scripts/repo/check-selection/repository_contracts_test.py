@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 13
+#   version: 17
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -22,6 +22,42 @@ from test_support import *
 
 class RepositoryContractTests(unittest.TestCase):
     def codes(self, report): return {item["code"] for item in report["findings"]}
+
+    def test_infrastructure_composition_partition(self):
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        parent = checks['entity-smoke-composition']
+        self.assertEqual(parent['members'], ['entity-smoke-infrastructure-route', 'entity-smoke-composition-suite'])
+        wrapper = parent['argv'][1]
+        source = (ROOT / wrapper).read_text()
+        fixture = 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py'
+        self.assertEqual(source.count(fixture), 1)
+        self.assertIn('infrastructure) exec python3 -B ' + fixture + ' ;;', source)
+        self.assertLess(source.index(fixture), source.index('entity_smoke_build='))
+        for identity, unit in zip(parent['members'], ['infrastructure', 'suite']):
+            child = checks[identity]
+            self.assertEqual(child['argv'], ['bash', wrapper, '--unit', unit])
+            self.assertEqual(child['inputs'], parent['inputs'])
+            self.assertEqual(selection.validate_check(ROOT, identity, child), [])
+        self.assertEqual(selection.validate_check(ROOT, 'entity-smoke-composition', parent), [])
+        self.assertEqual(checks['entity-smoke-infrastructure-route']['runtime']['tools'], ['bash', 'python3'])
+        for identity in ['entity-smoke-composition', *parent['members']]:
+            self.assertEqual(selection.execution_policy.validate_feedback(identity, checks[identity]), [])
+        self.assertFalse(parent['feedback']['development'])
+        self.assertTrue(all(checks[child]['feedback']['development'] for child in parent['members']))
+        for reference in [
+            fixture, fixture.replace("infrastructure-route-test.py", "acceptance-control-test.sh"),
+            'scripts/repo/check-selection/execution_policy.py',
+        ]:
+            self.assertTrue(any(selection.below(reference, declared) for declared in parent['inputs']))
+            with tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                path = root / reference; path.parent.mkdir(parents=True); path.write_text('first')
+                before = selection.fingerprint(root, set(parent['inputs']))
+                path.write_text('changed')
+                self.assertNotEqual(selection.fingerprint(root, set(parent['inputs'])), before)
+        for arguments in [('--unit', 'unknown'), ('--unit', 'infrastructure', 'extra'), ('--unit',)]:
+            result = subprocess.run(['bash', wrapper, *arguments], cwd=ROOT, capture_output=True)
+            self.assertEqual(result.returncode, 2)
 
     def test_described_aggregate_branches_preserve_exact_execution_gate(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
@@ -86,7 +122,8 @@ class RepositoryContractTests(unittest.TestCase):
                                       all=False, stage='local', execute_local=False, evidence=None, json=True)
             report = selection.plan(args)
             self.assertEqual(report['verdict'], 'planned', report.get('findings'))
-            self.assertTrue(expected <= {check['check_id'] for check in report['checks']})
+            self.assertTrue(expected <= {check['check_id'] for check in report['checks']},
+                            (source, expected - {check['check_id'] for check in report['checks']}))
             for identity in expected - {'persistence-container', 'entity-smoke-container'}:
                 with self.subTest(source=source, check=identity), tempfile.TemporaryDirectory(prefix='shared-package-input-') as directory:
                     root = Path(directory)
@@ -200,7 +237,8 @@ class RepositoryContractTests(unittest.TestCase):
             with patch.object(selection, 'fingerprint', side_effect=plan_fingerprint):
                 report = selection.plan(args)
             self.assertEqual(report['verdict'], 'planned', report.get('findings'))
-            self.assertTrue(expected <= {check['check_id'] for check in report['checks']})
+            self.assertTrue(expected <= {check['check_id'] for check in report['checks']},
+                            (source, expected - {check['check_id'] for check in report['checks']}))
             for identity in expected:
                 with self.subTest(source=source, check=identity), tempfile.TemporaryDirectory(prefix='shared-execution-input-') as directory:
                     root = Path(directory)
@@ -584,6 +622,8 @@ class RepositoryContractTests(unittest.TestCase):
             'aws-runtime-alignment-regression': (
                 'provider-adapters/aws/runtime-alignment', 'deploy.test.aws.runtime-alignment',
                 {alignment + 'provider-adapters/aws/runtime-alignment',
+                 'scripts/04.deploy/shared/postgresql-version.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/response.py'}),
             'provider-condition-evidence-regression': (
                 'validate-provider-condition-evidence', 'deploy.test.validate-provider-condition-evidence',
@@ -619,6 +659,19 @@ class RepositoryContractTests(unittest.TestCase):
                 self.assertFalse(selection.validate_check(ROOT, identity, check))
                 self.assertNotIn(identity, checks['target-alignment-regression'].get('members', []))
         # Ordinary runtime implementation edits do not own these fixture suites.
+        for source in ('scripts/04.deploy/shared/postgresql-version.py',
+                       'scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py'):
+            with self.subTest(shared_input=source), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                file = root / source; file.parent.mkdir(parents=True); file.write_text('first')
+                inputs = set(checks['aws-runtime-alignment-regression']['inputs'])
+                before = selection.fingerprint(root, inputs)
+                file.write_text('changed')
+                self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                omitted = inputs - {source}
+                without = selection.fingerprint(root, omitted)
+                file.write_text('changed again')
+                self.assertEqual(without, selection.fingerprint(root, omitted))
         for identity in expected:
             self.assertFalse(any(selection.below('platform/server/src/index.ts', path)
                                  for path in checks[identity]['inputs']))
@@ -773,6 +826,12 @@ class RepositoryContractTests(unittest.TestCase):
                 'deploy.test.kanbien-core-platform.provision-target-budget',
                 ['recovery-test.py', 'RecoveryCli.test_budget_lost_response_resumes_exact_operation'],
                 {base + '50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget',
+                 base + '00-target-alignment/declaration-coverage/script.py',
+                 base + '00-target-alignment/provider-adapters/aws/preparation-inputs.py',
+                 'scripts/04.deploy/shared/postgresql-version.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py',
+                 'infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml',
                  'scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/response.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py',
@@ -1059,6 +1118,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(len(parent['members']), len(expected))
         self.assertEqual(parent['inputs'], ['scripts/repo/check-selection'])
         self.assertEqual(checks['check-selection-mechanics']['runtime']['node_packages'], [])
+        self.assertTrue({'scripts/repo/diagnostic-coverage/script.py',
+                         'scripts/repo/diagnostic-coverage/script.sh'} <= set(checks['check-selection-mechanics']['inputs']))
         for excluded in ['platform', 'packages/core', 'docs', '.agentic', 'scripts/04.deploy']:
             self.assertNotIn(excluded, checks['check-selection-mechanics']['inputs'])
         for member in expected:

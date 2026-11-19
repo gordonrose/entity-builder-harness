@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -85,9 +85,10 @@ def context(args, provider, *, source_proof=True, require_terminal_jobs=True, re
     artifact = C.source_digest()
     alignment, parameters, subnet_group = C.ALIGN.inspect(provider, custody, C.now())
     binding = {**C.binding_for(custody, alignment), "proof_label": args.proof_label}
-    cache = C.ROOT / ".cache/entity-smoke-live" / args.proof_label
+    delivery = C.delivery_context(args, custody, binding)
+    cache = C.delivery_cache(args.proof_label, delivery)
     C.filesystem_preflight(cache)
-    parameters, resources = TASK.owned_stack(provider, binding, parameters, cache)
+    parameters, resources = TASK.owned_stack(provider, binding, parameters, cache, **({"delivery": delivery} if delivery else {}))
     snapshot = TASK.BINDING.DEPLOY.source()[1]
     server = TASK.BINDING.inspect(provider, "server", parameters, resources, snapshot)
     checked = TASK.BINDING.inspect(provider, "database-proof", parameters, resources, snapshot)
@@ -96,6 +97,7 @@ def context(args, provider, *, source_proof=True, require_terminal_jobs=True, re
     value = {"binding": binding, "cache": cache, "parameters": parameters, "resources": resources, "checked": checked, "custody": custody,
              "provider": provider, "artifact": artifact, "binding_snapshot": snapshot, "completion_deadlines": deadlines, "subnet_group": subnet_group,
              "report": {"plan": {}}, "server": server}
+    if delivery: value["delivery"] = delivery
     history = TASK.HISTORY.read(TASK.dependencies(), value, args)
     service = C.RESOURCE.service(provider, server["definition"], 1)
     tasks = C.RESOURCE.running_service_tasks(provider)
@@ -145,8 +147,8 @@ class Provider(C.Provider):
 
 def prepare(args, provider, *, source_proof=True):
     value = context(args, provider, source_proof=source_proof)
-    binding = {**value["binding"], "record_digest": args.expected_digest}
-    snapshot = "kanbien-core-platform-" + args.proof_label
+    binding = C.RESOURCE.recovery_binding({**value["binding"], "record_digest": args.expected_digest}, value.get("delivery"))
+    snapshot = "kanbien-core-platform-" + C.RESOURCE.resource_label(binding)
     request = {"binding": binding, "source_resource_id": value["parameters"]["DatabaseResourceId"], "snapshot": snapshot, "original_commit_observed_at": value["history"]["completed_at"]}
     C.RESOURCE.validate_request("create-recovery-point", request)
     store = C.RESOURCE.ResourceStore(value["cache"] / "attempts")
@@ -218,8 +220,9 @@ def completed(context_value, args, provider):
     require(isinstance(packet, dict) and set(packet) == {"schema", "plan", "request", "plan_sha256"} and packet["schema"] == "deploy/entity-smoke-snapshot-plan-packet/v1"
             and isinstance(packet["plan"], dict) and packet["plan_sha256"] == C.DEPLOY.fingerprint(packet["plan"]), "snapshot-completed-plan-invalid")
     request, plan = packet["request"], packet["plan"]
-    expected = {"binding": {**context_value["binding"], "record_digest": args.expected_digest}, "source_resource_id": context_value["parameters"]["DatabaseResourceId"],
-                "snapshot": "kanbien-core-platform-" + args.proof_label, "original_commit_observed_at": context_value["history"]["completed_at"]}
+    binding = C.RESOURCE.recovery_binding({**context_value["binding"], "record_digest": args.expected_digest}, context_value.get("delivery"))
+    expected = {"binding": binding, "source_resource_id": context_value["parameters"]["DatabaseResourceId"],
+                "snapshot": "kanbien-core-platform-" + C.RESOURCE.resource_label(binding), "original_commit_observed_at": context_value["history"]["completed_at"]}
     require(request == expected and plan.get("request_sha256") == C.DEPLOY.fingerprint(request) and plan.get("binding") == expected["binding"]
             and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("snapshot", C.digest_file(path), context_value["artifact"])
             and plan.get("graph_sha256") == C.DEPLOY.fingerprint(graph())
@@ -248,6 +251,7 @@ def parse(arguments=None):
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--proof-label", required=True)
     parser.add_argument("--expected-digest", required=True)
+    parser.add_argument("--expected-predecessor")
     parser.add_argument("--approved-plan")
     parser.add_argument("--wait-seconds", type=int, default=30)
     parser.add_argument("--json", action="store_true")

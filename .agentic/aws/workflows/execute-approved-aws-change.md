@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: aws.workflows.execute-approved-aws-change
-  version: 4
+  version: 6
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-11-09"
+  updated_on: "2026-11-19"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -50,6 +50,42 @@ Before running a mutating command, confirm:
   approval uses its recovery allowance without asking again. Deleting the
   source database, backups or unrelated resources remains outside that scope.
 - Capture the result and verification evidence after execution.
+
+## Bounded ordinary-release approval
+
+An explicit approval may cover a complete ordinary release, including its
+declared verification and conditional restoration of the exact accepted
+predecessor. Record that approval in the existing session/change record. It
+must identify the account/region, target/scope, immutable candidate package,
+accepted predecessor, compatible rollback package, declared operations and
+protected resources. Approval of implementing this mechanism is not approval
+of a concrete AWS release.
+
+Some step plans depend on earlier live results. They need fresh exact hashes,
+but do not need another user prompt solely because those hashes become
+available later. Before using the existing exact-plan execution interface,
+match the generated plan to the approved release's identity and allowed effects
+and pass the existing change-shape, custody and execution gates. A generated
+hash is never approval by itself. An absent/mismatched binding, broader effects,
+changed release identity, broader permissions, data deletion or resources
+outside the approved update requires a new decision before that effect.
+
+Conditional restoration requires a positively terminal failed verification
+after completed deployment. Admission blocks, pending/unknown outcomes,
+malformed reports and collection/promotion conflicts are not that evidence.
+Reconcile original operations first; never replay an uncertain operation.
+Use the existing separately labelled compatible-image restoration controller,
+preserve data and accepted history, and privately verify the restored release.
+Restoration is not successful delivery or acceptance of the failed candidate.
+This approval does not authorise generic failed-stack repair, migrations,
+permission changes, requalification or repeated recovery attempts.
+
+The ordinary-update connector enforces this boundary with its reviewed
+`--plan-release` fingerprint and matching `--approved-release` execution input.
+Existing exact-plan commands and original task/change-set records remain
+authoritative. Local connected tests, package qualification and live acceptance
+are separate evidence levels; implementation alone establishes neither live
+recovery nor the delivery-time target.
 
 ## Entity-smoke read-only preflight
 

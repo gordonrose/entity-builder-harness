@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.persistence-acceptance-route.impl
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -211,7 +211,7 @@ def full_route():
         # Package custody is acceptance evidence too.  Keep the simulated
         # files in the same durable evidence root as production receipts so
         # the generic successor validator exercises its allowlisted-root rule.
-        values={'candidate_receipt':custody(evidence_root/'package-receipts/candidate.json',facts['candidate_digest']),'rollback_receipt':custody(evidence_root/'package-receipts/rollback.json',facts['rollback_digest']),'restoration_verifier_receipt':custody(evidence_root/'package-receipts/restoration-verifier.json',facts['candidate_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'proof_applicability':None,'observability_receipts':observability_receipts}
+        values={'candidate_receipt':custody(evidence_root/'package-receipts/candidate.json',facts['candidate_digest']),'rollback_receipt':custody(evidence_root/'package-receipts/rollback.json',facts['rollback_digest']),'restoration_verifier_receipt':custody(evidence_root/'package-receipts/restoration-verifier.json',facts['candidate_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'observability_receipts':observability_receipts}
         values["rollback_compatibility_id"]="rollback-compatibility-"+"a"*24
         route_inputs=yaml.safe_load((ROOT/ROUTE).read_text())['inputs']
         values.update({key:spec['example'] for key,spec in route_inputs.items() if key.endswith('_predecessor')})
@@ -220,7 +220,7 @@ def full_route():
         observations=[];state={'healthy':True,'cleanup':True}
         def aws(*parts):
             observations.append(parts)
-            if parts[:2]==('ecr','batch-get-image'):return {'images':[{'imageManifest':json.dumps({'manifests':[{'digest':runnable,'mediaType':'application/vnd.oci.image.manifest.v1+json','platform':{'architecture':'amd64','os':'linux'}}]})}]}
+            if parts[:2]==('ecr','batch-get-image'):return {'images':[{'imageId':{'imageDigest':facts['candidate_digest']},'imageManifest':json.dumps({'mediaType':'application/vnd.oci.image.index.v1+json','manifests':[{'digest':runnable,'mediaType':'application/vnd.oci.image.manifest.v1+json','platform':{'architecture':'amd64','os':'linux'}}]})}]}
             if parts[:2]==('cloudformation','describe-stacks'):return {'Stacks':[{'StackStatus':'UPDATE_COMPLETE','Outputs':[{'OutputKey':k,'OutputValue':v} for k,v in definitions.items()]}]}
             if parts[:2]==('ecs','describe-services'):return {'services':[{'serviceName':collector.SERVICE,'status':'ACTIVE','desiredCount':1,'runningCount':1,'pendingCount':0,'taskDefinition':definitions['CoreServerPersistenceTaskDefinitionArn'],'deployments':[{'status':'PRIMARY','rolloutState':'COMPLETED'}]}]}
             if parts[:2]==('ecs','list-tasks'):return {'taskArns':[current]}
@@ -228,15 +228,20 @@ def full_route():
                 selected=parts[parts.index('--tasks')+1:]
                 assert len(selected)==1 and selected[0] in {current,health},'historical task query forbidden: '+str(selected)
                 if selected[0]==health:return {'tasks':[copy.deepcopy(health_task)]}
-                return {'tasks':[{'taskArn':current,'taskDefinitionArn':definitions['CoreServerPersistenceTaskDefinitionArn'],'lastStatus':'RUNNING','healthStatus':'HEALTHY' if state['healthy'] else 'UNHEALTHY','group':'service:'+collector.SERVICE,'overrides':{'containerOverrides':[],'inferenceAcceleratorOverrides':[]},'containers':[{'name':'core-server-persistence','image':image,'imageDigest':runnable}]}]}
+                return {'tasks':[{'taskArn':current,'taskDefinitionArn':definitions['CoreServerPersistenceTaskDefinitionArn'],'startedAt':state.get('started_at',stamp(now-timedelta(hours=1))),'lastStatus':'RUNNING','healthStatus':'HEALTHY' if state['healthy'] else 'UNHEALTHY','group':'service:'+collector.SERVICE,'overrides':{'containerOverrides':[],'inferenceAcceleratorOverrides':[]},'containers':[{'name':'core-server-persistence','image':image,'imageDigest':runnable}]}]}
             if parts[:2]==('ecs','describe-task-definition'):
                 definition=parts[-1];name='core-server-persistence' if definition==definitions['CoreServerPersistenceTaskDefinitionArn'] else 'private-persistence-verifier';return {'taskDefinition':{'taskDefinitionArn':definition,'family':definition.rsplit('/',1)[-1].rsplit(':',1)[0],'containerDefinitions':[{'name':name,'image':image,'environment':[{'name':'PLATFORM_SOURCE_COMMIT_SHA','value':'a'*40}]}]}}
             if parts[:2]==('logs','get-log-events'):return {'events':[{'message':json.dumps({'verdict':'accepted','code':'KANBIEN_CORE_PERSISTENCE_HEALTHY'})}]}
-            if parts[:2]==('rds','describe-db-instances'):return {'DBInstances':[{'DBInstanceIdentifier':collector.DATABASE,'DBInstanceStatus':'available','Engine':'postgres','PubliclyAccessible':False,'StorageEncrypted':True,'DeletionProtection':True,'DbiResourceId':'db-FIXTURE-SOURCE','InstanceCreateTime':stamp(now-timedelta(days=1))}]}
+            if parts[:2]==('rds','describe-db-instances'):return {'DBInstances':[{'DBInstanceIdentifier':collector.DATABASE,'DBInstanceStatus':'available','Engine':'postgres','PubliclyAccessible':False,'StorageEncrypted':True,'DeletionProtection':True,'DbiResourceId':state.get('database_resource_id','db-FIXTURE-SOURCE'),'InstanceCreateTime':stamp(now-timedelta(days=1))}]}
             if parts[:2]==('rds','describe-db-snapshots'):return {'DBSnapshots':[{'DBSnapshotIdentifier':facts['recovery_snapshot'],'Status':'available','Encrypted':True,'DBInstanceIdentifier':collector.DATABASE,'SnapshotCreateTime':facts['snapshot_created_at'],'DbiResourceId':'db-FIXTURE-SOURCE'}]}
             raise AssertionError('unexpected provider call '+str(parts))
         real_run=subprocess.run
         def run(argv,*args,**kwargs):
+            if argv[:2] == ['git', 'ls-tree'] and kwargs.get('cwd') == root:
+                # This complete-route fixture controls immutable source trees;
+                # the shared policy's separate Git fixture tests real changes.
+                assert argv[5] == 'a' * 40, argv
+                return subprocess.CompletedProcess(argv, 0, b'100644 blob ' + (b'b' if state.get('tree_changed') else b'a') * 40 + b'\tpackages/core/fixture.ts\0', b'')
             if argv[0]=='aws':
                 assert argv[1:3]==['rds','describe-db-instances'] and '-restore-' in argv[4],argv
                 return subprocess.CompletedProcess(argv,1 if state['cleanup'] else 0,'{}','An error occurred (DBInstanceNotFound) when calling the DescribeDBInstances operation: synthetic missing' if state['cleanup'] else '')
@@ -273,6 +278,10 @@ def full_route():
         verdict,release_id=succession.promote(evidence_root,target=target,scope=scope,identity=identity,source_path=candidate_path,source_digest=succession.sha256_bytes(raw),expected_predecessor=current_reference['release_id'],legacy=False)
         assert verdict=='promoted' and release_id==report['facts']['release_id'] and succession.current(evidence_root)['release_id']==release_id
         passed('generic succession validates and atomically promotes the collector candidate after preserving the predecessor')
+        # Exercise the actual ordinary collector with the same accepted image:
+        # image equality must not turn old receipts into fresh release checks.
+        ordinary_update_route(collector, root, evidence_root, facts, definitions, health_task,
+                              values, state, aws, run, release_id)
         # Keep the complete historical-succession scenario, then exercise first
         # scope activation with fresh observations in a separate evidence tree.
         prior_scenario=root/'historical-succession-scenario'
@@ -395,6 +404,101 @@ def full_route():
         passed('independent activation validates its own accepted evidence, blocks failed evidence, previews without writes and preserves the unrelated accepted baseline')
     assert hashes()==initial,'genuine accepted evidence changed'
     passed('all genuine accepted evidence and lifecycle files preserved byte-for-byte')
+
+def ordinary_update_route(C, root, evidence_root, facts, definitions, health_task, values, state, aws, run, predecessor):
+    now = datetime.now(timezone.utc)
+    stamp = lambda value: value.isoformat().replace('+00:00', 'Z')
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None): return now + timedelta(minutes=3)
+    route = C.route_contract()
+    schema = C.route_module().document(root / route['accepted_record']['schema_path'])
+    names = schema['ordinary_update']['fresh_tasks']
+    receipt_api = C.receipt_module()
+    paths = {}
+    admin = DEFINITION + 'kanbien-core-platform-persistence-administration:7'
+    definitions['CoreServerPersistenceAdministrationTaskDefinitionArn'] = admin
+    original_health = copy.deepcopy(health_task)
+    old_bytes = {p:p.read_bytes() for p in evidence_root.rglob('*') if p.is_file()}
+    for index, name in enumerate(names):
+        value = json.loads(Path(facts['proof_receipts'][name]).read_text())
+        value['task'].update(arn=ARN + f'{400+index:032x}', started_at=stamp(now+timedelta(seconds=10+index*10)),
+                             stopped_at=stamp(now+timedelta(seconds=12+index*10)))
+        value['task']['definition'] = admin if value['proof_type']=='administration' else definitions['CoreServerPersistenceVerifierTaskDefinitionArn']
+        value['provenance']['collected_at'] = value['task']['stopped_at']
+        value['integrity']['payload_sha256'] = receipt_api.digest({key:item for key,item in value.items() if key!='integrity'})
+        path = evidence_root/'proof-receipts'/('fresh-update-'+name+'.json')
+        path.write_text(json.dumps(receipt_api.validate(value))); paths[name]=str(path)
+    state['started_at'] = stamp(now)
+    health_task.update(startedAt=stamp(now+timedelta(seconds=60)),stoppedAt=stamp(now+timedelta(seconds=80)))
+    manifest = root/'ordinary-inputs.yml'
+    body = {'schema':'deploy/acceptance-inputs/v1','target':C.TARGET,'scope':C.SCOPE,'release_mode':'ordinary-update',
+            'values':{'candidate_receipt':values['candidate_receipt'],'expected_predecessor':predecessor,
+                      'current_health_task':values['current_health_task'],'proof_receipts':paths}}
+    manifest.write_text(yaml.safe_dump(body))
+    calls=[]
+    def current_only(*parts):
+        calls.append(parts)
+        assert parts[:2] != ('rds','describe-db-snapshots'), 'routine update queried historical restore environment'
+        return aws(*parts)
+    try:
+        with patch.object(C,'aws',current_only), patch.object(C,'datetime',Clock), patch('subprocess.run',run):
+            args=['--inputs',str(manifest),'--write-candidate','--json']
+            code, report=capture(C,args)
+            assert code==0,report
+            candidate_path=root/report['facts']['candidate_record']
+            candidate=yaml.safe_load(candidate_path.read_text())
+            assert set(candidate['proof_set'])==set(names)|{'candidate-package','current-acceptance-observation'}
+            observation=evidence_root/candidate['proof_set']['current-acceptance-observation']['path']
+            record=yaml.safe_load(observation.read_text())
+            assert record['predecessor']['release_id']==predecessor
+            C.validate_record(record,evidence_class='simulated')
+            validator=load(RUN/'validate-accepted-release/script.py','ordinary_record_validator')
+            assert validator.validate(observation,root,'simulated')==[]
+            code,repeated=capture(C,args);assert code==0 and repeated['facts']==report['facts'],repeated
+            # Refusing historical same-image proof is an actual collector check.
+            body['values']['proof_receipts']={name:facts['proof_receipts'][name] for name in names}
+            manifest.write_text(yaml.safe_dump(body));code,stale=capture(C,args)
+            assert code and stale['findings']==[{'code':'acceptance-evidence-fresh-proof-stale-or-mismatched'}],stale
+            body['values']['proof_receipts']=paths
+            body['values']['expected_predecessor']='release-'+'0'*24
+            manifest.write_text(yaml.safe_dump(body));code,wrong=capture(C,args)
+            assert code and wrong['findings']==[{'code':'acceptance-evidence-predecessor-mismatch'}],wrong
+            body['values']['expected_predecessor']=predecessor
+            manifest.write_text(yaml.safe_dump(body))
+            for key, value, expected in [('tree_changed',True,'acceptance-recovery-requalification-required'),
+                                         ('database_resource_id','db-REPLACED','acceptance-recovery-binding-changed')]:
+                state[key]=value
+                code,changed=capture(C,args)
+                assert code and changed['findings']==[{'code':expected}],changed
+                state.pop(key)
+            current=C.succession_module().current(evidence_root)
+            try: C.updates().accepted(C.owner(),current['predecessor'])
+            except C.EvidenceFailure as error: assert str(error)=='acceptance-recovery-requalification-required'
+            else: raise AssertionError('legacy custody inferred missing recovery qualification')
+            # Exact predecessor-byte custody, not merely an accepted label.
+            original=next(p for p in old_bytes if p.name==record['predecessor']['candidate_record'].split('/')[-1])
+            original.write_bytes(old_bytes[original]+b'\n')
+            code,changed=capture(C,args);assert code and changed['verdict']=='blocked',changed
+            original.write_bytes(old_bytes[original])
+            assert all(path.read_bytes()==raw for path,raw in old_bytes.items())
+            S=C.succession_module()
+            _,_,_,identity=S.candidate_identity(candidate,evidence_root)
+            assert identity['expected_predecessor']==predecessor
+            def promote(expected):
+                return S.promote(evidence_root,target=C.TARGET,scope=C.SCOPE,identity=identity,
+                    source_path=candidate_path,source_digest=S.sha256_bytes(candidate_path.read_bytes()),
+                    expected_predecessor=expected,legacy=False)
+            try: promote('none')
+            except S.SuccessionFailure as error: assert str(error)=='release-succession-candidate-predecessor-mismatch'
+            else: raise AssertionError('collector candidate accepted against a different predecessor')
+            assert promote(predecessor)[0]=='promoted'
+            assert S.current(evidence_root)['predecessor']==predecessor
+            assert C.updates().accepted(C.owner(),candidate['release']['id'])[0]==record
+        passed('ordinary update uses four fresh proofs, exact accepted custody, shared recovery policy and current health; stale same-image proofs and changed predecessors fail without recovery operations')
+    finally:
+        health_task.clear();health_task.update(original_health);state.pop('started_at',None)
+
 
 if __name__=='__main__':
     route_tests();fresh_verifier_route_tests();full_route();print(json.dumps({'schema':'deploy/acceptance-route-rehearsal-report/v1','verdict':'passed','evidence_class':'simulated','checks':COUNT}))

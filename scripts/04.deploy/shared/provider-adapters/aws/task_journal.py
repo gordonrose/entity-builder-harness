@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.task-journal
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -110,6 +110,20 @@ def reserve(path, descriptor, value, *, schema, marker, mode, request, new_opera
     if value is not None:
         if new_operation and value["operation_id"] == expected:
             if completed(value) is None: raise JournalFailure("prior-operation-not-complete")
+            # Preserve the original operation before advancing the existing
+            # journal. Recovery may still need its failed candidate evidence.
+            history = directory(path.parent, "history")
+            retained = history / (value["operation_id"] + ".json")
+            if retained.exists():
+                if read(retained) != value: raise JournalFailure("operation-metadata-invalid")
+            else:
+                raw = canonical(value)
+                fd = os.open(retained, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(raw); stream.flush(); os.fsync(stream.fileno())
+                fd = os.open(history, os.O_RDONLY | os.O_DIRECTORY)
+                try: os.fsync(fd)
+                finally: os.close(fd)
             predecessor = value["operation_id"]
         else:
             if new_operation and value["predecessor"] != expected:

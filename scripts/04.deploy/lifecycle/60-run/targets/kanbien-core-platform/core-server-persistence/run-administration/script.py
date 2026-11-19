@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import re
@@ -136,6 +137,9 @@ def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, s
 
 
 def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=None) -> int:
+    terminal = {}
+    def unsuccessful(code, *, facts=None):
+        return report("failed" if terminal else "blocked", code, facts={**(facts or {}), **terminal})
     observed = MIGRATION.duration(task)
     if observed is None:
         return report("blocked", "persistence-administration-duration-unavailable")
@@ -146,10 +150,13 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
             failure = "persistence-administration-completion-deadline-exceeded" if observed > seconds else "persistence-administration-unsuccessful-completion"
             receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=failure,
                 context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
-            on_receipt(RECEIPTS.persist(receipt))
+            path = RECEIPTS.persist(receipt)
+            on_receipt(path)
+            terminal = {"operation_id": task.get("startedBy"), "operation": operation,
+                        "proof_receipt": path.relative_to(ROOT).as_posix(), "proof_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
         except Exception: return report("uncertain", "persistence-administration-receipt-persistence-failed", facts={"operation_id": task.get("startedBy")})
     if observed > seconds:
-        return report("blocked", "persistence-administration-completion-deadline-exceeded")
+        return unsuccessful("persistence-administration-completion-deadline-exceeded")
     if not MIGRATION.task_exit(task):
         # Use the task's actual log stream and a closed reader; never replay it.
         arn = task.get("taskArn")
@@ -164,7 +171,7 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
                 failure, observation = contract.collect_persistence_task_failure(events, "administration") if ok and "administration_task" in known_facts else (None, "failed" if not ok else "unavailable")
                 known_facts["task_log_observation"] = observation
                 if failure is not None:
-                    return report("blocked", "persistence-administration-unsuccessful-completion", facts={**known_facts, "safe_result_code": failure["code"], "task_failure": failure})
+                    return unsuccessful("persistence-administration-unsuccessful-completion", facts={**known_facts, "safe_result_code": failure["code"], "task_failure": failure})
             except Exception:
                 known_facts["task_log_observation"] = "failed"
             for event in events.get("events", []) if ok and isinstance(events, dict) else []:
@@ -191,10 +198,10 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
                         if not operational:
                             continue
                         facts["related_diagnostics"] = contract.validate_related_diagnostics(value["related_diagnostics"], diagnostic)
-                    return report("blocked", "persistence-administration-unsuccessful-completion", facts=facts)
+                    return unsuccessful("persistence-administration-unsuccessful-completion", facts=facts)
                 except Exception:
                     continue
-        return report("blocked", "persistence-administration-unsuccessful-completion", facts=known_facts)
+        return unsuccessful("persistence-administration-unsuccessful-completion", facts=known_facts)
     result_code, code = accepted_log(task, operation)
     if result_code is None:
         return report("blocked", code)

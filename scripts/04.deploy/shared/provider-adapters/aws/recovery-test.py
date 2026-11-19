@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.aws.provisioning-recovery
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -89,6 +89,10 @@ class RecoveryCli(unittest.TestCase):
     ('ec2','describe-security-groups','InvalidGroup..NotFound','private-canary','aws-command-failed'),
     ('ec2','describe-security-groups','UnauthorizedOperation','private-canary not found','aws-access-denied'),
     ('iam','get-role','AccessDenied','private-canary not found','aws-access-denied'),
+    ('sts','get-caller-identity','ExpiredToken','private-canary not found','aws-credentials-expired'),
+    ('cloudformation','execute-change-set','ExpiredTokenException','private-canary','aws-credentials-expired'),
+    ('sts','get-caller-identity','InvalidClientTokenId','expired private-canary','aws-access-denied'),
+    ('sts','get-caller-identity','UnknownFailure','ExpiredToken private-canary','aws-command-failed'),
     ('budgets','describe-budget','NotFoundException','private-canary','aws-resource-missing'),
     ('logs','get-log-events','ResourceNotFoundException','private-canary','aws-resource-missing'),
     ('cloudformation','describe-stacks','AccessDenied','Stack with id own-fixture does not exist','aws-access-denied'),
@@ -155,6 +159,13 @@ except m.RelationalSmokeError as error:print(str(error));sys.exit(1)
    root=Path(directory);fixture_root(root)
    relative='scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py';controller=copy(root,relative)
    copy(root,'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml')
+   for dependency in ('scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py',
+                      'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py',
+                      'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py',
+                      'scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py',
+                      'scripts/04.deploy/shared/postgresql-version.py',
+                      'infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml'):
+    copy(root,dependency)
    tag=root/'scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh';tag.parent.mkdir(parents=True);tag.write_text('exit 0\n')
    aws=root/'aws';aws.write_text(BUDGET_FAKE);aws.chmod(0o755);state=root/'provider.json';state.write_text('{"calls":[]}')
    env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'FIXTURE_STATE':str(state),'KANBIEN_CORE_PLATFORM_COST_ALERT_EMAIL':'fixture@example.invalid','PYTHONDONTWRITEBYTECODE':'1'}

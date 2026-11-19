@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 4
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-18"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -398,12 +398,18 @@ for service,operation,text,code in [
     with patch.object(retire.subprocess,'run',return_value=SimpleNamespace(returncode=1,stdout='',stderr=text)) as call:
         assert retire.aws(service,operation)==(False,None,code)
         assert call.call_count==1
-with patch.object(prepare,'aws',return_value=(True,{'Stacks':[{'Outputs':None}]},'ok')) as call:
-    assert prepare.foundation_outputs()==(None,'foundation-outputs-unavailable')
+with patch.object(prepare,'aws',return_value=(True,{'Stacks':[{'StackStatus':'UPDATE_COMPLETE','Outputs':None}]},'ok')) as call:
+    assert prepare.foundation_outputs()==(None,'foundation-outputs-invalid')
     assert call.call_count==1
-with patch.object(prepare,'aws',side_effect=[(True,{'Vpcs':[{'CidrBlock':'10.0.0.0/16'}]},'ok'),(True,{'Service':None},'ok')]) as call:
-    assert prepare.infrastructure_parameters({'VpcId':'vpc','ServiceDiscoveryArn':'arn/service'})==(None,'persistence-namespace-observation-invalid')
-    assert call.call_count==2
+outputs={key:'fixture' for key in prepare.FOUNDATION_CHECKS.NETWORK_OUTPUTS}
+outputs.update(VpcId='vpc',PrivateSubnetIds='subnet')
+with patch.object(prepare,'aws',side_effect=[
+    (True,{'Vpcs':[{'VpcId':'vpc','State':'available','CidrBlock':'10.0.0.0/16'}]},'ok'),
+    (True,{'Subnets':[{'SubnetId':'subnet','VpcId':'vpc','State':'available','MapPublicIpOnLaunch':False}]},'ok'),
+    (True,{'Service':None},'ok'),
+]) as call:
+    assert prepare.infrastructure_parameters(outputs)==(None,'foundation-namespace-reference-invalid')
+    assert call.call_count==3
 for payload in ['{private-json-canary', '[]']:
     with patch.object(prepare.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=payload)):
         assert prepare.validate_receipt(Path('private-path-canary')) is None

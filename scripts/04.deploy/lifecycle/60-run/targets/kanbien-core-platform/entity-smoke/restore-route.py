@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.restore.implementation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -64,7 +64,8 @@ def adapted(provider):
 
 
 def parameters(value, snapshot):
-    p, binding = value["parameters"], {**value["binding"], "record_digest": value["history"]["binding"]["record_digest"]}
+    p = value["parameters"]
+    binding = C.RESOURCE.recovery_binding({**value["binding"], "record_digest": value["history"]["binding"]["record_digest"]}, value.get("delivery"))
     result = {key: p[key] for key in ("VpcId", "VpcCidr", "EndpointSecurityGroupId", "S3ArtifactPrefixListId", "LogGroupName", "ImageRepositoryUri", "ImageRepositoryArn", "ImageDigest", "SourceRevision")}
     result.update(DatabaseSubnetGroupName=value["subnet_group"], RestoredDatabaseName=p["DatabaseName"], RestoredDatabaseIdentifier=RESTORE.names(binding)[2],
                   SourceSnapshotArn=snapshot["result"]["facts"]["snapshot_arn"], ProofLabel=binding["proof_label"])
@@ -78,9 +79,11 @@ def source(args, provider, *, source_proof=True, require_terminal_jobs=True, ret
     snapshot = S.completed(value, args, provider)
     scope = {"resources": value["resources"]}
     _, other = TASK.RECOVERY.STATE.STOP.B.services(C, provider, scope, {"server": value["server"]["definition"]})
-    old = value["history"]["prerequisites"]["packets"]["initial-stop"]["root"]["request"]["packet"]["intent"]["other_services"]
+    packets = value["history"]["prerequisites"]["packets"]
+    old = packets["recovery-runtime"]["other_services"] if value.get("delivery") else packets["initial-stop"]["root"]["request"]["packet"]["intent"]["other_services"]
     require(other == old, "restore-other-service-configuration-changed")
-    return {**value, "snapshot": snapshot, "restore_parameters": parameters(value, snapshot), "restore_binding": {**value["binding"], "record_digest": args.expected_digest}}
+    return {**value, "snapshot": snapshot, "restore_parameters": parameters(value, snapshot),
+        "restore_binding": C.RESOURCE.recovery_binding({**value["binding"], "record_digest": args.expected_digest}, value.get("delivery"))}
 
 
 def gate_reference(value, cache, name, plan_hash):
@@ -114,12 +117,16 @@ def deployment(value, args, provider, *, observe=True):
     require(isinstance(result, dict) and set(result) == {"status", "reservation", "facts"} and result.get("status") == "completed"
             and isinstance(result.get("reservation"), dict) and isinstance(result.get("facts"), dict), "restore-deployment-result-invalid")
     facts = result["facts"]
-    require(set(facts) == {"stack_arn", "database_identifier", "restored_resource_id", "resources", "resources_sha256"} and isinstance(facts["resources"], dict)
+    fields = {"stack_arn", "database_identifier", "restored_resource_id", "resources", "resources_sha256"}
+    require(set(facts) in (fields, fields | {"engine_version"}) and isinstance(facts["resources"], dict)
             and set(facts["resources"]) == set(RESTORE.RESOURCE_TYPES) and all(isinstance(row, dict) and set(row) == {"type", "physical_id"}
                 and row["type"] == RESTORE.RESOURCE_TYPES[name] and isinstance(row["physical_id"], str) and row["physical_id"] for name, row in facts["resources"].items())
             and facts["resources_sha256"] == C.DEPLOY.fingerprint(facts["resources"]) and facts["database_identifier"] == RESTORE.names(value["restore_binding"])[2]
             and facts["resources"]["RestoredDatabase"]["physical_id"] == facts["database_identifier"] and isinstance(facts["restored_resource_id"], str)
             and re.fullmatch(r"db-[A-Za-z0-9]+", facts["restored_resource_id"]), "restore-deployment-resources-invalid")
+    if "engine_version" in facts:
+        try: RESTORE.PG.version(facts["engine_version"])
+        except RESTORE.PG.VersionFailure as failure: raise RestoreFailure(failure.code) from None
     store = R.ResourceStore(value["cache"] / "attempts")
     execution = result["reservation"]
     require(isinstance(execution.get("request"), dict) and all(execution["request"].get(key) == item for key, item in request.items())
@@ -130,6 +137,10 @@ def deployment(value, args, provider, *, observe=True):
     gate_reference(receipt, value["cache"], "restore-deploy", packet["plan_sha256"])
     if observe:
         current = RESTORE.observe_restore(adapted(provider), store, value["restore_binding"], value["restore_parameters"], execution["request"]["change_set_arn"], execution["request"]["stack_arn"])
+        # Old immutable receipts lack a version observation. Today's live read
+        # still enforces image compatibility; do not rewrite historical bytes.
+        if "engine_version" not in facts and current.get("status") == "completed":
+            current = {**current, "facts": {key: item for key, item in current["facts"].items() if key != "engine_version"}}
         require(current == result, "restore-deployment-observation-changed")
     return receipt
 
@@ -137,12 +148,16 @@ def deployment(value, args, provider, *, observe=True):
 def reader_context(value, deployed):
     facts = deployed["result"]["facts"]
     p, parent = value["restore_parameters"], value["restore_binding"]
-    child = {**{key: item for key, item in parent.items() if key != "record_digest"}, "permission_contract_sha256": C.digest_file(RESTORE.SOURCE),
+    child = {**{key: item for key, item in parent.items() if key not in {"record_digest", "recovery_id"}}, "permission_contract_sha256": C.digest_file(RESTORE.SOURCE),
              "dependency_incarnation_sha256": C.DEPLOY.fingerprint({"resource_id": facts["restored_resource_id"], "database": p["RestoredDatabaseName"], "schema": "entity_smoke"})}
     checked = {"definition": facts["resources"]["RestoreReaderTaskDefinition"]["physical_id"], "security_group": facts["resources"]["RestoreReaderSecurityGroup"]["physical_id"], "subnets": value["parameters"]["PrivateSubnetIds"].split(",")}
     probe_label = "entity-smoke-" + hashlib.sha256((parent["proof_label"] + ":restore-reader:restore-read:preflight:isolated-restore").encode()).hexdigest()[:24]
-    probe_label = C.TRANSITION.restore_reader_preflight(C, {**value, "binding": child, "checked": checked}, deployed, probe_label)
-    return {**value, "binding": child, "checked": checked, "report": {"plan": {"preflight_label": probe_label}}, "required_after": deployed["observed_at"], "deployed": deployed}
+    if value.get("delivery"):
+        namespace = C.RESOURCE.recovery_namespace(C, value)
+        probe_label = C.delivery_preflight_label(namespace, "isolated-restore", "restore-reader", "restore-read")
+    else:
+        probe_label = C.TRANSITION.restore_reader_preflight(C, {**value, "binding": child, "checked": checked}, deployed, probe_label)
+    return {**{key: item for key, item in value.items() if key != "delivery"}, "recovery_delivery": value.get("delivery"), "binding": child, "checked": checked, "report": {"plan": {"preflight_label": probe_label}}, "required_after": deployed["observed_at"], "deployed": deployed}
 
 
 def reader(value, args, provider):
@@ -297,7 +312,12 @@ def prepare(args, provider, *, source_proof=True):
         deployed = deployment(value, args, provider)
         BINDING.inspect(C, TASK.BINDING, RESTORE, provider, value["restore_binding"], value["restore_parameters"], deployed["result"]["facts"], value["parameters"]["PrivateSubnetIds"].split(","))
     declaration = graph(args.phase)
-    reconciliation = C.TRANSITION.cleanup_reconciliation(C, value["cache"], value["restore_binding"], request, store, declaration) if args.phase == "cleanup" else None
+    reconciliation = None
+    if args.phase == "cleanup":
+        if value.get("delivery"):
+            C.RESOURCE.recovery_namespace(C, value)
+        else:
+            reconciliation = C.TRANSITION.cleanup_reconciliation(C, value["cache"], value["restore_binding"], request, store, declaration)
     safe = {"schema": "deploy/entity-smoke-restore-plan/v1", "phase": args.phase, "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke", "binding": value["restore_binding"],
             "request_sha256": C.DEPLOY.fingerprint(request), "controller_sha256": value["artifact"], "graph_sha256": C.DEPLOY.fingerprint(declaration), "operator_sha256": actor(provider, value["restore_binding"], args.phase),
             "snapshot_sha256": C.digest_file(value["cache"] / "snapshot-receipt.json"), "history_sha256": C.digest_file(value["cache"] / "credential-history.json"),
@@ -359,7 +379,7 @@ def run(args, provider):
     else: prepared["effect_request"] = packet["request"]
     effect_request = prepared["effect_request"]
     previous = store.read(phase, effect_request)
-    C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
+    if not value.get("delivery"): C.TRANSITION.require_existing_attempt(C, args.proof_label, previous)
     reconciling_cleanup = "reconciles_plan_sha256" in packet["plan"]
     if reconciling_cleanup:
         require(phase == "delete-restore" and previous is not None, "restore-cleanup-reconciliation-journal-required")
@@ -400,6 +420,7 @@ def parse(arguments=None):
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--proof-label", required=True)
     parser.add_argument("--expected-digest", required=True)
+    parser.add_argument("--expected-predecessor")
     parser.add_argument("--approved-plan")
     parser.add_argument("--wait-seconds", type=int, default=30)
     parser.add_argument("--json", action="store_true")

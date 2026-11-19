@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.task-plan.implementation
-#   version: 3
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -64,6 +64,13 @@ class TaskRouteFailure(Exception):
     def __init__(self, code, item=None):
         super().__init__(code)
         self.code, self.item = code, item
+
+
+class CurrentTaskFailure(TaskRouteFailure):
+    """Distinguish this invocation's task from failed prerequisite evidence."""
+    def __init__(self, evidence):
+        super().__init__(evidence.code)
+        self.evidence = evidence
 
 
 def require(value, code):
@@ -128,10 +135,10 @@ def operator(provider, definition, roles):
     return C.DEPLOY.fingerprint({"account": caller["Account"], "role": value["Arn"]})
 
 
-def owned_stack(provider, binding, parameters, cache, *, delivery=None):
+def owned_stack(provider, binding, parameters, cache, *, delivery=None, rollback=False):
     if delivery is not None:
         selected = {**parameters, "ServerDesiredCount": "1"}
-        checked = C.completed_deployment(provider, binding, selected, delivery)
+        checked = C.completed_deployment(provider, binding, selected, delivery, rollback=rollback)
         require(checked["cache"] == cache, "task-delivery-cache-mismatch")
         return selected, checked["resources"]
     retained = C.read_json(cache / "receipts/create.json")
@@ -178,13 +185,17 @@ def prepare(args, provider, *, retained_source_evidence=None):
     alignment, parameters, _ = C.ALIGN.inspect(provider, receipt, C.now())
     binding = {**C.binding_for(receipt, alignment), "proof_label": args.proof_label}
     delivery = C.delivery_context(args, receipt, binding)
+    rollback = proof_stage == "rollback"
+    if rollback:
+        binding, _ = C.rollback_selection(args, delivery, binding)
+        parameters.update(ImageDigest=binding["image_digest"], SourceRevision=binding["source_revision"])
     cache = C.delivery_cache(args.proof_label, delivery)
     C.filesystem_preflight(cache)
     declaration = GRAPH.contract(args.workload, C.GATE, negative=CREDENTIAL.negative(args))
-    artifacts = {item["id"]: artifact if item["id"] == GRAPH.CONTROLLER_SOURCE else receipt["image_digest"] for item in declaration["artifacts"]}
+    artifacts = {item["id"]: artifact if item["id"] == GRAPH.CONTROLLER_SOURCE else binding["image_digest"] for item in declaration["artifacts"]}
     book = C.GateBook(artifact, cache / "task-realization", contract=declaration, artifact_bindings=artifacts)
     book.gate("source"); book.gate("artifact"); book.gate("semantic-integration")
-    selected, resources = owned_stack(provider, binding, parameters, cache, **({"delivery": delivery} if delivery else {}))
+    selected, resources = owned_stack(provider, binding, parameters, cache, **({"delivery": delivery, "rollback": rollback} if delivery else {}))
     binding_snapshot = BINDING.DEPLOY.source()[1]
     checked = BINDING.inspect(provider, args.workload, selected, resources, binding_snapshot)
     callees = {"server": BINDING.inspect(provider, "server", selected, resources, binding_snapshot)} if args.workload == "verifier" else {}
@@ -219,7 +230,8 @@ def prepare(args, provider, *, retained_source_evidence=None):
     try: prerequisites = STEPS.prerequisites(dependencies(), context, args, provider)
     except STEPS.PrerequisiteMissing as failure:
         prerequisites, missing = None, failure.item
-    safe["prerequisites_sha256"] = None if prerequisites is None else C.DEPLOY.fingerprint(prerequisites)
+    custody = STEPS.prerequisite_custody(C, prerequisites) if delivery else prerequisites
+    safe["prerequisites_sha256"] = None if prerequisites is None else C.DEPLOY.fingerprint(custody)
     safe["pending_prerequisite"] = missing
     safe["execution_route_available"] = (STEPS.selected(args) is not None or FEATURE.supported(args) or RECOVERY.supported(args) or CREDENTIAL.supported(args) or ACCEPTANCE.supported(args)) and prerequisites is not None
     context["prerequisites"] = prerequisites
@@ -290,10 +302,16 @@ def execute(args, provider):
         source_guard()
         C.ALIGN.source_preflight(context["custody"])
         alignment, parameters, _ = C.ALIGN.inspect(observed, context["custody"], C.now())
-        require({**C.binding_for(context["custody"], alignment), "proof_label": args.proof_label} == context["binding"], "task-dependency-changed-before-submission")
+        original_binding = {**C.binding_for(context["custody"], alignment), "proof_label": args.proof_label}
+        current_binding = original_binding
+        rollback = STEPS.stage(args) == "rollback"
+        if rollback:
+            current_binding, _ = C.rollback_selection(args, context["delivery"], original_binding)
+            parameters.update(ImageDigest=current_binding["image_digest"], SourceRevision=current_binding["source_revision"])
+        require(current_binding == context["binding"], "task-dependency-changed-before-submission")
         if context.get("delivery"):
-            require(C.delivery_context(args, context["custody"], context["binding"]) == context["delivery"], "task-predecessor-changed-before-submission")
-        selected, resources = owned_stack(observed, context["binding"], parameters, context["cache"], **({"delivery": context["delivery"]} if context.get("delivery") else {}))
+            require(C.delivery_context(args, context["custody"], original_binding) == context["delivery"], "task-predecessor-changed-before-submission")
+        selected, resources = owned_stack(observed, context["binding"], parameters, context["cache"], **({"delivery": context["delivery"], "rollback": rollback} if context.get("delivery") else {}))
         binding_snapshot = BINDING.DEPLOY.source()[1]
         require(selected == context["parameters"] and resources == context["resources"]
                 and BINDING.inspect(observed, args.workload, selected, resources, binding_snapshot) == context["checked"], "task-target-changed-before-submission")
@@ -312,9 +330,12 @@ def execute(args, provider):
     else: provider.effect = "original-operation-reconcile-only"
     def progress(value):
         print(json.dumps({"schema": "deploy/entity-smoke-task-progress/v1", "phase": value["phase"], "operation_id": value["operation_id"]}), file=C.os.sys.stderr, flush=True)
-    completed = runner.run_owned_task(provider, store, key, request, context["cache"] / "task-receipts",
-                                      required_after=context["prerequisites"]["required_after"], preflight=preflight,
-                                      revocation=context["prerequisites"]["revocation"] if negative else None, on_progress=progress)
+    try:
+        completed = runner.run_owned_task(provider, store, key, request, context["cache"] / "task-receipts",
+                                          required_after=context["prerequisites"]["required_after"], preflight=preflight,
+                                          revocation=context["prerequisites"]["revocation"] if negative else None, on_progress=progress)
+    except runner.EVIDENCE.TerminalTaskFailure as failure:
+        raise CurrentTaskFailure(failure) from None
     reservation = store.read(key, request)
     try: RECOVERY.validate_result(args, completed["receipt"])
     except RECOVERY.RecoveryStepFailure:
@@ -345,9 +366,11 @@ def parse(arguments=None):
     parser.add_argument("--workload", choices=tuple(GRAPH.ROOT_UNITS), required=True)
     parser.add_argument("--operation", required=True)
     parser.add_argument("--phase", choices=("preflight", "operation"), default="operation")
-    parser.add_argument("--proof-stage", choices=("baseline", "activation", "server-replacement", "initial-recovery", "credential-recovery", "acceptance"), default="baseline")
+    parser.add_argument("--proof-stage", choices=("baseline", "activation", "server-replacement", "initial-recovery", "credential-recovery", "acceptance", "rollback"), default="baseline")
     parser.add_argument("--expected-digest")
     parser.add_argument("--expected-predecessor")
+    parser.add_argument("--rollback-receipt", type=Path)
+    parser.add_argument("--rollback-compatibility-id")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     parser.add_argument("--execute", action="store_true")
@@ -358,6 +381,8 @@ def parse(arguments=None):
     require(args.expected_digest is None or re.fullmatch(r"[a-f0-9]{64}", args.expected_digest) is not None, "task-arguments-invalid")
     require(args.expected_predecessor is None or re.fullmatch(r"release-[a-f0-9]{24}", args.expected_predecessor) is not None, "task-predecessor-invalid")
     STEPS.stage(args)
+    require((args.proof_stage == "rollback" and args.expected_predecessor is not None and args.rollback_receipt is not None and args.rollback_compatibility_id is not None)
+            or (args.proof_stage != "rollback" and args.rollback_receipt is None and args.rollback_compatibility_id is None), "task-rollback-selection-invalid")
     require(args.operation not in {"read", "cleanup", "collision"} or args.expected_digest is not None, "task-original-record-digest-required")
     require(args.proof_stage not in {"initial-recovery", "credential-recovery", "acceptance"} or args.expected_digest is not None, "task-original-record-digest-required")
     require(not args.execute or isinstance(args.approved_plan, str) and re.fullmatch(r"sha256:[a-f0-9]{64}", args.approved_plan) is not None, "task-approved-plan-required")
@@ -391,7 +416,13 @@ def main():
             if failure.workload is not None: context.update(affected_workload=failure.workload)
         evidence = failure.evidence_reference if isinstance(failure, (C.InfrastructureFailure, ACCEPTANCE.AcceptanceFailure)) else None
         diagnostics = failure.diagnostics if isinstance(failure, ACCEPTANCE.AcceptanceFailure) else RUNNER.EVIDENCE.failure_report(failure) if isinstance(failure, RUNNER.EVIDENCE.EvidenceFailure) else C.RESOURCE.EVIDENCE.failure_report(failure) if isinstance(failure, C.RESOURCE.EVIDENCE.EvidenceFailure) else {}
-        print(json.dumps({"schema": "deploy/entity-smoke-task-report/v1", "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke", "verdict": "blocked", "condition": condition, "context": context, "effect": provider.effect,
+        # A prerequisite may also have failed terminally. Only the owned runner
+        # reports the current task here; prerequisite evidence stays blocked.
+        terminal = failure.evidence.terminal if isinstance(failure, CurrentTaskFailure) else None
+        if terminal is not None:
+            diagnostics = RUNNER.EVIDENCE.failure_report(failure.evidence)
+        print(json.dumps({"schema": "deploy/entity-smoke-task-report/v1", "target": C.RESOURCE.CLUSTER, "scope": "entity-smoke", "verdict": "failed" if terminal is not None else "blocked", "condition": condition, "context": context, "effect": provider.effect,
+                          **({"terminal_failure": terminal} if terminal is not None else {}),
                           **diagnostics,
                           **({"evidence_reference": evidence} if evidence is not None else {})}, sort_keys=True)); return 1
 
