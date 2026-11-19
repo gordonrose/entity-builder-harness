@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-15T20:26:27Z
-latest_commit_sha: 8c425ce6
-chat_duration: 789560s (09:03:19:20)
+latest_commit_at_utc: 2026-11-19T18:40:51Z
+latest_commit_sha: 815e3d5e
+chat_duration: 1128824s (13:01:33:44)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2774,6 +2774,17 @@ ten-minute delivery measurement remain deferred. No commit, push, publication,
 AWS mutation or accepted-history rewrite was performed in this slice. Changes
 remain in the recorded Nov6 worktree, preserving earlier uncommitted work.
 
+
+### 2026-11-19T18:40:51Z - Commit recorded
+
+Commit: `815e3d5e`
+
+Message: refactor(deploy): consolidate release delivery and checked recovery reuse
+
+Summary: Preserved approved consolidation, bounded ordinary-update/recovery coordinator and strictly checked accepted-proof reuse. Full local affected report: 135 passed, 21 deferred; staged gate: 49 passed, 107 deferred. Original unexplained provider regression and unchanged passing reruns retained. Package and AWS successor proof still pending; no push.
+
+ADR impact: Existing deployment architecture; bounded policy correction, no new ADR.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3054,6 +3065,13 @@ remain in the recorded Nov6 worktree, preserving earlier uncommitted work.
   Summary: Preserved prior successor-release support and local checks, user strategic/efficiency instructions, all-34-lesson programme and adapter retirement plan. Commit gates passed. Full integration, image qualification and AWS proof remain paused.
   ADR impact: No new ADR; existing internal ownership consolidation.
 
+
+- Commit: `815e3d5e`
+  Time UTC: 2026-11-19T18:40:51Z
+  Message: refactor(deploy): consolidate release delivery and checked recovery reuse
+  Summary: Preserved approved consolidation, bounded ordinary-update/recovery coordinator and strictly checked accepted-proof reuse. Full local affected report: 135 passed, 21 deferred; staged gate: 49 passed, 107 deferred. Original unexplained provider regression and unchanged passing reruns retained. Package and AWS successor proof still pending; no push.
+  ADR impact: Existing deployment architecture; bounded policy correction, no new ADR.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3067,9 +3085,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-15T20:26:27Z
-Latest commit SHA: 8c425ce6
-Chat duration: 789560s (09:03:19:20)
+Latest commit at UTC: 2026-11-19T18:40:51Z
+Latest commit SHA: 815e3d5e
+Chat duration: 1128824s (13:01:33:44)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
