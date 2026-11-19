@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-19T18:40:51Z
-latest_commit_sha: 815e3d5e
-chat_duration: 1128824s (13:01:33:44)
+latest_commit_at_utc: 2026-11-19T21:59:15Z
+latest_commit_sha: ca8ee043
+chat_duration: 1140728s (13:04:52:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2830,6 +2830,17 @@ Summary: Preserved approved consolidation, bounded ordinary-update/recovery coor
 
 ADR impact: Existing deployment architecture; bounded policy correction, no new ADR.
 
+
+### 2026-11-19T21:59:15Z - Commit recorded
+
+Commit: `ca8ee043`
+
+Message: fix(harness): carry end-to-end delivery authority across stages
+
+Summary: Reconciled end-to-end task authority across existing deployment, commit, promotion and AWS owners. No new runtime code or registry. Metadata/process/command drift and 56 local links passed; staged gate passed 38 checks with 69 deferred in .cache/test-runs/20261119T215849Z-ffec5e81fdbb45cfbad34be835dd00a3/report.json. Preserves original user authority, exact-plan gates and out-of-scope stops. Push/publication approved; proceed without renewed stage prompts.
+
+ADR impact: Clarifies existing bounded release approval; no new architecture ADR.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3117,6 +3128,13 @@ ADR impact: Existing deployment architecture; bounded policy correction, no new 
   Summary: Preserved approved consolidation, bounded ordinary-update/recovery coordinator and strictly checked accepted-proof reuse. Full local affected report: 135 passed, 21 deferred; staged gate: 49 passed, 107 deferred. Original unexplained provider regression and unchanged passing reruns retained. Package and AWS successor proof still pending; no push.
   ADR impact: Existing deployment architecture; bounded policy correction, no new ADR.
 
+
+- Commit: `ca8ee043`
+  Time UTC: 2026-11-19T21:59:15Z
+  Message: fix(harness): carry end-to-end delivery authority across stages
+  Summary: Reconciled end-to-end task authority across existing deployment, commit, promotion and AWS owners. No new runtime code or registry. Metadata/process/command drift and 56 local links passed; staged gate passed 38 checks with 69 deferred in .cache/test-runs/20261119T215849Z-ffec5e81fdbb45cfbad34be835dd00a3/report.json. Preserves original user authority, exact-plan gates and out-of-scope stops. Push/publication approved; proceed without renewed stage prompts.
+  ADR impact: Clarifies existing bounded release approval; no new architecture ADR.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3130,9 +3148,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-19T18:40:51Z
-Latest commit SHA: 815e3d5e
-Chat duration: 1128824s (13:01:33:44)
+Latest commit at UTC: 2026-11-19T21:59:15Z
+Latest commit SHA: ca8ee043
+Chat duration: 1140728s (13:04:52:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
