@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -38,6 +38,7 @@ CONTROLLER_REPAIR_FILES = frozenset({
     "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py",
     "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py",
     "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+    "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py",
     "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py",
     "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh",
     "scripts/04.deploy/operational-realization-gate/script.py",
@@ -47,6 +48,7 @@ CONTROLLER_REPAIR_FILES = frozenset({
     "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/alignment-test.py",
     ".agentic/aws/standards/operational-realization-applicability.md",
     "scripts/repo/diagnostic-coverage/reviews.v1.json",
+    "scripts/repo/check-selection/checks.yml",
 })
 READS = {
     ("sts", "get-caller-identity"), ("cloudformation", "describe-stacks"),
@@ -204,8 +206,8 @@ def foundation_sources(source, current):
     except ValueError: raise AlignmentFailure("alignment-foundation-repair-invalid") from None
 
 
-def source_checkpoint(receipt):
-    current = command(["git", "rev-parse", "HEAD"]).strip()
+def source_checkpoint(receipt, *, controller_revision=None):
+    current = command(["git", "rev-parse", "HEAD"]).strip() if controller_revision is None else controller_revision
     source = receipt["source_revision"]
     require(all(isinstance(value, str) and re.fullmatch(r"[a-f0-9]{40}", value) is not None for value in (source, current)), "alignment-source-checkpoint-mismatch")
     if current != source:

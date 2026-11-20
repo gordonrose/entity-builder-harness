@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -17,6 +17,7 @@
 #   - id: deploy.test.entity-smoke.composition.wrapper
 #     path: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
 import copy
+import hashlib
 import importlib.util
 import json
 import os
@@ -347,8 +348,22 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
         write(controller_path, "checked controller correction\n")
         repair = commit("controller-only correction")
         assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": repair}
+        assert M.source_checkpoint(custody, controller_revision=source)["controller_revision"] == source
+        controller_spec = importlib.util.spec_from_file_location("retained_controller_fixture", old_root / M.CONTROLLER_DIRECTORY / "script.py")
+        controller = importlib.util.module_from_spec(controller_spec); controller_spec.loader.exec_module(controller)
+        with patch.object(controller, "ROOT", M.ROOT), patch.object(controller, "ALIGN", M), \
+             patch.object(controller, "source_paths", lambda revision=None: [M.ROOT / controller_path]):
+            original_digest = controller.historical_source_digest(source)
+            assert original_digest == controller.DEPLOY.fingerprint({controller_path: "sha256:" + hashlib.sha256(b"original controller\n").hexdigest()})
+            current_digest = controller.source_digest()
+            packet = {"binding": {"source_revision": source}, "plan": {"controller_sha256": original_digest}}
+            assert controller.retained_controller(packet, current_digest) == original_digest
+            packet["plan"]["controller_sha256"] = "sha256:" + "0" * 64
+            try: controller.retained_controller(packet, current_digest)
+            except controller.InfrastructureFailure as failure: assert failure.code == "task-step-completion-artifacts-mismatch"
+            else: raise AssertionError("unknown historical controller admitted")
         M.source_preflight(custody)
-        for path in ("scripts/04.deploy/shared/provider-adapters/aws/response.py", "scripts/04.deploy/shared/provider-adapters/aws/cli.py", "scripts/04.deploy/shared/provider-adapters/aws/tasks.py", "scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py", "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py", "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py", "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py", "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"):
+        for path in ("scripts/04.deploy/shared/provider-adapters/aws/response.py", "scripts/04.deploy/shared/provider-adapters/aws/cli.py", "scripts/04.deploy/shared/provider-adapters/aws/tasks.py", "scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py", "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py", "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py", "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py", "scripts/04.deploy/lifecycle/60-run/release-succession/script.py", "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py"):
             write(path, "checked controller response correction\n")
             rejected_source(lambda: M.source_preflight(custody), "alignment-committed-source-required")
             repair = commit("shared response controller-only correction")

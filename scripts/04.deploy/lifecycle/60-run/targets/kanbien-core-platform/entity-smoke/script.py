@@ -18,6 +18,7 @@
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.sh
 import argparse
 from datetime import datetime, timezone
+from functools import lru_cache
 import hashlib
 import importlib.util
 import json
@@ -189,9 +190,11 @@ def local_checks():
         raise InfrastructureFailure("infrastructure-local-proof-not-passed", reference if retained else None)
 
 
-def source_digest():
-    ALIGN.preparation_ready()
-    controller_files = [path for path in DIRECTORY.iterdir()
+def source_paths(revision=None):
+    candidates = DIRECTORY.iterdir() if revision is None else (
+        ROOT / name for name in ALIGN.command(["git", "ls-tree", "--name-only", revision,
+            str(DIRECTORY.relative_to(ROOT)) + "/"]).splitlines())
+    controller_files = [path for path in candidates
                         if path.suffix in {".py", ".sh"} and not path.name.endswith(("-test.py", "-test.sh"))]
     paths = sorted([*controller_files, CONTRACT, DEPLOY.SOURCE, Path(CHECK_RESULTS.__file__),
                     CONTRACT.parent / "acceptance-record-schema.yml", CONTRACT.parent / "acceptance-route-contract.yml",
@@ -210,7 +213,45 @@ def source_digest():
                     Path(ALIGN.__file__)])
     paths.extend([Path(ALIGN.INPUT_OWNER.__file__), Path(ALIGN.INPUT_OWNER.PATHS.__file__),
                   *(ROOT / reference for reference in ALIGN.INPUTS["references"])])
-    return DEPLOY.fingerprint({str(path.relative_to(ROOT)): digest_file(path) for path in paths})
+    return paths
+
+
+def source_digest():
+    ALIGN.preparation_ready()
+    return DEPLOY.fingerprint({str(path.relative_to(ROOT)): digest_file(path) for path in source_paths()})
+
+
+@lru_cache(maxsize=32)
+def historical_source_digest(revision):
+    """Only immutable Git objects are cached; never current source or AWS state."""
+    require(isinstance(revision, str) and re.fullmatch(r"[a-f0-9]{40}", revision), "infrastructure-source-unavailable")
+    names = sorted({str(path.relative_to(ROOT)) for path in source_paths(revision)})
+    entries = ALIGN.command(["git", "ls-tree", "-z", revision, "--", *names]).split("\0")[:-1]
+    require(len(entries) == len(names) and all(row.startswith(("100644 blob ", "100755 blob ")) for row in entries), "infrastructure-source-unavailable")
+    values = {}
+    for name in names:
+        try: result = subprocess.run(["git", "show", revision + ":" + name], cwd=ROOT, capture_output=True, timeout=30)
+        except (OSError, subprocess.SubprocessError): raise InfrastructureFailure("infrastructure-source-unavailable") from None
+        require(result.returncode == 0 and len(result.stdout) <= 4 * 1024 * 1024, "infrastructure-source-unavailable")
+        values[name] = "sha256:" + hashlib.sha256(result.stdout).hexdigest()
+    return DEPLOY.fingerprint(values)
+
+
+def retained_controller(packet, current):
+    """Bind historical task gates to a checked controller-only Git checkpoint."""
+    controller = packet["plan"]["controller_sha256"]
+    if controller == current: return controller
+    source = packet["binding"]["source_revision"]
+    # The same existing guard proves that no image/runtime/configuration inputs
+    # changed. An arbitrary hash in a retained packet cannot authorize its reuse.
+    identity = ALIGN.source_checkpoint({"source_revision": source})
+    revisions = [source, *ALIGN.command(["git", "rev-list", "--ancestry-path", "--max-count=32",
+        source + ".." + identity["controller_revision"]]).splitlines()]
+    for revision in revisions:
+        if historical_source_digest(revision) == controller:
+            ALIGN.source_checkpoint({"source_revision": source}, controller_revision=revision)
+            return controller
+    raise InfrastructureFailure("task-step-completion-artifacts-mismatch")
 
 
 def filesystem_preflight(cache):

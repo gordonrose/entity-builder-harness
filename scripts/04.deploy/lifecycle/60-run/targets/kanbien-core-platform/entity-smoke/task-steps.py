@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -24,6 +24,7 @@ Recovery/record operations remain unavailable until their predecessors are wired
 import hashlib
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 
 _spec = importlib.util.spec_from_file_location("entity_smoke_step_recovery_selection", Path(__file__).with_name("source-transition.py"))
 TRANSITION = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(TRANSITION)
@@ -85,17 +86,100 @@ def key(args, delivery=None):
         if TRANSITION.acceptance_renewal(args) and args.phase == "preflight": suffix += ":readback-recovery-1"
     if stage(args) == "activation": suffix += ":" + activation_generation(args)
     if delivery is not None: suffix += ":delivery:" + delivery["delivery_id"]
+    if renewed(args): suffix += ":preflight-renewal-1"
     return "task-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":" + args.phase + suffix).encode()).hexdigest()[:48]
 
 
 def path(context, args):
     suffix = "" if stage(args) == "baseline" else "-" + stage(args)
     if not context.get("delivery"): suffix += TRANSITION.preflight_step_suffix(args)
+    if renewed(args): suffix += "-preflight-renewal-1"
     if stage(args) == "activation":
         generation = activation_generation(args)
         require(context["artifact"] == "sha256:" + generation, "task-activation-controller-mismatch")
         suffix += "-" + generation
     return context["cache"] / "task-steps" / (args.workload + "-" + args.operation + suffix + "-" + args.phase + ".json")
+
+
+def renewed(args):
+    return args.phase == "preflight" and getattr(args, "preflight_renewal_selection", None) == (stage(args), args.workload, args.operation)
+
+
+def renewal_label(original):
+    return "entity-smoke-" + POLICY.observation_renewal_id(original)
+
+
+def select_preflight(route, context, args, provider):
+    """One unused expired success may be renewed; an operation is never replayed.
+
+    The original packet, completion and gate remain immutable. The replacement
+    keeps a distinct label, reservation and packet; its plan carries original
+    custody for independent collection. No failed/unknown probe is renewable.
+    """
+    if not context.get("delivery") or route.CREDENTIAL.negative(args): return
+    C, runner = route.C, route.RUNNER
+    base = C.delivery_preflight_label(context["delivery"], stage(args), args.workload, args.operation)
+    plan = context["report"]["plan"]
+    plan["preflight_label"] = base
+    plan.pop("preflight_renewal", None)
+    if "schema" in plan: plan["schema"] = "deploy/entity-smoke-task-plan/v2"
+    args.preflight_renewal_selection = None
+    probe = SimpleNamespace(**{**vars(args), "phase": "preflight"})
+    operation = SimpleNamespace(**{**vars(args), "phase": "operation"})
+    original_path = path(context, probe)
+    if not route.COMPLETION.path(original_path).is_file(): return
+    original = observe_packet(route, context, probe, provider, historical=True, select=False)
+    completion = route.COMPLETION.read(route, context, probe, original_path)
+    operation_request = request(route, context, operation)
+    store = runner.CONTROL.AttemptStore(context["cache"] / "task-attempts")
+    reserved = store.read(key(operation, context["delivery"]), operation_request)
+    selected = None
+    if reserved is not None:
+        runner.PREFLIGHT.read_admission(context["cache"] / "task-receipts", reserved)
+        admission = C.read_json(runner.PREFLIGHT.admission_path(context["cache"] / "task-receipts", reserved))
+        selected = admission["preflight"]["label"]
+        require(selected in {base, renewal_label(base)}, "task-step-delivery-label-mismatch")
+        if selected == base: return
+    elif not POLICY.observation_expired(original["receipt"]["task"]["stopped_at"], C.now(), runner.EVIDENCE.timestamp):
+        return
+    args.preflight_renewal_selection = (stage(args), args.workload, args.operation)
+    plan["preflight_label"] = renewal_label(base)
+    if "schema" in plan: plan["schema"] = "deploy/entity-smoke-task-plan/v3"
+    plan["preflight_renewal"] = {"packet": original, "completion": completion,
+        "gate": C.read_json(C.ROOT / completion["realization_evidence"])}
+    renewed_probe = SimpleNamespace(**{**vars(args), "phase": "preflight"})
+    if reserved is None and route.COMPLETION.path(path(context, renewed_probe)).is_file():
+        latest = observe_packet(route, context, renewed_probe, provider, historical=True, select=False)
+        require(not POLICY.observation_expired(latest["receipt"]["task"]["stopped_at"], C.now(), runner.EVIDENCE.timestamp),
+            "preflight-renewal-exhausted")
+
+
+def validate_renewal(route, plan, binding, delivery, args):
+    """Closed historical proof, not present-tense permission to launch."""
+    base = route.C.delivery_preflight_label(delivery, stage(args), args.workload, args.operation)
+    previous = plan.get("preflight_renewal")
+    if previous is None:
+        require(plan["preflight_label"] == base, "task-step-delivery-label-mismatch")
+        return
+    require(isinstance(previous, dict) and set(previous) == {"packet", "completion", "gate"}, "preflight-renewal-custody-invalid")
+    packet, completion, gate = (previous[name] for name in ("packet", "completion", "gate"))
+    require(isinstance(packet, dict) and isinstance(packet.get("plan"), dict)
+        and "preflight_renewal" not in packet["plan"], "preflight-renewal-custody-invalid")
+    probe = SimpleNamespace(**{**vars(args), "phase": "preflight"})
+    validate_delivery_step(route, packet, binding, delivery, probe)
+    require(all(plan[key] == packet["plan"][key] for key in ("task_definition_sha256", "configuration_sha256", "roles_sha256", "network_sha256", "prerequisites_sha256", "expected_record_digest", "package_custody_reference")),
+        "preflight-renewal-binding-changed")
+    route.RUNNER.PREFLIGHT.validate_launch(packet["reservation"]["request"])
+    route.RUNNER.EVIDENCE.validate_retained(packet["receipt"], packet["reservation"])
+    document = lambda value: "sha256:" + hashlib.sha256(route.RUNNER.CONTROL.canonical(value) + b"\n").hexdigest()
+    require(isinstance(completion, dict) and set(completion) == {"schema", "step_sha256", "plan_sha256", "realization_evidence", "realization_evidence_sha256"}
+        and completion["schema"] == "deploy/entity-smoke-task-completion/v1"
+        and completion["step_sha256"] == document(packet) and completion["plan_sha256"] == packet["plan_sha256"]
+        and completion["realization_evidence_sha256"] == document(gate), "preflight-renewal-custody-invalid")
+    graph = route.GRAPH.contract(args.workload, route.C.GATE)
+    artifacts = {item["id"]: packet["plan"]["controller_sha256"] if item["id"] == route.GRAPH.CONTROLLER_SOURCE else binding["image_digest"] for item in graph["artifacts"]}
+    route.COMPLETION.validate_gate(route, graph, gate, packet["plan_sha256"], artifacts)
+    require(plan["preflight_label"] == renewal_label(base), "task-step-delivery-label-mismatch")
 
 
 def request(route, context, args):
@@ -137,21 +221,29 @@ def validate_delivery_step(route, value, binding, delivery, args):
               "expected_record_digest", "binding", "controller_sha256", "graph_sha256", "parameters_sha256", "template_sha256", "preflight_rule_sha256", "operator_sha256",
               "task_definition_sha256", "configuration_sha256", "roles_sha256", "network_sha256", "callee_bindings_sha256", "package_custody_reference", "task_count",
               "automatic_retry", "delivery", "prerequisites_sha256", "pending_prerequisite", "execution_route_available", "request_sha256"}
-    require(value["delivery"] == delivery and isinstance(plan, dict) and set(plan) == fields and plan["schema"] == "deploy/entity-smoke-task-plan/v2"
+    require(value["delivery"] == delivery and isinstance(plan, dict)
+            and ((set(plan) == fields and plan["schema"] == "deploy/entity-smoke-task-plan/v2")
+                 or (set(plan) == fields | {"preflight_renewal"} and plan["schema"] == "deploy/entity-smoke-task-plan/v3"))
             and plan["delivery"] == delivery and C.DEPLOY.fingerprint(plan) == value["plan_sha256"]
             and plan["binding"] == binding and plan["request_sha256"] == C.DEPLOY.fingerprint(expected)
             and isinstance(value["prerequisites"], dict) and plan["prerequisites_sha256"] == C.DEPLOY.fingerprint(value["prerequisites"])
             and plan["proof_stage"] == stage(args) and plan["workload"] == args.workload and plan["phase"] == args.phase
             and plan["prepared_operation"] == args.operation and plan["pending_prerequisite"] is None and plan["execution_route_available"] is True
             and plan["package_custody_reference"] == delivery["candidate"]["receipt_reference"], "task-step-delivery-plan-mismatch")
-    require(plan["preflight_label"] == C.delivery_preflight_label(delivery, stage(args), args.workload, args.operation), "task-step-delivery-label-mismatch")
+    validate_renewal(route, plan, binding, delivery, args)
+    if "preflight_renewal" in plan:
+        original = plan["preflight_renewal"]["packet"]
+        require(POLICY.observation_expired(original["receipt"]["task"]["stopped_at"], value["receipt"]["task"]["created_at"], route.RUNNER.EVIDENCE.timestamp), "preflight-renewal-before-expiry")
     return value
 
 
-def observe_packet(route, context, args, provider, *, completion_required=True, historical=False):
+def observe_packet(route, context, args, provider, *, completion_required=True, historical=False, select=True):
     """Reobserve by default; explicit retained completion is historical only."""
     C, runner = route.C, route.RUNNER
     require(type(historical) is bool and (not historical or completion_required), "task-historical-completion-required")
+    if select and context.get("delivery"):
+        context = {**context, "report": {"plan": dict(context["report"]["plan"])}}
+        select_preflight(route, context, args, provider)
     target = path(context, args)
     runner.CONTROL.no_symlinks(target)
     if not target.exists(): return None

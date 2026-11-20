@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -17,13 +17,14 @@
 #   - id: deploy.test.entity-smoke.composition.wrapper
 #     path: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
 import copy
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 from contextlib import redirect_stdout
 import importlib.util
 import json
 import io
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -775,6 +776,14 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
             consumer.context = SimpleNamespace(package=receipt, expected=prior["release_id"], route={"target": M.C.RESOURCE.CLUSTER, "scope": "entity-smoke"},
                 values={"proof_label": binding["proof_label"], "expected_digest": "1" * 64, "rollback_compatibility_id": "rollback-compatibility-" + "8" * 24}, check_authority=lambda: None)
             consumer.release_context = lambda: (binding, delivery, cache)
+            original_provider = M.C.Provider
+            def retained_provider():
+                value = original_provider(); value._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
+                return value
+            with patch.object(M.C, "Provider", retained_provider):
+                before = list(provider.observed)
+                consumer.deploy()
+                assert not any(op in {"create-change-set", "execute-change-set", "run-task"} for _, op, _ in provider.observed[len(before):])
             assert consumer.approved_plan(planned, phase="update") == planned["plan_sha256"]
             for key, bad in (("resource_additions", 1), ("database_data_or_schema_changes", True), ("phase", "create"),
                              ("package_custody_reference", "github-actions-run:1"), ("account", "000000000000")):
@@ -829,6 +838,8 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
                         proof_name = {"permissions": "baseline-permissions", "lifecycle": "lifecycle", "collision": "collision", "observe-migration-state": "migration-state", "read": "baseline-read" if requalify else "final-read"}[operation]
                         archive = evidence.capture_task(M, context, args, live(), proof_name, {**binding, "record_digest": "1" * 64})
                         assert archive["packet"] == step and archive["delivery"] == delivery
+                        if requalify and failed_recovery is None and operation == "permissions" and phase == "preflight":
+                            renewal_protocols(provider, args, context, evidence, consumer)
                         request = step["reservation"]["request"]
                         label = M.C.delivery_preflight_label(delivery, stage, workload, operation) if phase == "preflight" else M.C.delivery_operation_label(delivery, workload, operation)
                         assert request["proof_label"] == label
@@ -900,6 +911,84 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
             assert not (root / ".cache/entity-smoke-live" / binding["proof_label"] / "task-steps").exists()
             for path in cache.rglob("*.json"):
                 assert CANARY not in path.read_text() and F.PARAMETERS["AdministratorSecretArn"] not in path.read_text()
+
+
+def renewal_protocols(provider, args, context, evidence, consumer):
+    """Advance controlled time, not retained timestamps; run the real owners."""
+    real_datetime = datetime
+    offset = timedelta(seconds=901)
+    class Later(real_datetime):
+        @classmethod
+        def now(cls, tz=None): return real_datetime.now(tz) + offset
+    timestamp = M.RUNNER.EVIDENCE.timestamp
+    policy = M.STEPS.POLICY
+    assert not policy.observation_expired("2026-11-20T00:00:00Z", "2026-11-20T00:15:00Z", timestamp)
+    assert policy.observation_expired("2026-11-20T00:00:00Z", "2026-11-20T00:15:00.001Z", timestamp)
+    original_root = M.C.ROOT
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-renewal-") as temporary:
+        root = Path(temporary)
+        shutil.copytree(original_root / ".cache", root / ".cache")
+        remote = copy.deepcopy(provider)
+        def live():
+            value = M.Provider(); value._invoke = lambda service, operation, parameters: remote(service, operation, **parameters)
+            return value
+        current = SimpleNamespace(**vars(args))
+        with patch.object(M.C, "ROOT", root), patch.dict(globals(), datetime=Later), \
+             patch.object(M.C, "datetime", Later), patch.object(M, "datetime", Later), \
+             patch.object(M.RUNNER, "datetime", Later), patch.object(M.RUNNER.CONTROL, "datetime", Later), \
+             patch.object(M.C.GATE, "datetime", Later):
+            before = sum(op == "run-task" for _, op, _ in remote.observed)
+            initial = M.prepare(current, live())
+            old = initial["report"]["plan"]["preflight_renewal"]["packet"]
+            original_bytes = M.RUNNER.CONTROL.canonical(old)
+            assert initial["report"]["plan"]["preflight_label"] != old["plan"]["preflight_label"]
+            current.approved_plan = initial["report"]["plan_sha256"]
+            assert consumer.approved_plan(initial["report"], selection=(current.proof_stage, current.workload, current.operation, current.phase)) == current.approved_plan
+            actual_read = M.RUNNER.CONTROL.AttemptStore.read
+            digest_reads = {"count": 0}
+            def changing_source_read():
+                digest_reads["count"] += 1
+                return context["artifact"]
+            def competing_reservation(store, key, request):
+                if digest_reads["count"] > 1 and request["environment"].get(M.RUNNER.CONTROL.OPERATIONS[current.workload][0]) == current.operation:
+                    return {"fixture": "concurrent-dependent-reservation"}
+                return actual_read(store, key, request)
+            with patch.object(M.C, "source_digest", changing_source_read), patch.object(M.RUNNER.CONTROL.AttemptStore, "read", competing_reservation):
+                fails(lambda: M.execute(current, live()), "preflight-renewal-operation-already-reserved")
+            assert sum(op == "run-task" for _, op, _ in remote.observed) == before
+            completed = M.execute(current, live())
+            assert completed["verdict"] == "completed" and not completed["reused"]
+            fresh = M.C.read_json(root / completed["receipt"])
+            assert fresh["reservation"]["operation_id"] != old["reservation"]["operation_id"]
+            assert M.RUNNER.CONTROL.canonical(fresh["plan"]["preflight_renewal"]["packet"]) == original_bytes
+            archive = evidence.capture_task(M, initial, current, live(), "baseline-permissions", {**context["binding"], "record_digest": "1" * 64})
+            assert archive["packet"] == fresh
+            changed = copy.deepcopy(fresh)
+            changed["plan"]["preflight_renewal"]["packet"]["receipt"]["task"]["stopped_at"] = "2026-01-01T00:00:00Z"
+            changed["plan_sha256"] = M.C.DEPLOY.fingerprint(changed["plan"])
+            try: M.STEPS.validate_delivery_step(M.dependencies(), changed, context["binding"], context["delivery"], current)
+            except (M.STEPS.StepFailure, M.RUNNER.EVIDENCE.EvidenceFailure, M.RUNNER.PREFLIGHT.EVIDENCE.EvidenceFailure): pass
+            else: raise AssertionError("altered original renewal custody accepted")
+            offset += timedelta(seconds=901)
+            fails(lambda: M.prepare(current, live()), "preflight-renewal-exhausted")
+            offset -= timedelta(seconds=901)
+            current.phase = "operation"
+            operation_context = M.prepare(current, live())
+            current.approved_plan = operation_context["report"]["plan_sha256"]
+            assert M.execute(current, live())["verdict"] == "completed"
+            operation_proof = evidence.capture_task(M, operation_context, current, live(), "baseline-permissions", {**context["binding"], "record_digest": "1" * 64})
+            assert operation_proof["admission"]["preflight"]["reservation"] == fresh["reservation"]
+            # AWS may forget old completed tasks. Historical custody still
+            # reconciles; no read of those tasks and no extra launch is allowed.
+            remote.remote.clear()
+            remote.results.clear()
+            for phase in ("preflight", "operation"):
+                current.phase = phase
+                current.approved_plan = M.plan(current, live())["plan_sha256"]
+                result = M.execute(current, live())
+                assert result["reused"] and result["effect"] == "historical-task-completion-validated"
+            assert sum(op == "run-task" for _, op, _ in remote.observed) == before + 2
+    print("ENTITY_SMOKE_EXPIRED_PREFLIGHT_RENEWAL_AND_HISTORY_PASSED")
 
 
 def successor_recovery_protocols(provider, live, args, binding, delivery, cache, evidence, *, failed_recovery=None):

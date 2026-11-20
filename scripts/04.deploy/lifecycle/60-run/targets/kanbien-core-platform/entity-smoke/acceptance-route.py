@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -454,11 +454,11 @@ def validate_successor(value, *, evidence_class):
         for phase in ("preflight", "operation"):
             proof = pair[phase]
             require(isinstance(proof, dict) and proof.get("name") == name and proof.get("phase") == phase
-                    and proof.get("controller_sha256") == value["controller_sha256"], "acceptance-task-attribution-mismatch", name)
+                    and proof.get("controller_sha256") == proof.get("packet", {}).get("plan", {}).get("controller_sha256"), "acceptance-task-attribution-mismatch", name)
             A.validate_task(proof, binding, delivery=delivery)
             packet = proof["packet"]
             plan = packet["plan"]
-            require(plan["controller_sha256"] == value["controller_sha256"]
+            require(plan["controller_sha256"] == proof["controller_sha256"]
                     and plan["package_custody_reference"] == value["package"]["receipt_reference"]
                     and all(plan[key] == value["deployment"]["plan"][key] for key in ("parameters_sha256", "template_sha256")),
                     "acceptance-task-delivery-plan-mismatch", name)
@@ -505,14 +505,14 @@ def validate_requalified_successor(value, binding, delivery):
         require(isinstance(pair, dict) and set(pair) == phases, "acceptance-task-phases-incomplete", name)
         for phase, proof in pair.items():
             require(isinstance(proof, dict) and proof.get("name") == name and proof.get("phase") == phase
-                and proof.get("controller_sha256") == value["controller_sha256"], "acceptance-task-attribution-mismatch", name)
+                and proof.get("controller_sha256") == (value["controller_sha256"] if name == "restore-read" else proof.get("packet", {}).get("plan", {}).get("controller_sha256")), "acceptance-task-attribution-mismatch", name)
             A.validate_task(proof, binding, delivery=None if name == "restore-read" else delivery,
                 expected_binding=value["restored_binding"] if name == "restore-read" else None,
                 namespace_delivery=delivery if name == "restore-read" else None)
             if name != "restore-read":
                 plan = proof["packet"]["plan"]
                 A.POLICY.validate_prerequisite_references(proof["packet"]["prerequisites"], available)
-                require(plan["controller_sha256"] == value["controller_sha256"]
+                require(plan["controller_sha256"] == proof["controller_sha256"]
                     and plan["package_custody_reference"] == value["package"]["receipt_reference"]
                     and all(plan[k] == value["deployment"]["plan"][k] for k in ("parameters_sha256", "template_sha256")),
                     "acceptance-task-delivery-plan-mismatch", name)

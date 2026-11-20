@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -171,6 +171,7 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     actual_operation = ("ready" if workload == "verifier" else "preflight") if phase == "preflight" else operation
     label = preflight_label(parent, stage, workload, operation, delivery=delivery, namespace_delivery=namespace_delivery) if phase == "preflight" else (
         C.delivery_operation_label(delivery, workload, operation) if delivery is not None else parent["proof_label"])
+    if delivery is not None and phase == "preflight": label = packet["plan"]["preflight_label"]
     require(request["environment"][T.RUNNER.CONTROL.OPERATIONS[workload][0]] == actual_operation
             and request["proof_label"] == label, "acceptance-task-request-selection-mismatch", name)
     if workload in {"verifier", "database-proof", "restore-reader"}:
@@ -199,7 +200,8 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     elif name == "credential-unready": T.RUNNER.UNREADY.validate_admission(admission, reservation)
     else:
         T.RUNNER.PREFLIGHT.validate_admission(admission, reservation)
-        require(admission["preflight"]["label"] == preflight_label(parent, stage, workload, operation, delivery=delivery, namespace_delivery=namespace_delivery), "acceptance-preflight-stage-mismatch", name)
+        selected_label = packet["plan"]["preflight_label"] if delivery is not None else preflight_label(parent, stage, workload, operation, namespace_delivery=namespace_delivery)
+        require(admission["preflight"]["label"] == selected_label, "acceptance-preflight-stage-mismatch", name)
     return value
 
 
@@ -226,7 +228,7 @@ def capture_task(route, context, args, provider, name, collection_binding, *, hi
         selected = route.RUNNER.UNREADY.path_for(context["cache"] / "task-receipts", packet["reservation"]) if name == "credential-unready" else route.RUNNER.PREFLIGHT.admission_path(context["cache"] / "task-receipts", packet["reservation"])
         admission = route.C.read_json(selected)
     value = {"schema": SCHEMA, "name": name, "stage": args.proof_stage, "phase": args.phase, "requested_operation": args.operation,
-             "controller_sha256": T.IMAGE_REPAIR.completed_bootstrap_controller(packet, completion, context["artifact"]), "collection_binding": collection_binding,
+             "controller_sha256": route.COMPLETION.controller_for(route.dependencies(), packet, completion, context["artifact"]), "collection_binding": collection_binding,
              "graph": route.GRAPH.contract(args.workload, route.C.GATE, negative=name == "credential-unready"),
              "packet": packet, "completion": completion, "gate": gate, "admission": admission}
     delivery = context.get("delivery")

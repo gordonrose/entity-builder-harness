@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-11-19"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -17,6 +17,7 @@
 #   - id: deploy.compiler.acceptance-route
 #     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
 import hashlib
+from datetime import timedelta
 import json
 from pathlib import Path
 import re
@@ -26,6 +27,16 @@ import yaml
 ROOT = Path(__file__).resolve().parents[5]
 BINDINGS = ("configuration_contract_sha256", "permission_contract_sha256",
             "dependency_incarnation_sha256")
+
+
+def observation_expired(stopped_at, current_time, timestamp):
+    """Shared observation-renewal boundary; collection cannot restamp age."""
+    return timestamp(current_time) - timestamp(stopped_at) > timedelta(seconds=900)
+
+
+def observation_renewal_id(original):
+    """One deterministic replacement identity, never an unbounded retry count."""
+    return hashlib.sha256((original + ":preflight-renewal-1").encode()).hexdigest()[:24]
 
 
 class PolicyFailure(ValueError):

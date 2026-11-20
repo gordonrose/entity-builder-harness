@@ -7136,3 +7136,106 @@ Pre-verification preparation passed for 127 headed artifacts with no process
 or governed-command drift. Final source-matched registered verification follows
 the review update. No AWS mutation, task checkpoint, publication or live
 acceptance is implied by these exploratory passes.
+
+### Nov20 live continuation: retained completion and expired unused preflight
+
+The approved successor deployed from `19b0fd3f` using publication 44728505415.
+Sixteen of twenty-five task phases completed, including feature lifecycle,
+collision, migration-state, original-record read, permission observation,
+runtime-login revocation, expected unready behaviour and restoration preflight.
+Runtime login remains revoked pending restoration. No restore operation was
+submitted: its planner returned `infrastructure-provider-observation-unavailable`
+at `iam/get-role-policy`; subsequent STS identity observation succeeded.
+The unused restoration preflight then exceeded its 900-second window.
+Original reports and receipts remain in the existing delivery evidence store.
+
+Two implementation gaps are established, not application-test failures:
+the coordinator reobserves completed ECS tasks after AWS has removed them,
+and preflight renewal is implemented only for pinned historical incidents.
+The current user explicitly approved all necessary extensions to finish this
+proof. Correct the reusable owners rather than add another incident executor.
+
+Bounded implementation inventory: reuse the existing source-checkpoint
+comparison, task reservation/receipt/admission and completion owners, shared
+release coordinator and acceptance collector. Permit a separately identified,
+bounded renewal only for a successfully completed, expired preflight with no
+reserved dependent operation. Preserve the original packet and reservation;
+require fresh gates and terminal proof for the renewal. Keep the 900-second
+admission limit and all no-replay rules. Completed steps reconcile through
+validated historical custody, while incomplete steps retain fresh admission.
+Controller-only repair must retain the qualified image and operational inputs,
+prove permitted Git changes and bind historical controller identities without
+restamping old evidence. No new release engine, business-operation replay,
+schema change, broader permissions or source-data deletion is in scope.
+
+Predicate/consumer inventory: distinguish absent, malformed, incomplete,
+failed, uncertain, completed-fresh and completed-expired preflight evidence;
+reject renewal after any dependent reservation and reject unbounded renewal.
+Validate exact source/image/configuration/request and original completion/gate
+hashes in task planning, execution, historical read, collection and acceptance.
+Retain finite owning error codes and safe stage/provider context; do not infer
+the IAM failure's native cause or expose provider output. Test expiry boundaries,
+tampering, concurrent reservation/no replay, selected renewal admission and
+collector equality. For controller provenance reject runtime/template changes,
+unknown hashes, unrelated revisions and altered historical proof. Extend the
+existing task, acceptance, alignment and coordinator fixtures; source review and
+registered focused checks precede the checked local repair checkpoint and live
+continuation. Earlier local/live results remain evidence of their original
+inputs, not proof of this correction. Unattended and ten-minute delivery remain
+unproved; local validation and repeated admission overhead have been observed.
+
+The continuation inventory is retained here rather than changing the qualified
+application's plan inputs. Existing controller-only Git comparison remains the
+source boundary. Owners changed: task-steps/task-route select and execute the
+single renewal; task-completion and the controller source reader verify original
+Git identities; acceptance-evidence/acceptance-route retain per-task controller
+and original preflight custody. Shared proof-policy owns observation expiry and
+the deterministic one-renewal identity. Alignment permits that existing shared
+policy owner as a controller-only repair, not runtime/template changes.
+The task-route fixture advances controlled clocks through expiry and exercises
+the actual renewal, operation admission, collector and completed-task resume.
+The existing alignment Git fixture covers allowed/forbidden controller inputs.
+No new runner, image, schema or data operation is introduced. The current
+implementation is under exploratory verification, not approved live evidence.
+
+The final focused run passed diagnostic adoption, acceptance controls and the
+ordinary-update regression, but failed the composition suite. Direct diagnosis
+identified initial-release recovery's smaller context missing the controller
+artifact used by delivery preparation. Its restart and shared credential
+fixtures exposed this existing consumer contract. Kept initial-release source
+reads unchanged and limited the prepared-context optimization to delivery
+packets; no fixture contract was weakened. The direct task-route tail, resource/deployment/restore and
+acceptance fixture runs passed; these are diagnostic runs, not a replacement
+for the final registered suite. No live operation or checkpoint followed the
+failed suite. The impact planner also reported workspace/runtime observation
+failures; both owning observations passed on direct recheck without edits.
+
+Self-review covers the listed producer/consumer inventory, exact renewal
+custody, one-renewal bound, expiry edge, concurrent dependent reservation,
+original controller provenance, no business replay and collector equality.
+The initial-release completion context was the follow-up correction.
+No new ADR is needed: this repairs existing approved controller-only recovery
+and evidence ownership, without a new deployment architecture. Long local
+fixture/planner duration remains observed cost, not ten-minute delivery proof.
+
+Final registered repair verification passed on the frozen source. Focused report
+`.cache/test-runs/20261120T173528Z-03d0c312500c4400b9489ff6eaced856/report.json`
+passed diagnostic adoption, acceptance controls, composition suite and ordinary
+update regression. The final integration report
+`.cache/test-runs/20261120T191746Z-0764f86c6f55465889f598eb78bc4170/report.json`
+passed 92 checks (88 executed, four matching focused receipts reused), with
+20 later-stage checks deferred and no findings. Its elapsed time was
+6129.87 seconds; this is local integration evidence, not live acceptance or
+evidence of ten-minute delivery. Earlier failed runs remain retained separately.
+
+AWS authentication was renewed through the user's terminal after both device
+requests failed. STS confirmed account `337159794548`; read-only observation
+confirmed the feature stack remains `UPDATE_COMPLETE`. No AWS mutation occurred
+during this verification continuation. Runtime-login restoration, replacement,
+snapshot/isolated restore/readback/cleanup, final source read and acceptance remain
+pending. Preserve the original task custody and failed IAM observation; neither
+SSO expiry nor passing local checks establishes that earlier failure's cause.
+The scoped README skill/source review keeps these evidence levels separate.
+This record is the compact carry-forward; raw verification output stays in the
+existing private run reports. The next action is the approved checked local
+controller checkpoint, then immediate governed runtime-access restoration.

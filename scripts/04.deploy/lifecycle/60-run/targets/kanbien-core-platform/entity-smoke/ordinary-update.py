@@ -53,6 +53,7 @@ class Consumer:
         previous, _ = ctx.succession.history_record_for_id(ctx.evidence_root, ctx.expected)
         self.require(all(self.rollback_package[k] == previous["release"][k] for k in ("source_revision", "image_digest")), "delivery-rollback-package-mismatch")
         result = {"account": C.ALIGN.ACCOUNT, "region": C.ALIGN.REGION, "rollback_package": self.rollback_package,
+            "maximum_unused_preflight_renewals_per_step": 1,
             "operations": ["update", *[n + "." + p for n in self.K.SUCCESSOR_TASKS for p in ("preflight", "operation")], "rollback", "rollback-read.preflight", "rollback-read.operation"],
             "protected_resources": "database-schema-data-permissions-and-other-scopes", "recovery": "exact-accepted-predecessor-only"}
         requirements = self.qualification()
@@ -108,7 +109,8 @@ class Consumer:
         else:
             stage, workload, operation, step = selection
             actual = ("ready" if workload == "verifier" else "preflight") if step == "preflight" else operation
-            self.require(plan.get("schema") == "deploy/entity-smoke-task-plan/v2"
+            self.require((plan.get("schema") == "deploy/entity-smoke-task-plan/v2" and "preflight_renewal" not in plan
+                          or plan.get("schema") == "deploy/entity-smoke-task-plan/v3" and isinstance(plan.get("preflight_renewal"), dict))
                 and all(plan.get(k) == v for k, v in {"proof_stage": stage, "workload": workload, "prepared_operation": operation,
                     "operation": actual, "phase": step, "database_effect": self.K.T.EFFECTS[actual], "expected_record_digest": ctx.values["expected_digest"],
                     "task_count": 1, "automatic_retry": False, "execution_route_available": True, "pending_prerequisite": None}.items()), "delivery-plan-outside-approval")
@@ -131,6 +133,20 @@ class Consumer:
 
     def deploy(self, phase="update"):
         ctx = self.context
+        C = self.K.C
+        binding, delivery, cache = self.release_context()
+        retained_path = cache / "receipts" / (phase + ".json")
+        if phase == "update" and retained_path.is_file():
+            ctx.check_authority()
+            C.ALIGN.source_preflight(ctx.package)
+            retained = C.read_json(retained_path)
+            C.retained_controller(retained, C.source_digest())
+            provider = C.Provider()
+            alignment, parameters, _ = C.ALIGN.inspect(provider, ctx.package, C.now())
+            self.require({**C.binding_for(ctx.package, alignment), "proof_label": ctx.values["proof_label"]} == binding,
+                "delivery-plan-outside-approval")
+            C.completed_deployment(provider, binding, {**parameters, "ServerDesiredCount": "1"}, delivery)
+            return
         argv = ["bash", self.directory + "/script.sh", "--phase", phase, *self.common,
             "--rollback-receipt", str(self.rollback), "--rollback-compatibility-id", ctx.values["rollback_compatibility_id"], "--json"]
         _, _, cache = self.release_context()

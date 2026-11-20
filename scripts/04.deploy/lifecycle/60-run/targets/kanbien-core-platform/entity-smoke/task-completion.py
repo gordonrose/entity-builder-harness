@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -39,10 +39,21 @@ def read(route, context, args, step):
     require(C.digest_file(evidence) == value["realization_evidence_sha256"], "task-step-completion-gate-changed")
     retained = C.read_json(evidence)
     declaration = route.GRAPH.contract(args.workload, C.GATE, negative=route.CREDENTIAL.negative(args))
-    controller = route.IMAGE_REPAIR.completed_bootstrap_controller(packet, value, C.source_digest())
+    # Delivery preparation already checked current source; submission rechecks it.
+    # Initial-release recovery has a smaller context and retains its original
+    # source-read contract, including pinned historical controller repairs.
+    current = context.get("artifact") if "delivery" in packet else C.source_digest()
+    require(isinstance(current, str) and route.re.fullmatch(r"sha256:[a-f0-9]{64}", current), "task-step-completion-artifacts-mismatch")
+    controller = controller_for(route, packet, value, current)
     expected = {row["id"]: controller if row["id"] == route.GRAPH.CONTROLLER_SOURCE else context["binding"]["image_digest"] for row in declaration["artifacts"]}
     validate_gate(route, declaration, retained, value["plan_sha256"], expected)
     return value
+
+
+def controller_for(route, packet, completion, current):
+    if "delivery" in packet:
+        return route.C.retained_controller(packet, current)
+    return route.IMAGE_REPAIR.completed_bootstrap_controller(packet, completion, current)
 
 
 def validate_gate(route, declaration, retained, plan_sha256, expected, *, through="controlled-execution"):

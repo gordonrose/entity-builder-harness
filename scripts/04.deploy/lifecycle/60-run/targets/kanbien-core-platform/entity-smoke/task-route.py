@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -225,6 +225,7 @@ def prepare(args, provider, *, retained_source_evidence=None):
     context = {"report": {"plan": safe}, "book": book, "cache": cache, "binding": binding, "checked": checked,
                "parameters": selected, "resources": resources, "artifact": artifact, "custody": receipt, "callees": callees, "completion_deadlines": deadlines, "binding_snapshot": binding_snapshot}
     if delivery: context["delivery"] = delivery
+    STEPS.select_preflight(dependencies(), context, args, provider)
     # Missing prior work is visible in a plan, not manufactured as success.
     missing = None
     try: prerequisites = STEPS.prerequisites(dependencies(), context, args, provider)
@@ -236,6 +237,8 @@ def prepare(args, provider, *, retained_source_evidence=None):
     safe["execution_route_available"] = (STEPS.selected(args) is not None or FEATURE.supported(args) or RECOVERY.supported(args) or CREDENTIAL.supported(args) or ACCEPTANCE.supported(args)) and prerequisites is not None
     context["prerequisites"] = prerequisites
     safe["request_sha256"] = C.DEPLOY.fingerprint(STEPS.request(dependencies(), context, args))
+    if delivery and "preflight_renewal" in safe:
+        STEPS.validate_renewal(dependencies(), safe, binding, delivery, args)
     selected_digest = C.DEPLOY.fingerprint(safe)
     book.bind_plan(selected_digest)
     # These are actual prepared source/artifact/configuration/permission/target
@@ -260,6 +263,14 @@ def execute(args, provider):
     if not safe["execution_route_available"]:
         raise TaskRouteFailure("task-prerequisite-required", safe["pending_prerequisite"]) if safe["pending_prerequisite"] is not None else TaskRouteFailure("task-execution-prerequisites-not-connected")
     runner, deps = RUNNER, dependencies()
+    step_path = STEPS.path(context, args)
+    if context.get("delivery") and COMPLETION.path(step_path).is_file():
+        packet = STEPS.observe_packet(deps, context, args, provider, historical=True)
+        completion = COMPLETION.read(deps, context, args, step_path)
+        provider.effect = "historical-task-completion-validated"
+        return {"verdict": "completed", "plan_sha256": packet["plan_sha256"],
+            "reconciliation_plan_sha256": report["plan_sha256"], "receipt": str(step_path.relative_to(C.ROOT)),
+            "realization_evidence": completion["realization_evidence"], "effect": provider.effect, "reused": True}
     history = HISTORY.reconcile(deps, {**context, "provider": provider}, args)
     if history is not None:
         step_path = STEPS.path(context, args)
@@ -281,7 +292,7 @@ def execute(args, provider):
     elif args.phase == "operation":
         if previous is None:
             probe_args = SimpleNamespace(**{**vars(args), "phase": "preflight"})
-            packet = STEPS.observe_packet(deps, context, probe_args, provider)
+            packet = STEPS.observe_packet(deps, context, probe_args, provider, historical=True)
             require(packet is not None, "task-preflight-receipt-required")
             preflight = {"reservation": packet["reservation"], "receipt": packet["receipt"], "label": safe["preflight_label"]}
             runner.PREFLIGHT.require_receipt(request, packet["reservation"], packet["receipt"], expected_preflight_label=safe["preflight_label"], current_time=datetime.now(timezone.utc).isoformat(), required_after=context["prerequisites"]["required_after"])
@@ -297,6 +308,11 @@ def execute(args, provider):
         require(C.source_digest() == context["artifact"] and C.digest_file(RULE) == safe["preflight_rule_sha256"]
                 and C.DEPLOY.fingerprint(GRAPH.contract(args.workload, C.GATE, negative=negative)) == safe["graph_sha256"]
                 and C.digest_file(C.ROOT / C.ALIGN.SCOPE) == context["binding"]["configuration_contract_sha256"], "task-source-changed-before-submission")
+        if args.phase == "preflight" and "preflight_renewal" in safe:
+            operation_args = SimpleNamespace(**{**vars(args), "phase": "operation"})
+            operation_request = STEPS.request(deps, context, operation_args)
+            require(store.read(STEPS.key(operation_args, context.get("delivery")), operation_request) is None,
+                "preflight-renewal-operation-already-reserved")
     def guard():
         observed = BINDING.observation_scope(provider)
         source_guard()

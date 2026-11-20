@@ -4,7 +4,7 @@ id: aws.standard.operational-realization-applicability
 version: 18
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-19"
+updated_on: "2026-11-20"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -263,6 +263,31 @@ ownership and safe evidence rules remain binding. This rule permits neither
 bootstrap/migration writes nor accepted-release promotion.
 
 ### Completed predecessor custody and bounded readback renewal
+
+For delivery-bound releases, the existing task route may select one renewal of
+a successfully completed preflight whose 900-second window expired unused.
+This replaces incident-specific selection for new delivery identities; the
+pinned historical readers below remain only for their original records.
+The original reservation, result, completion and seven-gate evidence are
+validated and retained. No dependent operation reservation may exist before
+the renewal is first submitted. A deterministic replacement label and separate
+step path preserve the original bytes. The replacement plan carries original
+custody so collection validates both observations and the actual operation's
+matching admission. Failed, uncertain or incomplete probes cannot use this
+path; a second renewal is rejected. All first-five gates, closed read-only
+requests, ninety-second completion and fresh 900-second admission still apply.
+The shared release proof policy owns expiry and replacement identity; the
+existing task store, runner and collector own execution and custody.
+
+Checked controller-only repairs may preserve completed delivery tasks under
+their actual original controller hashes. The existing Git source comparison
+must prove permitted controller/test/governance changes against the qualified
+package, and the original hash must match an immutable ancestor checkpoint.
+Unknown hashes and runtime, image, template or operational-input changes do
+not qualify. Each task's archived gate retains its own controller binding;
+current collection retains the current controller separately. Historical
+completion can reconcile without ECS retaining the old task, but cannot stand
+in for current readiness or fresh admission of a new operation.
 
 Completed predecessor tasks may be consumed as historical evidence through
 their original reservation, collected result, completion sidecar and unchanged
