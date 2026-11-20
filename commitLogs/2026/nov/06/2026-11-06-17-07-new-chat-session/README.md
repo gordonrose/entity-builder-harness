@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-20T08:52:41Z
-latest_commit_sha: 8467c25ac44ae7c4e383ee508177f50e712ab81e
-chat_duration: 1179934s (13:15:45:34)
+latest_commit_at_utc: 2026-11-20T09:36:37Z
+latest_commit_sha: 29a4c6dff643b8cc733b091c3286a81465974dee
+chat_duration: 1182570s (13:16:29:30)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2936,6 +2936,17 @@ Summary: Codified execution continuity and final-response checks; reconciled che
 
 ADR impact: No ADR: existing completion policy clarified without a new execution mechanism.
 
+
+### 2026-11-20T09:36:37Z - Commit recorded
+
+Commit: `29a4c6dff643b8cc733b091c3286a81465974dee`
+
+Message: fix(package): prepare aggregate checks on clean runners
+
+Summary: Repaired clean-CI aggregate preparation through the existing selector; actual builder and omitted/suppressed/late preparation regressions passed; clean checkout aggregate passed with no findings after reproducing the original missing-context failure; staged affected gate passed. Failed publication 44709273891 retained, no AWS workload mutation. No ADR needed: restores the existing verification contract.
+
+ADR impact: none
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3237,6 +3248,13 @@ ADR impact: No ADR: existing completion policy clarified without a new execution
   Summary: Codified execution continuity and final-response checks; reconciled checkpoint handoff; structural and focused portability checks plus staged gate passed. End-to-end entity-smoke delivery remains authorized and in progress.
   ADR impact: No ADR: existing completion policy clarified without a new execution mechanism.
 
+
+- Commit: `29a4c6dff643b8cc733b091c3286a81465974dee`
+  Time UTC: 2026-11-20T09:36:37Z
+  Message: fix(package): prepare aggregate checks on clean runners
+  Summary: Repaired clean-CI aggregate preparation through the existing selector; actual builder and omitted/suppressed/late preparation regressions passed; clean checkout aggregate passed with no findings after reproducing the original missing-context failure; staged affected gate passed. Failed publication 44709273891 retained, no AWS workload mutation. No ADR needed: restores the existing verification contract.
+  ADR impact: none
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3250,9 +3268,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-20T08:52:41Z
-Latest commit SHA: 8467c25ac44ae7c4e383ee508177f50e712ab81e
-Chat duration: 1179934s (13:15:45:34)
+Latest commit at UTC: 2026-11-20T09:36:37Z
+Latest commit SHA: 29a4c6dff643b8cc733b091c3286a81465974dee
+Chat duration: 1182570s (13:16:29:30)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
