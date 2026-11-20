@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-19T21:59:15Z
-latest_commit_sha: ca8ee043
-chat_duration: 1140728s (13:04:52:08)
+latest_commit_at_utc: 2026-11-20T08:52:41Z
+latest_commit_sha: HEAD
+chat_duration: 1179934s (13:15:45:34)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2888,6 +2888,17 @@ Summary: Reconciled end-to-end task authority across existing deployment, commit
 
 ADR impact: Clarifies existing bounded release approval; no new architecture ADR.
 
+
+### 2026-11-20T08:52:41Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(harness): require execution continuity through task completion
+
+Summary: Codified execution continuity and final-response checks; reconciled checkpoint handoff; structural and focused portability checks plus staged gate passed. End-to-end entity-smoke delivery remains authorized and in progress.
+
+ADR impact: No ADR: existing completion policy clarified without a new execution mechanism.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3182,6 +3193,13 @@ ADR impact: Clarifies existing bounded release approval; no new architecture ADR
   Summary: Reconciled end-to-end task authority across existing deployment, commit, promotion and AWS owners. No new runtime code or registry. Metadata/process/command drift and 56 local links passed; staged gate passed 38 checks with 69 deferred in .cache/test-runs/20261119T215849Z-ffec5e81fdbb45cfbad34be835dd00a3/report.json. Preserves original user authority, exact-plan gates and out-of-scope stops. Push/publication approved; proceed without renewed stage prompts.
   ADR impact: Clarifies existing bounded release approval; no new architecture ADR.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-11-20T08:52:41Z
+  Message: fix(harness): require execution continuity through task completion
+  Summary: Codified execution continuity and final-response checks; reconciled checkpoint handoff; structural and focused portability checks plus staged gate passed. End-to-end entity-smoke delivery remains authorized and in progress.
+  ADR impact: No ADR: existing completion policy clarified without a new execution mechanism.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3195,9 +3213,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-19T21:59:15Z
-Latest commit SHA: ca8ee043
-Chat duration: 1140728s (13:04:52:08)
+Latest commit at UTC: 2026-11-20T08:52:41Z
+Latest commit SHA: HEAD
+Chat duration: 1179934s (13:15:45:34)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
