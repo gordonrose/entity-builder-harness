@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-20T11:26:28Z
-latest_commit_sha: c1d93d17
-chat_duration: 1189161s (13:18:19:21)
+latest_commit_at_utc: 2026-11-20T19:20:38Z
+latest_commit_sha: 693e911f
+chat_duration: 1217611s (14:02:13:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3083,6 +3083,17 @@ Summary: Corrected successor replacement rollback and preserved historical recei
 
 ADR impact: No separate ADR: bounded correction within existing deployment and recovery owners.
 
+
+### 2026-11-20T19:20:38Z - Commit recorded
+
+Commit: `693e911f`
+
+Message: fix(deploy): resume retained proof with bounded preflight renewal
+
+Summary: Checked controller-only repair; focused and integration verification passed. Live restoration and remaining proof still pending.
+
+ADR impact: No new ADR: repair of existing recovery and evidence owners.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3398,6 +3409,13 @@ ADR impact: No separate ADR: bounded correction within existing deployment and r
   Summary: Corrected successor replacement rollback and preserved historical receipt semantics. Registered integration passed with zero findings: 90 passed (16 executed, 74 matching reused), 20 later-stage deferred; report .cache/test-runs/20261120T112353Z-244852d50d34411b8fd896f776a5629f/report.json. Focused registered checks and staged gate passed. AWS bounded failed-update recovery completed and accepted image retained. Fresh publication and successor live acceptance remain pending.
   ADR impact: No separate ADR: bounded correction within existing deployment and recovery owners.
 
+
+- Commit: `693e911f`
+  Time UTC: 2026-11-20T19:20:38Z
+  Message: fix(deploy): resume retained proof with bounded preflight renewal
+  Summary: Checked controller-only repair; focused and integration verification passed. Live restoration and remaining proof still pending.
+  ADR impact: No new ADR: repair of existing recovery and evidence owners.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3411,9 +3429,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-20T11:26:28Z
-Latest commit SHA: c1d93d17
-Chat duration: 1189161s (13:18:19:21)
+Latest commit at UTC: 2026-11-20T19:20:38Z
+Latest commit SHA: 693e911f
+Chat duration: 1217611s (14:02:13:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -7239,3 +7257,59 @@ The scoped README skill/source review keeps these evidence levels separate.
 This record is the compact carry-forward; raw verification output stays in the
 existing private run reports. The next action is the approved checked local
 controller checkpoint, then immediate governed runtime-access restoration.
+
+Controller repair checkpoint `693e911fc4ecc1912f7258d7ab94c2ab2a79f6be`
+passed the commit gate with 39 matching checks reused and no findings. Its
+application source remains `19b0fd3ff1a36dd247de4d820742d2e68bdc9727`;
+controller-only alignment passed without republishing the unchanged image.
+The first live planner stopped before effects because its exact local-check
+selection lacked preparation. The existing selector recorded that preparation;
+no source changes or proof waivers were needed.
+
+The one bounded expired-preflight renewal completed successfully as operation
+`es-0fe1eda8a9e24647958f09fd245c9052`, stopped at 19:33:56Z on 20 November.
+The original preflight is retained unchanged. Runtime-login restoration then
+completed as `es-2ec7d11ac4784bdf926c6bf1ae09b729`, exit zero at 19:44:45Z,
+with `ENTITY_SMOKE_ADMINISTRATION_CONFIRMED` for `restore-runtime`.
+The retained packet is under the original proof label and delivery
+`104261dd18363aa576a5600cd294150f3d9b2f6e5884b7316f0f8a8221c6e179`,
+`task-steps/administration-restore-runtime-credential-recovery-operation.json`.
+Runtime replacement planning is now in progress. Replacement/readback,
+isolated restore/readback/cleanup and final acceptance are still pending.
+This is successful bounded recovery, not unattended or ten-minute proof.
+
+The credential-replacement plan initially failed a provider read, then passed
+unchanged with hash
+`sha256:4b55227f98a3a3a605a61a2d0bd6d9ac9784b4352b927adc2094a35e66e1a2ae`.
+Its supervised execution returned `aws-command-failed`, `effect: not-started`,
+before StopTask dispatch. The original reservation
+`es-9f25ce32e7d041818568993eca837116` remains unchanged, naming original task
+`336ea82ab86641e495223f14b3f82348`. Read-only reconciliation confirms that task
+RUNNING, desired RUNNING, HEALTHY, definition `entity-smoke-server:3`.
+The failed report `/tmp/nov20-credential-replacement-execute.json` has SHA-256
+`29f3976199d3bd591105bb0d29601693cf4cd96af5da8e75cde31c612f04d385`.
+Five independent bounded service reads reproduced two connection/read timeouts;
+three passed. The timeout format matches the existing retry recognizer; no
+claim is made that retries were absent or that either earlier failure's exact
+provider operation is known.
+
+Confirmed defect: the shared replacement adapter reserves before precondition
+and provider guard, but existing reservations can only observe. Thus a known
+pre-dispatch failure strands the original reserved stop. Under the user's
+standing necessary-extension/recovery authority, add only a bounded supervised
+operator-completion rule to the existing AWS applicability standard. Reuse the
+current plan/identity/gate owners, native CLI and exclusive evidence writer;
+retain a separate one-submission intent and return to the original controller
+for actual replacement completion. No new repository executor, permissions,
+task identity, image or database operation is introduced. Unknown submissions
+remain observation-only. Counterexamples reviewed: a RUNNING task alone is not
+negative submission proof; changed plan/task/request, missing supervision,
+existing operator intent, and changed source/configuration cannot authorize a
+new stop. No ADR is needed for this bounded operator recovery, which is not a
+new automated deployment architecture.
+
+This is not a fix to the shared submission protocol. Its permanent correction
+and fault-injection coverage remain remediation work, and this live run cannot
+be represented as unattended delivery or a ten-minute success. The current
+worktree source stays frozen; apply proportionate process/metadata checks to
+the single rule change, then continue the already-approved functional proof.

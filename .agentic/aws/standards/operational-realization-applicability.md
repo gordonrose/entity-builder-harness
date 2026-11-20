@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 18
+version: 19
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-20"
@@ -309,6 +309,39 @@ by a historical reader. The exact pre-companion server-replacement receipt
 `sha256:fefc8e5561299b9e5cb63e41f820fae3a250f1bf3452bbf01f24eb72580b83e6`
 may use its pinned original controller and actual seven-gate evidence; this
 does not admit any other missing companion or restamp historical observations.
+
+### Operator completion of a known-unsubmitted task replacement
+
+<!-- deterministic-check: allow reason="a supervised command's observed pre-dispatch failure and standing recovery authority require operator judgment; existing plan, identity, gate and immutable-write owners enforce the technical checks" -->
+Within an approved replacement and repair boundary, an operator may complete
+the original StopTask once when the supervised controller returned
+`effect: not-started` after reserving its exact task but before dispatch. This
+is not permission to retry an uncertain provider submission. Preserve and bind
+the failed command/report, exact approved plan, immutable reservation and
+original task ARN in the existing session and private proof directory. A
+RUNNING observation alone does not establish that submission never occurred.
+Missing supervision or an unknown/submitted outcome remains reconcile-only.
+
+Before the sole submission, rerun the existing owner's source, package,
+configuration, identity, permission, service and original-task checks against
+that unchanged plan. Require the original task still RUNNING with desired
+status RUNNING, the same service, definition and image, and no other active
+replacement operator. Validate the existing execution-preflight gates. Flush
+one separate immutable operator intent, linked to the original reservation and
+failed report, before using the AWS CLI for that exact original task, cluster
+and original reservation's reason. Never substitute the current successor,
+alter the original reservation or enable automatic mutation retries. An
+existing operator intent or uncertain response permits observation only.
+
+The existing replacement owner must collect the actual original-task stop
+reason, healthy distinct successor and seventh-gate receipt afterwards. Keep
+the operator intervention visible alongside that receipt. This establishes
+bounded functional recovery only, not unattended delivery or the ten-minute
+target. The reserved-before-dispatch controller defect remains an explicit
+remediation item until its shared submission protocol and failure tests are
+corrected; this operator procedure is not an automatic retry implementation.
+
+### Historical bounded preflight renewals
 
 For the current entity-smoke proof only, the controller may renew the successful
 collision preflight `es-d8eb01dcede146719f91b8dd16278882` once after its window
