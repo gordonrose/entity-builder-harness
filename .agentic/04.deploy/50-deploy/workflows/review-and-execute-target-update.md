@@ -4,7 +4,7 @@ id: deploy.workflow.release-update-and-recovery
 version: 5
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-11-19"
+updated_on: "2026-11-20"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -102,6 +102,16 @@ Recovery uses `--phase rollback`, the same candidate/controller receipt,
 and the separate `--rollback-receipt` and `--rollback-compatibility-id`.
 Compatibility must cover every image role the actual template updates.
 It never rewinds migrations, widens grants or promotes the failed candidate.
+
+Image-only successor execution explicitly enables provider rollback for immutable
+task-definition replacements. A failed provisioning update is not a completed
+deployment or application verification failure. Previously disabled-rollback
+failures use only the separately approved
+[bounded failed-update recovery](../../../aws/workflows/execute-approved-aws-change.md#bounded-failed-update-recovery).
+After verified recovery, UPDATE_ROLLBACK_COMPLETE is a stable starting state,
+subject to the same accepted ownership, template and parameter checks. Retain
+old plan/evidence readers, but new successor plans declare enabled provider
+rollback; do not reinterpret an old plan as authorizing a changed request.
 
 ## Stop Conditions and Output
 

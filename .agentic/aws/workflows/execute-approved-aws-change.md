@@ -4,7 +4,7 @@
   version: 6
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-11-19"
+  updated_on: "2026-11-20"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -83,7 +83,8 @@ Use the existing separately labelled compatible-image restoration controller,
 preserve data and accepted history, and privately verify the restored release.
 Restoration is not successful delivery or acceptance of the failed candidate.
 An ordinary image-update boundary does not authorize generic failed-stack
-repair, migrations, permission changes, undeclared requalification or repeated
+repair; the separately approved bounded recovery below is distinct from
+application verification rollback. It does not authorize migrations, permission changes, undeclared requalification or repeated
 recovery attempts. Declared successor requalification must appear explicitly in
 the reviewed delivery boundary; end-to-end wording does not bypass its gates.
 
@@ -93,6 +94,40 @@ Existing exact-plan commands and original task/change-set records remain
 authoritative. Local connected tests, package qualification and live acceptance
 are separate evidence levels; implementation alone establishes neither live
 recovery nor the delivery-time target.
+
+## Bounded failed-update recovery
+
+Under explicitly recorded failed-update recovery authority, an operator may use
+AWS `rollback-stack` once to restore an owned UPDATE_FAILED stack to its last
+accepted stable state. This is not a generic retry or stack recreation route.
+Before submission, independently validate accepted release/package custody,
+exact account/region/stack ARN and ownership tags, original reserved execution
+token and its terminal failed root event. Require a prior successful root event
+on that same stack, predating the failed update, and the accepted template,
+unchanged non-image parameters and resource inventory. Reject initial creation
+failures or absent last stable state: AWS may delete a stack with no stable state.
+
+Record the exact rollback request and one client token exclusively before its
+single submission using the existing immutable reservation writer. Do not set
+RoleARN, RetainExceptOnCreate or resource-skip/delete options. An existing intent
+or uncertain response selects observation only, never another submission. Keep
+raw provider output private; retain only approved identity/hash/status facts.
+Completion requires the original recovery token's UPDATE_ROLLBACK_COMPLETE root
+event, the same stack ARN, accepted template/parameters and unchanged non-task
+resource identities, plus the exact accepted image running with no pending tasks.
+Failed, absent or uncertain evidence is not successful recovery or acceptance.
+
+Only then may a corrected, freshly checked delivery use a new immutable candidate
+and reservation. Preserve the failed delivery and recovery evidence. Never reuse
+its consumed change set or overwrite its plan. Successor image-only updates and
+compatible-image restorations explicitly enable provider rollback; this restores
+the prior stack if provisioning fails, and cannot promote a failed candidate.
+Initial creation/count-only activation keep their separately declared policy.
+Application proof and acceptance remain mandatory after a successful update.
+
+This operator recovery uses the existing AWS CLI and immutable evidence writer;
+it is not an unattended recovery capability or proof of the delivery-time target.
+See [AWS rollback semantics](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/rollback-stack.html).
 
 ## Entity-smoke read-only preflight
 

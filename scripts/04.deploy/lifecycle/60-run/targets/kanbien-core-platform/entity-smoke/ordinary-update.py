@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-19"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -100,10 +100,10 @@ class Consumer:
                 rollback_compatibility_id=ctx.values["rollback_compatibility_id"]), delivery, binding)
         self.require(plan.get("binding") == binding, "delivery-plan-outside-approval")
         if phase:
-            self.require(plan.get("schema") == "deploy/entity-smoke-infrastructure-plan/v2" and plan.get("phase") == phase
+            self.require(plan.get("schema") == "deploy/entity-smoke-infrastructure-plan/v3" and plan.get("phase") == phase
                 and all(type(plan.get(k)) is int and plan[k] == v for k, v in {"resource_additions": 0, "resource_modifications": 1,
                     "resource_replacements": 5, "server_desired_count": 1, "baseline_database_ingress_additions": 0, "baseline_endpoint_ingress_additions": 0}.items())
-                and all(plan.get(k) is False for k in ("database_data_or_schema_changes", "source_database_replacement", "automatic_rollback"))
+                and all(plan.get(k) is False for k in ("database_data_or_schema_changes", "source_database_replacement")) and plan.get("automatic_rollback") is True
                 and plan.get("rollback_compatibility", {}).get("compatibility_id") == ctx.values["rollback_compatibility_id"], "delivery-plan-outside-approval")
         else:
             stage, workload, operation, step = selection

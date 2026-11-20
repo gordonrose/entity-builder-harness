@@ -5,7 +5,7 @@
 #   version: 7
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -378,7 +378,7 @@ def validate_deployment_receipt(packet, binding, delivery, *, rollback=False):
               "parameters_sha256", "template_sha256", "package_custody_reference", "resource_additions", "resource_modifications", "resource_replacements", "server_desired_count",
               "database_data_or_schema_changes", "source_database_replacement", "baseline_database_ingress_additions", "baseline_endpoint_ingress_additions",
               "automatic_rollback", "delivery", "previous_parameters_sha256", "rollback_compatibility"}
-    require(isinstance(plan, dict) and set(plan) == fields and plan["schema"] == "deploy/entity-smoke-infrastructure-plan/v2"
+    require(isinstance(plan, dict) and set(plan) == fields and plan["schema"] in {"deploy/entity-smoke-infrastructure-plan/v2", "deploy/entity-smoke-infrastructure-plan/v3"}
             and DEPLOY.fingerprint(plan) == packet["plan_sha256"] and plan["delivery"] == request["delivery"] == delivery
             and plan["phase"] == phase and plan["binding"] == request["binding"] == binding
             and plan["target"] == RESOURCE.CLUSTER and plan["scope"] == "entity-smoke" and plan["account"] == ALIGN.ACCOUNT and plan["region"] == ALIGN.REGION
@@ -388,7 +388,8 @@ def validate_deployment_receipt(packet, binding, delivery, *, rollback=False):
         require(isinstance(plan[key], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", plan[key]) is not None, "infrastructure-delivery-plan-mismatch")
     require(all(type(plan[key]) is int and plan[key] == expected for key, expected in {"resource_additions": 0, "resource_modifications": 1, "resource_replacements": 5, "server_desired_count": 1,
             "baseline_database_ingress_additions": 0, "baseline_endpoint_ingress_additions": 0}.items())
-            and all(plan[key] is False for key in ("database_data_or_schema_changes", "source_database_replacement", "automatic_rollback")), "infrastructure-delivery-plan-mismatch")
+            and all(plan[key] is False for key in ("database_data_or_schema_changes", "source_database_replacement"))
+            and plan["automatic_rollback"] is (plan["schema"] == "deploy/entity-smoke-infrastructure-plan/v3"), "infrastructure-delivery-plan-mismatch")
     compatibility = plan["rollback_compatibility"]
     require(isinstance(compatibility, dict) and set(compatibility) == {"compatibility_id", "compatibility_sha256", "receipt_reference"}
                 and isinstance(compatibility["compatibility_id"], str) and re.fullmatch(r"(?:rollback-compatibility|accepted-proof)-[a-f0-9]{24}", compatibility["compatibility_id"]) is not None
@@ -593,7 +594,7 @@ def infrastructure_plan(args, receipt, binding, parameters, operator, artifact, 
             "server_desired_count": 1 if activate else 0, "database_data_or_schema_changes": False, "source_database_replacement": False,
             "baseline_database_ingress_additions": 0 if activate else 4, "baseline_endpoint_ingress_additions": 0 if activate else 5, "automatic_rollback": False}
     if delivery:
-        plan.update(schema="deploy/entity-smoke-infrastructure-plan/v2", delivery=delivery, previous_parameters_sha256=DEPLOY.fingerprint(previous_parameters),
+        plan.update(schema="deploy/entity-smoke-infrastructure-plan/v3", automatic_rollback=True, delivery=delivery, previous_parameters_sha256=DEPLOY.fingerprint(previous_parameters),
                     resource_modifications=1, resource_replacements=5, rollback_compatibility=compatibility)
     return plan
 
@@ -764,7 +765,7 @@ def run(args, provider):
         if existing_execution is None:
             before_binding = {**binding, "source_revision": previous_parameters["SourceRevision"], "image_digest": previous_parameters["ImageDigest"]}
             state = DEPLOY.deployed_stack(provider, before_binding, previous_parameters)
-            require(state.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "infrastructure-successor-precondition-not-confirmed")
+            require(state.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"}, "infrastructure-successor-precondition-not-confirmed")
         DEPLOY.request(binding, parameters, activate, **options)
     elif activate:
         activation_prerequisites(provider, args.prerequisites.absolute() if args.prerequisites else None, binding, parameters, cache, store,
@@ -805,7 +806,7 @@ def run(args, provider):
         else:
             require(set(supplied) == {"StackName", "ChangeSetName", "ClientRequestToken"} | ({"DisableRollback"} if activate else set())
                     and supplied["StackName"] == reviewed["facts"]["stack_arn"] and supplied["ChangeSetName"] == reviewed["facts"]["change_set_arn"]
-                    and re.fullmatch(r"es-[a-f0-9]{32}", supplied["ClientRequestToken"]) is not None and (not activate or supplied["DisableRollback"] is True), "infrastructure-submission-does-not-match-plan")
+                    and re.fullmatch(r"es-[a-f0-9]{32}", supplied["ClientRequestToken"]) is not None and (not activate or supplied["DisableRollback"] is (not plan["automatic_rollback"])), "infrastructure-submission-does-not-match-plan")
             reserved = store.read("deploy-execute-" + args.phase, {**intent, "change_set_arn": supplied["ChangeSetName"], "stack_arn": supplied["StackName"]})
             require(reserved is not None and supplied["ClientRequestToken"] == reserved["operation_id"], "infrastructure-submission-does-not-match-plan")
     if args.mode == "review": provider.enable(("cloudformation", "create-change-set"), prewrite)

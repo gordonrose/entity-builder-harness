@@ -5,7 +5,7 @@
 #   version: 8
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -744,6 +744,7 @@ def successor_protocols():
                                    expected_predecessor=predecessor["release_id"], approved_plan=None, wait_seconds=0, prerequisites=None)
             provider = Provider(lost_execute=True)
             F.accepted_provider(provider, F.delivery_fixture())
+            provider.stack["StackStatus"] = "UPDATE_ROLLBACK_COMPLETE"
             # The real public updater must reject unavailable recovery custody
             # before creating a change set, not only when rollback is requested.
             with patch.object(M, "rollback_selection", real_selection):
@@ -755,6 +756,7 @@ def successor_protocols():
                     failed(lambda: M.run(args, provider), "release-succession-compatibility-not-found")
             assert not any(op in {"create-change-set", "execute-change-set"} for _, op, _ in provider.calls)
             planned = M.run(args, provider)
+            assert planned["plan"]["schema"] == "deploy/entity-smoke-infrastructure-plan/v3" and planned["plan"]["automatic_rollback"] is True
             assert planned["plan"]["resource_modifications"] == 1 and planned["plan"]["resource_replacements"] == 5 and planned["plan"]["resource_additions"] == 0
             delivery, binding = planned["plan"]["delivery"], planned["plan"]["binding"]
             cache = M.delivery_cache(args.proof_label, delivery)
@@ -785,6 +787,14 @@ def successor_protocols():
             for gate in (cache / "realization").glob("controlled-execution-*.json"):
                 assert M.read_json(gate)["change_summary"]["operation_counts"] == {"create": 0, "update": 1, "delete": 0, "replace": 5, "broaden-permission": 0}
             assert M.validate_deployment_receipt(packet, binding, delivery) is packet
+            legacy = copy.deepcopy(packet)
+            legacy["plan"].update(schema="deploy/entity-smoke-infrastructure-plan/v2", automatic_rollback=False)
+            legacy["plan_sha256"] = M.DEPLOY.fingerprint(legacy["plan"])
+            assert M.validate_deployment_receipt(legacy, binding, delivery) is legacy
+            for invalid in (copy.deepcopy(packet), legacy):
+                invalid["plan"]["automatic_rollback"] = not invalid["plan"]["automatic_rollback"]
+                invalid["plan_sha256"] = M.DEPLOY.fingerprint(invalid["plan"])
+                failed(lambda: M.validate_deployment_receipt(invalid, binding, delivery), "infrastructure-delivery-plan-mismatch")
             reused = copy.deepcopy(packet)
             reused["plan"]["rollback_compatibility"]["compatibility_id"] = "accepted-proof-" + predecessor["release_id"].removeprefix("release-")
             reused["plan_sha256"] = M.DEPLOY.fingerprint(reused["plan"])

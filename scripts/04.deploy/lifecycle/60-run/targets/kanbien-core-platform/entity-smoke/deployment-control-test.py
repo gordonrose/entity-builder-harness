@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -106,7 +106,8 @@ class Provider:
             matches = [change for change in self.changes.values() if change["ChangeSetId"] == parameters["ChangeSetName"]]
             assert len(matches) == 1
             change = matches[0]; activate = not change["ChangeSetName"].startswith("entity-smoke-create-")
-            assert (parameters.get("DisableRollback") is True) if activate else "DisableRollback" not in parameters
+            successor = any(row["ResourceChange"].get("Replacement") == "True" for row in change["Changes"])
+            assert (parameters.get("DisableRollback") is (not successor)) if activate else "DisableRollback" not in parameters
             self.tokens.append(parameters["ClientRequestToken"])
             self.completed_at = datetime.now(timezone.utc).isoformat()
             self.stack.update(Tags=copy.deepcopy(change["Tags"]), Parameters=copy.deepcopy(change["Parameters"]), StackStatus=("UPDATE_IN_PROGRESS" if activate else "CREATE_IN_PROGRESS") if self.delayed else ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"))
@@ -159,6 +160,7 @@ def successor_cases(root):
     delivery, active = delivery_fixture(), {**PARAMETERS, "ServerDesiredCount": "1"}
     provider = Provider(lost_prepare=True, lost_execute=True)
     old = accepted_provider(provider, delivery)
+    provider.stack["StackStatus"] = "UPDATE_ROLLBACK_COMPLETE"
     store = R.ResourceStore(root / "successor")
     options = {"activate": True, "delivery": delivery, "previous_parameters": old}
     fails(lambda: M.prepare(provider, store, BINDING, active, **options), "deployment-change-submission-uncertain-reconcile-only")
@@ -173,6 +175,14 @@ def successor_cases(root):
     result = M.execute(provider, store, BINDING, active, facts["change_set_arn"], facts["stack_arn"], **options)
     assert result["status"] == "completed" and result["reservation"]["request"]["delivery"] == delivery
     assert sum(op == "create-change-set" for _, op, _ in provider.calls) == sum(op == "execute-change-set" for _, op, _ in provider.calls) == 1
+    for status in ("UPDATE_ROLLBACK_IN_PROGRESS", "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"):
+        provider.stack["StackStatus"] = status
+        assert M.execute(provider, store, BINDING, active, facts["change_set_arn"], facts["stack_arn"], **options)["status"] == "pending"
+    for status in ("UPDATE_FAILED", "UPDATE_ROLLBACK_COMPLETE", "UPDATE_ROLLBACK_FAILED"):
+        provider.stack["StackStatus"] = status
+        fails(lambda: M.execute(provider, store, BINDING, active, facts["change_set_arn"], facts["stack_arn"], **options), "deployment-execution-not-successful")
+    provider.stack["StackStatus"] = "UPDATE_COMPLETE"
+    assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 1
     provider.lost_prepare = provider.lost_execute = False
     rollback_binding = {**BINDING, "source_revision": old["SourceRevision"], "image_digest": old["ImageDigest"]}
     rollback = {"activate": True, "delivery": delivery, "previous_parameters": active, "rollback": True}
@@ -182,6 +192,17 @@ def successor_cases(root):
     assert restored["reservation"]["phase"] == "deploy-execute-rollback"
     assert {row["ParameterKey"]: row["ParameterValue"] for row in provider.stack["Parameters"]} == old
     assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 2
+    assert all(arguments["DisableRollback"] is False for _, op, arguments in provider.calls if op == "execute-change-set")
+    for status in ("UPDATE_FAILED", "UPDATE_ROLLBACK_IN_PROGRESS", "UPDATE_ROLLBACK_FAILED"):
+        unsafe = Provider(); accepted_provider(unsafe, delivery)
+        unsafe.stack["StackStatus"] = status
+        fails(lambda: M.prepare(unsafe, R.ResourceStore(root / status), BINDING, active, **options), "deployment-successor-precondition-not-confirmed")
+        assert not any(op in {"create-change-set", "execute-change-set"} for _, op, _ in unsafe.calls)
+    changed = Provider(); accepted_provider(changed, delivery)
+    changed.stack["StackStatus"] = "UPDATE_ROLLBACK_COMPLETE"
+    changed.stack["Parameters"][0]["ParameterValue"] = "wrong-restored-value"
+    fails(lambda: M.prepare(changed, R.ResourceStore(root / "wrong-restored-parameters"), BINDING, active, **options), "deployment-provider-parameters-mismatch")
+    assert not any(op in {"create-change-set", "execute-change-set"} for _, op, _ in changed.calls)
     untouched = Provider(); accepted_provider(untouched, delivery)
     fails(lambda: M.prepare(untouched, R.ResourceStore(root / "changed-network"), BINDING, {**active, "VpcCidr": "10.72.0.0/16"}, **options), "deployment-non-image-parameter-change-prohibited")
     assert untouched.calls == []

@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-19"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [architecture, security, sre]
@@ -144,6 +144,32 @@ class Harness:
 
 
 class DeliveryTests(unittest.TestCase):
+    def test_successor_approval_requires_explicit_provider_rollback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            h = Harness("entity-smoke", directory); c = h.consumer()
+            fixture = D.module(ROOT / c.directory / "deployment-control-test.py")
+            binding, delivery = fixture.BINDING, fixture.delivery_fixture()
+            c.release_context = lambda: (binding, delivery, Path(directory))
+            c.context.package = delivery["candidate"]
+            plan = {"schema": "deploy/entity-smoke-infrastructure-plan/v3", "phase": "update",
+                "target": c.context.route["target"], "scope": c.context.route["scope"],
+                "account": c.K.C.ALIGN.ACCOUNT, "region": c.K.C.ALIGN.REGION,
+                "binding": binding, "delivery": delivery, "controller_sha256": "sha256:" + "f" * 64,
+                "package_custody_reference": delivery["candidate"]["receipt_reference"],
+                "resource_additions": 0, "resource_modifications": 1, "resource_replacements": 5,
+                "server_desired_count": 1, "baseline_database_ingress_additions": 0, "baseline_endpoint_ingress_additions": 0,
+                "database_data_or_schema_changes": False, "source_database_replacement": False, "automatic_rollback": True,
+                "rollback_compatibility": {"compatibility_id": c.context.values["rollback_compatibility_id"]}}
+            def check():
+                digest = c.K.C.DEPLOY.fingerprint(plan)
+                return h.adapter.Consumer.approved_plan(c, {"plan": plan, "plan_sha256": digest}, phase="update")
+            with patch.object(c.K.C, "source_digest", return_value=plan["controller_sha256"]):
+                self.assertEqual(check(), c.K.C.DEPLOY.fingerprint(plan))
+                for schema, rollback in (("v2", False), ("v3", False), ("v3", 1), ("v3", None)):
+                    plan.update(schema="deploy/entity-smoke-infrastructure-plan/" + schema, automatic_rollback=rollback)
+                    with self.assertRaises(D.Halt) as failure: check()
+                    self.assertEqual(failure.exception.condition, "delivery-plan-outside-approval")
+
     def test_requalification_sequence_and_bounded_access_recovery(self):
         with tempfile.TemporaryDirectory() as directory:
             h = Harness("entity-smoke", directory); c = h.consumer()

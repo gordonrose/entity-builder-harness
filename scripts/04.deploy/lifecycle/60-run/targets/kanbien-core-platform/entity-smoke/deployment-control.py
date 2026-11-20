@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-18"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -233,7 +233,7 @@ def prepare(provider, store, binding, parameters, *, activate=False, delivery=No
         if delivery is not None:
             previous_binding = {**binding, "source_revision": previous_parameters["SourceRevision"], "image_digest": previous_parameters["ImageDigest"]}
             before = deployed_stack(provider, previous_binding, previous_parameters)
-            require(before.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "deployment-successor-precondition-not-confirmed")
+            require(before.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"}, "deployment-successor-precondition-not-confirmed")
         elif activate:
             before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"})
             require(before.get("StackStatus") in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}, "deployment-activation-precondition-not-confirmed")
@@ -266,8 +266,9 @@ def observe(provider, store, binding, parameters, change_arn, stack_arn, *, acti
     else:
         exact_stack(value, binding)
     require(value["StackId"] == stack_arn, "deployment-stack-identity-not-confirmed")
-    pending = {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"} if activate else {"REVIEW_IN_PROGRESS", "CREATE_IN_PROGRESS"}
+    pending = {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS", "UPDATE_ROLLBACK_IN_PROGRESS", "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"} if activate else {"REVIEW_IN_PROGRESS", "CREATE_IN_PROGRESS"}
     if value.get("StackStatus") in pending: return {"status": "pending", "reservation": reservation}
+    require(value.get("StackStatus") == ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"), "deployment-execution-not-successful")
     value = deployed_stack(provider, binding, parameters)
     require(value["StackId"] == stack_arn and value.get("StackStatus") == ("UPDATE_COMPLETE" if activate else "CREATE_COMPLETE"), "deployment-execution-not-successful")
     events = provider("cloudformation", "describe-stack-events", StackName=stack_arn)
@@ -311,11 +312,12 @@ def execute(provider, store, binding, parameters, change_arn, stack_arn, *, acti
             before = deployed_stack(provider, binding, {**parameters, "ServerDesiredCount": "0"}) if activate else only(provider("cloudformation", "describe-stacks", StackName=stack_arn), "Stacks")
         if activate: exact_stack(before, binding)
         else: initial_stack(provider, before, binding, parameters, review)
-        require(before["StackId"] == stack_arn and before.get("StackStatus") in ({"CREATE_COMPLETE", "UPDATE_COMPLETE"} if activate else {"REVIEW_IN_PROGRESS"}), "deployment-execution-precondition-not-confirmed")
+        stable = {"CREATE_COMPLETE", "UPDATE_COMPLETE"} | ({"UPDATE_ROLLBACK_COMPLETE"} if delivery is not None else set())
+        require(before["StackId"] == stack_arn and before.get("StackStatus") in (stable if activate else {"REVIEW_IN_PROGRESS"}), "deployment-execution-precondition-not-confirmed")
     try:
         return CHANGE_SETS.execute(provider, store, phase="deploy-execute-" + mode,
             request={**intent, "change_set_arn": change_arn, "stack_arn": stack_arn},
-            arguments={"StackName": stack_arn, "ChangeSetName": change_arn, **({"DisableRollback": True} if activate else {})},
+            arguments={"StackName": stack_arn, "ChangeSetName": change_arn, **({"DisableRollback": delivery is None} if activate else {})},
             precondition=precondition, observe=lambda _reservation: observe(provider, store, binding, parameters, change_arn, stack_arn, activate=activate, **options),
             passthrough=(RESOURCE.SubmissionNotStarted,))
     except CHANGE_SETS.ChangeSetFailure:

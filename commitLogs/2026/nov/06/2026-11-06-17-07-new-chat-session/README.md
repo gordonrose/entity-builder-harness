@@ -59,6 +59,131 @@ below are historical incident records, not the current acceptance verdict.
 
 ## Session Log
 
+- Nov20 correction self-review closed for the three runtime files and their
+  existing consumer fixtures. Direct deployment-control and public infrastructure
+  fixtures passed; the coordinator's 18 tests passed, including actual approval
+  rejection of old/disabled/mistyped rollback plans. Source-matched diagnostic
+  adoption passed with no findings. Pending provider rollback stays pending;
+  terminal provisioning rollback remains a failed delivery, not acceptance.
+  v2 retained receipt semantics are preserved and v3 policy inversions rejected.
+  No app, template, permissions, schema, shared execution engine or public command
+  was added. Existing workflows now distinguish bounded operator repair from
+  application verification recovery; the old limitation in that automated route
+  remains truthful. No architecture change needs a separate ADR. Registered
+  focused/integration checks, fresh checkpoint/publication and successor live
+  proof remain required; exploratory fixtures and recovered baseline do not
+  satisfy them. Verification inputs are now frozen for those checks.
+
+- Nov20 bounded failed-update recovery completed. The approved operator procedure
+  independently validated accepted custody/package, original failed execution,
+  prior stable root event, exact stack identity/template/non-image parameters,
+  original non-task resource identities and accepted running image. It retained
+  one exclusive request in `failed-update-recovery-intent.json`, submitted once,
+  then observed its exact token reach UPDATE_ROLLBACK_COMPLETE. Original
+  resource identities and accepted parameters/image were confirmed unchanged.
+  Safe completion: `.cache/test-runs/entity-smoke-successor.qbk90t/failed-update-recovery-completed.json`.
+  The reviewed operator script is `/tmp/nov20-owned-stack-recovery.py`; it reuses
+  the existing CLI, custody readers and immutable evidence writer. This is not
+  new-candidate acceptance or a new application/data health proof. No source
+  database mutation or deletion was selected.
+
+- Nov20 continuation authority: the user approved all necessary extensions to
+  complete this end-to-end proof, including the requested owned failed-update
+  recovery, controller correction, checked checkpoints/publication and fresh
+  execution. Account 337159794548, eu-west-1, entity-smoke only; retain source
+  data, source snapshots, accepted history and other scopes. Fresh STS and stack
+  reads confirmed the account and original UPDATE_FAILED state.
+
+  Bounded correction inventory: reuse shared change-set submission/reservations,
+  existing infrastructure controller, plan validator and coordinator; correct
+  DisableRollback only for successor update/restoration. Initial create/count-only
+  activation retain their existing policy. Accept UPDATE_ROLLBACK_COMPLETE as a
+  stable predecessor only alongside unchanged template/parameters/ownership.
+  Retain old v2 plan readers; emit v3 with explicit automatic provider rollback.
+  Existing deployment-control, infrastructure-route and ordinary-update fixtures
+  must reject disabled successor rollback, changed stable-state parameters,
+  nonterminal/failed recovery, stale plans and duplicate mutation submissions.
+  Finite existing failure codes remain the operational diagnostic interface;
+  no provider reason, endpoint or credential enters public reports. Record the
+  original failed attempt separately from recovery and a fresh qualified update.
+  The AWS workflow owns the bounded operator recovery; no parallel incident
+  deployment engine or revived retired executor is introduced. These tests and
+  live recovery are planned, not yet passed.
+
+- Nov20 live successor proof is blocked by a confirmed provider/controller
+  incompatibility, not complete. `execution-03.json` returned
+  `deployment-execution-not-successful` before the deploy stage completed.
+  Read-only CloudFormation observations show the exact update at
+  `2026-11-20T10:24:25.936Z` reached `UPDATE_FAILED` at
+  `2026-11-20T10:24:32.702Z`. All five task-definition failures matched the
+  fixed AWS reason that replacement updates are unsupported with disable-rollback;
+  raw reason/provider responses were not retained. The controller supplies
+  `DisableRollback=True` for the successor even though its reviewed plan
+  requires five immutable task-definition replacements. This is a controller
+  defect confirmed against AWS's stack-failure-options documentation:
+  https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stack-failure-options.html
+  The failed resource updates returned to their prior definitions, but the
+  stack itself remains failed. A separate read-only ECS observation confirmed
+  ACTIVE service, desired/running one, pending zero, definition bound to the
+  exact accepted `4a0b522f...` image and one RUNNING task using that same digest.
+  No candidate feature task, permission revoke, snapshot, restore or cleanup
+  step has started. No database mutation was selected by this image-only update.
+  Published candidate custody remains valid; no successor acceptance was written.
+
+  Existing ordinary recovery only admits a positively failed verification after
+  completed deployment. The AWS execution workflow explicitly excludes generic
+  failed-stack repair, so repeatedly resuming this terminal failure cannot finish
+  the proof. Required next decision: a bounded, owned failed-update recovery to
+  the positively verified accepted predecessor, and correction/qualification of
+  the successor rollback policy before a fresh separately identified update.
+  Preserve original reservations, source database/data/snapshots, other scopes
+  and staging. Do not delete/recreate the stack or blindly retry its change set.
+  No live process remains from the failed coordinator invocation.
+
+- Nov20 execution continuation: `execution-01.json` stopped before deployment
+  because the controller's explicit local selection had stale preparation
+  context. Retained report
+  `.cache/test-runs/20261120T101041Z-c44ef210bf31492d9e2a64676fc622f9/report.json`
+  identifies that condition. Refreshed the existing private selector context for
+  its exact checks; subsequent local report
+  `.cache/test-runs/20261120T101449Z-9c8af165d51a445fab7e7c50eb42cafc/report.json`
+  passed all four selected entries. No source/image/approval change.
+  `execution-02.json` returned pending on the one reserved update change set.
+  The retained plan has zero additions, one modification, five task-definition
+  replacements, desired count one and no database/schema/source replacement.
+  `execution-03.json` continues owner-defined reconciliation of that reservation.
+  Release cache: `.cache/entity-smoke-live/entity-smoke-8f76ed3480e85d60fb60f547/releases/b1f6dd37f2a81edf91ddd79a2bf5af19d6f5cb32139bca644f443ba558a31fea`.
+  Pending is not acceptance and does not authorize another change-set submission.
+
+- Nov20 live release boundary reviewed under the user's recorded end-to-end
+  authority. Publication `44714881596` completed successfully; custody validator
+  passed for source `cbc5a75fedffd341017b540b1501db5312870bf5` and image
+  `sha256:129bb50b1cf3f8ca3fabfd4427ca218a84f39c7fe8e592dbb4f7c81611e8affd`.
+  Read-only planner passed. Derived approval binding:
+  `sha256:140d4335d87a317b05f9f3112e8bc6f7e2b325d90822566eb2635d0d251aabfc`.
+  Account/region/scope and exact accepted predecessor match the approved chain.
+  The declared successor update, existing feature tests, bounded role
+  revoke/restore, one server replacement, one source snapshot, eight-resource
+  isolated restore/read/owned-cleanup and final original read remain in scope.
+  Source database/schema/data/original record/source snapshots/other scopes stay
+  protected; failure recovery is the exact accepted predecessor only. Individual
+  controllers still validate fresh concrete plans and retain no-replay evidence.
+  Inputs, safe receipt and release plan are under
+  `.cache/test-runs/entity-smoke-successor.qbk90t/`.
+  This binds existing user authority; it is not a claim the user saw this hash.
+
+- Nov20 corrected publication dispatched: source
+  `cbc5a75fedffd341017b540b1501db5312870bf5`, task fix `29a4c6df`.
+  Clean-checkout composition passed after existing preparation, confirming the
+  reproduced context failure. Commit gate and promotion gate passed; promotion
+  had 55 passed and 13 later-stage checks deferred. Exact clean integration
+  package/declaration checks and final pre-push eligibility passed. Normal
+  fast-forward of remote main from `54fabe7a` to `cbc5a75f` was confirmed by
+  fetch. Publication run `44714881596` is queued for that exact source; the
+  failed earlier run remains retained. Do not claim publication, candidate
+  qualification or successor acceptance until their terminal evidence exists.
+  Keep this HEAD fixed through proof; session notes remain bookkeeping only.
+
 - Nov20 publication run `44709273891` failed before image build/publication:
   the package builder invoked the composition aggregate without preparing its
   required task context. Reproduced in the clean integration checkout with
