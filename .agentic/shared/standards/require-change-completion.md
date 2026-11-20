@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 13
+version: 14
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-15"
+updated_on: "2026-11-20"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -12,6 +12,8 @@ kind: standard
 purpose: Require connected implementation, proportionate authorized verification and honest completion evidence across layers.
 portability: { class: reusable, targets: [entity-builder] }
 used_by:
+- id: repo.agents
+  path: AGENTS.md
 - id: shared.workflows.change-shared-process
   path: .agentic/shared/workflows/change-shared-process.md
 -->
@@ -31,6 +33,59 @@ For README additions or edits, follow the
 [readable-README standard](require-readable-readmes.md) using the
 [README-writing skill](../skills/write-readme.md). Keep the task's scope and
 verification proportionate; this does not require unrelated documentation work.
+
+## Execution continuity and final-response checklist
+
+<!-- deterministic-check: allow reason="matching user intent, remaining work and genuine blockers requires judgment; repository checks do not intercept the client's final-response event" -->
+For an authorized execution task, continue until the requested outcome and its
+required verification are complete. Do not issue a final response while an
+authorized, actionable step remains. Use intermediate updates for progress;
+a checkpoint, passing stage or running command is not task completion.
+Monitor required commands and delegated work through terminal results, inspect
+those results, and take the next authorized step without another user prompt.
+Use bounded waits so progress remains visible. A process identifier or a running
+check is not an autonomous continuation of the whole task.
+
+Before issuing a final response, review the existing task/session record:
+
+- The user's requested outcome is supported by the required evidence, not just
+  a plan, an agent's completion claim or a successful earlier stage.
+- No required operation is still running or has an unread terminal result;
+  failures and uncertain effects have been resolved through their owning flow.
+- No required authorized step is left as a recommendation for the user to ask
+  for again. Additional unrelated improvements are not completion requirements.
+- If work is incomplete, an actual external blocker needs user input, access,
+  authority or a governance decision after safe in-scope alternatives and
+  independent authorized work have been exhausted. Name the attempted checks,
+  exact blocker, remaining work and any processes still running. Do not report
+  completion or imply background continuation.
+
+An explicit user pause, cancellation or replacement of the task takes precedence.
+An explanatory/status request does not itself authorize new mutations; answer it
+without treating it as cancellation of an already-authorized task. Platform
+interruptions and enforced limits are not voluntary completion: preserve state
+when possible and reconcile it on resumption. This rule neither expands task
+authority nor overrides safety gates, explicit proof deferrals or goal controls.
+
+Carry the original task, acceptance criteria, authority, evidence references,
+pending process/run identifiers and next incomplete step through existing
+session logs, delegation handoffs and compaction. Resume from that state rather
+than ending at the handoff or replaying an uncertain operation. Do not create a
+parallel task registry. Do not create or resume a persistent goal without the
+required user instruction; a paused goal is not active continuation. Claim that
+work will continue after a final response only when the user requested that
+handoff and the actual continuation mechanism and its covered steps are verified.
+
+### Enforcement boundary
+
+This checklist governs agent behavior; prose and commit checks cannot themselves
+prevent a client from accepting a final response. A mechanical completion guard
+requires a supported, active client hook plus evidence-backed task-state checks.
+Neither an agent-written `done` flag nor always repeating a prompt proves task
+completion. Any such guard must honor user stop/pause, genuine blockers and
+platform limits, and be tested through the actual client before being described
+as enforced. Reuse existing task/evidence and goal mechanisms rather than adding
+another scheduler. Record missing wiring honestly; do not imply it is installed.
 
 ## Reuse, simplicity and normal delivery
 

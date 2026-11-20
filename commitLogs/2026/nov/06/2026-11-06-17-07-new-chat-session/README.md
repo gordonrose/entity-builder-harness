@@ -59,6 +59,53 @@ below are historical incident records, not the current acceptance verdict.
 
 ## Session Log
 
+- Nov20 live delivery resumed: user explicitly requested completion of the
+  end-to-end proof after the continuity correction. Carry the recorded push,
+  publication and bounded successor-requalification authority forward for
+  `kanbien-core-platform/entity-smoke`, account `337159794548`, `eu-west-1`.
+  Include the five reviewed continuity-rule files in a checked source checkpoint;
+  qualify and publish that exact source, then review/bind the generated release
+  boundary and execute through the existing ordinary-update coordinator.
+  Preserve the accepted predecessor, original record, source database/snapshots,
+  other scopes and staging. Only declared positively owned restore-clone cleanup
+  after successful readback is included. No force push, permission expansion,
+  initial bootstrap replay or generic stack repair. Generated plan hashes are
+  agent-reviewed bindings to this authority, not hashes previously seen by the
+  user. No new persistent goal is created or paused goal silently resumed.
+
+- Nov20 execution-continuity correction: user requested implementation of the
+  rule against voluntarily ending an authorized task before completion. Bounded
+  inventory: reuse shared `require-change-completion.md` for the rule and inline
+  final-response checklist; route execution tasks from AGENTS without adding
+  lines; reference the checklist from `change-shared-process.md`; reconcile the
+  before-commit compaction instruction so checkpoint/handoff is not an implicit
+  stop. No standalone completion checklist or handoff owner was found in the
+  inspected shared/chat workflows, so no parallel artifact family is added.
+  No runtime code, diagnostic producer, deployment change or ADR is needed.
+  Self-review cases: pending test, unread successful result with deployment
+  remaining, and recoverable failure require continuation; completed requested
+  scope permits final response; exhausted external blocker permits an explicit
+  incomplete report; user pause/replacement and platform limits remain binding.
+  These are instruction-review cases, not executable agent-compliance tests.
+  Mechanism inventory: repo `.codex` contains script permission rules but no
+  configured Stop hook or task-completion validator. Existing goal inspection
+  returned paused; this task neither resumes nor replaces it. Official Codex
+  hooks documentation reviewed Nov20 (`https://learn.chatgpt.com/docs/hooks`)
+  describes synchronous Stop continuation and separately trusted hook loading;
+  it does not establish an active hook in this client. No hook, scheduler,
+  transcript parser or agent-written completion flag is introduced. Mechanical
+  prevention of premature final responses remains unimplemented, not claimed.
+  Verification: preparation passed (three metadata headers, process drift and
+  governed-command drift); eleven local Markdown links/anchors and whitespace
+  checks passed. Development selection deferred all three affected regressions
+  with no findings, so it was not counted as an executed pass. Explicit existing
+  bootstrap and portability regressions then both executed and passed:
+  `.cache/test-runs/20261120T084403Z-5f0f9fe379d84f00ad446b5245d271ef/report.json`.
+  Repository-contract integration regression remains deferred; no executable
+  selection/controller change was made. Changes remain uncommitted. Full
+  deployment proof is outside this harness-correction task and remains pending
+  separately; no command or agent is continuing that deployment in background.
+
 - Nov19 end-to-end authority correction: user approved pushing/publishing the
   verified checkpoint, then explicitly requested a harness rule that an
   end-to-end live-deployment instruction must not trigger repeated approval

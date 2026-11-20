@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.checklists.before-commit
-  version: 2
+  version: 3
   status: active
   created_on: "2026-06-15"
-  updated_on: "2026-11-19"
+  updated_on: "2026-11-20"
   layer: 00.chat
   domain: git
   disciplines:
@@ -210,9 +210,13 @@ This commit must contain only the current chat session log and no other paths.
 Stop and ask if any other path is staged, unstaged, or would be committed.
 
 If continuing the same chat into another implementation phase after the
-bookkeeping checkpoint, run `/compact` so Codex carries forward the commit
-summary, decisions, unresolved issues, and context hygiene instead of raw
-intermediate output.
+bookkeeping checkpoint, use the client's available compaction mechanism when
+needed. Carry forward the original task and authority, commit summary, required
+verification, unresolved issues, pending process/run identifiers and next
+incomplete step instead of raw intermediate output. Compaction preserves the
+ongoing task; it is not a completion boundary or a reason to wait for another
+user prompt. If compaction is unavailable, continue with the existing session
+record rather than pretending to invoke a client command.
 
 ## Approval
 
