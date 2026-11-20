@@ -16,7 +16,7 @@ latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
 latest_commit_at_utc: 2026-11-20T08:52:41Z
-latest_commit_sha: HEAD
+latest_commit_sha: 8467c25ac44ae7c4e383ee508177f50e712ab81e
 chat_duration: 1179934s (13:15:45:34)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
@@ -58,6 +58,15 @@ The other baselines and staging were not retired. Earlier incomplete-status note
 below are historical incident records, not the current acceptance verdict.
 
 ## Session Log
+
+- Nov20 promotion gate passed for `872fcca1c3af712200e7268634858f8dd81e602a`:
+  137 passed (134 matching results reused, three executed), 21 later-stage
+  checks deferred; report
+  `.cache/test-runs/20261120T091130Z-69ffaa8fd3414624b8114d3bf69330e4/report.json`.
+  Record the actual task commit `8467c25a` rather than the recorder's literal
+  `HEAD` argument. This bookkeeping correction changes no verification or
+  deployment inputs. Preserve the checked result and revalidate exact promotion
+  source after its narrow session checkpoint.
 
 - Nov20 live delivery resumed: user explicitly requested completion of the
   end-to-end proof after the continuity correction. Carry the recorded push,
@@ -3194,7 +3203,7 @@ ADR impact: No ADR: existing completion policy clarified without a new execution
   ADR impact: Clarifies existing bounded release approval; no new architecture ADR.
 
 
-- Commit: `HEAD`
+- Commit: `8467c25ac44ae7c4e383ee508177f50e712ab81e`
   Time UTC: 2026-11-20T08:52:41Z
   Message: fix(harness): require execution continuity through task completion
   Summary: Codified execution continuity and final-response checks; reconciled checkpoint handoff; structural and focused portability checks plus staged gate passed. End-to-end entity-smoke delivery remains authorized and in progress.
@@ -3214,7 +3223,7 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 
 Raised at UTC: 2026-11-06T17:07:07Z
 Latest commit at UTC: 2026-11-20T08:52:41Z
-Latest commit SHA: HEAD
+Latest commit SHA: 8467c25ac44ae7c4e383ee508177f50e712ab81e
 Chat duration: 1179934s (13:15:45:34)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
