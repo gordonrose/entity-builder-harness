@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -72,6 +72,7 @@ safe_command_diagnostic ENTITY_SMOKE_IMAGE_DIAGNOSTICS_NOT_CONFIRMED package 'Th
   bash scripts/repo/diagnostic-coverage/verify.sh --unit catalog
 safe_command_diagnostic ENTITY_SMOKE_IMAGE_FEATURE_NOT_CONFIRMED package 'The feature contract and use-case checks failed.' 'Correct the feature before image qualification.' -- \
   npm --ignore-scripts run app:entity-smoke:check
+bash scripts/repo/check-selection/script.sh --checks entity-smoke-composition --task-paths infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml --record-preparation --json
 safe_command_diagnostic ENTITY_SMOKE_IMAGE_COMPOSITION_FAILED package 'The isolated feature composition failed.' 'Correct the local wiring before image qualification.' -- \
   bash scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
 if ! command -v docker >/dev/null 2>&1 || ! timeout 30 docker info >/dev/null 2>&1; then

@@ -59,6 +59,34 @@ below are historical incident records, not the current acceptance verdict.
 
 ## Session Log
 
+- Nov20 publication run `44709273891` failed before image build/publication:
+  the package builder invoked the composition aggregate without preparing its
+  required task context. Reproduced in the clean integration checkout with
+  `verification-task-context-required` and `verification-task-context-stale`;
+  local cached preparation had hidden this missing connection. The existing
+  selector preparation command succeeds there. Bounded correction: connect that
+  existing command in the feature builder, update its protected workflow body,
+  and extend the actual-builder fixture for ordering, exact arguments, preserved
+  preparation failure and withheld Docker execution. No extra runner/helper,
+  registry or relaxed test gate. Persistence's direct composition is unaffected.
+  Review the actual builder, workflow validator and existing caller tests;
+  preparation retains the selector's finite structured reasons instead of hiding
+  them in the generic composition wrapper. Other diagnostic debt remains partial.
+  No AWS workload mutation occurred; failed run evidence is retained.
+
+- Nov20 remote promotion completed: normal fast-forward of `origin/main` from
+  `96b755b9` to `54fabe7a52a614ad727392814d3db9f93fb688ab`, confirmed by fetch and
+  the remote API. Exact-source eligibility passed, as did package and declaration
+  checks in the clean governed integration worktree
+  `/tmp/agentic-remote-promotions/chat_2026-11-06-17-07-new-chat-session-20261120T091341Z-15005`.
+  Existing publication workflow dispatched once for that main source: GitHub
+  Actions run `44709273891`. Its pending `kanbien-core-platform` environment
+  reported `current_user_can_approve: true`; the recorded user publication
+  authority was applied to that exact gate, without bypassing protection or
+  changing its configuration. The job entered `in_progress`. Retain
+  HEAD at this qualified publication identity while collecting subsequent
+  evidence; session bookkeeping is not another source checkpoint mid-proof.
+
 - Nov20 promotion gate passed for `872fcca1c3af712200e7268634858f8dd81e602a`:
   137 passed (134 matching results reused, three executed), 21 later-stage
   checks deferred; report

@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -81,6 +81,15 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-workflow-") as temporary:
     assert CONTROL.inspect(original, builder=builder) == []
     builder.write_text("set +e\n" + (CONTROL.ROOT / CONTROL.BUILD).read_text())
     assert CONTROL.inspect(original, builder=builder) == ["entity-smoke-publication-contract-invalid"]
+    source = (CONTROL.ROOT / CONTROL.BUILD).read_text()
+    preparation = next(line for line in source.splitlines() if line.startswith('bash scripts/repo/check-selection/script.sh '))
+    for altered in (
+        source.replace(preparation + '\n', ''),
+        source.replace(preparation, preparation + ' || true'),
+        source.replace(preparation + '\n', '') + '\n' + preparation + '\n',
+    ):
+        builder.write_text(altered)
+        assert CONTROL.inspect(original, builder=builder) == ['entity-smoke-publication-contract-invalid']
     smoke = Path(temporary) / "smoke.sh"
     smoke.write_text((CONTROL.ROOT / CONTROL.SMOKE).read_text().replace("node scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/verify-image.mjs", "true # node"))
     assert CONTROL.inspect(original, smoke=smoke) == ["entity-smoke-publication-contract-invalid"]

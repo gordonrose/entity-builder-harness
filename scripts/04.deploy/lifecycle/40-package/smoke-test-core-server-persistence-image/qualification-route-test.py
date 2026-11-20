@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-20"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -97,6 +97,13 @@ set -e
 command_path="$1"
 shift
 printf '%s\\n' "$command_path" >> "$QUAL_CALLS"
+if [[ "$command_path" == scripts/repo/check-selection/script.sh ]]; then
+  printf '%s\\0' "$@" > "$QUAL_PREPARATION_ARGS"
+  if [[ "$command_path" == "$QUAL_FAIL" ]]; then
+    printf '%s\\n' '{"verdict":"gap","findings":[{"code":"verification-task-context-invalid"}]}'
+    exit 23
+  fi
+fi
 if [[ "$command_path" == "$QUAL_FAIL" ]]; then exit 23; fi
 if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path" "$@"; fi
 ''')
@@ -194,7 +201,10 @@ if [[ "docker:$1" == "$QUAL_FAIL" ]]; then printf 'build-provider-canary\\n' >&2
         'scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh',
         'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',
     ]
+    preparation_args = fixture / 'preparation-args'
+    environment['QUAL_PREPARATION_ARGS'] = str(preparation_args)
     feature_checks = shared + ['scripts/repo/diagnostic-coverage/verify.sh', 'npm:--ignore-scripts run app:entity-smoke:check',
+                               'scripts/repo/check-selection/script.sh',
                                'scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh']
     for rejected in ('', *feature_checks, 'docker:info', 'docker:build'):
         calls.write_text(''); head_count.unlink(missing_ok=True); docker_args.unlink(missing_ok=True)
@@ -204,6 +214,10 @@ if [[ "docker:$1" == "$QUAL_FAIL" ]]; then printf 'build-provider-canary\\n' >&2
         if not rejected:
             assert result.returncode == 0, result.stderr
             assert executed == feature_checks + ['timeout:30', 'docker:info', 'docker:build'], executed
+            assert preparation_args.read_bytes().decode().split('\0')[:-1] == [
+                '--checks', 'entity-smoke-composition', '--task-paths',
+                'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml',
+                '--record-preparation', '--json']
             assert head_count.read_text().strip() == '1'
             assert result.stdout.strip() == 'ENTITY_SMOKE_LOCAL_IMAGE_BUILT_NOT_QUALIFIED'
             assert docker_args.read_bytes().decode().split('\0')[:-1] == [
@@ -214,6 +228,10 @@ if [[ "docker:$1" == "$QUAL_FAIL" ]]; then printf 'build-provider-canary\\n' >&2
         else:
             assert result.returncode != 0 and executed[-1] == rejected, (rejected, executed)
             assert not docker_args.exists() and 'BUILT_NOT_QUALIFIED' not in result.stdout
+            if rejected == 'scripts/repo/check-selection/script.sh':
+                assert result.returncode == 23
+                assert result.stdout.strip() == '{"verdict":"gap","findings":[{"code":"verification-task-context-invalid"}]}'
+                assert result.stderr == ''
             if rejected == 'docker:build':
                 assert 'DIAGNOSTIC_CODE=ENTITY_SMOKE_IMAGE_BUILD_FAILED' in result.stderr and 'build-provider-canary' not in result.stderr
     for args, extra, code in (
