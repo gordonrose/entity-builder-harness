@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -72,7 +72,7 @@ class Provider(C.Provider):
 def prepare(args, provider, *, source_proof=True):
     value = D.source(args, provider, source_proof=source_proof, require_terminal_jobs=False)
     deployed = D.deployment(value, args, provider)
-    child = D.reader_context(value, deployed)
+    child = D.reader_context(value, deployed, provider)
     inspected = D.BINDING.inspect(C, TASK.BINDING, D.RESTORE, provider, value["restore_binding"], value["restore_parameters"], deployed["result"]["facts"], child["checked"]["subnets"])
     require(inspected["binding"] == child["binding"] and all(inspected["checked"][key] == child["checked"][key] for key in child["checked"]), "restore-reader-child-binding-mismatch")
     child["checked"] = inspected["checked"]
@@ -89,6 +89,8 @@ def prepare(args, provider, *, source_proof=True):
             "task_binding_sha256": C.DEPLOY.fingerprint(child["checked"]), "parent_deployment_sha256": C.digest_file(child["cache"] / "restore-deploy-receipt.json"),
             "history_sha256": C.digest_file(child["cache"] / "credential-history.json"), "snapshot_sha256": C.digest_file(child["cache"] / "snapshot-receipt.json"),
             "package_custody_reference": child["custody"]["receipt_reference"], "task_count": 1, "source_mutation": False, "scope_acceptance": False, "automatic_retry": False}
+    if "failed_observation_sha256" in child:
+        safe["failed_observation_sha256"] = child["failed_observation_sha256"]
     digest = C.DEPLOY.fingerprint(safe)
     path = child["cache"] / "restore-reader-plans" / (digest.removeprefix("sha256:") + ".json")
     if not C.RESOURCE.write_exclusive(path, safe): require(C.read_json(path) == safe, "restore-reader-plan-retention-conflict")

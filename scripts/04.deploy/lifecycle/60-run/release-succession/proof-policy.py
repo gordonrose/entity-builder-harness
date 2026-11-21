@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-11-19"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -37,6 +37,29 @@ def observation_expired(stopped_at, current_time, timestamp):
 def observation_renewal_id(original):
     """One deterministic replacement identity, never an unbounded retry count."""
     return hashlib.sha256((original + ":preflight-renewal-1").encode()).hexdigest()[:24]
+
+
+def failed_observation_id(original, terminal, expected, *, dependent_reserved):
+    """One replacement of a checked failed read-only observation, never replay.
+
+    The provider owner validates the original journal, terminal evidence and
+    read-only request before supplying these bindings. A success, uncertain
+    outcome, different identity or already-started dependent work cannot enter.
+    The caller always supplies the original identity, not the replacement.
+    """
+    require(isinstance(original, str) and bool(original)
+        and isinstance(terminal, dict) and isinstance(expected, dict)
+        and set(expected) == {"operation_id", "request_sha256", "source_revision",
+            "image_digest", "workload", "operation", "proof_label_sha256"}
+        and set(terminal) == set(expected) | {"task_arn", "task_definition", "exit_code", "stopped_at", "failure_basis"}
+        and all(isinstance(value, str) and value and terminal.get(key) == value
+                for key, value in expected.items())
+        and expected["operation"] in {"preflight", "ready"}
+        and type(terminal.get("exit_code")) is int and terminal["exit_code"] != 0
+        and terminal.get("failure_basis") in {"validated-failure-report", "nonzero-exit"},
+        "observation-recovery-terminal-required")
+    require(dependent_reserved is False, "observation-recovery-dependent-already-reserved")
+    return hashlib.sha256((original + ":terminal-observation-recovery-1").encode()).hexdigest()[:24]
 
 
 class PolicyFailure(ValueError):

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -101,7 +101,7 @@ def reconcile(route, context, args):
     route.RUNNER.CONTROL.no_symlinks(companion)
     if not step.is_file() or not companion.is_file(): return None
     packet = route.STEPS.observe_packet(route, context, args, context["provider"], historical=True)
-    controller = C.TRANSITION.controller(packet, C.read_json(companion), context["artifact"])
+    controller = route.COMPLETION.controller_for(route, packet, C.read_json(companion), context["artifact"])
     plan = {**context["report"]["plan"], "controller_sha256": controller}
     require(C.DEPLOY.fingerprint(plan) == packet["plan_sha256"], "history-original-plan-not-confirmed")
     original = {**context, "artifact": controller,
@@ -125,7 +125,7 @@ def validate(route, context, args, value):
             and value["schema"] == SCHEMA and value["current_readiness"] is False and value["scope_acceptance"] is False, "history-packet-invalid")
     selected = SimpleNamespace(**{**vars(args), "proof_stage": "credential-recovery", "workload": "database-proof", "operation": "permissions", "phase": "operation"})
     step = route.STEPS.path(context, selected)
-    controller = C.TRANSITION.controller(C.read_json(step), C.read_json(route.COMPLETION.path(step)), C.source_digest())
+    controller = route.COMPLETION.controller_for(route, C.read_json(step), C.read_json(route.COMPLETION.path(step)), context["artifact"])
     require(value["binding"] == {**context["binding"], "record_digest": args.expected_digest} and value["controller_sha256"] == controller, "history-source-or-binding-mismatch")
     plan, references, prerequisites = value["plan"], value["references"], value["prerequisites"]
     require(isinstance(plan, dict) and value["plan_sha256"] == C.DEPLOY.fingerprint(plan) and plan.get("binding") == context["binding"]

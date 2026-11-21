@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -93,6 +93,8 @@ def key(args, delivery=None):
 def path(context, args):
     suffix = "" if stage(args) == "baseline" else "-" + stage(args)
     if not context.get("delivery"): suffix += TRANSITION.preflight_step_suffix(args)
+    if args.phase == "preflight" and context.get("failed_observation_sha256"):
+        suffix += "-terminal-observation-recovery-1"
     if renewed(args): suffix += "-preflight-renewal-1"
     if stage(args) == "activation":
         generation = activation_generation(args)

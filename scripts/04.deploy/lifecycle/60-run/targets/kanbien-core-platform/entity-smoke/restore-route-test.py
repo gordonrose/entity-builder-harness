@@ -5,7 +5,7 @@
 #   version: 6
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -176,9 +176,12 @@ def run(case, snapshot_args, S, T, canary):
             for phase in ("preflight", "operation"):
                 selected = reader_args(phase)
                 planned(Y, selected); selected.mode = "execute"
+                before_launch = len(original_transport.jobs.remote)
                 original_transport.jobs.lost_next = True
                 fails(lambda: Y.run(selected, provider(Y)), "task-submission-uncertain-reconcile-required")
+                assert len(original_transport.jobs.remote) == before_launch + 1, "fresh reservation passes its own guard exactly once"
                 assert Y.run(selected, provider(Y))["verdict"] == "completed"
+                assert len(original_transport.jobs.remote) == before_launch + 1, "lost-response reconciliation never launches again"
             captured = D.reader(value, root_args, provider(D))
             assert captured["step"]["receipt"]["result"]["record_digest"] == snapshot_args.expected_digest
             assert captured["context"]["binding"]["dependency_incarnation_sha256"] != case.binding["dependency_incarnation_sha256"]
@@ -375,6 +378,52 @@ def run(case, snapshot_args, S, T, canary):
     wrong_clone = {**new_context, "binding": {**new_context["binding"], "dependency_incarnation_sha256": "sha256:" + "0" * 64}}
     fails(lambda: C.TRANSITION.restore_reader_preflight(C, wrong_clone, new_context["deployed"], original_request["proof_label"]), "restore-reader-recovery-original-request-mismatch")
     assert len(original_transport.jobs.remote) == before_jobs + 1
+    # Exercise the replacement shared policy and provider adapter without any
+    # incident pins, then drive their selected label through the real runner,
+    # lost-response reconciliation, reader and cleanup consumers below.
+    generic_child = {**failed_context, "report": {"plan": {"preflight_label": original_request["proof_label"]}}}
+    original_status = original_task["lastStatus"]
+    original_task["lastStatus"] = "RUNNING"
+    try: fails(lambda: D.reader_recovery(generic_child, new_context["deployed"], original_request["proof_label"], provider(Y)), "restore-reader-recovery-terminal-required")
+    finally: original_task["lastStatus"] = original_status
+    generic_label = D.reader_recovery(generic_child, new_context["deployed"], original_request["proof_label"], provider(Y))
+    generic_path = value["cache"] / "task-receipts" / (original_reservation["operation_id"] + "-failed-observation.json")
+    generic_bytes = generic_path.read_bytes()
+    generic = C.read_json(generic_path)
+    assert generic["report"] == T.RUNNER.EVIDENCE.failure_report(observed_failure)
+    assert generic_label != original_request["proof_label"]
+    assert canary not in generic_bytes.decode()
+    assert D.reader_recovery(generic_child, new_context["deployed"], original_request["proof_label"]) == generic_label
+    for mutate, code in (
+        (lambda item: item.update(parent_sha256="sha256:" + "0" * 64), "restore-reader-recovery-evidence-changed"),
+        (lambda item: item["terminal"].update(exit_code=0), "observation-recovery-terminal-required"),
+        (lambda item: item["terminal"].update(request_sha256="0" * 64), "observation-recovery-terminal-required"),
+        (lambda item: item["terminal"].update(operation="restore-read"), "observation-recovery-terminal-required")):
+        changed = copy.deepcopy(generic); mutate(changed)
+        generic_path.write_bytes(C.RESOURCE.CONTROL.canonical(changed) + b"\n")
+        try: fails(lambda: D.reader_recovery(generic_child, new_context["deployed"], original_request["proof_label"]), code)
+        finally: generic_path.write_bytes(generic_bytes)
+    dependency = reader_args("operation")
+    dependency_request = T.STEPS.request(T.dependencies(), generic_child, dependency)
+    dependency_store = T.RUNNER.CONTROL.AttemptStore(value["cache"] / "task-attempts")
+    dependency_store.reserve(T.STEPS.key(dependency), dependency_request)
+    try: fails(lambda: D.reader_recovery(generic_child, new_context["deployed"], original_request["proof_label"]), "observation-recovery-dependent-already-reserved")
+    finally: dependency_store.path_for(T.STEPS.key(dependency), dependency_request).unlink()
+    real_context = D.reader_context
+    def generic_context(context, deployed, provider=None):
+        with patch.object(C.TRANSITION, "restore_reader_preflight", return_value=original_request["proof_label"]):
+            child = real_context(context, deployed)
+        child["report"]["plan"]["preflight_label"] = original_request["proof_label"]
+        child["report"]["plan"]["preflight_label"] = D.reader_recovery(child, deployed, original_request["proof_label"], provider)
+        return child
+    D.reader_context = generic_context
+    # Historical control custody delegates to existing Git verification, never
+    # silently treats any old hash as today's source or changes receipt bytes.
+    prior_plan = C.read_json(value["cache"] / "restore-deploy-receipt.json")["packet"]["plan"]
+    with patch.object(C, "retained_controller", return_value=prior_plan["controller_sha256"]) as checked_controller:
+        assert C.CONTROL_COMPLETION.checked_controller(C, "restore-deployment", "sha256:" + "0" * 64,
+            prior_plan, "sha256:" + "e" * 64, allow_history=True) == prior_plan["controller_sha256"]
+        checked_controller.assert_called_once_with({"plan": prior_plan, "binding": prior_plan["binding"]}, "sha256:" + "e" * 64)
     probe_args = reader_args("preflight")
     planned(Y, probe_args); probe_args.mode = "execute"; original_transport.jobs.lost_next = True
     fails(lambda: Y.run(probe_args, provider(Y)), "task-submission-uncertain-reconcile-required")
@@ -411,7 +460,7 @@ def run(case, snapshot_args, S, T, canary):
     task_pins = {}
     for selected_phase in ("preflight", "operation"):
         selected_args = reader_args(selected_phase)
-        step_path = T.STEPS.path(value, selected_args)
+        step_path = T.STEPS.path(recovered_context, selected_args)
         step = C.read_json(step_path); completion = C.read_json(T.COMPLETION.path(step_path))
         task_pins[C.TRANSITION.document(step)] = (C.TRANSITION.document(completion), value["artifact"][7:])
     C.CONTROL_COMPLETION.REPAIRS.update(pins)
@@ -615,6 +664,14 @@ def run(case, snapshot_args, S, T, canary):
                 assert archived["collection_binding"] == collection_binding
                 archives[name][phase] = archived
                 if name == "restore-read":
+                    assert archived["observation_recovery"]["failure"] == generic
+                    forged = copy.deepcopy(archived)
+                    forged["observation_recovery"]["failure"]["terminal"]["exit_code"] = 0
+                    forged["observation_recovery"]["plan"]["failed_observation_sha256"] = K.A.document_digest(forged["observation_recovery"]["failure"])
+                    forged["packet"]["plan_sha256"] = K.A.digest(forged["observation_recovery"]["plan"])
+                    try: K.A.recovered_observation_label(forged, archived["packet"]["reservation"]["request"], original_request["proof_label"])
+                    except K.A.EvidenceFailure as failure: assert failure.code == "observation-recovery-terminal-required"
+                    else: raise AssertionError("rehashed successful or uncertain observation cannot become failure-recovery authority")
                     pin = C.TRANSITION.document(archived["packet"])
                     previous_pin = C.TRANSITION.CONTROLLER_REPAIR_PINS.get(pin)
                     C.TRANSITION.CONTROLLER_REPAIR_PINS[pin] = (C.TRANSITION.document(archived["completion"]), archived["controller_sha256"][7:])

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-20T19:20:38Z
-latest_commit_sha: 693e911f
-chat_duration: 1217611s (14:02:13:31)
+latest_commit_at_utc: 2026-11-20T20:16:08Z
+latest_commit_sha: 34350813
+chat_duration: 1220941s (14:03:09:01)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3094,6 +3094,17 @@ Summary: Checked controller-only repair; focused and integration verification pa
 
 ADR impact: No new ADR: repair of existing recovery and evidence owners.
 
+
+### 2026-11-20T20:16:08Z - Commit recorded
+
+Commit: `34350813`
+
+Message: docs(deploy): bound supervised unsubmitted replacement recovery
+
+Summary: Checked bounded operator rule; local procedure fault cases passed. Replacement still awaits actual submission and completion.
+
+ADR impact: No new ADR: supervised recovery of the existing approved operation, not a new executor.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3416,6 +3427,13 @@ ADR impact: No new ADR: repair of existing recovery and evidence owners.
   Summary: Checked controller-only repair; focused and integration verification passed. Live restoration and remaining proof still pending.
   ADR impact: No new ADR: repair of existing recovery and evidence owners.
 
+
+- Commit: `34350813`
+  Time UTC: 2026-11-20T20:16:08Z
+  Message: docs(deploy): bound supervised unsubmitted replacement recovery
+  Summary: Checked bounded operator rule; local procedure fault cases passed. Replacement still awaits actual submission and completion.
+  ADR impact: No new ADR: supervised recovery of the existing approved operation, not a new executor.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3429,9 +3447,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-20T19:20:38Z
-Latest commit SHA: 693e911f
-Chat duration: 1217611s (14:02:13:31)
+Latest commit at UTC: 2026-11-20T20:16:08Z
+Latest commit SHA: 34350813
+Chat duration: 1220941s (14:03:09:01)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -7313,3 +7331,250 @@ and fault-injection coverage remain remediation work, and this live run cannot
 be represented as unattended delivery or a ten-minute success. The current
 worktree source stays frozen; apply proportionate process/metadata checks to
 the single rule change, then continue the already-approved functional proof.
+
+The first operator invocation exceeded the controller's 900-second local-check
+wrapper before AWS effects. Direct execution of the same registered selection
+then passed all four checks in
+`.cache/test-runs/20261120T203332Z-11b31fc33e72488a8d4dbe5f05e88f9e/report.json`:
+three completed matching child receipts were reused and the aggregate executed.
+No timeout or required check was waived.
+
+The next invocation passed live preparation but failed local intent serialization:
+`GateBook.validate` returns a Path, not the dictionary used by my initial stub.
+This was an operator-procedure defect, not an AWS failure. The exclusive writer
+had opened a zero-byte file before JSON serialization; the following native
+StopTask call was never reached. Preserve that file at
+`credential-replacement-operator-intent.json` (empty SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`)
+and failed report `/tmp/nov20-operator-replacement-execute-2.json` (SHA-256
+`129969b0b20a74d03a1070f37ffe80afac59d414723ce8f30b7f78690db65dd1`).
+There is no valid retained operator intent or provider submission from this
+attempt; the conservative `unknown-reconcile-original-only` wrapper response
+reflects file existence, not an invoked AWS command. Supervised call ordering
+and the serialization exception establish the narrower pre-dispatch failure.
+
+Correct the private procedure to encode the gate's relative path/hash and fully
+serialize before opening an intent. Its one fixed confirmed-intent path is
+`credential-replacement-operator-intent-confirmed.json`; it requires the exact
+empty failed artifact/report above and binds both in the valid intent. A
+nonempty failed artifact, unknown outcome or existing confirmed intent cannot
+authorize another stop. No original evidence is deleted or overwritten.
+The revised local tests use the real Path return type and JSON serialization,
+including valid dispatch and ten rejection/no-replay cases; they passed without
+AWS calls. This remains supervised completion of the original known-unsubmitted
+stop, not an added replacement or an automated recovery claim.
+
+After the WSL crash, the user requested completion of the full end-to-end proof.
+Reconciliation found the original task still RUNNING/HEALTHY, the failed empty
+intent preserved, and no confirmed operator intent. Temporary operator files
+were lost; the original not-started failure and reservation survived in the
+private proof directory. Reconstructed the same supervised procedure using the
+existing preparation/gate owners, the fixed confirmed-intent path, and native
+single-attempt StopTask. Disposable tests exercised actual Path serialization,
+exclusive intent before dispatch and refusal to submit with an existing intent.
+The required local selection passed, then fresh source/package/configuration,
+identity/permission/service/task checks matched the original plan `4b55227f`.
+AWS accepted StopTask for original task `336ea82ab86641e495223f14b3f82348`
+with original reason `es-9f25ce32e7d041818568993eca837116`; the response showed
+DEACTIVATING, desired STOPPED. Retained `credential-replacement-operator-intent-confirmed.json`
+and `credential-replacement-operator-submission.json` alongside original proof.
+Never dispatch this stop again. The existing replacement controller is now
+reconciling the actual successor and completion gates. Replacement readback,
+permissions, snapshot/isolated restore/readback/cleanup and final acceptance
+remain pending. This is supervised recovery, not unattended or ten-minute proof.
+README source review distinguishes accepted submission from completed proof;
+no application, deployment-source or permission changes were made on resumption.
+
+The original replacement controller subsequently returned `completed`, effect
+`original-server-replacement-observed`, under unchanged plan `4b55227f`.
+Its `credential-replacement-receipt.json` and completion companion are retained
+in that delivery's proof directory. This closes replacement itself, not data
+readback. Fresh credential-recovery verifier readiness/read planning follows.
+
+Credential readiness completed as `es-207e5d17a4e141c093bb38ea280c6bf6`,
+exit zero, stopped 2026-11-20T22:43:07Z. Its first dependent read invocation
+failed `ecs/describe-tasks` before reservation/submission; the exact public
+failure is retained as `credential-read-pre-reservation-failure.json`.
+STS still confirmed the approved account. Resuming the same exact read plan
+`e2b19288` passed unchanged admission before expiry and completed as
+`es-b730a41a34f048c8802fd7e47c0f855e`. The original record read and readiness
+packets/companions are retained under `task-steps/verifier-read-credential-recovery-*`.
+No read operation or readiness task was replayed. Runtime permission proof is
+next; snapshot/isolated restore/readback/cleanup and final acceptance remain open.
+
+Credential permissions preflight completed as `es-fbacde1f14e94cf18abe631277d63663`,
+exit zero, stopped 2026-11-20T23:08:34Z. Operation planning encountered another
+`ecs/describe-tasks` failure before submission; repeating only the read-only
+planning produced plan `c03bb450`. Execution of that plan completed the single
+permissions task `es-ff12f1381bc44a62898d537230722e00` and retained
+`task-steps/database-proof-permissions-credential-recovery-operation.json`,
+`task-realization/controlled-execution-0f5dedd5d9d54942b351832c744b342d.json`
+and `credential-history.json` in the same delivery proof directory.
+The task-phase count is now 21/25. Snapshot planning follows; isolated restore,
+its two reader phases, clone cleanup, final two verifier phases and acceptance
+remain incomplete. This README-only update was reviewed against the actual
+terminal reports; it adds no runtime changes or broader proof claim.
+
+The first snapshot planner failed `aws-command-failed` before any snapshot
+effect; its report did not identify the provider operation. Three bounded
+direct ECS read diagnostics then succeeded (one task, no failures each).
+The unchanged planner subsequently passed with plan `cc61080f` and execution
+returned `original-snapshot-not-terminal`. The original snapshot is
+`kanbien-core-platform-entity-smoke-104261dd18363aa576a5600c`.
+Its first reconciliation encountered `alignment-dependency-not-available`;
+read-only AWS observations confirmed the snapshot `creating` and the protected
+source database `backing-up`, with the original source resource ID unchanged.
+Wait for that existing snapshot and source availability, then reconcile only
+the original reservation. Never create another snapshot for this delivery.
+The prepared `.cache/test-runs/entity-smoke-successor.qbk90t/acceptance-inputs.json`
+passed the existing collector's argument validation. That validates inputs only;
+no final proof collection or acceptance promotion has occurred.
+
+AWS subsequently reported the original snapshot available at 100%; the owning
+controller completed reconciliation and retained `snapshot-receipt.json` under
+plan `cc61080f`. Isolated restore plan `71452fe7` then passed for exactly eight
+resources, with no source mutation. Change-set review returned pending once;
+reconciling that same reservation completed and retained
+`restore-review-receipt.json`. Execution of that reviewed original change set
+started at approximately 2026-11-20T23:53Z. No restore completion/readback or
+cleanup is claimed yet. Source/controller inputs remain unchanged.
+
+The original restore execution returned pending. AWS subsequently reported all
+eight resources CREATE_COMPLETE. The first completed-stack reconciliation hit
+an AWS read failure in reconcile-only mode; the next observation succeeded and
+retained `restore-deploy-receipt.json` (SHA-256
+`00849915ccf40c8e408ba01c21c7fae8480663dc4ba4a442392a0ebbc7d22e63`).
+No second deployment submission occurred.
+
+Clone preflight plan `e1070048` passed, but its one task
+`es-294fd95b73ca4b7b84c54cbcc96da4d1` failed. The public command report is copied
+to `restore-reader-preflight-failure-report.json` in the delivery proof directory;
+this is a retained failure report, not a success receipt or acceptance evidence.
+AWS confirmed task `8151f53042134d20a45defc228dc43e0` STOPPED with exit 1:
+created 2026-11-21T00:25:37.385Z, started 00:25:52.105Z, stopped 00:26:21.203Z.
+Its diagnostic is `persistence.unclassified-failure` version 2, readiness at
+`pool_connect`, absent driver code, unknown classification and effect not assessed.
+Do not label this a proven timeout or permission failure.
+
+Read-only diagnosis confirmed the clone available, private, IAM authentication
+enabled and its exact resource ID `db-E422RVTROVSZNPOS26AROUNWMY` unchanged.
+The reader's declared endpoint, port 5432, database and runtime username match
+the clone. Its outbound PostgreSQL rule and the clone's inbound rule match.
+IAM simulation allowed `rds-db:connect` for exactly that clone/runtime user,
+with no missing context. These checks do not prove a successful connection.
+
+Progress remains 21/25 task phases complete. No original-record read against
+the clone has been reserved, and no clone cleanup is permitted before successful
+readback. The existing terminal-preflight recovery rule and source-transition
+selector are pinned to old attempt `es-7718c551963245a899c9f1421dc84d5c`;
+the provider standard explicitly prohibits extending historical exceptions.
+The ordinary delivery renewal rule covers only successful unused expired probes,
+not failed probes. Supporting this new terminal failure requires a governed,
+checked reusable recovery extension, preserving the failed attempt and allowing
+only a separately reserved bounded observation against the same clone/identity.
+No such extension or second task has been executed. Full proof/acceptance remain
+incomplete; source, snapshot, clone and other baselines are preserved.
+
+### Approved terminal-observation recovery repair — 2026-11-21
+
+The user answered “yes - complete the end to end”, approving the proposed
+bounded reusable recovery extension and continuation of the existing proof.
+Reuse the shared release proof policy, exact task journal, terminal evidence
+collector, immutable writer, existing reader/cleanup/acceptance consumers and
+checked controller-history mechanism. No new execution engine or incident pin.
+One deterministic replacement observation is permitted only after independently
+confirmed terminal failure of the exact read-only original, against unchanged
+clone/image/configuration/identity/network, before a dependent read reservation.
+Pending, missing, malformed or uncertain observations do not qualify. Preserve
+the original failure; a second failure cannot select a third label. Keep the
+ninety-second task bound and fresh successful admission before readback.
+
+Consumer/diagnostic inventory before editing: shared `release-succession/proof-policy.py`
+owns bounded selection; `restore-route.py` supplies exact clone/request custody
+to the reader producer and cleanup/collector readers; `restore-reader-route.py`
+captures the existing runner's positively identified TerminalTaskFailure without
+launching anything during planning. Existing task evidence owns diagnosis and
+safe projection: preserve the actual unclassified readiness/pool_connect record,
+not a guessed cause. New rejection conditions remain finite controller reasons
+with the existing public mode/phase/workload context; no raw logs or endpoints.
+Snapshot and clone receipt readers must use the existing retained-controller
+Git verification after this controller-only repair, not new historical pins or
+restamped evidence. Application/image/template/schema inputs remain unchanged.
+
+Planned counterexamples: absent/pending/uncertain failure cannot select recovery;
+different request/clone/diagnostic custody and an already reserved dependent read
+are rejected; recovery success admits the original read and cleanup, while lost
+responses reconcile the same task and recovery failure never launches a third.
+Extend existing connected restore tests and proof-policy assertions. Review the
+complete affected consumer chain, prepare source-matched diagnostic records,
+run registered focused checks then impact-selected local verification once at
+stable inputs, and checkpoint before live execution. This adds one bounded
+observation only on failure, not routine release work. Ten-minute/unattended
+delivery is not established by this supervised proof. No separate ADR: this is
+the approved implementation of existing single-submission recovery principles.
+
+Consolidated self-review: the selector, producer, step path and cleanup reader
+now agree on one original-failure digest and deterministic replacement. The
+existing archive consumes the same original read packet. Runtime code, image,
+permissions and templates are unchanged. Existing historical incident readers
+remain for actual retained baseline evidence; no new pins were added. Shared
+proof-policy and control-history owners were extended rather than another
+executor. Original diagnosis remains unclassified. The exploratory connected
+run found the legacy fixture still selecting its old label while testing the
+new path; its compatibility assertions are retained, and the subsequent actual
+runner/read/cleanup sequence now selects the generic recovery. Final registered
+verification remains pending. Source-matched reviews retain their partial status.
+
+Read-only original-task capture independently collected the existing stopped
+task and retained `task-receipts/es-294fd95b73ca4b7b84c54cbcc96da4d1-failed-observation.json`
+inside this delivery, digest `54ddb845ef6c5f461ee178bbf031647a69f94d89e279ce198f73aad22dad9dd1`.
+The bounded replacement label is `entity-smoke-ba0c00ec23b728547707e6ac`.
+No replacement task has been launched; this is negative evidence only.
+
+Final consumer tracing reopened review before focused verification: credential
+history and its replacement reader still compared completed controls to the
+current controller, and the acceptance archive still assumed the original
+preflight label. These required consumers are included in this same repair.
+History/replacement/archive capture now use the existing checked controller
+owner; historical connection validation retains each already-validated original
+control/gate instead of requiring the collector's hash. The task archive carries
+the exact recovery plan and negative observation and verifies their hashes,
+original request, shared deterministic label, timing and safe diagnostic report.
+An arbitrary replacement label without that evidence remains invalid. The
+connected restore fixture passes actual producer output through these readers;
+no separate registry, copied engine or rewritten historical evidence is added.
+
+Registered composition verification failed at the connected successor restore
+fixture: recovery selection re-entered during the original pre-submit guard,
+after its reservation but before RunTask, and rejected that same invocation as
+an unresolved old task. Focused infrastructure/acceptance checks and separate
+failure/restart fixtures passed; the broad failure is not an AWS observation.
+Correction stays in `restore-route.py`: an exact original reservation with no
+observable task retains its original label, never selects recovery. The owning
+runner still permits submission only for its freshly created reservation and
+reconciles pre-existing reservations without replay. Other reconciliation errors
+remain errors. Extend the existing connected restore fixture to assert exactly
+one task after a lost response and no second launch on reconciliation. Reopen
+source review/preparation for these two affected files and their review hashes;
+no application, permission, image or cloud configuration changes are needed.
+
+The parent self-review closed this correction: only the original label is
+retained for an unobservable reservation; exact runner ownership still decides
+fresh submission versus reconciliation. Other reconciliation failures propagate.
+The connected successor fixture now checks one launch after response loss and
+no second launch during reconciliation. Source and diagnostic review hashes are
+prepared and unchanged through final verification. Registered focused checks
+`entity-smoke-acceptance-controls`, `entity-smoke-composition-suite` and
+`entity-smoke-infrastructure-route` passed (report
+`.cache/test-runs/20261121T012321Z-d8fc9d50f623416b8d50e98d0ba586d3/report.json`).
+Impact-selected integration then passed all 67 local checks with zero findings,
+reusing those three focused results; 20 package/provider/acceptance obligations
+remain separate, not passed by the local runner (report
+`.cache/test-runs/20261121T015936Z-193465bed7e844c68e12269758c27cb2/report.json`).
+The integration run took 2162 seconds, so this is not delivery-budget evidence.
+Context hygiene: retain these bounded outcomes and the original failed-probe
+identity above, not raw child output. AWS account checks continued to confirm
+337159794548 through the configured credential provider; this does not extend
+the upstream login's lifetime. No new live probe has launched. Next: approved
+local controller checkpoint, one replacement clone probe, original clone read,
+owned cleanup, final readiness/read and collector/promotion. Existing candidate
+image, source snapshot, database, other baselines and staging remain unchanged.

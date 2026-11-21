@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -121,9 +121,50 @@ def validate_gate(graph, gate, plan_sha256, artifacts, counts, *, item, family="
     return gate
 
 
+def recovered_observation_label(value, request, base):
+    """Validate archived negative custody without consulting current AWS state."""
+    recovery = value["observation_recovery"]
+    require(value["name"] == "restore-read" and isinstance(recovery, dict)
+        and set(recovery) == {"plan", "failure"}, "acceptance-observation-recovery-invalid")
+    plan, failure = recovery["plan"], recovery["failure"]
+    require(isinstance(plan, dict) and C.DEPLOY.fingerprint(plan) == value["packet"]["plan_sha256"]
+        and plan.get("binding") == value["packet"]["binding"]
+        and plan.get("request_sha256") == C.DEPLOY.fingerprint(request)
+        and plan.get("controller_sha256") == value["controller_sha256"]
+        and isinstance(failure, dict) and set(failure) == {"schema", "reservation", "parent_sha256", "terminal", "report"}
+        and failure["schema"] == "deploy/terminal-observation-recovery/v1"
+        and plan.get("parent_deployment_sha256") == failure["parent_sha256"]
+        and plan.get("failed_observation_sha256") == document_digest(failure), "acceptance-observation-recovery-invalid")
+    original = failure["reservation"]
+    expected = {**request, "proof_label": base, "deadline_seconds": 90,
+        "environment": {"ENTITY_SMOKE_DATABASE_PROOF_OPERATION": "preflight", "ENTITY_SMOKE_PROOF_LABEL": base}}
+    T.RUNNER.PREFLIGHT.validate_launch(expected)
+    require(isinstance(original, dict) and set(original) == {"schema", "operation_id", "request", "request_sha256", "reserved_at"}
+        and original.get("schema") == "deploy/entity-smoke-task-reservation/v1"
+        and isinstance(original.get("operation_id"), str) and re.fullmatch(r"es-[a-f0-9]{32}", original["operation_id"])
+        and original.get("request") == expected and original.get("request_sha256") == hashlib.sha256(T.RUNNER.CONTROL.canonical(expected)).hexdigest(),
+        "acceptance-observation-recovery-invalid")
+    terminal = failure["terminal"]
+    identity = {key: expected[key] for key in ("source_revision", "image_digest", "workload")}
+    identity.update(operation_id=original.get("operation_id"), request_sha256=original["request_sha256"],
+        operation="preflight", proof_label_sha256=hashlib.sha256(base.encode()).hexdigest())
+    try: selected = "entity-smoke-" + POLICY.failed_observation_id(base, terminal, identity, dependent_reserved=False)
+    except POLICY.PolicyFailure as error: raise EvidenceFailure(error.code) from None
+    report = failure["report"]
+    require(terminal.get("task_definition") == expected["definition"]
+        and isinstance(terminal.get("task_arn"), str) and re.fullmatch(r"arn:aws:ecs:" + T.RUNNER.CONTROL.REGION + ":" + T.RUNNER.CONTROL.ACCOUNT + ":task/" + T.RUNNER.CONTROL.CLUSTER + r"/[a-f0-9]{32}", terminal["task_arn"])
+        and isinstance(report, dict) and report == T.RUNNER.EVIDENCE.failure_report(T.RUNNER.EVIDENCE.TerminalTaskFailure(
+        terminal, report.get("diagnostic"), report.get("related_diagnostics"), report.get("observations")))
+        and T.RUNNER.EVIDENCE.timestamp(terminal["stopped_at"]) >= T.RUNNER.EVIDENCE.timestamp(original["reserved_at"])
+        and T.RUNNER.EVIDENCE.timestamp(value["packet"]["reservation"]["reserved_at"]) >= T.RUNNER.EVIDENCE.timestamp(terminal["stopped_at"])
+        and plan.get("preflight_label") == selected, "acceptance-observation-recovery-invalid")
+    return selected
+
+
 def validate_task(value, collection_binding, *, expected_binding=None, delivery=None, namespace_delivery=None):
     """Pure historical validation; no provider access or today's source hash."""
     fields = {"schema", "name", "stage", "phase", "requested_operation", "controller_sha256", "collection_binding", "graph", "packet", "completion", "gate", "admission"}
+    if isinstance(value, dict) and "observation_recovery" in value: fields.add("observation_recovery")
     if delivery is not None:
         C.RESOURCE.validate_delivery(delivery)
         fields.add("delivery")
@@ -172,6 +213,12 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     label = preflight_label(parent, stage, workload, operation, delivery=delivery, namespace_delivery=namespace_delivery) if phase == "preflight" else (
         C.delivery_operation_label(delivery, workload, operation) if delivery is not None else parent["proof_label"])
     if delivery is not None and phase == "preflight": label = packet["plan"]["preflight_label"]
+    recovered_label = None
+    if "observation_recovery" in value:
+        base = (C.delivery_preflight_label(namespace_delivery, stage, workload, operation) if namespace_delivery is not None
+            else "entity-smoke-" + hashlib.sha256((parent["proof_label"] + ":restore-reader:restore-read:preflight:isolated-restore").encode()).hexdigest()[:24])
+        recovered_label = recovered_observation_label(value, request, base)
+        if phase == "preflight": label = recovered_label
     require(request["environment"][T.RUNNER.CONTROL.OPERATIONS[workload][0]] == actual_operation
             and request["proof_label"] == label, "acceptance-task-request-selection-mismatch", name)
     if workload in {"verifier", "database-proof", "restore-reader"}:
@@ -201,7 +248,7 @@ def validate_task(value, collection_binding, *, expected_binding=None, delivery=
     else:
         T.RUNNER.PREFLIGHT.validate_admission(admission, reservation)
         selected_label = packet["plan"]["preflight_label"] if delivery is not None else preflight_label(parent, stage, workload, operation, namespace_delivery=namespace_delivery)
-        require(admission["preflight"]["label"] == selected_label, "acceptance-preflight-stage-mismatch", name)
+        require(admission["preflight"]["label"] == (recovered_label or selected_label), "acceptance-preflight-stage-mismatch", name)
     return value
 
 
@@ -233,6 +280,9 @@ def capture_task(route, context, args, provider, name, collection_binding, *, hi
              "packet": packet, "completion": completion, "gate": gate, "admission": admission}
     delivery = context.get("delivery")
     if delivery is not None: value["delivery"] = delivery
+    if context.get("failed_observation"):
+        plan = route.C.read_json(context["cache"] / "restore-reader-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json"))
+        value["observation_recovery"] = {"plan": plan, "failure": context["failed_observation"]}
     return validate_task(value, collection_binding, expected_binding=context["binding"], delivery=delivery,
         namespace_delivery=context.get("recovery_delivery"))
 

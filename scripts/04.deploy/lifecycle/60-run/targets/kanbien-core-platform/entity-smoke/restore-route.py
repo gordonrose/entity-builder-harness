@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -109,7 +109,7 @@ def deployment(value, args, provider, *, observe=True):
     request = RESTORE.request(value["restore_binding"], value["restore_parameters"])
     require(packet["request"] == request and packet["plan"].get("phase") == "deploy" and packet["plan"].get("binding") == value["restore_binding"]
             and packet["plan"].get("request_sha256") == C.DEPLOY.fingerprint(request)
-            and packet["plan"].get("controller_sha256") == C.CONTROL_COMPLETION.controller("restore-deployment", C.digest_file(path), value["artifact"])
+            and packet["plan"].get("controller_sha256") == retained_controller(value, packet, "restore-deployment", path)
             and packet["plan"].get("snapshot_sha256") == C.digest_file(value["cache"] / "snapshot-receipt.json"), "restore-deployment-binding-mismatch")
     for path in (value["cache"] / "restore-deploy-plan.json", value["cache"] / "restore-deploy-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):
         require(C.read_json(path) == packet, "restore-deployment-plan-not-retained")
@@ -145,7 +145,100 @@ def deployment(value, args, provider, *, observe=True):
     return receipt
 
 
-def reader_context(value, deployed):
+def retained_controller(value, packet, name, path):
+    if value.get("delivery"):
+        return C.retained_controller({"plan": packet["plan"], "binding": value["binding"]}, value["artifact"])
+    return C.CONTROL_COMPLETION.controller(name, C.digest_file(path), value["artifact"])
+
+
+def reader_recovery(child, deployed, original, provider=None):
+    """Bind one failed observation to its original journal and completed clone.
+
+    Planning may observe the original, never launch it. Historical consumers
+    validate the retained negative evidence and exact journal without requiring
+    ECS to retain the failed task indefinitely.
+    """
+    args = SimpleNamespace(proof_label=child["binding"]["proof_label"], workload="restore-reader",
+        operation="restore-read", proof_stage="isolated-restore", phase="preflight", expected_digest=None)
+    deps, runner, steps = TASK.dependencies(), TASK.RUNNER, TASK.STEPS
+    request = steps.request(deps, child, args)
+    runner.PREFLIGHT.validate_launch(request)
+    store = runner.CONTROL.AttemptStore(child["cache"] / "task-attempts")
+    previous = store.read(steps.key(args), request)
+    if previous is None: return original
+    negative_path = child["cache"] / "task-receipts" / (previous["operation_id"] + "-failed-observation.json")
+    runner.CONTROL.no_symlinks(negative_path)
+    if not negative_path.exists():
+        if TASK.COMPLETION.path(steps.path(child, args)).exists(): return original
+        require(provider is not None, "restore-reader-recovery-terminal-required")
+        try:
+            _, task = runner.CONTROL.reconcile_reserved(provider, previous)
+        except runner.CONTROL.TaskFailure as failure:
+            if failure.code != "task-reconciliation-unresolved-no-replay": raise
+            # The exact original remains selected, including inside its own
+            # post-reservation/pre-submit guard. Only the runner's fresh
+            # reservation may launch; an older unknown attempt reconciles only.
+            return original
+        require(task.get("lastStatus") == "STOPPED", "restore-reader-recovery-terminal-required")
+        logs = runner.EVIDENCE.read_logs(provider, request, task["taskArn"])
+        try:
+            runner.EVIDENCE.collect(task, previous, logs, C.now())
+            return original
+        except runner.EVIDENCE.TerminalTaskFailure as failure:
+            require(C.RESOURCE.timestamp(task["createdAt"]) >= C.RESOURCE.timestamp(deployed["observed_at"]),
+                "restore-reader-recovery-predates-clone")
+            negative = {"schema": "deploy/terminal-observation-recovery/v1", "reservation": previous,
+                "parent_sha256": C.digest_file(child["cache"] / "restore-deploy-receipt.json"),
+                "terminal": failure.terminal, "report": runner.EVIDENCE.failure_report(failure)}
+            if not C.RESOURCE.write_exclusive(negative_path, negative):
+                require(C.read_json(negative_path) == negative, "restore-reader-recovery-evidence-changed")
+    negative = C.read_json(negative_path)
+    require(isinstance(negative, dict) and set(negative) == {"schema", "reservation", "parent_sha256", "terminal", "report"}
+        and negative["schema"] == "deploy/terminal-observation-recovery/v1" and negative["reservation"] == previous
+        and negative["parent_sha256"] == C.digest_file(child["cache"] / "restore-deploy-receipt.json"),
+        "restore-reader-recovery-evidence-changed")
+    terminal = negative["terminal"]
+    report = negative["report"]
+    require(isinstance(report, dict), "restore-reader-recovery-evidence-changed")
+    if report:
+        require(isinstance(report.get("observations"), list) and 1 <= len(report["observations"]) <= 3
+            and set(report) == {"diagnostic", "related_diagnostics", "observations"}, "restore-reader-recovery-evidence-changed")
+        for item in report["observations"]:
+            require(runner.EVIDENCE.failure_bundle({"verdict": "failed", "code": "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED", **item}) == item,
+                "restore-reader-recovery-evidence-changed")
+        require({"diagnostic": report["diagnostic"], "related_diagnostics": report["related_diagnostics"]} in report["observations"],
+            "restore-reader-recovery-evidence-changed")
+    expected = {key: request[key] for key in ("source_revision", "image_digest", "workload")}
+    expected.update(operation_id=previous["operation_id"], request_sha256=previous["request_sha256"],
+        operation="preflight", proof_label_sha256=hashlib.sha256(original.encode()).hexdigest())
+    require(isinstance(terminal, dict) and set(terminal) == set(expected) | {"task_arn", "task_definition", "exit_code", "stopped_at", "failure_basis"}
+        and terminal.get("task_definition") == request["definition"]
+        and isinstance(terminal.get("task_arn"), str) and re.fullmatch(
+            r"arn:aws:ecs:" + runner.CONTROL.REGION + ":" + runner.CONTROL.ACCOUNT + ":task/" + runner.CONTROL.CLUSTER + r"/[a-f0-9]{32}", terminal["task_arn"])
+        and C.RESOURCE.timestamp(terminal.get("stopped_at")) >= C.RESOURCE.timestamp(deployed["observed_at"])
+        and bool(report) == (terminal.get("failure_basis") == "validated-failure-report"), "restore-reader-recovery-terminal-required")
+    operation = SimpleNamespace(**{**vars(args), "phase": "operation", "expected_digest": child["history"]["binding"]["record_digest"]})
+    # Once the replacement exists, later consumers may validate the dependent
+    # read. Before its reservation, no dependent operation may already exist.
+    try:
+        identity = steps.POLICY.failed_observation_id(original, terminal, expected, dependent_reserved=False)
+    except steps.POLICY.PolicyFailure as failure: raise RestoreFailure(failure.code) from None
+    selected = "entity-smoke-" + identity
+    renewed = {**request, "proof_label": selected,
+        "environment": {**request["environment"], "ENTITY_SMOKE_PROOF_LABEL": selected}}
+    replacement = store.read(steps.key(args), renewed)
+    if replacement is None:
+        require(store.read(steps.key(operation), steps.request(deps, child, operation)) is None,
+            "observation-recovery-dependent-already-reserved")
+    else:
+        require(C.RESOURCE.timestamp(replacement["reserved_at"]) >= C.RESOURCE.timestamp(terminal["stopped_at"]),
+            "restore-reader-recovery-terminal-required")
+    child["failed_observation_sha256"] = C.digest_file(negative_path)
+    child["failed_observation"] = negative
+    return selected
+
+
+def reader_context(value, deployed, provider=None):
     facts = deployed["result"]["facts"]
     p, parent = value["restore_parameters"], value["restore_binding"]
     child = {**{key: item for key, item in parent.items() if key not in {"record_digest", "recovery_id"}}, "permission_contract_sha256": C.digest_file(RESTORE.SOURCE),
@@ -157,7 +250,10 @@ def reader_context(value, deployed):
         probe_label = C.delivery_preflight_label(namespace, "isolated-restore", "restore-reader", "restore-read")
     else:
         probe_label = C.TRANSITION.restore_reader_preflight(C, {**value, "binding": child, "checked": checked}, deployed, probe_label)
-    return {**{key: item for key, item in value.items() if key != "delivery"}, "recovery_delivery": value.get("delivery"), "binding": child, "checked": checked, "report": {"plan": {"preflight_label": probe_label}}, "required_after": deployed["observed_at"], "deployed": deployed}
+    result = {**{key: item for key, item in value.items() if key != "delivery"}, "recovery_delivery": value.get("delivery"), "binding": child, "checked": checked, "report": {"plan": {"preflight_label": probe_label}}, "required_after": deployed["observed_at"], "deployed": deployed}
+    if value.get("delivery"):
+        result["report"]["plan"]["preflight_label"] = reader_recovery(result, deployed, probe_label, provider)
+    return result
 
 
 def reader(value, args, provider):
@@ -175,6 +271,7 @@ def reader(value, args, provider):
     completion = C.read_json(TASK.COMPLETION.path(TASK.STEPS.path(child, selected)))
     require(isinstance(plan, dict) and C.DEPLOY.fingerprint(plan) == step["plan_sha256"] and plan.get("phase") == "operation" and plan.get("binding") == child["binding"]
             and plan.get("parent_deployment_sha256") == C.digest_file(value["cache"] / "restore-deploy-receipt.json")
+            and plan.get("failed_observation_sha256") == child.get("failed_observation_sha256")
             and plan.get("request_sha256") == C.DEPLOY.fingerprint(step["reservation"]["request"]) and plan.get("controller_sha256") == C.TRANSITION.controller(step, completion, value["artifact"])
             and plan.get("graph_sha256") == C.DEPLOY.fingerprint(TASK.GRAPH.contract("restore-reader", C.GATE)), "restore-reader-original-plan-mismatch")
     return {"context": child, "step": step, "deployed": deployed}

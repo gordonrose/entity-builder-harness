@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-11"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -52,6 +52,12 @@ def controller(name, receipt_digest, current):
     return (LEGACY | REPAIRS).get((name, receipt_digest), current)
 
 
+def checked_controller(C, name, receipt_digest, plan, current, *, allow_history=False):
+    historical = controller(name, receipt_digest, current)
+    if not allow_history or historical != current or plan.get("controller_sha256") == current: return historical
+    return C.retained_controller({"plan": plan, "binding": plan["binding"]}, current)
+
+
 def companion(path):
     return path.with_name(path.stem + ".completion.json")
 
@@ -66,7 +72,7 @@ def checked(C, path, name, graph, current):
     C.require(isinstance(packet, dict) and isinstance(packet.get("plan"), dict), "control-completion-plan-required")
     plan = packet["plan"]
     C.require(packet.get("plan_sha256") == C.DEPLOY.fingerprint(plan)
-              and plan.get("controller_sha256") == controller(name, digest, current)
+              and plan.get("controller_sha256") == checked_controller(C, name, digest, plan, current, allow_history="releases" in path.parts)
               and plan.get("graph_sha256") == C.DEPLOY.fingerprint(graph), "control-completion-source-or-plan-mismatch")
     cache = path.parent.parent if name == "initial-stop" else path.parent
     prefix = str((cache / (NAMES[name] + "-realization")).relative_to(C.ROOT)) + "/controlled-execution-"

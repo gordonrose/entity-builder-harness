@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -224,7 +224,8 @@ def completed(context_value, args, provider):
     expected = {"binding": binding, "source_resource_id": context_value["parameters"]["DatabaseResourceId"],
                 "snapshot": "kanbien-core-platform-" + C.RESOURCE.resource_label(binding), "original_commit_observed_at": context_value["history"]["completed_at"]}
     require(request == expected and plan.get("request_sha256") == C.DEPLOY.fingerprint(request) and plan.get("binding") == expected["binding"]
-            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("snapshot", C.digest_file(path), context_value["artifact"])
+            and plan.get("controller_sha256") == (C.retained_controller({"plan": plan, "binding": context_value["binding"]}, context_value["artifact"])
+                if context_value.get("delivery") else C.CONTROL_COMPLETION.controller("snapshot", C.digest_file(path), context_value["artifact"]))
             and plan.get("graph_sha256") == C.DEPLOY.fingerprint(graph())
             and plan.get("history_sha256") == C.digest_file(context_value["cache"] / "credential-history.json")
             and plan.get("configuration_sha256") == C.DEPLOY.fingerprint({"parameters": context_value["parameters"], "resources": context_value["resources"], "server": context_value["server"]}), "snapshot-completed-binding-mismatch")

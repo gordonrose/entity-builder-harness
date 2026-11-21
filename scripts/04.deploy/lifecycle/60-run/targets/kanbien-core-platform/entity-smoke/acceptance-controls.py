@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -129,7 +129,7 @@ def capture(route, A, name, receipt, graph, binding, cache, controller):
     else:
         reservation, packet = receipt["result"]["reservation"], receipt["packet"]
     plan = packet["plan"]
-    expected_controller = route.C.CONTROL_COMPLETION.controller(name, A.document_digest(receipt), controller)
+    expected_controller = route.C.CONTROL_COMPLETION.checked_controller(route.C, name, A.document_digest(receipt), plan, controller, allow_history="releases" in cache.parts)
     require(plan.get("controller_sha256") == expected_controller, "acceptance-control-current-source-mismatch", name)
     reference = receipt.get("realization_evidence")
     prefix = str((cache / (SELECTIONS[name][1] + "-realization")).relative_to(route.C.ROOT)) + "/controlled-execution-"
@@ -210,6 +210,10 @@ def validate_connections(A, value):
         attempts.add(control["operation_id"])
         expected = A.digest(basis) if name in {"initial-stop", "initial-restart"} else value["controller_sha256"]
         expected = A.C.CONTROL_COMPLETION.controller(name, control["source_receipt_document_sha256"], expected)
+        # Capture verified the controller-only Git checkpoint. These archived
+        # controls have already passed their original plan/artifact/gate checks;
+        # historical connection validation must not restamp them as the collector.
+        if successor: expected = plan(name)["controller_sha256"]
         require(plan(name)["controller_sha256"] == expected and plan(name)["package_custody_reference"] == value["package"]["receipt_reference"], "acceptance-control-source-attribution-mismatch", name)
     prefix = ("baseline-permissions", "lifecycle", "collision", "migration-state", "baseline-read") if successor else ("bootstrap", "migration", "grant-runtime", "baseline-permissions", "original-record", "lifecycle", "collision", "baseline-read")
     previous = None

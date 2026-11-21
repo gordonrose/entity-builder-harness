@@ -4,7 +4,7 @@ id: aws.standard.operational-realization-applicability
 version: 19
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-20"
+updated_on: "2026-11-21"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -395,14 +395,17 @@ for other operations, images or scopes.
 
 ### Terminal restore-reader preflight recovery
 
-The standing completion authority permits exactly one separately reserved
-read-only recovery probe for failed restore preflight
-`es-7718c551963245a899c9f1421dc84d5c`. The existing source-transition owner
-requires the pinned original negative observation, request journal, public
-failure report and completed clone binding. Preserve the original exit1,
-diagnostic, timestamps and image identity; no failure becomes successful proof.
-The connection cause remains unclassified, not a proven timeout or permission
-failure. A successful new observation establishes recovery only.
+For an explicitly approved release recovery, permit exactly one separately
+reserved read-only replacement of a terminal failed restore preflight. The
+shared release proof policy owns deterministic replacement identity and
+terminal/read-only identity checks; the restore adapter supplies the exact
+original journal, independently collected terminal failure, safe diagnostic
+report and completed clone binding. No incident ID may grant new authority.
+Preserve the original failure, diagnostic, timestamps and image identity; no
+failure becomes successful proof. An unclassified connection cause remains
+unclassified, not a proven timeout or permission failure. A successful new
+observation establishes recovery only. The old pinned source-transition reader
+remains solely for existing historical baseline custody, not new releases.
 
 Use one deterministic recovery label and separate immutable step path, the same
 qualified program, clone, runtime identity, network and ninety-second bound.
@@ -412,7 +415,7 @@ An uncertain or failed recovery probe cannot acquire a third label or replay
 either reservation. This permits no permission/image/template change, business
 write, database replacement or cleanup before successful original-record read.
 The completed snapshot and clone deployment retain their exact original
-controller/receipt/gate hashes through the existing control-custody selector;
+controller/receipt/gate hashes through checked controller-only Git ancestry;
 all request, incarnation, plan, graph and live ownership checks remain required.
 
 ### Unsubmitted restore-cleanup plan correction

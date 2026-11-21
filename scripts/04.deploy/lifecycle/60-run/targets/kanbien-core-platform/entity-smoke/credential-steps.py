@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -180,7 +180,7 @@ def replacement(route, context, args, provider, prior):
     require(request["binding"] == {**context["binding"], "record_digest": args.expected_digest} and request["definition"] == server["definition"]
             and request["original_task"] == prior["base"]["original_task"] and plan.get("proof_stage") == "credential-recovery"
             and plan.get("binding") == request["binding"] and plan.get("request_sha256") == C.DEPLOY.fingerprint(request)
-            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("credential-replacement", C.CONTROL_COMPLETION.document(value), context["artifact"])
+            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.checked_controller(C, "credential-replacement", C.CONTROL_COMPLETION.document(value), plan, context["artifact"], allow_history=bool(context.get("delivery")))
             and plan.get("graph_sha256") == C.DEPLOY.fingerprint(route.GRAPH.replacement(C.GATE, C.CONTRACT, "credential-recovery"))
             and plan.get("baseline_read_sha256") == C.DEPLOY.fingerprint(prior["base"]["baseline_read"])
             and plan.get("prerequisites_sha256") == C.DEPLOY.fingerprint(public_prefix(prior))
