@@ -4,7 +4,7 @@ id: deploy.plan.consolidate-core-platform-deployment-routes
 version: 3
 status: draft
 created_on: "2026-11-14"
-updated_on: "2026-11-19"
+updated_on: "2026-11-21"
 layer: 04.deploy
 domain: deployment.consolidation
 disciplines: [architecture, sre, security]
@@ -16,6 +16,14 @@ used_by:
   path: docs/04.deploy/plans/core-platform-deployment-route-inventory.md
 -->
 # Consolidate core platform deployment routes
+
+## Verification and timeout audit
+
+The [21 November audit](../../../../docs/04.deploy/plans/verification-diagnostics-timeout-audit.md)
+records repository-wide inventories, measured verification costs, missing
+diagnostic causes, deadline and resume defects, and ranked subtractive
+corrections. These are findings and proposals, not implemented fixes.
+The accepted release proof and its promotion remain separate from that work.
 
 ## Nov19 end-to-end delivery authority — approved harness correction
 

@@ -4,7 +4,7 @@
   version: 2
   status: draft
   created_on: "2026-11-14"
-  updated_on: "2026-11-15"
+  updated_on: "2026-11-21"
   layer: 05.education
   domain: education
   disciplines: [agentic, architecture, sre]
@@ -24,6 +24,10 @@ The responsibility for those mistakes remains mine; these lessons are not a
 list of things you should have known or supervised.
 
 ## Progress
+
+The [21 November verification, diagnostics and timeout audit](../../04.deploy/plans/verification-diagnostics-timeout-audit.md)
+adds source-backed incidents and proposed corrections. It does not advance the
+user-led lesson review statuses below.
 
 - Current position: lesson 1, discussing reuse of the PostgreSQL release route.
 - Lessons reviewed: 0 of 34.
