@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-20T20:16:08Z
-latest_commit_sha: 34350813
-chat_duration: 1220941s (14:03:09:01)
+latest_commit_at_utc: 2026-11-21T02:01:50Z
+latest_commit_sha: 77cd94ec
+chat_duration: 1241683s (14:08:54:43)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3105,6 +3105,17 @@ Summary: Checked bounded operator rule; local procedure fault cases passed. Repl
 
 ADR impact: No new ADR: supervised recovery of the existing approved operation, not a new executor.
 
+
+### 2026-11-21T02:01:50Z - Commit recorded
+
+Commit: `77cd94ec`
+
+Message: fix(deploy): bind bounded restore observation recovery to original evidence
+
+Summary: Approved one bounded terminal-observation replacement; preserved original negative evidence, completed controller history, source image and no-replay semantics. Registered focused checks and 67 impact-selected local checks passed; live proof remains 21/25 pending replacement clone probe/read, cleanup and final acceptance.
+
+ADR impact: No new architecture: extends existing proof policy, task journal and checked controller history.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3434,6 +3445,13 @@ ADR impact: No new ADR: supervised recovery of the existing approved operation, 
   Summary: Checked bounded operator rule; local procedure fault cases passed. Replacement still awaits actual submission and completion.
   ADR impact: No new ADR: supervised recovery of the existing approved operation, not a new executor.
 
+
+- Commit: `77cd94ec`
+  Time UTC: 2026-11-21T02:01:50Z
+  Message: fix(deploy): bind bounded restore observation recovery to original evidence
+  Summary: Approved one bounded terminal-observation replacement; preserved original negative evidence, completed controller history, source image and no-replay semantics. Registered focused checks and 67 impact-selected local checks passed; live proof remains 21/25 pending replacement clone probe/read, cleanup and final acceptance.
+  ADR impact: No new architecture: extends existing proof policy, task journal and checked controller history.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3447,9 +3465,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-20T20:16:08Z
-Latest commit SHA: 34350813
-Chat duration: 1220941s (14:03:09:01)
+Latest commit at UTC: 2026-11-21T02:01:50Z
+Latest commit SHA: 77cd94ec
+Chat duration: 1241683s (14:08:54:43)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
