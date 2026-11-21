@@ -402,6 +402,10 @@ below are historical incident records, not the current acceptance verdict.
 - Raised: Preparation refactor exploratory fixture failures and review freshness.
   Resolution: The provider fixture initially lacked the new resolver/declaration closure (14 cases); copied actual references. Two update fixture cases used a conflicting synthetic repository; selected the real declared repository. One new coverage assertion incorrectly expected an empty reference field; corrected to the actual report shape. Two diagnostic fixture-source hashes were stale; reviewed setup changes and refreshed their existing records. All corrected focused tests and the complete persistence target-control smoke suite subsequently passed. Both real scope coverage checks passed. Governed surviving-path preparation passed: 21 headers, zero errors, selector planned with no findings; prior deleted-path preparation limitation remains separate. No failures were treated as passes before correction.
 
+
+- Raised: Audit publication planning selected broad deployment regressions for documentation-only changes
+  Resolution: Recorded the over-selection in the audit and did not execute the repeated regression plan; used narrow document, metadata, link and whitespace validation.
+
 ## Decisions Made
 
 - Renewal correction consolidated review: the existing readback recovery owner
@@ -810,6 +814,10 @@ below are historical incident records, not the current acceptance verdict.
 
 - Decision: Preparation-performance correction locally verified
   Rationale: Final registered run .cache/test-runs/20261118T205140Z-fec1ebbd717a41f28961acc1caf7c08e/report.json passed all four checks with no findings: check-selection-mechanics and diagnostic-adoption executed; harness-command-drift-regression and harness-governed-runner-regression reused matching evidence. Corrected task inputs remained frozen. The first run passed functional regressions but rejected the missed mechanics-fixture support-review hash; that failure remains retained. Correcting the review binding required another mechanics execution, which took 766.374 seconds; the earlier pass took 373.038 seconds. This regression duration is not a preparation speedup or delivery-budget claim. Representative impact planning improved from 97.29 to 29.00 seconds with identical 29 check entries, dependency IDs, source-reference sets, findings and scheduling; full governed inventory improved from 18.32 to 7.95 seconds with byte-identical output. A sequential same-graph comparison returned the same 741 references in 15.876 versus 1.398 seconds. Six-file lifecycle preparation passed in 95.12 seconds. No new files, runner, registry or persistent cache; two existing production owners and existing tests were changed. Complete affected integration, packaging, AWS proof and the ten-minute end-to-end delivery target remain unestablished. No commit, push or cloud operation occurred.
+
+
+- Decision: Migrate script topology during remediation rather than as a separate wholesale move
+  Rationale: Inventory and define destinations first, then move and remove each capability with its behavioral correction so broken machinery is not merely reorganized.
 
 ## Deployment retrospective — 2026-11-12
 
@@ -1850,6 +1858,10 @@ process used to reach it is not the standard to preserve.
 
 - Summary: Focused frozen-input results and retained limitations
   Durable evidence: Final direct focused pass: declared-template callers 1.252s; feature template boundaries 0.378s; package-projection regressions 2.337s (controlled Docker fixture, not actual qualification); historical acceptance reader 3.007s (release-53798ef563be4ce9a8c5b2f0; current_readiness false); diagnostic review structure 1.437s; retired-path reference checker 9.215s; whitespace 0.041s. All passed; changed-source fingerprints remained identical across execution. Direct fixtures do not seed trusted selector reuse; broader registered composition/integration checks are deferred. Preparation passed for surviving files; explicit deleted filename was rejected by metadata preparation as lifecycle-path-missing, so deletion was separately checked by the governed migration checker and full impact plan. Retain this deletion-preparation usability gap for Batch C rather than claiming staged/integration readiness. The earlier final frozen acceptance-control run 20261115T191055Z-bd2698f3f30d4edd94de2a69d96e0ca9 also passed; its prior interrupted/source-changed run remains separate. Current adapter slice is an uncommitted reviewable working diff; no provider operation occurred.
+
+
+- Summary: Verification, diagnostics, timeout and script-topology audit completed; deployment proof already accepted and promoted separately
+  Durable evidence: docs/04.deploy/plans/verification-diagnostics-timeout-audit.md plus its inventory and retained-run TSV files; no remediation implementation or new AWS proof is claimed.
 
 ## Activity Log
 
@@ -3171,6 +3183,43 @@ Summary: Retained the validated accepted release and session retrospective.
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-21T19:54:56Z - Issue
+
+Raised: Audit publication planning selected broad deployment regressions for documentation-only changes
+
+Resolution: Recorded the over-selection in the audit and did not execute the repeated regression plan; used narrow document, metadata, link and whitespace validation.
+
+
+### 2026-11-21T19:54:58Z - Decision
+
+Decision: Migrate script topology during remediation rather than as a separate wholesale move
+
+Rationale: Inventory and define destinations first, then move and remove each capability with its behavioral correction so broken machinery is not merely reorganized.
+
+
+### 2026-11-21T19:55:01Z - Context hygiene
+
+Summary: Verification, diagnostics, timeout and script-topology audit completed; deployment proof already accepted and promoted separately
+
+Durable evidence: docs/04.deploy/plans/verification-diagnostics-timeout-audit.md plus its inventory and retained-run TSV files; no remediation implementation or new AWS proof is claimed.
+
+
+### 2026-11-21T19:55:03Z - ADR disposition
+
+ADR needed: no
+
+Reason: The audit records findings and a ranked remediation sequence but does not yet approve a replacement architecture; destination decisions belong to the next remediation planning slice.
+
+
+### 2026-11-21T19:55:26Z - Commit summary
+
+Commit: docs(deploy): record verification and timeout audit
+
+Summary: Records the completed evidence-led audit, raw inventories, script-topology finding and ranked subtractive remediation; no runtime or AWS behavior changes.
+
+ADR impact: No ADR; findings precede the next architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3542,6 +3591,11 @@ ADR impact: covered by session ADR disposition
   Summary: Retained the validated accepted release and session retrospective.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: docs(deploy): record verification and timeout audit
+  Summary: Records the completed evidence-led audit, raw inventories, script-topology finding and ranked subtractive remediation; no runtime or AWS behavior changes.
+  ADR impact: No ADR; findings precede the next architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3550,7 +3604,7 @@ ADR impact: covered by session ADR disposition
 
 ADR needed: no
 ADR path:
-Reason: This implementation applies the existing PostgreSQL identity-separation decision (ADR 0041) and deployment-proof ownership decision (ADR 0042). The target-specific recovery and observation decisions are recorded in their approved owning standards and the implementation plan; this resumption only classifies explanatory documentation, without a new architecture or authority boundary.
+Reason: The audit records findings and a ranked remediation sequence but does not yet approve a replacement architecture; destination decisions belong to the next remediation planning slice.
 
 ## Session Metrics
 

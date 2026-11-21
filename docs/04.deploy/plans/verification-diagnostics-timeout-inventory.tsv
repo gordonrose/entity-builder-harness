@@ -1,0 +1,949 @@
+category	path_or_id	details
+registered-check	chat-startup-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-startup"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-log-writers-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-log-writers"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-log-maintenance-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-log-maintenance"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-summary-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-summary"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-upstream-portability-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-upstream-portability"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	harness-governed-runner-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","harness-governed-runner"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	harness-command-drift-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","harness-command-drift"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	harness-process-drift-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","harness-process-drift"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-bootstrap-audit-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-bootstrap-audit"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-migration-audit-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-migration-audit"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-upstream-ensure-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-upstream-ensure"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-upstream-contract-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-upstream-contract"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-upstream-bootstrap-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-upstream-bootstrap"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-integration-preparation-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-integration-preparation"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-cleanup-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-cleanup"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-prerequisites-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-prerequisites"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-conflict-audit-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-conflict-audit"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-recovery-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-recovery"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-session-reader-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-session-reader"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-session-resolution-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-session-resolution"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-worktree-paths-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-worktree-paths"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-command-dispatch-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-command-dispatch"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-refresh-readiness-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-refresh-readiness"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-conflict-classification-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-conflict-classification"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-log-deletion-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-log-deletion"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	module-index-structure	{"stage":"local","boundary":"commit","argv":["bash","scripts/repo/module-structure/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	module-index-structure-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/module-structure/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	harness-artifact-migration-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/01.harness/smoke-test-artifact-path-migration.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-export-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-export"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-commit-metrics-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-commit-metrics"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	harness-index-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","harness-index"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	harness-agent-validator-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/01.harness/agents/validate-harness-agents/diagnostic-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	security-cognito-diagnostics	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--security-adapter","cognito"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	security-shared-rate-limit-diagnostics	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--security-adapter","dynamodb-rate-limiter"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	diagnostic-adoption	{"stage":"local","boundary":"commit","argv":["bash","scripts/repo/diagnostic-coverage/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	diagnostic-runtime-contracts	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh"],"members":["diagnostic-base-runtime","platform-server-runtime","kanbien-platform-runtime"],"feedback":null,"prerequisites":null}
+registered-check	diagnostic-catalog-readers	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","catalog"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	diagnostic-base-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","base"],"members":["diagnostic-catalog-readers","core-runtime","platform-contracts-runtime","platform-config-runtime","platform-security-runtime","platform-observability-runtime","platform-health-runtime","platform-persistence-runtime","platform-runtime-runtime","platform-testing-runtime","platform-workers-runtime","platform-smoke-runtime"],"feedback":null,"prerequisites":null}
+registered-check	core-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","core"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-contracts-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","contracts"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	entity-smoke-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","entity-smoke"],"members":null,"feedback":{"development":true,"expected_seconds":30,"isolation":"worktree","rationale":"Compile public feature types and run source-discovered local feature and runner tests without packaging or providers."},"prerequisites":null}
+registered-check	platform-config-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","config"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-security-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","security"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-observability-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","observability"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-health-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","health"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-persistence-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","persistence"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	dynamodb-persistence-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","dynamodb-persistence"],"members":null,"feedback":{"development":true,"expected_seconds":30,"isolation":"worktree","rationale":"Compile and run local DynamoDB adapter contracts without contacting AWS."},"prerequisites":null}
+registered-check	sqs-queue-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","sqs-queue"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-runtime-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","runtime"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-testing-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","testing"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-workers-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","workers"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-smoke-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","smoke-app"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	cloudwatch-observability-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","cloudwatch"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	platform-server-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","server"],"members":null,"feedback":{"development":false,"expected_seconds":60,"isolation":"worktree","rationale":"Preserve assembled startup prerequisites; image payload proof belongs to checkpoint integration."},"prerequisites":null}
+registered-check	ecs-fargate-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","ecs-fargate"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	kanbien-platform-runtime	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/diagnostic-coverage/verify.sh","--unit","product"],"members":null,"feedback":{"development":false,"expected_seconds":60,"isolation":"worktree","rationale":"Verify complete product assembly and preserve package prerequisites at integration."},"prerequisites":null}
+registered-check	platform-shell-payload	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/build-platform-shell-image/check-source.sh","--payload-only"],"members":null,"feedback":{"development":false,"expected_seconds":90,"isolation":"worktree","rationale":"Assemble the actual image payload at integration; failures remain blocking."},"prerequisites":null}
+registered-check	observability-mvp-declaration-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	secret-dependency-declaration-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	target-alignment-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	postgresql-version-policy	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh","--postgresql-version-only"],"members":null,"feedback":{"development":true,"expected_seconds":1,"isolation":"disposable-fixture","rationale":"Check declared PostgreSQL compatibility and exact qualification without Docker or AWS."},"prerequisites":null}
+registered-check	aws-foundation-checks	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh","--foundation-only"],"members":null,"feedback":{"development":true,"expected_seconds":1,"isolation":"disposable-fixture","rationale":"Exercise shared foundation and private-network predicates without AWS or compilation."},"prerequisites":null}
+registered-check	aws-runtime-alignment-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	provider-condition-evidence-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	delivery-access-contract-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	core-target-declaration-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	bootstrap-target-controls-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	foundation-budget-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	runtime-credential-lifecycle-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	active-workload-health-recovery-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	ordinary-update-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.sh","--ordinary-update"],"members":null,"feedback":{"development":true,"expected_seconds":90,"isolation":"worktree","rationale":"Exercise both real route bindings and offline command parsers with controlled child outcomes, never AWS."},"prerequisites":null}
+registered-check	release-succession-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.sh"],"members":null,"feedback":{"development":true,"expected_seconds":15,"isolation":"worktree","rationale":"Simulate immutable release custody and first-versus-subsequent recovery selection in disposable directories without providers."},"prerequisites":null}
+registered-check	health-failure-recovery-declaration-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	persistence-diagnostic-mapping-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-postgresql-reference-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	postgresql-disposable-diagnostics	{"stage":"package","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	postgresql-connection-diagnostics	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh"],"members":null,"feedback":{"development":true,"expected_seconds":60,"isolation":"disposable-fixture","rationale":"Exercise local PostgreSQL connection diagnostic fixtures without a provider or shared database."},"prerequisites":null}
+registered-check	restore-connection-diagnostics	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-retirement-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-local-retrieval-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/query-local-context/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-source-projection-validation	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/check-source-projections/script.sh","--current","--projection-set","projection.02.rag-rulebook.hosted-context-provider-contract"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-source-review-validation	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh","--record",".agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-source-derivation-validation	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/validate-derivation-reports/script.sh","--report",".agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-source-projection-scope-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/check-source-projections/scoped-smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-source-coverage-validation	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/check-source-material-coverage/script.sh","--current","--source","docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-source-coverage-scope-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	scope-inventory	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh","--target-root","{target_root}","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	runnable-program	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh","--contract","{program_contract}","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	core-dependency-boundary	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	entity-smoke-acceptance-controls	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.sh"],"members":null,"feedback":{"development":true,"expected_seconds":15,"isolation":"disposable-fixture","rationale":"Exercise cleanup, final admission, archives and actual route parsers with controlled promotion dependencies; no AWS, Docker or live acceptance evidence is created."},"prerequisites":null}
+registered-check	runtime-dependency-assembly	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/script.sh"],"members":null,"feedback":{"development":true,"expected_seconds":5,"isolation":"disposable-fixture","rationale":"Exercise both real dependency bindings, copied Docker scripts and context omissions with controlled installed trees; no Docker or AWS."},"prerequisites":null}
+registered-check	runtime-payload-assembly	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/script.sh"],"members":null,"feedback":{"development":true,"expected_seconds":60,"isolation":"disposable-fixture","rationale":"Exercise declaration-derived real compilation, isolated shims, both payload adapters and copied Docker source closures without Docker or AWS."},"prerequisites":null}
+registered-check	entity-smoke-composition-suite	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh","--unit","suite"],"members":null,"feedback":{"development":true,"expected_seconds":60,"isolation":"worktree","rationale":"Compile isolated public feature wiring and exercise controlled private HTTP and administrative observation without Docker or AWS."},"prerequisites":null}
+registered-check	entity-smoke-infrastructure-route	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh","--unit","infrastructure"],"members":null,"feedback":{"development":true,"expected_seconds":10,"isolation":"worktree","rationale":"Exercise the existing infrastructure route with controlled providers, without compiling the app or contacting AWS."},"prerequisites":null}
+registered-check	entity-smoke-composition	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh"],"members":["entity-smoke-infrastructure-route","entity-smoke-composition-suite"],"feedback":{"development":false,"expected_seconds":70,"isolation":"worktree","rationale":"Require both registered members for full composition verification; development feedback selects the leaves."},"prerequisites":null}
+registered-check	persistence-composition	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	persistence-provider-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	persistence-container	{"stage":"package","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	entity-smoke-container	{"stage":"package","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	entity-smoke-publication-contract	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/smoke-test.sh"],"members":null,"feedback":{"development":true,"expected_seconds":5,"isolation":"worktree","rationale":"Check publication ordering and lost-response controls with local doubles, without Docker or AWS."},"prerequisites":null}
+registered-check	bootstrap-container	{"stage":"package","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	persistence-target-alignment	{"stage":"deploy","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	entity-smoke-target-alignment	{"stage":"deploy","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.sh","--receipt","{package_receipt}","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	bootstrap-target-alignment	{"stage":"deploy","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	entity-smoke-acceptance	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/collect-acceptance.sh","--inputs","{acceptance_inputs}","--write-candidate","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	persistence-acceptance	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh","--inputs","{acceptance_inputs}","--write-candidate","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	bootstrap-acceptance	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh","--inputs","{acceptance_inputs}","--write","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	check-selection-mechanics	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","mechanics"],"members":null,"feedback":{"development":false,"expected_seconds":300,"isolation":"disposable-fixture","rationale":"Full selector and cache mechanics are checkpoint proof; focused fixture cases provide editing feedback."},"prerequisites":null}
+registered-check	check-selection-repository-contracts	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","repository-contracts"],"members":null,"feedback":{"development":false,"expected_seconds":360,"isolation":"disposable-fixture","rationale":"Repository-wide graph and gate contracts are stable checkpoint verification."},"prerequisites":null}
+registered-check	harness-lifecycle-metadata-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","harness-lifecycle"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	harness-header-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","harness-header"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-session-preparation-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-session"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-local-merge-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-local-merge"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	chat-main-refresh-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh","--unit","chat-main-refresh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	check-selection-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/check-selection/smoke-test.sh"],"members":["check-selection-mechanics","check-selection-repository-contracts","harness-lifecycle-metadata-regression","harness-header-regression","chat-session-preparation-regression","chat-local-merge-regression","chat-main-refresh-regression"],"feedback":null,"prerequisites":null}
+registered-check	bootstrap-payload-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/payload-fixture-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	persistence-payload-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	artifact-placement-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	operational-realization-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/operational-realization-gate/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	acceptance-route	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh","--scope-contract","{scope_contract}","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	acceptance-route-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	bootstrap-acceptance-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	deployment-operation-diagnostics-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	collector-package-custody-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	task-classification-fixtures	{"stage":"local","boundary":"commit","argv":["bash","scripts/00.chat/classification/classify-task/check-fixtures.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	lifecycle-metadata-preparation	{"stage":"local","boundary":"commit","argv":["bash","scripts/01.harness/artifact-metadata/update-lifecycle/script.sh","--changed"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	artifact-inventory-audit	{"stage":"local","boundary":"integration","argv":["bash","scripts/repo/audit-artifact-inventory/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	delivery-inventory-regression	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/inventory-deploy-control/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-runtime-alignment	{"stage":"deploy","boundary":"commit","argv":["bash","scripts/04.deploy/reconcile-platform-shell-staging/script.sh","--mode","runtime-alignment","--deployment-manifest","infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-declaration	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh","--scope-contract","infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-infrastructure	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-infrastructure/script.sh"],"members":["shell-infrastructure-policy","shell-synthetic-scheduler-check","shell-metric-coverage-policy-check","shell-artifact-store-policy","shell-postgresql-reference-regression","shell-deployment-reconciliation-policy-check","shell-drift-detection-boundary-check","shell-negative-authz-client-check","shell-negative-authz-smoke-check","shell-persistence-write-client-check","shell-persistence-smoke-check","shell-persistence-admission-probe-check","shell-persistence-delivery-proof-check","shell-rate-limit-smoke-check","shell-ingress-smoke-check","shell-worker-smoke-check","shell-postgresql-relational-smoke-check","shell-candidate-preflight-regression"],"feedback":null,"prerequisites":null}
+registered-check	shell-infrastructure-policy	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-artifact-store-policy	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-publication	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-package-source	{"stage":"local","boundary":"integration","argv":["bash","scripts/04.deploy/build-platform-shell-image/check-source.sh"],"members":["platform-server-runtime","kanbien-platform-runtime","platform-shell-payload"],"feedback":null,"prerequisites":null}
+registered-check	shell-image-smoke	{"stage":"package","boundary":"commit","argv":["bash","scripts/04.deploy/smoke-test-platform-shell-image/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-ingress-smoke	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh","--execute"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-postgresql-live-boundary-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-postgresql-relational-smoke-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-persistence-admission-probe-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-postgresql-relational-smoke	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh","--execute","--approve-relational-stage6"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-negative-authz-client-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-persistence-write-client-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-controlled-smoke-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-negative-authz-smoke-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-persistence-smoke-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-negative-authz-smoke	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh","--execute"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-persistence-smoke	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh","--execute"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-worker-smoke-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-persistence-delivery-proof-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-worker-smoke	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-worker-smoke/script.sh","--execute","--approve-live-worker-smoke"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-persistence-delivery-proof	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh","--verify-terminal"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-metric-coverage-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-metric-coverage-policy-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-synthetic-scheduler-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-rate-limit-smoke-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-ingress-smoke-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-metric-coverage	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-metric-coverage/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-rate-limit-smoke	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh","--execute"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-deployment-reconciliation-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-deployment-reconciliation-policy-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-artifact-active-drift-assessment-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-foundation-active-drift-assessment-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-service-active-drift-assessment-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-drift-detection-boundary-check	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-deployment-reconciliation	{"stage":"acceptance","boundary":"commit","argv":["bash","scripts/04.deploy/reconcile-platform-shell-staging/script.sh","--mode","continuous","--json"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-local-query-regression	{"stage":"package","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/query-context/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-local-service-regression	{"stage":"package","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/run-local-service/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-local-image	{"stage":"package","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/smoke-test-service-image/script.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	package-custody-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	core-package-custody-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	container-boundaries-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/validate-container-boundaries/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-release-evidence-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	source-review-history-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	shell-candidate-preflight-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-runtime-build-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-policy-compiler-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+registered-check	rag-selector-regression	{"stage":"local","boundary":"commit","argv":["bash","scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh"],"members":null,"feedback":null,"prerequisites":null}
+package-script	package.json#chat	bash scripts/00.chat/command/dispatcher/script.sh
+package-script	package.json#chat:list	bash scripts/00.chat/command/dispatcher/script.sh list
+package-script	package.json#chat:new	bash scripts/00.chat/command/dispatcher/script.sh new
+package-script	package.json#chat:open-window	bash scripts/00.chat/command/dispatcher/script.sh open-window
+package-script	package.json#chat:download-repo	bash scripts/00.chat/command/dispatcher/script.sh download-repo
+package-script	package.json#chat:download-repo-diff	bash scripts/00.chat/command/dispatcher/script.sh download-repo-diff
+package-script	package.json#chat:close	bash scripts/00.chat/command/dispatcher/script.sh close
+package-script	package.json#chat:audit-bootstrap	bash scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+package-script	package.json#chat:audit-layer-migration	bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh
+package-script	package.json#chat:cleanup-empty-branches	bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
+package-script	package.json#chat:commit-log-summary	bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+package-script	package.json#chat:record-main-refresh-conflict	bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh
+package-script	package.json#chat:report-workspaces	bash scripts/00.chat/reporting/report-chat-workspaces/script.sh
+package-script	package.json#chat:smoke-package-scripts	bash scripts/00.chat/command/package-scripts/smoke-test.sh
+package-script	package.json#repo:audit-artifact-inventory	bash scripts/repo/audit-artifact-inventory/script.sh
+package-script	package.json#rag:verify	bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/commit-gates/script.sh
+package-script	package.json#rag:service	bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/script.sh
+package-script	package.json#rag:service:smoke	bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/smoke-test.sh
+package-script	package.json#rag:image:build	bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-service-image/script.sh
+package-script	package.json#rag:image:smoke	bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/smoke-test-service-image/script.sh
+package-script	package.json#platform:shell:image:build	bash scripts/04.deploy/build-platform-shell-image/script.sh
+package-script	package.json#deploy:control:inventory	bash scripts/04.deploy/inventory-deploy-control/script.sh
+package-script	package.json#deploy:control:inventory:check	bash scripts/04.deploy/inventory-deploy-control/smoke-test.sh
+package-script	package.json#platform:shell:image:smoke	bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+package-script	package.json#platform:shell:controlled-smoke	bash scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
+package-script	package.json#platform:shell:controlled-smoke:check	bash scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh
+package-script	package.json#platform:shell:negative-authz-client:provision	bash scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh
+package-script	package.json#platform:shell:negative-authz-client:check	bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
+package-script	package.json#platform:shell:negative-authz-smoke	bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh
+package-script	package.json#platform:shell:negative-authz-smoke:check	bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
+package-script	package.json#platform:shell:persistence-write-client:provision	bash scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
+package-script	package.json#platform:shell:persistence-write-client:check	bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
+package-script	package.json#platform:shell:persistence-smoke	bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+package-script	package.json#platform:shell:persistence-smoke:check	bash scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
+package-script	package.json#platform:shell:persistence-admission-probe	bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
+package-script	package.json#platform:shell:persistence-admission-probe:check	bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
+package-script	package.json#platform:shell:persistence-delivery-proof	bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+package-script	package.json#platform:shell:persistence-delivery-proof:check	bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh
+package-script	package.json#platform:shell:rate-limit-smoke	bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh
+package-script	package.json#platform:shell:rate-limit-smoke:check	bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
+package-script	package.json#platform:shell:ingress-smoke	bash scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh
+package-script	package.json#platform:shell:ingress-smoke:check	bash scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
+package-script	package.json#platform:shell:worker-smoke	bash scripts/04.deploy/run-platform-shell-worker-smoke/script.sh
+package-script	package.json#platform:shell:worker-smoke:check	bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
+package-script	package.json#platform:shell:metric-coverage	bash scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
+package-script	package.json#platform:shell:metric-coverage:check	bash scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh
+package-script	package.json#platform:shell:metric-coverage:policy-check	bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+package-script	package.json#platform:shell:synthetic-scheduler:check	bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+package-script	package.json#platform:shell:deployment-artifact-store:check	bash scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh
+package-script	package.json#platform:shell:deployment-reconciliation	bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+package-script	package.json#platform:shell:deployment-reconciliation:check	bash scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
+package-script	package.json#platform:shell:deployment-reconciliation:policy-check	bash scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+package-script	package.json#platform:shell:deployment-reconciliation:role-policy-alignment	bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh --mode role-policy-alignment --json
+package-script	package.json#platform:shell:foundation-active-drift-assessment	bash scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
+package-script	package.json#platform:shell:foundation-active-drift-assessment:check	bash scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh
+package-script	package.json#platform:shell:artifact-active-drift-assessment	bash scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh
+package-script	package.json#platform:shell:artifact-active-drift-assessment:check	bash scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh
+package-script	package.json#platform:shell:service-active-drift-assessment	bash scripts/04.deploy/assess-platform-shell-service-drift/script.sh
+package-script	package.json#platform:shell:service-active-drift-assessment:check	bash scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh
+package-script	package.json#platform:shell:postgresql-live-boundary	bash scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh
+package-script	package.json#platform:shell:postgresql-live-boundary:check	bash scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh
+package-script	package.json#platform:shell:postgresql-relational-smoke	bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+package-script	package.json#platform:shell:postgresql-relational-smoke:check	bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+package-script	package.json#platform:shell:candidate-execution-preflight	bash scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
+package-script	package.json#platform:shell:candidate-execution-preflight:check	bash scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
+package-script	package.json#platform:shell:drift-detection-boundary:check	bash scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh
+package-script	package.json#platform:shell:infrastructure:check	bash scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+package-script	package.json#platform:shell:deployment-workflow:check	bash scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh
+package-script	package.json#deployment:realization:validate	bash scripts/04.deploy/operational-realization-gate/script.sh
+package-script	package.json#deployment:realization:test	bash scripts/04.deploy/operational-realization-gate/smoke-test.sh
+package-script	package.json#deployment:realization:check	npm run deployment:realization:test && bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths .agentic/04.deploy/standards/operational-realization-gate.md .agentic/04.deploy/workflows/operational-realization-gate.md .agentic/01.harness/templates/operational-realization-contract.v1.template.yml .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml .agentic/01.harness/templates/operational-realization-contract.v1.guide.md docs/04.deploy/plans/operational-realization-gate-programme.md scripts/04.deploy/operational-realization-gate
+package-script	package.json#app:entity-smoke:check	npm run app:entity-smoke:typecheck && npm run app:entity-smoke:test
+package-script	package.json#app:entity-smoke:test	node scripts/repo/workspace-build/script.mjs --project apps/entity-smoke/tsconfig.runtime-test.json --development --payload && node apps/entity-smoke/tests/run-runtime-tests.mjs
+package-script	package.json#app:entity-smoke:typecheck	tsc -p apps/entity-smoke/tsconfig.check.json
+package-script	package.json#app:platform-smoke:boundary	node apps/platform-smoke/tests/test-infrastructure/static-validation/platform-smoke-boundaries.test.mjs
+package-script	package.json#app:platform-smoke:build	tsc -p apps/platform-smoke/tsconfig.json
+package-script	package.json#app:platform-smoke:check	npm run app:platform-smoke:typecheck && npm run app:platform-smoke:build && npm run app:platform-smoke:test && npm run app:platform-smoke:boundary
+package-script	package.json#app:platform-smoke:test	node scripts/repo/workspace-build/script.mjs --project apps/platform-smoke/tsconfig.runtime-test.json --development --payload && node apps/platform-smoke/tests/run-runtime-tests.mjs
+package-script	package.json#app:platform-smoke:typecheck	tsc -p apps/platform-smoke/tsconfig.check.json
+package-script	package.json#core:check	npm run core:typecheck && npm run core:test && node packages/core/tests/test-infrastructure/static-validation/core-boundaries.test.mjs
+package-script	package.json#core:test	tsc -p packages/core/tsconfig.runtime-test.json && node packages/core/tests/run-runtime-tests.mjs
+package-script	package.json#core:typecheck	tsc -p packages/core/tsconfig.check.json
+package-script	package.json#platform:contracts:boundary	node platform/contracts/tests/test-infrastructure/static-validation/platform-contracts-boundaries.test.mjs
+package-script	package.json#platform:contracts:build	tsc -p platform/contracts/tsconfig.json
+package-script	package.json#platform:contracts:check	npm run platform:contracts:typecheck && npm run platform:contracts:build && npm run platform:contracts:test && npm run platform:contracts:boundary
+package-script	package.json#platform:contracts:test	node scripts/repo/workspace-build/script.mjs --project platform/contracts/tsconfig.runtime-test.json --development --payload && node platform/contracts/tests/run-runtime-tests.mjs
+package-script	package.json#platform:contracts:typecheck	tsc -p platform/contracts/tsconfig.check.json
+package-script	package.json#platform:config:boundary	node platform/config/tests/test-infrastructure/static-validation/platform-config-boundaries.test.mjs
+package-script	package.json#platform:config:build	tsc -p platform/config/tsconfig.json
+package-script	package.json#platform:config:check	npm run platform:config:typecheck && npm run platform:config:build && npm run platform:config:test && npm run platform:config:boundary
+package-script	package.json#platform:config:test	node scripts/repo/workspace-build/script.mjs --project platform/config/tsconfig.runtime-test.json --development --payload && node platform/config/tests/run-runtime-tests.mjs
+package-script	package.json#platform:config:typecheck	tsc -p platform/config/tsconfig.check.json
+package-script	package.json#platform:health:boundary	node platform/health/tests/test-infrastructure/static-validation/platform-health-boundaries.test.mjs
+package-script	package.json#platform:health:build	tsc -p platform/health/tsconfig.json
+package-script	package.json#platform:health:check	npm run platform:health:typecheck && npm run platform:health:build && npm run platform:health:test && npm run platform:health:boundary
+package-script	package.json#platform:health:test	node scripts/repo/workspace-build/script.mjs --project platform/health/tsconfig.runtime-test.json --development --payload && node platform/health/tests/run-runtime-tests.mjs
+package-script	package.json#platform:health:typecheck	tsc -p platform/health/tsconfig.check.json
+package-script	package.json#platform:observability:boundary	node platform/observability/tests/test-infrastructure/static-validation/platform-observability-boundaries.test.mjs
+package-script	package.json#platform:observability:build	tsc -p platform/observability/tsconfig.json
+package-script	package.json#platform:observability:check	npm run platform:observability:typecheck && npm run platform:observability:build && npm run platform:observability:test && npm run platform:observability:boundary
+package-script	package.json#platform:observability:test	node scripts/repo/workspace-build/script.mjs --project platform/observability/tsconfig.runtime-test.json --development --payload && node platform/observability/tests/run-runtime-tests.mjs
+package-script	package.json#platform:observability:typecheck	tsc -p platform/observability/tsconfig.check.json
+package-script	package.json#platform:persistence:boundary	node platform/persistence/tests/test-infrastructure/static-validation/platform-persistence-boundaries.test.mjs
+package-script	package.json#platform:persistence:build	tsc -p platform/persistence/tsconfig.json
+package-script	package.json#platform:persistence:check	npm run platform:persistence:typecheck && npm run platform:persistence:build && npm run platform:persistence:test && npm run platform:persistence:boundary
+package-script	package.json#platform:persistence:test	node scripts/repo/workspace-build/script.mjs --project platform/persistence/tsconfig.runtime-test.json --development --payload && node platform/persistence/tests/run-runtime-tests.mjs
+package-script	package.json#platform:persistence:typecheck	node scripts/repo/workspace-build/script.mjs --project platform/persistence/tsconfig.check.json --development
+package-script	package.json#platform:runtime:boundary	node platform/runtime/tests/test-infrastructure/static-validation/platform-runtime-boundaries.test.mjs
+package-script	package.json#platform:runtime:build	tsc -p platform/runtime/tsconfig.json
+package-script	package.json#platform:runtime:check	npm run platform:runtime:typecheck && npm run platform:runtime:build && npm run platform:runtime:test && npm run platform:runtime:boundary
+package-script	package.json#platform:runtime:test	node scripts/repo/workspace-build/script.mjs --project platform/runtime/tsconfig.runtime-test.json --development --payload && node platform/runtime/tests/run-runtime-tests.mjs
+package-script	package.json#platform:runtime:typecheck	tsc -p platform/runtime/tsconfig.check.json
+package-script	package.json#platform:security:boundary	node platform/security/tests/test-infrastructure/static-validation/platform-security-boundaries.test.mjs
+package-script	package.json#platform:security:build	tsc -p platform/security/tsconfig.json
+package-script	package.json#platform:security:check	npm run platform:security:typecheck && npm run platform:security:build && npm run platform:security:test && npm run platform:security:boundary
+package-script	package.json#platform:security:test	node scripts/repo/workspace-build/script.mjs --project platform/security/tsconfig.runtime-test.json --development --payload && node platform/security/tests/run-runtime-tests.mjs
+package-script	package.json#platform:security:typecheck	tsc -p platform/security/tsconfig.check.json
+package-script	package.json#platform:adapter:aws:auth:cognito:boundary	node platform/adapters/aws/auth/cognito/tests/test-infrastructure/static-validation/cognito-adapter-boundaries.test.mjs
+package-script	package.json#platform:adapter:aws:auth:cognito:build	tsc -p platform/adapters/aws/auth/cognito/tsconfig.json
+package-script	package.json#platform:adapter:aws:auth:cognito:check	npm run platform:adapter:aws:auth:cognito:typecheck && npm run platform:adapter:aws:auth:cognito:build && npm run platform:adapter:aws:auth:cognito:test && npm run platform:adapter:aws:auth:cognito:boundary
+package-script	package.json#platform:adapter:aws:auth:cognito:test	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/auth/cognito/tsconfig.runtime-test.json --development --payload && node platform/adapters/aws/auth/cognito/tests/run-runtime-tests.mjs
+package-script	package.json#platform:adapter:aws:auth:cognito:typecheck	tsc -p platform/adapters/aws/auth/cognito/tsconfig.check.json
+package-script	package.json#platform:adapter:aws:observability:cloudwatch:boundary	node platform/adapters/aws/observability/cloudwatch/tests/test-infrastructure/static-validation/cloudwatch-otel-adapter-boundaries.test.mjs
+package-script	package.json#platform:adapter:aws:observability:cloudwatch:build	tsc -p platform/adapters/aws/observability/cloudwatch/tsconfig.json
+package-script	package.json#platform:adapter:aws:observability:cloudwatch:check	npm run platform:adapter:aws:observability:cloudwatch:typecheck && npm run platform:adapter:aws:observability:cloudwatch:build && npm run platform:adapter:aws:observability:cloudwatch:test && npm run platform:adapter:aws:observability:cloudwatch:boundary
+package-script	package.json#platform:adapter:aws:observability:cloudwatch:test	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/observability/cloudwatch/tsconfig.runtime-test.json --development --payload && node platform/adapters/aws/observability/cloudwatch/tests/run-runtime-tests.mjs
+package-script	package.json#platform:adapter:aws:observability:cloudwatch:typecheck	tsc -p platform/adapters/aws/observability/cloudwatch/tsconfig.check.json
+package-script	package.json#platform:adapter:aws:queue:sqs:boundary	node platform/adapters/aws/queue/sqs/tests/test-infrastructure/static-validation/sqs-adapter-boundaries.test.mjs
+package-script	package.json#platform:adapter:aws:queue:sqs:build	tsc -p platform/adapters/aws/queue/sqs/tsconfig.json
+package-script	package.json#platform:adapter:aws:queue:sqs:check	npm run platform:adapter:aws:queue:sqs:typecheck && npm run platform:adapter:aws:queue:sqs:build && npm run platform:adapter:aws:queue:sqs:test && npm run platform:adapter:aws:queue:sqs:boundary
+package-script	package.json#platform:adapter:aws:queue:sqs:test	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/queue/sqs/tsconfig.runtime-test.json --development --payload && node platform/adapters/aws/queue/sqs/tests/run-runtime-tests.mjs
+package-script	package.json#platform:adapter:aws:queue:sqs:typecheck	tsc -p platform/adapters/aws/queue/sqs/tsconfig.check.json
+package-script	package.json#platform:adapter:aws:runtime:ecs-fargate:boundary	node platform/adapters/aws/runtime/ecs-fargate/tests/test-infrastructure/static-validation/ecs-fargate-adapter-boundaries.test.mjs
+package-script	package.json#platform:adapter:aws:runtime:ecs-fargate:build	tsc -p platform/adapters/aws/runtime/ecs-fargate/tsconfig.json
+package-script	package.json#platform:adapter:aws:runtime:ecs-fargate:check	npm run platform:adapter:aws:runtime:ecs-fargate:typecheck && npm run platform:adapter:aws:runtime:ecs-fargate:build && npm run platform:adapter:aws:runtime:ecs-fargate:test && npm run platform:adapter:aws:runtime:ecs-fargate:boundary
+package-script	package.json#platform:adapter:aws:runtime:ecs-fargate:test	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/runtime/ecs-fargate/tsconfig.runtime-test.json --development --payload && node platform/adapters/aws/runtime/ecs-fargate/tests/run-runtime-tests.mjs
+package-script	package.json#platform:adapter:aws:runtime:ecs-fargate:typecheck	tsc -p platform/adapters/aws/runtime/ecs-fargate/tsconfig.check.json
+package-script	package.json#platform:adapter:aws:security:dynamodb-rate-limiter:boundary	node platform/adapters/aws/security/dynamodb-rate-limiter/tests/test-infrastructure/static-validation/dynamodb-rate-limiter-boundaries.test.mjs
+package-script	package.json#platform:adapter:aws:security:dynamodb-rate-limiter:build	tsc -p platform/adapters/aws/security/dynamodb-rate-limiter/tsconfig.json
+package-script	package.json#platform:adapter:aws:security:dynamodb-rate-limiter:check	npm run platform:adapter:aws:security:dynamodb-rate-limiter:typecheck && npm run platform:adapter:aws:security:dynamodb-rate-limiter:build && npm run platform:adapter:aws:security:dynamodb-rate-limiter:test && npm run platform:adapter:aws:security:dynamodb-rate-limiter:boundary
+package-script	package.json#platform:adapter:aws:security:dynamodb-rate-limiter:test	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/security/dynamodb-rate-limiter/tsconfig.runtime-test.json --development --payload && node platform/adapters/aws/security/dynamodb-rate-limiter/tests/run-runtime-tests.mjs
+package-script	package.json#platform:adapter:aws:security:dynamodb-rate-limiter:typecheck	tsc -p platform/adapters/aws/security/dynamodb-rate-limiter/tsconfig.check.json
+package-script	package.json#platform:adapter:aws:persistence:dynamodb:boundary	node platform/adapters/aws/persistence/dynamodb/tests/test-infrastructure/static-validation/dynamodb-persistence-adapter-boundaries.test.mjs
+package-script	package.json#platform:adapter:aws:persistence:dynamodb:build	tsc -p platform/adapters/aws/persistence/dynamodb/tsconfig.json
+package-script	package.json#platform:adapter:aws:persistence:dynamodb:check	npm run platform:adapter:aws:persistence:dynamodb:typecheck && npm run platform:adapter:aws:persistence:dynamodb:build && npm run platform:adapter:aws:persistence:dynamodb:test && npm run platform:adapter:aws:persistence:dynamodb:boundary
+package-script	package.json#platform:adapter:aws:persistence:dynamodb:test	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/persistence/dynamodb/tsconfig.runtime-test.json --development --payload && node platform/adapters/aws/persistence/dynamodb/tests/run-runtime-tests.mjs
+package-script	package.json#platform:adapter:aws:persistence:dynamodb:typecheck	tsc -p platform/adapters/aws/persistence/dynamodb/tsconfig.check.json
+package-script	package.json#platform:adapter:aws:persistence:postgresql:boundary	node platform/adapters/aws/persistence/postgresql/tests/test-infrastructure/static-validation/postgresql-persistence-adapter-boundaries.test.mjs
+package-script	package.json#platform:adapter:aws:persistence:postgresql:build	tsc -p platform/adapters/aws/persistence/postgresql/tsconfig.json
+package-script	package.json#platform:adapter:aws:persistence:postgresql:check	npm run platform:adapter:aws:persistence:postgresql:typecheck && npm run platform:adapter:aws:persistence:postgresql:build && npm run platform:adapter:aws:persistence:postgresql:test && npm run platform:adapter:aws:persistence:postgresql:boundary
+package-script	package.json#platform:adapter:aws:persistence:postgresql:integration	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/persistence/postgresql/tsconfig.integration-test.json --development --payload && node platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs
+package-script	package.json#platform:adapter:aws:persistence:postgresql:test	node scripts/repo/workspace-build/script.mjs --project platform/adapters/aws/persistence/postgresql/tsconfig.runtime-test.json --development --payload && node platform/adapters/aws/persistence/postgresql/tests/run-runtime-tests.mjs
+package-script	package.json#platform:adapter:aws:persistence:postgresql:typecheck	tsc -p platform/adapters/aws/persistence/postgresql/tsconfig.check.json
+package-script	package.json#platform:server:boundary	node platform/server/tests/test-infrastructure/static-validation/platform-server-boundaries.test.mjs
+package-script	package.json#platform:server:build	tsc -p platform/server/tsconfig.json
+package-script	package.json#platform:server:check	npm run platform:server:typecheck && npm run platform:server:build && npm run platform:server:test && npm run platform:server:boundary
+package-script	package.json#platform:server:image-build	node scripts/repo/workspace-build/script.mjs --project-roots --project platform/server/tsconfig.image.json --unowned-root-prefix infra/04.deploy/03.product/entrypoints/ --payload && node scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
+package-script	package.json#platform:server:image-runtime-check	npm run platform:server:image-build && node scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+package-script	package.json#platform:server:test	node scripts/repo/workspace-build/script.mjs --project platform/server/tsconfig.runtime-test.json --development --payload && node platform/server/tests/run-runtime-tests.mjs
+package-script	package.json#platform:server:typecheck	tsc -p platform/server/tsconfig.check.json
+package-script	package.json#platform:testing:boundary	node platform/testing/tests/test-infrastructure/static-validation/platform-testing-boundaries.test.mjs
+package-script	package.json#platform:testing:build	tsc -p platform/testing/tsconfig.json
+package-script	package.json#platform:testing:check	npm run platform:testing:typecheck && npm run platform:testing:build && npm run platform:testing:test && npm run platform:testing:boundary
+package-script	package.json#platform:testing:test	node scripts/repo/workspace-build/script.mjs --project platform/testing/tsconfig.runtime-test.json --development --payload && node platform/testing/tests/run-runtime-tests.mjs
+package-script	package.json#platform:testing:typecheck	tsc -p platform/testing/tsconfig.check.json
+package-script	package.json#platform:workers:boundary	node platform/workers/tests/test-infrastructure/static-validation/platform-workers-boundaries.test.mjs
+package-script	package.json#platform:workers:build	tsc -p platform/workers/tsconfig.json
+package-script	package.json#platform:workers:check	npm run platform:workers:typecheck && npm run platform:workers:build && npm run platform:workers:test && npm run platform:workers:boundary
+package-script	package.json#platform:workers:test	node scripts/repo/workspace-build/script.mjs --project platform/workers/tsconfig.runtime-test.json --development --payload && node platform/workers/tests/run-runtime-tests.mjs
+package-script	package.json#platform:workers:typecheck	tsc -p platform/workers/tsconfig.check.json
+package-script	package.json#product:kanbien-platform:boundary	node products/kanbien-platform/tests/test-infrastructure/static-validation/kanbien-platform-boundaries.test.mjs
+package-script	package.json#product:kanbien-platform:build	tsc -p products/kanbien-platform/tsconfig.json
+package-script	package.json#product:kanbien-platform:check	npm run product:kanbien-platform:typecheck && npm run product:kanbien-platform:build && npm run product:kanbien-platform:test && npm run product:kanbien-platform:boundary
+package-script	package.json#product:kanbien-platform:test	node scripts/repo/workspace-build/script.mjs --project products/kanbien-platform/tsconfig.runtime-test.json --development --payload && node products/kanbien-platform/tests/run-runtime-tests.mjs
+package-script	package.json#product:kanbien-platform:typecheck	tsc -p products/kanbien-platform/tsconfig.check.json
+ci-job	.github/workflows/delivery-coverage.yml#source-and-local-proof	{"timeout_minutes":null,"needs":[]}
+ci-job	.github/workflows/deploy-platform-shell-staging.yml#build-image	{"timeout_minutes":30,"needs":[]}
+ci-job	.github/workflows/deploy-rag-rulebook-staging.yml#retired	{"timeout_minutes":null,"needs":[]}
+ci-job	.github/workflows/platform-shell-staging-metric-coverage.yml#verify-coverage	{"timeout_minutes":5,"needs":[]}
+ci-job	.github/workflows/platform-shell-staging-synthetic.yml#run-synthetic	{"timeout_minutes":5,"needs":[]}
+ci-job	.github/workflows/publish-kanbien-core-platform-core-server-persistence.yml#qualify-and-publish	{"timeout_minutes":35,"needs":[]}
+ci-job	.github/workflows/publish-kanbien-core-platform-core-server.yml#publish-core-server	{"timeout_minutes":35,"needs":[]}
+ci-job	.github/workflows/publish-kanbien-core-platform-entity-smoke.yml#qualify-and-publish	{"timeout_minutes":35,"needs":[]}
+ci-job	.github/workflows/publish-kanbien-core-platform-observability-collector.yml#build-and-qualify	{"timeout_minutes":35,"needs":[]}
+ci-job	.github/workflows/publish-kanbien-core-platform-observability-collector.yml#scan-qualified-payload	{"timeout_minutes":15,"needs":"build-and-qualify"}
+ci-job	.github/workflows/publish-kanbien-core-platform-observability-collector.yml#complete-custody	{"timeout_minutes":20,"needs":["build-and-qualify","scan-qualified-payload"]}
+ci-job	.github/workflows/publish-kanbien-core-platform-observability-collector.yml#retain-safe-failure-diagnostic	{"timeout_minutes":5,"needs":["build-and-qualify","scan-qualified-payload","complete-custody"]}
+ci-job	.github/workflows/reconcile-platform-shell-staging.yml#reconcile	{"timeout_minutes":5,"needs":[]}
+timeout-candidate	.agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml	{"kind":"governance","lines":[54,64]}
+timeout-candidate	.agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml	{"kind":"governance","lines":[197,287]}
+timeout-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml	{"kind":"governance","lines":[77,82,83,89,164,193]}
+timeout-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml	{"kind":"governance","lines":[124]}
+timeout-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml	{"kind":"governance","lines":[132]}
+timeout-candidate	.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-runtime-freshness.yml	{"kind":"test","lines":[3,15,27,30,32,39,42,43,58,59,64]}
+timeout-candidate	.agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml	{"kind":"governance","lines":[494,496,497,502]}
+timeout-candidate	.agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml	{"kind":"governance","lines":[96]}
+timeout-candidate	.agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml	{"kind":"governance","lines":[800,804,817,1412,1415,1419,1423,1425,1428,1429,1431,1432,1433]}
+timeout-candidate	.agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml	{"kind":"governance","lines":[40]}
+timeout-candidate	.agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-09-01-prototype-architecture-compatibility-pointers.yml	{"kind":"governance","lines":[291,321]}
+timeout-candidate	.agentic/02.rag-rulebook/schemas/context-packet.schema.yml	{"kind":"governance","lines":[764]}
+timeout-candidate	.agentic/02.rag-rulebook/schemas/rulebook-index.schema.yml	{"kind":"governance","lines":[626]}
+timeout-candidate	.agentic/02.rag-rulebook/service/query-local-context.mjs	{"kind":"governance","lines":[82,88,90,94,107,108,118,119]}
+timeout-candidate	.agentic/02.rag-rulebook/service/server.mjs	{"kind":"governance","lines":[77,167,172,186,190,191,193,202,206,210,215,230,374,375,377,384,436]}
+timeout-candidate	.agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml	{"kind":"governance","lines":[142]}
+timeout-candidate	.agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml	{"kind":"governance","lines":[169,380]}
+timeout-candidate	.agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml	{"kind":"governance","lines":[158]}
+timeout-candidate	.agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml	{"kind":"governance","lines":[49,70,159]}
+timeout-candidate	.agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.template.yml	{"kind":"governance","lines":[59]}
+timeout-candidate	.agentic/04.deploy/schemas/provider-condition-evidence.v1.schema.yml	{"kind":"governance","lines":[45]}
+timeout-candidate	.github/workflows/deploy-platform-shell-staging.yml	{"kind":"operational","lines":[66]}
+timeout-candidate	.github/workflows/platform-shell-staging-metric-coverage.yml	{"kind":"operational","lines":[49]}
+timeout-candidate	.github/workflows/platform-shell-staging-synthetic.yml	{"kind":"operational","lines":[49]}
+timeout-candidate	.github/workflows/publish-kanbien-core-platform-core-server-persistence.yml	{"kind":"operational","lines":[30]}
+timeout-candidate	.github/workflows/publish-kanbien-core-platform-core-server.yml	{"kind":"operational","lines":[44]}
+timeout-candidate	.github/workflows/publish-kanbien-core-platform-entity-smoke.yml	{"kind":"operational","lines":[30]}
+timeout-candidate	.github/workflows/publish-kanbien-core-platform-observability-collector.yml	{"kind":"operational","lines":[28,77,127,225]}
+timeout-candidate	.github/workflows/reconcile-platform-shell-staging.yml	{"kind":"operational","lines":[49]}
+timeout-candidate	infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml	{"kind":"operational","lines":[151]}
+timeout-candidate	infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml	{"kind":"operational","lines":[82]}
+timeout-candidate	infra/04.deploy/02.rag-rulebook/environments/local/declaration-contract.yml	{"kind":"operational","lines":[66]}
+timeout-candidate	infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml	{"kind":"operational","lines":[99]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/contracts/entity-smoke-target-diagnostics.v1.json	{"kind":"operational","lines":[189]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/contracts/kanbien-core-server-persistence-operation-diagnostics.v1.json	{"kind":"operational","lines":[433,437,439]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/contracts/kanbien-platform-diagnostics.v1.json	{"kind":"operational","lines":[41,42,43,44,45]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/entity-smoke/administration.ts	{"kind":"operational","lines":[75,172,203]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/entity-smoke/configuration.ts	{"kind":"operational","lines":[43,44]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/entity-smoke/database-verification.ts	{"kind":"operational","lines":[57,112,113]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.ts	{"kind":"operational","lines":[55]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/entity-smoke/verification.ts	{"kind":"operational","lines":[27,34,72,78,161]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts	{"kind":"operational","lines":[48]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts	{"kind":"operational","lines":[75]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts	{"kind":"operational","lines":[64,65,129,174,181,184,185,188,202,206,207,208,211]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts	{"kind":"operational","lines":[44,73,74]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts	{"kind":"operational","lines":[122,126,135,141]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-configuration-diagnostics.ts	{"kind":"operational","lines":[22,23,24,25,26,97]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts	{"kind":"operational","lines":[48,51,84,118]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.ts	{"kind":"operational","lines":[97,98,99]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts	{"kind":"operational","lines":[130,131,132]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.ts	{"kind":"operational","lines":[38,54,55]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts	{"kind":"operational","lines":[283,284,285,286,287]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts	{"kind":"operational","lines":[84,106]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts	{"kind":"operational","lines":[114,225,230,233,393]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts	{"kind":"operational","lines":[130,131]}
+timeout-candidate	infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts	{"kind":"operational","lines":[48,200]}
+timeout-candidate	infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml	{"kind":"operational","lines":[32]}
+timeout-candidate	infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml	{"kind":"operational","lines":[99,100,101,102,103]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml	{"kind":"operational","lines":[118]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/20-alignment/runtime-alignment-contract.yml	{"kind":"operational","lines":[34]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-22.yml	{"kind":"operational","lines":[64,69,71,78]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml	{"kind":"operational","lines":[667,675,683,691,699,707,715,723,731,739,747,755,763,771,779]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml	{"kind":"operational","lines":[169,172,191,263,271,272,279,287]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml	{"kind":"operational","lines":[101,107]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml	{"kind":"operational","lines":[705,708,778,833,848,888,935,974]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml	{"kind":"operational","lines":[91]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml	{"kind":"operational","lines":[541,547,565,575,674]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml	{"kind":"operational","lines":[237]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/deployment-artifact-store.yml	{"kind":"operational","lines":[50]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/observability-metrics.yml	{"kind":"operational","lines":[49]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/public-ingress.yml	{"kind":"operational","lines":[122,128]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/relational-work-queue.yml	{"kind":"operational","lines":[35]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/work-queues.yml	{"kind":"operational","lines":[34]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml	{"kind":"operational","lines":[93,159,161,163,165,167,187,205,214,263,329,331,333,335,337,357,375,384,475,491,524,541,630,671,688,734,774,811,852,893]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml	{"kind":"operational","lines":[730,1069]}
+timeout-candidate	infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml	{"kind":"operational","lines":[593,918,919,920,921,922,1225,1462,1463,1464,1465,1466,1476,1481,1496,1512,1616,1631,1634]}
+timeout-candidate	packages/core/src/diagnostics/index.ts	{"kind":"operational","lines":[18]}
+timeout-candidate	packages/core/src/persistence/errors.ts	{"kind":"operational","lines":[13]}
+timeout-candidate	packages/core/src/queues/index.ts	{"kind":"operational","lines":[72,279,282,290,299]}
+timeout-candidate	packages/core/tests/files/unit/files-runtime.test.ts	{"kind":"test","lines":[729]}
+timeout-candidate	packages/core/tests/localization/unit/localization-runtime.test.ts	{"kind":"test","lines":[558]}
+timeout-candidate	packages/core/tests/logging/unit/logging-runtime.test.ts	{"kind":"test","lines":[205,210,221]}
+timeout-candidate	packages/core/tests/monitoring/unit/monitoring-runtime.test.ts	{"kind":"test","lines":[447]}
+timeout-candidate	packages/core/tests/persistence/type-level/persistence-types.test.ts	{"kind":"test","lines":[61,118]}
+timeout-candidate	packages/core/tests/persistence/unit/persistence-runtime.test.ts	{"kind":"test","lines":[122,124,126,133,134,534,536,543,548]}
+timeout-candidate	packages/core/tests/queues/type-level/queues-types.test.ts	{"kind":"test","lines":[91,96,157]}
+timeout-candidate	packages/core/tests/queues/unit/queues-runtime.test.ts	{"kind":"test","lines":[80,82,83,157,166,167,193,208,306]}
+timeout-candidate	packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts	{"kind":"test","lines":[67]}
+timeout-candidate	platform/adapters/aws/observability/cloudwatch/src/configuration.ts	{"kind":"operational","lines":[31,34,37,38,44]}
+timeout-candidate	platform/adapters/aws/observability/cloudwatch/src/index.ts	{"kind":"operational","lines":[29,64,84,86,242,243,244,245]}
+timeout-candidate	platform/adapters/aws/observability/cloudwatch/src/lifecycle-observation.ts	{"kind":"operational","lines":[1,124,125]}
+timeout-candidate	platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-adapter-runtime.test.ts	{"kind":"test","lines":[93,106,113,132,135,136,294,340]}
+timeout-candidate	platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-lifecycle-runtime.test.ts	{"kind":"test","lines":[4,21,82,127,137,150,151,152,153,154,155,156,158,160,162,163,189,280,281,283,290,293]}
+timeout-candidate	platform/adapters/aws/persistence/dynamodb/src/errors.ts	{"kind":"operational","lines":[51]}
+timeout-candidate	platform/adapters/aws/persistence/dynamodb/src/observations.ts	{"kind":"operational","lines":[26]}
+timeout-candidate	platform/adapters/aws/persistence/dynamodb/tests/contract/dynamodb-persistence-adapter-runtime.test.ts	{"kind":"test","lines":[485]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/configuration/contract/types.ts	{"kind":"operational","lines":[8,9,10,18]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/configuration/domain/assembly.ts	{"kind":"operational","lines":[12,13,14]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/configuration/domain/validation.ts	{"kind":"operational","lines":[31,32,35,38,39,41]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/connection.ts	{"kind":"operational","lines":[50,51,52,74,75,76]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/errors.ts	{"kind":"operational","lines":[33,97,99,158,209]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/migrations.ts	{"kind":"operational","lines":[52,54,70,71,72]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/outbox.ts	{"kind":"operational","lines":[52,72,89]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/processing.ts	{"kind":"operational","lines":[33,50,69]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/src/records.ts	{"kind":"operational","lines":[52,63,211,212,213,223]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts	{"kind":"test","lines":[132,133,134,168,170,172,173,175,177,178,184,297,717,720,728,798,799,800,821]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts	{"kind":"test","lines":[33,34,52,53,109,184,187,189,191,193,195,201]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-persistence-adapter-integration.test.ts	{"kind":"test","lines":[62,78,79,80,117,287,300,312,326,336,453,478,479,490]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs	{"kind":"test","lines":[54,65,116,173,180,200,231,232,235,241]}
+timeout-candidate	platform/adapters/aws/persistence/postgresql/tests/run-runtime-tests.mjs	{"kind":"test","lines":[30]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/configuration/contract/reporting/diagnostics.v1.json	{"kind":"operational","lines":[79,179]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/configuration/contract/requirements.ts	{"kind":"operational","lines":[4,13]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/configuration/contract/types.ts	{"kind":"operational","lines":[6]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/configuration/domain/assembly.ts	{"kind":"operational","lines":[8]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/configuration/index.ts	{"kind":"operational","lines":[1]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/errors.ts	{"kind":"operational","lines":[2]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/index.ts	{"kind":"operational","lines":[4]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/queue.ts	{"kind":"operational","lines":[96]}
+timeout-candidate	platform/adapters/aws/queue/sqs/src/worker.ts	{"kind":"operational","lines":[12,55,63,72,84,129,146,161,165,172,209,251]}
+timeout-candidate	platform/adapters/aws/queue/sqs/tests/contract/sqs-adapter-runtime.test.ts	{"kind":"test","lines":[93,110,124,129,137,181,383]}
+timeout-candidate	platform/adapters/aws/queue/sqs/tests/unit/sqs-configuration-runtime.test.ts	{"kind":"test","lines":[8,15,39,61,63,68,76,95,192,209]}
+timeout-candidate	platform/contracts/src/observability-profiles.ts	{"kind":"operational","lines":[348]}
+timeout-candidate	platform/health/tests/integration/diagnostics-runtime.test.ts	{"kind":"test","lines":[61]}
+timeout-candidate	platform/observability/contracts/diagnostics.v1.json	{"kind":"operational","lines":[54,70,103,104,105,440,519,563,593,708,724,876]}
+timeout-candidate	platform/observability/src/boundary-definitions.ts	{"kind":"operational","lines":[11]}
+timeout-candidate	platform/observability/src/configuration.ts	{"kind":"operational","lines":[14,21,23,95,98,101,106,107,108,109,112]}
+timeout-candidate	platform/observability/src/metric-lifecycle-diagnostics.ts	{"kind":"operational","lines":[14,26,35,41]}
+timeout-candidate	platform/observability/src/readiness-diagnostics.ts	{"kind":"operational","lines":[7,26,28,32]}
+timeout-candidate	platform/observability/src/readiness-observation.ts	{"kind":"operational","lines":[15,44,57,72,162,164,165,166,168,170,187,188,195]}
+timeout-candidate	platform/observability/tests/integration/configuration-runtime.test.ts	{"kind":"test","lines":[62,68,73,75]}
+timeout-candidate	platform/observability/tests/integration/metric-diagnostics-runtime.test.ts	{"kind":"test","lines":[214]}
+timeout-candidate	platform/observability/tests/integration/metric-lifecycle-diagnostics-runtime.test.ts	{"kind":"test","lines":[15,19,29]}
+timeout-candidate	platform/observability/tests/integration/platform-observability-runtime.test.ts	{"kind":"test","lines":[188,215,220,221,306]}
+timeout-candidate	platform/observability/tests/integration/readiness-diagnostics-runtime.test.ts	{"kind":"test","lines":[22,24,26,28,55,56,57,106,113,125,137,138,145,148,150,181]}
+timeout-candidate	platform/observability/tests/integration/security-diagnostics-runtime.test.ts	{"kind":"test","lines":[43]}
+timeout-candidate	platform/observability/tests/type-level/configuration-types.test.ts	{"kind":"test","lines":[12,15]}
+timeout-candidate	platform/persistence/contracts/diagnostics.v1.json	{"kind":"operational","lines":[183,268,353,438,523,608,662,693,778,863,948,1035,1122,1209,1296,1383,1439,1470,1557,1644,1731,1808,1885,1962,2039,2116,2162,2193,2270,2347,2911,2986,3073,3148,3235,3310,3330,3397,3472,3559,3634,3722,3797]}
+timeout-candidate	platform/persistence/src/diagnostics.ts	{"kind":"operational","lines":[16,25,141,179,298]}
+timeout-candidate	platform/persistence/tests/integration/platform-persistence-runtime.test.ts	{"kind":"test","lines":[667,669,672,683,698]}
+timeout-candidate	platform/persistence/tests/type-level/platform-persistence-types.test.ts	{"kind":"test","lines":[133]}
+timeout-candidate	platform/server/contracts/diagnostics.v1.json	{"kind":"operational","lines":[42,72,332,333,334,335,336,382,435,536]}
+timeout-candidate	platform/server/src/diagnostics.ts	{"kind":"operational","lines":[15,24,76,77,89,99,124,242,264,266]}
+timeout-candidate	platform/server/src/index.ts	{"kind":"operational","lines":[158]}
+timeout-candidate	platform/server/src/transport.ts	{"kind":"operational","lines":[15,16,17,18,19,38,39,40,41,42,88,89,90,91,92,111,113,116,143,144,146,256,259,260,280,282,283,337,338,586,587,589,594,595,597,601,602]}
+timeout-candidate	platform/server/tests/integration/builtin-evidence-runtime.test.ts	{"kind":"test","lines":[14]}
+timeout-candidate	platform/server/tests/integration/platform-server-runtime.test.ts	{"kind":"test","lines":[807,884,889,891,892,893,895,896,898,900,906,907,913,914,915]}
+timeout-candidate	platform/server/tests/integration/transport-diagnostics-runtime.test.ts	{"kind":"test","lines":[75,240,245,307,309,366]}
+timeout-candidate	platform/server/tests/type-level/transport-diagnostics-types.test.ts	{"kind":"test","lines":[17]}
+timeout-candidate	platform/server/tests/unit/transport-configuration-diagnostics-runtime.test.ts	{"kind":"test","lines":[6,7,25,27,28,30,32]}
+timeout-candidate	platform/workers/contracts/diagnostics.v1.json	{"kind":"operational","lines":[213]}
+timeout-candidate	platform/workers/src/configuration-diagnostics.ts	{"kind":"operational","lines":[3]}
+timeout-candidate	platform/workers/src/configuration/contract/requirements.ts	{"kind":"operational","lines":[1,7,11]}
+timeout-candidate	platform/workers/src/configuration/domain/validation/startup.ts	{"kind":"operational","lines":[5,10,11,14,24]}
+timeout-candidate	platform/workers/src/configuration/index.ts	{"kind":"operational","lines":[1]}
+timeout-candidate	platform/workers/src/index.ts	{"kind":"operational","lines":[6]}
+timeout-candidate	platform/workers/src/main.ts	{"kind":"operational","lines":[22,43]}
+timeout-candidate	platform/workers/src/types.ts	{"kind":"operational","lines":[94]}
+timeout-candidate	platform/workers/src/worker.ts	{"kind":"operational","lines":[174,179,185,555,579,585]}
+timeout-candidate	platform/workers/tests/integration/context-boundary-diagnostics-runtime.test.ts	{"kind":"test","lines":[39,63,106]}
+timeout-candidate	platform/workers/tests/integration/delivery-boundary-diagnostics-runtime.test.ts	{"kind":"test","lines":[57,167]}
+timeout-candidate	platform/workers/tests/integration/platform-workers-runtime.test.ts	{"kind":"test","lines":[112,442,549]}
+timeout-candidate	platform/workers/tests/integration/retry-configuration-runtime.test.ts	{"kind":"test","lines":[24,39,41,42,45,61,79,84,112,115,119]}
+timeout-candidate	platform/workers/tests/type-level/platform-workers-types.test.ts	{"kind":"test","lines":[71,72]}
+timeout-candidate	platform/workers/tests/type-level/retry-configuration-types.test.ts	{"kind":"test","lines":[2,6,9]}
+timeout-candidate	scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh	{"kind":"operational","lines":[78,102,104,111,114,124,126,132,134]}
+timeout-candidate	scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh	{"kind":"test","lines":[139,140,185,186,187,188,189]}
+timeout-candidate	scripts/00.chat/main-refresh/show-main-update-status/script.sh	{"kind":"operational","lines":[66,68]}
+timeout-candidate	scripts/01.harness/agents/validate-harness-agents/diagnostic-test.js	{"kind":"test","lines":[68]}
+timeout-candidate	scripts/01.harness/artifact-metadata/backfill-v2-headers/diagnostic-test.py	{"kind":"test","lines":[128]}
+timeout-candidate	scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh	{"kind":"test","lines":[474]}
+timeout-candidate	scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh	{"kind":"test","lines":[577]}
+timeout-candidate	scripts/02.rag-rulebook/build-local-runtime/script.sh	{"kind":"operational","lines":[312,428]}
+timeout-candidate	scripts/02.rag-rulebook/check-runtime-freshness/script.sh	{"kind":"operational","lines":[6,27,28,29,30,55,184,211,216]}
+timeout-candidate	scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh	{"kind":"test","lines":[6,17,27,28,31,32,57,71,98,101,125,126,130,133,153,157,160,179,181,184,204,207,229,232,249]}
+timeout-candidate	scripts/02.rag-rulebook/check-source-projections/scoped-smoke-test.sh	{"kind":"test","lines":[96]}
+timeout-candidate	scripts/02.rag-rulebook/commit-gates/script.sh	{"kind":"operational","lines":[143,144,145]}
+timeout-candidate	scripts/02.rag-rulebook/generate-rulebook-index/script.sh	{"kind":"operational","lines":[253,292,305]}
+timeout-candidate	scripts/02.rag-rulebook/query-local-context/script.sh	{"kind":"operational","lines":[235]}
+timeout-candidate	scripts/02.rag-rulebook/query-local-context/smoke-test.sh	{"kind":"test","lines":[344]}
+timeout-candidate	scripts/02.rag-rulebook/run-local-service/smoke-test.sh	{"kind":"test","lines":[69,71,81]}
+timeout-candidate	scripts/02.rag-rulebook/smoke-test-service-image/script.sh	{"kind":"test","lines":[188,190,200]}
+timeout-candidate	scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh	{"kind":"operational","lines":[389,390,404,458]}
+timeout-candidate	scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh	{"kind":"test","lines":[68,77,78]}
+timeout-candidate	scripts/04.deploy/assess-platform-shell-artifact-drift/script.py	{"kind":"operational","lines":[129,156,162]}
+timeout-candidate	scripts/04.deploy/assess-platform-shell-foundation-drift/script.py	{"kind":"operational","lines":[70,73,74,212,214,215,319,340]}
+timeout-candidate	scripts/04.deploy/assess-platform-shell-service-drift/script.py	{"kind":"operational","lines":[146,170,181]}
+timeout-candidate	scripts/04.deploy/build-platform-shell-image/configuration-diagnostic-test.mjs	{"kind":"test","lines":[40,51,77,111,113,242,296,324,335,339,344,374,382,402]}
+timeout-candidate	scripts/04.deploy/build-platform-shell-image/delivery-diagnostic-test.mjs	{"kind":"test","lines":[49,50,279,335,337,371,378,384]}
+timeout-candidate	scripts/04.deploy/build-platform-shell-image/process-diagnostic-test.mjs	{"kind":"test","lines":[55,109,263,279,282]}
+timeout-candidate	scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs	{"kind":"operational","lines":[128,129,130,131,132,143,200,217,458,468]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py	{"kind":"operational","lines":[243,325]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/smoke-test.sh	{"kind":"test","lines":[251,252,262]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py	{"kind":"operational","lines":[30,49,152]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/alignment-test.py	{"kind":"test","lines":[42,43,44,59,333,334]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py	{"kind":"operational","lines":[113,115,116,126,128,129]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/smoke-test.py	{"kind":"test","lines":[74]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.py	{"kind":"operational","lines":[82,152]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/smoke-test.sh	{"kind":"test","lines":[47]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.py	{"kind":"operational","lines":[15,40,110,112]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/smoke-test.sh	{"kind":"test","lines":[100]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.py	{"kind":"operational","lines":[369]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/fixtures/aligned.json	{"kind":"test","lines":[1]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/fixtures/contract.yml	{"kind":"test","lines":[28]}
+timeout-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.py	{"kind":"operational","lines":[29]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/binding-test.py	{"kind":"test","lines":[139,153]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.py	{"kind":"operational","lines":[91,93,94]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs	{"kind":"test","lines":[158,379,381,382,466]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs	{"kind":"test","lines":[87,93,127,136,137,138,199,213]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs	{"kind":"test","lines":[41,44,50,102]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs	{"kind":"test","lines":[428,431,432,433,434,435,436,437,440,450,451,452,453,469]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/access-control-test.mjs	{"kind":"test","lines":[95]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/preflight-test.mjs	{"kind":"test","lines":[39]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/runtime-test.mjs	{"kind":"test","lines":[109,345]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-validation-test.py	{"kind":"test","lines":[92,93]}
+timeout-candidate	scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py	{"kind":"operational","lines":[240]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/build-core-server-image/runtime-preparation-diagnostic-test.py	{"kind":"test","lines":[83,175]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh	{"kind":"operational","lines":[46]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py	{"kind":"test","lines":[66,137,239,472]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py	{"kind":"operational","lines":[30]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare-test.mjs	{"kind":"test","lines":[66]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble-test.mjs	{"kind":"test","lines":[64]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/connected-workload-test.py	{"kind":"test","lines":[131,168,174]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh	{"kind":"operational","lines":[112,119,125]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/runtime-command-test.mjs	{"kind":"test","lines":[82,84,93,102]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh	{"kind":"test","lines":[126,128,137]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py	{"kind":"test","lines":[44]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py	{"kind":"test","lines":[84,112,115,116,119]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py	{"kind":"test","lines":[117,147,216]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh	{"kind":"test","lines":[45,46,119,120]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh	{"kind":"test","lines":[124,151,164,171]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/capability-negative-test.py	{"kind":"test","lines":[30]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/qualification-control-test.mjs	{"kind":"test","lines":[58]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/verify-image.mjs	{"kind":"test","lines":[32,33,45,104,151,214,217]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py	{"kind":"test","lines":[39,41,42,59,60,112,113,116,145]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/publication-test.py	{"kind":"test","lines":[69,158,159,160,161]}
+timeout-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/verify-workflow.py	{"kind":"operational","lines":[78,115]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py	{"kind":"operational","lines":[63,64,65,107,108]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py	{"kind":"test","lines":[93,147,162,191]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh	{"kind":"test","lines":[152,153,154,155]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py	{"kind":"operational","lines":[155]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py	{"kind":"operational","lines":[231]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py	{"kind":"operational","lines":[45]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py	{"kind":"operational","lines":[66,93]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py	{"kind":"test","lines":[290,337,367,386,391,424,429,430,433,438,442,446,467,477,514,539,644,652,722,1089,1098,1129,1231,1263,1344,1345,1358,1481,1485,1572,1577,1654,1684,1702,1747,1767,1768,1813,1855,1918,2011]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py	{"kind":"operational","lines":[41,42,43,109,110,111,158,160]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py	{"kind":"test","lines":[88,104,206,218,220,244]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.py	{"kind":"operational","lines":[56]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.py	{"kind":"operational","lines":[33,34]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh	{"kind":"test","lines":[194,195,386,421,428,429,441,448]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py	{"kind":"operational","lines":[98,105]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py	{"kind":"operational","lines":[70,71]}
+timeout-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh	{"kind":"test","lines":[56,69]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.py	{"kind":"operational","lines":[86,88]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/release-succession/ordinary-update-test.py	{"kind":"test","lines":[230,234]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py	{"kind":"operational","lines":[93,94,159,164,165]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py	{"kind":"test","lines":[462,479]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.py	{"kind":"operational","lines":[104,105,109]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.py	{"kind":"operational","lines":[13,36,38,66,97,123,124,130,185,186,187,188,189,205,212,223,225,227,233,235]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.sh	{"kind":"operational","lines":[14]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/smoke-test.sh	{"kind":"test","lines":[14,50,55,61,62,72,92,98,109,118,121,134,151,152,153,159,161,164]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py	{"kind":"operational","lines":[56,63,64,74,77,81,82,90,142,151,162,163,195,196,200,205,211,212,213,214,219]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/controller-fixtures.py	{"kind":"operational","lines":[94,95,114]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py	{"kind":"test","lines":[99,126]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-updates.py	{"kind":"operational","lines":[92,153]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/current-observations-test.py	{"kind":"test","lines":[40,48,66,138,155]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py	{"kind":"operational","lines":[214,219,259,268,273,275,276,278,351,362,363,420,471,472,476,477,666,700,833,917,1014]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py	{"kind":"test","lines":[60,66,67,68,77,84,105,111,120,159,197]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts-smoke-test.py	{"kind":"test","lines":[40,47]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py	{"kind":"operational","lines":[79,83,84,87,88]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py	{"kind":"operational","lines":[109,140]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py	{"kind":"test","lines":[81,109,190,213,315,371,374]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py	{"kind":"operational","lines":[13,276,277,527,528,536,586,612,613,614,634,669,695,697,788]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py	{"kind":"operational","lines":[92,97,129,130]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.py	{"kind":"test","lines":[48,56,74,114]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py	{"kind":"operational","lines":[88,92]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/smoke-test.sh	{"kind":"test","lines":[39]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py	{"kind":"operational","lines":[151,152,160,340]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/replacement-operations.py	{"kind":"operational","lines":[110,112]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py	{"kind":"operational","lines":[47,93,101,150,152,159,213,219,255,259,283,285]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py	{"kind":"operational","lines":[23,24,25,42,43,66,74,130,295,297,301,320,328,353,355,357,417]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh	{"kind":"operational","lines":[14]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py	{"kind":"operational","lines":[79]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operation-test.py	{"kind":"test","lines":[54,130,343]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py	{"kind":"operational","lines":[67,72,103,104,124,136,137,141,146]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py	{"kind":"test","lines":[60,82,88,102,103,110,117,174,176,179,183,184,191,192,205]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py	{"kind":"operational","lines":[33,34,35,52,53,107,115,259,267,289,296,336,345,380,411,429,479,486,494,499,501]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.py	{"kind":"test","lines":[199,627,631]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evidence.py	{"kind":"operational","lines":[139]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route-test.py	{"kind":"test","lines":[433,726]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-observation-test.mjs	{"kind":"test","lines":[40]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/administrator-recovery-test.mjs	{"kind":"test","lines":[39]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-route-test.py	{"kind":"test","lines":[231]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py	{"kind":"operational","lines":[261,265,267]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair-test.py	{"kind":"test","lines":[93]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair.py	{"kind":"operational","lines":[58]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py	{"kind":"test","lines":[292,322,344,358,359,360,361,362,363,497,507,508,509,510,636,650,660,669,674,685,689,690,691,698,699,700,703,710,712,714,715,716,717,720]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/preflight-control-test.py	{"kind":"test","lines":[42,86,87,106]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/preflight-control.py	{"kind":"operational","lines":[55,77]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-state.py	{"kind":"operational","lines":[83,85]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement-route.py	{"kind":"operational","lines":[205,209,211]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route-test.py	{"kind":"test","lines":[114,116,390]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py	{"kind":"operational","lines":[169,173,174]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-control-test.py	{"kind":"test","lines":[49]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-route.py	{"kind":"operational","lines":[486,497,498]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py	{"kind":"operational","lines":[137,142,143,144,147,148,175,179,233,596,606,741,745,747,885,886,888]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py	{"kind":"operational","lines":[96,98,191,195,196]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/source-transition-test.py	{"kind":"test","lines":[235,296]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/source-transition.py	{"kind":"operational","lines":[419,421,474]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-completion.py	{"kind":"operational","lines":[60,87]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-control-test.py	{"kind":"test","lines":[36,148]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-control.py	{"kind":"operational","lines":[73,90,106]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-evidence-test.py	{"kind":"test","lines":[41]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-evidence.py	{"kind":"operational","lines":[206]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route-test.py	{"kind":"test","lines":[592,1113,1117,1119,1120,1130,1133,1134,1138,1139]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route.py	{"kind":"operational","lines":[225,227,303]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-runner-test.py	{"kind":"test","lines":[36,126,127,128,194,210,269]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-runner.py	{"kind":"operational","lines":[99,105,169,171]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-steps.py	{"kind":"operational","lines":[202,203,206]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/unready-control.py	{"kind":"operational","lines":[46]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py	{"kind":"operational","lines":[300,308]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py	{"kind":"operational","lines":[129,131]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py	{"kind":"operational","lines":[197,431,434,435,437,438,568]}
+timeout-candidate	scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.py	{"kind":"test","lines":[13,192,221,232,442,443,444]}
+timeout-candidate	scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py	{"kind":"test","lines":[13]}
+timeout-candidate	scripts/04.deploy/operational-realization-gate/service-graph-test.py	{"kind":"test","lines":[51]}
+timeout-candidate	scripts/04.deploy/provision-platform-shell-negative-authz-client/script.py	{"kind":"operational","lines":[153,155]}
+timeout-candidate	scripts/04.deploy/provision-platform-shell-persistence-write-client/script.py	{"kind":"operational","lines":[156,157]}
+timeout-candidate	scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py	{"kind":"test","lines":[70,100,104,140]}
+timeout-candidate	scripts/04.deploy/reconcile-platform-shell-staging/release_control.py	{"kind":"operational","lines":[78,112]}
+timeout-candidate	scripts/04.deploy/reconcile-platform-shell-staging/script.py	{"kind":"operational","lines":[47,92,95,96,508,510,513,515,549,792]}
+timeout-candidate	scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh	{"kind":"test","lines":[135,156,176,197]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py	{"kind":"test","lines":[63,76,77,100]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py	{"kind":"operational","lines":[71,171,203,246,550,551,561,562,569,570,577,578]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh	{"kind":"test","lines":[46,139,143]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-controlled-smoke/script.py	{"kind":"operational","lines":[27,45,47,48,226,243,245,253,266,270,302,303]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-ingress-smoke/script.py	{"kind":"operational","lines":[35,39,40,211,217,221,244]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-metric-coverage/script.py	{"kind":"operational","lines":[47,49,50,318,327,328,335,338,347,357,382,385,410,414,476,480,486,491,506,517,519,520,526,527,537,544,566,572,642,644,647,649]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.py	{"kind":"operational","lines":[35,39,40,183,190,192,200,206,210,241,242]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py	{"kind":"operational","lines":[235,237,255,259]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh	{"kind":"test","lines":[89]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py	{"kind":"operational","lines":[392,798]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-persistence-smoke/script.py	{"kind":"operational","lines":[56,72,73,269,276,278,286,296,300,345,346]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py	{"kind":"operational","lines":[56,87,232,425,746,747,748,754,757,776,806,807,823,1061,1063,1071,1078,1079,1082,1108,1109,1110]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh	{"kind":"test","lines":[75,370,372,375,379,380]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.py	{"kind":"operational","lines":[31,35,36,125,135,139,157,159,169,177,239]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh	{"kind":"test","lines":[71,77,81,82]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py	{"kind":"test","lines":[63,71]}
+timeout-candidate	scripts/04.deploy/run-platform-shell-worker-smoke/script.py	{"kind":"operational","lines":[35,43,44,165,251,254,255,258,265,266,267,278,311,315,330,380]}
+timeout-candidate	scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py	{"kind":"test","lines":[89,90,91,187,189,201,205,233,243,291,303,358,360,365,369,373,379,385,400]}
+timeout-candidate	scripts/04.deploy/shared/deployment-operation-diagnostics.py	{"kind":"operational","lines":[541,542]}
+timeout-candidate	scripts/04.deploy/shared/provider-adapters/aws/cli.py	{"kind":"operational","lines":[35,38,41,42,51,57,58,64,65,66,68]}
+timeout-candidate	scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py	{"kind":"operational","lines":[35,90,91]}
+timeout-candidate	scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py	{"kind":"operational","lines":[126,128,129,136,199,208,241]}
+timeout-candidate	scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py	{"kind":"test","lines":[131,154,173]}
+timeout-candidate	scripts/04.deploy/shared/provider-adapters/aws/response.py	{"kind":"operational","lines":[48,72,73]}
+timeout-candidate	scripts/04.deploy/shared/provider-adapters/aws/tasks.py	{"kind":"operational","lines":[159,166,172,176]}
+timeout-candidate	scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py	{"kind":"operational","lines":[27,53]}
+timeout-candidate	scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py	{"kind":"test","lines":[50,77]}
+timeout-candidate	scripts/04.deploy/smoke-test-platform-shell-image/script.sh	{"kind":"test","lines":[189,191,201,220,224]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py	{"kind":"operational","lines":[120]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh	{"kind":"operational","lines":[85]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh	{"kind":"operational","lines":[295]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh	{"kind":"operational","lines":[851,1479,1480,1717,1720,1784,1785]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh	{"kind":"operational","lines":[279]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py	{"kind":"operational","lines":[49,52,53,104]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh	{"kind":"operational","lines":[220]}
+timeout-candidate	scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh	{"kind":"operational","lines":[241]}
+timeout-candidate	scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh	{"kind":"operational","lines":[283]}
+timeout-candidate	scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh	{"kind":"test","lines":[118]}
+timeout-candidate	scripts/repo/check-selection/local_cache.py	{"kind":"operational","lines":[90,261,271]}
+timeout-candidate	scripts/repo/check-selection/mechanics_test.py	{"kind":"test","lines":[340,347]}
+timeout-candidate	scripts/repo/check-selection/repository_contracts_test.py	{"kind":"test","lines":[1164]}
+timeout-candidate	scripts/repo/check-selection/script.py	{"kind":"operational","lines":[107]}
+timeout-candidate	scripts/repo/check-selection/test_support.py	{"kind":"test","lines":[202]}
+timeout-candidate	scripts/repo/check-selection/workspace_context.py	{"kind":"operational","lines":[46,108]}
+timeout-candidate	scripts/repo/diagnostic-coverage/reviews.v1.json	{"kind":"operational","lines":[28,76,407,450,505,626,679,862,1136,1386,1443,1541,1580,1612,3022,3056,3089,3816,3840,3842,4217,4359,4653,5002,5215,5348,5909,6657]}
+timeout-candidate	scripts/repo/diagnostic-coverage/smoke-test.py	{"kind":"test","lines":[434,437,632,643,1040,1042,1329,1333,1377]}
+timeout-candidate	scripts/repo/workspace-build/check-inputs.mjs	{"kind":"operational","lines":[57]}
+timeout-candidate	scripts/repo/workspace-build/runtime-packages-test.mjs	{"kind":"test","lines":[48]}
+timeout-candidate	scripts/repo/workspace-build/runtime-packages.mjs	{"kind":"operational","lines":[135]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml	{"kind":"governance","lines":[105,109]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml	{"kind":"governance","lines":[116,119,122,128]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml	{"kind":"governance","lines":[100,101,104,105,106,107,113,116,122,124,126,128,130,133]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml	{"kind":"governance","lines":[419,420,433,434,437,439,465,467]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml	{"kind":"governance","lines":[152,153,156,162,165,167,173,185]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml	{"kind":"governance","lines":[123,124,127,130,132,138]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml	{"kind":"governance","lines":[119,120,123,126,128,134]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml	{"kind":"governance","lines":[130,131,135,136,141,143,151,153]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml	{"kind":"governance","lines":[138,139,143,144,149,151,159,163]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml	{"kind":"governance","lines":[199,201,202,207,209,210,211,214,215,217,221,223,233,237,239,241,247,249]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml	{"kind":"governance","lines":[153,154,157,158,162,163,164,165,166,171,173,179,181,189,191,193,195,197]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml	{"kind":"governance","lines":[116,117,118,127,129,131]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml	{"kind":"governance","lines":[113,114,116,120,122,126]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml	{"kind":"governance","lines":[113,114,116,122,124,128]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml	{"kind":"governance","lines":[91,93,105,108]}
+verification-candidate	.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml	{"kind":"governance","lines":[86,87,92,98,101,111]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml	{"kind":"governance","lines":[62,64,65,66,70,74,76,78]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/01.harness/2026-09-01-final-prototype-architecture-root-pointer.yml	{"kind":"governance","lines":[66,68,69,70,74,78,80,82]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml	{"kind":"governance","lines":[56,64]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-09-01-prototype-architecture-compatibility-pointers.yml	{"kind":"governance","lines":[280,282,285,286,287,288,289,291,292,294,296,299,303,309,311,313,315,317,321,323,327,331]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml	{"kind":"governance","lines":[183,185,186,187,191,195,197,199]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml	{"kind":"governance","lines":[73,74,75,76,77,78,80,82,84,86,88]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml	{"kind":"governance","lines":[62,64,65,66,70,74,76,78]}
+verification-candidate	.agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml	{"kind":"governance","lines":[80,82,83,84,88,92,94,96]}
+verification-candidate	.agentic/02.rag-rulebook/source-projections/v1.yml	{"kind":"governance","lines":[49,50,76,77,80,101,102,135,136,139,165,166,169,193,194,198,222,223,250,251,253,286,287,325,326,353,354,379,380,383,407,408,411,444,445]}
+verification-candidate	.github/workflows/delivery-coverage.yml	{"kind":"operational","lines":[37,43,49]}
+verification-candidate	.github/workflows/deploy-platform-shell-staging.yml	{"kind":"operational","lines":[102,107,108,109,110,111,112,113,118,229,235,332]}
+verification-candidate	.github/workflows/platform-shell-staging-metric-coverage.yml	{"kind":"operational","lines":[75,78,87]}
+verification-candidate	.github/workflows/platform-shell-staging-synthetic.yml	{"kind":"operational","lines":[75,78,87,93]}
+verification-candidate	.github/workflows/publish-kanbien-core-platform-core-server-persistence.yml	{"kind":"operational","lines":[44,52,53,54,61,118]}
+verification-candidate	.github/workflows/publish-kanbien-core-platform-core-server.yml	{"kind":"operational","lines":[71,81,83,93,103,159]}
+verification-candidate	.github/workflows/publish-kanbien-core-platform-entity-smoke.yml	{"kind":"operational","lines":[44,51,52,114]}
+verification-candidate	.github/workflows/publish-kanbien-core-platform-observability-collector.yml	{"kind":"operational","lines":[37,52,53,58,148,153,160,205]}
+verification-candidate	.github/workflows/reconcile-platform-shell-staging.yml	{"kind":"operational","lines":[75,78,87]}
+verification-candidate	.llm-workbench/manifest.json	{"kind":"operational","lines":[763]}
+verification-candidate	infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml	{"kind":"operational","lines":[90,133,184,185,198,216,846,852,862,1000]}
+verification-candidate	infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml	{"kind":"operational","lines":[71,84,90,91,121,135,149,162,183,466,713,1272,1640,1679,1698,2108,2359,2363,2376,2386,2415,2428,2436]}
+verification-candidate	package.json	{"kind":"operational","lines":[25,29,31,34,35,37,39,41,43,45,47,49,51,53,55,57,58,59,60,62,63,66,68,70,71,72,74,76,77,78,79,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186]}
+verification-candidate	scripts/00.chat/closeout/build-closeout-prompt/script.sh	{"kind":"operational","lines":[101]}
+verification-candidate	scripts/00.chat/command/dispatcher/script.sh	{"kind":"operational","lines":[38]}
+verification-candidate	scripts/00.chat/command/dispatcher/smoke-test.sh	{"kind":"test","lines":[114,125]}
+verification-candidate	scripts/00.chat/command/package-scripts/smoke-test.sh	{"kind":"test","lines":[154,155,156,157,160,161,162]}
+verification-candidate	scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh	{"kind":"operational","lines":[431,432,444,451]}
+verification-candidate	scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/smoke-test.sh	{"kind":"test","lines":[160,169,338,398]}
+verification-candidate	scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh	{"kind":"operational","lines":[226,231]}
+verification-candidate	scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh	{"kind":"test","lines":[139]}
+verification-candidate	scripts/00.chat/main-refresh/verify-conflict-audit/smoke-test.sh	{"kind":"test","lines":[78,86,132,142]}
+verification-candidate	scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh	{"kind":"test","lines":[67,114,148,156]}
+verification-candidate	scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh	{"kind":"test","lines":[97,118,138]}
+verification-candidate	scripts/00.chat/session-log/checkpoint-chat-session-log/smoke-test.sh	{"kind":"test","lines":[59,103,108]}
+verification-candidate	scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh	{"kind":"operational","lines":[63,64,95,96,97,98,99,124,125,126,127,128,129]}
+verification-candidate	scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh	{"kind":"test","lines":[105,111,212]}
+verification-candidate	scripts/00.chat/startup/start-chat-session/script.sh	{"kind":"operational","lines":[109,239,272]}
+verification-candidate	scripts/00.chat/startup/start-chat-session/smoke-test.sh	{"kind":"test","lines":[104,139,189,195,200,222]}
+verification-candidate	scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh	{"kind":"operational","lines":[155,238,242,244,246,248,330,333,400]}
+verification-candidate	scripts/00.chat/worktree/ensure-chat-worktree/script.sh	{"kind":"operational","lines":[176]}
+verification-candidate	scripts/00.chat/worktree/paths/smoke-test.sh	{"kind":"test","lines":[123,148,171,186,321]}
+verification-candidate	scripts/01.harness/agents/validate-harness-agents/diagnostic-test.sh	{"kind":"test","lines":[20]}
+verification-candidate	scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh	{"kind":"operational","lines":[75,839]}
+verification-candidate	scripts/01.harness/artifact-metadata/check-headers/script.sh	{"kind":"operational","lines":[50]}
+verification-candidate	scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh	{"kind":"test","lines":[32,40]}
+verification-candidate	scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh	{"kind":"test","lines":[500]}
+verification-candidate	scripts/01.harness/check-artifact-metadata-headers.sh	{"kind":"operational","lines":[35]}
+verification-candidate	scripts/01.harness/smoke-test-artifact-path-migration.sh	{"kind":"test","lines":[91,101,116,120]}
+verification-candidate	scripts/01.harness/smoke-test-governed-script-command-drift.sh	{"kind":"test","lines":[80,84,97,101,111,121,144]}
+verification-candidate	scripts/01.harness/smoke-test-governed-script-runner.sh	{"kind":"test","lines":[120,124,164,168,172,177,181,194,317]}
+verification-candidate	scripts/02.rag-rulebook/build-service-image/script.sh	{"kind":"operational","lines":[116]}
+verification-candidate	scripts/02.rag-rulebook/check-code-change-knowledge-coverage/smoke-test.sh	{"kind":"test","lines":[68,86,90]}
+verification-candidate	scripts/02.rag-rulebook/check-corpus-root-changes/script.sh	{"kind":"operational","lines":[49]}
+verification-candidate	scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh	{"kind":"test","lines":[47,66,108,110,121,148]}
+verification-candidate	scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh	{"kind":"test","lines":[57,98,130,157,181,204,229]}
+verification-candidate	scripts/02.rag-rulebook/check-source-material-coverage/script.sh	{"kind":"operational","lines":[51]}
+verification-candidate	scripts/02.rag-rulebook/check-source-projections/scoped-smoke-test.sh	{"kind":"test","lines":[21]}
+verification-candidate	scripts/02.rag-rulebook/check-source-projections/script.sh	{"kind":"operational","lines":[48]}
+verification-candidate	scripts/02.rag-rulebook/check-source-projections/smoke-test.sh	{"kind":"test","lines":[44,77,113,163,170,214,216,227]}
+verification-candidate	scripts/02.rag-rulebook/commit-gates/script.sh	{"kind":"operational","lines":[58,96,101,105,118,123,128,132,136,140,144,153,158,162,166,170,174,178,182,186,190,194,198]}
+verification-candidate	scripts/02.rag-rulebook/generate-recognition-sources/smoke-test.sh	{"kind":"test","lines":[128]}
+verification-candidate	scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh	{"kind":"operational","lines":[398]}
+verification-candidate	scripts/02.rag-rulebook/query-local-context/script.sh	{"kind":"operational","lines":[235]}
+verification-candidate	scripts/02.rag-rulebook/run-local-service/smoke-test.sh	{"kind":"test","lines":[34]}
+verification-candidate	scripts/04.deploy/assess-platform-shell-artifact-drift/script.py	{"kind":"operational","lines":[106]}
+verification-candidate	scripts/04.deploy/assess-platform-shell-foundation-drift/script.py	{"kind":"operational","lines":[127]}
+verification-candidate	scripts/04.deploy/assess-platform-shell-service-drift/script.py	{"kind":"operational","lines":[99,120]}
+verification-candidate	scripts/04.deploy/build-platform-shell-image/check-source.sh	{"kind":"operational","lines":[24]}
+verification-candidate	scripts/04.deploy/build-platform-shell-image/script.sh	{"kind":"operational","lines":[33,139]}
+verification-candidate	scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py	{"kind":"test","lines":[92,93,255,299,300,340,341,453]}
+verification-candidate	scripts/04.deploy/inventory-deploy-control/delivery_inventory.py	{"kind":"operational","lines":[151,440]}
+verification-candidate	scripts/04.deploy/inventory-deploy-control/smoke-test.sh	{"kind":"test","lines":[58]}
+verification-candidate	scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh	{"kind":"test","lines":[24,27]}
+verification-candidate	scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.sh	{"kind":"test","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh	{"kind":"test","lines":[34,36,72]}
+verification-candidate	scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh	{"kind":"operational","lines":[24]}
+verification-candidate	scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh	{"kind":"operational","lines":[24]}
+verification-candidate	scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh	{"kind":"test","lines":[36,43,49]}
+verification-candidate	scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh	{"kind":"test","lines":[23,30,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,59,61,63,71,72,73,74,75,76]}
+verification-candidate	scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh	{"kind":"test","lines":[80,81]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh	{"kind":"operational","lines":[32,91]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh	{"kind":"operational","lines":[27,28,29]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh	{"kind":"operational","lines":[40,43,45]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh	{"kind":"test","lines":[45,47,49]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/script.sh	{"kind":"operational","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/script.sh	{"kind":"operational","lines":[21,27,28]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/payload-fixture-test.sh	{"kind":"test","lines":[33,37,39,61]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh	{"kind":"test","lines":[86]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh	{"kind":"test","lines":[27,214,216]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py	{"kind":"test","lines":[100,207,231]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh	{"kind":"test","lines":[146]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh	{"kind":"test","lines":[27,31,32,35]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh	{"kind":"operational","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh	{"kind":"operational","lines":[53]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/script.sh	{"kind":"operational","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py	{"kind":"operational","lines":[46,53,62,76,101]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/script.sh	{"kind":"operational","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py	{"kind":"operational","lines":[36,37,38]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/script.sh	{"kind":"operational","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/smoke-test.sh	{"kind":"test","lines":[23,24,25]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/verify-workflow.py	{"kind":"operational","lines":[52,72,75,77,88,92,93,96]}
+verification-candidate	scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/workflow-test.py	{"kind":"test","lines":[85,94]}
+verification-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh	{"kind":"test","lines":[66,67,68,70,87,135,170]}
+verification-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh	{"kind":"test","lines":[341,452]}
+verification-candidate	scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh	{"kind":"test","lines":[43]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.sh	{"kind":"test","lines":[23,29]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.sh	{"kind":"test","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh	{"kind":"operational","lines":[48]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh	{"kind":"operational","lines":[29]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh	{"kind":"test","lines":[22,23,24,25,27]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh	{"kind":"operational","lines":[22]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh	{"kind":"operational","lines":[22]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh	{"kind":"test","lines":[226]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.sh	{"kind":"test","lines":[22]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh	{"kind":"operational","lines":[22]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh	{"kind":"test","lines":[56,57]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.sh	{"kind":"test","lines":[22,23,24]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-steps.py	{"kind":"operational","lines":[255]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py	{"kind":"operational","lines":[191]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py	{"kind":"test","lines":[496,525,556]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py	{"kind":"operational","lines":[81]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py	{"kind":"operational","lines":[172,177,770]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py	{"kind":"operational","lines":[84]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh	{"kind":"test","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.sh	{"kind":"test","lines":[21]}
+verification-candidate	scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/smoke-test.sh	{"kind":"test","lines":[21]}
+verification-candidate	scripts/04.deploy/operational-realization-gate/smoke-test.sh	{"kind":"test","lines":[204,238,239]}
+verification-candidate	scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh	{"kind":"test","lines":[106]}
+verification-candidate	scripts/04.deploy/reconcile-platform-shell-staging/script.py	{"kind":"operational","lines":[215,231,242,252,270,280,281]}
+verification-candidate	scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh	{"kind":"test","lines":[215]}
+verification-candidate	scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh	{"kind":"test","lines":[168]}
+verification-candidate	scripts/04.deploy/run-platform-shell-controlled-smoke/script.py	{"kind":"operational","lines":[118]}
+verification-candidate	scripts/04.deploy/run-platform-shell-ingress-smoke/script.py	{"kind":"operational","lines":[109]}
+verification-candidate	scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh	{"kind":"test","lines":[32,38]}
+verification-candidate	scripts/04.deploy/run-platform-shell-metric-coverage/script.py	{"kind":"operational","lines":[144,218]}
+verification-candidate	scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh	{"kind":"test","lines":[55]}
+verification-candidate	scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.py	{"kind":"operational","lines":[146]}
+verification-candidate	scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py	{"kind":"operational","lines":[154]}
+verification-candidate	scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh	{"kind":"test","lines":[74]}
+verification-candidate	scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh	{"kind":"test","lines":[454]}
+verification-candidate	scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.py	{"kind":"operational","lines":[100]}
+verification-candidate	scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh	{"kind":"test","lines":[31,37]}
+verification-candidate	scripts/04.deploy/run-platform-shell-worker-smoke/script.py	{"kind":"operational","lines":[106]}
+verification-candidate	scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh	{"kind":"test","lines":[32,38,43]}
+verification-candidate	scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh	{"kind":"test","lines":[21,22]}
+verification-candidate	scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py	{"kind":"operational","lines":[24]}
+verification-candidate	scripts/04.deploy/smoke-test-platform-shell-image/script.sh	{"kind":"test","lines":[233]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh	{"kind":"operational","lines":[708]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh	{"kind":"test","lines":[254,256,261,268,276,324]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh	{"kind":"operational","lines":[113]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh	{"kind":"test","lines":[30]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh	{"kind":"operational","lines":[69,70,91,100,111,121,137,302,304,307,308,309,311,313]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh	{"kind":"test","lines":[30]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh	{"kind":"operational","lines":[27,28]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh	{"kind":"operational","lines":[183,184,185,186,187,188,189,213,218]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py	{"kind":"operational","lines":[194,210,226,241]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.sh	{"kind":"operational","lines":[30]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh	{"kind":"test","lines":[30,31]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh	{"kind":"operational","lines":[40,312,906,1801,1926,2087,2092,2107,2119,2157,2174,2183]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-infrastructure/script.sh	{"kind":"operational","lines":[36]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh	{"kind":"operational","lines":[117,159,177,211,294,296,307]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh	{"kind":"test","lines":[31]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh	{"kind":"operational","lines":[29]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh	{"kind":"test","lines":[29,30]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh	{"kind":"test","lines":[31]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh	{"kind":"operational","lines":[137,169,258,260]}
+verification-candidate	scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh	{"kind":"test","lines":[31]}
+verification-candidate	scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh	{"kind":"test","lines":[147,151,158,166,214]}
+verification-candidate	scripts/repo/check-selection/checks.yml	{"kind":"operational","lines":[16]}
+verification-candidate	scripts/repo/check-selection/execution_policy.py	{"kind":"operational","lines":[17]}
+verification-candidate	scripts/repo/check-selection/local_cache.py	{"kind":"operational","lines":[18]}
+verification-candidate	scripts/repo/check-selection/mechanics_test.py	{"kind":"test","lines":[338,560,596,597,600,720,721,724,796,910,1002,1206,1253,1275,1314,1331,2026,2057,2068,2244,2257,2339,2560,2561]}
+verification-candidate	scripts/repo/check-selection/repository_contracts_test.py	{"kind":"test","lines":[71,300,301,302,528,756,758,908,926,943,995,1057,1143]}
+verification-candidate	scripts/repo/check-selection/script.py	{"kind":"operational","lines":[18,325,795]}
+verification-candidate	scripts/repo/check-selection/script.sh	{"kind":"operational","lines":[21]}
+verification-candidate	scripts/repo/check-selection/smoke-test.sh	{"kind":"test","lines":[19,23,34,35,36,37,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67]}
+verification-candidate	scripts/repo/check-selection/test_support.py	{"kind":"test","lines":[34,188,200]}
+verification-candidate	scripts/repo/check-selection/workspace_context.py	{"kind":"operational","lines":[18]}
+verification-candidate	scripts/repo/commit-gates/script.sh	{"kind":"operational","lines":[37,43]}
+verification-candidate	scripts/repo/diagnostic-coverage/reviews.v1.json	{"kind":"operational","lines":[5393]}
+verification-candidate	scripts/repo/diagnostic-coverage/smoke-test.py	{"kind":"test","lines":[55,120,145,146,168,193,194,196,199,201]}
+verification-candidate	scripts/repo/diagnostic-coverage/verify.sh	{"kind":"operational","lines":[43,62,63,64,65,77,78]}
+verification-candidate	scripts/repo/module-structure/script.sh	{"kind":"operational","lines":[21]}
+verification-candidate	scripts/repo/module-structure/smoke-test.sh	{"kind":"test","lines":[21,22]}
+verification-candidate	scripts/repo/workspace-build/check-inputs-test.mjs	{"kind":"test","lines":[35,85,106,115,116,120]}
+verification-candidate	scripts/repo/workspace-build/check-inputs.mjs	{"kind":"operational","lines":[18]}
