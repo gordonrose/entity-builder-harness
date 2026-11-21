@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.readme
-version: 9
+version: 10
 status: active
 created_on: "2026-08-30"
-updated_on: "2026-11-04"
+updated_on: "2026-11-09"
 layer: 03.product
 domain: governance
 disciplines:
@@ -36,6 +36,12 @@ planning and AWS mutation remain governed by `04.deploy`.
 - Product migration plans: `.agentic/03.product/plans/migration/`
 - Product implementation plans: `.agentic/03.product/plans/implementation/`
 - Product standards: `.agentic/03.product/standards/`
+- [Feature governance](feature/README.md): the canonical standards, workflow,
+  readiness checklist, pilot plan, and skill for real app features.
+- [Entity governance](entity/README.md): the specialization for durable entities
+  implemented as features, including the staged entity-builder path.
+- [Test requirements](tests/README.md): existing testing obligations separated
+  into Core, Platform and app/product owners.
 - [Configuration and runtime settings](standards/config-runtime-settings.md):
   authoritative configuration requirements, formerly held in a legacy docs ruleset.
 - [Public module structure](standards/public-module-structure.md): export-only

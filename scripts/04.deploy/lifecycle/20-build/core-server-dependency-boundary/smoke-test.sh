@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-dependency-boundary
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -55,17 +55,19 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('b10_boundary',Path(sys.argv[1])/'scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.py'); module=importlib.util.module_from_spec(spec); sys.modules[spec.name]=module; spec.loader.exec_module(module)
 with tempfile.TemporaryDirectory() as directory:
     root=Path(directory); module.ROOT=root; package=root/'packages/core/package.json'; package.parent.mkdir(parents=True)
+    bindings=module.DeclarationBindings({'@kanbien/core': (Path('packages/core'), 'core')}, {}, {}, frozenset())
     package.write_text('[]')
-    try: module.discover_manifest_dependencies({'@kanbien/core'})
+    try: module.discover_manifest_dependencies({'@kanbien/core'}, bindings)
     except module.BoundaryFailure as error: assert error.codes==('package-manifest-invalid',)
     else: raise AssertionError('nonmapping manifest accepted')
     lock=root/'package-lock.json'; lock.write_text('[]')
-    try: module.ensure_lockfile_records(set())
+    try: module.ensure_lockfile_records(set(), bindings)
     except module.BoundaryFailure as error: assert error.codes==('lockfile-invalid',)
     else: raise AssertionError('nonmapping lockfile accepted')
     package.write_bytes(b'\xff')
-    try: module.discover_manifest_dependencies({'@kanbien/core'})
+    try: module.discover_manifest_dependencies({'@kanbien/core'}, bindings)
     except module.BoundaryFailure as error: assert error.codes==('package-manifest-unreadable',)
     else: raise AssertionError('invalid UTF8 accepted')
 B10_PY
+python3 -B scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/binding-test.py
 echo "Core server dependency-boundary local tests passed."

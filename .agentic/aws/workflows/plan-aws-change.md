@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-11-19"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -42,7 +42,11 @@ execution.
   signal.
 - Prefer dry-run, diff, or plan commands where the AWS service or tool supports
   them.
-- Ask for explicit approval before switching to execution.
+- Before switching to execution, match the concrete plan to recorded authority
+  under the [end-to-end delivery rule](../../04.deploy/standards/operational-realization-gate.md#end-to-end-live-delivery-authority).
+  Ask only when authority is absent or the effects exceed it. A planning-only
+  request remains read-only; planning within an approved live delivery does not
+  require a second approval merely to move to its governed execution workflow.
 
 ## Output
 

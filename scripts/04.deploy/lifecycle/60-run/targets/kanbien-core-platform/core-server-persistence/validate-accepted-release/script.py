@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.persistence-accepted-release.validate.impl
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -90,6 +90,8 @@ def validate(path: Path, root: Path = ROOT, evidence_class: str = 'live') -> lis
         source = IMPLEMENTATION_ROOT / 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py'
         spec=importlib.util.spec_from_file_location('retained_acceptance_collector',source);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
         module.ROOT=root;module.EVIDENCE_CLASS=evidence_class
+        module.RECORD=root/module.RECORD.relative_to(IMPLEMENTATION_ROOT)
+        module.EVIDENCE_ROOT=module.RECORD.parent
         module.validate_record(record,evidence_class=evidence_class)
         return []
     except Exception as error:

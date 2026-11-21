@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-boundaries.test.mjs -->
+<!-- course-file: platform/adapters/aws/runtime/ecs-fargate/tests/test-infrastructure/static-validation/ecs-fargate-adapter-boundaries.test.mjs -->
 
 ### ecs-fargate-adapter-boundaries.test.mjs
 
-[Open current source](../../../../../platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-boundaries.test.mjs) · **Snapshot:** modified existing file; 1 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/runtime/ecs-fargate/tests/test-infrastructure/static-validation/ecs-fargate-adapter-boundaries.test.mjs) · **Snapshot:** modified existing file; 1 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -66,11 +66,11 @@ Owning registered proof: `ecs-fargate-runtime`, `platform-server-runtime`, `plat
 
 <!-- course-source-sha256: before=5cb2f87a073f99569e79c3d5827450ec603dc01aa0a7339ebee3e4b72a5534bf after=dcff0570d957f594ca82cb289390df7204b6d136f9d453d460e01bb1f5c2ef75 -->
 
-<!-- course-file: platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-runtime.test.ts -->
+<!-- course-file: platform/adapters/aws/runtime/ecs-fargate/tests/contract/ecs-fargate-adapter-runtime.test.ts -->
 
 ### ecs-fargate-adapter-runtime.test.ts
 
-[Open current source](../../../../../platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 63 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/runtime/ecs-fargate/tests/contract/ecs-fargate-adapter-runtime.test.ts) · **Snapshot:** modified existing file; 63 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -90,11 +90,11 @@ Owning registered proof: `ecs-fargate-runtime`, `platform-server-runtime`, `plat
 
 <!-- course-source-sha256: before=12cc1cd72778d9d136e94ae45bdcb5857c7e29e2e89f690f4000b3c45164054b after=b9eb0962f8c6c2add7e64abf56a4365c4f9fe736f996ce9526fe2b4c4e0fc5fa -->
 
-<!-- course-file: platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-types.test.ts -->
+<!-- course-file: platform/adapters/aws/runtime/ecs-fargate/tests/type-level/ecs-fargate-adapter-types.test.ts -->
 
 ### ecs-fargate-adapter-types.test.ts
 
-[Open current source](../../../../../platform/adapters/aws/runtime/ecs-fargate/tests/ecs-fargate-adapter-types.test.ts) · **Snapshot:** added (absent from baseline); 13 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/adapters/aws/runtime/ecs-fargate/tests/type-level/ecs-fargate-adapter-types.test.ts) · **Snapshot:** added (absent from baseline); 13 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for application mounting and lifecycle.
 

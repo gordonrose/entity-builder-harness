@@ -1,6 +1,6 @@
 import { brand, type Brand } from "../shared/index";
 import type { SecretString } from "./secrets";
-import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { attachCoreDiagnosticRecord } from "../shared/index";
 import { coreSecurityPrimitiveRecord } from "./diagnostics";
 
 export type HashAlgorithm = Brand<string, "HashAlgorithm">;

@@ -1,0 +1,77 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.acceptance-record-schema
+#   version: 3
+#   status: draft
+#   created_on: "2026-11-09"
+#   updated_on: "2026-11-19"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [security, sre]
+#   kind: schema
+#   purpose: Bind feature acceptance to the existing immutable release-succession current reference and complete retained composite proof.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.entity-smoke.acceptance-route
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml
+schema: deploy/entity-smoke-acceptance-schema/v1
+record_schema: deploy/release-current-ref/v1
+succession_schema: .agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml
+required_proofs: [entity-smoke-complete-proof]
+collected_schemas:
+  first_qualification: deploy/entity-smoke-collected-acceptance/v1
+  historical_ordinary_update: deploy/entity-smoke-collected-acceptance/v2
+  ordinary_update: deploy/entity-smoke-collected-acceptance/v3
+  successor_requalification: deploy/entity-smoke-collected-acceptance/v4
+composite_members:
+  tasks: [bootstrap, migration, grant-runtime, baseline-permissions, original-record, lifecycle, collision, baseline-read, replacement-read, initial-read, migration-state, permission-state, credential-revoke, credential-unready, credential-restore, credential-read, credential-permissions, restore-read, final-read]
+  controls: [server-replacement, initial-stop, initial-restart, credential-replacement, snapshot, restore-deployment, restore-cleanup]
+acceptance_owner: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-state.py
+historical_validation: original-bytes-lineage-and-meaning-not-current-health
+new_promotion: current-contracts-and-fresh-same-candidate-proof
+accepted_rollback_reuse:
+  selection: exact-accepted-proof
+  configuration_exclusion: top-level-change_impact-only
+  execution: image-only-no-schema-or-permission-model-change
+  schema_input_paths:
+    - apps/entity-smoke/features/test-entity/migrations
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/migrations.ts
+successor_requalification:
+  qualification: changed-recovery-inputs-with-fresh-candidate-capability-proof
+  fresh_tasks: [baseline-permissions, lifecycle, collision, migration-state, baseline-read, permission-state, credential-revoke, credential-unready, credential-restore, credential-read, credential-permissions, restore-read, final-read]
+  fresh_controls: [credential-replacement, snapshot, restore-deployment, restore-cleanup]
+  preserve: [accepted-predecessor, original-record, source-database-incarnation, source-snapshots, other-scopes]
+  resource_namespace: exact-delivery-id
+  initial_setup_replay: prohibited
+  acceptance: complete-fresh-connected-evidence-before-promotion
+ordinary_update:
+  qualification: unchanged-recovery-inputs-and-current-functional-proof
+  fresh_tasks: [baseline-permissions, lifecycle, collision, migration-state, final-read]
+  retained_evidence: exact-accepted-predecessor-capability-history
+  changed_inputs: require-affected-capability-requalification
+  lineage: exact-accepted-predecessor-and-checked-update-receipt
+  task_custody: original-delivery-plan-prerequisites-reservation-completion-and-admission
+  rollback: exact-compatible-predecessor-without-candidate-promotion
+  # Recovery evidence is not inferred from an unchanged CloudFormation template.
+  # Exact Git tree comparisons cover runtime/persistence, migrations, dependency
+  # selection and packaging. Feature behaviour still needs fresh lifecycle proof.
+  recovery_input_paths:
+    - packages/core
+    - platform
+    - apps/entity-smoke/package.json
+    - apps/entity-smoke/tsconfig.json
+    - apps/entity-smoke/src
+    - apps/entity-smoke/features/test-entity/migrations
+    - apps/entity-smoke/features/test-entity/persistence
+    - infra/04.deploy/03.product/entrypoints
+    - infra/04.deploy/03.product/image/entity-smoke
+    - scripts/04.deploy/lifecycle/20-build
+    - scripts/04.deploy/lifecycle/40-package
+    - scripts/repo/workspace-build
+    - package.json
+    - package-lock.json
+    - pnpm-lock.yaml
+    - pnpm-workspace.yaml
+    - tsconfig.json
+    - .npmrc

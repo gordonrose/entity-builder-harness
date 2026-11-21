@@ -10,14 +10,6 @@
     "noEmit": false,
     "outDir": "../../../../../.cache/platform-adapter-aws-queue-sqs-runtime",
     "baseUrl": "../../../../..",
-    "paths": {
-      "@kanbien/core": [
-        "packages/core/src/index.ts"
-      ],
-      "@kanbien/core/*": [
-        "packages/core/src/*/index.ts"
-      ]
-    },
     "rootDir": "../../../../..",
     "types": [
       "node"
@@ -25,6 +17,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "tests/*-runtime.test.ts"
+    "tests/**/*-runtime.test.ts"
   ]
 }

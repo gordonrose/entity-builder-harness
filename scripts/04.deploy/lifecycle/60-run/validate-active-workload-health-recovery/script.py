@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-active-workload-health-recovery.implementation
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -233,7 +233,11 @@ def inspect(target_root: Path, rehearsal_root: Path | None = None, index_overrid
                 predecessor = item.get("predecessor")
                 successor = item.get("successor")
                 if lifecycle == "candidate":
-                    if not text(predecessor) or predecessor not in indexed or indexed[predecessor].get("lifecycle") != "active":
+                    if predecessor is None:
+                        others = set().union(*(set(workloads) for other, workloads in ownership.items() if other != scope_id))
+                        if set(ownership.get(scope_id, [])).intersection(others):
+                            codes.append("scope-lifecycle-candidate-predecessor-invalid")
+                    elif not text(predecessor) or predecessor not in indexed or indexed[predecessor].get("lifecycle") != "active":
                         codes.append("scope-lifecycle-candidate-predecessor-invalid")
                     elif not set(ownership.get(scope_id, [])).intersection(ownership.get(predecessor, [])):
                         codes.append("scope-lifecycle-candidate-ownership-invalid")

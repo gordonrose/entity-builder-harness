@@ -4,7 +4,7 @@ id: product.plan.shared-rate-limit-configuration
 version: 1
 status: active
 created_on: "2026-11-02"
-updated_on: "2026-11-04"
+updated_on: "2026-11-09"
 layer: 03.product
 domain: security
 disciplines: [architecture, security, agentic]
@@ -53,9 +53,9 @@ table/region guards, clock/storage behavior and security definitions stay intact
 | platform/adapters/aws/security/dynamodb-rate-limiter/src/index.ts | Preserve all eleven public names as re-exports. Move existing implementation to rate-limiter.ts, replacing duplicated numeric work only. |
 | platform/adapters/aws/security/dynamodb-rate-limiter/src/rate-limiter.ts | Existing adapter implementation; use public security assertion and failure record. Number conversion, environment errors, table/region/provider specifics remain local. |
 | scripts/repo/module-structure/legacy.v1.json | Remove only this now-clean adapter index allowance; do not refresh any pin or weaken structure policy. This bounded cleanup is part of the authorised relevant refactor. |
-| platform/security/tests/configuration-predicate-diagnostics-runtime.test.ts | Retain complete matrix, legacy errors/diagnostic literals, snapshots/defaults/no-coercion/clock order; add public-helper and actual in-memory wiring counterexamples. |
-| platform/security/tests/platform-security-types.test.ts | Public helper arguments and forbidden name/field type counterexamples. |
-| platform/adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-runtime.test.ts | Retain numeric/environment/limiting/clock/provider tests; add actual adapter helper-call wiring and forced failure before dependent work. |
+| platform/security/tests/unit/configuration-predicate-diagnostics-runtime.test.ts | Retain complete matrix, legacy errors/diagnostic literals, snapshots/defaults/no-coercion/clock order; add public-helper and actual in-memory wiring counterexamples. |
+| platform/security/tests/type-level/platform-security-types.test.ts | Public helper arguments and forbidden name/field type counterexamples. |
+| platform/adapters/aws/security/dynamodb-rate-limiter/tests/contract/dynamodb-rate-limiter-runtime.test.ts | Retain numeric/environment/limiting/clock/provider tests; add actual adapter helper-call wiring and forced failure before dependent work. |
 | Existing security/adapter boundary tests and tsconfigs/package manifests | New local source files are included by existing globs; supported package exports/dependencies unchanged. Run owning registered checks. |
 | platform/security/src/diagnostics.ts, Core security and generated catalogs | No definition/name/version/schema changes. Exact security catalog hash and existing caller literals prove preservation. Core text parsing is inapplicable to numeric inputs and remains untouched. |
 | Other adapters, server/worker and target callers | Public limiter exports/signatures preserved; no deep imports/private paths found by whole-repo search. No retiring-target runtime/deployment work. |

@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test` work. A test proves a boundary, a generated expor
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/workers/tests/builtin-evidence-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/builtin-evidence-runtime.test.ts -->
 
 ### builtin-evidence-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/builtin-evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 71 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/builtin-evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 71 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=absent after=a21b87d15d9b3b6af502351e96cca3342af22eea9598eb6ffe5f9b072338afc1 -->
 
-<!-- course-file: platform/workers/tests/context-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/context-boundary-diagnostics-runtime.test.ts -->
 
 ### context-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/context-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 135 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/context-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 135 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -92,11 +92,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=absent after=44ae2c092287d33023f1281688e391f227660ce40f187a4e0ec7898ddf6b8782 -->
 
-<!-- course-file: platform/workers/tests/delivery-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/delivery-boundary-diagnostics-runtime.test.ts -->
 
 ### delivery-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/delivery-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 243 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/delivery-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 243 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -114,11 +114,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=absent after=59f52fe031279ac6a71379c2d28c566b8bbd08ad88004b6d8506f16b6c447527 -->
 
-<!-- course-file: platform/workers/tests/health-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/health-diagnostics-runtime.test.ts -->
 
 ### health-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/health-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 46 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/health-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 46 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -136,11 +136,11 @@ Owning registered proof: `platform-health-runtime`, `platform-server-runtime`, `
 
 <!-- course-source-sha256: before=absent after=2b05ab6dcdc7f48598a312a1babef00f0217974364710e23d4773657161c1773 -->
 
-<!-- course-file: platform/workers/tests/lifecycle-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/lifecycle-boundary-diagnostics-runtime.test.ts -->
 
 ### lifecycle-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/lifecycle-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 108 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/lifecycle-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 108 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -158,11 +158,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=absent after=03d16e67deac57d0f45cc1920aeeafecad1c80a7d1b6359849c307352ad97a53 -->
 
-<!-- course-file: platform/workers/tests/lifecycle-boundary-diagnostics-types.test.ts -->
+<!-- course-file: platform/workers/tests/type-level/lifecycle-boundary-diagnostics-types.test.ts -->
 
 ### lifecycle-boundary-diagnostics-types.test.ts
 
-[Open current source](../../../../../platform/workers/tests/lifecycle-boundary-diagnostics-types.test.ts) · **Snapshot:** added (absent from baseline); 11 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/type-level/lifecycle-boundary-diagnostics-types.test.ts) · **Snapshot:** added (absent from baseline); 11 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for worker processing and queue delivery.
 
@@ -180,11 +180,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=absent after=dce641501bd0d146e4dba67d2b9621e0bc2467e4d42de625d148f4e9bde3e46b -->
 
-<!-- course-file: platform/workers/tests/metric-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/metric-diagnostics-runtime.test.ts -->
 
 ### metric-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/metric-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 43 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/metric-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 43 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -202,11 +202,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=absent after=7f2b5da4392b2c869e5c398575a7ed49bdced2d16b10d2e9ca2b3c04e31a5f48 -->
 
-<!-- course-file: platform/workers/tests/platform-workers-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/platform-workers-runtime.test.ts -->
 
 ### platform-workers-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/platform-workers-runtime.test.ts) · **Snapshot:** modified existing file; 19 added / 2 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/platform-workers-runtime.test.ts) · **Snapshot:** modified existing file; 19 added / 2 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -224,11 +224,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=be99b44ad628314b6cb6cd5d4ff8f0bacb382ff0fc2c8a187a5fe357516d0a3c after=7871efd0b3c3ec65beddccdf36a41b70241493916085c3db516a43cbe773c879 -->
 
-<!-- course-file: platform/workers/tests/platform-workers-types.test.ts -->
+<!-- course-file: platform/workers/tests/type-level/platform-workers-types.test.ts -->
 
 ### platform-workers-types.test.ts
 
-[Open current source](../../../../../platform/workers/tests/platform-workers-types.test.ts) · **Snapshot:** modified existing file; 2 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/type-level/platform-workers-types.test.ts) · **Snapshot:** modified existing file; 2 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for worker processing and queue delivery.
 
@@ -246,11 +246,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=f875680f735a3a0d8bb409fbb45d99456e88a3d2b3e7427235e20e4c45de5a46 after=6945a1c3c289ae46f90f9ec3ba033e63b1ac6eb4bac301ed20c2a34272477b7d -->
 
-<!-- course-file: platform/workers/tests/process-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/process-boundary-diagnostics-runtime.test.ts -->
 
 ### process-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/process-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 101 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/process-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 101 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 
@@ -268,11 +268,11 @@ Owning registered proof: `platform-workers-runtime`, `diagnostic-catalog-readers
 
 <!-- course-source-sha256: before=absent after=30cb89e4456d01b28b2c5fd488b9f56a6904b4c284949524cbd8b75b8041e88c -->
 
-<!-- course-file: platform/workers/tests/startup-configuration-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/workers/tests/integration/startup-configuration-diagnostics-runtime.test.ts -->
 
 ### startup-configuration-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/workers/tests/startup-configuration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 206 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/workers/tests/integration/startup-configuration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 206 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for worker processing and queue delivery.
 

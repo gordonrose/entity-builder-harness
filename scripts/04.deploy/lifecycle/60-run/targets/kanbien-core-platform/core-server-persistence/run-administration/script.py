@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import re
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -82,11 +82,11 @@ MIGRATION = module(ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-co
 RECEIPTS = module(ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py", "persistence_proof_receipts")
 
 
-def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) -> int:
+def report(verdict: str, *codes: str, facts: dict[str, object] | None = None, stream=None) -> int:
     value: dict[str, object] = {"schema": "deploy/persistence-administration-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if facts:
         value["facts"] = facts
-    print(json.dumps(value, sort_keys=True))
+    print(json.dumps(value, sort_keys=True), file=stream or sys.stdout)
     return 0 if verdict == "accepted" else 1
 
 
@@ -136,12 +136,27 @@ def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, s
     return None, code if not ok else "persistence-administration-not-confirmed"
 
 
-def accept(task: dict[str, object], seconds: int, operation: str) -> int:
+def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=None) -> int:
+    terminal = {}
+    def unsuccessful(code, *, facts=None):
+        return report("failed" if terminal else "blocked", code, facts={**(facts or {}), **terminal})
     observed = MIGRATION.duration(task)
     if observed is None:
         return report("blocked", "persistence-administration-duration-unavailable")
+    if on_receipt is not None and (observed > seconds or not MIGRATION.task_exit(task)):
+        try:
+            digest = MIGRATION.image_digest(task.get("taskDefinitionArn"))
+            if digest is None: raise ValueError()
+            failure = "persistence-administration-completion-deadline-exceeded" if observed > seconds else "persistence-administration-unsuccessful-completion"
+            receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=failure,
+                context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+            path = RECEIPTS.persist(receipt)
+            on_receipt(path)
+            terminal = {"operation_id": task.get("startedBy"), "operation": operation,
+                        "proof_receipt": path.relative_to(ROOT).as_posix(), "proof_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+        except Exception: return report("uncertain", "persistence-administration-receipt-persistence-failed", facts={"operation_id": task.get("startedBy")})
     if observed > seconds:
-        return report("blocked", "persistence-administration-completion-deadline-exceeded")
+        return unsuccessful("persistence-administration-completion-deadline-exceeded")
     if not MIGRATION.task_exit(task):
         # Use the task's actual log stream and a closed reader; never replay it.
         arn = task.get("taskArn")
@@ -156,7 +171,7 @@ def accept(task: dict[str, object], seconds: int, operation: str) -> int:
                 failure, observation = contract.collect_persistence_task_failure(events, "administration") if ok and "administration_task" in known_facts else (None, "failed" if not ok else "unavailable")
                 known_facts["task_log_observation"] = observation
                 if failure is not None:
-                    return report("blocked", "persistence-administration-unsuccessful-completion", facts={**known_facts, "safe_result_code": failure["code"], "task_failure": failure})
+                    return unsuccessful("persistence-administration-unsuccessful-completion", facts={**known_facts, "safe_result_code": failure["code"], "task_failure": failure})
             except Exception:
                 known_facts["task_log_observation"] = "failed"
             for event in events.get("events", []) if ok and isinstance(events, dict) else []:
@@ -183,10 +198,10 @@ def accept(task: dict[str, object], seconds: int, operation: str) -> int:
                         if not operational:
                             continue
                         facts["related_diagnostics"] = contract.validate_related_diagnostics(value["related_diagnostics"], diagnostic)
-                    return report("blocked", "persistence-administration-unsuccessful-completion", facts=facts)
+                    return unsuccessful("persistence-administration-unsuccessful-completion", facts=facts)
                 except Exception:
                     continue
-        return report("blocked", "persistence-administration-unsuccessful-completion", facts=known_facts)
+        return unsuccessful("persistence-administration-unsuccessful-completion", facts=known_facts)
     result_code, code = accepted_log(task, operation)
     if result_code is None:
         return report("blocked", code)
@@ -197,9 +212,11 @@ def accept(task: dict[str, object], seconds: int, operation: str) -> int:
     try:
         receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=result_code, context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         path = RECEIPTS.persist(receipt)
+        if on_receipt is not None: on_receipt(path)
     except Exception:
-        return report("blocked", "persistence-administration-receipt-persistence-failed")
-    return report("accepted", "persistence-administration-applied", facts={"operation": operation, "safe_result_code": result_code, "administration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed, "proof_receipt": str(path.relative_to(ROOT))})
+        return report("uncertain" if on_receipt is not None else "blocked", "persistence-administration-receipt-persistence-failed",
+            facts={"operation_id": task.get("startedBy")} if on_receipt is not None else None)
+    return report("accepted", "persistence-administration-applied", facts={"operation": operation, "safe_result_code": result_code, "administration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed, "proof_receipt": str(path.relative_to(ROOT)), **({"operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"} if on_receipt is not None else {})})
 
 
 def retained_observation(operation: str, definition: str) -> tuple[Path | None, dict[str, object] | None]:
@@ -250,11 +267,16 @@ def main() -> int:
     parser.add_argument("--operation", choices=OPERATIONS)
     parser.add_argument("--reconcile-task")
     parser.add_argument("--fresh", action="store_true")
+    parser.add_argument("--new-operation", action="store_true")
+    parser.add_argument("--expected-operation")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.operation is None or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.reconcile_task is not None and args.fresh):
         return report("blocked", "persistence-administration-arguments-invalid")
+    new_operation = args.new_operation or args.fresh
+    if new_operation != (args.expected_operation is not None) or (args.expected_operation is not None and args.expected_operation != "none" and re.fullmatch(r"kp-[a-f0-9]{32}", args.expected_operation) is None) or (new_operation and args.reconcile_task is not None):
+        return report("blocked", "persistence-administration-new-operation-arguments-invalid")
     if args.validate_arguments:
         print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": PROOF_CONTRACT[args.operation]}, sort_keys=True))
         return 0
@@ -276,28 +298,18 @@ def main() -> int:
             return report("blocked", code if not ok else "persistence-administration-controller-observation-uncertain")
         reconciliation = current_task(task, args.reconcile_task, definition)
         return accept(task, seconds, args.operation) if reconciliation == "ok" else report("blocked", reconciliation)
-    if not args.fresh:
-        retained_path, retained = retained_observation(args.operation, definition)
-        if retained_path is not None and retained is not None:
-            return reused_observation(retained_path, retained, args.operation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
     overrides = json.dumps({"containerOverrides": [{"name": "persistence-administration", "environment": [{"name": "PERSISTENCE_ADMINISTRATION_OPERATION", "value": args.operation}]}]})
-    ok, started, code = MIGRATION.aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network, "--overrides", overrides)
-    tasks = started.get("tasks", []) if ok and isinstance(started, dict) else []
-    task = tasks[0] if len(tasks) == 1 and isinstance(tasks[0], dict) else None
-    if not isinstance(task, dict) or not isinstance(task.get("taskArn"), str):
-        return report("blocked", code if not ok else "persistence-administration-not-started")
-    begun, current = time.monotonic(), task
-    while time.monotonic() - begun <= seconds:
-        ok, described, code = MIGRATION.aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", task["taskArn"])
-        tasks = described.get("tasks", []) if ok and isinstance(described, dict) else []
-        if not ok or len(tasks) != 1 or not isinstance(tasks[0], dict):
-            return report("blocked", "persistence-administration-controller-observation-uncertain")
-        current = tasks[0]
-        if current.get("lastStatus") == "STOPPED":
-            return accept(current, seconds, args.operation)
-        time.sleep(5)
-    return report("blocked", "persistence-administration-controller-deadline-remote-task-still-running")
+    def historical():
+        retained_path, retained = retained_observation(args.operation, definition)
+        if retained_path is not None and retained is not None: return reused_observation(retained_path, retained, args.operation)
+        return None
+    operations = MIGRATION.task_operations()
+    binding = operations.BoundOperation(root=ROOT, proof_type="administration", family="kanbien-core-platform-persistence-administration",
+        container="persistence-administration", selector="PERSISTENCE_ADMINISTRATION_OPERATION", results=SUCCESS,
+        aws=MIGRATION.aws, report=report, accept=accept, receipts=RECEIPTS)
+    return binding.run(mode=args.operation, definition=definition, network=network, overrides=overrides, seconds=seconds,
+        new_operation=new_operation, expected_operation=args.expected_operation, historical=historical)
 
 
 if __name__ == "__main__":

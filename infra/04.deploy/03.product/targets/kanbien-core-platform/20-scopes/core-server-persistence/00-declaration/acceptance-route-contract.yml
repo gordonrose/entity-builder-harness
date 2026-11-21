@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.acceptance-route
-#   version: 2
+#   version: 4
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -21,6 +21,10 @@
 #   - id: deploy.compiler.acceptance-route
 #     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
 schema: deploy/acceptance-route/v1
+ordinary_delivery:
+  command: ordinary-update
+  implementation: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ordinary-update.py
+  owner: deploy.binding.persistence-ordinary-update
 target: kanbien-core-platform
 scope: core-server-persistence
 program_id: kanbien-core-server-persistence
@@ -66,10 +70,6 @@ inputs:
     kind: identifier
     owner: verify-candidate
     example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/cccccccccccccccccccccccccccccccc
-  proof_applicability:
-    kind: optional-path
-    owner: qualify-persistence-proof-applicability
-    example: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-aaaaaaaaaaaa.json
   observability_receipts:
     kind: receipt-map
     owner: rehearse-observability-readiness
@@ -113,6 +113,30 @@ inputs:
     kind: identifier
     owner: verify-candidate
     example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  migration_state_observation_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  effective_privilege_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  runtime_identity_initial_access_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  credential_revocation_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  credential_recovery_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
+  runtime_identity_access_route_predecessor:
+    kind: identifier
+    owner: run-administration
+    example: none
 outputs:
   candidate_record:
     command: collect
@@ -122,7 +146,27 @@ outputs:
     command: current-release
     fact: release_id
     kind: release-id
+ordinary_update_inputs:
+  candidate_receipt:
+    kind: path
+    owner: package-custody
+    example: /tmp/qualified-candidate.json
+  expected_predecessor:
+    kind: identifier
+    owner: release-succession
+    example: release-aaaaaaaaaaaaaaaaaaaaaaaa
+  proof_receipts:
+    kind: proof-map
+    owner: completed-proof-controllers
+  current_health_task:
+    kind: identifier
+    owner: verify-candidate
+    example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/cccccccccccccccccccccccccccccccc
 commands:
+  ordinary-update:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/release-succession/ordinary-update.sh, --scope-contract, '{scope_contract}', --inputs, '{ordinary_update_inputs}', --plan-release, --json]
+    owner: deploy.command.ordinary-update
+    effects: [network, writes-files, aws-mutation]
   # Explicitly non-accepting: this command has no proof contract and cannot
   # replace isolated-restore or any other recovery acceptance obligation.
   connection-diagnostic:
@@ -142,19 +186,15 @@ commands:
       workload: persistence-restoration-verifier-task
       names: [PERSISTENCE_POSTGRES_HOST]
       observation_required: true
-  qualify-proof-applicability:
-    argv:
-    - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh
-    owner: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability.wrapper
-    effects:
-    - writes-files
   migration-state-observation:
     argv:
     - bash
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - observe-migration-state
+    - --new-operation
+    - --expected-operation
+    - '{migration_state_observation_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -166,6 +206,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - prove-effective-privilege
+    - --new-operation
+    - --expected-operation
+    - '{effective_privilege_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -202,6 +245,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - confirm-runtime-iam-access
+    - --new-operation
+    - --expected-operation
+    - '{runtime_identity_initial_access_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -213,6 +259,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - revoke-runtime
+    - --new-operation
+    - --expected-operation
+    - '{credential_revocation_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -238,6 +287,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - restore-runtime
+    - --new-operation
+    - --expected-operation
+    - '{credential_recovery_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
@@ -376,6 +428,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
     - confirm-runtime-iam-access
+    - --new-operation
+    - --expected-operation
+    - '{runtime_identity_access_route_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:

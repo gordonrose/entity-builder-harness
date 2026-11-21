@@ -4,3 +4,4 @@ node_modules/
 .DS_Store
 .cache/
 __pycache__/
+infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/30-release-evidence/.release-succession.lock

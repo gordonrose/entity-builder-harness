@@ -1,6 +1,6 @@
 import { coreDiagnosticCatalog } from "../diagnostic-catalog";
 import { captureDiagnosticRecord, requireDiagnosticRecord, selectDiagnosticEvidenceWithReport, deliverDiagnosticRecord, diagnosticProcessingRecord, type DiagnosticDefinition, type DiagnosticRecord } from "../diagnostics/index";
-import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { attachCoreDiagnosticRecord } from "../shared/index";
 import { coreAuditDiagnosticDefinitions, coreAuditBoundaryDiagnosticRecord, coreAuditValidationDiagnosticRecord,
   type CoreAuditBoundaryDetail, type CoreAuditDiagnosticContext, type CoreAuditDiagnosticOptions, type CoreAuditValidationDetail } from "./diagnostics";
 

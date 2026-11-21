@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.script.build-platform-shell-image.verify-runtime-payload
-//   version: 7
+//   version: 8
 //   status: active
 //   created_on: "2026-09-06"
-//   updated_on: "2026-10-30"
+//   updated_on: "2026-11-09"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -25,6 +25,7 @@
 import { deepEqual } from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, renameSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { verifyTargetConfigurationDiagnostics } from "./configuration-diagnostic-test.mjs";
@@ -47,6 +48,8 @@ const requiredPayloadFiles = [
   persistenceCompositionEntrypoint,
   relationalBootstrapEntrypoint,
   relationalRestoreVerificationEntrypoint,
+  join(runtimeRoot, "apps", "entity-smoke", "src", "index.js"),
+  join(runtimeRoot, "node_modules", "@kanbien", "app-entity-smoke", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-auth-cognito", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-observability-cloudwatch", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-persistence-dynamodb", "index.js"),
@@ -74,6 +77,13 @@ let workspaceHidden = false;
 try {
   renameSync(workspacePackageScope, hiddenWorkspaceScope);
   workspaceHidden = true;
+  const requireCompiled = createRequire(join(runtimeRoot, "public-app-probe.cjs"));
+  deepEqual(requireCompiled.resolve("@kanbien/app-entity-smoke"),
+    join(runtimeRoot, "node_modules", "@kanbien", "app-entity-smoke", "index.js"));
+  const entitySmoke = requireCompiled("@kanbien/app-entity-smoke");
+  deepEqual([entitySmoke.entitySmokeAppManifest.appId, typeof entitySmoke.createTestEntityService,
+    typeof entitySmoke.inMemoryTestEntityRepository], ["entity-smoke", "function", "function"],
+  "The compiled public app and feature exports must resolve through the generated shim, not workspace sources.");
   verifySecurityConfigurationRetention();
   verifyObservabilityConfigurationRetention();
   await verifyTargetConfigurationDiagnostics(runtimeRoot, repositoryRoot);

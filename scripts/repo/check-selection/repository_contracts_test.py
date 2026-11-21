@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 4
+#   version: 17
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-19"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -22,6 +22,319 @@ from test_support import *
 
 class RepositoryContractTests(unittest.TestCase):
     def codes(self, report): return {item["code"] for item in report["findings"]}
+
+    def test_infrastructure_composition_partition(self):
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        parent = checks['entity-smoke-composition']
+        self.assertEqual(parent['members'], ['entity-smoke-infrastructure-route', 'entity-smoke-composition-suite'])
+        wrapper = parent['argv'][1]
+        source = (ROOT / wrapper).read_text()
+        fixture = 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py'
+        self.assertEqual(source.count(fixture), 1)
+        self.assertIn('infrastructure) exec python3 -B ' + fixture + ' ;;', source)
+        self.assertLess(source.index(fixture), source.index('entity_smoke_build='))
+        for identity, unit in zip(parent['members'], ['infrastructure', 'suite']):
+            child = checks[identity]
+            self.assertEqual(child['argv'], ['bash', wrapper, '--unit', unit])
+            self.assertEqual(child['inputs'], parent['inputs'])
+            self.assertEqual(selection.validate_check(ROOT, identity, child), [])
+        self.assertEqual(selection.validate_check(ROOT, 'entity-smoke-composition', parent), [])
+        self.assertEqual(checks['entity-smoke-infrastructure-route']['runtime']['tools'], ['bash', 'python3'])
+        for identity in ['entity-smoke-composition', *parent['members']]:
+            self.assertEqual(selection.execution_policy.validate_feedback(identity, checks[identity]), [])
+        self.assertFalse(parent['feedback']['development'])
+        self.assertTrue(all(checks[child]['feedback']['development'] for child in parent['members']))
+        for reference in [
+            fixture, fixture.replace("infrastructure-route-test.py", "acceptance-control-test.sh"),
+            'scripts/repo/check-selection/execution_policy.py',
+        ]:
+            self.assertTrue(any(selection.below(reference, declared) for declared in parent['inputs']))
+            with tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                path = root / reference; path.parent.mkdir(parents=True); path.write_text('first')
+                before = selection.fingerprint(root, set(parent['inputs']))
+                path.write_text('changed')
+                self.assertNotEqual(selection.fingerprint(root, set(parent['inputs'])), before)
+        for arguments in [('--unit', 'unknown'), ('--unit', 'infrastructure', 'extra'), ('--unit',)]:
+            result = subprocess.run(['bash', wrapper, *arguments], cwd=ROOT, capture_output=True)
+            self.assertEqual(result.returncode, 2)
+
+    def test_described_aggregate_branches_preserve_exact_execution_gate(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        wrapper = ROOT / 'scripts/repo/diagnostic-coverage/verify.sh'
+        source = wrapper.read_text()
+        original_read = Path.read_text
+        for identity in ('diagnostic-runtime-contracts', 'diagnostic-base-runtime'):
+            with self.subTest(check=identity):
+                check = catalog['checks'][identity]
+                self.assertEqual(selection.validate_check(ROOT, identity, check), [])
+                expected = 'exec bash scripts/repo/check-selection/script.sh --aggregate-members ' + identity + ' --execute-local --json'
+                for extra in ('node undeclared-child.mjs; ', 'non_npm; '):
+                    altered = source.replace(expected, extra + expected)
+                    self.assertNotEqual(altered, source)
+                    with patch.object(Path, 'read_text', new=lambda path, *args, **kwargs:
+                                      altered if path == wrapper else original_read(path, *args, **kwargs)):
+                        self.assertEqual(selection.validate_check(ROOT, identity, check),
+                                         [{'code': 'verification-aggregate-wrapper-invalid', 'check_id': identity}])
+
+    def test_declaration_helpers_are_executed_and_fingerprinted_by_existing_regressions(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        payload = (ROOT / 'scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/script.sh').read_text()
+        for name in ('declarations', 'compile', 'script', 'project-selection', 'runtime-packages', 'check-inputs'):
+            self.assertIn('scripts/repo/workspace-build/' + name + '-test.mjs', payload)
+        module = (ROOT / 'scripts/repo/module-structure/smoke-test.sh').read_text()
+        self.assertIn('scripts/repo/workspace-build/dependencies-test.mjs', module)
+        boundary = (ROOT / 'scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh').read_text()
+        self.assertIn('runnable-program-contract/smoke-test.sh', boundary)
+        program = (ROOT / 'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh').read_text()
+        self.assertIn('runnable-program-contract/build-inputs-test.mjs', program)
+        self.assertIn('runnable-program-contract/build-validation-test.py', program)
+        for rule in catalog['repository_inputs']:
+            self.assertTrue(set(rule['checks']) <= set(catalog['checks']))
+        for identity, source in [('runtime-payload-assembly', 'scripts/repo/workspace-build/project-selection.mjs'),
+                                 ('runtime-payload-assembly', 'scripts/repo/workspace-build/compile-test.mjs'),
+                                 ('core-dependency-boundary', 'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-validation-test.py'),
+                                 ('runnable-program', 'scripts/repo/workspace-build/declarations.mjs')]:
+            with self.subTest(check=identity), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                file = root / source; file.parent.mkdir(parents=True); file.write_text('first')
+                inputs = set(catalog['checks'][identity]['inputs'])
+                before = selection.fingerprint(root, inputs)
+                file.write_text('second')
+                self.assertNotEqual(selection.fingerprint(root, inputs), before)
+                omitted = {path for path in inputs if not selection.below(source, path)}
+                counterexample = selection.fingerprint(root, omitted)
+                file.write_text('third')
+                self.assertEqual(selection.fingerprint(root, omitted), counterexample)
+
+    def test_shared_payload_assembly_selects_and_invalidates_both_consumers(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        cases = {
+            'scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs': {'bootstrap-payload-regression'},
+            'scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs': set(),
+            'scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh': None,
+        }
+        for source, additional in cases.items():
+            expected = {'persistence-payload-regression', 'entity-smoke-publication-contract', 'package-custody-regression', 'persistence-container', 'entity-smoke-container'} if additional is None else additional | {'runtime-payload-assembly', 'runtime-dependency-assembly',
+                        'persistence-payload-regression', 'entity-smoke-composition',
+                        'persistence-container', 'entity-smoke-container'}
+            args = argparse.Namespace(root=ROOT, catalog=ROOT / 'scripts/repo/check-selection/checks.yml', paths=[source], staged=False,
+                                      all=False, stage='local', execute_local=False, evidence=None, json=True)
+            report = selection.plan(args)
+            self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+            self.assertTrue(expected <= {check['check_id'] for check in report['checks']},
+                            (source, expected - {check['check_id'] for check in report['checks']}))
+            for identity in expected - {'persistence-container', 'entity-smoke-container'}:
+                with self.subTest(source=source, check=identity), tempfile.TemporaryDirectory(prefix='shared-package-input-') as directory:
+                    root = Path(directory)
+                    file = root / source
+                    file.parent.mkdir(parents=True)
+                    file.write_text('fixture v1')
+                    inputs = set(catalog['checks'][identity]['inputs'])
+                    before = selection.fingerprint(root, inputs)
+                    file.write_text('fixture v2')
+                    self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                    omitted = {item for item in inputs if not selection.below(source, item)}
+                    missing_before = selection.fingerprint(root, omitted)
+                    file.write_text('fixture v3')
+                    self.assertEqual(missing_before, selection.fingerprint(root, omitted),
+                                     'counterexample demonstrates why the shared input cannot be omitted')
+
+    def test_shared_ecs_response_selects_and_invalidates_both_bindings(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        for source in ('scripts/04.deploy/shared/provider-adapters/aws/response.py',
+                       'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py'):
+            args = argparse.Namespace(root=ROOT, catalog=ROOT / 'scripts/repo/check-selection/checks.yml', paths=[source], staged=False,
+                                      all=False, stage='local', execute_local=False, evidence=None, json=True)
+            report = selection.plan(args)
+            self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+            expected = {'entity-smoke-composition', 'persistence-payload-regression'}
+            if source.endswith('/response.py'):
+                expected |= {'persistence-provider-regression', 'shell-negative-authz-client-check',
+                             'shell-postgresql-relational-smoke-check', 'deployment-operation-diagnostics-regression'}
+            self.assertTrue(expected <= {check['check_id'] for check in report['checks']})
+            for identity in ('entity-smoke-composition', 'persistence-payload-regression'):
+                with self.subTest(source=source, check=identity), tempfile.TemporaryDirectory(prefix='shared-ecs-input-') as directory:
+                    root = Path(directory)
+                    file = root / source
+                    file.parent.mkdir(parents=True)
+                    file.write_text('fixture v1')
+                    inputs = set(catalog['checks'][identity]['inputs'])
+                    before = selection.fingerprint(root, inputs)
+                    file.write_text('fixture v2')
+                    self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                    omitted = {item for item in inputs if not selection.below(source, item)}
+                    missing_before = selection.fingerprint(root, omitted)
+                    file.write_text('fixture v3')
+                    self.assertEqual(missing_before, selection.fingerprint(root, omitted))
+
+    def test_shared_cli_boundary_invalidates_registered_callers(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        expected = {'diagnostic-catalog-readers', 'core-target-declaration-regression', 'bootstrap-target-controls-regression',
+                    'restore-connection-diagnostics', 'entity-smoke-composition', 'persistence-composition',
+                    'persistence-payload-regression', 'persistence-provider-regression', 'acceptance-route-regression',
+                    'deployment-operation-diagnostics-regression'}
+        for source in ('scripts/04.deploy/shared/provider-adapters/aws/cli.py',
+                       'scripts/04.deploy/shared/provider-adapters/aws/response.py'):
+            args = argparse.Namespace(root=ROOT, catalog=ROOT / 'scripts/repo/check-selection/checks.yml', paths=[source], staged=False,
+                                      all=False, stage='local', execute_local=False, evidence=None, json=True)
+            report = selection.plan(args)
+            self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+            self.assertTrue(expected <= {check['check_id'] for check in report['checks']})
+            for identity in expected:
+                with self.subTest(source=source, check=identity), tempfile.TemporaryDirectory(prefix='shared-cli-input-') as directory:
+                    root = Path(directory)
+                    file = root / source
+                    file.parent.mkdir(parents=True)
+                    file.write_text('fixture v1')
+                    inputs = set(catalog['checks'][identity]['inputs'])
+                    before = selection.fingerprint(root, inputs)
+                    file.write_text('fixture v2')
+                    self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                    omitted = {item for item in inputs if not selection.below(source, item)}
+                    missing_before = selection.fingerprint(root, omitted)
+                    file.write_text('fixture v3')
+                    self.assertEqual(missing_before, selection.fingerprint(root, omitted))
+
+    def test_shared_task_and_publication_owners_invalidate_actual_callers(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        # Plans still validate the real catalog and every selected input. This
+        # fixture never changes repository sources: reuse their real digests
+        # across plan cases, not across runs. Actual mutation/omission probes
+        # below retain the unwrapped fingerprint implementation.
+        actual_fingerprint, plan_hashes = selection.fingerprint, {}
+        def plan_fingerprint(root, refs, *, exclude=frozenset()):
+            if root != ROOT or refs == {'scripts/repo/check-selection/checks.yml'}:
+                return actual_fingerprint(root, refs, exclude=exclude)
+            key = (root, frozenset(refs), frozenset(exclude))
+            if key not in plan_hashes:
+                plan_hashes[key] = actual_fingerprint(root, refs, exclude=exclude)
+            return plan_hashes[key]
+        aws = 'scripts/04.deploy/shared/provider-adapters/aws/'
+        baseline = {'diagnostic-catalog-readers', 'persistence-composition', 'persistence-provider-regression',
+                    'acceptance-route-regression', 'deployment-operation-diagnostics-regression'}
+        publication = {'entity-smoke-publication-contract', 'package-custody-regression'}
+        cases = {
+            aws + 'tasks.py': baseline | {'entity-smoke-composition', 'restore-connection-diagnostics', 'persistence-payload-regression', 'runtime-payload-assembly'},
+            aws + 'task_journal.py': baseline,
+            'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py': baseline,
+            'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/replacement-operations.py': {'diagnostic-catalog-readers', 'persistence-provider-regression', 'acceptance-route-regression', 'deployment-operation-diagnostics-regression'},
+            'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py': {'diagnostic-catalog-readers', 'persistence-provider-regression', 'acceptance-route-regression', 'deployment-operation-diagnostics-regression'},
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts': {'diagnostic-catalog-readers', 'entity-smoke-composition', 'persistence-composition', 'persistence-payload-regression', 'platform-shell-payload', 'package-custody-regression'},
+            aws + 'resource_reservation.py': baseline | {'entity-smoke-composition', 'runtime-payload-assembly'},
+            aws + 'snapshots.py': baseline | {'entity-smoke-composition', 'runtime-payload-assembly'},
+            aws + 'change_sets.py': {'entity-smoke-composition', 'persistence-provider-regression', 'acceptance-route-regression', 'runtime-payload-assembly'},
+            'scripts/04.deploy/lifecycle/60-run/release-succession/script.py': {'release-succession-regression', 'entity-smoke-composition', 'acceptance-route-regression', 'runtime-payload-assembly'},
+            aws + 'ecr_publication.py': publication,
+            'scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py': publication,
+        }
+        for source, expected in cases.items():
+            args = argparse.Namespace(root=ROOT, catalog=ROOT / 'scripts/repo/check-selection/checks.yml', paths=[source], staged=False,
+                                      all=False, stage='local', execute_local=False, evidence=None, json=True)
+            with patch.object(selection, 'fingerprint', side_effect=plan_fingerprint):
+                report = selection.plan(args)
+            self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+            self.assertTrue(expected <= {check['check_id'] for check in report['checks']},
+                            (source, expected - {check['check_id'] for check in report['checks']}))
+            for identity in expected:
+                with self.subTest(source=source, check=identity), tempfile.TemporaryDirectory(prefix='shared-execution-input-') as directory:
+                    root = Path(directory)
+                    file = root / source; file.parent.mkdir(parents=True); file.write_text('fixture v1')
+                    inputs = set(catalog['checks'][identity]['inputs'])
+                    before = selection.fingerprint(root, inputs)
+                    file.write_text('fixture v2')
+                    self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                    omitted = {item for item in inputs if not selection.below(source, item)}
+                    missing_before = selection.fingerprint(root, omitted)
+                    file.write_text('fixture v3')
+                    self.assertEqual(missing_before, selection.fingerprint(root, omitted))
+        for identity in publication:
+            inputs = catalog['checks'][identity]['inputs']
+            for source in ('scripts/04.deploy/shared/deployment-operation-diagnostics.py', 'scripts/repo/diagnostic-coverage/runtime_contract.py',
+                           'packages/core/contracts/diagnostics.v1.json', 'infra/04.deploy/03.product/entrypoints/contracts/kanbien-platform-delivery-diagnostics.v1.json'):
+                self.assertTrue(any(selection.below(source, item) for item in inputs), (identity, source))
+
+    def test_feature_catalog_inputs_invalidate_actual_fingerprints(self):
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        for identity in ('diagnostic-catalog-readers', 'diagnostic-runtime-contracts'):
+            with self.subTest(check=identity), tempfile.TemporaryDirectory(prefix='feature-catalog-inputs-') as directory:
+                root = Path(directory)
+                source = root / 'apps/entity-smoke/features/test-entity/contract/diagnostics.ts'
+                export = root / 'apps/entity-smoke/contracts/diagnostics.v1.json'
+                source.parent.mkdir(parents=True); source.write_text('fixture source v1\n')
+                export.parent.mkdir(parents=True); export.write_text('{"fixture":1}\n')
+                inputs = set(checks[identity]['inputs'])
+                before = selection.fingerprint(root, inputs)
+                source.write_text('fixture source v2\n')
+                changed_source = selection.fingerprint(root, inputs)
+                self.assertNotEqual(before, changed_source, 'consumed feature source must invalidate catalog proof')
+                export.write_text('{"fixture":2}\n')
+                changed_export = selection.fingerprint(root, inputs)
+                self.assertNotEqual(changed_source, changed_export, 'feature export must invalidate catalog proof')
+                (root / 'unrelated.txt').write_text('unrelated fixture input\n')
+                self.assertEqual(changed_export, selection.fingerprint(root, inputs))
+                omitted = inputs - {'apps/entity-smoke'}
+                missing_before = selection.fingerprint(root, omitted)
+                source.write_text('fixture source v3\n')
+                self.assertEqual(missing_before, selection.fingerprint(root, omitted), 'counterexample reproduces omitted-root cache identity')
+                self.assertIn('@kanbien/app-entity-smoke', checks[identity]['runtime']['node_packages'])
+
+    def test_feedback_pilot_binds_real_owners_without_reclassifying_existing_gates(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        checks = catalog['checks']
+        for identity, check in checks.items():
+            self.assertEqual(selection.execution_policy.validate_feedback(identity, check), [], identity)
+        feature = checks['entity-smoke-runtime']
+        self.assertEqual(feature['argv'], ['bash', 'scripts/repo/diagnostic-coverage/verify.sh', '--unit', 'entity-smoke'])
+        self.assertEqual(feature['boundary'], 'integration')
+        self.assertEqual(feature['effects'], ['writes-files'])
+        self.assertTrue(feature['feedback']['development'])
+        self.assertIn('apps/entity-smoke', feature['inputs'])
+        self.assertIn('packages/core', feature['inputs'])
+        self.assertIn('platform/contracts', feature['inputs'])
+        self.assertIn('packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts', feature['inputs'])
+        scripts = json.loads((ROOT / 'package.json').read_text())['scripts']
+        self.assertEqual(scripts['app:entity-smoke:check'], 'npm run app:entity-smoke:typecheck && npm run app:entity-smoke:test')
+        self.assertIn('tsc -p apps/entity-smoke/tsconfig.check.json', scripts['app:entity-smoke:typecheck'])
+        self.assertIn('node apps/entity-smoke/tests/run-runtime-tests.mjs', scripts['app:entity-smoke:test'])
+        self.assertTrue(checks['dynamodb-persistence-runtime']['feedback']['development'])
+        self.assertTrue(checks['postgresql-connection-diagnostics']['feedback']['development'])
+        for identity in ('platform-server-runtime', 'kanbien-platform-runtime', 'platform-shell-payload',
+                         'check-selection-mechanics', 'check-selection-repository-contracts'):
+            self.assertFalse(checks[identity]['feedback']['development'], identity)
+            self.assertEqual(checks[identity]['boundary'], 'integration', identity)
+        self.assertTrue(checks['diagnostic-runtime-contracts']['focused_prerequisites'])
+        self.assertIn('platform-server-runtime', checks['diagnostic-runtime-contracts']['members'])
+        self.assertIn('kanbien-platform-runtime', checks['diagnostic-runtime-contracts']['members'])
+        self.assertNotIn('feedback', checks['core-runtime'])
+
+    def test_migrated_runner_units_bind_shared_fixture_changes(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        fixture = 'packages/core/tests/test-infrastructure/helpers/runtime-runner-fixture.ts'
+        identities = ('core-runtime', 'platform-contracts-runtime', 'platform-config-runtime',
+                      'platform-health-runtime', 'platform-observability-runtime',
+                      'platform-persistence-runtime', 'platform-runtime-runtime',
+                      'platform-security-runtime', 'platform-testing-runtime',
+                      'platform-workers-runtime', 'platform-server-runtime',
+                      'platform-smoke-runtime', 'kanbien-platform-runtime',
+                      'cloudwatch-observability-runtime', 'ecs-fargate-runtime',
+                      'dynamodb-persistence-runtime', 'sqs-queue-runtime',
+                      'security-cognito-diagnostics', 'security-shared-rate-limit-diagnostics',
+                      'postgresql-connection-diagnostics')
+
+        def assert_binding(candidate):
+            for identity in identities:
+                self.assertTrue(any(selection.below(fixture, item)
+                                    for item in candidate['checks'][identity]['inputs']), identity)
+
+        assert_binding(catalog)
+        stale = copy.deepcopy(catalog)
+        stale['checks']['platform-config-runtime']['inputs'].remove(fixture)
+        with self.assertRaises(AssertionError):
+            assert_binding(stale)
 
     def test_imported_diagnostic_fixtures_have_focused_registered_owners(self):
         import re
@@ -160,7 +473,7 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertEqual(check['argv'], ['bash', 'scripts/repo/module-structure/' + command])
             self.assertEqual(check['owner'], owner)
             self.assertEqual(check['boundary'], boundary)
-            self.assertEqual(check['effects'], ['read-only'])
+            self.assertEqual(check['effects'], ['read-only'] if boundary == 'commit' else ['read-only', 'writes-files'])
             self.assertEqual(check['stage'], 'local')
             self.assertFalse(selection.validate_check(ROOT, identity, check))
             self.assertIn('typescript', check['runtime']['node_packages'])
@@ -176,10 +489,44 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertIn('module-index-structure', selected, ref)
         baseline = json.loads((ROOT / 'scripts/repo/module-structure/legacy.v1.json').read_text())
         self.assertNotIn('packages/core/src/config/index.ts', [row['path'] for row in baseline['legacy']])
-        self.assertIn('module-structure/check.mjs', (ROOT / 'packages/core/tests/core-boundaries.test.mjs').read_text())
+        self.assertIn('module-structure/check.mjs', (ROOT / 'packages/core/tests/test-infrastructure/static-validation/core-boundaries.test.mjs').read_text())
         self.assertIn('scripts/repo/module-structure/check.mjs', checks['core-runtime']['inputs'])
         self.assertTrue(any('scripts/repo/module-structure/check.mjs' in rule['inputs']
                             and 'core-runtime' in rule['checks'] for rule in rules))
+
+    def test_workspace_dependency_inspection_uses_existing_gate_and_real_input_closure(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        identities = {'module-index-structure', 'module-index-structure-regression'}
+        references = ['scripts/repo/workspace-build/dependencies.mjs',
+                      'scripts/repo/workspace-build/declarations.mjs',
+                      'scripts/repo/workspace-build/dependencies-test.mjs',
+                      'scripts/future/imported-test-tool.mjs', 'apps/future/package.json',
+                      'apps/future/tests/fixture.ts', 'infra/future/probe.ts']
+        for reference in references:
+            selected = {identity for rule in catalog['repository_inputs']
+                        if any(selection.below(reference, item) for item in rule['inputs'])
+                        for identity in rule['checks']}
+            self.assertTrue(identities <= selected, reference)
+            for identity in identities:
+                with tempfile.TemporaryDirectory(prefix='workspace-import-input-') as directory:
+                    root = Path(directory)
+                    source = root / reference
+                    source.parent.mkdir(parents=True)
+                    source.write_text('independent first source')
+                    inputs = set(catalog['checks'][identity]['inputs'])
+                    before = selection.fingerprint(root, inputs)
+                    source.write_text('independent changed source')
+                    self.assertNotEqual(before, selection.fingerprint(root, inputs), (reference, identity))
+                    omitted = {item for item in inputs if not selection.below(reference, item)}
+                    missing_before = selection.fingerprint(root, omitted)
+                    source.write_text('independent third source')
+                    self.assertEqual(missing_before, selection.fingerprint(root, omitted))
+        implementation = (ROOT / 'scripts/repo/module-structure/check.mjs').read_text()
+        self.assertIn('workspaces = inspectWorkspaceDependencies(root)', implementation)
+        self.assertIn('...workspaces.findings', implementation)
+        wrapper = (ROOT / 'scripts/repo/module-structure/smoke-test.sh').read_text()
+        self.assertIn('node --test scripts/repo/workspace-build/dependencies-test.mjs', wrapper)
+        self.assertNotIn('workspace-dependency-registry', json.dumps(catalog))
 
     def test_configuration_access_uses_the_existing_gate_and_policy_inputs(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
@@ -275,6 +622,8 @@ class RepositoryContractTests(unittest.TestCase):
             'aws-runtime-alignment-regression': (
                 'provider-adapters/aws/runtime-alignment', 'deploy.test.aws.runtime-alignment',
                 {alignment + 'provider-adapters/aws/runtime-alignment',
+                 'scripts/04.deploy/shared/postgresql-version.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/response.py'}),
             'provider-condition-evidence-regression': (
                 'validate-provider-condition-evidence', 'deploy.test.validate-provider-condition-evidence',
@@ -282,6 +631,9 @@ class RepositoryContractTests(unittest.TestCase):
             'core-target-declaration-regression': (
                 'core-platform-target-declaration', 'deploy.test.core-platform-target-declaration',
                 {alignment.rstrip('/'), 'scripts/04.deploy/lifecycle/60-run',
+                 'scripts/04.deploy/shared/provider-adapters/aws/cli.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/response.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/tasks.py',
                  'scripts/04.deploy/lifecycle/40-package/package-custody-receipt',
                  'scripts/04.deploy/shared/deployment-operation-diagnostics.py',
                  'scripts/repo/diagnostic-coverage/runtime_contract.py',
@@ -307,6 +659,19 @@ class RepositoryContractTests(unittest.TestCase):
                 self.assertFalse(selection.validate_check(ROOT, identity, check))
                 self.assertNotIn(identity, checks['target-alignment-regression'].get('members', []))
         # Ordinary runtime implementation edits do not own these fixture suites.
+        for source in ('scripts/04.deploy/shared/postgresql-version.py',
+                       'scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py'):
+            with self.subTest(shared_input=source), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                file = root / source; file.parent.mkdir(parents=True); file.write_text('first')
+                inputs = set(checks['aws-runtime-alignment-regression']['inputs'])
+                before = selection.fingerprint(root, inputs)
+                file.write_text('changed')
+                self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                omitted = inputs - {source}
+                without = selection.fingerprint(root, omitted)
+                file.write_text('changed again')
+                self.assertEqual(without, selection.fingerprint(root, omitted))
         for identity in expected:
             self.assertFalse(any(selection.below('platform/server/src/index.ts', path)
                                  for path in checks[identity]['inputs']))
@@ -448,6 +813,7 @@ class RepositoryContractTests(unittest.TestCase):
                     'validate-health-failure-and-recovery-declaration', 'validate-persistence-diagnostic-mapping',
                     'validate-acceptance-route', 'promote-accepted-scope', 'release-succession']),
                  base + '40-package/package-custody-receipt',
+                 'scripts/04.deploy/shared/provider-adapters/aws/cli.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/response.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py',
                  'scripts/04.deploy/shared/deployment-operation-diagnostics.py',
@@ -460,6 +826,12 @@ class RepositoryContractTests(unittest.TestCase):
                 'deploy.test.kanbien-core-platform.provision-target-budget',
                 ['recovery-test.py', 'RecoveryCli.test_budget_lost_response_resumes_exact_operation'],
                 {base + '50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget',
+                 base + '00-target-alignment/declaration-coverage/script.py',
+                 base + '00-target-alignment/provider-adapters/aws/preparation-inputs.py',
+                 'scripts/04.deploy/shared/postgresql-version.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py',
+                 'scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py',
+                 'infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml',
                  'scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/response.py',
                  'scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py',
@@ -525,7 +897,7 @@ class RepositoryContractTests(unittest.TestCase):
         check = checks['dynamodb-persistence-runtime']
         self.assertEqual(check['argv'], ['bash', 'scripts/repo/diagnostic-coverage/verify.sh', '--unit', 'dynamodb-persistence'])
         wrapper = (ROOT / 'scripts/repo/diagnostic-coverage/verify.sh').read_text()
-        self.assertIn('  dynamodb-persistence) exec npm --ignore-scripts run platform:adapter:aws:persistence:dynamodb:check ;;', wrapper.splitlines())
+        self.assertIn('  dynamodb-persistence) run_npm --ignore-scripts run platform:adapter:aws:persistence:dynamodb:check ;;', wrapper.splitlines())
         self.assertEqual(check['stage'], 'local')
         self.assertEqual(check['evidence_class'], 'local-runtime')
         self.assertFalse(check['scope_inputs'])
@@ -560,7 +932,7 @@ class RepositoryContractTests(unittest.TestCase):
         check = checks['sqs-queue-runtime']
         self.assertEqual(check['argv'], ['bash', 'scripts/repo/diagnostic-coverage/verify.sh', '--unit', 'sqs-queue'])
         wrapper = (ROOT / 'scripts/repo/diagnostic-coverage/verify.sh').read_text()
-        self.assertIn('  sqs-queue) exec npm --ignore-scripts run platform:adapter:aws:queue:sqs:check ;;', wrapper.splitlines())
+        self.assertIn('  sqs-queue) run_npm --ignore-scripts run platform:adapter:aws:queue:sqs:check ;;', wrapper.splitlines())
         self.assertEqual(check['stage'], 'local')
         self.assertEqual(check['evidence_class'], 'local-runtime')
         self.assertFalse(check['scope_inputs'])
@@ -644,7 +1016,7 @@ class RepositoryContractTests(unittest.TestCase):
         for paths, expected in [
             (['platform/adapters/aws/persistence/dynamodb/src/transactions.ts'], {'dynamodb-persistence-runtime', 'platform-shell-payload'}),
             (['platform/adapters/aws/queue/sqs/src/worker.ts'], {'sqs-queue-runtime', 'platform-shell-payload'}),
-            (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
+            (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
             (['scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py', '.agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml'], {'restore-connection-diagnostics', 'deployment-operation-diagnostics-regression'}),
         ]:
             args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
@@ -746,6 +1118,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(len(parent['members']), len(expected))
         self.assertEqual(parent['inputs'], ['scripts/repo/check-selection'])
         self.assertEqual(checks['check-selection-mechanics']['runtime']['node_packages'], [])
+        self.assertTrue({'scripts/repo/diagnostic-coverage/script.py',
+                         'scripts/repo/diagnostic-coverage/script.sh'} <= set(checks['check-selection-mechanics']['inputs']))
         for excluded in ['platform', 'packages/core', 'docs', '.agentic', 'scripts/04.deploy']:
             self.assertNotIn(excluded, checks['check-selection-mechanics']['inputs'])
         for member in expected:
@@ -761,6 +1135,9 @@ class RepositoryContractTests(unittest.TestCase):
         catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
         owners = {'harness-lifecycle-metadata-regression', 'harness-header-regression', 'chat-session-preparation-regression', 'chat-local-merge-regression', 'chat-main-refresh-regression'}
         cases = [
+            ('apps/entity-smoke/features/test-entity/domain/services/update-test-entity.ts', {'entity-smoke-runtime', 'kanbien-platform-runtime'}, {'check-selection-mechanics'}),
+            ('platform/adapters/aws/persistence/dynamodb/src/index.ts', {'dynamodb-persistence-runtime', 'platform-shell-payload'}, {'check-selection-mechanics'}),
+            ('platform/adapters/aws/persistence/postgresql/src/index.ts', {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics'}, {'check-selection-mechanics'}),
             ('platform/adapters/aws/runtime/ecs-fargate/src/index.ts', {'ecs-fargate-runtime', 'platform-shell-payload', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('platform/server/src/configuration/runtime.ts', {'platform-server-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'check-selection-regression', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('scripts/repo/check-selection/script.py', {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression', *owners}, set()),

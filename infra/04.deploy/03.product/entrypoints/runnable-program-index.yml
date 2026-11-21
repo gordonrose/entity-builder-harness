@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.entrypoints.runnable-program-index
-#   version: 4
+#   version: 7
 #   status: active
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -12,7 +12,7 @@
 #   - security
 #   - sre
 #   kind: manifest
-#   purpose: Record the factual runnable-program and package-candidate boundary for the Kanbien core bootstrap server.
+#   purpose: Record the factual runnable-program and package-candidate boundaries for independent Kanbien core-platform programs.
 #   portability:
 #     class: internal
 #     targets: []
@@ -24,8 +24,27 @@
 schema: deploy/runnable-program-contract/v1
 id: kanbien-core-server-candidate
 version: 1
+dependency_bindings:
+  core: {workspace_package: '@kanbien/core'}
+  app-entity-smoke: {workspace_package: '@kanbien/app-entity-smoke'}
+  platform-config: {workspace_package: '@kanbien/platform-config'}
+  platform-contracts: {workspace_package: '@kanbien/platform-contracts'}
+  platform-health: {workspace_package: '@kanbien/platform-health'}
+  platform-observability: {workspace_package: '@kanbien/platform-observability'}
+  platform-persistence: {workspace_package: '@kanbien/platform-persistence'}
+  platform-runtime: {workspace_package: '@kanbien/platform-runtime'}
+  platform-security: {workspace_package: '@kanbien/platform-security'}
+  platform-server: {workspace_package: '@kanbien/platform-server'}
+  platform-adapter-aws-postgresql: {workspace_package: '@kanbien/platform-adapter-aws-persistence-postgresql'}
+  platform-adapter-aws-cloudwatch-otel: {workspace_package: '@kanbien/platform-adapter-aws-observability-cloudwatch'}
+  postgresql: {external_packages: [pg, '@aws-sdk/rds-signer']}
+  opentelemetry-metrics-runtime:
+    external_packages: ['@opentelemetry/api', '@opentelemetry/exporter-metrics-otlp-proto', '@opentelemetry/resources', '@opentelemetry/sdk-metrics']
 runnable_programs:
   - id: kanbien-core-server
+    build:
+      kind: workspace-typescript
+      typescript_project: infra/04.deploy/03.product/entrypoints/kanbien-core-server.tsconfig.json
     source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
     entrypoint: artifacts/kanbien-core-server.main.js
     runtime_executable: node
@@ -63,17 +82,35 @@ runnable_programs:
       - relay
       - worker
   - id: kanbien-core-server-persistence
+    build:
+      kind: workspace-typescript
+      typescript_project: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
     source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
     entrypoint: artifacts/kanbien-core-server-persistence.main.js
     runtime_executable: node
     role: http-server
-    configuration_boundary: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+    configuration_boundary: infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
     dependency_failure_boundary: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
     local_proof: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
     owner: 04.deploy/03.product
     approved_dependencies: [core, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
     observed_dependencies: [core, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
     forbidden_dependencies: [app-platform-smoke, platform-workers, product-kanbien-platform, staging-platform-server, relay, worker]
+  - id: kanbien-entity-smoke
+    build:
+      kind: workspace-typescript
+      typescript_project: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json
+    source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts
+    entrypoint: artifacts/kanbien-entity-smoke.main.js
+    runtime_executable: node
+    role: http-server
+    configuration_boundary: infra/04.deploy/03.product/entrypoints/entity-smoke/configuration.ts
+    dependency_failure_boundary: infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts
+    local_proof: scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
+    owner: 04.deploy/03.product
+    approved_dependencies: [app-entity-smoke, core, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
+    observed_dependencies: [app-entity-smoke, core, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
+    forbidden_dependencies: [app-platform-smoke, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-workers, product-kanbien-platform, staging-platform-server, relay, worker]
 image_contracts:
   - id: kanbien-core-server-image
     program: kanbien-core-server
@@ -85,6 +122,10 @@ image_contracts:
     program: kanbien-core-server-persistence
     command_mode: exec
     command: [node, artifacts/kanbien-core-server-persistence.main.js]
+  - id: kanbien-entity-smoke-image
+    program: kanbien-entity-smoke
+    command_mode: exec
+    command: [node, artifacts/kanbien-entity-smoke.main.js]
 package_candidates:
   - id: kanbien-core-server-candidate
     image_contract: kanbien-core-server-image
@@ -92,8 +133,13 @@ package_candidates:
   - id: kanbien-core-server-persistence-candidate
     image_contract: kanbien-core-server-persistence-image
     immutable_identity_rule: runtime-bound-sha256
+  - id: kanbien-entity-smoke-candidate
+    image_contract: kanbien-entity-smoke-image
+    immutable_identity_rule: runtime-bound-sha256
 candidate_verifications:
   - candidate: kanbien-core-server-candidate
     required_evidence_fields: [package_contract_id, candidate_id, program_id, source_revision, image_digest, release_identity, health_verdict, verification_verdict, checked_at, receipt_reference]
   - candidate: kanbien-core-server-persistence-candidate
+    required_evidence_fields: [package_contract_id, candidate_id, program_id, source_revision, image_digest, release_identity, health_verdict, verification_verdict, checked_at, receipt_reference]
+  - candidate: kanbien-entity-smoke-candidate
     required_evidence_fields: [package_contract_id, candidate_id, program_id, source_revision, image_digest, release_identity, health_verdict, verification_verdict, checked_at, receipt_reference]

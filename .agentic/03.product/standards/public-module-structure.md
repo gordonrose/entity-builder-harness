@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.standard.public-module-structure
-version: 9
+version: 11
 status: active
 created_on: "2026-11-01"
-updated_on: "2026-11-03"
+updated_on: "2026-11-15"
 layer: 03.product
 domain: architecture
 disciplines: [architecture, agentic]
@@ -239,6 +239,40 @@ establish them. Apply this guidance to new work and relevant refactors without
 silently claiming or starting repository-wide adoption.
 
 ## Executable coverage and legacy debt
+
+### Declared workspace dependencies
+
+Workspace `package.json` owns its public exports and dependencies. Declare each
+runtime cross-workspace import in `dependencies`, including relative imports;
+an alias map or another package's transitive dependency is not authority. Tests
+may add their own dependencies through `devDependencies`, but runtime source
+must not import test helpers to borrow those permissions. Package-relative
+`tests/`, `__tests__/`, `fixtures/` and test/spec filenames identify development
+source; a nested runtime `src/fixtures/` directory does not.
+
+Derive compiler aliases and runtime public-export maps from these manifests
+through the shared `scripts/repo/workspace-build/` owners; do not maintain a
+second handwritten map in a compiler configuration, test runner or preparer.
+The neutral compiler and governed package-check input projector reject nonempty
+effective TypeScript `paths`, including inherited maps and projected plain
+`tsc` commands, with `compiler-aliases-must-be-derived`. Declaration-only and
+Bundler routes outside those governed package checks remain unchanged; this is
+not a claim that every repository compiler invocation is intercepted.
+
+The same module-structure command now uses the shared declaration resolver and
+TypeScript resolution to inspect literal TS/JS workspace imports, including
+relative cross-owner imports. Test-imported deployment entrypoints must remain
+within that test package's selected runtime/development closure. Repository
+tooling imported by tests keeps tooling dependencies in the root manifest; it
+does not grant those dependencies to product runtime source. Missing selected
+declarations, unsupported export shapes and source symlinks fail closed.
+Existing private-module, configuration and legacy-index rules remain separate.
+
+Computed loads are counted, not approved or universally resolved by this
+workspace check. Their explicit assets/dynamic requirements still need the
+owning build/program declaration, source review and actual package tests.
+Discovery never approves new program dependencies or cloud access. The
+command guide documents exact discovery and literal-analysis limits.
 
 The same existing command also applies the configuration standard's
 [narrow source-access boundary](config-runtime-settings.md#narrow-automatic-access-boundary-and-limitations).

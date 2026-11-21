@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.diagnostics-backlog
-version: 26
+version: 27
 status: active
 created_on: "2026-11-01"
-updated_on: "2026-11-05"
+updated_on: "2026-11-09"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -131,11 +131,11 @@ task, not to implement the correction during the course.
 
 #### Regression fixtures
 
-- [x] Extend `packages/core/tests/config-runtime.test.ts` and
-  `packages/core/tests/config-types.test.ts` as applicable to prove the public
+- [x] Extend `packages/core/tests/config/unit/config-runtime.test.ts` and
+  `packages/core/tests/config/type-level/config-types.test.ts` as applicable to prove the public
   constraint, boundaries, immutability and supported use by existing readers.
 - [x] Extend
-  `platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts`
+  `platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts`
   and
   `scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs`
   with independent expectations for valid boundaries 1 and 65535 and rejected
@@ -681,8 +681,8 @@ reports are unreadable or that adding a name automatically emits new reports.
 
 #### Regression fixtures
 
-- [x] Extend `packages/core/tests/diagnostic-record-runtime.test.ts`, relevant
-  Core type tests and `platform/config/tests/platform-config-runtime.test.ts`
+- [x] Extend `packages/core/tests/diagnostics/contract/diagnostic-record-runtime.test.ts`, relevant
+  Core type tests and `platform/config/tests/integration/platform-config-runtime.test.ts`
   to show a new shared reason leaves retained definitions unchanged, is rejected
   by definitions that did not select it, and is accepted by an explicitly
   selecting new diagnostic/version.
@@ -821,7 +821,7 @@ This is repeated implementation, not proof that either limiter currently fails.
 
 - [x] Extend affected tests in `platform/security/tests/`, particularly
   `configuration-predicate-diagnostics-runtime.test.ts`, and
-  `platform/adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-runtime.test.ts`.
+  `platform/adapters/aws/security/dynamodb-rate-limiter/tests/contract/dynamodb-rate-limiter-runtime.test.ts`.
   Prove valid positive integers and exact failures for wrong type, fractions,
   zero/negative values, NaN and infinities through both real caller paths.
 - [x] Preserve existing environment-number spellings and defaults in the adapter;
@@ -932,8 +932,8 @@ establish equivalent inputs, results and failure handling.
 #### Regression fixtures
 
 - [ ] If consolidating, extend
-  `platform/adapters/aws/auth/cognito/tests/cognito-adapter-runtime.test.ts` and
-  `platform/adapters/aws/security/dynamodb-rate-limiter/tests/dynamodb-rate-limiter-runtime.test.ts`
+  `platform/adapters/aws/auth/cognito/tests/contract/cognito-adapter-runtime.test.ts` and
+  `platform/adapters/aws/security/dynamodb-rate-limiter/tests/contract/dynamodb-rate-limiter-runtime.test.ts`
   for absent, empty, whitespace-only and ordinary strings through actual callers.
   Assert exact local failure identities and that rejected required input does
   not reach dependent provider work. A replacement that silently trims/rejects
@@ -1026,8 +1026,8 @@ that sharing the loop gives every copied value a validation requirement.
 #### Regression fixtures
 
 - [ ] If extracting, extend relevant server and worker configuration/startup
-  fixtures, including `platform/server/tests/configuration-runtime.test.ts` and
-  `platform/workers/tests/platform-workers-process-runtime.test.ts`, to verify
+  fixtures, including `platform/server/tests/integration/configuration-runtime.test.ts` and
+  `platform/workers/tests/integration/platform-workers-process-runtime.test.ts`, to verify
   each caller's selected names, extra names, absent and empty values, exclusion
   of unrelated keys and unchanged downstream configuration/diagnostics.
 - [ ] Show both real startup paths use the shared operation and preserve their
@@ -1139,7 +1139,7 @@ other modules; reconcile that guidance rather than creating competing rules.
 #### Regression fixtures
 
 - [x] Preserve and run affected public-import/type and behaviour cases in
-  `packages/core/tests/config-types.test.ts`, `config-runtime.test.ts` and
+  `packages/core/tests/config/type-level/config-types.test.ts`, `config-runtime.test.ts` and
   `diagnostic-record-runtime.test.ts`, plus actual affected consumer tests.
   Verify unchanged successful and failed reads, source exceptions and diagnostic
   records through the existing public import, not only private destination files.
@@ -1934,9 +1934,9 @@ The audit also distinguishes local status from deferred collector/backend proof.
 
 #### Regression fixtures
 
-- [ ] Extend `packages/core/tests/diagnostic-delivery-runtime.test.ts`,
+- [ ] Extend `packages/core/tests/diagnostics/contract/diagnostic-delivery-runtime.test.ts`,
   its type/caller fixture and
-  `platform/observability/tests/diagnostics-runtime.test.ts` for successful
+  `platform/observability/tests/integration/diagnostics-runtime.test.ts` for successful
   void, sync throw, returned rejection/unavailability, resolved/rejected/pending
   asynchronous results, bad context/catalogue, omitted/disabled receiver and
   independent companion delivery. Verify original work, no unhandled rejection,
@@ -2113,3 +2113,76 @@ Evidence and update history:
   retains those failed attempts and corrections. Only the three instruction
   documents, this backlog and the existing session journal changed for DIAG-014.
   DIAG-013 and broader integration/deployment remain outside this task.
+
+## DIAG-015 — Complete entity-smoke feature and mount diagnostic adoption
+
+Status: open
+
+### 1. ID
+
+DIAG-015
+
+### 2. Date/time raised
+
+2026-11-07T10:36:23+00:00 (UTC).
+
+This is the recording time. The preceding source review did not record its
+own exact discovery timestamp.
+
+### 3. Summary
+
+Complete the explicitly partial feature and app-mount diagnostic coverage.
+Do not confuse clearing unreviewed-source findings with full runtime adoption.
+
+### 4. Background
+
+The user authorised the assistant to correct the test-entity catalog identifier
+and review 23 previously unreviewed files after the test migration checks.
+That correction and the connected validation-reason tests passed. Source review
+also confirmed that feature not-found/archive errors have no diagnostic record,
+the entity wrapper copies only the primary UUID diagnostic, and app.mount.ts's
+required helper throws only a registration error's message. These remaining
+boundaries are explicitly partial in reviews.v1.json, not adopted. Failure-path
+caller coverage is incomplete; successful product mounting does not close it.
+This entry records future work, not a new authorisation or a reopening of
+DIAG-012/014. Logging/telemetry delivery remains separately deferred in DIAG-013.
+
+### 5. User stories
+
+- As a feature maintainer, complete safe error/record preservation in
+  apps/entity-smoke/features/test-entity/contract/{errors,diagnostics}.ts,
+  domain/entity.ts and domain/services/. Reuse Core lifecycle/UUID evidence;
+  keep feature meaning local and preserve outcomes, first-error policy and
+  source companions without exposing submitted values or entity identifiers.
+- As an app maintainer, preserve structured registration evidence through
+  apps/entity-smoke/src/app.mount.ts to its real Runtime/Server caller. Keep
+  existing shared mechanisms and successful registration order; do not guess
+  causes or replay registration or feature mutations.
+- As a reviewer, retain explicit partial debt until exact caller proof exists.
+  Assess remaining getter/clock/repository and diagnostic-processing coverage
+  from the real code, not an assumption that every possible throw is covered.
+
+### 6. Acceptance criteria
+
+- [ ] Code: inventoried feature rejection and mount failure reasons reach the
+  actual caller with exact selected code/version/context and independent source
+  companions. Preserve existing business behavior and privacy; record bounded
+  compatibility decisions before changing contracts.
+- [ ] Harness: apply the existing feature readiness, diagnostic review and
+  completion workflows. Reconcile the two partial owner records and assess a
+  registered entity-smoke proof route; do not add another diagnostics framework
+  or claim that source hashes prove adoption. No missing general standard was
+  established by this review, so a new policy is not a prerequisite.
+- [ ] Regression fixtures: extend the existing entity-smoke integration tests
+  and real mount caller fixtures for not-found/archive/lifecycle failure,
+  UUID companions and rejected registration. Exact assertions must reject a
+  dropped record, wrong reason and message-only wrapper; include successes,
+  private canaries, processing failure isolation and no replay as applicable.
+  These additions and their registered proof selection are planned, not passed.
+
+Evidence and update history:
+
+- 2026-11-07T10:36:23+00:00 (UTC): recorded after the approved source review.
+  The current session journal and diagnostic-correction-final-verification.json
+  under commitLogs/2026/nov/06/2026-11-06-17-07-new-chat-session/ retain the
+  correction and local outcomes. No container, AWS mutation, commit or push.

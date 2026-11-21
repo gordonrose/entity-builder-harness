@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-administration
-//   version: 2
+//   version: 3
 //   status: draft
 //   created_on: "2026-10-25"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -24,12 +24,12 @@ import {
   postgreSqlPersistenceOperationError,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { restoreRuntimeIamAccess, revokeRuntimeAccess } from "./kanbien-core-server-persistence-runtime-credential";
-import { ensureBoundedLoginRole, ensureRdsIamAuthentication, type PostgreSqlLoginIdentity } from "./kanbien-core-server-persistence-role-credential";
-import { persistenceAdministrationConfigurationResult, persistenceAdministratorCredentialBindings, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceConfigurationResult, persistenceCredentialsResult } from "./kanbien-core-server-persistence-configuration";
+import { ensureBoundedLoginRole, ensureRdsIamAuthentication, type PostgreSqlLoginIdentity } from "./shared/persistence/role-credential";
+import { persistenceAdministrationConfigurationResult, persistenceAdministratorCredentialBindings, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceConfigurationResult, persistenceCredentialsResult } from "./shared/persistence/configuration";
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { persistenceIamAuthenticationResult, type PersistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
 import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
-import { AdministrationObservation, PersistenceTaskObservations, type AdministrationPredicateDetail, type PersistenceTaskDiagnosticOptions } from "./kanbien-core-server-persistence-operation-diagnostics";
+import { AdministrationObservation, PersistenceTaskObservations, type AdministrationPredicateDetail, type PersistenceTaskDiagnosticOptions } from "./shared/persistence/operation-diagnostics";
 
 type Identity = PostgreSqlLoginIdentity;
 type MigrationStateObservation = "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED" | "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";

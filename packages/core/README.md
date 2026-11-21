@@ -147,7 +147,7 @@ the caller's context and the reporter's method receiver intact.
 
 The [safe-diagnostic standard](../../.agentic/shared/standards/require-safe-diagnostic-record.md#reuse-optional-delivery-mechanics)
 governs reuse and its limits. The
-[delivery tests](tests/diagnostic-delivery-runtime.test.ts) cover order, identity,
+[delivery tests](tests/diagnostics/contract/diagnostic-delivery-runtime.test.ts) cover order, identity,
 rejected results and continued delivery. Status-bearing log-write observation
 remains with Platform. Core queues also uses these shared delivery helpers.
 This section explains the delivery exports, not every
@@ -215,8 +215,8 @@ logger received anything. Delivery confirmation remains separate work (DIAG-013)
 
 The [supported-reason standard](../../.agentic/shared/standards/require-safe-diagnostic-record.md#supported-reason-preservation)
 requires the real operation's reason to survive; a processing-failure fallback
-is not proof of that. [Record tests](tests/diagnostic-record-runtime.test.ts)
-and [Events tests](tests/events-runtime.test.ts) exercise these distinct cases.
+is not proof of that. [Record tests](tests/diagnostics/contract/diagnostic-record-runtime.test.ts)
+and [Events tests](tests/events/unit/events-runtime.test.ts) exercise these distinct cases.
 DIAG-012's [implementation plan](../../.agentic/shared/plans/implementation/governed-diagnostic-coverage.md)
 records which actual consumers have been reviewed; these helpers do not
 automatically migrate every caller.

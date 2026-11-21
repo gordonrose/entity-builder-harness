@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: deploy.workflow.operational-realization-gate
-  version: 3
+  version: 5
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-10-25"
+  updated_on: "2026-11-09"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -54,6 +54,16 @@ provider exceptions or grant mutation authority.
 1. Copy the template and declare the complete execution graph. Do not use an
    external resource name, provider type, credential value, endpoint, or raw
    provider response in the contract.
+   Keep v1 unchanged for existing consumers. For synchronous unit calls or
+   workloads without direct stores, explicitly select the
+   [v2 schema and guide](../schemas/operational-realization-contract.v2.guide.md).
+   Bind each actual connection and direct store; do not invent database or
+   queue relationships. A graph declaration grants no effective permission.
+   For an explicitly governed disposable-restore cleanup only, select the v2
+   bounded cleanup declaration from the standard. Keep deletion truthful and
+   delete-only, retain source/shared protection and bind the original successful
+   readback and positive ownership in the provider's concrete reviewed plan.
+   An opt-in or passing compiler is not that evidence or execution approval.
 2. Use `npm run deployment:realization:validate -- --contract <path>
    --validate-contract` to
    reject missing graph edges, unsafe lifecycle/retry paths, insufficient proof

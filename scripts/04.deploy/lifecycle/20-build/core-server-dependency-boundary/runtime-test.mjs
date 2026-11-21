@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-program-runtime
-//   version: 2
+//   version: 3
 //   status: draft
 //   created_on: "2026-10-19"
-//   updated_on: "2026-10-30"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines:
@@ -25,8 +25,10 @@
 
 import { deepEqual } from "node:assert/strict";
 import { request as httpRequest } from "node:http";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { readProgramBuildInputs } from "../runnable-program-contract/build-inputs.mjs";
+import { planRuntimePackages, writeRuntimePackages } from "../../../../repo/workspace-build/runtime-packages.mjs";
 
 const buildOutput = process.argv[2];
 if (typeof buildOutput !== "string" || buildOutput.length === 0) {
@@ -34,39 +36,9 @@ if (typeof buildOutput !== "string" || buildOutput.length === 0) {
 }
 
 const runtimeRoot = buildOutput;
-const packages = {
-  "@kanbien/core": {
-    ".": "packages/core/src/index.js",
-    "./audit": "packages/core/src/audit/index.js",
-    "./authn": "packages/core/src/authn/index.js",
-    "./authz": "packages/core/src/authz/index.js",
-    "./config": "packages/core/src/config/index.js",
-    "./diagnostics": "packages/core/src/diagnostics/index.js",
-    "./events": "packages/core/src/events/index.js",
-    "./i18n": "packages/core/src/i18n/index.js",
-    "./logging": "packages/core/src/logging/index.js",
-    "./monitoring": "packages/core/src/monitoring/index.js",
-    "./queues": "packages/core/src/queues/index.js",
-    "./security": "packages/core/src/security/index.js",
-    "./shared": "packages/core/src/shared/index.js",
-    "./tenancy": "packages/core/src/tenancy/index.js",
-    "./validation": "packages/core/src/validation/index.js",
-  },
-  "@kanbien/platform-config": { ".": "platform/config/src/index.js" },
-  "@kanbien/platform-contracts": { ".": "platform/contracts/src/index.js" },
-  "@kanbien/platform-health": { ".": "platform/health/src/index.js" },
-  "@kanbien/platform-observability": { ".": "platform/observability/src/index.js" },
-  "@kanbien/platform-runtime": { ".": "platform/runtime/src/index.js" },
-  "@kanbien/platform-security": { ".": "platform/security/src/index.js" },
-  "@kanbien/platform-server": {
-    ".": "platform/server/src/index.js",
-    "./main": "platform/server/src/main.js",
-  },
-};
-
-for (const [packageName, exportsMap] of Object.entries(packages)) {
-  writePackageShim(packageName, exportsMap);
-}
+const repository = fileURLToPath(new URL("../../../../../", import.meta.url));
+const { inputs } = readProgramBuildInputs(repository, { programId: "kanbien-core-server" });
+writeRuntimePackages(planRuntimePackages({ compiledRoot: runtimeRoot, assetRoot: repository, packages: inputs.packages }), {}, { packageManifestSpace: 2 });
 
 const program = await import(pathToFileUrl(join(runtimeRoot, "infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.js")));
 const serverMain = await import(pathToFileUrl(join(runtimeRoot, "platform/server/src/main.js")));
@@ -118,25 +90,6 @@ try {
 }
 
 console.log("Core server compiled runtime proof passed.");
-
-function writePackageShim(packageName, exportsMap) {
-  const packageRoot = join(runtimeRoot, "node_modules", ...packageName.split("/"));
-  const packageExports = {};
-  for (const [exportName, targetPath] of Object.entries(exportsMap)) {
-    const shimPath = exportName === "."
-      ? join(packageRoot, "index.js")
-      : join(packageRoot, exportName.slice(2), "index.js");
-    mkdirSync(dirname(shimPath), { recursive: true });
-    const target = join(runtimeRoot, targetPath);
-    const modulePath = relative(dirname(shimPath), target).replaceAll("\\", "/");
-    writeFileSync(shimPath, `module.exports = require(${JSON.stringify(modulePath.startsWith(".") ? modulePath : `./${modulePath}`)});\n`);
-    packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
-  }
-  writeFileSync(
-    join(packageRoot, "package.json"),
-    `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`,
-  );
-}
 
 function localGet(port, path) {
   return new Promise((resolve, reject) => {

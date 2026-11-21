@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/observability/tests/configuration-runtime.test.ts -->
+<!-- course-file: platform/observability/tests/integration/configuration-runtime.test.ts -->
 
 ### configuration-runtime.test.ts
 
-[Open current source](../../../../../platform/observability/tests/configuration-runtime.test.ts) · **Snapshot:** added (absent from baseline); 99 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/integration/configuration-runtime.test.ts) · **Snapshot:** added (absent from baseline); 99 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for diagnostics for telemetry itself.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-observability-runtime`, `diagnostic-catalog-r
 
 <!-- course-source-sha256: before=absent after=5233a37fe377a67532f346b0f474dadfb7b70afbd3a78b2b9cb2bd47df1d6ed7 -->
 
-<!-- course-file: platform/observability/tests/configuration-types.test.ts -->
+<!-- course-file: platform/observability/tests/type-level/configuration-types.test.ts -->
 
 ### configuration-types.test.ts
 
-[Open current source](../../../../../platform/observability/tests/configuration-types.test.ts) · **Snapshot:** added (absent from baseline); 17 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/type-level/configuration-types.test.ts) · **Snapshot:** added (absent from baseline); 17 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for diagnostics for telemetry itself.
 
@@ -92,11 +92,11 @@ Owning registered proof: `platform-observability-runtime`, `diagnostic-catalog-r
 
 <!-- course-source-sha256: before=absent after=299f6e0564af171a87697c19158957ef0239978658a45f1999c97577d68ae8b9 -->
 
-<!-- course-file: platform/observability/tests/diagnostics-runtime.test.ts -->
+<!-- course-file: platform/observability/tests/integration/diagnostics-runtime.test.ts -->
 
 ### diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/observability/tests/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 95 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/integration/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 95 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for diagnostics for telemetry itself.
 
@@ -114,11 +114,11 @@ Owning registered proof: `platform-contracts-runtime`, `platform-observability-r
 
 <!-- course-source-sha256: before=absent after=b88fe2c2531237a0c47ea3cee1289e60c15e4abdbde14fa8f9beae8ceaa1b0a8 -->
 
-<!-- course-file: platform/observability/tests/metric-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/observability/tests/integration/metric-diagnostics-runtime.test.ts -->
 
 ### metric-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/observability/tests/metric-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 248 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/integration/metric-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 248 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for diagnostics for telemetry itself.
 
@@ -136,11 +136,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=absent after=06dbbff10e937acd232a92d697cb0be5cff24ebe8532007c0c2fe96af8aa5003 -->
 
-<!-- course-file: platform/observability/tests/metric-lifecycle-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/observability/tests/integration/metric-lifecycle-diagnostics-runtime.test.ts -->
 
 ### metric-lifecycle-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/observability/tests/metric-lifecycle-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 62 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/integration/metric-lifecycle-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 62 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for diagnostics for telemetry itself.
 
@@ -158,11 +158,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=absent after=e4592b27efccea828d433af45fb043d6e4c42cc8b3e1e92a9f89180a64c49985 -->
 
-<!-- course-file: platform/observability/tests/platform-observability-runtime.test.ts -->
+<!-- course-file: platform/observability/tests/integration/platform-observability-runtime.test.ts -->
 
 ### platform-observability-runtime.test.ts
 
-[Open current source](../../../../../platform/observability/tests/platform-observability-runtime.test.ts) · **Snapshot:** modified existing file; 172 added / 7 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/integration/platform-observability-runtime.test.ts) · **Snapshot:** modified existing file; 172 added / 7 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for diagnostics for telemetry itself.
 
@@ -182,11 +182,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=209783bb27e17409ff12b3a8021af3dc6d76558e9eada1b22b2312d07cb0defd after=c17b96c5dcddea126ea1fc9452ca76dedf181532430b5d8fc833c9160059ffd1 -->
 
-<!-- course-file: platform/observability/tests/platform-observability-types.test.ts -->
+<!-- course-file: platform/observability/tests/type-level/platform-observability-types.test.ts -->
 
 ### platform-observability-types.test.ts
 
-[Open current source](../../../../../platform/observability/tests/platform-observability-types.test.ts) · **Snapshot:** modified existing file; 23 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/type-level/platform-observability-types.test.ts) · **Snapshot:** modified existing file; 23 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for diagnostics for telemetry itself.
 
@@ -204,11 +204,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=4c1b14ccf3d96518eb6836a89d5045c74d82617067e96e8eaa0dd099c9355478 after=96c744e6c4b38495ea67d8c8db44089c1d85fb850cf4b19787103d480d18c9b7 -->
 
-<!-- course-file: platform/observability/tests/readiness-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/observability/tests/integration/readiness-diagnostics-runtime.test.ts -->
 
 ### readiness-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/observability/tests/readiness-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 189 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/integration/readiness-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 189 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for diagnostics for telemetry itself.
 
@@ -246,11 +246,11 @@ Proving boundary: inspect the affected file's registered inputs in [the check ca
 
 <!-- course-source-sha256: before=914ab43e05ccf5777ce49822b6e6cd4490e93fd0765a3bf39b91dc33f4a902f9 after=6a894883e3054df6e6430680caf5ff4b636abfcdeb068e984935e6c78d0f9545 -->
 
-<!-- course-file: platform/observability/tests/security-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/observability/tests/integration/security-diagnostics-runtime.test.ts -->
 
 ### security-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/observability/tests/security-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 49 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/observability/tests/integration/security-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 49 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for diagnostics for telemetry itself.
 

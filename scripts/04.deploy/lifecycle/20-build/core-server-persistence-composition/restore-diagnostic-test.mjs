@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.packaged-persistence-connection-diagnostic
-//   version: 2
+//   version: 3
 //   status: active
 //   created_on: "2026-10-26"
-//   updated_on: "2026-11-04"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: persistence.diagnostics
 //   disciplines: [security, sre]
@@ -122,7 +122,7 @@ try {
 async function maintenanceCheckedValueRegression(environment, certificate) {
   const require = createRequire(join(compiled, "maintenance-checked-values.cjs"));
   const connection = require(join(compiled, "platform/adapters/aws/persistence/postgresql/src/connection.js"));
-  const configuration = require(join(compiled, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js"));
+  const configuration = require(join(compiled, "infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js"));
   const restore = require(join(compiled, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.js"));
   const checks = require(join(compiled, "packages/core/src/config/domain/validation/settings.js"));
   const savedPool = connection.createNodePostgreSqlTokenConnectionPool, savedAuthority = configuration.persistenceCertificateAuthorityResult;
@@ -172,7 +172,7 @@ async function maintenanceCheckedValueRegression(environment, certificate) {
 async function restoreCleanupRegression(environment, certificate) {
   const require = createRequire(join(compiled, "restore-cleanup-test.cjs")), entrypoints = join(compiled, "infra/04.deploy/03.product/entrypoints");
   const connection = require(join(compiled, "platform/adapters/aws/persistence/postgresql/src/connection.js"));
-  const configuration = require(join(entrypoints, "kanbien-core-server-persistence-configuration.js"));
+  const configuration = require(join(entrypoints, "shared/persistence/configuration.js"));
   const restore = require(join(entrypoints, "kanbien-core-server-persistence-restore-verifier.main.js"));
   const originalPool = connection.createNodePostgreSqlTokenConnectionPool, originalAuthority = configuration.persistenceCertificateAuthorityResult;
   const originalLog = console.log, originalError = console.error, originalExit = process.exitCode;

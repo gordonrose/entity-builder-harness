@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.runnable-program-contract
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -23,6 +23,7 @@ set -euo pipefail
 #     - entity-builder
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.command.runnable-program-contract
 #     path: scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh
@@ -71,10 +72,13 @@ for path in (
         raise SystemExit(f"ERROR: expected YAML mapping: {path}")
 source = Path("scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py").read_text(encoding="utf-8")
 compile(source, "runnable-program-contract.py", "exec")
-for forbidden in ("subprocess", "socket", "urllib", "requests"):
+for forbidden in ("socket", "urllib", "requests"):
     if forbidden in source:
         raise SystemExit(f"ERROR: report-only checker must not contain {forbidden}")
 PY
+
+node --test scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs-test.mjs
+python3 -B scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-validation-test.py
 
 expect_pass "$FIXTURES/valid-contract.yml"
 

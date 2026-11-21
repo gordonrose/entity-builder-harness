@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.private-verifier-operation-continuation
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -70,7 +70,8 @@ class Fixture:
   subprocess.run(['git','init','--quiet',str(self.root)],check=True)
   for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py',
                Path('scripts/04.deploy/shared/deployment-operation-diagnostics.py'),Path('scripts/repo/diagnostic-coverage/runtime_contract.py'),
-               Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/task_journal.py'),
                Path('packages/core/contracts/diagnostics.v1.json'),Path('platform/persistence/contracts/diagnostics.v1.json'),
                Path('platform/security/contracts/diagnostics.v1.json'),Path('platform/observability/contracts/diagnostics.v1.json'),
                Path('infra/04.deploy/03.product/entrypoints/contracts/diagnostics.v1.json'),
@@ -195,6 +196,9 @@ class OperationTests(unittest.TestCase):
   proof=f.root/first['facts']['proof_receipt'];before=proof.read_bytes();f.update(observation='missing')
   retained=self.invoke(f,verdict='accepted');self.assertEqual(retained['facts']['evidence_reuse'],'historical-completion');self.assertEqual(proof.read_bytes(),before);self.assertEqual(len(f.runs()),1)
   f.update(observation='present');new=self.invoke(f,'--new-operation','--expected-operation',old,verdict='accepted');again=self.invoke(f,'--new-operation','--expected-operation',old,verdict='accepted')
+  archive=f.root/'.git/private-persistence-verifier/history'/f'{old}.json'
+  preserved=json.loads(archive.read_text());self.assertEqual(preserved['operation_id'],old);self.assertEqual(preserved['proof_receipt'],first['facts']['proof_receipt'])
+  archived=archive.read_bytes();self.invoke(f,'--new-operation','--expected-operation',old,verdict='accepted');self.assertEqual(archive.read_bytes(),archived)
   self.assertNotEqual(old,new['facts']['operation_id']);self.assertEqual(new['facts']['operation_id'],again['facts']['operation_id']);self.assertEqual(len(f.runs()),2)
   self.invoke(f,'--new-operation','--expected-operation','kp-'+'e'*32,verdict='blocked');self.assertEqual(proof.read_bytes(),before)
  def test_known_terminal_failures_allow_only_explicit_successor(self):
@@ -203,6 +207,8 @@ class OperationTests(unittest.TestCase):
     f=self.fixture();f.update(submission='normal',status='STOPPED',**changes);first=self.invoke(f,verdict='failed');operation=first['facts']['operation_id']
     again=self.invoke(f,verdict='failed');self.assertEqual(again['findings'][0]['code'],code);self.assertEqual(len(f.runs()),1)
     self.invoke(f,'--new-operation','--expected-operation',operation,verdict='failed');self.assertEqual(len(f.runs()),2)
+    archived=json.loads((f.root/'.git/private-persistence-verifier/history'/f'{operation}.json').read_text())
+    self.assertEqual(archived['proof_receipt'],first['facts']['proof_receipt']);self.assertEqual(archived['proof_sha256'],first['facts']['proof_sha256'])
  def test_failed_task_one_bounded_read_retains_source_nine_and_late_frame(self):
   f=self.fixture()
   sources=[{'schema':'core/diagnostic-record/v1','code':'core.persistence.in-memory-boundary-failed','definitionVersion':1,'detail':{'operation':'initialize','phase':'get-id','reason':'boundary-threw','effect':'write-not-reached','ordinal':index}} for index in range(10)]

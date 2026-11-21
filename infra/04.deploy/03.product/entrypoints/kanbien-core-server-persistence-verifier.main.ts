@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-verifier
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -16,7 +16,7 @@
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
 import { createHash } from "node:crypto";
-import { PersistenceTaskObservations, VerificationObservation, type PersistenceTaskDiagnosticOptions } from "./kanbien-core-server-persistence-operation-diagnostics";
+import { PersistenceTaskObservations, VerificationObservation, type PersistenceTaskDiagnosticOptions } from "./shared/persistence/operation-diagnostics";
 
 export async function runKanbienCoreServerPersistenceVerifier(env: NodeJS.ProcessEnv = process.env, diagnostics?: PersistenceTaskDiagnosticOptions): Promise<void> {
   const observations = new PersistenceTaskObservations("verification", diagnostics);

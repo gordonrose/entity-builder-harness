@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [agentic, architecture, sre]
@@ -352,6 +352,17 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any], *, probe_c
     workload = contract.get("workload", {})
     template = workload.get("runtime_template") if isinstance(workload, dict) else None
     provider_binding = binding.get("proposed_provider_binding")
+    if isinstance(provider_binding, dict) and {"stack", "publication_pipeline", "dependencies"} & provider_binding.keys():
+        helper = Path(__file__).parents[1] / "provider-adapters/aws/preparation-inputs.py"
+        spec = importlib.util.spec_from_file_location("coverage_preparation_inputs", helper)
+        preparation = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(preparation)
+        try:
+            resolved = preparation.load(root, contract.get("target"), contract.get("scope"))
+            for source in resolved["references"]:
+                reference(source, "preparation-inputs-source-unavailable")
+        except preparation.InputFailure as failure:
+            gap(failure.code)
     if not isinstance(provider_binding, dict) or provider_binding.get("template") != template:
         gap("scope-provider-template-binding-mismatch")
     if isinstance(template, str) and safe_path(template):

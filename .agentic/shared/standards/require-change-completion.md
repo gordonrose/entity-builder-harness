@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 10
+version: 14
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-05"
+updated_on: "2026-11-20"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -12,6 +12,8 @@ kind: standard
 purpose: Require connected implementation, proportionate authorized verification and honest completion evidence across layers.
 portability: { class: reusable, targets: [entity-builder] }
 used_by:
+- id: repo.agents
+  path: AGENTS.md
 - id: shared.workflows.change-shared-process
   path: .agentic/shared/workflows/change-shared-process.md
 -->
@@ -31,6 +33,93 @@ For README additions or edits, follow the
 [readable-README standard](require-readable-readmes.md) using the
 [README-writing skill](../skills/write-readme.md). Keep the task's scope and
 verification proportionate; this does not require unrelated documentation work.
+
+## Execution continuity and final-response checklist
+
+<!-- deterministic-check: allow reason="matching user intent, remaining work and genuine blockers requires judgment; repository checks do not intercept the client's final-response event" -->
+For an authorized execution task, continue until the requested outcome and its
+required verification are complete. Do not issue a final response while an
+authorized, actionable step remains. Use intermediate updates for progress;
+a checkpoint, passing stage or running command is not task completion.
+Monitor required commands and delegated work through terminal results, inspect
+those results, and take the next authorized step without another user prompt.
+Use bounded waits so progress remains visible. A process identifier or a running
+check is not an autonomous continuation of the whole task.
+
+Before issuing a final response, review the existing task/session record:
+
+- The user's requested outcome is supported by the required evidence, not just
+  a plan, an agent's completion claim or a successful earlier stage.
+- No required operation is still running or has an unread terminal result;
+  failures and uncertain effects have been resolved through their owning flow.
+- No required authorized step is left as a recommendation for the user to ask
+  for again. Additional unrelated improvements are not completion requirements.
+- If work is incomplete, an actual external blocker needs user input, access,
+  authority or a governance decision after safe in-scope alternatives and
+  independent authorized work have been exhausted. Name the attempted checks,
+  exact blocker, remaining work and any processes still running. Do not report
+  completion or imply background continuation.
+
+An explicit user pause, cancellation or replacement of the task takes precedence.
+An explanatory/status request does not itself authorize new mutations; answer it
+without treating it as cancellation of an already-authorized task. Platform
+interruptions and enforced limits are not voluntary completion: preserve state
+when possible and reconcile it on resumption. This rule neither expands task
+authority nor overrides safety gates, explicit proof deferrals or goal controls.
+
+Carry the original task, acceptance criteria, authority, evidence references,
+pending process/run identifiers and next incomplete step through existing
+session logs, delegation handoffs and compaction. Resume from that state rather
+than ending at the handoff or replaying an uncertain operation. Do not create a
+parallel task registry. Do not create or resume a persistent goal without the
+required user instruction; a paused goal is not active continuation. Claim that
+work will continue after a final response only when the user requested that
+handoff and the actual continuation mechanism and its covered steps are verified.
+
+### Enforcement boundary
+
+This checklist governs agent behavior; prose and commit checks cannot themselves
+prevent a client from accepting a final response. A mechanical completion guard
+requires a supported, active client hook plus evidence-backed task-state checks.
+Neither an agent-written `done` flag nor always repeating a prompt proves task
+completion. Any such guard must honor user stop/pause, genuine blockers and
+platform limits, and be tested through the actual client before being described
+as enforced. Reuse existing task/evidence and goal mechanisms rather than adding
+another scheduler. Record missing wiring honestly; do not imply it is installed.
+
+## Reuse, simplicity and normal delivery
+
+Assess every change for duplication and missed reuse before implementation.
+For repository machinery, actively inspect existing code, instructions, rules,
+checks and callers for competing ownership or contradictory behaviour. Record
+their disposition in the existing consumer inventory: reuse, extend, reconcile,
+or retire through the owning migration process. Adding a new rule does not
+resolve an old conflicting rule; historical evidence is not deletion debt.
+
+Features, apps and products consume shared build, packaging, deployment and
+recovery capabilities. Workload-specific code, schemas, migrations, declarations
+and behaviour tests are expected; another execution engine for the same
+capability is not. New infrastructure/runtime support must become a reusable
+platform capability exposed through the normal delivery path. Prefer the
+smallest connected change, with one authoritative owner and no unnecessary
+registries, wrappers, mandatory fields or manual steps.
+
+Normal delivery has an engineering budget of at most ten minutes from the
+initial delivery invocation to the changed application running remotely with
+its required smoke checks and acceptance complete. This applies to updates
+and new features, apps and products using supported capabilities. It is a
+requirement to design and measure against, not a claim already achieved.
+The [test-execution standard](../testing/standards/test-execution.md#delivery-budget-accounting)
+owns timing, exclusions and reporting. Budget misses require correction; they
+do not authorise bypassing safety checks, killing uncertain operations or
+calling incomplete proof successful.
+
+In the existing task plan or session record, briefly identify the reused owner,
+any genuinely new capability, conflicting/superseded consumers, delivery-cost
+impact and proportional verification. Scale this assessment to the change;
+a small correction does not require a new plan or a repository-wide audit.
+The implementing agent owns it. Escalate material scope/risk tradeoffs, not
+routine implementation choices already authorised by the task.
 
 ## Implementation and consumers
 
@@ -62,6 +151,11 @@ without delegation or a separate reviewer, perform and record an explicit
 self-review. Collect required corrections in one consolidated list rather than
 feeding enhancements into an announced final test pass.
 
+Include the reuse/contradiction assessment and delivery impact in that review.
+Confirm which old owners were retained or reconciled and which implementation
+or measurement gaps remain; a passing test alone does not establish simplicity,
+reusability or the delivery budget.
+
 For each material behavioral guarantee changed by coding work, identify a
 plausible incorrect outcome and the exact assertions that would reject it.
 <!-- deterministic-check: allow reason="choosing material counterexamples and assessing assertion sensitivity requires source-review judgment" -->
@@ -82,6 +176,14 @@ blocks this handoff; a passing exploratory test does not close it. Source review
 does not grant git, deployment or other external authority.
 
 ## Verification and stage boundaries
+
+Follow the [test-execution standard](../testing/standards/test-execution.md)
+for development feedback versus commit/integration proof. During implementation,
+path-scoped development selection may execute declared fast checks and leave the
+full integration obligations pending. Report that state as partial, not complete
+verification. Do not run full regression after every edit. The sequence below
+applies when closing integration proof on stable inputs; development feedback
+cannot satisfy or bypass staged, CI or local-main promotion gates.
 
 Before broad verification or image qualification, complete implementation and
 affected-consumer changes required by the applicable requirements, close the
@@ -135,6 +237,16 @@ the stage that requires that proof. Distinguish static validation, local
 runtime tests, actual container qualification, CI and live evidence in the
 existing session record and completion report. Name checks, outcomes and safe
 evidence references; planned commands and fixtures are not execution evidence.
+
+The existing selector's report and retained run summary must state requested
+local results separately from complete declared-impact local integration,
+package qualification, live-target proof and acceptance. Explicit, development,
+commit-only and empty selections cannot establish complete affected integration.
+Preserve original statuses and distinguish absent, failed, observed interruption,
+stale and deferred evidence. Missing later-stage proof does not fail successful
+local checks: those stages remain unevaluated until their owning controller
+provides proof. A report is an observation, not a new source of trusted evidence
+or execution authority; do not import it to bypass existing custody checks.
 
 ## Correction and continuation
 

@@ -6,20 +6,6 @@
     "incremental": false,
     "noEmit": true,
     "baseUrl": "../..",
-    "paths": {
-      "@kanbien/core": [
-        "packages/core/src/index.ts"
-      ],
-      "@kanbien/core/*": [
-        "packages/core/src/*/index.ts"
-      ],
-      "@kanbien/platform-contracts": [
-        "platform/contracts/src/index.ts"
-      ],
-      "@kanbien/platform-observability": [
-        "platform/observability/src/index.ts"
-      ]
-    },
     "rootDir": "../..",
     "types": [
       "node"

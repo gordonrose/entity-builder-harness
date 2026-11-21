@@ -1,0 +1,10 @@
+schema: deploy/release-current-ref/v1
+target: kanbien-core-platform
+scope: entity-smoke
+status: active
+release_id: release-98f40c26981890ef5fac0e7d
+record:
+  path: accepted-releases/release-98f40c26981890ef5fac0e7d.yml
+  sha256: sha256:e69f509657d83ee5c3bddc8114998a244b282cb7b37a8c19ae735a2b308d071d
+predecessor: release-53798ef563be4ce9a8c5b2f0
+promoted_at: '2026-11-21T18:44:29.872693Z'

@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/config/tests/evidence-runtime.test.ts -->
+<!-- course-file: platform/config/tests/integration/evidence-runtime.test.ts -->
 
 ### evidence-runtime.test.ts
 
-[Open current source](../../../../../platform/config/tests/evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 68 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/config/tests/integration/evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 68 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for configuration: tell absence from invalidity.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-config-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=3e64d578f816fe60799805237a3cae0dc935d81d51e1687e055c191d6c0c4ad6 -->
 
-<!-- course-file: platform/config/tests/platform-config-runtime.test.ts -->
+<!-- course-file: platform/config/tests/integration/platform-config-runtime.test.ts -->
 
 ### platform-config-runtime.test.ts
 
-[Open current source](../../../../../platform/config/tests/platform-config-runtime.test.ts) · **Snapshot:** modified existing file; 99 added / 3 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/config/tests/integration/platform-config-runtime.test.ts) · **Snapshot:** modified existing file; 99 added / 3 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for configuration: tell absence from invalidity.
 
@@ -94,11 +94,11 @@ Owning registered proof: `core-runtime`, `platform-config-runtime`, `diagnostic-
 
 <!-- course-source-sha256: before=c0324fed695223bd1028f7d1e5fefc317a666c66063e516d6131024d05ced0ab after=d35cf87fcf1310e9703f507646530c5f5fb78bb6d62a14f4874666ad52e2d229 -->
 
-<!-- course-file: platform/config/tests/platform-config-types.test.ts -->
+<!-- course-file: platform/config/tests/type-level/platform-config-types.test.ts -->
 
 ### platform-config-types.test.ts
 
-[Open current source](../../../../../platform/config/tests/platform-config-types.test.ts) · **Snapshot:** modified existing file; 17 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/config/tests/type-level/platform-config-types.test.ts) · **Snapshot:** modified existing file; 17 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for configuration: tell absence from invalidity.
 

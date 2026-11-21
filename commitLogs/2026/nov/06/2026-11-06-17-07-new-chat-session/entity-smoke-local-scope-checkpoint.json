@@ -1,0 +1,77 @@
+{
+  "schema": "chat/entity-smoke-local-scope-checkpoint/v1",
+  "checked_at": "2026-11-08T00:56:33Z",
+  "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+  "source_state": "dirty-worktree-input-digests-not-qualified-commit-custody",
+  "authority": "informational-session-snapshot-not-a-package-or-acceptance-receipt",
+  "coverage": "requested-checks-only",
+  "report": {
+    "path": ".cache/test-runs/20261108T005457Z-883fb0755cae4cf2adcd04bf7e2290f1/report.json",
+    "sha256": "6582ccc6f6185fbb9a7d6a9ebffbb9cfabe6fa4bd381cf528a8a580bf16d5c22"
+  },
+  "checks": [
+    {
+      "id": "entity-smoke-composition",
+      "status": "passed",
+      "source": "local-runner",
+      "elapsed_seconds": 17.077957,
+      "input_digest": "2c8fbf7d248ded6301afa8665c2a048bb5cb926090dfc8ba1f747f12f5813666",
+      "runtime_digest": "163a974057017085865c6e2c78187d19aee725820ccbd4f327c47ab6f7677572"
+    },
+    {
+      "id": "entity-smoke-runtime",
+      "status": "passed",
+      "source": "local-runner",
+      "elapsed_seconds": 19.333319,
+      "input_digest": "eb6cb3cd2a9bcd8cb21b65b8a0fb353334e6d0ce292e9ffddaae547368748295",
+      "runtime_digest": "d65dc1f3b3f35a97e31bc915de08c094a9212231fd76941452f19bc35084f6fb"
+    },
+    {
+      "id": "health-failure-recovery-declaration-regression",
+      "status": "passed",
+      "source": "local-runner",
+      "elapsed_seconds": 9.693611,
+      "input_digest": "ca5fdccc3f436d58c2f4955941512561f86dd73d298c0c8b38d22f76da6a130e",
+      "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa"
+    }
+  ],
+  "timings": {
+    "command_execution_seconds": 46.104887,
+    "planning_seconds": 12.672397,
+    "runtime_identity_seconds": 12.975376,
+    "fingerprinting_seconds": 0.994441,
+    "receipt_validation_seconds": 0.424602,
+    "other_seconds": 0.140478,
+    "total_components_seconds": 73.312181
+  },
+  "other_observations": {
+    "existing_scope_inventory": "passed",
+    "runnable_program_contract": "passed",
+    "scoped_metadata_headers": {
+      "status": "passed",
+      "files": 19
+    },
+    "new_readme_links": {
+      "status": "passed",
+      "links": 8
+    },
+    "whitespace": "passed",
+    "diagnostic_adoption": {
+      "status": "failed",
+      "stale_or_missing_reviews": 29
+    }
+  },
+  "pending": [
+    "first-release-recovery-governance-decision",
+    "complete-scope-declaration-binding-index",
+    "consolidated-source-and-diagnostic-review",
+    "restricted-role-real-postgresql-qualification",
+    "actual-feature-image-qualification-and-custody",
+    "target-controls-and-live-replacement-isolated-restore-acceptance",
+    "full-affected-integration",
+    "older-platform-shell-payload-final-proof"
+  ],
+  "aws_actions_performed": false,
+  "commits_created": false,
+  "accepted_scope": false
+}

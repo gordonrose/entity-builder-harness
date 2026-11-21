@@ -59,6 +59,17 @@
 **/.cache
 **/.cache/**
 
+!scripts/repo/
+!scripts/repo/workspace-build/
+!scripts/repo/workspace-build/declarations.mjs
+!scripts/repo/workspace-build/runtime-packages.mjs
+!scripts/repo/workspace-build/compile.mjs
+!scripts/04.deploy/lifecycle/20-build/
+!scripts/04.deploy/lifecycle/20-build/runnable-program-contract/
+!scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs
+!scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs
+!infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+
 # Reapply all high-risk exclusions after the source allowlist.
 **/.git
 **/.cache

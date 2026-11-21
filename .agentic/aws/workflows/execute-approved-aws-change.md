@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: aws.workflows.execute-approved-aws-change
-  version: 2
+  version: 6
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-25"
+  updated_on: "2026-11-20"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -24,7 +24,8 @@
 ## Use When
 
 Use this only after the user explicitly approves an AWS command or change plan
-that may mutate cloud state.
+that may mutate cloud state, or requests an end-to-end live delivery covering
+those effects under the [delivery-authority rule](../../04.deploy/standards/operational-realization-gate.md#end-to-end-live-delivery-authority).
 
 ## Required Gates
 
@@ -42,7 +43,8 @@ Before running a mutating command, confirm:
   chat.
 - Use the narrowest command that performs the approved change.
 - Do not print or store secret values.
-- Stop and ask again before destructive actions such as deleting resources,
+- Stop and ask before destructive actions not covered by the recorded delivery
+  authority, such as deleting resources,
   replacing persistent storage, revoking access broadly, or changing DNS in a
   way that could interrupt service. For an explicitly adopted and approved
   [bounded PostgreSQL Stage 6 route](../standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability),
@@ -50,6 +52,101 @@ Before running a mutating command, confirm:
   approval uses its recovery allowance without asking again. Deleting the
   source database, backups or unrelated resources remains outside that scope.
 - Capture the result and verification evidence after execution.
+
+## Bounded ordinary-release approval
+
+An explicit end-to-end live-delivery request supplies approval for the complete
+named release, including declared verification and conditional restoration of
+the exact accepted predecessor. Record the actual request, account/region,
+target/scope, declared operations and protected resources in the existing
+session/change record. Bind the immutable candidate and compatible predecessor
+packages when their validated receipts are available; do not ask again because
+those identities could not exist before the approved build. Approval merely to
+implement this mechanism is not approval of a concrete AWS release.
+
+Some step plans depend on earlier live results. They need fresh exact hashes,
+but do not need another user prompt solely because those hashes become
+available later. Before using the existing exact-plan execution interface,
+match the generated plan to the approved release's identity and allowed effects
+and pass the existing change-shape, custody and execution gates. A generated
+hash is never approval by itself. Missing/mismatched evidence blocks execution
+until corrected. A corrected candidate within the same authorized delivery
+requires fresh qualification and plan bindings, not renewed user approval.
+Broader effects, a different target, broader permissions or deletion/resources
+outside the declared boundary require a new decision before that effect.
+
+Conditional restoration requires a positively terminal failed verification
+after completed deployment. Admission blocks, pending/unknown outcomes,
+malformed reports and collection/promotion conflicts are not that evidence.
+Reconcile original operations first; never replay an uncertain operation.
+Use the existing separately labelled compatible-image restoration controller,
+preserve data and accepted history, and privately verify the restored release.
+Restoration is not successful delivery or acceptance of the failed candidate.
+An ordinary image-update boundary does not authorize generic failed-stack
+repair; the separately approved bounded recovery below is distinct from
+application verification rollback. It does not authorize migrations, permission changes, undeclared requalification or repeated
+recovery attempts. Declared successor requalification must appear explicitly in
+the reviewed delivery boundary; end-to-end wording does not bypass its gates.
+
+The ordinary-update connector enforces this boundary with its reviewed
+`--plan-release` fingerprint and matching `--approved-release` execution input.
+Existing exact-plan commands and original task/change-set records remain
+authoritative. Local connected tests, package qualification and live acceptance
+are separate evidence levels; implementation alone establishes neither live
+recovery nor the delivery-time target.
+
+## Bounded failed-update recovery
+
+Under explicitly recorded failed-update recovery authority, an operator may use
+AWS `rollback-stack` once to restore an owned UPDATE_FAILED stack to its last
+accepted stable state. This is not a generic retry or stack recreation route.
+Before submission, independently validate accepted release/package custody,
+exact account/region/stack ARN and ownership tags, original reserved execution
+token and its terminal failed root event. Require a prior successful root event
+on that same stack, predating the failed update, and the accepted template,
+unchanged non-image parameters and resource inventory. Reject initial creation
+failures or absent last stable state: AWS may delete a stack with no stable state.
+
+Record the exact rollback request and one client token exclusively before its
+single submission using the existing immutable reservation writer. Do not set
+RoleARN, RetainExceptOnCreate or resource-skip/delete options. An existing intent
+or uncertain response selects observation only, never another submission. Keep
+raw provider output private; retain only approved identity/hash/status facts.
+Completion requires the original recovery token's UPDATE_ROLLBACK_COMPLETE root
+event, the same stack ARN, accepted template/parameters and unchanged non-task
+resource identities, plus the exact accepted image running with no pending tasks.
+Failed, absent or uncertain evidence is not successful recovery or acceptance.
+
+Only then may a corrected, freshly checked delivery use a new immutable candidate
+and reservation. Preserve the failed delivery and recovery evidence. Never reuse
+its consumed change set or overwrite its plan. Successor image-only updates and
+compatible-image restorations explicitly enable provider rollback; this restores
+the prior stack if provisioning fails, and cannot promote a failed candidate.
+Initial creation/count-only activation keep their separately declared policy.
+Application proof and acceptance remain mandatory after a successful update.
+
+This operator recovery uses the existing AWS CLI and immutable evidence writer;
+it is not an unattended recovery capability or proof of the delivery-time target.
+See [AWS rollback semantics](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/rollback-stack.html).
+
+## Entity-smoke read-only preflight
+
+For the isolated entity-smoke observation task, apply the provider-owned
+[read-only preflight rule](../standards/operational-realization-applicability.md#entity-smoke-read-only-execution-preflight)
+before supplying task-launch capability. Its adopted ordering allowance does
+not replace the concrete AWS approval required above or admit business writes.
+Require actual probe evidence before proceeding to the later operation; do not
+mark a generic gate passed merely because the exception was selected.
+
+## Entity-smoke disposable restore cleanup
+
+For entity-smoke disposable restore cleanup, use the
+[bounded cleanup rule](../standards/operational-realization-applicability.md#entity-smoke-disposable-restore-cleanup).
+Match the concrete owned-resource deletion plan to the delivery's declared
+cleanup authority before execution; do not ask again when it is already covered.
+Rule adoption, a compiler pass or clone-creation-only approval is not deletion
+authority. Preserve the original readback/ownership gates and
+single-submission journal; uncertain deletion is reconciled, not retried.
 
 ## Bounded PostgreSQL Repair and Resume
 

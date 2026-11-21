@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.script.build-platform-shell-image.process-diagnostic-test
-//   version: 2
+//   version: 3
 //   status: active
 //   created_on: "2026-10-30"
-//   updated_on: "2026-11-05"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: diagnostics
 //   disciplines: [architecture, security, sre]
@@ -130,7 +130,7 @@ async function verifyDynamoConstructorTargets(load) {
 async function verifyCorePersistenceStartup(load) {
   const connection = load("platform/adapters/aws/persistence/postgresql/src/connection.js");
   const composition = load("infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-composition.js");
-  const config = load("infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js");
+  const config = load("infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js");
   const telemetry = load("infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.js");
   const originalPool = connection.createNodePostgreSqlTokenConnectionPool, originalAuthority = config.persistenceCertificateAuthorityResult;
   const originalConfiguration = telemetry.observabilityConfigurationFromTargetEnvironment;

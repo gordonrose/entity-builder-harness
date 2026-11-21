@@ -10,20 +10,6 @@
     "noEmit": false,
     "outDir": "../../.cache/platform-persistence-runtime",
     "baseUrl": "../..",
-    "paths": {
-      "@kanbien/core": [
-        "packages/core/src/index.ts"
-      ],
-      "@kanbien/core/*": [
-        "packages/core/src/*/index.ts"
-      ],
-      "@kanbien/platform-contracts": [
-        "platform/contracts/src/index.ts"
-      ],
-      "@kanbien/platform-observability": [
-        "platform/observability/src/index.ts"
-      ]
-    },
     "rootDir": "../..",
     "types": [
       "node"
@@ -31,7 +17,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "tests/*-runtime.test.ts",
+    "tests/**/*-runtime.test.ts",
     "../contracts/src/**/*.ts",
     "../observability/src/**/*.ts"
   ]

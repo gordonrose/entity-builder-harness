@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.runnable-program-candidates
-version: 2
+version: 4
 status: active
 created_on: "2026-10-19"
-updated_on: "2026-10-26"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -52,6 +52,21 @@ Every candidate contract declares:
 Observed dependencies are report input, not approval. A dependency may appear
 in an image only when the selected program declares it as approved. An
 unapproved dependency is a fail-closed boundary violation.
+
+For a `workspace-typescript` build, the program declares its TypeScript project
+and resolves each existing approved dependency ID through `dependency_bindings`.
+Workspace names, exports and dependency edges come from package manifests; the
+binding approves their use and does not duplicate export paths. Every selected
+transitive workspace and external dependency must remain approved. Discovery
+does not grant approval. The generic contract command validates this closure
+through the shared build-input reader, rejecting missing or unsupported inputs.
+Legacy contracts without build declarations retain structural validation only.
+Compiler aliases and runtime public-export maps must derive from manifests
+through the shared workspace build owners, not handwritten parallel maps.
+Both the neutral compiler and governed package-check input projector reject
+nonempty effective TypeScript `paths`, including inherited mappings and plain
+`tsc` bypasses, with `compiler-aliases-must-be-derived`. Declaration-only and
+Bundler routes outside governed package checks remain unchanged.
 
 ## Safe evidence boundary
 

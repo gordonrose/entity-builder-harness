@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.shared.deployment-operation-diagnostics
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -532,6 +532,8 @@ def write_report(path: Path, report: dict[str, Any], *, exclusive: bool = False)
 
 def classify_aws_error(code: object) -> str:
     """Map an existing safe provider adapter code to a safe generic category."""
+    if code == "aws-credentials-expired":
+        return "provider-credentials-expired"
     if code == "aws-access-denied":
         return "provider-access-denied"
     if code == "aws-resource-missing":

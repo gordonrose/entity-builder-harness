@@ -1,0 +1,95 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.infrastructure-realization
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [architecture, security, sre]
+#   kind: deployment-contract
+#   purpose: Bind the infrastructure controller's actual execution graph separately from application workloads that do not exist before creation.
+#   portability: {class: internal, targets: []}
+#   used_by:
+#   - id: deploy.plan.entity-smoke-core-platform
+#     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
+schema: operational-realization-contract/v2
+id: entity-smoke-infrastructure-control
+version: 1
+provider_boundary: normalized-facts-only
+artifacts:
+  - id: infrastructure-controller-source
+    immutable_reference_mode: runtime-bound-sha256
+    entrypoint: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py
+    assertions: [committed-source-closure, qualified-application-source-match, actual-cli-and-resource-control-tests]
+identities:
+  - id: infrastructure-operator
+    permissions: [inspect-selected-target, review-own-resource-additions, execute-exact-reviewed-change]
+configuration_inputs:
+  - id: infrastructure-inputs
+    required_fields: [source-revision, qualified-image-reference, selected-template-hash, checked-parameter-hash, configuration-contract-hash, permission-contract-hash, dependency-incarnation-hash, proof-label, selected-plan-hash]
+    optional_fields: []
+    sensitivity: secret-reference-only
+connections:
+  - {id: control-state-connection, source: infrastructure-controller, destination: resource-control-state, transport_security: verified}
+  - {id: intent-connection, source: infrastructure-controller, destination: attempt-store, transport_security: not-applicable}
+state_stores:
+  - id: resource-control-state
+    semantics: [exact-initial-absence-or-owned-operation, immutable-operation-identity, matching-source-and-parameters, explicit-terminal-state]
+  - id: attempt-store
+    semantics: [exclusive-reservation-before-effect, synchronous-file-and-directory-flush, one-submission-per-phase-and-label, no-replay-after-unknown-outcome]
+async_channels: []
+observability_profiles:
+  - id: infrastructure-safe-reports
+    required_facts: [source-and-artifact-identity, plan-hash, gate-and-phase, known-or-uncertain-effect, finite-failure-code]
+recovery_plans:
+  - id: infrastructure-reconciliation
+    entry_condition: prior-operation-observed-failed-or-stopped-before-separately-reviewed-recovery
+    cleanup: preserve-owned-partial-resources-and-all-application-data-no-implicit-deletion
+    rollback: observe-original-operation-no-automatic-recreation-or-source-database-reversal
+execution_units:
+  - id: infrastructure-controller
+    artifact: infrastructure-controller-source
+    identity: infrastructure-operator
+    configuration_inputs: [infrastructure-inputs]
+    connections: [control-state-connection, intent-connection]
+    state_stores: [resource-control-state, attempt-store]
+    async_channels: []
+    observability_profile: infrastructure-safe-reports
+    recovery_plan: infrastructure-reconciliation
+edges:
+  - {from: infrastructure-controller, to: infrastructure-controller-source, purpose: executes}
+  - {from: infrastructure-controller, to: infrastructure-operator, purpose: assumes}
+  - {from: infrastructure-controller, to: infrastructure-inputs, purpose: reads-configuration}
+  - {from: infrastructure-controller, to: control-state-connection, purpose: connects}
+  - {from: control-state-connection, to: resource-control-state, purpose: reaches-state}
+  - {from: infrastructure-controller, to: resource-control-state, purpose: controls-owned-resources}
+  - {from: infrastructure-controller, to: intent-connection, purpose: connects}
+  - {from: intent-connection, to: attempt-store, purpose: reaches-state}
+  - {from: infrastructure-controller, to: attempt-store, purpose: reserves-exact-operation}
+  - {from: infrastructure-controller, to: infrastructure-safe-reports, purpose: reports}
+  - {from: infrastructure-controller, to: infrastructure-reconciliation, purpose: reconciles}
+lifecycle:
+  states: [prepared, running, succeeded, failed, stopped]
+  terminal_states: [succeeded, failed, stopped]
+  transitions: [{from: prepared, to: running}, {from: running, to: succeeded}, {from: running, to: failed}, {from: running, to: stopped}]
+  retry: {mode: reviewed-recovery-only, requires_new_label: true, maximum_attempts: 1, permitted_from: [failed, stopped]}
+change_shape:
+  reviewed_change_summary_required: true
+  allowed_operation_classes: [create, update]
+  forbidden_operation_classes: [delete, replace, broaden-permission]
+assumptions:
+  - id: infrastructure-is-not-application-proof
+    statement: infrastructure-preflight-does-not-claim-application-identity-or-database-operation-success
+    required_proof: declared
+    actual_proof: declared
+gates:
+  - {id: source, prerequisites: [], may_mutate_live_target: false, evidence: [feature-infrastructure-source]}
+  - {id: artifact, prerequisites: [source], may_mutate_live_target: false, evidence: [feature-infrastructure-artifact]}
+  - {id: semantic-integration, prerequisites: [source, artifact], may_mutate_live_target: false, evidence: [feature-infrastructure-semantics]}
+  - {id: live-read, prerequisites: [source, artifact, semantic-integration], may_mutate_live_target: false, evidence: [feature-infrastructure-alignment]}
+  - {id: change-set, prerequisites: [source, artifact, semantic-integration, live-read], may_mutate_live_target: false, evidence: [feature-infrastructure-reviewed-change]}
+  - {id: execution-preflight, prerequisites: [source, artifact, semantic-integration, live-read, change-set], may_mutate_live_target: false, evidence: [feature-infrastructure-preflight]}
+  - {id: controlled-execution, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight], may_mutate_live_target: true, evidence: [feature-infrastructure-execution]}
+  - {id: recovery, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight, controlled-execution], may_mutate_live_target: true, evidence: [feature-infrastructure-recovery]}

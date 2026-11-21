@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-acceptance-receipts
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -27,6 +27,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
+import yaml
 
 ROOT = Path(__file__).resolve().parents[8]
 BASE = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence"
@@ -123,12 +124,35 @@ try:
         raise AssertionError("historical restore proof passed")
     restore_path.write_text(json.dumps(original_restore), encoding="utf-8")
     retained = collector.EVIDENCE_ROOT / "proof-receipts/migration-apply-6ac40437365f4a72b1d86cc42a664a83.json"
-    candidate_path, successor = collector.candidate_record(
-        {"source_revision": "f" * 40, "image_digest": candidate, "receipt_reference": "test-receipt"},
-        {"migration-apply": {"receipt": str(retained.relative_to(collector.ROOT))}},
-        "2026-10-25T10:00:00Z",
-    )
     succession = collector.succession_module()
+    with patch.object(collector, "succession_module", return_value=succession), patch.object(succession, "candidate_document", wraps=succession.candidate_document) as constructor:
+        candidate_path, successor = collector.candidate_record(
+            {"source_revision": "f" * 40, "image_digest": candidate, "receipt_reference": "test-receipt"},
+            {"migration-apply": {"receipt": str(retained.relative_to(collector.ROOT))}},
+            "2026-10-25T10:00:00Z",
+        )
+        assert constructor.call_count == 1, "the real collector must use the shared constructor"
+    # Reconstruct the prior representation independently, including YAML order.
+    canonical_bytes = lambda value: json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    digest = lambda value: "sha256:" + hashlib.sha256(value).hexdigest()
+    expected_proofs = {"migration-apply": {"path": str(retained.relative_to(collector.EVIDENCE_ROOT)), "sha256": digest(retained.read_bytes())}}
+    contract_paths = {
+        "configuration_contract": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "permission_contract": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+    }
+    contracts = {key: {"path": path, "sha256": digest((ROOT / path).read_bytes())} for key, path in contract_paths.items()}
+    identity = {"target": collector.TARGET, "scope": collector.SCOPE, "source_revision": "f" * 40,
+                "image_digest": candidate, **contracts, "proof_set_sha256": digest(canonical_bytes(expected_proofs))}
+    expected = {"schema": "deploy/release-candidate/v1", "evidence_class": "simulated",
+                "target": collector.TARGET, "scope": collector.SCOPE, "status": "verified",
+                "release": {"id": "release-" + hashlib.sha256(canonical_bytes(identity)).hexdigest()[:24],
+                            **{key: value for key, value in identity.items() if key not in {"target", "scope"}}},
+                "proof": {"accepted_at": "2026-10-25T10:00:00Z", "receipt_count": 1}, "proof_set": expected_proofs}
+    assert succession.rendered(successor) == yaml.safe_dump(expected, sort_keys=False).encode(), "consolidation must preserve the actual baseline candidate bytes"
+    with patch.object(collector, "succession_module", return_value=succession), patch.object(succession, "candidate_document", side_effect=succession.SuccessionFailure("release-succession-candidate-proof-invalid")):
+        try: collector.candidate_record({"source_revision": "f" * 40, "image_digest": candidate}, {"migration-apply": {"receipt": str(retained.relative_to(ROOT))}}, "2026-10-25T10:00:00Z")
+        except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-candidate-record-invalid"
+        else: raise AssertionError("collector bypassed the shared constructor failure")
     assert candidate_path.name == successor["release"]["id"] + ".yml"
     assert succession.candidate_identity(successor)[0:2] == (collector.TARGET, collector.SCOPE)
     broken=directory/"migration-applied-state.json"; value=json.loads(broken.read_text()); value["task"]["exit_code"]=None; broken.write_text(json.dumps(value),encoding="utf-8")

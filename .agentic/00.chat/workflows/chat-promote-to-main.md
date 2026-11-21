@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-10-26"
+  updated_on: "2026-11-19"
   layer: 00.chat
   domain: local-merge
   disciplines:
@@ -66,8 +66,9 @@ and preservation requirements.
    private receipts. Its declared effects include local check/cache writes;
    package and provider operations remain with their owning controllers.
 
-3. If verification reports `State: eligible`, ask for explicit user approval
-   before merging the chat branch into local `main`.
+3. If verification reports `State: eligible`, confirm explicit user authority
+   before merging. A merge request or end-to-end task instruction whose owning
+   workflow includes this integration supplies it; ask only if it is absent.
 
 ## Refresh Policy
 
@@ -123,8 +124,10 @@ branch.
 If verification reports `blocked-dirty-chat-worktree`, do not merge the chat
 branch into `main`.
 
-Do not stash, discard, stage, or commit dirty chat work automatically. Ask the
-user whether to inspect, commit, preserve, or explicitly discard the work.
+Do not stash or discard dirty chat work automatically. For task-owned changes
+already covered by commit authority, follow the normal commit checklist without
+another prompt. Otherwise ask whether to inspect, commit or preserve the work;
+discarding it requires its own explicit authority.
 
 ### Missing Or Ambiguous Evidence
 
@@ -158,7 +161,8 @@ For an approved local merge, run from the root integration worktree:
 git merge --no-ff <chat-branch>
 ```
 
-Pushes to `origin` require separate explicit approval.
+Pushes to `origin` require explicit push authority, which may already be included
+in the same end-to-end task instruction. Local-merge-only approval is insufficient.
 
 ## Cleanup Policy
 

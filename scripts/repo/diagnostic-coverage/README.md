@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.diagnostics.readme
-version: 3
+version: 4
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-02"
+updated_on: "2026-11-15"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -37,13 +37,27 @@ and controller checks remain with their existing registered owners.
 To regenerate reviewed contract snapshots after a source/schema change:
 
 ```bash
-node_modules/.bin/tsc -p scripts/repo/diagnostic-coverage/tsconfig.json
+node scripts/repo/workspace-build/script.mjs --project-roots --project scripts/repo/diagnostic-coverage/tsconfig.json --unowned-root-prefix infra/04.deploy/03.product/entrypoints/ --generated-json-assets --payload
 NODE_PATH="$PWD/node_modules" node scripts/repo/diagnostic-coverage/export-catalogs.mjs --compiled-root .cache/diagnostic-catalog-export
 bash scripts/repo/diagnostic-coverage/verify.sh
 ```
 
 `--check` on the exporter compares without rewriting snapshots. Do not edit
 generated JSON to define new values. Runtime source remains authoritative.
+The compiler reads the project's explicit source files, finds their workspace
+owners, and follows those packages' declared runtime dependencies. Package names
+and public export paths come from their manifests; the exporter no longer keeps
+its own package/shim list. The target-entrypoint prefix permits this project's
+existing non-workspace source files, not undeclared package dependencies.
+
+`--generated-json-assets` is specific to generation: a declared JSON output may
+be missing before it is regenerated. Missing TypeScript exports, malformed
+declarations and symlinks still fail. Ordinary builds do not enable this option.
+The exporter creates JavaScript shims first, checks all selected catalogues
+against committed definitions, then copies JSON assets only on success. A stale
+`--check` result or incompatible definition does not replace retained runtime
+JSON. It still maintains an explicit list of which executable catalogues to
+export; discovering a workspace does not select a new catalogue automatically.
 Config is the first Core module with an adjacent generated catalogue:
 `packages/core/src/config/contract/reporting/diagnostics.v1.json`. Its executable
 owner exports `coreConfigDiagnosticCatalog` through `@kanbien/core/config`;

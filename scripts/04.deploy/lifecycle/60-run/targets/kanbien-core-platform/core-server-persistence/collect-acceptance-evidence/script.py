@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -30,6 +30,7 @@ import subprocess
 import tempfile
 from typing import Any
 from functools import lru_cache
+from types import SimpleNamespace
 
 import yaml
 
@@ -50,11 +51,19 @@ EVIDENCE_ROOT = RECORD.parent
 TASK_ARN = re.compile(rf"^arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/[0-9a-f]{{32}}$")
 SNAPSHOT = re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
 TASKS: dict[str, dict[str, Any]] = {}
-_AWS_RESPONSE = None
+_AWS_CLI = None
 
 
 class EvidenceFailure(Exception):
     pass
+
+
+def updates():
+    return controller("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-updates.py")
+
+
+def owner():
+    return SimpleNamespace(**globals())
 
 
 def succession_module():
@@ -123,31 +132,11 @@ def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]],
             contracts[key] = {"path": relative, "sha256": succession.sha256_bytes((ROOT / relative).read_bytes())}
         except OSError as error:
             raise EvidenceFailure("acceptance-evidence-contract-unreadable") from error
-    identity = {
-        "target": TARGET,
-        "scope": SCOPE,
-        "source_revision": source_revision,
-        "image_digest": image_digest,
-        **contracts,
-        "proof_set_sha256": succession.sha256_bytes(succession.canonical(receipt_set)),
-    }
-    value: dict[str, Any] = {
-        "schema": succession.CANDIDATE_SCHEMA,
-        "evidence_class": EVIDENCE_CLASS,
-        "target": TARGET,
-        "scope": SCOPE,
-        "status": "verified",
-        "release": {
-            "id": succession.release_id(identity),
-            "source_revision": source_revision,
-            "image_digest": image_digest,
-            **contracts,
-            "proof_set_sha256": identity["proof_set_sha256"],
-        },
-        "proof": {"accepted_at": accepted_at, "receipt_count": len(receipt_set)},
-        "proof_set": receipt_set,
-    }
     try:
+        value = succession.candidate_document(target=TARGET, scope=SCOPE,
+            source_revision=source_revision, image_digest=image_digest, **contracts,
+            proofs=receipt_set, accepted_at=accepted_at,
+            expected_predecessor=package.get("expected_predecessor"))
         succession.candidate_identity(value, EVIDENCE_ROOT)
     except succession.SuccessionFailure as error:
         raise EvidenceFailure("acceptance-evidence-candidate-record-invalid") from error
@@ -217,29 +206,22 @@ def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> in
 
 
 def aws(*parts: str) -> dict[str, Any]:
+    global _AWS_CLI
+    if _AWS_CLI is None: _AWS_CLI = controller("scripts/04.deploy/shared/provider-adapters/aws/cli.py")
     try:
-        completed = subprocess.run(["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True, timeout=30, env={**os.environ, "AWS_PAGER": ""}, check=False)
-    except subprocess.TimeoutExpired as error:
-        raise EvidenceFailure("acceptance-evidence-aws-observation-timeout") from error
-    except OSError as error:
-        raise EvidenceFailure("acceptance-evidence-aws-command-unavailable") from error
-    except UnicodeError as error:
-        raise EvidenceFailure("acceptance-evidence-aws-response-invalid") from error
-    if completed.returncode:
-        global _AWS_RESPONSE
-        if _AWS_RESPONSE is None:
-            _AWS_RESPONSE = controller("scripts/04.deploy/shared/provider-adapters/aws/response.py")
-        classified = _AWS_RESPONSE.classify_error(parts[0], parts[1], completed.stderr)
-        code = "acceptance-evidence-aws-access-denied" if classified == "aws-access-denied" else "acceptance-evidence-aws-observation-failed"
-        raise EvidenceFailure(code)
-    try:
-        parsed = json.loads(completed.stdout or "{}")
-    except json.JSONDecodeError as error:
-        raise EvidenceFailure("acceptance-evidence-aws-response-invalid") from error
-    if not isinstance(parsed, dict):
-        raise EvidenceFailure("acceptance-evidence-aws-response-invalid")
-    return parsed
-
+        return _AWS_CLI.invoke_json(
+            ["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"],
+            timeout=30, environment={**os.environ, "AWS_PAGER": ""}, check=False,
+            empty_body="empty-string", object_only=True,
+        )
+    except _AWS_CLI.CliFailure as failure:
+        if failure.phase == "process":
+            suffix = {"aws-command-timeout": "observation-timeout", "aws-command-unavailable": "command-unavailable", "aws-response-invalid": "response-invalid"}[failure.code]
+        elif failure.phase == "response": suffix = "response-invalid"
+        else: suffix = "access-denied" if failure.code == "aws-access-denied" else "observation-failed"
+        error = EvidenceFailure("acceptance-evidence-aws-" + suffix)
+        if failure.cause is not None: raise error from failure.cause
+        raise error from None
 
 def receipt(path: Path) -> dict[str, str]:
     command = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"
@@ -433,20 +415,6 @@ def proof_applicability_module():
     assert specification and specification.loader
     specification.loader.exec_module(module)
     return module
-
-
-def proof_applicability(path: Path | None, candidate: dict[str, str]) -> dict[str, Any] | None:
-    """Load a narrowly scoped predecessor-proof reuse decision, if supplied."""
-    if path is None:
-        return None
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise EvidenceFailure("acceptance-evidence-proof-applicability-unreadable") from error
-    try:
-        return proof_applicability_module().validate(raw, candidate)
-    except (ValueError, OSError) as error:
-        raise EvidenceFailure("acceptance-evidence-proof-applicability-invalid") from error
 
 
 def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, str, str, str]], deadlines: dict[str, int], receipt_root: Path | None = None, applicability: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
@@ -708,11 +676,19 @@ def current_health(arn: str, definition: str, candidate: dict, runnable_digest: 
     return health
 
 
-def database_posture(snapshot_id: str, record_proof: dict) -> dict[str, str]:
+def source_database_posture() -> dict:
     database = aws("rds", "describe-db-instances", "--db-instance-identifier", DATABASE).get("DBInstances")
     instance = database[0] if isinstance(database, list) and len(database) == 1 and isinstance(database[0], dict) else None
     if not isinstance(instance, dict) or instance.get("DBInstanceStatus") != "available" or instance.get("Engine") != "postgres" or instance.get("PubliclyAccessible") is not False or instance.get("StorageEncrypted") is not True or instance.get("DeletionProtection") is not True:
         raise EvidenceFailure("acceptance-evidence-source-database-posture-invalid")
+    parsed_time(instance.get("InstanceCreateTime"))
+    return {"database": DATABASE, "source_created_at": instance["InstanceCreateTime"],
+            "source_resource_id": instance.get("DbiResourceId"), "instance": instance}
+
+
+def database_posture(snapshot_id: str, record_proof: dict) -> dict[str, str]:
+    source = source_database_posture()
+    instance = source["instance"]
     snapshots = aws("rds", "describe-db-snapshots", "--db-snapshot-identifier", snapshot_id).get("DBSnapshots")
     snapshot = snapshots[0] if isinstance(snapshots, list) and len(snapshots) == 1 and isinstance(snapshots[0], dict) else None
     if not isinstance(snapshot, dict) or snapshot.get("Status") != "available" or snapshot.get("Encrypted") is not True or snapshot.get("DBInstanceIdentifier") != DATABASE:
@@ -727,7 +703,7 @@ def database_posture(snapshot_id: str, record_proof: dict) -> dict[str, str]:
     response = controller("scripts/04.deploy/shared/provider-adapters/aws/response.py")
     if response.classify_error("rds", "describe-db-instances", check.stderr) != "aws-resource-missing":
         raise EvidenceFailure("acceptance-evidence-restored-database-observation-failed")
-    return {"database": DATABASE, "snapshot": snapshot_id, "restored_database": restored_identifier, "restore_cleanup": "confirmed-absent", **recovery_facts, "source_created_at": instance["InstanceCreateTime"]}
+    return {"database": DATABASE, "snapshot": snapshot_id, "restored_database": restored_identifier, "restore_cleanup": "confirmed-absent", **recovery_facts, "source_created_at": instance["InstanceCreateTime"], "source_resource_id": source["source_resource_id"]}
 
 
 def live_budget() -> None:
@@ -757,7 +733,7 @@ def write_record(record: dict[str, Any]) -> None:
         raise EvidenceFailure("acceptance-evidence-record-conflict") from error
 
 
-def write_successor(record: dict[str, Any]) -> dict[str, str]:
+def write_successor(record: dict[str, Any], retained=None) -> dict[str, str]:
     """Capture fresh observations durably before emitting the generic candidate.
 
     The original accepted record is immutable.  Candidate promotion is a
@@ -766,14 +742,25 @@ def write_successor(record: dict[str, Any]) -> dict[str, str]:
     succession = succession_module()
     if EVIDENCE_CLASS == "simulated" and (not EVIDENCE_ROOT.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or EVIDENCE_ROOT.resolve().is_relative_to(IMPLEMENTATION_ROOT.resolve())):
         raise EvidenceFailure("acceptance-evidence-simulation-production-write-forbidden")
+    # Same terminal proof and current observations reconcile to their original
+    # capture; a fresh wall-clock stamp alone must not create another candidate.
+    selection = {**record, "acceptance": {key: value for key, value in record["acceptance"].items() if key != "accepted_at"}}
+    observation = EVIDENCE_ROOT / "proof-receipts" / ("acceptance-observation-" + succession.sha256_bytes(succession.canonical(selection))[7:] + ".yml")
+    if observation.exists():
+        prior, _ = succession.document(succession.retained_evidence_file(EVIDENCE_ROOT, observation))
+        proposed = {**record, "acceptance": {**record["acceptance"], "accepted_at": prior.get("acceptance", {}).get("accepted_at")}}
+        if proposed != prior:
+            raise EvidenceFailure("acceptance-evidence-record-conflict")
+        record = prior
     raw = yaml.safe_dump(record, sort_keys=True).encode()
-    observation = EVIDENCE_ROOT / "proof-receipts" / ("acceptance-observation-" + succession.sha256_bytes(raw)[7:] + ".yml")
     succession.immutable_write(observation, raw)
     proofs = dict(record["provider_observation"]["proofs"])
     proofs["current-acceptance-observation"] = {"receipt": observation.relative_to(ROOT).as_posix()}
-    path, value = candidate_record(record["release"], proofs, record["acceptance"]["accepted_at"])
-    succession.immutable_write(path, succession.rendered(value))
-    return {"candidate_record": str(path), "release_id": value["release"]["id"]}
+    package = {**record["release"], "receipt_reference": record["release"].get("receipt_reference", record["release"].get("package_custody_reference"))}
+    if "predecessor" in record:
+        package["expected_predecessor"] = record["predecessor"]["release_id"]
+    path, value = publish_candidate_record(package, proofs, record["acceptance"]["accepted_at"], retained or {})
+    return {"candidate_record": path.resolve().relative_to(ROOT.resolve()).as_posix(), "release_id": value["release"]["id"]}
 
 
 def publish_candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]], accepted_at: str, retained: dict[str, Path]) -> tuple[Path, dict[str, Any]]:
@@ -829,19 +816,23 @@ def route_contract() -> dict:
     return route
 
 
-def required_proofs(candidate: dict, rollback: dict, restoration: dict | None = None) -> dict:
+def required_proofs(candidate: dict, rollback: dict, restoration: dict | None = None, *, selected=None) -> dict:
     result = {}
     route = route_contract()
     obligations = route_module().document(ROOT / route["accepted_record"]["schema_path"]).get("required_proofs")
     if not isinstance(obligations, list) or any(not isinstance(name, str) for name in obligations) or set(obligations) != set(route["proofs"]):
         raise EvidenceFailure("acceptance-evidence-required-proofs-mismatch")
     for name, proof in route["proofs"].items():
+        if selected is not None and name not in selected:
+            continue
         if not isinstance(proof, dict) or proof.get("image_role") not in {"candidate", "rollback", "restoration-verifier"}:
             raise EvidenceFailure("acceptance-evidence-proof-route-invalid")
         image = candidate if proof["image_role"] == "candidate" else rollback if proof["image_role"] == "rollback" else restoration
         if not isinstance(image, dict):
             raise EvidenceFailure("acceptance-evidence-restoration-verifier-receipt-invalid")
         result[name] = (proof["proof_type"], proof["family"], image["image_digest"], proof["result_code"], proof["deadline_workload"])
+    if selected is not None and set(result) != set(selected):
+        raise EvidenceFailure("acceptance-evidence-required-proofs-mismatch")
     return result
 
 
@@ -874,9 +865,12 @@ def sequence_valid(observed: dict, values: dict) -> None:
             raise EvidenceFailure("acceptance-evidence-rehearsal-sequence-invalid")
 
 
-def validate_record(record: object, *, evidence_class: str = "live") -> None:
+def validate_record(record: object, *, evidence_class: str = "live", historical=False) -> None:
     """Validate historical custody and proof without provider queries."""
     if not isinstance(record, dict): raise EvidenceFailure("accepted-release-record-invalid")
+    if record.get("schema") == updates().SCHEMA:
+        updates().validate(owner(), record)
+        return
     route = route_contract()
     schema = route_module().document(ROOT / route["accepted_record"]["schema_path"])
     fields = schema.get("required_fields")
@@ -902,7 +896,7 @@ def validate_record(record: object, *, evidence_class: str = "live") -> None:
     restoration = release.get("restoration_verifier_release")
     if "evidence_class" in record and (not isinstance(restoration, dict) or set(restoration) != {"source_revision", "image_digest", "package_custody_reference"} or re.fullmatch(r"[a-f0-9]{40}", str(restoration.get("source_revision"))) is None or re.fullmatch(r"sha256:[a-f0-9]{64}", str(restoration.get("image_digest"))) is None or not isinstance(restoration.get("package_custody_reference"), str)):
         raise EvidenceFailure("accepted-release-restoration-verifier-identity-invalid")
-    if evidence_class == "live":
+    if evidence_class == "live" and not historical:
         compatibility = acceptance.get("rollback_compatibility")
         if not isinstance(compatibility, dict) or set(compatibility) != {"id", "path", "sha256"}:
             raise EvidenceFailure("accepted-release-rollback-compatibility-missing")
@@ -951,30 +945,53 @@ def validate_record(record: object, *, evidence_class: str = "live") -> None:
 def parse_arguments(argv=None):
     parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
     parser.add_argument("--inputs", type=Path)
+    parser.add_argument("--ordinary-update", action="store_true")
+    parser.add_argument("--expected-predecessor")
     parser.add_argument("--receipt", type=Path); parser.add_argument("--rollback-receipt", type=Path); parser.add_argument("--restoration-verifier-receipt", type=Path)
     parser.add_argument("--proof", action="append", default=[]); parser.add_argument("--proof-receipt", action="append", default=[])
     parser.add_argument("--server-replacement-original"); parser.add_argument("--server-replacement-successor"); parser.add_argument("--recovery-snapshot")
-    parser.add_argument("--record-proof-receipt", type=Path); parser.add_argument("--current-health-task"); parser.add_argument("--proof-applicability", type=Path); parser.add_argument("--observability-receipt", action="append", default=[])
+    parser.add_argument("--record-proof-receipt", type=Path); parser.add_argument("--current-health-task"); parser.add_argument("--observability-receipt", action="append", default=[])
     parser.add_argument("--write", action="store_true"); parser.add_argument("--write-candidate", action="store_true"); parser.add_argument("--json", action="store_true"); parser.add_argument("--validate-arguments", action="store_true")
     try: args, unknown = parser.parse_known_args(argv)
     except argparse.ArgumentError as error: raise EvidenceFailure("acceptance-evidence-arguments-invalid") from error
     if unknown or (args.write and args.write_candidate): raise EvidenceFailure("acceptance-evidence-arguments-invalid")
     if args.inputs is not None:
-        if args.receipt or args.rollback_receipt or args.restoration_verifier_receipt or args.proof or args.proof_receipt or args.server_replacement_original or args.server_replacement_successor or args.recovery_snapshot or args.record_proof_receipt or args.current_health_task or args.proof_applicability or args.observability_receipt: raise EvidenceFailure("acceptance-evidence-input-source-ambiguous")
+        if args.receipt or args.rollback_receipt or args.restoration_verifier_receipt or args.proof or args.proof_receipt or args.server_replacement_original or args.server_replacement_successor or args.recovery_snapshot or args.record_proof_receipt or args.current_health_task or args.observability_receipt: raise EvidenceFailure("acceptance-evidence-input-source-ambiguous")
         if args.validate_arguments: return args
         try: values = route_module().input_values(args.inputs, route_contract(), root=ROOT)
         except ValueError as error: raise EvidenceFailure(str(error)) from error
+        mode = route_module().document(args.inputs).get("release_mode", "first-qualification")
+        if mode == "ordinary-update":
+            if args.ordinary_update or args.expected_predecessor:
+                raise EvidenceFailure("acceptance-evidence-input-source-ambiguous")
+            args.ordinary_update = True
+            args.expected_predecessor = values["expected_predecessor"]
+            args.receipt = Path(values["candidate_receipt"])
+            args.proof_receipt = [name + "=" + path for name, path in values["proof_receipts"].items()]
+            args.current_health_task = values["current_health_task"]
+            return validate_update_arguments(args)
         args.receipt, args.rollback_receipt, args.restoration_verifier_receipt = Path(values["candidate_receipt"]), Path(values["rollback_receipt"]), Path(values["restoration_verifier_receipt"])
         args.proof_receipt = [name + "=" + path for name, path in values["proof_receipts"].items()]
         for name in ("server_replacement_original", "server_replacement_successor", "recovery_snapshot", "current_health_task"): setattr(args, name, values[name])
         args.record_proof_receipt = Path(values["record_proof_receipt"])
-        if values.get("proof_applicability") is not None: args.proof_applicability = Path(values["proof_applicability"])
         args.observability_receipt = [name + "=" + path for name, path in values["observability_receipts"].items()]
+    if args.ordinary_update:
+        return validate_update_arguments(args)
+    if args.expected_predecessor is not None:
+        raise EvidenceFailure("acceptance-evidence-arguments-invalid")
     if args.receipt is None or args.rollback_receipt is None or args.restoration_verifier_receipt is None or not all(isinstance(value, str) for value in (args.server_replacement_original, args.server_replacement_successor, args.recovery_snapshot, args.current_health_task)) or SNAPSHOT.fullmatch(args.recovery_snapshot) is None or args.record_proof_receipt is None:
         raise EvidenceFailure("acceptance-evidence-arguments-invalid")
     if args.proof: raise EvidenceFailure("acceptance-evidence-retained-proof-receipts-required")
     if not args.proof_receipt: raise EvidenceFailure("acceptance-evidence-proof-receipt-set-invalid")
     if not args.observability_receipt: raise EvidenceFailure("acceptance-evidence-observability-receipt-set-invalid")
+    return args
+
+
+def validate_update_arguments(args):
+    if args.receipt is None or not args.proof_receipt or not isinstance(args.current_health_task, str) or not isinstance(args.expected_predecessor, str) or re.fullmatch(r"release-[a-f0-9]{24}", args.expected_predecessor) is None:
+        raise EvidenceFailure("acceptance-evidence-arguments-invalid")
+    if args.write or args.rollback_receipt or args.restoration_verifier_receipt or args.proof or args.observability_receipt or args.recovery_snapshot or args.record_proof_receipt or args.server_replacement_original or args.server_replacement_successor:
+        raise EvidenceFailure("acceptance-evidence-ordinary-update-inputs-invalid")
     return args
 
 
@@ -985,11 +1002,15 @@ def main() -> int:
         args = parse_arguments()
         if args.validate_arguments:
             print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
+        if args.ordinary_update:
+            record = updates().collect(owner(), args)
+            facts = write_successor(record, {"candidate-package": args.receipt}) if args.write_candidate else None
+            return report("recorded" if args.write_candidate else "ready", facts=facts)
         candidate, rollback, restoration = receipt(args.receipt), receipt(args.rollback_receipt), receipt(args.restoration_verifier_receipt)
         if candidate["image_digest"] == rollback["image_digest"]: raise EvidenceFailure("acceptance-evidence-rollback-identity-invalid")
         compatibility = qualified_rollback_compatibility(rollback) if EVIDENCE_CLASS == "live" else None
         required = required_proofs(candidate, rollback, restoration)
-        applicability = proof_applicability(args.proof_applicability, candidate)
+        applicability = None  # Historical v1 applicability is reader-only.
         observed = parse_proof_receipts(args.proof_receipt, required, contract_deadlines(), applicability=applicability)
         observability = parse_observability_receipts(args.observability_receipt, candidate["image_digest"], applicability=applicability, observed_proofs=observed)
         values = retained_context(args.proof_receipt, args.recovery_snapshot, args.server_replacement_original, args.server_replacement_successor)
@@ -1013,12 +1034,10 @@ def main() -> int:
         stamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         acceptance = {"accepted_at":stamp,"collector":"collect-acceptance-evidence","retained_for_restoration":True,"rollback_release":rollback}
         if compatibility is not None: acceptance["rollback_compatibility"] = compatibility
-        if applicability is not None:
-            try: relative = args.proof_applicability.resolve().relative_to(ROOT.resolve()).as_posix()
-            except ValueError: raise EvidenceFailure("acceptance-evidence-proof-applicability-path-invalid") from None
-            acceptance["proof_applicability"] = {"path": relative, "sha256": succession_module().sha256_bytes(args.proof_applicability.read_bytes())}
         record = {"schema":"deploy/persistence-accepted-release/v1","target":TARGET,"scope":SCOPE,"status":"accepted" if EVIDENCE_CLASS == "live" else "rehearsed","evidence_class":EVIDENCE_CLASS,"release":{"source_revision":candidate["source_revision"],"image_digest":candidate["image_digest"],"image_repository":f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kanbien-core-platform/core-server","package_custody_reference":candidate["receipt_reference"],"restoration_verifier_release":{"source_revision":restoration["source_revision"],"image_digest":restoration["image_digest"],"package_custody_reference":restoration["receipt_reference"]},"runtime_stack":STACK,"service":SERVICE,"runtime_task_definition":outputs["CoreServerPersistenceTaskDefinitionArn"],"verifier_task_definition":outputs["CoreServerPersistenceVerifierTaskDefinitionArn"],"migration_task_definition":outputs["CoreServerPersistenceMigrationTaskDefinitionArn"],"restoration_verifier_task_definition":outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]},"acceptance":acceptance,"provider_observation":{"current_service":current,"current_health":health,"database":database,"proofs":observed,"observability":observability,"server_replacement":{"original_task":original,"replacement_task":successor}}}
         validate_record(record, evidence_class=EVIDENCE_CLASS)
+        if args.write_candidate:
+            record["qualification"] = updates().qualification(owner(), candidate, database)
         facts = None
         if args.write:
             if RECORD.exists(): raise EvidenceFailure("acceptance-evidence-record-already-exists")
@@ -1033,17 +1052,12 @@ def main() -> int:
             }
             if compatibility is not None:
                 retained["rollback-compatibility"] = ROOT / compatibility["path"]
-            if args.proof_applicability is not None:
-                retained["proof-applicability"] = args.proof_applicability
-            candidate_path, candidate = publish_candidate_record(candidate, observed, stamp, retained)
-            try:
-                relative = candidate_path.resolve().relative_to(ROOT.resolve()).as_posix()
-            except ValueError:
-                raise EvidenceFailure("acceptance-evidence-candidate-path-invalid") from None
-            return report("recorded", facts={"candidate_record": relative, "release_id": candidate["release"]["id"]})
+            return report("recorded", facts=write_successor(record, retained))
         return report("recorded" if args.write else "ready")
     except (EvidenceFailure, KeyError, TypeError, ValueError, OSError, subprocess.SubprocessError) as error:
-        return report("blocked", str(error) if isinstance(error, EvidenceFailure) else "acceptance-evidence-malformed-input")
+        # These owners emit closed condition codes, never native/provider text.
+        known = isinstance(error, EvidenceFailure) or error.__class__.__name__ in {"PolicyFailure", "SuccessionFailure"}
+        return report("blocked", str(error) if known else "acceptance-evidence-malformed-input")
 
 
 if __name__ == "__main__": raise SystemExit(main())

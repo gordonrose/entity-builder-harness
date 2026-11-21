@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.schema.health-failure-and-recovery-declaration.v2.guide
-version: 8
+version: 10
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-25"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [agentic, security, sre]
@@ -74,6 +74,19 @@ server-mediated cleanup route, safe deletion outcome, and abandoned-verifier
 handling. This is not an administrative dependency test: the verifier must
 exercise the same server-mediated path that the application uses.
 
+For a generated-ID feature, select `acceptance_record.identity:
+generated-feature-record` and supply every field of that schema variant. Do not
+copy fixed-ID idempotency claims onto ordinary UUID creation. Reserve the proof
+label in the controller before invoking create; reject pre-existing labels,
+retain the returned original ID/facts digest, and observe uncertain submissions
+without blindly creating again. A fresh attempt requires its own explicit
+authority. Readback must fail on missing or changed facts, not repair them.
+Use cleanup outcome
+`logical-delete-synthetic-record-after-retention-purge-separately-governed`;
+the fixed-ID variant's physical-deletion outcome is not interchangeable. The
+validator checks the full declaration variant, while controller/application
+tests and receipts must prove its execution separately.
+
 A one-shot task that changes dependency structure uses `migration_execution`.
 It identifies the required dependency and `migration` credential class, uses a
 strictly ordered immutable/checksummed manifest, permits exactly one executor,
@@ -102,6 +115,25 @@ replacement; an image rollback is only to a prior persistence-capable accepted
 release and never reverses database structure; and a recovery point is restored
 to a new isolated database, read through an isolated application, without
 mutating the source. One proof cannot stand in for the other two.
+
+For the first release of a new isolated scope, the optional
+`initial_release_recovery` block describes the approved stop/preserve-data
+fallback. Copy its complete closed policy from the schema, not a new free-text
+strategy. Retain the normal image rollback declaration: it applies as soon as
+the first release is accepted. Replacement/readback and isolated database restore
+still precede first acceptance; prior-image restoration proof alone is replaced
+by bounded stop/data-preservation proof for the eligible initial release.
+
+The declaration validator checks shape, not the absence of an accepted image.
+Use the existing release-succession `--operation select-recovery` with the
+canonical `--scope-contract` and its `--evidence-root`. A valid current accepted
+release selects normal restoration even when the optional block remains in the
+declaration. A missing current reference with accepted history is a blocked
+reconciliation case. A caller cannot supply an empty substitute evidence folder
+to obtain initial-release treatment. The report never performs a stop, qualifies
+an image for rollback or grants AWS authority. The selected provider control
+must prove the stopped scope and preserved state, with the usual labelled
+attempt/uncertainty boundaries, before acceptance can consume its receipt.
 
 `not_applicable` is optional but, when used, must state the concern, why the
 declared workload type makes it inapplicable, and why that is appropriate for

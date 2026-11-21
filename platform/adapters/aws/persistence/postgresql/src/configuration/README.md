@@ -115,7 +115,7 @@ remain in the parent connection/security implementation.
 The [configuration standard](../../../../../../../.agentic/03.product/standards/config-runtime-settings.md)
 and [module structure standard](../../../../../../../.agentic/03.product/standards/public-module-structure.md)
 govern ownership. The existing
-[adapter runtime fixture](../../tests/postgresql-persistence-adapter-runtime.test.ts)
+[adapter runtime fixture](../../tests/contract/postgresql-persistence-adapter-runtime.test.ts)
 checks direct compatibility and actual shared-rule use; the target configuration
 fixture checks the real checked-loading path. Live deployment and engine
 qualification are separate from these local checks.

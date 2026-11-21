@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.command.build-core-server-persistence-image.prepare-runtime
-//   version: 3
+//   version: 4
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [architecture, security, sre]
@@ -17,68 +17,28 @@
 //   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import path, { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
+import { readProgramBuildInputs, ProgramBuildInputError } from "../../20-build/runnable-program-contract/build-inputs.mjs";
+import { assembleRuntimePayload } from "../prepare-runtime-payload/assemble.mjs";
 import { runtimeEntrypoints, wrapperSource } from "./runtime-contract.mjs";
-let compiledRoot;
-let preparationPhase = "arguments";
-let preparationLocation = {};
-let writesStarted = false;
+const repository = fileURLToPath(new URL("../../../../../", import.meta.url));
+import { WorkspaceDeclarationError } from "../../../../repo/workspace-build/declarations.mjs";
+const state = { phase: "arguments", location: {}, writesStarted: false };
 try {
-compiledRoot = parseCompiledRoot(process.argv.slice(2));
-preparationPhase = "compiled-entrypoint";
-for (const entrypoint of Object.keys(runtimeEntrypoints).map((entry) => `${entry}.js`)) {
-  preparationLocation = { entrypoint };
-  const compiledEntrypoint = join(compiledRoot, "infra/04.deploy/03.product/entrypoints", entrypoint);
-  if (!existsSync(compiledEntrypoint)) throw new Error(`Required compiled entrypoint is missing: ${entrypoint}`);
-}
-const coreModules = ["audit", "authn", "authz", "config", "diagnostics", "events", "i18n", "logging", "monitoring", "persistence", "queues", "security", "shared", "tenancy", "validation"];
-const packages = {
-  "@kanbien/core": { ".": "packages/core/src/index.js", ...Object.fromEntries(coreModules.map((name) => [`./${name}`, `packages/core/src/${name}/index.js`])) },
-  "@kanbien/platform-adapter-aws-observability-cloudwatch": { ".": "platform/adapters/aws/observability/cloudwatch/src/index.js" },
-  "@kanbien/platform-adapter-aws-persistence-postgresql": { ".": "platform/adapters/aws/persistence/postgresql/src/index.js" },
-  "@kanbien/platform-config": { ".": "platform/config/src/index.js" },
-  "@kanbien/platform-contracts": { ".": "platform/contracts/src/index.js" },
-  "@kanbien/platform-health": { ".": "platform/health/src/index.js" },
-  "@kanbien/platform-observability": { ".": "platform/observability/src/index.js" },
-  "@kanbien/platform-persistence": { ".": "platform/persistence/src/index.js" },
-  "@kanbien/platform-runtime": { ".": "platform/runtime/src/index.js" },
-  "@kanbien/platform-security": { ".": "platform/security/src/index.js" },
-  "@kanbien/platform-server": { ".": "platform/server/src/index.js", "./main": "platform/server/src/main.js" },
-};
-// Check compiled exports before writing any shim.
-preparationPhase = "compiled-export";
-for (const exportsMap of Object.values(packages)) {
-  for (const target of Object.values(exportsMap)) {
-    preparationLocation = { compiledExport: target };
-    if (!existsSync(join(compiledRoot, target))) throw new Error("Required compiled package export is missing.");
-  }
-}
-for (const [name, exportsMap] of Object.entries(packages)) writePackageShim(name, exportsMap);
-preparationPhase = "payload-manifest-write";
-preparationLocation = {};
-writeFileSync(join(compiledRoot, "runtime-payload.json"), JSON.stringify({ required_imports: Object.entries(packages).flatMap(([name, exportsMap]) => Object.keys(exportsMap).map((key) => `${name}${key === "." ? "" : key.slice(1)}`)) }));
-for (const [entry, exported] of Object.entries(runtimeEntrypoints)) {
-  preparationPhase = "wrapper-write";
-  preparationLocation = { entrypoint: `${entry}.js` };
-  writeFileSync(join(compiledRoot, `${entry}.js`), wrapperSource(entry, exported));
-}
-} catch {
-  console.error(JSON.stringify({ scope: "core-server-persistence-runtime-preparation", verdict: "failed", code: "runtime-preparation-boundary-failed", phase: preparationPhase, ...preparationLocation, effect: writesStarted ? "earlier-writes-possible" : "writes-not-started" }));
+const compiledRoot = parseCompiledRoot(process.argv.slice(2));
+state.phase = "declarations";
+const { inputs: { packages } } = readProgramBuildInputs(repository, { programId: "kanbien-core-server-persistence" });
+assembleRuntimePayload({ compiledRoot, assetRoot: repository, packages, packageManifestSpace: 2,
+  manifest: { path: "runtime-payload.json", newline: false }, manifestBeforeWrappers: true,
+  entrypoints: Object.entries(runtimeEntrypoints).map(([entry, exported]) => ({
+    target: `infra/04.deploy/03.product/entrypoints/${entry}.js`, output: `${entry}.js`, source: wrapperSource(entry, exported),
+  })),
+}, state);
+} catch (cause) {
+  const declared = state.phase === "declarations" && (cause instanceof WorkspaceDeclarationError || cause instanceof ProgramBuildInputError);
+  if (declared) state.location = cause.location ?? {};
+  const location = state.phase === "compiled-export" ? { compiledExport: state.location.compiledExport } : state.location;
+  console.error(JSON.stringify({ scope: "core-server-persistence-runtime-preparation", verdict: "failed", code: "runtime-preparation-boundary-failed", phase: state.phase, ...(declared ? { reason: cause.code } : {}), ...location, effect: state.writesStarted ? "earlier-writes-possible" : "writes-not-started" }));
   process.exitCode = 1;
 }
 function parseCompiledRoot(args) { if (args.length !== 2 || args[0] !== "--compiled-root" || args[1].length === 0) throw new Error("Usage: prepare-runtime.mjs --compiled-root <compiled-output-directory>"); return args[1]; }
-function writePackageShim(packageName, exportsMap) {
-  preparationLocation = { package: packageName };
-  const packageRoot = join(compiledRoot, "node_modules", ...packageName.split("/")); const packageExports = {};
-  for (const [exportName, targetPath] of Object.entries(exportsMap)) {
-    preparationLocation = { package: packageName, export: exportName };
-    const shimPath = exportName === "." ? join(packageRoot, "index.js") : join(packageRoot, exportName.slice(2), "index.js");
-    preparationPhase = "shim-directory"; writesStarted = true; mkdirSync(path.dirname(shimPath), { recursive: true });
-    const fromShim = relative(path.dirname(shimPath), join(compiledRoot, targetPath)).replaceAll(path.sep, "/");
-    preparationPhase = "shim-write"; writeFileSync(shimPath, `module.exports = require(${JSON.stringify(fromShim.startsWith(".") ? fromShim : `./${fromShim}`)});\n`); packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
-  }
-  preparationPhase = "manifest-write";
-  preparationLocation = { package: packageName };
-  writeFileSync(join(packageRoot, "package.json"), `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`);
-}

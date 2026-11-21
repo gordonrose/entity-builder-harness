@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.operational-realization-gate
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -21,7 +21,7 @@ set -euo pipefail
 #     targets:
 #     - entity-builder
 #   effects:
-#   - read-only
+#   - writes-files
 #   used_by:
 #   - id: package.script.deployment-realization-test
 #     path: package.json
@@ -236,4 +236,5 @@ if grep -Eq -- 'subprocess|socket|urllib|requests' scripts/04.deploy/operational
   exit 1
 fi
 python3 -B scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py
+python3 -B scripts/04.deploy/operational-realization-gate/service-graph-test.py
 echo "Operational Realization Gate local tests passed."

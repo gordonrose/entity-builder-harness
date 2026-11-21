@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-18"
 #   layer: 01.harness
 #   domain: governance
 #   disciplines:
@@ -43,22 +43,17 @@ reject_script() {
   if [ "${LIST_MODE:-no}" != yes ]; then echo "ERROR: $1" >&2; fi
 }
 has_artifact_header() {
-  local header status
+  local header
   header="$(sed -n '1,80p' "$1" 2>/dev/null)" || { read_failed header; return 2; }
-  if grep -Fq "agentic-artifact:" <<< "$header" 2>/dev/null; then return 0; else status=$?; fi
-  [ "$status" -ne 1 ] || return 1
-  read_failed header
+  [[ "$header" == *agentic-artifact:* ]]
 }
 
 metadata_has_line() {
-  local path="$1"
-  local value="$2"
-  local header status
-
-  header="$(sed -n '1,140p' "$path" 2>/dev/null)" || { read_failed effects; return 2; }
-  if grep -Eq "^[#[:space:]]*-[[:space:]]*$value[[:space:]]*$" <<< "$header" 2>/dev/null; then return 0; else status=$?; fi
-  [ "$status" -ne 1 ] || return 1
-  read_failed effects
+  local value="$2" declared
+  for declared in "${script_effects[@]}"; do
+    [[ "$declared" == "$value" ]] && return 0
+  done
+  return 1
 }
 
 has_never_persistent_effect() {
@@ -79,7 +74,8 @@ has_never_persistent_effect() {
 }
 
 classify_script() {
-  local path="$1" status effect read_only=no
+  local path="$1" status effect read_only=no effects_header line
+  local -a script_effects=()
 
   case "$path" in
     */lib.sh)
@@ -116,6 +112,14 @@ classify_script() {
     return 1
   fi
 
+  effects_header="$(sed -n '1,140p' "$path" 2>/dev/null)" || { read_failed effects; return 2; }
+  # Parse complete lines once. Never cache across scripts or invocations, or
+  # allow whitespace matching to join a dash and an effect on separate lines.
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^[#[:space:]]*-[[:space:]]*([^[:space:]]+)[[:space:]]*$ ]]; then
+      script_effects+=("${BASH_REMATCH[1]}")
+    fi
+  done <<< "$effects_header"
   if has_never_persistent_effect "$path"; then
     reject_script "script has effects that are never persistent-auto-approved"
     return 1

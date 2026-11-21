@@ -1,0 +1,34 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.package-delivery-access
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [security, sre]
+#   kind: delivery-access-contract
+#   purpose: Bind feature publication to its own repository-limited role without extending accepted delivery identities.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.command.entity-smoke.package-workflow
+#     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/script.sh
+schema: deploy/delivery-access-contract/v1
+pipeline: entity-smoke-package-custody
+actor: github-kanbien-core-platform-entity-smoke-publisher
+provider_policy_source: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml#FeaturePublisherRole
+workflow: .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
+operations:
+  - {id: registry-token, workflow_step: Log in to Amazon ECR, provider_action: "ecr:GetAuthorizationToken", resource_class: aws-ecr-registry-token, purpose: authenticate-to-own-registry, proof: static-policy-coverage}
+  - {id: repository-observation, workflow_step: Prove fixed delivery read access, provider_action: "ecr:DescribeRepositories", resource_class: entity-smoke-image-repository, purpose: observe-own-immutable-scanning-repository, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-1, workflow_step: Publish immutable image, provider_action: "ecr:InitiateLayerUpload", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-2, workflow_step: Publish immutable image, provider_action: "ecr:UploadLayerPart", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-3, workflow_step: Publish immutable image, provider_action: "ecr:CompleteLayerUpload", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-4, workflow_step: Publish immutable image, provider_action: "ecr:BatchCheckLayerAvailability", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-5, workflow_step: Publish immutable image, provider_action: "ecr:PutImage", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-6, workflow_step: Publish immutable image, provider_action: "ecr:BatchGetImage", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-7, workflow_step: Publish immutable image, provider_action: "ecr:DescribeImages", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: image-action-8, workflow_step: Publish immutable image, provider_action: "ecr:GetDownloadUrlForLayer", resource_class: entity-smoke-image-repository, purpose: qualify-publish-or-observe-own-immutable-image, proof: static-policy-coverage-and-live-read-probe}
+  - {id: scan-observation, workflow_step: Require clean ECR scan, provider_action: "ecr:DescribeImageScanFindings", resource_class: entity-smoke-image-repository, purpose: reject-unqualified-vulnerabilities, proof: static-policy-coverage-and-live-read-probe}
+

@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-11-10"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [architecture, security, sre]
@@ -134,7 +134,9 @@ Resources:
           - Effect: Allow
             Principal: '*'
             Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer]
-            Resource: !Ref ExistingRepositoryArn
+            Resource:
+              - !Ref ExistingRepositoryArn
+              - !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke'
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   EcrDkrEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -151,7 +153,9 @@ Resources:
           - Effect: Allow
             Principal: '*'
             Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer]
-            Resource: !Ref ExistingRepositoryArn
+            Resource:
+              - !Ref ExistingRepositoryArn
+              - !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke'
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   LogsEndpoint:
     Type: AWS::EC2::VPCEndpoint

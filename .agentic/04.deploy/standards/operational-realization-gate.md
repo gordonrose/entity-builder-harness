@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: deploy.standard.operational-realization-gate
-  version: 3
+  version: 6
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-10-26"
+  updated_on: "2026-11-19"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -54,12 +54,71 @@ must cite its provider-owned applicability rule and recorded approvals; an
 exception never grants execution authority or weakens an applicable executable
 gate. Without that record, the normal requirements below apply.
 
+## End-to-end live-delivery authority
+
+<!-- deterministic-check: allow reason="interpreting the user's task and matching its intended effects requires judgment; existing exact-plan controllers enforce the concrete execution boundary" -->
+An explicit instruction to execute an end-to-end live deployment authorizes
+the complete named delivery, not merely planning it. Resolve the repository,
+publication destination, target/scope and provider account/region from that
+instruction and established context. Record the original request and its limits
+in the existing session/change record before starting. Ask only for genuinely
+missing scope information; do not defer authority discovery until publication.
+
+Within that boundary, approval covers necessary task edits, checks, local
+checkpoints, normal governed integration/push, build, qualification, publication,
+declared deployment/setup, verification, acceptance and declared conditional
+recovery. This includes required in-scope corrections and their requalification
+and republication. It does not authorize unrelated work. Existing explicit user
+restrictions remain binding unless the user changes them. A request only to plan,
+explain, implement locally or test locally does not authorize live delivery.
+
+Do not ask again at each stage, after an interruption, or solely because an
+image digest, source checkpoint or plan hash becomes available. Review the actual
+generated plan against the recorded task authority, record the exact derived
+binding and use the existing approval inputs/controllers. Distinguish the user's
+task approval from the agent's later plan review; never claim the user reviewed
+a hash they were not shown. A corrected candidate requires new qualification
+and matching plans, not another prompt when its effects remain within scope.
+
+All source, package, live-state, change-shape, ownership and recovery gates still
+apply. Declared disposable proof-resource cleanup may be included in the
+delivery boundary; it requires positive ownership and original successful proof
+before deletion. A different target/account, broader permissions, shared-resource
+changes outside the declared delivery, source-data deletion, history rewriting,
+discarding unrelated work or new ungoverned recovery is not implied authority.
+Stop only that affected operation and resolve the actual missing authority or
+governance; continue independent authorized work. Reconcile uncertain effects
+without replay. Authentication or other unavailable external prerequisites may
+require user help, but do not revoke the existing task approval.
+This rule does not override platform-enforced or tool-level permission controls.
+
+Carry the original authority, explicit restrictions, current source/receipt/plan
+bindings and remaining steps through session logs, handoffs and compaction.
+Assistant-written summaries must not invent narrower "local-only" permission;
+"no AWS changes performed" reports an outcome, not an authorization limit.
+Consult the original user request if a summary conflicts with it.
+
+Review examples: "deploy this named release end to end" covers its normal
+commit/push/publication and reviewed declared execution without another prompt;
+"prepare a deployment plan" does not. A new hash for the same approved delivery
+requires revalidation, not renewed consent; an unplanned shared-network change
+requires a scope decision. These are instruction-review cases, not executable
+evidence of agent compliance or permission to bypass a controller.
+
 ## Required Realization Contract
 
 Every capability that can mutate a live target, perform a migration, execute a
-background job, or require a recovery action must have a versioned
-`operational-realization-contract/v1` before execution. Use the existing [template and schema](../../01.harness/templates/operational-realization-contract.v1.guide.md),
-retained at their compatible paths; this standard owns their deployment semantics.
+background job, or require a recovery action must have a versioned realization
+contract before execution. The existing
+[v1 template and schema](../../01.harness/templates/operational-realization-contract.v1.guide.md)
+retain their compatible paths and admission behaviour. Select
+[v2](../schemas/operational-realization-contract.v2.guide.md) for explicit
+synchronous unit-to-unit connections or workloads without direct storage.
+Declare empty connection/store lists explicitly rather than invent a dependency.
+Direct store declarations must match the unit's own connections; a service call
+does not confer its callee's storage authority. This standard owns both
+versions' deployment semantics; all proof levels, ordered gates, safety and
+provider approval requirements below remain mandatory.
 
 The contract must declare all of the following.
 
@@ -81,6 +140,25 @@ An execution unit may not depend on an implied service or setting. Each such
 relationship must be an explicit edge between declared nodes. The compiler
 rejects unknown nodes and missing dependency edges.
 
+## Bounded disposable-restore change shape
+
+Ordinary contracts continue to forbid delete, replace and permission broadening.
+Only v2 may explicitly declare `change_shape.disposable_restore_cleanup`, with
+exactly four true fields: `original_readback_required`,
+`positive_ownership_required`, `explicit_execution_approval_required` and
+`preserve_source_and_shared_resources`. Its allowed classes must be exactly
+`[delete]`; forbidden classes exactly `[create, update, replace, broaden-permission]`.
+Malformed or partial opt-ins fail closed. Existing v1 admission is unchanged.
+
+This declaration permits validation of the truthful cleanup shape, not execution.
+An applicable provider-owned rule and actual controller must separately require
+the original successful readback, positive disposable-resource ownership and
+explicit concrete execution approval, protecting source and shared resources.
+All eight gates, input-bound evidence and actual normalized change counts still
+apply. The compiler cannot establish those provider facts from booleans. The
+currently approved provider case is solely the entity-smoke isolated restore
+under its [applicability rule](../../aws/standards/operational-realization-applicability.md#entity-smoke-disposable-restore-cleanup).
+
 ## Proof Levels
 
 Proof levels are ordered. A higher level can satisfy a lower requirement.
@@ -92,6 +170,41 @@ Proof levels are ordered. A higher level can satisfy a lower requirement.
 
 `unknown` is never an acceptable actual or required proof state. It is a
 deliberate stop signal in a contract and is rejected by the compiler.
+
+## Proof applicability by change
+
+Use the existing scope, capability and realization declarations to distinguish
+what changed before selecting proof. Record the reasoning in the existing
+change inventory, not a new registry. This classification guides connected
+implementation and evidence selection; it does not itself add a schema field,
+grant an exception or weaken an executable requirement.
+
+| Change | Required assessment |
+| --- | --- |
+| New or materially changed platform/infrastructure capability | Qualify the new execution, access, state and recovery behaviour at its owning boundary. Expose reusable capability inputs and proof bindings for later consumers, not a workload-named copy of the machinery. |
+| New feature/app/workload using qualified capability | Identify matching reusable capability evidence and prove the new workload's actual package, configuration, permissions, migrations and meaningful operation. A shared engine or passing old workload is not proof that this workload works. |
+| Update within an existing qualified route | Invalidate evidence for changed inputs and affected dependencies; reuse only still-matching evidence through its owning reader. Always obtain the fresh target/operation observations required by the gates. |
+| Removal, retirement or changed isolation/ownership | Prove affected callers, permissions, data-retention and recovery consequences. Source removal is not authority to delete remote resources or erase accepted history. |
+
+For each selected obligation, name its existing owner, current input binding,
+whether execution or valid retained proof supplies it, and the invalidation
+conditions. Changes to migrations, permissions, runtime, state semantics or
+recovery can invalidate capability proof as well as workload proof. Review the
+actual affected boundary, not just the changed filename. Reusing a capability
+must neither trigger a full infrastructure rehearsal solely because a feature
+has a new name nor substitute capability proof for its new workload obligations.
+
+First-acceptance replacement/restore requirements remain effective. Persistence
+and entity-smoke ordinary updates use their acceptance schema's `ordinary_update`
+policy and the shared immutable-input comparator. Fresh deployed identity,
+migration state, effective access, meaningful operation and readiness are never
+replaced by recovery history. Reuse requires exact validated accepted-predecessor
+custody and unchanged declared recovery inputs, contracts and database incarnation.
+Absent or unverifiable bindings require requalification; old records are not
+retroactively upgraded. Changed-capability execution remains separately selected,
+not an implicit effect of collection. Other routes keep their declared proof sets.
+Any further selective policy must migrate its declaration, validator, collector
+and tests together. These local controls do not establish live delivery timing.
 
 ## Mandatory Gate Sequence
 

@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -293,6 +293,7 @@ Resources:
     Properties:
       DBInstanceIdentifier: kanbien-core-platform-persistence
       Engine: postgres
+      EngineVersion: '18'
       DBInstanceClass: db.t4g.micro
       AllocatedStorage: '20'
       StorageType: gp3

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.core-server-dependency-boundary
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -42,16 +43,7 @@ CONTRACT_PATH = ROOT / "infra/04.deploy/03.product/entrypoints/runnable-program-
 SOURCE_ENTRYPOINT = Path("infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts")
 COMPILED_ENTRYPOINT = Path("infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.js")
 
-PACKAGE_ROOTS = {
-    "@kanbien/core": (Path("packages/core"), "core"),
-    "@kanbien/platform-config": (Path("platform/config"), "platform-config"),
-    "@kanbien/platform-contracts": (Path("platform/contracts"), "platform-contracts"),
-    "@kanbien/platform-health": (Path("platform/health"), "platform-health"),
-    "@kanbien/platform-observability": (Path("platform/observability"), "platform-observability"),
-    "@kanbien/platform-runtime": (Path("platform/runtime"), "platform-runtime"),
-    "@kanbien/platform-security": (Path("platform/security"), "platform-security"),
-    "@kanbien/platform-server": (Path("platform/server"), "platform-server"),
-}
+BUILD_INPUT_READER = Path(__file__).resolve().parent.parent / "runnable-program-contract/build-inputs.mjs"
 
 FORBIDDEN_PACKAGE_PREFIXES = (
     "@kanbien/app-platform-smoke",
@@ -80,6 +72,67 @@ class BoundaryFailure(Exception):
 class BoundaryFacts:
     package_ids: tuple[str, ...]
     package_names: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class DeclarationBindings:
+    package_roots: dict[str, tuple[Path, str]]
+    compiler_paths: dict[str, Path]
+    external_owners: dict[str, str]
+    node_builtins: frozenset[str]
+
+
+def declaration_bindings() -> DeclarationBindings:
+    """Read approved names/exports; never substitute them for observed imports."""
+    try:
+        result = subprocess.run(
+            ["node", str(BUILD_INPUT_READER), "--program", PROGRAM_ID,
+             "--contract", CONTRACT_PATH.relative_to(ROOT).as_posix()],
+            cwd=ROOT, capture_output=True, text=True, timeout=30, check=False,
+        )
+    except subprocess.TimeoutExpired:
+        raise BoundaryFailure("program-build-inputs-timeout") from None
+    except (OSError, UnicodeError, ValueError, subprocess.SubprocessError):
+        raise BoundaryFailure("program-build-inputs-unavailable") from None
+    if result.returncode != 0:
+        raise BoundaryFailure("program-build-inputs-rejected")
+    try:
+        value = json.loads(result.stdout)
+        if not isinstance(value, dict) or value.get("programId") != PROGRAM_ID:
+            raise ValueError()
+        inputs, owners = value["inputs"], value["workspaceOwners"]
+        if not isinstance(inputs, dict) or not isinstance(owners, dict):
+            raise ValueError()
+        roots: dict[str, tuple[Path, str]] = {}
+        for directory, owner in owners.items():
+            if not isinstance(directory, str) or not directory.endswith("/") or not isinstance(owner, str):
+                raise ValueError()
+            relative = Path(directory)
+            if relative.is_absolute() or ".." in relative.parts:
+                raise ValueError()
+            manifest = json.loads((ROOT / relative / "package.json").read_text(encoding="utf-8"))
+            name = manifest["name"]
+            if not isinstance(name, str) or name in roots:
+                raise ValueError()
+            roots[name] = (relative, owner)
+        if not roots or set(inputs["packageNames"]) != set(roots) or not isinstance(inputs["compilerPaths"], dict):
+            raise ValueError()
+        paths: dict[str, Path] = {}
+        for specifier, targets in inputs["compilerPaths"].items():
+            if not isinstance(specifier, str) or not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], str):
+                raise ValueError()
+            target = Path(targets[0])
+            if target.is_absolute() or ".." in target.parts:
+                raise ValueError()
+            paths[specifier] = target
+        external, builtins = value["externalOwners"], value["nodeBuiltins"]
+        if not isinstance(external, dict) or not all(isinstance(name, str) and isinstance(owner, str) for name, owner in external.items()):
+            raise ValueError()
+        if not isinstance(builtins, list) or not all(isinstance(name, str) for name in builtins):
+            raise ValueError()
+        return DeclarationBindings(roots, paths, external, frozenset(builtins))
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError):
+        raise BoundaryFailure("program-build-inputs-invalid") from None
 
 
 def parse_args() -> argparse.Namespace:
@@ -112,30 +165,21 @@ def safe_report(verdict: str, codes: tuple[str, ...], facts: BoundaryFacts | Non
     return result
 
 
-def package_for_specifier(specifier: str) -> tuple[str, Path, str] | None:
-    for package_name, (package_path, package_id) in PACKAGE_ROOTS.items():
+def package_for_specifier(specifier: str, bindings: DeclarationBindings) -> tuple[str, Path, str] | None:
+    for package_name, (package_path, package_id) in bindings.package_roots.items():
         if specifier == package_name or specifier.startswith(f"{package_name}/"):
             return package_name, package_path, package_id
     return None
 
 
-def source_file_for_specifier(source: Path, specifier: str) -> Path | None:
+def source_file_for_specifier(source: Path, specifier: str, bindings: DeclarationBindings) -> Path | None:
     if specifier.startswith("."):
         base = (source.parent / specifier).resolve()
         options = (base, base.with_suffix(".ts"), base / "index.ts")
         return next((candidate for candidate in options if candidate.is_file()), None)
 
-    package = package_for_specifier(specifier)
-    if package is None:
-        return None
-    package_name, package_path, _ = package
-    remainder = specifier.removeprefix(package_name).lstrip("/")
-    base = ROOT / package_path / "src"
-    if not remainder:
-        return base / "index.ts"
-    if package_name == "@kanbien/platform-server" and remainder == "main":
-        return base / "main.ts"
-    return base / remainder / "index.ts"
+    target = bindings.compiler_paths.get(specifier)
+    return ROOT / target if target is not None else None
 
 
 def import_specifiers(source: Path) -> tuple[str, ...]:
@@ -146,7 +190,7 @@ def import_specifiers(source: Path) -> tuple[str, ...]:
     return tuple(match.group(1) for match in IMPORT_RE.finditer(text))
 
 
-def discover_typescript_graph() -> BoundaryFacts:
+def discover_typescript_graph(bindings: DeclarationBindings) -> BoundaryFacts:
     entrypoint = ROOT / SOURCE_ENTRYPOINT
     if not entrypoint.is_file():
         raise BoundaryFailure("source-entrypoint-missing")
@@ -154,42 +198,58 @@ def discover_typescript_graph() -> BoundaryFacts:
     pending = [entrypoint]
     visited: set[Path] = set()
     package_names: set[str] = set()
+    external_ids: set[str] = set()
     forbidden = False
     while pending:
         source = pending.pop()
         if source in visited:
             continue
         visited.add(source)
-        relative_source = source.relative_to(ROOT).as_posix()
+        try:
+            relative_source = source.resolve().relative_to(ROOT).as_posix()
+        except ValueError:
+            raise BoundaryFailure("typescript-source-outside-repository") from None
+        for name, (directory, _) in bindings.package_roots.items():
+            if relative_source.startswith(directory.as_posix() + "/"):
+                package_names.add(name)
         if any(segment in relative_source for segment in FORBIDDEN_SOURCE_SEGMENTS):
             forbidden = True
 
         for specifier in import_specifiers(source):
             if specifier.startswith(FORBIDDEN_PACKAGE_PREFIXES):
                 forbidden = True
-            package = package_for_specifier(specifier)
+            package = package_for_specifier(specifier, bindings)
             if package is not None:
                 package_names.add(package[0])
-            resolved = source_file_for_specifier(source, specifier)
-            if specifier.startswith((".", "@kanbien/")) and resolved is None:
-                raise BoundaryFailure("typescript-import-unresolved")
+            resolved = source_file_for_specifier(source, specifier, bindings)
+            if resolved is None:
+                if package is not None or specifier.startswith("."):
+                    raise BoundaryFailure("typescript-import-unresolved")
+                builtin = specifier.removeprefix("node:")
+                if specifier in bindings.node_builtins or (specifier.startswith("node:") and builtin in bindings.node_builtins):
+                    continue
+                parts = specifier.split("/")
+                name = "/".join(parts[:2]) if specifier.startswith("@") else parts[0]
+                if name not in bindings.external_owners:
+                    raise BoundaryFailure("dependency-unapproved")
+                external_ids.add(bindings.external_owners[name])
             if resolved is not None:
                 pending.append(resolved)
 
     if forbidden:
         raise BoundaryFailure("forbidden-dependency-observed")
 
-    manifest_names = discover_manifest_dependencies(package_names)
+    manifest_names = discover_manifest_dependencies(package_names, bindings)
     all_package_names = package_names | manifest_names
-    package_ids = {PACKAGE_ROOTS[name][1] for name in all_package_names}
-    ensure_lockfile_records(all_package_names)
+    package_ids = {bindings.package_roots[name][1] for name in all_package_names} | external_ids
+    ensure_lockfile_records(all_package_names, bindings)
     return BoundaryFacts(
         package_ids=tuple(sorted(package_ids)),
         package_names=tuple(sorted(all_package_names)),
     )
 
 
-def discover_manifest_dependencies(initial_package_names: set[str]) -> set[str]:
+def discover_manifest_dependencies(initial_package_names: set[str], bindings: DeclarationBindings) -> set[str]:
     discovered: set[str] = set()
     pending = list(initial_package_names)
     while pending:
@@ -197,7 +257,7 @@ def discover_manifest_dependencies(initial_package_names: set[str]) -> set[str]:
         if package_name in discovered:
             continue
         discovered.add(package_name)
-        package_path = ROOT / PACKAGE_ROOTS[package_name][0] / "package.json"
+        package_path = ROOT / bindings.package_roots[package_name][0] / "package.json"
         try:
             document = json.loads(package_path.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError):
@@ -210,12 +270,12 @@ def discover_manifest_dependencies(initial_package_names: set[str]) -> set[str]:
         for dependency in dependencies:
             if dependency.startswith(FORBIDDEN_PACKAGE_PREFIXES):
                 raise BoundaryFailure("forbidden-dependency-observed")
-            if dependency in PACKAGE_ROOTS and dependency not in discovered:
+            if dependency in bindings.package_roots and dependency not in discovered:
                 pending.append(dependency)
     return discovered
 
 
-def ensure_lockfile_records(package_names: set[str]) -> None:
+def ensure_lockfile_records(package_names: set[str], bindings: DeclarationBindings) -> None:
     try:
         lockfile = json.loads((ROOT / "package-lock.json").read_text(encoding="utf-8"))
         if not isinstance(lockfile, dict):
@@ -226,7 +286,7 @@ def ensure_lockfile_records(package_names: set[str]) -> None:
     if not isinstance(records, dict):
         raise BoundaryFailure("lockfile-invalid")
     for package_name in package_names:
-        package_path = PACKAGE_ROOTS[package_name][0].as_posix()
+        package_path = bindings.package_roots[package_name][0].as_posix()
         record = records.get(package_path)
         if not isinstance(record, dict) or record.get("name") != package_name:
             raise BoundaryFailure("lockfile-workspace-missing")
@@ -266,7 +326,7 @@ def contract_dependencies() -> tuple[set[str], set[str]]:
 
 
 def validate(build_output: Path) -> BoundaryFacts:
-    facts = discover_typescript_graph()
+    facts = discover_typescript_graph(declaration_bindings())
     approved, declared_observed = contract_dependencies()
     actual = set(facts.package_ids)
     if not actual.issubset(approved):

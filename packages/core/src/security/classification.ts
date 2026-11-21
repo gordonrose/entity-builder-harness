@@ -1,5 +1,5 @@
 import type { MessageDescriptor } from "../shared/index";
-import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { attachCoreDiagnosticRecord } from "../shared/index";
 import { coreSecurityPrimitiveRecord } from "./diagnostics";
 
 export const dataSensitivities = ["public", "internal", "confidential", "restricted", "secret"] as const;

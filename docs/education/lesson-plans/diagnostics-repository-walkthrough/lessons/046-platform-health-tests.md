@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test` work. A test proves a boundary, a generated expor
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/health/tests/diagnostics-runtime.test.ts -->
+<!-- course-file: platform/health/tests/integration/diagnostics-runtime.test.ts -->
 
 ### diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/health/tests/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 127 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/health/tests/integration/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 127 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for health: public status and private evidence.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-health-runtime`, `platform-server-runtime`, `
 
 <!-- course-source-sha256: before=absent after=9e4477bd88d578402639ee4f235335ab84ed297ce49f852cec3a1fbaaf2db210 -->
 
-<!-- course-file: platform/health/tests/platform-health-runtime.test.ts -->
+<!-- course-file: platform/health/tests/integration/platform-health-runtime.test.ts -->
 
 ### platform-health-runtime.test.ts
 
-[Open current source](../../../../../platform/health/tests/platform-health-runtime.test.ts) · **Snapshot:** modified existing file; 2 added / 3 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/health/tests/integration/platform-health-runtime.test.ts) · **Snapshot:** modified existing file; 2 added / 3 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for health: public status and private evidence.
 
@@ -90,11 +90,11 @@ Owning registered proof: `platform-health-runtime`, `platform-server-runtime`, `
 
 <!-- course-source-sha256: before=320592b3a152e3f085b85129578abdd6d36ce560f33d1a123273b946932be64f after=975f98bbb518c8cd75d35cd598ab1da7fbd1a7e0c12814110763dffbff0058d0 -->
 
-<!-- course-file: platform/health/tests/platform-health-types.test.ts -->
+<!-- course-file: platform/health/tests/type-level/platform-health-types.test.ts -->
 
 ### platform-health-types.test.ts
 
-[Open current source](../../../../../platform/health/tests/platform-health-types.test.ts) · **Snapshot:** modified existing file; 13 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/health/tests/type-level/platform-health-types.test.ts) · **Snapshot:** modified existing file; 13 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for health: public status and private evidence.
 

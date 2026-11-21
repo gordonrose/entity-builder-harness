@@ -1,0 +1,150 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: product.tests.app.standard.requirements
+#   version: 1
+#   status: active
+#   created_on: "2026-11-06"
+#   updated_on: "2026-11-09"
+#   layer: 03.product
+#   domain: testing
+#   disciplines: [agentic, architecture]
+#   kind: standard
+#   purpose: Own the existing app testing requirements extracted from the retained architecture layer rules.
+#   portability: {class: required, targets: [llm-workbench, entity-builder, design-system-builder]}
+#   used_by:
+#   - id: harness.architecture.rules.layers.apps
+#     path: docs/03.product/rules/apps/layers/apps.yml
+#   - id: product.tests.readme
+#     path: .agentic/03.product/tests/README.md
+
+id: product.tests.app.standard.requirements
+title: App and product testing requirements
+version: 1
+status: active
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "products/**"
+
+related_rulesets:
+  - docs/06.shared/rules/concerns/ci-quality.yml
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    minimum_evidence:
+      - "Exercise both accepted and rejected app-owned decisions, including permission helpers, malformed inputs, empty state, tenant variants, and app-owned fallback behavior."
+    must_not:
+      - "Do not count route smoke tests or package-only tests as proof of app-owned wiring, validation, permissions, or failure behavior."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "App-specific dependency composition, workflow helpers, and route policy helpers make the intended product decisions."
+      - id: validation
+        should_prove:
+          - "App-owned config, route policy inputs, command inputs, and small request-shaping helpers accept and reject the right values."
+      - id: edge_cases
+        should_prove:
+          - "Optional dependencies, empty app state, feature flags, tenant context variants, and ordering-sensitive helpers behave intentionally."
+      - id: security_permissions
+        should_prove:
+          - "App-level permission helpers and resource authorization decisions allow and deny the correct cases."
+      - id: failure_modes
+        should_prove:
+          - "App-owned error mapping and fallback helpers produce expected failures before broader runtime wiring is involved."
+  - type: integration
+    role: primary
+    minimum_evidence:
+      - "Exercise mounted routes or workers with realistic app dependencies plus rejected payloads, auth failures, permission failures, tenant isolation, dependency failures, and safe health/log output."
+    must_not:
+      - "Do not accept happy-path route tests that skip malformed requests, invalid permissions, tenant isolation, repository failures, or worker retry/dead-letter behavior."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Primary routes, workers, app mounts, health checks, repositories, and platform mount behavior work together."
+      - id: use_case_scenarios
+        should_prove:
+          - "Representative product workflows exercise realistic request data, persistence behavior, jobs, and app service wiring."
+      - id: validation
+        should_prove:
+          - "Invalid request payloads, params, app config, and job payloads are rejected at the app boundary."
+      - id: security_permissions
+        should_prove:
+          - "Authentication requirements, app permissions, tenant isolation, and resource authorization hold through mounted routes or workers."
+      - id: failure_modes
+        should_prove:
+          - "Repository, platform dependency, worker, and app service failures map to the expected response, retry, or dead-letter behavior."
+      - id: observability_health
+        should_prove:
+          - "App health, readiness contributions, audit events, and safe logging work through the runtime integration point."
+  - type: contract
+    role: primary
+    minimum_evidence:
+      - "Compare public API schemas, app manifests, mount contracts, migration metadata, and permission declarations against the platform or generated contracts that consume them."
+    must_not:
+      - "Do not let generated snapshots stand in for schema compatibility, permission metadata, migration-contract, or platform-mount assertions."
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Generated API schemas, published clients, platform mount contracts, app manifests, and app-owned migration contracts remain compatible."
+      - id: security_permissions
+        should_prove:
+          - "Permission names, route auth declarations, and policy metadata stay compatible with platform enforcement."
+      - id: generated_output
+        should_prove:
+          - "Generated app schemas, clients, migration metadata, or deployment metadata match the source contracts."
+  - type: e2e
+    role: conditional
+    minimum_evidence:
+      - "Cover highest-risk app-owned journeys with realistic users, denied users, tenant-isolated data, visible error/recovery states, and product-critical flows."
+    must_not:
+      - "Do not use E2E coverage to replace closer app integration, contract, validation, or permission tests for the same behavior."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Browser-critical or API-critical user paths work through the deployed or realistic runtime stack."
+      - id: use_case_scenarios
+        should_prove:
+          - "Realistic user journeys cover the app's highest-risk product workflows."
+      - id: security_permissions
+        should_prove:
+          - "Login, permission-denied, tenant-isolated, and privileged-user flows behave correctly where the app owns the user experience."
+      - id: failure_modes
+        should_prove:
+          - "User-visible errors, retries, empty states, and recovery paths are acceptable for critical journeys."
+  - type: smoke
+    role: primary
+    minimum_evidence:
+      - "Start the app or worker, load manifests, mount key entrypoints, and verify safe readiness/liveness output for the deployment-facing surface."
+    must_not:
+      - "Do not treat startup success as proof of route correctness, authorization, tenant isolation, app contracts, migrations, or failure handling."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "The app can start, mount, expose key routes or workers, and load app manifests without obvious runtime failure."
+      - id: observability_health
+        should_prove:
+          - "Deployment health, readiness, liveness, and app-provided health checks are visible and safe."
+
+rules:
+  - id: apps.tests-prove-wiring-and-contracts
+    title: App tests prove wiring and contracts
+    severity: error
+    summary: >
+      App tests should prove application wiring, route behavior, contracts,
+      deployment health, and end-to-end flows. Reusable business logic should
+      usually be tested in the package that owns it.
+    must:
+      - "Use unit tests for app-specific wiring and dependency composition."
+      - "Use integration tests for routes, workers, app health checks, and platform mount behavior."
+      - "Use contract tests against generated API schemas and platform mount contracts."
+      - "Use E2E tests and deployment smoke tests where the app boundary requires them."
+      - "Keep most reusable business logic tests close to the package that owns the logic."
+    must_not:
+      - "Do not rely only on package tests to prove that app runtime wiring works."
+      - "Do not duplicate full reusable-domain test suites inside apps after the logic moves to packages."
+      - "Do not skip contract or smoke coverage for deployment-facing app mounts and manifests."
+    agent_guidance: >
+      App tests should catch bad assembly. Package tests should catch reusable
+      behavior bugs.

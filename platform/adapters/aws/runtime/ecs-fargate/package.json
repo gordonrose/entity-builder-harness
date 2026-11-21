@@ -12,5 +12,8 @@
   ],
   "dependencies": {
     "@kanbien/platform-server": "0.0.0"
+  },
+  "devDependencies": {
+    "@kanbien/core": "0.0.0"
   }
 }

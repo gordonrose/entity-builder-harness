@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test` work. A test proves a boundary, a generated expor
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/testing/tests/config-evidence-runtime.test.ts -->
+<!-- course-file: platform/testing/tests/integration/config-evidence-runtime.test.ts -->
 
 ### config-evidence-runtime.test.ts
 
-[Open current source](../../../../../platform/testing/tests/config-evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 71 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/testing/tests/integration/config-evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 71 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-contracts-runtime`, `platform-runtime-runtime
 
 <!-- course-source-sha256: before=absent after=f9c58a991d696009730c627b7539d573238dcb128034b9224f1b917f2cabfb92 -->
 
-<!-- course-file: platform/testing/tests/diagnostics-runtime.test.ts -->
+<!-- course-file: platform/testing/tests/unit/diagnostics-runtime.test.ts -->
 
 ### diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/testing/tests/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 59 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/testing/tests/unit/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 59 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -92,11 +92,11 @@ Owning registered proof: `platform-contracts-runtime`, `platform-runtime-runtime
 
 <!-- course-source-sha256: before=absent after=8710f42a9a535d900a8aa68cc0956082021678c989e1a6b19e48aa93706e3bd3 -->
 
-<!-- course-file: platform/testing/tests/mount-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/testing/tests/integration/mount-boundary-diagnostics-runtime.test.ts -->
 
 ### mount-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/testing/tests/mount-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 82 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/testing/tests/integration/mount-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 82 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 

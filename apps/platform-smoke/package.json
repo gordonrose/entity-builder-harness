@@ -15,6 +15,7 @@
     "@kanbien/platform-persistence": "0.0.0"
   },
   "devDependencies": {
+    "@kanbien/platform-runtime": "0.0.0",
     "@kanbien/platform-server": "0.0.0",
     "@kanbien/platform-testing": "0.0.0",
     "@kanbien/platform-workers": "0.0.0"

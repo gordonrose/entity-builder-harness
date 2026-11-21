@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.apply-core-server-persistence-database-permission-surface.impl
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-18"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -23,7 +23,6 @@ import argparse
 import importlib.util
 import json
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 
@@ -161,8 +160,8 @@ def desired_parameters(receipt):
     return {"ImageDigest":receipt["image_digest"],"SupportImageDigest":receipt["image_digest"],"RestoreVerifierImageDigest":receipt["image_digest"],"SourceRevision":receipt["source_revision"],"EnableObservability":"false"}
 
 
-def reconcile(prepare,name,receipt):
-    verdict,code=prepare.observe_update(name,desired_parameters(receipt),lambda change:reviewable(change,"UPDATE_COMPLETE",name,receipt["image_digest"],receipt["source_revision"]))
+def reconcile(prepare,name,receipt,*,reservation=None):
+    verdict,code=prepare.observe_update(name,desired_parameters(receipt),lambda change:reviewable(change,"UPDATE_COMPLETE",name,receipt["image_digest"],receipt["source_revision"]),reservation=reservation)
     return report("updated-awaiting-administration" if verdict=="complete" else verdict,code,facts={"change_set":name,"candidate_image_digest":receipt["image_digest"],"candidate_source_revision":receipt["source_revision"]})
 
 
@@ -172,6 +171,7 @@ def main() -> int:
     parser.add_argument("--rollback-receipt",type=Path)
     parser.add_argument("--rollback-compatibility-id")
     parser.add_argument("--reconcile",action="store_true")
+    parser.add_argument("--operation-label")
     # Accepted temporarily for workflow compatibility.  The independent
     # observability update validates and uses them; the privilege boundary
     # deliberately does not bind a collector or a notification recipient.
@@ -186,10 +186,15 @@ def main() -> int:
     create = load(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py", "create")
     receipt = prepare.validate_receipt(args.receipt)
     if receipt is None:return report("blocked","package-custody-receipt-invalid")
-    name=f"kanbien-core-platform-persistence-permissions-{receipt['image_digest'][7:19]}"
+    name=prepare.labelled_update_name(f"kanbien-core-platform-persistence-permissions-{receipt['image_digest'][7:19]}",args.operation_label)
+    if name is None:return report("blocked","persistence-database-permission-surface-arguments-invalid")
     if args.reconcile:return reconcile(prepare,name,receipt)
     rollback=prepare.validate_receipt(args.rollback_receipt)
     if rollback is None or not prepare.rollback_compatibility(rollback,args.rollback_compatibility_id):return report("blocked","persistence-permission-change-rollback-compatibility-not-proven")
+    request, resumed = prepare.begin_update(name=name, receipt=receipt, controller=__file__, template=TEMPLATE,
+        settings={"rollback":rollback,"compatibility":args.rollback_compatibility_id},
+        observe=lambda reservation:reconcile(prepare,name,receipt,reservation=reservation), failure=lambda verdict,code:report(verdict,code))
+    if resumed is not None:return resumed
     if not create.package_gates(args.receipt) or not prepare.live_budget()[0]:
         return report("blocked", "persistence-database-permission-surface-preconditions-not-proven")
     if not prepare.candidate_image(receipt)[0]:
@@ -205,35 +210,18 @@ def main() -> int:
     services = service.get("services", []) if ok and isinstance(service, dict) else []
     if len(services) != 1 or not isinstance(services[0], dict) or services[0].get("desiredCount") != 1 or services[0].get("runningCount") != 1:
         return report("blocked", "persistence-database-permission-surface-service-not-healthy")
-    name = f"kanbien-core-platform-persistence-permissions-{receipt['image_digest'][7:19]}"
-    ok, existing, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if ok and isinstance(existing,dict) and (existing.get("Status")=="FAILED" or existing.get("ExecutionStatus")!="AVAILABLE"):
-        return reconcile(prepare,name,receipt)
-    if not ok:
-        if code != "aws-resource-missing":
-            return report("blocked", code)
-        parameter_values = [{"ParameterKey": key, "UsePreviousValue": True} for key in parameters]
-        for key, value in (("ImageDigest", receipt["image_digest"]), ("SupportImageDigest", receipt["image_digest"]), ("RestoreVerifierImageDigest", receipt["image_digest"]), ("SourceRevision", receipt["source_revision"]), ("EnableObservability", "false")):
-            parameter_values = [item for item in parameter_values if item["ParameterKey"] != key]
-            parameter_values.append({"ParameterKey": key, "ParameterValue": value})
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as parameter_file:
-            json.dump(parameter_values, parameter_file)
-            parameter_file.flush()
-            ok, _, code = prepare.aws(
-                "cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name,
-                "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}",
-                "--parameters", f"file://{parameter_file.name}", "--capabilities", "CAPABILITY_NAMED_IAM",
-            )
-        if not ok:
-            return report("uncertain", code, facts={"change_set":name})
-    change, code = wait_for_review(prepare, name, status, receipt["image_digest"], receipt["source_revision"])
-    if change is None:return reconcile(prepare,name,receipt)
-    if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(prepare,name,receipt)
-    actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
-    if not prepare.update_parameters_match(actual,desired_parameters(receipt),parameters):return report("blocked","persistence-update-live-parameters-mismatch")
-    ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok:return report("uncertain",code,facts={"change_set":name})
-    return reconcile(prepare,name,receipt)
+    desired = desired_parameters(receipt)
+    parameter_values = [{"ParameterKey": key, "UsePreviousValue": True} for key in parameters if key not in desired]
+    parameter_values += [{"ParameterKey": key, "ParameterValue": value} for key, value in desired.items()]
+    def admit(change):
+        actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
+        return None if prepare.update_parameters_match(actual,desired,parameters) else "persistence-update-live-parameters-mismatch"
+    return prepare.apply_update(
+        name=name, request=request, parameters=parameter_values, template_arguments=("--template-body", f"file://{TEMPLATE}"),
+        review=lambda _existing, _created: wait_for_review(prepare, name, status, receipt["image_digest"], receipt["source_revision"]),
+        admit=admit, observe=lambda reservation: reconcile(prepare,name,receipt,reservation=reservation),
+        failure=lambda verdict, code: report(verdict,code,facts={"change_set":name} if verdict=="uncertain" else None),
+    )
 
 
 

@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.architecture.rules.concerns.ci-quality
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-22"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-09"
 #   layer: 06.shared
 #   domain: architecture
 #   disciplines:
@@ -23,7 +23,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: concern.ci-quality
 title: CI quality rules
-version: 1
+version: 2
 status: active
 
 description: >
@@ -134,9 +134,9 @@ substitute_limits:
 
 layer_test_taxonomy_scope:
   layer_files:
-    - docs/03.product/rules/apps/layers/apps.yml
-    - docs/03.product/rules/core/layers/packages-core.yml
-    - docs/03.product/rules/platform/layers/platform.yml
+    - .agentic/03.product/tests/app/standards/test-requirements.yml
+    - .agentic/03.product/tests/core/standards/test-requirements.yml
+    - .agentic/03.product/tests/platform/standards/test-requirements.yml
     - docs/01.harness/rules/layers/scripts-command-surface.yml
     - docs/04.deploy/rules/layers/infra.yml
     - docs/03.product/rules/design-system/layers/design-system.yml

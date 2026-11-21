@@ -11,6 +11,7 @@ the live RDS state before another command can be issued.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import subprocess
 import sys
@@ -19,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[8]
 TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 DATABASE = "kanbien-core-platform-persistence"
+_AWS_CLI = None
 REQUIRED_EXPORTS = frozenset({"postgresql", "iam-db-auth-error"})
 TRANSITIONAL_STATUSES = frozenset({"modifying", "configuring-log-exports", "rebooting"})
 
@@ -37,28 +39,27 @@ def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) ->
     return 0 if verdict == "reconciled" else 1
 
 
-def aws(*parts: str) -> tuple[bool, object | None, str]:
-    try:
-        result = subprocess.run(
-            ["aws", *parts, "--profile", "kanbien-dev", "--region", "eu-west-1", "--output", "json"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return False, None, "aws-command-timeout"
-    except OSError:
-        return False, None, "aws-command-unavailable"
-    if result.returncode != 0:
-        # Keep raw provider stderr out of repository evidence and terminal
-        # output. Only the bounded disposition crosses this controller.
-        return False, None, "aws-command-failed"
-    try:
-        return True, json.loads(result.stdout), "ok"
-    except json.JSONDecodeError:
-        return False, None, "aws-command-invalid-json"
+def aws_cli():
+    global _AWS_CLI
+    if _AWS_CLI is None:
+        spec = importlib.util.spec_from_file_location("aws_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
+        _AWS_CLI = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_AWS_CLI)
+    return _AWS_CLI
 
+
+def aws(*parts: str) -> tuple[bool, object | None, str]:
+    cli = aws_cli()
+    try:
+        value = cli.invoke_json(
+            ["aws", *parts, "--profile", "kanbien-dev", "--region", "eu-west-1", "--output", "json"],
+            timeout=30, check=False, empty_body="reject", object_only=False, classify_errors=False,
+        )
+        return True, value, "ok"
+    except cli.CliFailure as failure:
+        if failure.phase == "process" and isinstance(failure.cause, UnicodeError): raise failure.cause
+        code = "aws-command-invalid-json" if failure.phase == "response" else failure.code
+        return False, None, code
 
 def template_declares_required_exports(path: Path = TEMPLATE) -> bool:
     try:

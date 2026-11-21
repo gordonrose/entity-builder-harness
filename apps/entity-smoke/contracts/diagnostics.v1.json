@@ -1,0 +1,124 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "entity-smoke.test-entity",
+    "definitions": [
+      {
+        "code": "entity-smoke.test-entity.validation-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "user",
+          "severity": "warning",
+          "recovery": "user_correctable",
+          "retryable": false,
+          "userCorrectable": true
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "input",
+                "integerValue",
+                "uuidValue",
+                "occurredAt",
+                "label",
+                "status",
+                "enabled",
+                "categories",
+                "notes",
+                "description",
+                "reviewedAt",
+                "secondaryCategories"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "invalid-format",
+                "invalid-value",
+                "invalid-item"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "entity-smoke.test-entity.stored-record-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "data_integrity",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "id",
+                "attributes",
+                "visibility",
+                "timestamps",
+                "lifecycle",
+                "row-count"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "invalid-shape"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-returned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "entity-smoke.test-entity.identifier-conflict",
+        "version": 1,
+        "classification": {
+          "failureKind": "conflict",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-created"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

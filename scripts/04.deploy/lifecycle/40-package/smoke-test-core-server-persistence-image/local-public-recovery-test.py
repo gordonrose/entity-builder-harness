@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.local-public-persistence-recovery
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -32,6 +32,7 @@ ROOT=Path(__file__).resolve().parents[5]
 DIRECTORY=Path('scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image')
 WRAPPER=ROOT/DIRECTORY/'qualify-local-public-images.sh'
 BUILD=Path('scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh')
+BUILD_OPERATIONS=Path('scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh')
 SMOKE=DIRECTORY/'script.sh'
 DOCKERFILE=Path('infra/04.deploy/03.product/image/core-server-persistence/Dockerfile')
 CONTRACT=DOCKERFILE.with_name('image-contract.yml')
@@ -88,7 +89,7 @@ def run_case(name,*,package="persistence",environment=None,arguments=None,mutate
  global COUNT
  with tempfile.TemporaryDirectory(prefix='public-recovery-test-') as directory:
   fixture=Path(directory);binaries=fixture/'bin';binaries.mkdir();events=fixture/'events';events.touch()
-  selected=((CORE_BUILD,CORE_SMOKE,CORE_DOCKERFILE,CORE_CONTRACT) if package=='core' else (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER))+(SAFE_COMMAND,)
+  selected=((CORE_BUILD,CORE_SMOKE,CORE_DOCKERFILE,CORE_CONTRACT) if package=='core' else (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER,BUILD_OPERATIONS,Path("scripts/04.deploy/shared/postgresql-version.py"),Path("scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")))+(SAFE_COMMAND,)
   tag='kanbien-core-server:test' if package=='core' else 'kanbien-core-server-persistence:test'
   for relative in selected:
    path=fixture/relative;path.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,path)
@@ -153,17 +154,19 @@ for name,mutate in (
  ('changed-nested-integration-check',lambda root:(root/INTEGRATION_CHECK).write_text((root/INTEGRATION_CHECK).read_text()+'\n# unreviewed owner edit\n')),
  ('changed-nested-diagnostic-check',lambda root:(root/DIAGNOSTIC_CHECK).write_text((root/DIAGNOSTIC_CHECK).read_text()+'\n# unreviewed owner edit\n')),
  ('changed-safe-command-helper',lambda root:(root/SAFE_COMMAND).write_text((root/SAFE_COMMAND).read_text()+'\n# unreviewed helper edit\n')),
+ ('changed-build-operations',lambda root:(root/BUILD_OPERATIONS).write_text((root/BUILD_OPERATIONS).read_text()+'\n# unreviewed build edit\n')),
  ('private-node',replace(DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
  ('private-frontend',replace(DOCKERFILE,'docker/dockerfile:1.7','private.invalid/frontend:1.7')),
- ('private-postgres',replace(SMOKE,'postgres:16-bookworm','private.invalid/postgres:16-bookworm')),
- ('hidden-tag-comment',replace(SMOKE,'postgres:16-bookworm bash -ec','private.invalid/image bash -ec # "$TAG"')),
+ ('private-postgres',replace(CONTRACT,'postgres:18.3-bookworm','private.invalid/postgres:18.3-bookworm')),
+ ('hidden-tag-comment',replace(SMOKE,'"$POSTGRES_IMAGE" bash -ec','private.invalid/image bash -ec # "$TAG"')),
  ('extra-copy-image',replace(DOCKERFILE,'--from=build','--from=private.invalid/image')),
  ('lowercase-from',lambda root:(root/DOCKERFILE).write_text((root/DOCKERFILE).read_text()+'\n  from private.invalid/image\n')),
  ('lowercase-arg',lambda root:(root/DOCKERFILE).write_text((root/DOCKERFILE).read_text()+'\n  arg BUILD_NODE_IMAGE=private.invalid/image\n')),
- ('builder-private-override',replace(BUILD,'--build-arg "SOURCE_COMMIT_SHA=', '--build-arg BUILD_NODE_IMAGE=private.invalid/image --build-arg "SOURCE_COMMIT_SHA=')),
- ('builder-secret',replace(BUILD,'docker build --file','docker build --secret id=fixture --file')),
+ ('builder-private-override',replace(BUILD_OPERATIONS,'--build-arg "SOURCE_COMMIT_SHA=', '--build-arg BUILD_NODE_IMAGE=private.invalid/image --build-arg "SOURCE_COMMIT_SHA=')),
+ ('builder-secret',replace(BUILD_OPERATIONS,'docker build "$@"','docker build --secret id=fixture "$@"')),
  ('malformed-contract',lambda root:(root/CONTRACT).write_text('runtime_base: []\n')),
 ):run_case('owner-'+name,mutate=mutate,expected=1,code='local-public-recovery-owner-review-required')
+run_case('owner-missing-build-operations',mutate=lambda root:(root/BUILD_OPERATIONS).unlink(),expected=1,code='local-public-recovery-input-unavailable')
 run_case('core-fixed-route',package='core')
 run_case('explicit-persistence',arguments=['--package','persistence','--tag','kanbien-core-server-persistence:test','--port','39456'])
 run_case('core-engine-mismatch',package='core',environment={'RECOVERY_ENGINE_MODE':'mismatch'},expected=1,code='local-public-recovery-engine-mismatch')

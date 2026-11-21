@@ -1,0 +1,1780 @@
+{
+  "schema": "repo/test-execution-feedback-verification/v1",
+  "recorded_on": "2026-11-07",
+  "implementation": "local-feedback-pilot",
+  "integration_state": "blocked-by-existing-image-packaging",
+  "authority": "Historical sanitized observations only; not trusted reusable receipts or live acceptance.",
+  "observations": [
+    {
+      "name": "focused-feature-and-diagnostics",
+      "path": ".cache/test-runs/20261107T124848Z-e9b1e88f22dc418cb863863bcd5bac14/report.json",
+      "report_sha256": "7a99779a88cd114c5d3c9e8b54179d55c2ee6d5881e1bc1e4b779491bfc4b4e1",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "passed",
+      "boundary": "integration",
+      "mode": "explicit",
+      "counts": {
+        "passed": 3
+      },
+      "timings": {
+        "command_execution_seconds": 118.693372,
+        "fingerprinting_seconds": 5.364782,
+        "other_seconds": 0.087712,
+        "planning_seconds": 11.271313,
+        "receipt_validation_seconds": 0.272655,
+        "runtime_identity_seconds": 30.988558
+      },
+      "findings": [],
+      "checks": [
+        {
+          "boundary": "commit",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed"
+          ],
+          "check_id": "diagnostic-adoption",
+          "elapsed_seconds": 2.018584,
+          "evidence_key": "75059733019c3c1e301b3c25e8d2c2de0722967d7d0e9ebb3596c7c991c531e1",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "29c6fec431542d58f9409e870f1241291d0c84087352fd14db2a67495b8eb317",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "diagnostic-catalog-readers",
+          "elapsed_seconds": 82.488789,
+          "evidence_key": "1fbb2073420428b7088e0af6a2e4b6a74717a0e92119aa774079a9f94ea1f014",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "e9cd9f46eda494055bd0dc88a1fc9a0477a402a208b3d0828ca3d03419c9f162",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "entity-smoke-runtime",
+          "elapsed_seconds": 34.185999,
+          "evidence_key": "b1f901ccb41766e63246ea141f4faea975b56146d98eff145b1e5f5e32dd5a3e",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "51397c6db0c1d8f5e1b45f7e1cbe0918224c92de8d6a968925a001acfc8da875",
+          "runtime_digest": "d65dc1f3b3f35a97e31bc915de08c094a9212231fd76941452f19bc35084f6fb",
+          "stage": "local",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "feature-development",
+      "path": ".cache/test-runs/20261107T124921Z-49d77ee8b3864aeda5985ab0a9470907/report.json",
+      "report_sha256": "e4d0b14757cc2d2415a50e4bf228ed439b62c42561b8a0c0502c9046435e7d5e",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "partial",
+      "boundary": "integration",
+      "mode": "development",
+      "counts": {
+        "deferred": 32,
+        "passed": 1
+      },
+      "timings": {
+        "command_execution_seconds": 0,
+        "fingerprinting_seconds": 4.486894,
+        "other_seconds": 0.006022,
+        "planning_seconds": 20.895847,
+        "receipt_validation_seconds": 0.000761,
+        "runtime_identity_seconds": 4.188288
+      },
+      "findings": [],
+      "checks": [
+        {
+          "boundary": "commit",
+          "check_id": "diagnostic-adoption",
+          "evidence_key": "69c9361cb8e0c4151d0ab5bda0e94e5fc94b48d9b6adc63c5847e03be3ed5724",
+          "input_digest": "29c6fec431542d58f9409e870f1241291d0c84087352fd14db2a67495b8eb317",
+          "runtime_digest": null,
+          "stage": "local",
+          "status": "deferred"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "entity-smoke-runtime",
+          "evidence_key": "b1f901ccb41766e63246ea141f4faea975b56146d98eff145b1e5f5e32dd5a3e",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "51397c6db0c1d8f5e1b45f7e1cbe0918224c92de8d6a968925a001acfc8da875",
+          "runtime_digest": "d65dc1f3b3f35a97e31bc915de08c094a9212231fd76941452f19bc35084f6fb",
+          "stage": "local",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "commit-scheduled-local",
+      "path": ".cache/test-runs/20261107T131420Z-77d2f5c0c5b5440b9a99c58733a850e0/report.json",
+      "report_sha256": "48d2d64d072f9d072373fddbf5eea282ff2e6e3364b25582f10a307ebda47126",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "passed",
+      "boundary": "commit",
+      "mode": "impact",
+      "counts": {
+        "deferred": 88,
+        "passed": 36
+      },
+      "timings": {
+        "command_execution_seconds": 194.240609,
+        "fingerprinting_seconds": 28.45446,
+        "other_seconds": 0.489007,
+        "planning_seconds": 47.766465,
+        "receipt_validation_seconds": 1.860104,
+        "runtime_identity_seconds": 18.942232
+      },
+      "findings": [],
+      "checks": [
+        {
+          "boundary": "integration",
+          "check_id": "check-selection-mechanics",
+          "evidence_key": "3f7714e0b41a63b7d640ae6b30d97aa75bb6c14e3977d15d0b3888566040be2e",
+          "input_digest": "57b9c1f90473d5eb0a699895707f4fb2af7eb2de8297510ecd0c9d1a14d083a1",
+          "runtime_digest": null,
+          "stage": "local",
+          "status": "deferred"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "check-selection-repository-contracts",
+          "evidence_key": "e01a3d95607623bc1407ec35b08edd247214994f4bfce0c4b1ad481bc9c01396",
+          "input_digest": "97575b5de9a87c4b0439ac436294fc15dfcb58229a3f42c9d6b1ec3560151fe0",
+          "runtime_digest": null,
+          "stage": "local",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed"
+          ],
+          "check_id": "diagnostic-adoption",
+          "elapsed_seconds": 2.021128,
+          "evidence_key": "aca80f20e7fba8323d64cd583ff5a91747ef31cc1e3de69f6f1284e71accd6c1",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "567727a76c71402e9ebb6bde352ed036bd63992dc92f48927f6cd37d7cb864a4",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "diagnostic-catalog-readers",
+          "evidence_key": "30f8cbd552eebc296c91d3773a64351272b48dd10b1255373fea574907286afd",
+          "input_digest": "4382a89a766feb3accf5ef17f180f53cc7522a8ce461dd425b018cf3be9486e6",
+          "runtime_digest": null,
+          "stage": "local",
+          "status": "deferred"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "entity-smoke-runtime",
+          "evidence_key": "c7c53e28ac680fdd06d24a670972dc387a23bff797562bad443548e1242b14c4",
+          "input_digest": "51397c6db0c1d8f5e1b45f7e1cbe0918224c92de8d6a968925a001acfc8da875",
+          "runtime_digest": null,
+          "stage": "local",
+          "status": "deferred"
+        }
+      ]
+    },
+    {
+      "name": "registered-selector-suites",
+      "path": ".cache/test-runs/20261107T131604Z-32373d114d3743ffa66fe6df4019ab42/report.json",
+      "report_sha256": "96baa40de2212e2c5e397eb7c0f6cb4f925f4b80ca2e9d0c0ebdd0d92d611cf5",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "passed",
+      "boundary": "integration",
+      "mode": "explicit",
+      "counts": {
+        "passed": 2
+      },
+      "timings": {
+        "command_execution_seconds": 823.577548,
+        "fingerprinting_seconds": 3.683611,
+        "other_seconds": 0.271342,
+        "planning_seconds": 14.394717,
+        "receipt_validation_seconds": 0.181596,
+        "runtime_identity_seconds": 20.164235
+      },
+      "findings": [],
+      "checks": [
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "check-selection-mechanics",
+          "elapsed_seconds": 347.915253,
+          "evidence_key": "6612cc1a4bbbb83765b283da129eb86fda7f48c1b4b014732b2be6df957fffb2",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "57b9c1f90473d5eb0a699895707f4fb2af7eb2de8297510ecd0c9d1a14d083a1",
+          "runtime_digest": "8d3328a90383bf23d7b34b007e6f7ee37564416f6eb7d88c8f0e4601fea4a41a",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "check-selection-repository-contracts",
+          "elapsed_seconds": 475.662295,
+          "evidence_key": "9a32d83310c1755532dff9df49ed790bbf4cf36eedb273b665aa1428b6757077",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "97575b5de9a87c4b0439ac436294fc15dfcb58229a3f42c9d6b1ec3560151fe0",
+          "runtime_digest": "b80bbf25f4ee30b7dc84c62ba36f907af2d0f7d42e2afb518cf612dc1c0b2c75",
+          "stage": "local",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "full-local-integration",
+      "path": ".cache/test-runs/20261107T132708Z-59ed954a56424de78b4d6b962eb49ad3/report.json",
+      "report_sha256": "349187ffe10554acad0acf4b7574e2d3d2870bc781a92bc74fcdf53f21078462",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "verdict": "gap",
+      "boundary": "integration",
+      "mode": "impact",
+      "counts": {
+        "passed": 89,
+        "failed": 1,
+        "blocked": 17,
+        "deferred": 17
+      },
+      "timings": {
+        "command_execution_seconds": 542.170042,
+        "fingerprinting_seconds": 22.007829,
+        "other_seconds": 0.510008,
+        "planning_seconds": 23.837106,
+        "receipt_validation_seconds": 1.089346,
+        "runtime_identity_seconds": 60.331125
+      },
+      "findings": [
+        {
+          "check_id": "platform-shell-payload",
+          "code": "required-check-failed"
+        },
+        {
+          "check_id": "core-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "diagnostic-catalog-readers",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-config-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-contracts-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-health-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-observability-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-persistence-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-runtime-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-security-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-smoke-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-testing-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-workers-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "diagnostic-base-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "kanbien-platform-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "platform-server-runtime",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "diagnostic-runtime-contracts",
+          "code": "verification-prerequisite-not-passed"
+        },
+        {
+          "check_id": "shell-package-source",
+          "code": "verification-prerequisite-not-passed"
+        }
+      ],
+      "checks": [
+        {
+          "boundary": "integration",
+          "check_id": "acceptance-route-regression",
+          "evidence_key": "61e3acc53294212cb8711e802d1824e8aed9abdc1107d97ef3194b7509a8a5fd",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "bdedd46368f0266584ac9257a7d1731936cad4524649dd46836eaf4881085915",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "acceptance-route",
+          "evidence_key": "02d0dc7c3895dfa27a6e754a3b63284ac13d93c1770eb526db3cd02fbb03d5d3",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "b1e80d9dc3d9d27e63a2f0c4992f1d51de737269d4d7d394f305b7c2f3ac3af4",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "acceptance-route",
+          "evidence_key": "234431cdfaf9980b85347e07dd528f6ba9446d654860c7bc0d0a4750c94f61dd",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "01a1ddb3414231c2e2e297c2950f521ee53d1dea9f8e4cf801c13faf78e4ba98",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "bootstrap-acceptance-regression",
+          "evidence_key": "1e98a8e29b0176b36b5fa71f10b9521bbf5fbc9814c9bceb1fe7e204322caaca",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "d328a8faa8c124e1ed00be3d92548302581f28e1a39b7a5c6c9691db9d2be480",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-bootstrap-audit-regression",
+          "evidence_key": "e73e9ccda365fb2e1a2d9a4036f460c9aee4e3d44d439fb03869b8c98d3bc970",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "05f0952048a775fd0d96fbe1fd1d27f101015f2c96ecca68fcfaceb3f30d1d08",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-cleanup-regression",
+          "evidence_key": "2829bb68fa9c2816918d363f1ac697ec55e3ca72b6c7ec8f969df6613615f8a6",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "27235b56e3614aeef8cfcb3356c3bdfb163952d0a0afa67eb3c8f7d45caf9417",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-command-dispatch-regression",
+          "evidence_key": "59ad785c295a6289b50be8cf2606a3589f445ec7fd0b95b7c798e617eb66a14f",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "3a17aedc438c6a66f7d7f0d7b7cf2671d958da3c17de966a40dc1716e8e255a4",
+          "runtime_digest": "40d73debe1bf0497998a1eb2667b312600421b9bbe31b795cfe2f4c836290a29",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-commit-metrics-regression",
+          "evidence_key": "0f199df6d8a297c71bdaf45ad6a85560a7969fdf9f6c53f5d28e62c95ebf74f9",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "9cd17a5db14d27d1b83a7751d5b6398a82ec17cb837fe41f337e7f7d98fd26b8",
+          "runtime_digest": "9cd0d05c1c5d3f09e5abcf0340f1fafc28dfe14dd4d389ad753381de528be75c",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-conflict-audit-regression",
+          "evidence_key": "29bd9c86527bfa3ba4aafe0b4660f37cbf1a31a84ba3f07cfbb13387aece896a",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "3b772bbfb6a3736a8a17b81cc250db5b6bf1efabe86830ab341e4a64d15b4542",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-conflict-classification-regression",
+          "evidence_key": "814b0d831adb49b72807035a3e75be307305b65327b1dc59413c2d6508c35ab6",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "9d5e7fec098e951069b36cf077094d17a57342648f96144c43717a693306fead",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-export-regression",
+          "evidence_key": "88d7758a87179521c09a34ed9e28d1edc2200d6ced0f7528720e50d2de506175",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "b14cec087fef6f8d71ff8ee97cb011beebf4520b01bafad0de741f40ad34a65a",
+          "runtime_digest": "40d73debe1bf0497998a1eb2667b312600421b9bbe31b795cfe2f4c836290a29",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-integration-preparation-regression",
+          "evidence_key": "103bab5308a196d189777769faf8a77fb907568ff947de2c78fb008ef5079c62",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "002780ff171d9a0ea1c327312d84971c682398541dacfc70ba4efb3de72f3da4",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-local-merge-regression",
+          "evidence_key": "a90a8eb839b97dfcb89c5e8434e91e3c531a0a3e841e85ddc9cbfbee000bd86f",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "3699ef48e4e0ee3f8f25dbbacaa7d0c1bccc367805c75e53ba63ac2adcd0e1c6",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-log-deletion-regression",
+          "evidence_key": "0f0aa764d25a25275292699be18858e3107ee48fad2a735df9dad77b410cbcb4",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "d3003cf2bf798d226a90a63b0c4f3e1e925a7c663a89df952a37e2ed4522d395",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-log-maintenance-regression",
+          "evidence_key": "6d69767090f4913ec29d93715ff9c05766252f0187336fb789401f73a276c0ff",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "8b49e1d593be8612d16058000b8343b15e585879a4cdd31ed163474272a1ae34",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-log-writers-regression",
+          "evidence_key": "05a4a653455e97ed05b667966bfb4ab37eeef72bfb937d44848ec794a65f4309",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "a51d000c914691d6f029383fe21435657153510c91019a2865279c9dde2934d8",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-main-refresh-regression",
+          "evidence_key": "f879321899d454b6da356b52327d617b50226a558976c6c4dc9c80aa70fcca91",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "d9bbb5e442afecb58352ce20b6559186bfe2056b197d48faa9645d4d39994bd4",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-migration-audit-regression",
+          "evidence_key": "4e6e807c26cfa4249206672b7fb15d73651d7b3a3834baf20c22670f8814a4d3",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "0dec60ad10305bf7025a497af2e27e13e4fcd04cc07636a56cf0673272bb29fb",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-prerequisites-regression",
+          "evidence_key": "52a6a2cdef62c28b12817c39dfefb465f6d4871abda564661107dbc1a674ae88",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "408eba2570f827ed73b11b24985d079df10c64b523813bb7d6f9060fab8921a1",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-recovery-regression",
+          "evidence_key": "893e1358c8cd0a3797f5c0267eda46ea7acecda507983e7ae57ad38c9dc1b071",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "7d5005d45b40a12044e60df93c25fa7b32934a5fc313111397f87dbbaa2f62b7",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-refresh-readiness-regression",
+          "evidence_key": "e4422629cb4264abe09fb57b613bd13e20ac435d90a162a792e5bacdd6511b83",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "7dc01d9db68d69f025a512e964af3faf09c87cf69632cb36f922e0f27b943dd9",
+          "runtime_digest": "40d73debe1bf0497998a1eb2667b312600421b9bbe31b795cfe2f4c836290a29",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-session-preparation-regression",
+          "evidence_key": "090ae10f65f73c48f8ccd5e1a94507c2de6fcd312d5fb6200417ff940f771990",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "c854f610966b74c22566e80d6e8fff42c702461c2fdb80ab671d939e1917ddc4",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-session-reader-regression",
+          "evidence_key": "acae102d31b63a265a9081999e273afac1f706a4006139fe7551a96ab94fc60e",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "d8ec4e8913cdd8b463cfac91e58f513a62066cb0c03fe4bf00b007c96c5df8b0",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-session-resolution-regression",
+          "evidence_key": "a38e981c12d9e067baa195f256941bb9315fc42b01e931f3d00df7a0f46bb679",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "0677643d046edefa2d2f498ed45e6d3ee97e0a542e338ce12adcf6a0fa138ac4",
+          "runtime_digest": "40d73debe1bf0497998a1eb2667b312600421b9bbe31b795cfe2f4c836290a29",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-startup-regression",
+          "evidence_key": "808727da17aae83cc625c63a90058065394285aa19fdd2bbfae073c5080eacf0",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "e26af030c5ca424282c4e3d0fc621243c785f9f4f06a31d0f058f874e49ca308",
+          "runtime_digest": "dd45ade9bf951e6086c006149442d1089a2363e4f9dda6c165d24c7f9f0d3e5f",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-summary-regression",
+          "evidence_key": "75c505407ec021b69a2fb889c9f7114326b49989cc92740802d6ca273855f9be",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "37314dbac16d8fd5c69658b129306ab1343ccf92e3a81cdfb5be63776dc60190",
+          "runtime_digest": "dd45ade9bf951e6086c006149442d1089a2363e4f9dda6c165d24c7f9f0d3e5f",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-upstream-bootstrap-regression",
+          "evidence_key": "6bb912a32137ad94e8887d0c4221c877c62f9f50b6bea32bb18f1c13870528bb",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "67d62b4836f66cc7cba8075693cba032b00699fe35d8f8cbce2f0cbeaaa8fa30",
+          "runtime_digest": "dd45ade9bf951e6086c006149442d1089a2363e4f9dda6c165d24c7f9f0d3e5f",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-upstream-contract-regression",
+          "evidence_key": "fed0c81acb52fc27c2938c3369598a171c2539a2dc7f7c723921ed6b360aebe9",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "a28053f5c98156e9b0927031db3d8242dd5b713a1526d356688d76c261de800b",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-upstream-ensure-regression",
+          "evidence_key": "acb811c04722a19e5cd710722bf856e94d865f5c8c6d4026f065f3ffe479c8a8",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "e3a4444594df0c8034770c2677e12af785ef26024dac11d7e28e25059e6bc335",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-upstream-portability-regression",
+          "evidence_key": "9d3ffc6058588fd6f3e584a012659b1c271c904b87227462098e32f94a829136",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "4cd05c7752b0859742b4140a086584e8d853260b8a6dc453543d62521b6322ef",
+          "runtime_digest": "4bc1303732d9883a6b0ddad3b10c036980e8a4b2cfcba2aa7df30714bcbabcfb",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "chat-worktree-paths-regression",
+          "evidence_key": "1e78856b93880a2e5614c06fd51ffb7df80a7329ec4cd93a462df108b5e29f63",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "e5d6b99187805494a61bf50d04cb2e8243865a0b3bc2da57dcaa5119dc2c2eeb",
+          "runtime_digest": "40d73debe1bf0497998a1eb2667b312600421b9bbe31b795cfe2f4c836290a29",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "check-selection-mechanics",
+          "evidence_key": "6612cc1a4bbbb83765b283da129eb86fda7f48c1b4b014732b2be6df957fffb2",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "57b9c1f90473d5eb0a699895707f4fb2af7eb2de8297510ecd0c9d1a14d083a1",
+          "runtime_digest": "8d3328a90383bf23d7b34b007e6f7ee37564416f6eb7d88c8f0e4601fea4a41a",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "check-selection-repository-contracts",
+          "evidence_key": "9a32d83310c1755532dff9df49ed790bbf4cf36eedb273b665aa1428b6757077",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "97575b5de9a87c4b0439ac436294fc15dfcb58229a3f42c9d6b1ec3560151fe0",
+          "runtime_digest": "b80bbf25f4ee30b7dc84c62ba36f907af2d0f7d42e2afb518cf612dc1c0b2c75",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "harness-header-regression",
+          "elapsed_seconds": 22.873049,
+          "evidence_key": "111d739ba2dbc8c24fa4001a57411776729e27d447a4a865b290f4c28c0550b5",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "80c918cf9d9d56dd21539cccc9b8450296f06e63afe126499d784f9abdc74e61",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "harness-lifecycle-metadata-regression",
+          "elapsed_seconds": 16.380703,
+          "evidence_key": "e47a5ebc1f23950b65d201585177013fbf11acce9d54a05c14966cf830baf465",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "b8d4f92ee42b3a16335ffc1fbab7dde499111a2916437c6493da90ac4a530715",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "check-selection-regression",
+          "elapsed_seconds": 14.131297,
+          "evidence_key": "fe805d50a211b011b8ffe81f6493d54eea9ceb094f315b1ff8d60ccaf5c17211",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "4c8bedf3454624f623b7a6269f867bea1bbc57e2bc86bc7319a9586bb072f65b",
+          "runtime_digest": "82d038d560ec9e747c0f94a5d65597da8b4f7c84c03eca086ed8eb93a4755f3c",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "cloudwatch-observability-runtime",
+          "elapsed_seconds": 33.00597,
+          "evidence_key": "d67450ae92652c77db362ad062991335f640825f0a295e3f07e8d41966aa1aca",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "6886b0dfead07a33985df6153b1db3e701d8c8c68aa0266994fff8402001c9d2",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed"
+          ],
+          "check_id": "core-dependency-boundary",
+          "elapsed_seconds": 12.80844,
+          "evidence_key": "9eecd78a0a320ff1d411bd9138e7d019007044010ec6e00b9fecbf3525764691",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "7bae66635d4b56eb8d736f64f9a176ebc689eaa395e79634e6fca86006791cf6",
+          "runtime_digest": "61f434e8031716a32ca35603563c498058c065805e254ac0b68369a696cac266",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "platform-shell-payload",
+          "elapsed_seconds": 16.889937,
+          "evidence_key": "483239c2441bd62554e673794a67c5d40eef93884847b4ae0e4ae25293569650",
+          "evidence_source": "local-runner",
+          "exit_code": 1,
+          "input_digest": "0f61b0385ed068498f4a3bf8d752424aa51d12084e2b067730ae088786995cb6",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "failed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "core-runtime",
+          "evidence_key": "f196517ac813fb4d172da849e4817b78b33ee1cf8f683e7a0fb285eae6f2b58e",
+          "input_digest": "b395d216e532b334f6ac806fea387a799a5a3770751f4a7965efc5b33124a75a",
+          "runtime_digest": "74f11603950ad916c8acde301631a2f06267f6e29c423f0a24c41c0473e57af9",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "delivery-access-contract-regression",
+          "evidence_key": "320bb211e9926d854f6371cb0d34951475bea80556082977abee0c276690e540",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "04338ce01dde7c69a96aa688faaf4d724a774f4aa067d972fc9bce5e2e10e302",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "delivery-inventory-regression",
+          "elapsed_seconds": 31.634767,
+          "evidence_key": "ed0aea4764112f4ee9a482e80d21ac5b28caeade1db8d33f4fdc24c9524d38ec",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "d939edfa98bcb90e7ed27e65f6e2cc0c1204b7b17c80cc06a93fc27842ef8f92",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "deployment-operation-diagnostics-regression",
+          "elapsed_seconds": 2.126512,
+          "evidence_key": "3c167c60981a0426886b86a29d303b6772d7fca8ab3c12d7071bf42492b990a2",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "36b93ecd8f8824c9628670315497a57c851bbc88a362c931eb4ac4f7da88feaa",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "diagnostic-adoption",
+          "evidence_key": "aca80f20e7fba8323d64cd583ff5a91747ef31cc1e3de69f6f1284e71accd6c1",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "567727a76c71402e9ebb6bde352ed036bd63992dc92f48927f6cd37d7cb864a4",
+          "runtime_digest": "5f2a73a03e31a866ec91d7ee515c437f4014ebc20b6ae97958c5f105fcc81ef7",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "diagnostic-catalog-readers",
+          "evidence_key": "b73e588fe7b6d710d8c75ac7cd88138d88170dafca3bdd6967cd8573e39b8e87",
+          "input_digest": "4382a89a766feb3accf5ef17f180f53cc7522a8ce461dd425b018cf3be9486e6",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-config-runtime",
+          "evidence_key": "c3f66303f3ae9ea89c6b8a450a6e2f1ab5e7cf2600f114756bdf2ef0254e2e02",
+          "input_digest": "c639301d7a02cdc3cec8e5c196f477b25d4db64067a037f1e57363989d14362c",
+          "runtime_digest": "7dbfec9fb72d8a08a32ed8a356ddbf6cbb0fa5b739857e6886baea80a56b0e72",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-contracts-runtime",
+          "evidence_key": "456727135267b0e1042888a2694f56e8d2536550f2303c88d84eb48ddbb25c7f",
+          "input_digest": "f5bdf95d0423071f8666603bfed997c9fb4dbd480ad591126a36b9412e3fe4d4",
+          "runtime_digest": "0e1f9d0309496d0fd7debec7938f70456662bd898a3d5a82d4e5b3cbdb4c493e",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-health-runtime",
+          "evidence_key": "b974e4b88c1fa60983b0c2bcaca7026190e70e471664411248b8d6ea4a3db699",
+          "input_digest": "a85b9e6ca4d3a19b54ac95b4c1200ddc43c151b2f88962811815d85fcd8e5d85",
+          "runtime_digest": "7d6304a6835cab80a6985510bd6d6e4dd3043f32bb4079873626a46d21bfcd79",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-observability-runtime",
+          "evidence_key": "174269c766957882906154f59cb2002888dcca1a49d7158e0a2623641fe9f9cd",
+          "input_digest": "7e5fa98ffb3d83fca8c283d1948146a6fe4b14f4aea5433233637d4206fa6379",
+          "runtime_digest": "f627515e63ce0e944c54994c4a08e7c385a58ca87f630d5962fd0a053b622597",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-persistence-runtime",
+          "evidence_key": "a21887deb969d48addd9a58c01e790bbf6deb51be4bf1bef8f9f015c1a51ff2c",
+          "input_digest": "0958e839f00fdd2e56435c17838ff18216219fb1ddb892cb2f1f1b9c9776c43b",
+          "runtime_digest": "e0403a1839ad8274eb3be803874d075987f2eedaeb7e8e8334a37290a7841fea",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-runtime-runtime",
+          "evidence_key": "21bac749bb5acc57d23a386bb9b4443a845f4bd6c82f01a84acac3282949f529",
+          "input_digest": "d5163e581885addadd775451e6b37fa4c4f21af4d9d8aaf4e2f7c130ea43ce28",
+          "runtime_digest": "4314692525c46ecfbd5dc7ff7f217013f548131c8a7db944e557498161e32500",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-security-runtime",
+          "evidence_key": "226c8c734660805ca411b6bd945346e6e3399127760a4c732e0e78c361ec3360",
+          "input_digest": "d01606e792f024e0c8dced899b06788b9151c5ef0ad697290af1cdb2cdf44376",
+          "runtime_digest": "ebd95284b6aec8763f2b243608faeb4778427cf5559361a8959055696403ac2a",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-smoke-runtime",
+          "evidence_key": "41ae429b83289e320a4022e57f09329d8460c40baf1f23e2e6effe772d2f1e46",
+          "input_digest": "5a543f2b98d267703adbecce493ce2808f4537761ab31f408bc8f345f8e7cd5c",
+          "runtime_digest": "098c24e8ff45fb40032ddb96d5b7bef072270b6211fc465bae745ea7d936eda2",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-testing-runtime",
+          "evidence_key": "e05d6c07f47df84127767e0c4760c1567c0a8ab6526563fb2be1f9369c9ce1ea",
+          "input_digest": "0230430263664930d5a5eb2446d047709220624e59f5ccad747a2f37a9d3d408",
+          "runtime_digest": "fbf9be6db74ffbd92148613949dbe6687600014b393ae7bc7b3310751edaa476",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-workers-runtime",
+          "evidence_key": "c6fe9ab57ffed193dcfdc218c7c5d392085916efade6026227f721ca356157cc",
+          "input_digest": "b1af491dbb132f250a2c517a948331a1a34da4e198268b6764667d2a9e3c24cb",
+          "runtime_digest": "b181a038a55665b05d7e32f878256c98a96227e1282707bde2fb5fa25c82ba7e",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "diagnostic-base-runtime",
+          "evidence_key": "6e04b873b19278636b0c7b283bfb6a2ac715f31d750d70a1c0a72afcabe7c8e7",
+          "input_digest": "d3a28ef69accdc1819525c4e1370cf787de2cec9ff78d47e2c8f6bbbaf4bdd6b",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "kanbien-platform-runtime",
+          "evidence_key": "31346191b733ca4bebc0024190465c193ff13df14364b390ab56770ab8c60bc5",
+          "input_digest": "8aa45d9e426a05a22e87a7d2602e31a04e0d9ae76ada53bbc77c5a7fd0171e0b",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "platform-server-runtime",
+          "evidence_key": "487015308e129af8075ebe4f5dca336c1225e0aa1c25064689d5de8209df7cb9",
+          "input_digest": "e486c8971b903ec2151e9e0a502a0cdd14f77ba1b9cbe8cfee1aac25637ee621",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "diagnostic-runtime-contracts",
+          "evidence_key": "04819621259089c2bb5efee4c42333b1286e530e28b53bf214bd1d1825de3ccd",
+          "input_digest": "c73a150e6af0a9f3021b843d989f342252d7214995e87b85f3fb92f2bc31f7f4",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "dynamodb-persistence-runtime",
+          "elapsed_seconds": 39.667079,
+          "evidence_key": "7a47d80b0ba773eaac7387b2bc98e3aa726f1366bb86f96bfb2f3a534fd36e70",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "70791fd3c65cd71b36171e4604da9960a6ca94b9304648518c2b77b7b0042842",
+          "runtime_digest": "cae9235dd4c7577fba0139217aff741009ddf0335a08931c9393754a4100f882",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "ecs-fargate-runtime",
+          "elapsed_seconds": 35.616709,
+          "evidence_key": "d0fd8d92fde37338951619cf077d5626687abe442b75ad531d236c329987c27a",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "55d9387db956988ce72cc496502de11865ac05654e0f439cbe234b53ddaeb6b4",
+          "runtime_digest": "5777f24cf72c215b08679f13fa3a11951303a0f500a3a1da788ef89396701545",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "entity-smoke-runtime",
+          "evidence_key": "b1f901ccb41766e63246ea141f4faea975b56146d98eff145b1e5f5e32dd5a3e",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "51397c6db0c1d8f5e1b45f7e1cbe0918224c92de8d6a968925a001acfc8da875",
+          "runtime_digest": "d65dc1f3b3f35a97e31bc915de08c094a9212231fd76941452f19bc35084f6fb",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "harness-command-drift-regression",
+          "elapsed_seconds": 1.504561,
+          "evidence_key": "3dc5b736ed492ffc8e3d093dc5409d616ee8ae61efece0d5029784f93d74f838",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "39ec1867dc54646fa86b0ba375e8a8bb582f04332739e35b002ce606b893f3aa",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "harness-governed-runner-regression",
+          "elapsed_seconds": 1.608468,
+          "evidence_key": "fdbfcc334717c6186c8355c3e19f44bbe4777a575f681a033c342b55858b0125",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "cb17fb0b15e1a04d80d8253ea53746481178754fada5ed30dc07248666f3fb33",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "harness-process-drift-regression",
+          "elapsed_seconds": 0.212311,
+          "evidence_key": "a801b627df098ba235f795b25bb217821ba06e4d268be77dba932b9d14c7e6a4",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "214806784ba6581285dd489c98370a8565cbcc0960d4bd979d5f035872ea4148",
+          "runtime_digest": "8e0c3251c0beb9653729cf1aea390a7c49bc6a1792cce40f638ca07c8268220b",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed"
+          ],
+          "check_id": "module-index-structure-regression",
+          "elapsed_seconds": 3.784948,
+          "evidence_key": "d987a038a2a2a96eea3f58a36a1489e87f0de360dd64758bd03f4da6a6373a99",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "4053b7231b8b90dd023c497af80fc0175f86c080da7df802490a351b7fe4b0ba",
+          "runtime_digest": "469c2cdb12268a938f026e25f9f9991d65abf04cc730ed83120006e297aaf163",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "module-index-structure",
+          "evidence_key": "f6d3213adb4b3541f2eae4a52ce43bbbd3612b5462f113a98a618f005706397a",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "37e452ffa6306e7a25b336c7e39a1be39c77e3d51b31cdec04a2b62cc23c8d06",
+          "runtime_digest": "469c2cdb12268a938f026e25f9f9991d65abf04cc730ed83120006e297aaf163",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed"
+          ],
+          "check_id": "persistence-composition",
+          "elapsed_seconds": 102.346185,
+          "evidence_key": "b7e384ab93ef9a05df0abc441359fc7fae5188119864e7c95244ff9926ef67cd",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "37c5a31abcb966f200b014754f3aad579a1a53bd9a86062e46f84cc5e98c4afd",
+          "runtime_digest": "32f16cf9eb198b7d0f4c60e0f3c666670363a480ea3eb8c976be803ada6738bb",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "persistence-diagnostic-mapping-regression",
+          "evidence_key": "048e5f893853ba6a88a06d003f4a146e88d3407558f8b7f35d17d49665555344",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "e77e14577686057117e93972133640509da9050bdbfdc1271624491fbf7775c4",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "persistence-payload-regression",
+          "elapsed_seconds": 30.174858,
+          "evidence_key": "bb69e7a4ceeccd326415f1182afdbcc5f64aefc82c1848bc2ea320bbe4d63c1c",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "8c3e2ff0bce6c23f7e1c076086f3fb3089a1bca18620ad06f65ae43483e3e77f",
+          "runtime_digest": "d63fc7bb155cf9ac648d870c578ee063a9ce9ae8f33a844b39c87ab8cdfc53c2",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "persistence-provider-regression",
+          "elapsed_seconds": 36.168903,
+          "evidence_key": "476fd5ad787a6804a656245d996cc4aba69c143a3e20a2fc2d7957f5fc1f5af9",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "a7f61849d9d6d7d9e4a0fb8b89d3db6485d47b63212501357160d4c6e5f1308d",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "postgresql-connection-diagnostics",
+          "elapsed_seconds": 39.393375,
+          "evidence_key": "bd203a1f3c251634eb806c2f0a1e442b66c64900eeefb6d8ca25282474a83df0",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "3fe1d2afc2f60796d5ec96ec749012db66e97a12340645efdf8bcf48c2ee19ac",
+          "runtime_digest": "a86c50cb26ee77f42ebbb2cc61387a5846d48d8a8348c4e38f6535d77d166841",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "restore-connection-diagnostics",
+          "elapsed_seconds": 1.334762,
+          "evidence_key": "306a83a263b6b47d94ffa16fc3207ee604cd5fccdb6f16782e9d1ca9ac419e8c",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "b8b92b360be69728210d20ce34ea9e8d927fe29e4777c204f7ba30420234c30d",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "runnable-program",
+          "evidence_key": "27dde23b6113be269a5763825126168cf2d7d4f1791886987b799902f1b4bc54",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "d98d068f1e06dc77ff42753b786c9126fa295cec50de21618a8b8bd1ca472bd3",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "scope-inventory",
+          "evidence_key": "0509565be870928aacae17c03c612df8cdbf570a4002f72a7838f583c63d2f2e",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "3e3af9ec30602bc51203c209a4bbb0a7e8356c2d2b70ad91480549c55ac8806b",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "security-cognito-diagnostics",
+          "elapsed_seconds": 34.319015,
+          "evidence_key": "599820bf5648d02162a13a75908bf27628e23ae50f1d43f35e8e380131efec06",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "c54f2475dbe91e87352e44b2ee1c2cc66f192a42216c0c0d51ca5ed14a782b04",
+          "runtime_digest": "c90397bb3592d571c4b3d1994ac500989dac0381264845d66ca6ae1e936babb8",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "security-shared-rate-limit-diagnostics",
+          "elapsed_seconds": 34.946175,
+          "evidence_key": "256b5df7ff39ebbe9a5142dca95ece8752b9b1dd7f62be49c551e1311678f94b",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "a5c2abd0053e492e86bb6b7f661e8e238bcf542eec4ef034720f0b9fb0a80ad5",
+          "runtime_digest": "65f9ef1d2f54c35e0b56a698efd818183fcc5d46967f97d404fa4635147d3fb1",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-artifact-active-drift-assessment-check",
+          "evidence_key": "5f9532aa5dfb68c76457e61a2d7a0287d5b6246ce899d26ee620fe475666aeea",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "039a399d130e587c62e0989e4ea7430e1d049810b3a47711275ace43dd2cc593",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-artifact-store-policy",
+          "evidence_key": "8efca0c477a0be008ed6b44ec6fb5fc49d0769e9f514efb3131134bb971ab794",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "b52274a8811f3269025b44ca7439e00dd88d49d861de7566fbe746c49d050cc1",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-candidate-preflight-regression",
+          "evidence_key": "4c657d779a6a96b79ea3cdb0772ef9e8cf8701886d79346064768f1263855c97",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "80c73e3423ad8c20361e6829013ccb70b0ad024ddf88a709b1d62bb3d82f82a1",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-controlled-smoke-check",
+          "evidence_key": "e6c03f3029c8a5c63fbce0764a25710d5be0c55fa9ca402bbcb4bb638f2629c5",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "da149224ca040955b047a2a9a0169d5b531ea67ebbb79bead460c7d0d7eaee83",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-deployment-reconciliation-check",
+          "evidence_key": "969f553a6d0f4b67e6aa6c46abade8c2f95d3ea22875a4d398b137d2a3b57b9f",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "ce4744770bc31996e25d0c1229b6c2e6e10eb9fb7309c79eca9af49a845db783",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-deployment-reconciliation-policy-check",
+          "evidence_key": "5c631f0ac3869fd582ffd47a7ecf376c389637572d5d9c553f833b739da126dc",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "719d70b2039b391c3727a9e492fa51e7276d87d7b1ba303f9270d7a172112a94",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-drift-detection-boundary-check",
+          "evidence_key": "7a15ab4aee731f962c0245694cd6ab9df00875643b2c183396ade8dbafd210fc",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "8795bd6b2a2e2d17101ba17aa22781542b52916105618be6b63efac4bf10febe",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-foundation-active-drift-assessment-check",
+          "evidence_key": "0bba45aa60b9e02d33fee93e307991cef1b9a524f2864bf0e18872bc6d14811b",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "8d0418763752ca3b4b3f6214a3bf948d9c5f81c9856adfa73920508c16378688",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-infrastructure-policy",
+          "evidence_key": "d498cdc1cbe16e9fd01613b8ff84b8edb0c27e25657388e9e072b82124b2f6aa",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "c01c9cb1cedf0c3141ef04fab4d9ab74aceba78f5ac722bcedfdd6ef7dd0c8b8",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-ingress-smoke-check",
+          "evidence_key": "cd98f7f6e9bb76b54008b3ef059b99a4080571de171ebf05d9a082f2ba237b68",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "ab3e0ea3de3604d43a27089cfe79624d9fee5b270da8d66e6717e10bce6ee72e",
+          "runtime_digest": "71af534f07995d7af476502633f797d59db64db41b67c51ff1a6806ea2693475",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-metric-coverage-policy-check",
+          "evidence_key": "f536e38b86c284a42f4f5ac4975eec8d00b0de0caf044a490486d2ac123f3ac1",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "66d5a2e84c4dfe95178671caf1a50766532c659d4d10b569115a408856582970",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-negative-authz-client-check",
+          "evidence_key": "0af8bc2730968f2d3a814a2e69a7dea55399e8d24e019088d6fd66a85803bc93",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "49c25fcb1d58e53a37ed5344808de7be57e5cf640f98e96365b34440736e1ba1",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-negative-authz-smoke-check",
+          "evidence_key": "b4a30981ec1aadc8f956a44cdd9b510396ac6ef20ee08805cf4fa4a52c7bb4b5",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "bad6be145e90b907cc8aec5760da2667fb9bbcbbef7e3aa2207ac2d8a1d96504",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-persistence-admission-probe-check",
+          "evidence_key": "7d10d106482a4ba8a0f2ba689cfcdbfc1d3c221c66fd8da9772ebef71c252c10",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "6cefa3f7142ce3b890ced49b3d8eb53d33860f4c40e62183eb595ab1243282d0",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-persistence-delivery-proof-check",
+          "evidence_key": "0431b2ecfd3778843db7b2d23516f92653edd14b0f6dd0af31914564fc82d28e",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "6f3918cf93088132e9f6a2eabcb64c88aebfaeea59a0db9257f6629a65e9a333",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-persistence-smoke-check",
+          "evidence_key": "375d0ad867c3e3120dbdb7c92d73d33dc2e72dc8c68186c837790efc024963c2",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "315b43f845f1ddcd105e78ca0f04e3f7cfcd686bc88b6f0b710e58990e07ea16",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-persistence-write-client-check",
+          "evidence_key": "b4c935e8738c1071a735d0433ad1cd41635260d6410e0d9ede84def2687e88ed",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "f7fa3cd30665875e06197a571e571e9ebd4db59bdca85413016db3e732914a03",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-postgresql-reference-regression",
+          "evidence_key": "e74ba76fccde1ddb41169200f74e7be6365b77b92a4657fd3a190a02e26e6bcd",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "7183694edb5cb939a9d5938be17a2b9e1d0fbacf98740dff3c094e8eb2c61e75",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-postgresql-relational-smoke-check",
+          "evidence_key": "a6716344e8edacb87119081d4c16b3f3f7fa38e53d077c779ef6ac880f85c515",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "8e94a0ff7ce145fbc0da2d8f748fd1f3818933fdd37d7bbae295bcf9894f9d0d",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-rate-limit-smoke-check",
+          "evidence_key": "8850cb563f1f8a5a01aab623fd09ff872aa014a9d060ad2521f79223ce391638",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "486ffe445d2155eb87d3c7271faa1096bc8d82204433ade19a6355ccf2e15027",
+          "runtime_digest": "71af534f07995d7af476502633f797d59db64db41b67c51ff1a6806ea2693475",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-synthetic-scheduler-check",
+          "evidence_key": "edd9cd127596b01f66d09d054757b159dc9c8e5a78c53eedc5ff3136059cd4be",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "5a3793267975cbbdef417fce325e32b78d88914ef4c93ac93f2426c5963fcb68",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-worker-smoke-check",
+          "evidence_key": "24ba2b98bcf3803a3a0557aae38c7d053bab70d1b817673b01600c269d305bda",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "97d17b3d01155ff18dfceb457a2d2d96d70f109b620335223e77814df6eb8c64",
+          "runtime_digest": "71af534f07995d7af476502633f797d59db64db41b67c51ff1a6806ea2693475",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-infrastructure",
+          "evidence_key": "6602f3db26034e1eb3ccd049880a5208c86928a8d55627e2af5a1c083bfab899",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "f17ad0f3427a7c22fb5971258d1bfb63be8170bea3685572208a16e0719153f3",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-metric-coverage-check",
+          "evidence_key": "35fa095de3f40a32b952a647928d77b7a081580a51c217a274bf8e44dbdca2e2",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "4b5c29526319f8a7f5ffe93f38670bd58145290b7a60cc96c04b32fee009ab0e",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "shell-package-source",
+          "evidence_key": "40c429edc8dec1773b93a33693a9d3bffd62cfced02c70199cd767cd6e4b2a21",
+          "input_digest": "be34103960879d273c736ac18f8c648d9fd04ac628dcb422141b2dd28db21a4c",
+          "runtime_digest": "ded79d10bace3fef3d49654b5126b9b63c4c65afc45eaceea6441639fbf5ac5a",
+          "stage": "local",
+          "status": "blocked"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-postgresql-live-boundary-check",
+          "evidence_key": "082563c226e75a2b04e1c2526f74cdddb0b03a1e07266ded5062dfe234549f88",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "d3cee3011cd112f13af5a7c76bed23fa450fe4010008cc8fba6edf14013974c7",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-publication",
+          "evidence_key": "2cc452ee15b32611f2b1736e7e6b8af7b56e2202a9fecf63a0ef21c2fbac8ee5",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "e0c2f9b320fba463f3cf36c27ac2315bfb2f704c79561a269cb43e97ca40e1e4",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-release-evidence-regression",
+          "evidence_key": "a16e6bf8f16bc13b56163fab9bbc3bfc57aa68fe2d5ff0090544b4354702bfa5",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "719db6115ca590b3eda3f04fe96abcc1e2a1e7c7f0789a2eb8ef08bf75f51fe9",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-service-active-drift-assessment-check",
+          "evidence_key": "89e01932077deb0a107753e335b52959fea6ede22c41987c3bd6393f38e8c6a8",
+          "evidence_source": "trusted-worktree-cache",
+          "exit_code": 0,
+          "input_digest": "c51642d5fe2cfc4da82705f58b15b3f5ee1492e6050bcdca04d169c15725c5c2",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed"
+          ],
+          "check_id": "sqs-queue-runtime",
+          "elapsed_seconds": 31.242018,
+          "evidence_key": "08f894e194ba3a832e29b5431b14a6c1eee93e55b1e84f4908a4c9a348752a44",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "3d3c1186ac04039d7c2e60641b6cac31fda4f44050e97b1f4e0216e42294521e",
+          "runtime_digest": "b2c4acc37f23aa622a414f830539331f74829134a84619e84735c5dacd612c8c",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "bootstrap-container",
+          "evidence_key": "b2adc99b751645c0777fb721931a00bb106e005b195bb4c198893f464ebac19d",
+          "input_digest": "7b8f968e98b2eb0ab4ee017db0c16222b997a1895b76c1fb800a12681f957a62",
+          "runtime_digest": null,
+          "stage": "package",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "persistence-container",
+          "evidence_key": "3045d83c4535255f9e49463455b9834b2a61e9f7c0f31961ef85ed4793d49a0a",
+          "input_digest": "5fe2ebb33dee3050e6f23c2d3a2785ecb6308de0252c5cacc8789c060768831c",
+          "runtime_digest": null,
+          "stage": "package",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-image-smoke",
+          "evidence_key": "11efbeaeba78465dc88c713eef1b3b0063cb71af82aa26d2733bab27c972708c",
+          "input_digest": "c06bd11d67a6b76ad9d485a487048ef4ba4bade9ecdab766c005bbc474689e5e",
+          "runtime_digest": null,
+          "stage": "package",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "bootstrap-target-alignment",
+          "evidence_key": "e688889ebea2d458475de451c2673759919de9902662b00a5e6177471cdc1d81",
+          "input_digest": "440b2caf995d7479a9fb0fdd0b570bcbdd36b619f08511a6ebaa4eb8c2988b50",
+          "runtime_digest": null,
+          "stage": "deploy",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "persistence-target-alignment",
+          "evidence_key": "6afc36eb7c4336ed74966d8a8ac8d9e01877216362cbbda8c4379002195db54f",
+          "input_digest": "bfeb4ad6250f38b68bce2ccc6805f84e7d566b24cc1edd150f66160f6ea73a07",
+          "runtime_digest": null,
+          "stage": "deploy",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-runtime-alignment",
+          "evidence_key": "6bd4ee7d2c684810881f55aaec637c4d61a9c911993f5af86efad9f5359ec2af",
+          "input_digest": "de116e1117d6926c91f54b1fb2186f6e6a35227e8e44df422b6339e0d881a82b",
+          "runtime_digest": null,
+          "stage": "deploy",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "bootstrap-acceptance",
+          "evidence_key": "9905b1a32e5b4d96fb56574a84eb739ae4a24011067ddc0bb1390bdaba59b953",
+          "input_digest": "ccd0042308126028b9b50d1d1bd76a7b87c9066b1a562212581fa1143a56e29f",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "persistence-acceptance",
+          "evidence_key": "82ab377756eb9ec3a6517fd30ac3ccbbdabd819122b775aa6c4f1952209fc364",
+          "input_digest": "b4fda9b35cbac15d642c0a7839a72a2c5d7af02750ae079810f76b34590d223e",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-deployment-reconciliation",
+          "evidence_key": "9af10410b5ab6897f269a000078d20a320cafa83f9f9e7717addca351cf966b4",
+          "input_digest": "969ed34ffc6915500ed7d773f9e2725446a0a20336938520adf12654708ed529",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-ingress-smoke",
+          "evidence_key": "07d0a0db4bcb3e575031c5874189682e3beddfa56ff77f7dc4cb8863beef4f7e",
+          "input_digest": "cb2429bb398415aa9cd08104d59e0b188c59afb057a1fef45c33c3a15a4d9db9",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-metric-coverage",
+          "evidence_key": "b11b261a752461abd0df81ecf40f04d441c5342eb77a5091bec2600cfef375f3",
+          "input_digest": "c57ed85e9dcf6b7097a2afc0a04e35819926848d6b8670fa568601b7ae714415",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-negative-authz-smoke",
+          "evidence_key": "8b84d763a15c97278ab309d6a556fec63bbaf2905e58d4bedb543c7700116f05",
+          "input_digest": "510bea1077d713a5c19decdf171cacf260a97b004a9901c9b0ed21ba13b9e3e2",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-persistence-delivery-proof",
+          "evidence_key": "40b715b0d9850c96413f1ed28baaf1bf6b96973676bc8d44cb88ceb84ca5e4ee",
+          "input_digest": "9929ed15566e1f66d2e2e8cf92d8eddcfbeceb981ca42e7c74f80dcb42fc3d8d",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-persistence-smoke",
+          "evidence_key": "6cc694b0a7d66cc560ae89477caa9452ea8bf1192383882c2807fa319113a996",
+          "input_digest": "d68a8fcdab7de98be8fc4f3a225a01a6a52a3f18f135fcd2b34c06a1fb300a40",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-postgresql-relational-smoke",
+          "evidence_key": "2503fb77a6bb04acec18a198e7d7d7aec1cbb5c4c0b5a5b52f026e5dcd8c6197",
+          "input_digest": "922a68e96ad18c8fc150489db9ba840f7ba9c9e94e0cd94cbc34dbd9af14fb11",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-rate-limit-smoke",
+          "evidence_key": "304d79dd0c6a7affda4112b8a583c22cd37ee8931b3b6892bddcd3191436ee78",
+          "input_digest": "cf00945c5a256e13dc4315490c65875bf0fcef2a5cf0a93c040faa57250bafe4",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        },
+        {
+          "boundary": "commit",
+          "check_id": "shell-worker-smoke",
+          "evidence_key": "f94ef8dd939634b28df82f7b62a65037e672981b090ec8b996fdbf66238836f4",
+          "input_digest": "9015a1622c62532ff173ee402adb3d3b7e571b241b54a38f35fa470791b9539b",
+          "runtime_digest": null,
+          "stage": "acceptance",
+          "status": "deferred"
+        }
+      ]
+    }
+  ],
+  "exploratory_proof": {
+    "focused_policy_and_catalog_cases": 8,
+    "expanded_actual_feature_infrastructure_selection": "passed",
+    "verification_wrapper_success_and_failure_dispatch": "passed",
+    "app_typecheck_and_three_source_discovered_runtime_files": "passed",
+    "corrected_refresh_cleanliness_and_receipt_transfer": "passed",
+    "local_documentation_targets": 57,
+    "scoped_metadata_headers": "passed",
+    "whitespace": "passed"
+  },
+  "correction": {
+    "original_mechanics_failure": "Refresh fixture did not ignore newly retained .cache reports; production already ignores .cache.",
+    "fix": "Mirror the production ignore in the disposable fixture and assert report exists while git status remains clean.",
+    "original_full_process": "Interrupted with exit 143; no final report. Resumed via matching trusted receipts.",
+    "result": "Registered mechanics and repository-contract suites passed after correction."
+  },
+  "limits": [
+    "Full integration remains gap: platform-shell-payload failed and its prerequisite consumers stay blocked.",
+    "The existing image compiler mapping and runtime shim gap is outside this pilot.",
+    "Development proof is partial, never integration, container or AWS acceptance.",
+    "No scheduler, nightly execution, AWS operation, commit, push or auxiliary worktree.",
+    "Existing diagnostic partial adoption debt is not upgraded by these results."
+  ]
+}

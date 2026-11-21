@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test` work. A test proves a boundary, a generated expor
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/persistence/tests/platform-persistence-observability-runtime.test.ts -->
+<!-- course-file: platform/persistence/tests/integration/platform-persistence-observability-runtime.test.ts -->
 
 ### platform-persistence-observability-runtime.test.ts
 
-[Open current source](../../../../../platform/persistence/tests/platform-persistence-observability-runtime.test.ts) · **Snapshot:** modified existing file; 258 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/persistence/tests/integration/platform-persistence-observability-runtime.test.ts) · **Snapshot:** modified existing file; 258 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for persistence meaning and coordination.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=d1d7caa8d4d1905ab6e3cbf2b4fbce15c4cd590c4bae4c479efefda100270b6e after=deb7caaf508650b6d9b1100fb8271f68fd1260f97cffdf2cbd58e78e565b8420 -->
 
-<!-- course-file: platform/persistence/tests/platform-persistence-observability-types.test.ts -->
+<!-- course-file: platform/persistence/tests/type-level/platform-persistence-observability-types.test.ts -->
 
 ### platform-persistence-observability-types.test.ts
 
-[Open current source](../../../../../platform/persistence/tests/platform-persistence-observability-types.test.ts) · **Snapshot:** modified existing file; 6 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/persistence/tests/type-level/platform-persistence-observability-types.test.ts) · **Snapshot:** modified existing file; 6 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for persistence meaning and coordination.
 
@@ -88,11 +88,11 @@ Owning registered proof: `platform-persistence-runtime`, `diagnostic-catalog-rea
 
 <!-- course-source-sha256: before=74e9697ea6ef75edee12ecb76f708af8d704f5a852ef0622dcc24483f1c0f1c7 after=9ac46a3652b928bc265878da47989350abff813cb4dc5a284ddde42a1f070727 -->
 
-<!-- course-file: platform/persistence/tests/platform-persistence-runtime.test.ts -->
+<!-- course-file: platform/persistence/tests/integration/platform-persistence-runtime.test.ts -->
 
 ### platform-persistence-runtime.test.ts
 
-[Open current source](../../../../../platform/persistence/tests/platform-persistence-runtime.test.ts) · **Snapshot:** modified existing file; 410 added / 2 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/persistence/tests/integration/platform-persistence-runtime.test.ts) · **Snapshot:** modified existing file; 410 added / 2 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for persistence meaning and coordination.
 
@@ -112,11 +112,11 @@ Owning registered proof: `platform-persistence-runtime`, `diagnostic-catalog-rea
 
 <!-- course-source-sha256: before=2e7352906e6374f56bc7cfd2dc16533e06b489133238866a168b0f4865e192c5 after=3659d39193577d62bcd7a46de45f77d992720e9af7a01ccf74d678e0bc3a0d93 -->
 
-<!-- course-file: platform/persistence/tests/platform-persistence-types.test.ts -->
+<!-- course-file: platform/persistence/tests/type-level/platform-persistence-types.test.ts -->
 
 ### platform-persistence-types.test.ts
 
-[Open current source](../../../../../platform/persistence/tests/platform-persistence-types.test.ts) · **Snapshot:** modified existing file; 25 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/persistence/tests/type-level/platform-persistence-types.test.ts) · **Snapshot:** modified existing file; 25 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for persistence meaning and coordination.
 

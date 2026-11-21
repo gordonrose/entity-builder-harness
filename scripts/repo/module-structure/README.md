@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.module-structure.readme
-version: 4
+version: 5
 status: active
 created_on: "2026-11-01"
-updated_on: "2026-11-02"
+updated_on: "2026-11-15"
 layer: 03.product
 domain: architecture
 disciplines: [architecture, agentic]
@@ -38,6 +38,8 @@ owns the rule and its treatment of refactoring; this guide explains the tools.
   valid exports, rejected declarations, legacy changes and the actual config
   index. Its counterexample adds a function to a copy in memory and proves the
   check rejects it; it does not modify the real index.
+  It also runs the shared dependency inspector's isolated workspace fixtures;
+  those create and remove their own temporary files, not repository sources.
 
 ## Example: what gets checked
 
@@ -122,6 +124,10 @@ bash scripts/repo/module-structure/smoke-test.sh
 Successful repository output includes `findings: []`, `indexes` (how many source
 indexes were checked) and `legacy` (how many exact existing allowances matched).
 An unchanged legacy index counts as allowed debt, not as structurally compliant.
+The workspace inspection additionally reports `workspaceSources`,
+`workspaceImports` and `computedWorkspaceImports`. A computed load is counted
+because its destination is not a literal string; a zero-finding report does
+not establish that such a destination is declared or safe.
 
 `MODULE_INDEX_LEGACY_CHANGED` means a pinned index's non-export code changed;
 new re-exports alone do not cause it. `MODULE_INDEX_LEGACY_STALE` means an old
@@ -172,3 +178,54 @@ private aliases, type cycles and the exact catalog exception. Core's boundary
 test checks its actual source graph. These checks do not establish meaningful
 file responsibilities, public compatibility or diagnostic truth: real consumer
 and type/runtime tests and source review still provide those proofs.
+
+## Workspace manifest ownership
+
+Suppose a new receipt feature imports a function from an amount package. Its
+`package.json` must declare that package in `dependencies`. Writing a relative
+path to the amount source instead of its package name does not remove that
+dependency. A test-only assertion package belongs in `devDependencies`; runtime
+source cannot import a test helper to borrow that test-only permission.
+
+`check.mjs` calls
+[`inspectWorkspaceDependencies()`](../workspace-build/dependencies.mjs), which
+discovers workspaces through the root manifest and uses
+[`declarations.mjs`](../workspace-build/declarations.mjs) for their exports and
+selected dependency closures. TypeScript resolves literal import destinations.
+The inspector compares each workspace edge with the importing owner's manifest,
+then returns counts and fixed finding codes to the command's safe JSON report.
+It never executes the inspected programs or prints rejected import strings.
+
+For the invented receipt example, a missing dependency produces this report
+excerpt (not a complete command response):
+
+```json
+{"code":"WORKSPACE_DEPENDENCY_UNDECLARED","path":"apps/receipt/src/index.ts","line":1}
+```
+
+Adding the justified declaration resolves that finding; it does not by itself
+prove runtime behavior. Do not add dependencies merely to suppress a violation.
+The [focused fixtures](../workspace-build/dependencies-test.mjs) exercise both
+the package import and relative-path versions, changed/new/removed packages,
+runtime-to-test bypasses and an independently named workspace.
+
+This inspection includes workspace TS/TSX, JS/JSX, MJS/CJS and MTS/CTS files,
+excluding declaration files and dependency/Git/cache/build/coverage directories.
+Package-relative test roots and test/spec filenames use development declarations;
+an arbitrary runtime folder named `fixtures` or `tests` does not. Literal
+imports, re-exports, import types, import-equals, dynamic imports and simple
+`createRequire()` bindings are recognised. Source symlinks are rejected,
+including imported unowned tooling and entrypoint paths.
+
+Tests may import repository tooling: its external dependencies stay with the
+root manifest. Deployment entrypoints imported by tests instead use that test
+package's selected dependency closure. Runtime source cannot escape ownership
+by importing those unowned files. The existing source-specific module rules
+still decide whether a declared dependency's private files are usable.
+
+Limits: arbitrary loader aliases, computed imports, generated code, declaration
+files and other languages are not universally analysed. A declared external
+package is not installed or executed by this check; existing compiler, lock and
+isolated package checks establish those separate facts. Newly selected runnable
+programs still need their existing explicit approval boundary. Neither this
+static check nor a successful local test qualifies an image or a live target.

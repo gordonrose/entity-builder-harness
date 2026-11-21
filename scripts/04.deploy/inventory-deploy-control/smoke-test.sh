@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.inventory-deploy-control.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-06"
-#   updated_on: "2026-10-28"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.governance
 #   disciplines:
@@ -49,6 +49,10 @@ assert report["summary"]["entrypoints"] >= 1
 assert report["summary"]["routes"] >= 1
 assert any(item["path"] == "scripts/04.deploy/inventory-deploy-control/script.py" for item in report["entrypoints"])
 assert all("path" in item and "classification" in item for item in report["entrypoints"])
+for suffix in ("sh", "py"):
+    command = "scripts/04.deploy/lifecycle/60-run/release-succession/ordinary-update." + suffix
+    entry = next(item for item in report["entrypoints"] if item["path"] == command)
+    assert {"kanbien-core-platform-core-server-persistence", "kanbien-core-platform-entity-smoke"} <= set(entry["routes"]), entry
 PY
 
 python3 -B scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py

@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: github.workflow.publish-kanbien-core-platform-core-server-persistence
-#   version: 2
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -51,32 +51,30 @@ jobs:
           bash scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh --tag kanbien-core-server-persistence:qualification
           bash scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh --tag kanbien-core-server-persistence:qualification --port 39455
           python3 scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py --image kanbien-core-server-persistence:qualification
-          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-core-server-persistence:qualification --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml --input scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh --input scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-core-server-persistence:qualification --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml --input infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore --input infra/04.deploy/03.product/image/core-server-persistence/Dockerfile --input scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs --input scripts/repo/workspace-build/declarations.mjs --input scripts/repo/workspace-build/compile.mjs --input scripts/repo/workspace-build/runtime-packages.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --input infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs --input scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-dependencies.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh --input scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py --input scripts/04.deploy/shared/postgresql-version.py --input scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier
 
       - uses: aws-actions/configure-aws-credentials@v4
         with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
       - name: Prove fixed delivery read access
         id: access
-        run: bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
+        run: |
+          bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
+          python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py --operation reserve
+      - name: Retain pre-publication identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-core-server-persistence-reservation-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/core-server-persistence-publication-reservation.json
+            ${{ runner.temp }}/qualified-image.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
       - name: Publish immutable image
         id: image
-        run: |
-          set -euo pipefail
-          tag="persistence-${GITHUB_SHA::12}-run${GITHUB_RUN_ID}"
-          qualified_image="$(python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py verify --image kanbien-core-server-persistence:qualification --receipt "$RUNNER_TEMP/qualified-image.json" --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier)"
-          docker tag "$qualified_image" "$ECR_URI:$tag"
-          docker push "$ECR_URI:$tag"
-          digest="$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$tag" --query 'imageDetails[0].imageDigest' --output text)"
-          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-          image="$ECR_URI@$digest"
-          docker pull "$image" >/dev/null
-          test "$(docker image inspect "$image" --format '{{.Id}}')" = "$qualified_image"
-          revision="$(docker image inspect "$image" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
-          test "$revision" = "$GITHUB_SHA"
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+        run: python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py --operation publish
       - name: Require clean ECR scan
         id: scan
         run: python3 scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py --repository "$ECR_REPOSITORY" --image-digest "${{ steps.image.outputs.digest }}" --report "$RUNNER_TEMP/ecr-scan.json"
@@ -142,3 +140,16 @@ jobs:
             echo "- Receipt: github-actions-run:$GITHUB_RUN_ID"
             echo '- Deployment: not performed by this workflow.'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain safe failed-operation evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-core-server-persistence-failed-operation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/core-server-persistence-publication-reservation.json
+            ${{ runner.temp }}/core-server-persistence-publication-invoked.json
+            ${{ runner.temp }}/core-server-persistence-publication-operation.json
+          if-no-files-found: ignore
+          overwrite: false
+          retention-days: 30

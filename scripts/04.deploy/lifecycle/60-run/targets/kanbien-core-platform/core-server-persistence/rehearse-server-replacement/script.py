@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.rehearse-core-server-persistence-replacement.impl
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -231,6 +231,98 @@ def historical_service_task(prepare: object, task: object, digest: str) -> bool:
     return isinstance(image, str) and image.endswith("@" + digest)
 
 
+def operations():
+    return module(Path(__file__).resolve().parent.parent / "replacement-operations.py", "persistence_replacement_operations")
+
+
+def replace_current(prepare, receipt, after_administration_receipt=None):
+    """Normal execution always resumes its durable original, never its successor."""
+    owner = operations()
+    facts, remote_possible = {}, False
+    class Observed(Exception):
+        def __init__(self, verdict, code):
+            self.verdict, self.code = verdict, code
+    try:
+        store = owner.store(ROOT)
+        admission, admission_stop = owner.administration_admission(ROOT, after_administration_receipt, proof_receipts(), prepare.aws)
+        previous = store.selected(receipt, admission)
+        remote_possible = previous is not None
+        if previous is None:
+            current, code, definition = current_task(prepare)
+            if current is None or definition is None: return report(outcome(code), code)
+            bound, code = receipt_matches_task(prepare, receipt, current, definition)
+            if not bound: return report(outcome(code), code)
+            request = {"source_revision": receipt["source_revision"], "image_digest": receipt["image_digest"],
+                       "definition": definition, "original_task": current.get("taskArn"), "administration_receipt_sha256": admission}
+        else:
+            request = previous["request"]
+        original, definition = request["original_task"], request["definition"]
+        # Validate the closed slot before returning or passing its selectors.
+        store.path_for(owner.PHASE, request)
+        facts["original_task"] = original
+        if previous is not None: facts["recovery_boundary"] = previous["reserved_at"]
+        def precondition(reservation):
+            nonlocal remote_possible
+            facts["recovery_boundary"] = reservation["reserved_at"]
+            if admission_stop is not None and admission_stop > datetime.fromisoformat(reservation["reserved_at"].replace("Z", "+00:00")):
+                raise Observed("blocked", "persistence-replacement-administration-after-reservation")
+            current, code, selected_definition = current_task(prepare)
+            if current is None or selected_definition != definition or current.get("taskArn") != original:
+                raise Observed(outcome(code) if current is None else "blocked", code if current is None else "persistence-replacement-original-changed-before-stop")
+            bound, code = receipt_matches_task(prepare, receipt, current, definition)
+            if not bound: raise Observed(outcome(code), code)
+            print(json.dumps({"schema": "deploy/persistence-server-replacement-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": "pending", "facts": facts}), file=sys.stderr, flush=True)
+            remote_possible = True
+        def observe(reservation):
+            facts["recovery_boundary"] = reservation["reserved_at"]
+            successor, code = replacement_task(prepare, original, definition, time.monotonic() + 600)
+            if successor is None or not isinstance(successor.get("taskArn"), str): raise Observed(outcome(code), code)
+            facts["replacement_task"] = successor["taskArn"]
+            bound, code = receipt_matches_task(prepare, receipt, successor, definition)
+            if not bound: raise Observed(outcome(code), code)
+            stopped, code = reconciled_original(prepare, original)
+            if stopped is None: raise Observed(outcome(code), code)
+            try:
+                reserved = datetime.fromisoformat(reservation["reserved_at"].replace("Z", "+00:00"))
+                stopped_at, created, started = (datetime.fromisoformat(value.replace("Z", "+00:00")) for value in (stopped["stoppedAt"], successor["createdAt"], successor["startedAt"]))
+                if any(value.tzinfo is None for value in (stopped_at,created,started)) or stopped_at < reserved or created < reserved or started < created: raise ValueError()
+            except (ValueError, TypeError, KeyError):
+                raise Observed("uncertain", "persistence-replacement-reservation-lineage-not-confirmed") from None
+            receipts = proof_receipts()
+            try:
+                retained = retained_reconciliation_receipt(receipts, stopped=stopped, successor=successor,
+                    definition=definition, image_digest=receipt["image_digest"])
+            except ValueError as failure:
+                raise Observed("blocked", str(failure)) from None
+            if retained is not None:
+                proof_path = retained
+                if json.loads(retained.read_text(encoding="utf-8"))["context"]["recovery_boundary"] != reservation["reserved_at"]:
+                    raise Observed("uncertain", "persistence-replacement-retained-reservation-mismatch")
+            else:
+                body = receipts.make(proof_type="server-replacement", operation="controlled-replacement", task=stopped,
+                    image_digest=receipt["image_digest"], result_code="PERSISTENCE_SERVER_REPLACED",
+                    context={"original_stopped_reason": "governed core-server-persistence replacement rehearsal", "successor_task_arn": successor["taskArn"], "successor_started_at": successor["startedAt"], "runtime_task_definition": definition, "recovery_boundary": reservation["reserved_at"]},
+                    controller="rehearse-server-replacement", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+                proof_path = receipts.persist(body)
+            facts.update(candidate_image_digest=receipt["image_digest"], source_revision=receipt["source_revision"],
+                         runtime_task_definition=definition, proof_receipt=str(proof_path.relative_to(ROOT)))
+            return report("replaced", "persistence-server-replaced-read-proof-required", facts=facts)
+        return owner.TASKS.replace_task(owner.provider(prepare.aws), store, phase=owner.PHASE,
+            request=request, cluster=CLUSTER, original=original,
+            reason=lambda _reservation: "governed core-server-persistence replacement rehearsal",
+            precondition=precondition, observe=observe)
+    except Observed as failure:
+        return report(failure.verdict, failure.code, facts=facts)
+    except owner.TASKS.TaskFailure as failure:
+        return report("uncertain", failure.provider_code or "persistence-replacement-submission-uncertain", facts=facts)
+    except owner.TASKS.ProviderFailure as failure:
+        return report("uncertain", failure.code, facts=facts)
+    except (owner.OperationFailure, owner.RESERVATIONS.ReservationFailure) as failure:
+        return report("uncertain" if remote_possible else "blocked", failure.code, facts=facts)
+    except (OSError, ValueError, TypeError, KeyError):
+        return report("uncertain" if remote_possible else "blocked", "persistence-replacement-retention-not-confirmed", facts=facts)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path)
@@ -238,11 +330,12 @@ def main() -> int:
     parser.add_argument("--reconcile-successor-task")
     parser.add_argument("--capture-completed-original-task")
     parser.add_argument("--capture-completed-successor-task")
+    parser.add_argument("--after-administration-receipt")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     capture_requested = args.capture_completed_original_task is not None or args.capture_completed_successor_task is not None
-    if unknown or args.receipt is None or (capture_requested and (not isinstance(args.capture_completed_original_task, str) or not isinstance(args.capture_completed_successor_task, str))) or (capture_requested and args.reconcile_original_task is not None):
+    if unknown or args.receipt is None or (capture_requested and (not isinstance(args.capture_completed_original_task, str) or not isinstance(args.capture_completed_successor_task, str))) or (capture_requested and args.reconcile_original_task is not None) or (args.after_administration_receipt is not None and (capture_requested or args.reconcile_original_task is not None)):
         return report("blocked", "persistence-replacement-arguments-invalid")
     if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[],"proof_contract":{"proof_type":"server-replacement","operation":"controlled-replacement","result_code":"PERSISTENCE_SERVER_REPLACED","family":"kanbien-core-platform-core-server-persistence","deadline_workload":None}})); return 0
     prepare = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py", "prepare")
@@ -266,6 +359,7 @@ def main() -> int:
         except Exception:
             return report("blocked", "persistence-replacement-receipt-persistence-failed")
         return report("replaced", "persistence-server-replaced-read-proof-required", facts={"candidate_image_digest": receipt["image_digest"], "source_revision": receipt["source_revision"], "runtime_task_definition": stopped["taskDefinitionArn"], "original_task": args.capture_completed_original_task, "replacement_task": args.capture_completed_successor_task, "recovery_boundary": stopped_at, "proof_receipt": str(proof_path.relative_to(ROOT))})
+    if args.reconcile_original_task is None: return replace_current(prepare, receipt, args.after_administration_receipt)
     original, code, definition = current_task(prepare)
     current_code = code
     if original is not None and definition is not None:
@@ -307,47 +401,7 @@ def main() -> int:
         except Exception:
             return report("blocked", "persistence-replacement-receipt-persistence-failed")
         return report("replaced", "persistence-server-replaced-read-proof-required", facts={"candidate_image_digest": receipt["image_digest"], "source_revision": receipt["source_revision"], "runtime_task_definition": definition, "original_task": args.reconcile_original_task, "replacement_task": args.reconcile_successor_task, "recovery_boundary": stopped_at, "proof_receipt": str(proof_path.relative_to(ROOT))})
-    if original is None or definition is None:
-        return report(outcome(code), code)
-    original_arn = original.get("taskArn")
-    if not isinstance(original_arn, str):
-        return report("blocked", "persistence-replacement-current-task-invalid")
-    boundary = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    checkpoint = {"schema": "deploy/persistence-server-replacement-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": "pending", "facts": {"recovery_boundary": boundary}}
-    if re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}", original_arn):
-        checkpoint["facts"]["original_task"] = original_arn
-    print(json.dumps(checkpoint), file=sys.stderr, flush=True)
-    ok, _, code = prepare.aws("ecs", "stop-task", "--cluster", CLUSTER, "--task", original_arn, "--reason", "governed core-server-persistence replacement rehearsal")
-    if not ok:
-        return report("uncertain", code, facts={"original_task": original_arn, "recovery_boundary": boundary})
-    replacement, code = replacement_task(prepare, original_arn, definition, time.monotonic() + 600)
-    if replacement is None or not isinstance(replacement.get("taskArn"), str):
-        return report(outcome(code), code, facts={"original_task": original_arn, "recovery_boundary": boundary})
-    bound, code = receipt_matches_task(prepare, receipt, replacement, definition)
-    if not bound:
-        return report(outcome(code), code, facts={"original_task": original_arn, "replacement_task": replacement["taskArn"], "recovery_boundary": boundary})
-    stopped, code = reconciled_original(prepare, original_arn)
-    if stopped is None:
-        return report(outcome(code), code, facts={"original_task": original_arn, "replacement_task": replacement["taskArn"], "recovery_boundary": boundary})
-    try:
-        receipt_body = proof_receipts().make(
-            proof_type="server-replacement", operation="controlled-replacement", task=stopped,
-            image_digest=receipt["image_digest"], result_code="PERSISTENCE_SERVER_REPLACED",
-            context={"original_stopped_reason": "governed core-server-persistence replacement rehearsal", "successor_task_arn": replacement["taskArn"], "successor_started_at": replacement["startedAt"], "runtime_task_definition": definition, "recovery_boundary": boundary},
-            controller="rehearse-server-replacement", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        )
-        proof_path = proof_receipts().persist(receipt_body)
-    except Exception:
-        return report("blocked", "persistence-replacement-receipt-persistence-failed", facts={"original_task": original_arn, "replacement_task": replacement["taskArn"], "recovery_boundary": boundary})
-    return report("replaced", "persistence-server-replaced-read-proof-required", facts={
-        "candidate_image_digest": receipt["image_digest"],
-        "source_revision": receipt["source_revision"],
-        "runtime_task_definition": definition,
-        "original_task": original_arn,
-        "replacement_task": replacement["taskArn"],
-        "recovery_boundary": boundary,
-        "proof_receipt": str(proof_path.relative_to(ROOT)),
-    })
+    return report("blocked", "persistence-replacement-reconciliation-original-invalid")
 
 
 if __name__ == "__main__":

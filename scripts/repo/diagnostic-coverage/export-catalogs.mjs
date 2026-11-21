@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: repo.diagnostics.export-catalogs
-//   version: 4
+//   version: 6
 //   status: active
 //   created_on: "2026-10-27"
-//   updated_on: "2026-11-04"
+//   updated_on: "2026-11-15"
 //   layer: 06.shared
 //   domain: diagnostics
 //   disciplines: [architecture, security, sre]
@@ -17,66 +17,26 @@
 //   - id: repo.diagnostics.coverage
 //     path: scripts/repo/diagnostic-coverage/script.sh
 import { createRequire } from "node:module";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { catalogCompatible } from "./compatibility.mjs";
+import { projectWorkspaceInputs } from "../workspace-build/project-selection.mjs";
+import { planRuntimePackages, writeRuntimePackages, copyRuntimePackageAssets } from "../workspace-build/runtime-packages.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const args = process.argv.slice(2);
 if (args[0] !== "--compiled-root" || !args[1] || args.slice(2).some((arg) => arg !== "--check")) throw new Error("Usage: export-catalogs.mjs --compiled-root <compiled-output> [--check]");
 const compiled = resolve(args[1]);
-// Resolve only the reviewed compiled workspace modules, never TypeScript or provider operations.
-const packageSources = {
-  "@kanbien/core": "packages/core/src/index.js",
-  "@kanbien/app-platform-smoke": "apps/platform-smoke/src/index.js",
-  "@kanbien/product-kanbien-platform": "products/kanbien-platform/src/index.js",
-  "@kanbien/platform-config": "platform/config/src/index.js",
-  "@kanbien/platform-security": "platform/security/src/index.js",
-  "@kanbien/platform-contracts": "platform/contracts/src/index.js",
-  "@kanbien/platform-observability": "platform/observability/src/index.js",
-  "@kanbien/platform-health": "platform/health/src/index.js",
-  "@kanbien/platform-runtime": "platform/runtime/src/index.js",
-  "@kanbien/platform-workers": "platform/workers/src/index.js",
-  "@kanbien/platform-server": "platform/server/src/index.js",
-  "@kanbien/platform-persistence": "platform/persistence/src/index.js",
-  "@kanbien/platform-adapter-aws-persistence-postgresql": "platform/adapters/aws/persistence/postgresql/src/index.js",
-  "@kanbien/platform-adapter-aws-queue-sqs": "platform/adapters/aws/queue/sqs/src/index.js",
-};
-const assetExports = [];
-for (const [name, source] of Object.entries(packageSources)) {
-  const directory = join(compiled, "node_modules", ...name.split("/"));
-  mkdirSync(directory, { recursive: true });
-  const exports = { ".": "./index.cjs" };
-  writeFileSync(join(directory, "index.cjs"), `module.exports = require(${JSON.stringify(join(compiled, source))});\n`);
-  if (name === "@kanbien/core") {
-    const manifest = JSON.parse(readFileSync(join(root, "packages/core/package.json"), "utf8"));
-    for (const [key, path] of Object.entries(manifest.exports)) {
-      if (key === ".") continue;
-      if (path.endsWith(".json")) {
-        const output = join(directory, key.slice(2));
-        exports[key] = `./${key.slice(2)}`;
-        assetExports.push({ source: join(root, "packages/core", path), output });
-        continue;
-      }
-      const filename = `${key.slice(2)}.cjs`;
-      exports[key] = `./${filename}`;
-      mkdirSync(dirname(join(directory, filename)), { recursive: true });
-      writeFileSync(join(directory, filename), `module.exports = require(${JSON.stringify(join(compiled, "packages/core", path.replace(/\.ts$/, ".js")))});\n`);
-    }
-  }
-  if (name === "@kanbien/platform-persistence" || name === "@kanbien/platform-adapter-aws-queue-sqs" || name === "@kanbien/platform-security" || name === "@kanbien/platform-workers") {
-    const packageDirectory = name === "@kanbien/platform-persistence" ? "platform/persistence" : name === "@kanbien/platform-security" ? "platform/security" : name === "@kanbien/platform-workers" ? "platform/workers" : "platform/adapters/aws/queue/sqs";
-    const manifest = JSON.parse(readFileSync(join(root, packageDirectory, "package.json"), "utf8"));
-    for (const [key, target] of Object.entries(manifest.exports)) {
-      if (!target.endsWith(".json")) continue;
-      exports[key] = `./${key.slice(2)}`;
-      assetExports.push({ source: join(root, packageDirectory, target), output: join(directory, key.slice(2)) });
-    }
-  }
-  writeFileSync(join(directory, "package.json"), JSON.stringify({ name, type: "commonjs", exports }));
-}
+// Workspace identity and public exports come from the project and manifests.
+// Generated JSON may be absent while regenerating: neither stale source JSON
+// nor replacement assets are copied before the compatibility verdict below.
+const { inputs } = projectWorkspaceInputs(root, "scripts/repo/diagnostic-coverage/tsconfig.json", {
+  unownedRootPrefixes: ["infra/04.deploy/03.product/entrypoints/"], allowMissingJsonAssets: true,
+});
+const runtimePlan = planRuntimePackages({ compiledRoot: compiled, assetRoot: root, packages: inputs.packages });
+writeRuntimePackages(runtimePlan, {}, { deferJsonAssets: true });
 const require = createRequire(join(compiled, "diagnostic-export.cjs"));
 const { diagnosticRelatedRecordLimit, validDiagnosticDefinition } = require(join(compiled, "packages/core/src/diagnostics/index.js"));
 const selections = [
@@ -97,8 +57,10 @@ const selections = [
   ["platform/persistence/src/maintenance", "platform/persistence/src/maintenance/index.js", "persistenceMaintenanceDiagnosticCatalog", "diagnostics.v1.json", undefined, "contract/reporting"],
   ["platform/adapters/aws/queue/sqs/src/configuration", "platform/adapters/aws/queue/sqs/src/configuration/index.js", "sqsConfigurationDiagnosticCatalog", "diagnostics.v1.json", undefined, "contract/reporting"],
   ["apps/platform-smoke", "apps/platform-smoke/src/diagnostics.js", "platformSmokeDiagnosticCatalog"],
-  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js", "persistenceTaskConfigurationDiagnosticCatalog"],
-  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.js", "persistenceTaskOperationDiagnosticCatalog", "kanbien-core-server-persistence-operation-diagnostics.v1.json", "persistenceTaskFailureContract"],
+  ["apps/entity-smoke", "apps/entity-smoke/features/test-entity/contract/diagnostics.js", "testEntityDiagnosticCatalog"],
+  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js", "entitySmokeTargetDiagnosticCatalog", "entity-smoke-target-diagnostics.v1.json"],
+  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js", "persistenceTaskConfigurationDiagnosticCatalog"],
+  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.js", "persistenceTaskOperationDiagnosticCatalog", "kanbien-core-server-persistence-operation-diagnostics.v1.json", "persistenceTaskFailureContract"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.js", "kanbienPlatformPostgreSqlOperationDiagnosticCatalog", "kanbien-platform-postgresql-operation-diagnostics.v1.json"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-platform-configuration-diagnostics.js", "kanbienPlatformConfigurationDiagnosticCatalog", "kanbien-platform-diagnostics.v1.json"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.js", "kanbienCoreAcceptanceDiagnosticCatalog", "kanbien-core-server-acceptance-diagnostics.v1.json"],
@@ -136,9 +98,6 @@ if (!args.includes("--check") && !incompatible) for (const { output, content } o
   mkdirSync(dirname(output), { recursive: true });
   writeFileSync(output, content);
 }
-if (!failed && !incompatible) for (const { source, output } of assetExports) {
-  mkdirSync(dirname(output), { recursive: true });
-  copyFileSync(source, output);
-}
+if (!failed && !incompatible) copyRuntimePackageAssets(runtimePlan);
 console.log(JSON.stringify({ schema: "repo/diagnostic-export-report/v1", verdict: failed || incompatible ? "failed" : "passed", code: incompatible ? "diagnostic-definition-version-conflict" : failed ? "diagnostic-contract-export-stale" : "diagnostic-contract-exports-current" }));
 if (failed || incompatible) process.exitCode = 1;

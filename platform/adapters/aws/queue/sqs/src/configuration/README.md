@@ -175,13 +175,13 @@ not the template for new service requirements. Its existing retiring-target
 callers were not migrated. Removing that API needs their retirement or an
 approved caller migration; no sibling forwarding file was added.
 
-The [configuration runtime tests](../../tests/sqs-configuration-runtime.test.ts)
+The [configuration runtime tests](../../tests/unit/sqs-configuration-runtime.test.ts)
 prove strict inputs, actual sender/receiver commands using checked values,
 rejection before construction, source identity/read order, selected evidence,
 reporter isolation and Platform composition. The
-[existing runtime tests](../../tests/sqs-adapter-runtime.test.ts) retain message
+[existing runtime tests](../../tests/contract/sqs-adapter-runtime.test.ts) retain message
 operations, native observations and getter behavior. The
-[type tests](../../tests/sqs-configuration-types.test.ts) prove supported shapes.
+[type tests](../../tests/type-level/sqs-configuration-types.test.ts) prove supported shapes.
 Catalogue fixtures prove public JSON resolution, freshness and explicit Python
 reading. Narrow deployment readers do not automatically accept these new codes.
 

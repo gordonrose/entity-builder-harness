@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-09-01"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-09"
 #   layer: 02.rag-rulebook
 #   domain: rulebook
 #   disciplines:
@@ -144,7 +144,7 @@ iterations:
             summary: Define compatibility and migration expectations so existing names are not silently rewritten, and require later registry tests before runtime enforcement is claimed.
         evidence:
           - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
-          - platform/contracts/tests/platform-contracts-runtime.test.ts
+          - platform/contracts/tests/contract/platform-contracts-runtime.test.ts
     cross_review_summary:
       agreement:
         - The source already names app mounts and permission ownership, but lacks a compact semantic identifier policy.
@@ -250,7 +250,7 @@ iterations:
         recommendations: []
         evidence:
           - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
-          - platform/contracts/tests/platform-contracts-runtime.test.ts
+          - platform/contracts/tests/contract/platform-contracts-runtime.test.ts
           - docs/03.product/rules/platform/layers/platform.yml
     cross_review_summary:
       agreement:

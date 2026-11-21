@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -35,6 +35,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 [[ -n "$RETAINED_IMAGE" && -n "$SUPPORT_IMAGE" && "$PORT" =~ ^[0-9]+$ ]] || { echo 'ERROR: retained-rollback-qualification-arguments-invalid' >&2; exit 2; }
+postgresql_values="$(python3 -B "$ROOT/scripts/04.deploy/shared/postgresql-version.py" --contract "$ROOT/infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml" --shell-values)" || exit 1
+IFS=$'\t' read -r POSTGRES_IMAGE POSTGRES_VERSION_NUM POSTGRES_DATA <<<"$postgresql_values"
 command -v docker >/dev/null && docker info >/dev/null 2>&1 || { echo 'ERROR: Docker is required for retained rollback qualification.' >&2; exit 1; }
 command -v openssl >/dev/null || { echo 'ERROR: openssl is required for retained rollback qualification.' >&2; exit 1; }
 # A retained application image may predate the bounded administration program.
@@ -65,12 +67,15 @@ printf 'subjectAltName=DNS:postgres\n' > "$temporary/server.ext"
 safe_command_diagnostic RETAINED_QUALIFICATION_CERTIFICATE_SIGNING_FAILED package 'Disposable TLS setup failed.' 'Inspect the local certificate setup fixture.' -- openssl x509 -req -in "$temporary/server.csr" -CA "$temporary/ca.crt" -CAkey "$temporary/ca.key" -CAcreateserial -out "$temporary/server.crt" -days 1 -extfile "$temporary/server.ext"
 safe_command_diagnostic RETAINED_QUALIFICATION_NETWORK_CREATION_FAILED package 'Disposable resource creation failed.' 'Inspect the disposable resource fixture.' -- docker network create "$network"
 safe_command_diagnostic RETAINED_QUALIFICATION_VOLUME_CREATION_FAILED package 'Disposable resource creation failed.' 'Inspect the disposable resource fixture.' -- docker volume create "$volume"
-safe_command_diagnostic RETAINED_QUALIFICATION_CERTIFICATE_INSTALL_FAILED package 'Disposable certificate installation failed.' 'Inspect the disposable TLS setup fixture.' -- docker run --rm --name "$task" --user root -v "$temporary:/source:ro" -v "$volume:/certs" postgres:16-bookworm bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt'
-safe_command_diagnostic RETAINED_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$database" --network "$network" --network-alias postgres -e POSTGRES_DB=kanbienpersistence -e POSTGRES_USER=fixture_root -e POSTGRES_PASSWORD=synthetic-fixture-root -v "$volume:/certs:ro" postgres:16-bookworm postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key
+safe_command_diagnostic RETAINED_QUALIFICATION_CERTIFICATE_INSTALL_FAILED package 'Disposable certificate installation failed.' 'Inspect the disposable TLS setup fixture.' -- docker run --rm --name "$task" --user root -v "$temporary:/source:ro" -v "$volume:/certs" "$POSTGRES_IMAGE" bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt'
+safe_command_diagnostic RETAINED_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$database" --network "$network" --network-alias postgres -e POSTGRES_DB=kanbienpersistence -e POSTGRES_USER=fixture_root -e POSTGRES_PASSWORD=synthetic-fixture-root -v "$volume:/certs:ro" "$POSTGRES_IMAGE" postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key
 for attempt in $(seq 1 60); do
-  if docker exec -e PGPASSWORD=synthetic-fixture-root "$database" psql -U fixture_root -d kanbienpersistence -Atqc 'SELECT 1' >/dev/null 2>&1; then break; fi
+  if docker exec -e PGPASSWORD=synthetic-fixture-root "$database" psql -h 127.0.0.1 -U fixture_root -d kanbienpersistence -Atqc 'SELECT 1' >/dev/null 2>&1; then break; fi
   [[ "$attempt" != 60 ]] || { echo 'ERROR: retained-rollback-disposable-postgresql-unavailable' >&2; exit 1; }; sleep 1
 done
+observed_postgresql="$(docker exec "$database" psql -X -A -t -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence -c "SHOW server_version_num" 2>&1)" || { echo "ERROR: postgresql-qualification-observation-failed" >&2; exit 1; }
+[[ "$observed_postgresql" == "$POSTGRES_VERSION_NUM" ]] || { echo "ERROR: postgresql-qualification-version-mismatch" >&2; exit 1; }
+printf '{"engine_version":"%s.%s","evidence_class":"container-database-observation","qualification_complete":false}\n' "$((observed_postgresql / 10000))" "$((observed_postgresql % 10000))"
 administrator_password='synthetic-retained-administrator'; iam_token='synthetic-retained-iam-token'; administrator='{"username":"core_administrator","password":"synthetic-retained-administrator"}'; administrator_reference='arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-administrator'; record_id='core-persistence-retained-rollback-compatibility-0001'; fact='retained-rollback-compatibility-fact'; fact_digest="$(printf '%s' "$fact" | sha256sum | cut -d ' ' -f 1)"
 # fixture_root exists solely to bootstrap the disposable server. Every
 # exercised administration operation uses core_administrator, which is a

@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-10-26"
+  updated_on: "2026-11-19"
   layer: 00.chat
   domain: remote-promotion
   disciplines:
@@ -55,9 +55,11 @@ work.
      --remote-main origin <chat-branch>
    ```
 
-2. If the state is `eligible-remote-promotion`, obtain explicit approval for
-   the remote push. A previous approval for local merge does not silently
-   authorize an external push.
+2. If the state is `eligible-remote-promotion`, confirm recorded authority for
+   the remote push. An explicit end-to-end task instruction whose owning workflow
+   includes this push supplies that authority; do not ask again. A local-only
+   approval does not authorize an external push. Ask only if authority is absent
+   or the actual destination/effects exceed it.
 
 3. Prepare the clean, exact-commit worktree after that approval:
 

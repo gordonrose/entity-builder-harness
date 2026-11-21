@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.regression
-#   version: 8
+#   version: 10
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-04"
+#   updated_on: "2026-11-15"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -45,7 +45,7 @@ reader = load("runtime_contract", ROOT / "scripts/repo/diagnostic-coverage/runti
 deployment = load("deployment", ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py")
 
 class DiscoveryTests(unittest.TestCase):
-    def verification_fixture(self, relative, arguments, *, fail=0):
+    def verification_fixture(self, relative, arguments, *, fail=0, output=False):
         with tempfile.TemporaryDirectory(prefix='verification-unit-') as temporary:
             root = Path(temporary)
             subprocess.run(['git', 'init', '--quiet', temporary], check=True)
@@ -81,7 +81,24 @@ class DiscoveryTests(unittest.TestCase):
             result = subprocess.run(['bash', str(target), *arguments], cwd=root, capture_output=True, text=True,
                                     env={**os.environ, 'PATH': str(commands) + ':' + os.environ['PATH'],
                                          'TRACE': str(trace), 'TOOL_EXIT': str(fail)})
-            return result.returncode, trace.read_text().splitlines() if trace.exists() else []
+            observed = result.returncode, trace.read_text().splitlines() if trace.exists() else []
+            return (*observed, result.stdout) if output else observed
+
+    def test_package_command_projection_uses_actual_dispatch_without_executing_tools(self):
+        path = 'scripts/repo/diagnostic-coverage/verify.sh'
+        for arguments, expected in [(['--unit', 'core'], 'core:check'),
+                                    (['--unit', 'entity-smoke'], 'app:entity-smoke:check'),
+                                    (['--security-adapter', 'cognito'], 'platform:adapter:aws:auth:cognito:check'),
+                                    (['--unit', 'catalog'], None), (['--unit', 'base'], None), ([], None)]:
+            with self.subTest(arguments=arguments):
+                code, calls, stdout = self.verification_fixture(path, ['--describe-npm', *arguments], fail=7, output=True)
+                self.assertEqual((code, calls), (0, []))
+                self.assertEqual(json.loads(stdout), {'npmScript': expected,
+                    'ignoreScripts': True if expected and arguments != ['--unit', 'core'] else None})
+        for arguments in [['--unit', 'unknown'], ['--unit', 'core', 'extra'],
+                          ['--unit', 'base', 'extra'], ['--unit', 'catalog', 'extra'],
+                          ['--security-adapter', 'base'], ['--describe-npm']]:
+            self.assertEqual(self.verification_fixture(path, ['--describe-npm', *arguments]), (2, []))
 
     def test_aggregate_wrappers_request_complete_registered_units(self):
         for path, identity in [
@@ -124,11 +141,11 @@ class DiscoveryTests(unittest.TestCase):
         code, calls = self.verification_fixture(path, ['--unit', 'catalog'])
         self.assertEqual(code, 0)
         self.assertEqual(calls[:3], [
-            'tsc -p scripts/repo/diagnostic-coverage/tsconfig.json',
+            'node scripts/repo/workspace-build/script.mjs --project-roots --project scripts/repo/diagnostic-coverage/tsconfig.json --unowned-root-prefix infra/04.deploy/03.product/entrypoints/ --generated-json-assets --payload',
             'node scripts/repo/diagnostic-coverage/export-catalogs.mjs --compiled-root .cache/diagnostic-catalog-export --check',
             'python3 -B scripts/repo/diagnostic-coverage/smoke-test.py'])
         self.assertEqual(len(calls), 3)
-        for unit, command in [('server', 'platform:server:check'), ('product', 'product:kanbien-platform:check'), ('cloudwatch', 'platform:adapter:aws:observability:cloudwatch:check'), ('ecs-fargate', 'platform:adapter:aws:runtime:ecs-fargate:check'), ('dynamodb-persistence', 'platform:adapter:aws:persistence:dynamodb:check'), ('sqs-queue', 'platform:adapter:aws:queue:sqs:check')]:
+        for unit, command in [('entity-smoke', 'app:entity-smoke:check'), ('server', 'platform:server:check'), ('product', 'product:kanbien-platform:check'), ('cloudwatch', 'platform:adapter:aws:observability:cloudwatch:check'), ('ecs-fargate', 'platform:adapter:aws:runtime:ecs-fargate:check'), ('dynamodb-persistence', 'platform:adapter:aws:persistence:dynamodb:check'), ('sqs-queue', 'platform:adapter:aws:queue:sqs:check')]:
             self.assertEqual(self.verification_fixture(path, ['--unit', unit]), (0, ['npm --ignore-scripts run ' + command]))
             self.assertEqual(self.verification_fixture(path, ['--unit', unit], fail=7), (7, ['npm --ignore-scripts run ' + command]))
         self.assertEqual(self.verification_fixture('scripts/04.deploy/build-platform-shell-image/check-source.sh', ['--payload-only']),
@@ -268,7 +285,7 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(set(owners['observability']['checks']), {
             'platform-observability-runtime', 'platform-persistence-runtime', 'platform-server-runtime',
             'platform-workers-runtime', 'platform-health-runtime', 'diagnostic-catalog-readers'})
-        self.assertIn('platform/health/tests/platform-health-runtime.test.ts', owners['observability']['tests'])
+        self.assertIn('platform/health/tests/integration/platform-health-runtime.test.ts', owners['observability']['tests'])
         for capability in ['server', 'workers']:
             self.assertIn('platform/config/src/diagnostics.ts', owners[capability]['definitions'])
         self.assertIn('platform/security/src/diagnostics.ts', owners['server']['definitions'])
@@ -276,7 +293,7 @@ class DiscoveryTests(unittest.TestCase):
             self.assertIn(f'platform/{capability}/src/diagnostics.ts', owners['observability']['definitions'])
         # Configuration predicates and security mechanisms retain their own
         # proof owners; their debt/status must not be absorbed by this split.
-        self.assertTrue(any('platform/observability/tests/configuration-runtime.test.ts' in entry['tests']
+        self.assertTrue(any('platform/observability/tests/integration/configuration-runtime.test.ts' in entry['tests']
                             and 'platform/observability/src/configuration.ts' in entry.get('definitions', [])
                             and 'platform-observability-runtime' in entry['checks'] for entry in reviews))
         self.assertTrue(any('platform/security/src/diagnostics.ts' in [source['path'] for source in entry['sources']]
@@ -504,14 +521,33 @@ class ReaderTests(unittest.TestCase):
         # All regeneration/mutation happens in a disposable tree, never ROOT.
         compiled = ROOT / '.cache/diagnostic-catalog-export'
         git_directory = subprocess.check_output(['git', 'rev-parse', '--absolute-git-dir'], cwd=ROOT, text=True).strip()
+        declaration_files = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', '''
+import {loadWorkspaceGraph} from './scripts/repo/workspace-build/declarations.mjs';
+import {projectWorkspaceInputs} from './scripts/repo/workspace-build/project-selection.mjs';
+const root = process.cwd(), graph = loadWorkspaceGraph(root);
+const selected = projectWorkspaceInputs(root, 'scripts/repo/diagnostic-coverage/tsconfig.json', {
+  unownedRootPrefixes: ['infra/04.deploy/03.product/entrypoints/'], allowMissingJsonAssets: true,
+});
+console.log(JSON.stringify([...new Set([...graph.manifestPaths, ...[...graph.packages.values()].map(p => p.manifestPath),
+  ...selected.rootFiles, ...selected.inputs.sourceFiles,
+  ...Object.values(selected.inputs.packages).flatMap(exports => Object.values(exports).filter(p => p.endsWith('.json')))])]));
+'''], cwd=ROOT, text=True))
         with tempfile.TemporaryDirectory(prefix='config-catalogue-export-') as temporary:
             root = Path(temporary)
             for relative in ['scripts/repo/diagnostic-coverage/export-catalogs.mjs',
-                             'scripts/repo/diagnostic-coverage/compatibility.mjs', 'packages/core/package.json', 'platform/persistence/package.json', 'platform/security/package.json', 'platform/workers/package.json',
-                             'platform/adapters/aws/queue/sqs/package.json']:
+                             'scripts/repo/diagnostic-coverage/compatibility.mjs',
+                             'scripts/repo/diagnostic-coverage/tsconfig.json',
+                             'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json',
+                             'scripts/repo/workspace-build/project-selection.mjs',
+                             'scripts/repo/workspace-build/declarations.mjs',
+                             'scripts/repo/workspace-build/runtime-packages.mjs', *declaration_files]:
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(ROOT / relative, target)
+            # The project reader uses the actual installed TypeScript parser;
+            # this is an exporter compatibility fixture, not package isolation.
+            (root / 'node_modules').mkdir()
+            (root / 'node_modules/typescript').symlink_to(ROOT / 'node_modules/typescript', target_is_directory=True)
             output = root / 'compiled'
             shutil.copytree(compiled, output)
             env = {**os.environ, 'GIT_DIR': git_directory, 'NODE_PATH': str(ROOT / 'node_modules')}
@@ -673,9 +709,13 @@ exports.coreConfigDiagnosticCatalog = {owner: 'core.config', definitions: [
 ]};
 ''')
             local.write_text('stale fixture sentinel\n')
+            retained_asset = output / 'node_modules/@kanbien/core/config/diagnostics.v1.json'
+            retained_bytes = retained_asset.read_bytes()
             self.assertEqual(run()[1]['code'], 'diagnostic-definition-version-conflict')
             self.assertEqual(local.read_text(), 'stale fixture sentinel\n')
             self.assertEqual(aggregate.read_bytes(), reader.CORE_CATALOG.read_bytes())
+            self.assertEqual(retained_asset.read_bytes(), retained_bytes,
+                             'failed compatibility must not copy stale source assets into the runtime')
 
     def test_configuration_selection_and_loading_declaration_are_closed_additive_records(self):
         selection = {"schema": "core/diagnostic-record/v1", "code": "kanbien-core-server.persistence-implementation-invalid",
@@ -1199,7 +1239,7 @@ process.stdout.write(JSON.stringify([
             with self.assertRaises(reader.DiagnosticContractError):
                 reader.validate_record(bad)
             cases.append(bad)
-        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceAdministratorCredentialDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceAdministratorCredentialDiagnostic,value).ok)));"
+        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceAdministratorCredentialDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceAdministratorCredentialDiagnostic,value).ok)));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(cases), capture_output=True, text=True, check=True, cwd=ROOT)
         self.assertEqual(json.loads(result.stdout), [True, True] + [False] * 5)
 
@@ -1248,7 +1288,7 @@ process.stdout.write(JSON.stringify([
                 self.assertEqual(administration.accept(task, 10, "bootstrap-identities"), 1)
             self.assertNotIn("diagnostic", json.loads(output.getvalue()).get("facts", {}))
             self.assertNotIn("synthetic-sensitive-canary", output.getvalue())
-        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceConfigurationDiagnosticCatalog:catalog}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>{const definition=catalog.definitions.find(item=>item.code===value.code);return !!definition&&parseDiagnosticRecord(definition,value).ok})));"
+        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js'));const {persistenceConfigurationDiagnosticCatalog:catalog}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>{const definition=catalog.definitions.find(item=>item.code===value.code);return !!definition&&parseDiagnosticRecord(definition,value).ok})));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(records + malformed), capture_output=True, text=True, check=True, cwd=ROOT)
         self.assertEqual(json.loads(result.stdout), [True] * len(records) + [False] * len(malformed))
 
@@ -1422,7 +1462,7 @@ process.stdout.write(JSON.stringify([
                 expected.append(True)
             except reader.DiagnosticContractError:
                 expected.append(False)
-        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export'); const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js')); const {persistenceConfigurationDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js')); process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceConfigurationDiagnostic,value).ok)));"
+        javascript = "const fs=require('node:fs'),path=require('node:path'); const root=path.resolve('.cache/diagnostic-catalog-export'); const {parseDiagnosticRecord}=require(path.join(root,'packages/core/src/diagnostics/index.js')); const {persistenceConfigurationDiagnostic}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js')); process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(value=>parseDiagnosticRecord(persistenceConfigurationDiagnostic,value).ok)));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(cases), capture_output=True, text=True, check=True, cwd=ROOT, env={**os.environ, "NODE_PATH": str(ROOT / "node_modules")})
         self.assertEqual(json.loads(result.stdout), expected)
         self.assertEqual(expected, [True, True] + [False] * (len(cases) - 2))
@@ -1507,7 +1547,7 @@ process.stdout.write(JSON.stringify([
             except deployment.DiagnosticFailure:
                 expected.append(False)
         self.assertEqual(expected, [True] * 4 + [False] * 9)
-        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {persistenceTaskDiagnosticFields:fields}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(([primary,related])=>fields(primary,related).related_diagnostics!==undefined)));"
+        javascript = "const fs=require('node:fs'),path=require('node:path');const root=path.resolve('.cache/diagnostic-catalog-export');const {persistenceTaskDiagnosticFields:fields}=require(path.join(root,'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js'));process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(([primary,related])=>fields(primary,related).related_diagnostics!==undefined)));"
         result = subprocess.run(["node", "-e", javascript], input=json.dumps(cases), capture_output=True, text=True, check=True, cwd=ROOT, env={**os.environ, "NODE_PATH": str(ROOT / "node_modules")})
         self.assertEqual(json.loads(result.stdout), expected)
         self.assertEqual(reader.validate_operation_record(local, "migration"), local)

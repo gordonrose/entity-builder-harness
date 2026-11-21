@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-platform-target-declaration
-#   version: 7
+#   version: 8
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-12"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -51,12 +51,30 @@ expect_failure() {
 
 copy_fixture() {
   local name="$1"
-  local fixture="$TEMPORARY_DIRECTORY/$name"
+  local fixture="$TEMPORARY_DIRECTORY/$name/targets/kanbien-core-platform"
+  mkdir -p "$TEMPORARY_DIRECTORY/$name/targets" "$TEMPORARY_DIRECTORY/$name/image"
   cp -R "$SOURCE" "$fixture"
+  cp -R "$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector" "$TEMPORARY_DIRECTORY/$name/image/"
+  # Live acceptance belongs to the canonical repository, not a copied fixture.
+  # Keep the real accepted target check below; copied negative cases start with
+  # an unaccepted feature candidate so unrelated live custody cannot mask them.
+  python3 - "$fixture/20-scopes/scope-index.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+path = Path(sys.argv[1])
+value = yaml.safe_load(path.read_text(encoding="utf-8"))
+scope = next(scope for scope in value["scopes"] if scope["id"] == "entity-smoke")
+scope["lifecycle"] = "candidate"
+path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
+PY
   printf '%s' "$fixture"
 }
 
 expect_pass "$SOURCE"
+baseline="$(copy_fixture baseline)"
+expect_pass "$baseline"
 
 missing="$(copy_fixture missing)"
 python3 - "$missing/00-target/target-profile.yml" <<'PY'

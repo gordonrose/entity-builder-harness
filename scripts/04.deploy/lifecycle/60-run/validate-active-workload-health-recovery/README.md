@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.validate-active-workload-health-recovery.readme
-version: 4
+version: 5
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-23"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [agentic, security, sre]
@@ -37,8 +37,11 @@ It does not contact a provider, create workloads, or accept a release.
 An `accepted-historical` scope preserves its canonical declarations and
 accepted evidence but is not an active deployment owner. A `candidate` may
 overlap its active predecessor's intended workload ownership while it is being
-proved; it cannot become active until its predecessor becomes historical in a
-separately governed release transition. Do not flip lifecycle state in response
+proved; successor activation makes that predecessor historical in a governed
+release transition. An independent initial candidate has no predecessor or
+successor and owns workload identities disjoint from every other indexed scope.
+It still passes all declaration validators and requires its own validated
+accepted record before activation; no other scope is retired. Do not flip lifecycle state in response
 to a provider error: candidate rejection leaves the predecessor active, and a
 later reversion requires the existing release/recovery authority and evidence.
 

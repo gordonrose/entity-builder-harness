@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.kanbien-core-platform.persistence-ecs-task-evidence
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -19,30 +19,11 @@
 #   effects: [read-only]
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
 
-def task_overrides_match(task: object, container_name: str, expected_environment: dict[str, str]) -> bool:
-    """An empty inference list is inert; commands, roles and resources stay exact.
-
-    The optional empty inferenceAcceleratorOverrides list is present in captured
-    ECS responses. Unknown keys and nonempty/default-looking consequential
-    fields are deliberately rejected rather than silently discarded.
-    """
-    if not isinstance(task, dict):
-        return False
-    overrides = task.get("overrides")
-    if not isinstance(overrides, dict) or set(overrides) - {"containerOverrides", "inferenceAcceleratorOverrides"}:
-        return False
-    if "inferenceAcceleratorOverrides" in overrides and overrides["inferenceAcceleratorOverrides"] != []:
-        return False
-    containers = overrides.get("containerOverrides")
-    if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict):
-        return False
-    container = containers[0]
-    if set(container) != {"name", "environment"} or container.get("name") != container_name:
-        return False
-    environment = container.get("environment")
-    if not isinstance(environment, list) or len(environment) != len(expected_environment):
-        return False
-    if not all(isinstance(item, dict) and set(item) == {"name", "value"} and isinstance(item["name"], str) and isinstance(item["value"], str) for item in environment):
-        return False
-    return {item["name"]: item["value"] for item in environment} == expected_environment
+_RESPONSE_SPEC = importlib.util.spec_from_file_location("persistence_aws_response", Path(__file__).resolve().parents[5] / "shared/provider-adapters/aws/response.py")
+_RESPONSE = importlib.util.module_from_spec(_RESPONSE_SPEC)
+_RESPONSE_SPEC.loader.exec_module(_RESPONSE)
+# Retain this historical import path for existing migration/acceptance consumers.
+task_overrides_match = _RESPONSE.task_overrides_match

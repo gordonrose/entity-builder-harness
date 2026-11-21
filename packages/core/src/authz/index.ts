@@ -1,7 +1,7 @@
 import type { Principal } from "../authn/index";
 import { copyJsonValue, type JsonValue, type MessageDescriptor } from "../shared/index";
 import type { TenantId } from "../tenancy/index";
-import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { attachCoreDiagnosticRecord } from "../shared/index";
 import { corePermissionRecord } from "./diagnostics";
 export * from "./diagnostics";
 

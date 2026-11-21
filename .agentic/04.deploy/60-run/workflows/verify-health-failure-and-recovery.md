@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-health-failure-and-recovery
-version: 8
+version: 10
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-25"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -26,6 +26,11 @@ contract with `validate-health-failure-and-recovery-declaration` before calling
 provider or target commands.
 
 ## Required sequence
+
+Apply [proof applicability](../../standards/operational-realization-gate.md#proof-applicability-by-change)
+when designing or changing this proof chain. Its migration boundary preserves
+the currently declared requirements below until their connected controls and
+readers support more selective reuse; it is not a runtime exception.
 
 1. Locate the canonical scope declaration; do not construct a parallel health
    record in a plan, README, or provider template.
@@ -49,7 +54,16 @@ provider or target commands.
    If migration execution is declared, require all three persistence recovery
    proof requirements: retained data after replacement, compatible image
    restoration, and isolated database restoration. Do not let evidence for one
-   operation substitute for either of the others. Before accepting verifier or
+   operation substitute for either of the others. For a scope declaring the
+   optional initial-release policy, first run the existing release-succession
+   control with `--operation select-recovery --scope-contract <canonical-contract>
+   --evidence-root <scope>/30-release-evidence`. Only a successful initial-policy
+   result permits bounded-stop/data-preservation proof instead of prior-image
+   restoration proof at first acceptance. Replacement and isolated restore
+   remain required. A validated current accepted release selects ordinary
+   compatible-image restoration, while missing/broken history blocks selection.
+   The read-only result is not provider authority or execution evidence.
+   Before accepting verifier or
    migration evidence, confirm the declared read-only fresh-state observer,
    durable observer receipt before any replay, repeat, concurrent, conflicting,
    lost-response, and cleanup/replay behaviours were covered by the applicable

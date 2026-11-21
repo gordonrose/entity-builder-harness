@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -54,3 +54,4 @@ print("private persistence verifier isolation checks passed")
 PY
 
 python3 -B "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py"
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operation-test.py"

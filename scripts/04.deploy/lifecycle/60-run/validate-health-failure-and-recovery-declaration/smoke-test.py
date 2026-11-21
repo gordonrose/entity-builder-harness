@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-health-failure-and-recovery-declaration.fixtures
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -336,11 +336,76 @@ def main() -> int:
     if status != 0 or report["verdict"] != "passed":
         raise AssertionError(f"valid server-mediated verifier fixture failed: {report}")
 
+    generated_verifier = copy.deepcopy(mediated_verifier)
+    generated_proof = generated_verifier["health_recovery"]["workloads"][1]["server_mediated_dependency_proof"]
+    generated_proof["acceptance_record"] = {
+        "identity": "generated-feature-record",
+        "equivalent_repeat": "new-record-only-after-explicit-new-attempt",
+        "concurrent_create": "controller-reserves-one-create-per-proof-label",
+        "conflicting_reuse": "reject-preexisting-proof-label",
+        "lost_response_after_commit": "observe-indexed-label-before-new-attempt",
+        "readback": "original-id-and-facts-digest-required-no-recreation",
+        "identifier_collision": "reject-duplicate-id-preserve-original-facts",
+    }
+    logical_cleanup = "logical-delete-synthetic-record-after-retention-purge-separately-governed"
+    generated_proof["cleanup"]["outcome"] = logical_cleanup
+    status, report = run(generated_verifier, persistence_binding)
+    if status != 0 or report["verdict"] != "passed":
+        raise AssertionError(f"valid generated-ID verifier fixture failed: {report}")
+    for field in generated_proof["acceptance_record"]:
+        unsafe = copy.deepcopy(generated_verifier)
+        unsafe["health_recovery"]["workloads"][1]["server_mediated_dependency_proof"]["acceptance_record"][field] = "unsafe-substitution"
+        expect_failure(unsafe, persistence_binding, "server-mediated-dependency-proof-acceptance-record-invalid")
+    for field, value in [("outcome", "delete-synthetic-record-only-after-retention"), ("route", "direct-dependency-cleanup"), ("retention", "until-replacement-proof-accepted")]:
+        unsafe = copy.deepcopy(generated_verifier)
+        unsafe["health_recovery"]["workloads"][1]["server_mediated_dependency_proof"]["cleanup"][field] = value
+        expect_failure(unsafe, persistence_binding, "server-mediated-dependency-proof-cleanup-invalid")
+    mixed_variant = copy.deepcopy(mediated_verifier)
+    mixed_variant["health_recovery"]["workloads"][1]["server_mediated_dependency_proof"]["cleanup"]["outcome"] = logical_cleanup
+    expect_failure(mixed_variant, persistence_binding, "server-mediated-dependency-proof-cleanup-invalid")
+
     migration_contract, migration_binding = dependency_server_contract()
     migration_workload(migration_contract, migration_binding)
     status, report = run(migration_contract, migration_binding)
     if status != 0 or report["verdict"] != "passed":
         raise AssertionError(f"valid migration declaration fixture failed: {report}")
+
+    initial_contract = copy.deepcopy(migration_contract)
+    initial_policy = {
+        "applicability": "no-current-or-historical-accepted-release",
+        "strategy": "stop-own-scope-workloads-preserve-data",
+        "provider_mutation": "explicit-approved-bounded-control-only",
+        "automatic_replay": "prohibited", "database_reversal": "prohibited",
+        "verification": "owned-workloads-stopped-and-data-preserved",
+        "proof_requirement": "required-before-first-scope-acceptance",
+        "subsequent_releases": "prior-compatible-accepted-image-required",
+    }
+    initial_contract["health_recovery"]["initial_release_recovery"] = initial_policy
+    schema = read(ROOT / ".agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml")
+    if {key: schema["initial_release_recovery"].get(key) for key in initial_policy} != initial_policy:
+        raise AssertionError("initial policy schema and caller fixture disagree")
+    status, report = run(initial_contract, migration_binding)
+    if status != 0:
+        raise AssertionError(f"valid optional initial-release policy failed: {report}")
+    for field in initial_policy:
+        for remove in (True, False):
+            unsafe = copy.deepcopy(initial_contract)
+            if remove:
+                del unsafe["health_recovery"]["initial_release_recovery"][field]
+            else:
+                unsafe["health_recovery"]["initial_release_recovery"][field] = "unsafe-substitution"
+            expect_failure(unsafe, migration_binding, "initial-release-recovery-invalid")
+    for invalid in [None, {}, {**initial_policy, "skip_restore_proof": True}]:
+        unsafe = copy.deepcopy(initial_contract)
+        unsafe["health_recovery"]["initial_release_recovery"] = invalid
+        expect_failure(unsafe, migration_binding, "initial-release-recovery-invalid")
+    for concern, code in [("server_replacement", "persistence-recovery-server-replacement-invalid"), ("isolated_database_restore", "persistence-recovery-isolated-restore-invalid"), ("image_rollback", "persistence-recovery-image-rollback-invalid")]:
+        unsafe = copy.deepcopy(initial_contract)
+        del unsafe["health_recovery"]["persistence_recovery"][concern]
+        expect_failure(unsafe, migration_binding, code)
+    unsafe = copy.deepcopy(initial_contract)
+    unsafe["health_recovery"]["workloads"][0]["release_recovery"]["strategy"] = "always-stop-no-rollback"
+    expect_failure(unsafe, migration_binding, "release-recovery-invalid")
 
     missing_recovery = copy.deepcopy(migration_contract)
     del missing_recovery["health_recovery"]["persistence_recovery"]

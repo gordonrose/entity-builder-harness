@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.scope-lifecycle-and-workload-ownership
-version: 1
+version: 2
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-23"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.scope-lifecycle
 disciplines: [security, sre]
@@ -29,6 +29,13 @@ may overlap its active predecessor only while being prepared and proved; it is
 not release authority. An accepted-historical scope retains declarations and
 evidence for audit and governed recovery, but is not an active deployment
 owner.
+
+An independent initial candidate has no predecessor or successor and owns
+workload identities disjoint from every other indexed scope. It is not an
+accepted release or active owner. It must satisfy the same declaration,
+configuration, health/completion, diagnostics and proof requirements as a
+successor. Only its own validated accepted record permits initial activation;
+activation leaves other scopes and their accepted evidence unchanged.
 
 Changing lifecycle state does not mutate a provider. A candidate failure leaves
 its predecessor active. Candidate activation, or later reversion, follows the

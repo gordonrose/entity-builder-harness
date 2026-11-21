@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -56,6 +56,9 @@ workloads:
     provider_reference: CoreServerPersistenceRestorationVerifierTaskDefinition
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts, command_description: node artifacts/kanbien-core-server-persistence-restore-verifier.main.js }
 proposed_provider_binding:
+  stack: kanbien-core-platform-core-server-persistence
+  publication_pipeline: core-server-persistence-package-custody
+  dependencies: {}
   configuration_adapter: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
   template: 30-provider-realization/aws/cloudformation/core-server-persistence.yml
   workload_kind: ecs-fargate-service-and-run-to-completion-tasks

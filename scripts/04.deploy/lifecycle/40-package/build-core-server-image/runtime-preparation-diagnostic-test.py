@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.runtime-preparation-diagnostics
-#   version: 1
+#   version: 3
 #   status: active
 #   created_on: "2026-10-31"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -36,9 +36,47 @@ CANARY = "PRIVATE_PREPARATION_PATH_CANARY"
 spec = importlib.util.spec_from_file_location("payload_checker", ROOT / BASE / "build-core-server-image/verify-payload.py")
 payload = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(payload)
+SHELL_PACKAGES = json.loads(subprocess.check_output([
+    "node", "--input-type=module", "-e",
+    'import {projectWorkspaceInputs} from "./scripts/repo/workspace-build/project-selection.mjs"; '
+    'console.log(JSON.stringify(projectWorkspaceInputs(process.cwd(), "platform/server/tsconfig.image.json", '
+    '{unownedRootPrefixes:["infra/04.deploy/03.product/entrypoints/"]}).inputs.packages));',
+], cwd=ROOT, text=True))
 
 
 class PreparationDiagnostics(unittest.TestCase):
+    def test_platform_shell_entity_app_shim_uses_compiled_public_root(self):
+        with tempfile.TemporaryDirectory(prefix="prepare-entity-app-") as temporary:
+            directory = Path(temporary)
+            compiled = directory / '.cache/platform-shell-image-build'
+            self.stub_exports(compiled)
+            target = compiled / 'apps/entity-smoke/src/index.js'
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text('exports.marker = "compiled-entity";\n')
+            self.run_preparer('platform-shell', directory)
+            shim = compiled / 'node_modules/@kanbien/app-entity-smoke'
+            manifest = json.loads((shim / 'package.json').read_text())
+            self.assertEqual(manifest['exports'], {'.': './index.js'})
+            probe = 'try { if (require(process.argv[1]).marker !== "compiled-entity") process.exit(2); } catch (error) { process.stdout.write(error.code); process.exit(1); }'
+            result = subprocess.run(['node', '-e', probe, str(shim)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout)
+            target.unlink()
+            missing = subprocess.run(['node', '-e', probe, str(shim)], capture_output=True, text=True)
+            self.assertEqual((missing.returncode, missing.stdout), (1, 'MODULE_NOT_FOUND'))
+
+    def test_platform_shell_entity_shim_failures_keep_safe_package_location(self):
+        for phase, filename in (('shim-write', 'index.js'), ('manifest-write', 'package.json')):
+            with self.subTest(phase=phase), tempfile.TemporaryDirectory(prefix='prepare-entity-failure-') as temporary:
+                directory = Path(temporary)
+                self.stub_exports(directory / '.cache/platform-shell-image-build')
+                package = directory / '.cache/platform-shell-image-build/node_modules/@kanbien/app-entity-smoke'
+                (package / filename).mkdir(parents=True)
+                location = {'package': '@kanbien/app-entity-smoke'}
+                if phase == 'shim-write': location['export'] = '.'
+                self.run_preparer('platform-shell', directory, phase=phase,
+                                  effect='earlier-writes-possible', location=location)
+                self.assertFalse((package.parent / 'app-platform-smoke/package.json').exists())
+
     def run_preparer(self, kind, directory, *, arguments=None, phase=None, effect=None, location=None):
         compiled = directory / CANARY
         args = [] if kind == "platform-shell" else ["--compiled-root", str(compiled)]
@@ -57,6 +95,12 @@ class PreparationDiagnostics(unittest.TestCase):
         for home in ("packages/core/src", "platform", "infra/04.deploy/03.product/entrypoints"):
             for source in (ROOT / home).rglob("*.ts"):
                 target = compiled / source.relative_to(ROOT).with_suffix(".js")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("module.exports = {};\n")
+        for exports in SHELL_PACKAGES.values():
+            for source in exports.values():
+                if not source.endswith('.js'): continue
+                target = compiled / source
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text("module.exports = {};\n")
 
@@ -91,8 +135,8 @@ class PreparationDiagnostics(unittest.TestCase):
                     else:
                         blocker = compiled / "node_modules/@kanbien/core" / filename
                         blocker.mkdir(parents=True)
-                    location = {"package": "@kanbien/core"}
-                    if phase != "manifest-write" and not (kind == "platform-shell" and phase == "shim-directory"):
+                    location = {"package": "@kanbien/app-entity-smoke" if kind == "platform-shell" and phase == "shim-directory" else "@kanbien/core"}
+                    if phase != "manifest-write":
                         location["export"] = "."
                     self.run_preparer(kind, directory, phase=phase, effect="earlier-writes-possible", location=location)
                     if phase == "manifest-write":
@@ -112,6 +156,7 @@ class PreparationDiagnostics(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="prepare-wrapper-") as temporary:
             directory = Path(temporary)
             compiled = directory / CANARY
+            self.stub_exports(compiled)
             (compiled / "kanbien-core-server.main.js").mkdir(parents=True)
             self.run_preparer("core-server", directory, phase="wrapper-write", effect="earlier-writes-possible", location={"entrypoint": "kanbien-core-server.main.js"})
             self.assertTrue((compiled / "node_modules/@kanbien/core/package.json").is_file())

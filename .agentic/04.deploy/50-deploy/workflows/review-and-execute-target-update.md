@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.release-update-and-recovery
-version: 4
+version: 5
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-25"
+updated_on: "2026-11-20"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -34,10 +34,20 @@ image contracts, and publication route. Follow the build and package workflows
 linked from the lifecycle map. A new capability must first satisfy declaration
 coverage; existing exclusions are not implicit authority to expand the scope.
 
-Before unattended work, resolve the worktree and tool/dependency setup, exact
-committed source revision, permitted operations, credential availability,
-publication approval mechanism, and expiring provider conditions. Use existing
-approval evidence; request only missing authority or a change of scope. Check
+Reconcile [proof applicability](../../standards/operational-realization-gate.md#proof-applicability-by-change)
+against those declarations before selecting checks. Refer to valid earlier
+build/package proof through its owning readers rather than independently
+repeating preparation. Carry source/artifact identity and available stage
+observations forward under the shared [delivery accounting](../../../shared/testing/standards/test-execution.md#delivery-budget-accounting)
+rule; starting Deploy does not restart the delivery clock. If cross-stage
+timing is unavailable, say so without inventing a new execution journal.
+
+Before unattended work, apply the
+[end-to-end delivery authority](../../standards/operational-realization-gate.md#end-to-end-live-delivery-authority)
+rule. Resolve worktree/tool setup, permitted operations, credentials and expiring
+provider conditions upfront; bind the exact committed source and qualified
+package when produced. A complete live-delivery request includes its governed
+publication and execution, without another stage-by-stage prompt. Check
 account capability before claiming an external approval can only be performed
 by the user. No recorded intention bypasses a protected gate. Continue
 independent local work when an external prerequisite blocks mutation.
@@ -60,6 +70,48 @@ independent local work when an external prerequisite blocks mutation.
 6. Pass the receipt, deployment result, reviewed change identity and retained
    baseline to
    `.agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md`.
+
+For a scope declaring `ordinary_delivery`, the connected invocation documented
+in that Run workflow performs this hand-off and subsequent acceptance through
+the existing controllers. Do not launch a separate deployment before invoking
+it merely to satisfy this procedural list. Original operation receipts remain
+the resume authority; the connector grants no additional execution approval.
+
+For the entity-smoke adapter, use its existing infrastructure command with
+`--phase update` and the exact `--expected-predecessor`; create/activate are
+initial deployment operations, not aliases for an update. The same shared
+change-set and reservation owners review, submit once and reconcile updates.
+Supply `--rollback-receipt` and `--rollback-compatibility-id` for the update
+too: compatible recovery is checked before deploying, not discovered only
+after the candidate fails.
+For the declared unchanged-target reuse path, the compatibility selector is
+`accepted-proof-<accepted-release-suffix>` rather than a fabricated compatibility
+record ID. The existing rollback selector validates complete accepted custody,
+the exact qualified old package, immutable operational configuration/permission/
+schema inputs and unchanged database incarnation through the shared proof
+policy. Any operational difference requires a real fresh compatibility record.
+The update remains image-only: no migration execution, permission-model change
+or non-image parameter change is admitted by this selection.
+Before submission, the adapter checks the existing acceptance schema's
+recovery-input boundary against both immutable source revisions. Changes to
+that boundary require affected capability requalification, not a silent
+readiness-only acceptance. Keep the original proof label/data ownership and
+use the derived delivery namespace for new operation receipts.
+
+Recovery uses `--phase rollback`, the same candidate/controller receipt,
+and the separate `--rollback-receipt` and `--rollback-compatibility-id`.
+Compatibility must cover every image role the actual template updates.
+It never rewinds migrations, widens grants or promotes the failed candidate.
+
+Image-only successor execution explicitly enables provider rollback for immutable
+task-definition replacements. A failed provisioning update is not a completed
+deployment or application verification failure. Previously disabled-rollback
+failures use only the separately approved
+[bounded failed-update recovery](../../../aws/workflows/execute-approved-aws-change.md#bounded-failed-update-recovery).
+After verified recovery, UPDATE_ROLLBACK_COMPLETE is a stable starting state,
+subject to the same accepted ownership, template and parameter checks. Retain
+old plan/evidence readers, but new successor plans declare enabled provider
+rollback; do not reinterpret an old plan as authorizing a changed request.
 
 ## Stop Conditions and Output
 

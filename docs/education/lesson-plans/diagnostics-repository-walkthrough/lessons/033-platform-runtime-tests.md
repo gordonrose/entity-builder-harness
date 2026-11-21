@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test` work. A test proves a boundary, a generated expor
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/runtime/tests/context-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/runtime/tests/unit/context-diagnostics-runtime.test.ts -->
 
 ### context-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/runtime/tests/context-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 71 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/runtime/tests/unit/context-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 71 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-runtime-runtime`, `platform-server-runtime`, 
 
 <!-- course-source-sha256: before=absent after=fcedc48d6f535b8c22e414832dc364b5aed8bb5242354b19c6122567c1b547f2 -->
 
-<!-- course-file: platform/runtime/tests/diagnostics-runtime.test.ts -->
+<!-- course-file: platform/runtime/tests/integration/diagnostics-runtime.test.ts -->
 
 ### diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/runtime/tests/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 68 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/runtime/tests/integration/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 68 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -92,11 +92,11 @@ Owning registered proof: `platform-contracts-runtime`, `platform-runtime-runtime
 
 <!-- course-source-sha256: before=absent after=ddbf62eb3e52353561f65cb419af61a6fa534d3bbc10647ce07132ad00269887 -->
 
-<!-- course-file: platform/runtime/tests/lifecycle-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/runtime/tests/integration/lifecycle-diagnostics-runtime.test.ts -->
 
 ### lifecycle-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/runtime/tests/lifecycle-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 164 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/runtime/tests/integration/lifecycle-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 164 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -114,11 +114,11 @@ Owning registered proof: `platform-runtime-runtime`, `platform-server-runtime`, 
 
 <!-- course-source-sha256: before=absent after=ea2da30646fa9e913d66bf587416658b7e5c1578fd36fc63536c2af48f4f01fb -->
 
-<!-- course-file: platform/runtime/tests/lifecycle-diagnostics-types.test.ts -->
+<!-- course-file: platform/runtime/tests/type-level/lifecycle-diagnostics-types.test.ts -->
 
 ### lifecycle-diagnostics-types.test.ts
 
-[Open current source](../../../../../platform/runtime/tests/lifecycle-diagnostics-types.test.ts) · **Snapshot:** added (absent from baseline); 10 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/runtime/tests/type-level/lifecycle-diagnostics-types.test.ts) · **Snapshot:** added (absent from baseline); 10 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for application mounting and lifecycle.
 
@@ -136,11 +136,11 @@ Owning registered proof: `platform-runtime-runtime`, `platform-server-runtime`, 
 
 <!-- course-source-sha256: before=absent after=2eae7841fc080023750e8dd80706204a30734945eb27159691b7c2ea996ce15b -->
 
-<!-- course-file: platform/runtime/tests/mount-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/runtime/tests/integration/mount-boundary-diagnostics-runtime.test.ts -->
 
 ### mount-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/runtime/tests/mount-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 72 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/runtime/tests/integration/mount-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 72 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 
@@ -158,11 +158,11 @@ Owning registered proof: `platform-contracts-runtime`, `platform-runtime-runtime
 
 <!-- course-source-sha256: before=absent after=1a3f827e694d9c9bcd67d9d06bb0e389cdfcc4f1191ba38f355547b2730a3ff0 -->
 
-<!-- course-file: platform/runtime/tests/registration-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/runtime/tests/integration/registration-diagnostics-runtime.test.ts -->
 
 ### registration-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/runtime/tests/registration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 99 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/runtime/tests/integration/registration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 99 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for application mounting and lifecycle.
 

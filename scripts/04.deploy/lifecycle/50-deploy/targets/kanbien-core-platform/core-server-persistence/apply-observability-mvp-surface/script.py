@@ -8,10 +8,10 @@ declared dedicated collector.  It never retries an ambiguous provider mutation:
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-18"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -29,7 +29,6 @@ import hashlib
 import importlib.util
 import json
 import re
-import tempfile
 import time
 from pathlib import Path
 
@@ -213,9 +212,9 @@ def change_name(server: dict, collector: dict, alert_email: str) -> str:
     return f"kanbien-core-platform-observability-{server['image_digest'][7:19]}-{collector['image_digest'][7:19]}-{template_fingerprint()}-{recipient}"
 
 
-def reconcile(prepare, name: str, expected: dict[str, str], server: dict, collector: dict, alert_email: str, *, expected_added: dict[str, str] = ADDED, expected_modified: dict[str, str] = MODIFIED) -> int:
+def reconcile(prepare, name: str, expected: dict[str, str], server: dict, collector: dict, alert_email: str, *, expected_added: dict[str, str] = ADDED, expected_modified: dict[str, str] = MODIFIED, reservation=None) -> int:
     observable_expected = {key: value for key, value in expected.items() if key != "ObservabilityAlertEmail"}
-    verdict, code = prepare.observe_update(name, observable_expected, lambda value: review(value, name, server, collector, alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified))
+    verdict, code = prepare.observe_update(name, observable_expected, lambda value: review(value, name, server, collector, alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified), reservation=reservation)
     return report("updated-awaiting-observability-proof" if verdict == "complete" else verdict, code, facts={"change_set": name, "server_image_digest": server["image_digest"], "collector_image_digest": collector["image_digest"]})
 
 
@@ -240,6 +239,7 @@ def main() -> int:
     parser.add_argument("--alert-email")
     parser.add_argument("--repair-readiness-metric-delivery", action="store_true")
     parser.add_argument("--reconcile", action="store_true")
+    parser.add_argument("--operation-label")
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.server_receipt is None or args.collector_receipt is None or not isinstance(args.alert_email, str) or not re.fullmatch(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}", args.alert_email):
@@ -252,7 +252,16 @@ def main() -> int:
         return report("blocked", "persistence-observability-mvp-package-receipts-invalid")
     if not inline_template_body_is_supported():
         return report("blocked", "persistence-observability-mvp-template-body-too-large")
-    name = change_name(server, collector, args.alert_email)
+    name = prepare.labelled_update_name(change_name(server, collector, args.alert_email), args.operation_label)
+    if name is None:return report("blocked", "persistence-observability-mvp-arguments-invalid")
+    expected_added, expected_modified = (REPAIR_ADDED, REPAIR_MODIFIED) if args.repair_readiness_metric_delivery else (ADDED, MODIFIED)
+    expected = {"ImageDigest": server["image_digest"], "SupportImageDigest": server["image_digest"], "RestoreVerifierImageDigest": server["image_digest"], "SourceRevision": server["source_revision"], "EnableObservability": "true", "ObservabilityCollectorImage": f"{prepare.INPUTS['repository_uri']}@{collector['image_digest']}", "ObservabilityAlertEmail": args.alert_email}
+    observation = lambda reservation=None: reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified,reservation=reservation)
+    if args.reconcile:return observation()
+    request, resumed = prepare.begin_update(name=name, receipt=server, controller=__file__, template=TEMPLATE,
+        settings={"collector":collector,"recipient":args.alert_email,"repair":args.repair_readiness_metric_delivery},
+        observe=observation, failure=lambda verdict,code:report(verdict,code))
+    if resumed is not None:return resumed
     import subprocess
     collector_gate = subprocess.run(["bash", str(COLLECTOR_GATE), "--json"], capture_output=True, text=True)
     if collector_gate.returncode or not create.package_gates(args.server_receipt) or not prepare.declaration_covered() or not prepare.live_budget()[0] or not prepare.candidate_image(server)[0] or not collector_image_available(prepare, collector):
@@ -260,7 +269,6 @@ def main() -> int:
     foundation, code = prepare.foundation_outputs()
     if foundation is None:
         return report("blocked", code)
-    expected = {"ImageDigest": server["image_digest"], "SupportImageDigest": server["image_digest"], "RestoreVerifierImageDigest": server["image_digest"], "SourceRevision": server["source_revision"], "EnableObservability": "true", "ObservabilityCollectorImage": f"{foundation['RepositoryUri']}@{collector['image_digest']}", "ObservabilityAlertEmail": args.alert_email}
     infrastructure, code = prepare.infrastructure_parameters(foundation)
     if infrastructure is None:
         return report("blocked", code)
@@ -268,9 +276,6 @@ def main() -> int:
     current = parameters(stack) if ok else None
     if current is None or stack.get("Stacks", [{}])[0].get("StackStatus") not in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}:
         return report("blocked", code if not ok else "persistence-observability-mvp-stack-not-healthy")
-    expected_added, expected_modified = (REPAIR_ADDED, REPAIR_MODIFIED) if args.repair_readiness_metric_delivery else (ADDED, MODIFIED)
-    if args.reconcile:
-        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
     observable_expected = {key: value for key, value in expected.items() if key != "ObservabilityAlertEmail"}
     if args.repair_readiness_metric_delivery:
         if current.get("EnableObservability") != "true" or any(current.get(key) != value for key, value in observable_expected.items()):
@@ -283,29 +288,16 @@ def main() -> int:
     if not isinstance(services, list) or len(services) != len(service_names) or not all(healthy(item) for item in services):
         return report("blocked", "persistence-observability-mvp-services-not-healthy")
     values = {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{prepare.REGION}:{prepare.ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": foundation["RepositoryUri"], **expected}
-    ok, _, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok:
-        if code != "aws-resource-missing":
-            return report("blocked", code)
-        parameter_values = [{"ParameterKey": key, "ParameterValue": value} for key, value in values.items()]
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
-            json.dump(parameter_values, file)
-            file.flush()
-            ok, _, code = prepare.aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
-        if not ok:
-            return report("uncertain", code, facts={"change_set": name})
-    change, code = wait_for_review(prepare, name, server, collector, args.alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified)
-    if change is None:
-        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
-    if change.get("ExecutionStatus") != "AVAILABLE":
-        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
-    actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if not prepare.update_parameters_match(actual, observable_expected, current):
-        return report("blocked", "persistence-observability-mvp-parameters-mismatch")
-    ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok:
-        return report("uncertain", code, facts={"change_set": name})
-    return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
+    def admit(change):
+        actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
+        return None if prepare.update_parameters_match(actual, observable_expected, current) else "persistence-observability-mvp-parameters-mismatch"
+    return prepare.apply_update(
+        name=name, request=request, parameters=[{"ParameterKey": key, "ParameterValue": value} for key, value in values.items()],
+        template_arguments=("--template-body", f"file://{TEMPLATE}"),
+        review=lambda _existing, _created: wait_for_review(prepare, name, server, collector, args.alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified),
+        admit=admit, observe=observation,
+        failure=lambda verdict, code: report(verdict, code, facts={"change_set": name} if verdict == "uncertain" else None),
+    )
 
 
 if __name__ == "__main__":

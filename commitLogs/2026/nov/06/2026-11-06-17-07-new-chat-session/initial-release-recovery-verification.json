@@ -1,0 +1,254 @@
+{
+  "schema": "chat/initial-release-recovery-verification/v1",
+  "date": "2026-11-08",
+  "authority": "informational-session-snapshot-not-package-custody-or-live-acceptance",
+  "scope": "bounded-initial-release-governance-change",
+  "source_state": "dirty-worktree-verified-input-digests-not-qualified-commit",
+  "outcome": "five-requested-checks-passed-across-two-runs",
+  "runs": [
+    {
+      "path": ".cache/test-runs/20261108T094327Z-5dff56d6ba094b53889a95647ffad88e/report.json",
+      "sha256": "9d4076c0b0b7f4c3aa3d567c4f2929e962d5a084687ce83d0e091c162a033f3a",
+      "verdict": "gap",
+      "coverage": "requested-checks-only",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "checks": [
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "acceptance-route-regression",
+          "elapsed_seconds": 177.110419,
+          "evidence_key": "0747668edf1fefa5ceddbfb3615079718af183821e53ef74693635ce4733ef37",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "e60d9465c0663c714d1a1238f20ec8b5911fad9629cdbef473f351a05777b6f1",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed"
+          ],
+          "check_id": "check-selection-mechanics",
+          "elapsed_seconds": 388.707848,
+          "evidence_key": "fe193ef42b853d91a7eaf9304404d176e333acafab0e2914619f45e4b5e54fae",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "20d2fbdee6960416afea2211958a0f383065945bc3201a944cd31621fe169728",
+          "runtime_digest": "8d3328a90383bf23d7b34b007e6f7ee37564416f6eb7d88c8f0e4601fea4a41a",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "check_id": "check-selection-repository-contracts",
+          "evidence_key": "88c773f20215055d0b03cd369122dcda978bc855c7095e0cd09293a3814c2399",
+          "input_digest": "479a83e4327592ee888f435501982606810d962d4d0c747a978ec59abf7342cd",
+          "runtime_digest": "d3d15425907bcbaf85ba5f5bcd27d3f0ec3dcd6c2a473615505e50cf9fcd8aea",
+          "stage": "local",
+          "status": "uncertain"
+        },
+        {
+          "boundary": "commit",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "verification-contract-changed"
+          ],
+          "check_id": "health-failure-recovery-declaration-regression",
+          "elapsed_seconds": 21.643416,
+          "evidence_key": "a87c4360eef1c5d3b0c4055193827bf5d2033d124190d4c17d03d881d7e62bfe",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "12bed58bddf51b54a7a66fb6e8e5f3b6065390d7967438cd1addc0397dee88f5",
+          "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+          "stage": "local",
+          "status": "passed"
+        },
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "no-prior-successful-local-evidence"
+          ],
+          "check_id": "release-succession-regression",
+          "elapsed_seconds": 12.934325,
+          "evidence_key": "3f5cc96f488eb354b1b1efe3f063fa1efc21fcde38b409cee77ebef8576b2c11",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "ef8e62e45f84b5eb2af07963b578a5a239fc216d0ec1f60ae8065024fd2aa707",
+          "runtime_digest": "64eb7c70b48fa435bf55de26a98449c6ab0c9e3934f510b27ce9e5b9605cbdd8",
+          "stage": "local",
+          "status": "passed"
+        }
+      ],
+      "timings": {
+        "command_execution_seconds": 600.396008,
+        "fingerprinting_seconds": 4.392904,
+        "other_seconds": 0.134623,
+        "planning_seconds": 14.650458,
+        "receipt_validation_seconds": 0.970957,
+        "runtime_identity_seconds": 30.675903
+      },
+      "findings": [
+        {
+          "check_id": "check-selection-repository-contracts",
+          "code": "check-input-changed-before-execution"
+        }
+      ]
+    },
+    {
+      "path": ".cache/test-runs/20261108T095402Z-9ee87ed21f444eebaed5fc7ab620b980/report.json",
+      "sha256": "75ebedefd665529ebf68e09e40c6009d888317d3a83ef7a6a29fd578b5b58dd0",
+      "verdict": "passed",
+      "coverage": "requested-checks-only",
+      "source_revision": "ff10cf15017b809c3a8715d39a168af41d3511e6",
+      "checks": [
+        {
+          "boundary": "integration",
+          "cache_invalidation_reasons": [
+            "verified-inputs-changed",
+            "runtime-identity-changed"
+          ],
+          "check_id": "check-selection-repository-contracts",
+          "elapsed_seconds": 562.898915,
+          "evidence_key": "4e06dd517a522ee91e649cb8531b8d6c8b6dd851adfa75f495b41b4ca8a9a907",
+          "evidence_source": "local-runner",
+          "exit_code": 0,
+          "input_digest": "479a83e4327592ee888f435501982606810d962d4d0c747a978ec59abf7342cd",
+          "runtime_digest": "d3d15425907bcbaf85ba5f5bcd27d3f0ec3dcd6c2a473615505e50cf9fcd8aea",
+          "stage": "local",
+          "status": "passed"
+        }
+      ],
+      "timings": {
+        "command_execution_seconds": 562.898915,
+        "fingerprinting_seconds": 3.879232,
+        "other_seconds": 0.405023,
+        "planning_seconds": 10.478707,
+        "receipt_validation_seconds": 0.100765,
+        "runtime_identity_seconds": 21.841732
+      },
+      "findings": []
+    }
+  ],
+  "checks_used": [
+    {
+      "run": ".cache/test-runs/20261108T094327Z-5dff56d6ba094b53889a95647ffad88e/report.json",
+      "boundary": "integration",
+      "cache_invalidation_reasons": [
+        "verified-inputs-changed",
+        "verification-contract-changed"
+      ],
+      "check_id": "acceptance-route-regression",
+      "elapsed_seconds": 177.110419,
+      "evidence_key": "0747668edf1fefa5ceddbfb3615079718af183821e53ef74693635ce4733ef37",
+      "evidence_source": "local-runner",
+      "exit_code": 0,
+      "input_digest": "e60d9465c0663c714d1a1238f20ec8b5911fad9629cdbef473f351a05777b6f1",
+      "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+      "stage": "local",
+      "status": "passed"
+    },
+    {
+      "run": ".cache/test-runs/20261108T094327Z-5dff56d6ba094b53889a95647ffad88e/report.json",
+      "boundary": "integration",
+      "cache_invalidation_reasons": [
+        "verified-inputs-changed"
+      ],
+      "check_id": "check-selection-mechanics",
+      "elapsed_seconds": 388.707848,
+      "evidence_key": "fe193ef42b853d91a7eaf9304404d176e333acafab0e2914619f45e4b5e54fae",
+      "evidence_source": "local-runner",
+      "exit_code": 0,
+      "input_digest": "20d2fbdee6960416afea2211958a0f383065945bc3201a944cd31621fe169728",
+      "runtime_digest": "8d3328a90383bf23d7b34b007e6f7ee37564416f6eb7d88c8f0e4601fea4a41a",
+      "stage": "local",
+      "status": "passed"
+    },
+    {
+      "run": ".cache/test-runs/20261108T094327Z-5dff56d6ba094b53889a95647ffad88e/report.json",
+      "boundary": "commit",
+      "cache_invalidation_reasons": [
+        "verified-inputs-changed",
+        "verification-contract-changed"
+      ],
+      "check_id": "health-failure-recovery-declaration-regression",
+      "elapsed_seconds": 21.643416,
+      "evidence_key": "a87c4360eef1c5d3b0c4055193827bf5d2033d124190d4c17d03d881d7e62bfe",
+      "evidence_source": "local-runner",
+      "exit_code": 0,
+      "input_digest": "12bed58bddf51b54a7a66fb6e8e5f3b6065390d7967438cd1addc0397dee88f5",
+      "runtime_digest": "0da45195a08f87c6ae66bdcc1dfc4350534c53ed69d85efac16ea021148144fa",
+      "stage": "local",
+      "status": "passed"
+    },
+    {
+      "run": ".cache/test-runs/20261108T094327Z-5dff56d6ba094b53889a95647ffad88e/report.json",
+      "boundary": "integration",
+      "cache_invalidation_reasons": [
+        "no-prior-successful-local-evidence"
+      ],
+      "check_id": "release-succession-regression",
+      "elapsed_seconds": 12.934325,
+      "evidence_key": "3f5cc96f488eb354b1b1efe3f063fa1efc21fcde38b409cee77ebef8576b2c11",
+      "evidence_source": "local-runner",
+      "exit_code": 0,
+      "input_digest": "ef8e62e45f84b5eb2af07963b578a5a239fc216d0ec1f60ae8065024fd2aa707",
+      "runtime_digest": "64eb7c70b48fa435bf55de26a98449c6ab0c9e3934f510b27ce9e5b9605cbdd8",
+      "stage": "local",
+      "status": "passed"
+    },
+    {
+      "run": ".cache/test-runs/20261108T095402Z-9ee87ed21f444eebaed5fc7ab620b980/report.json",
+      "boundary": "integration",
+      "cache_invalidation_reasons": [
+        "verified-inputs-changed",
+        "runtime-identity-changed"
+      ],
+      "check_id": "check-selection-repository-contracts",
+      "elapsed_seconds": 562.898915,
+      "evidence_key": "4e06dd517a522ee91e649cb8531b8d6c8b6dd851adfa75f495b41b4ca8a9a907",
+      "evidence_source": "local-runner",
+      "exit_code": 0,
+      "input_digest": "479a83e4327592ee888f435501982606810d962d4d0c747a978ec59abf7342cd",
+      "runtime_digest": "d3d15425907bcbaf85ba5f5bcd27d3f0ec3dcd6c2a473615505e50cf9fcd8aea",
+      "stage": "local",
+      "status": "passed"
+    }
+  ],
+  "static_observations": {
+    "metadata_headers_passed": 17,
+    "relative_links_passed": 3,
+    "whitespace": "passed",
+    "impact_plan": {
+      "verdict": "planned",
+      "findings": [],
+      "selected_checks": 101,
+      "stages": {
+        "local": 84,
+        "package": 3,
+        "deploy": 3,
+        "acceptance": 11
+      },
+      "executed": false
+    },
+    "diagnostic_review": {
+      "affected_script_findings": 0,
+      "broader_unfinished_batch_findings": 28
+    }
+  },
+  "proof_limits": [
+    "requested-checks-only-not-full-affected-integration",
+    "initial-rule-eligibility-is-local-custody-not-live-provider-absence",
+    "rollback-compatibility-not-established-by-policy-selection",
+    "feature-scope-binding-and-provider-stop-acceptance-controls-still-unfinished",
+    "real-postgresql-image-custody-replacement-and-isolated-restore-proof-still-pending"
+  ],
+  "aws_mutations": false,
+  "commits_created": false,
+  "accepted_release_records_changed": false
+}

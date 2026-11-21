@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-09"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -48,11 +48,11 @@ This directory contains `test`, `dispatch` work. A test proves a boundary, a gen
 
 The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added” means absent at that commit, not that the whole capability was invented here. The file-specific explanations below take precedence over the broader folder summary.
 
-<!-- course-file: platform/server/tests/builtin-evidence-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/builtin-evidence-runtime.test.ts -->
 
 ### builtin-evidence-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/builtin-evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 81 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/builtin-evidence-runtime.test.ts) · **Snapshot:** added (absent from baseline); 81 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -70,11 +70,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=4eed68a6744f08efb9d5b33c0fefd7b472eb88f09c3737f0d99ca9ee4f44c97d -->
 
-<!-- course-file: platform/server/tests/configuration-omissions-runtime.test.ts -->
+<!-- course-file: platform/server/tests/unit/configuration-omissions-runtime.test.ts -->
 
 ### configuration-omissions-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/configuration-omissions-runtime.test.ts) · **Snapshot:** added (absent from baseline); 43 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/unit/configuration-omissions-runtime.test.ts) · **Snapshot:** added (absent from baseline); 43 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -92,11 +92,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=0a09f9c408a18a774f9e5f9540b6302248513263018c09a2e5de66bd0e38dcdf -->
 
-<!-- course-file: platform/server/tests/configuration-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/configuration-runtime.test.ts -->
 
 ### configuration-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/configuration-runtime.test.ts) · **Snapshot:** added (absent from baseline); 199 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/configuration-runtime.test.ts) · **Snapshot:** added (absent from baseline); 199 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -114,11 +114,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=4f3d5d5e169352cbe7b902a025b468b106dfd697a1197ed82d45d86e22a25951 -->
 
-<!-- course-file: platform/server/tests/diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/diagnostics-runtime.test.ts -->
 
 ### diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 68 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 68 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -136,11 +136,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=16efca98a60025668a8f8d49543548ed7269f86e4e165c46a0481951b8c09a15 -->
 
-<!-- course-file: platform/server/tests/health-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/health-diagnostics-runtime.test.ts -->
 
 ### health-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/health-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 56 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/health-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 56 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -158,11 +158,11 @@ Owning registered proof: `platform-health-runtime`, `platform-server-runtime`, `
 
 <!-- course-source-sha256: before=absent after=d1fa87cf878302daf54635f7a31f37f2f8ae0f654a87d910f2c5322cb699427b -->
 
-<!-- course-file: platform/server/tests/metric-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/metric-diagnostics-runtime.test.ts -->
 
 ### metric-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/metric-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 40 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/metric-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 40 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -180,11 +180,11 @@ Owning registered proof: `platform-observability-runtime`, `platform-server-runt
 
 <!-- course-source-sha256: before=absent after=6244f93d4087643fcb8a5e3bb968cad203cc3f4ff825350b9078f3277d51da26 -->
 
-<!-- course-file: platform/server/tests/platform-server-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/platform-server-runtime.test.ts -->
 
 ### platform-server-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/platform-server-runtime.test.ts) · **Snapshot:** modified existing file; 14 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/platform-server-runtime.test.ts) · **Snapshot:** modified existing file; 14 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -200,11 +200,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=de02d2ea1a761e7438ed90c2f4ed821cc2fa2cc9cfd191ba9874ae0731bffb15 after=70f5a32ab3f2febd281993727765229130ac977a78f32fd9c1383d2cd4d9ebfb -->
 
-<!-- course-file: platform/server/tests/platform-server-types.test.ts -->
+<!-- course-file: platform/server/tests/type-level/platform-server-types.test.ts -->
 
 ### platform-server-types.test.ts
 
-[Open current source](../../../../../platform/server/tests/platform-server-types.test.ts) · **Snapshot:** modified existing file; 10 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/type-level/platform-server-types.test.ts) · **Snapshot:** modified existing file; 10 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for http transport and request handling.
 
@@ -222,11 +222,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=b2f1b07ab1b6dadd52eaee61e4d3791d0532351c8cdbb9b3ad02f1d3157a3b7b after=24026805419ed5764934702d142a3603263c4b116fcb45c075ed9bfe819d631a -->
 
-<!-- course-file: platform/server/tests/process-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/process-boundary-diagnostics-runtime.test.ts -->
 
 ### process-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/process-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 134 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/process-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 134 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -244,11 +244,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=660ccd04430060f836228fb515f441240c07841e68b5b8aa5fa72e270e2218b5 -->
 
-<!-- course-file: platform/server/tests/request-boundary-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/request-boundary-diagnostics-runtime.test.ts -->
 
 ### request-boundary-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/request-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 233 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/request-boundary-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 233 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -266,11 +266,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=b106c0023662f3d1173525d96595c94440035894075f9678fbfe74829628fc67 -->
 
-<!-- course-file: platform/server/tests/request-observation-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/request-observation-runtime.test.ts -->
 
 ### request-observation-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/request-observation-runtime.test.ts) · **Snapshot:** added (absent from baseline); 236 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/request-observation-runtime.test.ts) · **Snapshot:** added (absent from baseline); 236 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -308,11 +308,11 @@ Proving boundary: inspect the affected file's registered inputs in [the check ca
 
 <!-- course-source-sha256: before=5391e040aa6e0a67c8625733b48cf318908cf249269d8b4186423d63d5760721 after=5f47db0d7359fe738a15268db10fdc1f2611a22a21696c3b6bdee6b2235de603 -->
 
-<!-- course-file: platform/server/tests/security-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/security-diagnostics-runtime.test.ts -->
 
 ### security-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/security-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 175 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/security-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 175 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -330,11 +330,11 @@ Owning registered proof: `core-runtime`, `platform-security-runtime`, `platform-
 
 <!-- course-source-sha256: before=absent after=2ef392548ae38acb40aee771fdadfd057bf35fc9d26675b2f9b3198d88e72912 -->
 
-<!-- course-file: platform/server/tests/startup-configuration-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/startup-configuration-diagnostics-runtime.test.ts -->
 
 ### startup-configuration-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/startup-configuration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 211 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/startup-configuration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 211 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -352,11 +352,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=b4e91f9a2461af92e81f3f8ca390beb8c10eeea78b09083f29137f2addb44228 -->
 
-<!-- course-file: platform/server/tests/transport-configuration-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/unit/transport-configuration-diagnostics-runtime.test.ts -->
 
 ### transport-configuration-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/transport-configuration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 42 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/unit/transport-configuration-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 42 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -374,11 +374,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=718af6a2c060043658ad24322bc01eb6f0cac1a24aba051e8404f07443f6c9a2 -->
 
-<!-- course-file: platform/server/tests/transport-diagnostics-runtime.test.ts -->
+<!-- course-file: platform/server/tests/integration/transport-diagnostics-runtime.test.ts -->
 
 ### transport-diagnostics-runtime.test.ts
 
-[Open current source](../../../../../platform/server/tests/transport-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 371 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/integration/transport-diagnostics-runtime.test.ts) · **Snapshot:** added (absent from baseline); 371 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for http transport and request handling.
 
@@ -396,11 +396,11 @@ Owning registered proof: `platform-server-runtime`, `diagnostic-catalog-readers`
 
 <!-- course-source-sha256: before=absent after=960f1629e53d64598065637446c067da6b18da128caf34e32d26ba2002ce3188 -->
 
-<!-- course-file: platform/server/tests/transport-diagnostics-types.test.ts -->
+<!-- course-file: platform/server/tests/type-level/transport-diagnostics-types.test.ts -->
 
 ### transport-diagnostics-types.test.ts
 
-[Open current source](../../../../../platform/server/tests/transport-diagnostics-types.test.ts) · **Snapshot:** added (absent from baseline); 29 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../platform/server/tests/type-level/transport-diagnostics-types.test.ts) · **Snapshot:** added (absent from baseline); 29 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Compile-time compatibility proof for http transport and request handling.
 

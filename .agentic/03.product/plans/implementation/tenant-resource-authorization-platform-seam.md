@@ -4,7 +4,7 @@ id: product.plan.tenant-resource-authorization-platform-seam
 version: 1
 status: active
 created_on: "2026-09-01"
-updated_on: "2026-10-20"
+updated_on: "2026-11-09"
 layer: 03.product
 domain: identity-access
 disciplines:
@@ -103,8 +103,8 @@ so this slice followed that workflow without inventing a replacement ADR.
 **Files**
 
 - `platform/contracts/src/index.ts`
-- `platform/contracts/tests/platform-contracts-types.test.ts`
-- `platform/contracts/tests/platform-contracts-runtime.test.ts`
+- `platform/contracts/tests/type-level/platform-contracts-types.test.ts`
+- `platform/contracts/tests/contract/platform-contracts-runtime.test.ts`
 - `platform/contracts/README.md`
 
 **Change**
@@ -141,8 +141,8 @@ behaviour without platform guessing.
 **Files**
 
 - `platform/runtime/src/index.ts`
-- `platform/runtime/tests/platform-runtime-runtime.test.ts`
-- `platform/runtime/tests/platform-runtime-types.test.ts`
+- `platform/runtime/tests/integration/platform-runtime-runtime.test.ts`
+- `platform/runtime/tests/type-level/platform-runtime-types.test.ts`
 
 **Change**
 
@@ -163,8 +163,8 @@ run tenant policy. The server is responsible for supplying a verified value.
 **Files**
 
 - `platform/server/src/index.ts`
-- `platform/server/tests/platform-server-runtime.test.ts`
-- `platform/server/tests/platform-server-types.test.ts`
+- `platform/server/tests/integration/platform-server-runtime.test.ts`
+- `platform/server/tests/type-level/platform-server-types.test.ts`
 - `platform/testing/src/index.ts` only if the focused server tests need a
   reusable resolver or authorizer fake.
 
@@ -220,9 +220,9 @@ client response.
 **Files**
 
 - `platform/runtime/src/index.ts`
-- `platform/runtime/tests/platform-runtime-runtime.test.ts`
+- `platform/runtime/tests/integration/platform-runtime-runtime.test.ts`
 - `platform/workers/src/index.ts`
-- `platform/workers/tests/platform-workers-runtime.test.ts`
+- `platform/workers/tests/integration/platform-workers-runtime.test.ts`
 
 **Change**
 

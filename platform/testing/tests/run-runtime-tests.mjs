@@ -1,41 +1,29 @@
-import { readdirSync } from "node:fs";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import path from "node:path";
+import { accessSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { join } from "node:path";
+import { loadWorkspaceGraph, selectWorkspaceProject } from "../../../scripts/repo/workspace-build/declarations.mjs";
+import { prepareWorkspaceRuntime } from "../../../scripts/repo/workspace-build/runtime-packages.mjs";
 
 const runtimeRoot = ".cache/platform-testing-runtime";
 const testDirectory = join(runtimeRoot, "platform/testing/tests");
-const coreModules = [
-  "audit",
-  "authn",
-  "authz",
-  "config",
-  "diagnostics",
-  "events",
-  "i18n",
-  "logging",
-  "monitoring",
-  "queues",
-  "shared",
-  "tenancy",
-  "validation",
-];
+const repository = process.cwd();
+const selection = { roots: [selectWorkspaceProject(loadWorkspaceGraph(repository), "platform/testing/tsconfig.runtime-test.json")], includeRootDevDependencies: true };
+prepareWorkspaceRuntime({ repository, compiledRoot: runtimeRoot, selection });
 
-writePackageShim("@kanbien/core", {
-  ".": join(runtimeRoot, "packages/core/src/index.js"),
-  ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, join(runtimeRoot, `packages/core/src/${moduleName}/index.js`)])),
-});
-writePackageShim("@kanbien/platform-contracts", {
-  ".": join(runtimeRoot, "platform/contracts/src/index.js"),
-});
-
-const testFiles = readdirSync(testDirectory)
-  .filter((fileName) => fileName.endsWith("-runtime.test.js"))
-  .sort();
-
-if (testFiles.length === 0) {
-  throw new Error(`No platform/testing runtime tests found in ${testDirectory}.`);
+const sourceDirectory = "platform/testing/tests";
+function runtimeSources(directory, relativeDirectory = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = join(relativeDirectory, entry.name);
+    if (entry.isSymbolicLink()) throw new Error(`Runtime test discovery does not support symlinks: ${relativePath}`);
+    if (entry.isDirectory()) return runtimeSources(join(directory, entry.name), relativePath);
+    return entry.isFile() && entry.name.endsWith("-runtime.test.ts") ? [relativePath] : [];
+  });
+}
+const testFiles = runtimeSources(sourceDirectory).sort().map((fileName) => fileName.replace(/\.ts$/, ".js"));
+if (testFiles.length === 0) throw new Error(`No runtime tests found in ${sourceDirectory}.`);
+for (const testFile of testFiles) {
+  try { accessSync(join(testDirectory, testFile)); }
+  catch { throw new Error(`Compiled runtime test unavailable: ${testFile}`); }
 }
 
 for (const testFile of testFiles) {
@@ -47,29 +35,4 @@ for (const testFile of testFiles) {
     process.exitCode = result.status ?? 1;
     break;
   }
-}
-
-function writePackageShim(packageName, exportsMap) {
-  const packageRoot = join(runtimeRoot, "node_modules", ...packageName.split("/"));
-  mkdirSync(packageRoot, { recursive: true });
-
-  const packageExports = {};
-  for (const [exportName, targetPath] of Object.entries(exportsMap)) {
-    const shimPath = exportName === "."
-      ? join(packageRoot, "index.js")
-      : join(packageRoot, exportName.slice(2), "index.js");
-    mkdirSync(path.dirname(shimPath), { recursive: true });
-    writeFileSync(shimPath, `module.exports = require(${JSON.stringify(relativeRequirePath(shimPath, targetPath))});\n`);
-    packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
-  }
-
-  writeFileSync(
-    join(packageRoot, "package.json"),
-    `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`,
-  );
-}
-
-function relativeRequirePath(fromFile, toFile) {
-  const relativePath = path.relative(path.dirname(fromFile), toFile).replaceAll(path.sep, "/");
-  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
 }

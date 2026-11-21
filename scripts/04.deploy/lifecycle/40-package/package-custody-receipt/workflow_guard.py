@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.validation.package-qualification-workflow
-#   version: 1
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -77,6 +77,41 @@ def unconditional_run(step):
     return lines
 
 
+def reserved_publication_binding(steps, qualification_index, *, command, stem, target, access_commands=()):
+    """Require the shared publisher's durable reservation and no-replay route."""
+    credentials = [(i, step) for i, step in enumerate(steps) if str(step.get("uses", "")).startswith("aws-actions/configure-aws-credentials@")]
+    if len(credentials) != 1:
+        raise ValueError("publication-credentials-invalid")
+    credential_index, credential = credentials[0]
+    if credential != {"uses": "aws-actions/configure-aws-credentials@v4", "with": {
+        "role-to-assume": "${{ env.AWS_ROLE_ARN }}", "aws-region": "${{ env.AWS_REGION }}"}}:
+        raise ValueError("publication-credentials-substituted")
+    access_index, access = protected_step(steps, "Prove fixed delivery read access",
+        [*access_commands, ["python3", command, "--operation", "reserve"]])
+    retained_index, retained = protected_step(steps, "Retain pre-publication identity")
+    if retained != {"name": "Retain pre-publication identity", "uses": "actions/upload-artifact@v4", "with": {
+        "name": target + "-" + stem + "-reservation-${{ github.run_id }}",
+        "path": "${{ runner.temp }}/" + stem + "-publication-reservation.json\n${{ runner.temp }}/qualified-image.json\n",
+        "if-no-files-found": "error", "overwrite": False, "retention-days": 30}}:
+        raise ValueError("publication-reservation-retention-invalid")
+    login_index, login = protected_step(steps, "Log in to Amazon ECR")
+    if login != {"name": "Log in to Amazon ECR", "uses": "aws-actions/amazon-ecr-login@v2"}:
+        raise ValueError("publication-login-substituted")
+    index, publication = protected_step(steps, "Publish immutable image", [["python3", command, "--operation", "publish"]])
+    if access.get("id") != "access" or publication.get("id") != "image" or not qualification_index < credential_index < access_index < retained_index < login_index < index:
+        raise ValueError("publication-order-invalid")
+    failure_index, failure = protected_step(steps, "Retain safe failed-operation evidence", condition="${{ failure() }}")
+    paths = "".join("${{ runner.temp }}/" + stem + "-publication-" + suffix + ".json\n" for suffix in ("reservation", "invoked", "operation"))
+    if failure != {"name": "Retain safe failed-operation evidence", "if": "${{ failure() }}", "uses": "actions/upload-artifact@v4", "with": {
+        "name": target + "-" + stem + "-failed-operation-${{ github.run_id }}-${{ github.run_attempt }}",
+        "path": paths, "if-no-files-found": "ignore", "overwrite": False, "retention-days": 30}} or failure_index <= index:
+        raise ValueError("publication-failure-retention-invalid")
+    for between in steps[qualification_index+1:index]:
+        if any(word in between.get("run", "") for word in ("docker build", "docker tag", "docker load", "qualified-image.json")):
+            raise ValueError("qualification-replaced-before-publication")
+    return index
+
+
 def custody_tail(steps, *, published_index, target, environment, region, candidate, contract, program, stem, artifact_name, qualification_outcome, scan_outcome, scan_check, provenance_name, attestation_name, capture_name, upload_name, receipt_filename, extra_artifacts, registry_expression):
     """Protect the producer/consumer proof boundaries; route identities stay with callers."""
     sbom_index, sbom = protected_step(steps, "Generate SBOM")
@@ -117,3 +152,25 @@ def protected_script(path, expected):
         return [line.strip() for line in source.replace("\\\n", " ").splitlines() if line.strip() and not line.lstrip().startswith("#")]
     if executable(path.read_text()) != executable(expected):
         raise ValueError("nested-qualification-command-substituted")
+
+
+CANDIDATE_BUILD_OPERATIONS = "scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh"
+
+
+def protected_candidate_build(path):
+    """Both workflow owners bind the same reviewed private build operations."""
+    protected_script(path, r'''candidate_image_prechecks() {
+  local scope="$1" target="$2" code="$3" summary="$4" next_check="$5"
+  shift 5
+  bash scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh --scope-contract "$scope" --json
+  "$@" scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+  bash scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh --target-root "$target" --json
+  safe_command_diagnostic "$code" package "$summary" "$next_check" -- bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
+}
+
+candidate_image_build() {
+  local code="$1" summary="$2" next_check="$3" dockerfile="$4" tag="$5" revision="$6" source_commit="$7" root="$8"
+  shift 8
+  safe_command_diagnostic "$code" package "$summary" "$next_check" -- docker build "$@" --file "$dockerfile" --tag "$tag" --label "org.opencontainers.image.revision=$revision" --label org.opencontainers.image.source=entity-builder-harness --build-arg "SOURCE_COMMIT_SHA=$source_commit" "$root"
+}
+''')

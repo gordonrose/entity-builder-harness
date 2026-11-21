@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.provider-cli-boundaries
-#   version: 2
+#   version: 6
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-06"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -24,6 +24,7 @@ import hashlib
 import copy
 import yaml
 from unittest.mock import patch
+from types import SimpleNamespace
 import os
 from pathlib import Path
 import subprocess
@@ -40,7 +41,7 @@ with log.open('a') as out:out.write(json.dumps([service,op])+'\\n')
 def fail(code,message='synthetic-only'):
  print(f'An error occurred ({code}) when calling the Fixture operation: {message}',file=sys.stderr);sys.exit(254)
 def emit(value):print(json.dumps(value));sys.exit(0)
-if op=='describe-budget':emit({'Budget':{'BudgetLimit':{'Amount':'100','Unit':'USD'},'CostFilters':{'TagKeyValue':['user:Target$kanbien-core-platform']}}})
+if op=='describe-budget':emit({'Budget':{'BudgetName':'kanbien-core-platform-monthly','BudgetType':'COST','TimeUnit':'MONTHLY','BudgetLimit':{'Amount':'100','Unit':'USD'},'CostFilters':{'TagKeyValue':['user:Target$kanbien-core-platform']}}})
 if op=='describe-db-instances':
  if scenario=='database-denied':fail('AccessDenied','resource not found')
  fail('DBInstanceNotFound')
@@ -66,7 +67,14 @@ class ProviderCliRegression(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='delivery-provider-cli-') as directory:
             root=Path(directory); executable=root/'aws'; executable.write_text(FAKE_AWS); executable.chmod(0o755)
             repository=root/'repository'
-            for relative in [RESTORE.with_name('script.py').relative_to(ROOT),Path('scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py'),Path('scripts/04.deploy/shared/provider-adapters/aws/response.py')]:
+            owner_path=ROOT/'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py'
+            spec=importlib.util.spec_from_file_location('fixture_preparation_inputs',owner_path)
+            owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+            sources=[Path('scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py'),Path('scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py'),owner_path.relative_to(ROOT),Path(owner.PATHS.__file__).relative_to(ROOT),Path(owner.CF.__file__).relative_to(ROOT),
+                     *map(Path,owner.load(ROOT,'kanbien-core-platform','core-server-persistence')['references'])]
+            for relative in sources:
+                destination=repository/relative;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/relative,destination)
+            for relative in [RESTORE.with_name('script.py').relative_to(ROOT),Path('scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py'),Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py')]:
                 destination=repository/relative;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/relative,destination)
             inventory=repository/'scripts/04.deploy/inventory-deploy-control/script.py';inventory.parent.mkdir(parents=True);inventory.write_text('import os,sys\nsys.exit(1 if os.environ.get("FIXTURE_SCENARIO")=="inventory-gap" else 0)\n')
             command_path=repository/RESTORE.with_name('script.py').relative_to(ROOT)
@@ -78,6 +86,7 @@ class ProviderCliRegression(unittest.TestCase):
                     env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'PYTHONDONTWRITEBYTECODE':'1','FIXTURE_SCENARIO':scenario,'FIXTURE_CALLS':str(calls)}
                     command=[sys.executable,'-B',str(command_path),'--operation','cleanup','--snapshot-id','kanbien-core-platform-persistence-recovery-20261026','--json']+(['--observe-only'] if observe else [])
                     result=subprocess.run(command,cwd=ROOT,capture_output=True,text=True,env=env,timeout=20)
+                    self.assertTrue(result.stdout.strip(), ('cleanup fixture returned no JSON', result.returncode, result.stderr))
                     report=json.loads(result.stdout)
                     self.assertEqual(report['verdict'],verdict,(result.stdout,result.stderr))
                     self.assertEqual(result.returncode,0 if verdict=='cleaned-up' else 1)
@@ -107,15 +116,24 @@ class ProviderCliRegression(unittest.TestCase):
         before = {path: path.read_bytes() for path in (receipt_path, record_path)}
         receipt = json.loads(before[receipt_path])
         with patch.object(prepare, 'aws', side_effect=AssertionError('provider reached')):
-            self.assertTrue(prepare.rollback_compatibility(receipt, identifier))
             validated = prepare.validate_receipt(receipt_path)
             self.assertEqual(validated['receipt_reference'], receipt['receipt_reference'])
-            self.assertTrue(prepare.rollback_compatibility(validated, identifier))
-            self.assertFalse(prepare.rollback_compatibility({**validated, 'receipt_reference': 'github-actions-run:1'}, identifier))
-            self.assertFalse(prepare.rollback_compatibility({**validated, 'source_revision': 'a'*40}, identifier))
-            self.assertFalse(prepare.rollback_compatibility({**validated, 'image_digest': 'sha256:'+'a'*64}, identifier))
             owner = prepare.succession_control()
-            record, reference = owner.compatibility_record(evidence, identifier)
+            record, reference = owner.compatibility_record(evidence, identifier, current_contracts=False)
+            current_matches = all(owner.sha256_bytes((ROOT / reference['identity'][key]['path']).read_bytes()) == reference['identity'][key]['sha256']
+                                  for key in ('configuration_contract', 'permission_contract'))
+            self.assertEqual(prepare.rollback_compatibility(receipt, identifier), current_matches)
+            self.assertEqual(prepare.rollback_compatibility(validated, identifier), current_matches)
+            if not current_matches:
+                with self.assertRaisesRegex(owner.SuccessionFailure, '^release-succession-compatibility-contract-mismatch$'):
+                    owner.compatibility_record(evidence, identifier)
+            # Isolate qualified package identity matching from the separately
+            # tested current-contract admission above; no archive is rewritten.
+            with patch.object(prepare, 'succession_control', return_value=owner), patch.object(owner, 'compatibility_record', return_value=(record, reference)):
+                self.assertTrue(prepare.rollback_compatibility(validated, identifier))
+                self.assertFalse(prepare.rollback_compatibility({**validated, 'receipt_reference': 'github-actions-run:1'}, identifier))
+                self.assertFalse(prepare.rollback_compatibility({**validated, 'source_revision': 'a'*40}, identifier))
+                self.assertFalse(prepare.rollback_compatibility({**validated, 'image_digest': 'sha256:'+'a'*64}, identifier))
             for workloads in (['core-server-service'], ['core-server-service', 'private-release-verifier-task', 'unowned-task'], ['persistence-restoration-verifier-task']):
                 changed = {**reference, 'identity': {**reference['identity'], 'workloads': workloads}}
                 with patch.object(prepare, 'succession_control', return_value=owner), patch.object(owner, 'compatibility_record', return_value=(record, changed)):
@@ -169,6 +187,78 @@ class ProviderCliRegression(unittest.TestCase):
             wrong = copy.deepcopy(change)
             next(item for item in wrong['Parameters'] if item['ParameterKey']=='RestoreVerifierImageDigest')['ParameterValue']=rollback['image_digest']
             self.assertFalse(transition.reviewable(wrong,'UPDATE_COMPLETE','rollback-safe',rollback['image_digest'],rollback['source_revision'],'sha256:'+'b'*64))
+
+
+    def test_actual_invocation_policies_remain_distinct(self):
+        deploy='scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/'
+        run='scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/'
+        # Expected policies are independent of the shared implementation.
+        profiles=[
+            (deploy+'prepare-candidate/script.py','whitespace',False,True,True,False,None),
+            (run+'run-migration/script.py','empty-string',False,True,True,False,None),
+            (run+'verify-candidate/script.py','empty-string',False,True,True,False,None),
+            (deploy+'retire-failed-candidate/script.py','whitespace',False,True,False,False,None),
+            (deploy+'reconcile-rds-log-export-surface/script.py','reject',False,False,False,True,'rds'),
+            (run+'collect-acceptance-evidence/script.py','empty-string',True,False,True,True,'acceptance-evidence-aws-'),
+            (run+'rehearse-observability-readiness/script.py','empty-string',True,False,True,True,'observability-rehearsal-provider-'),
+        ]
+        canary='provider-private-canary'
+        for index,(relative,empty,object_only,cli_timeouts,pager,explicit_check,prefix) in enumerate(profiles):
+            spec=importlib.util.spec_from_file_location('actual_cli_policy_'+str(index),ROOT/relative)
+            owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+            if 'prepare-candidate' in relative: owner._AWS_RESPONSE=SimpleNamespace(inventory_covered=lambda root:True)
+            if 'prepare-candidate' in relative:
+                for code in ('ExpiredToken', 'ExpiredTokenException'):
+                    response=SimpleNamespace(returncode=254, stdout='', stderr='An error occurred ('+code+') when calling the DescribeStacks operation: '+canary)
+                    with patch.object(owner.subprocess,'run',return_value=response) as expired_call:
+                        self.assertEqual(owner.aws('cloudformation','describe-stacks'),(False,None,'aws-credentials-expired'))
+                        self.assertEqual(expired_call.call_count,1)
+            typed=prefix not in (None,'rds')
+            arguments=['aws','cloudformation','describe-stacks']
+            if cli_timeouts: arguments+=['--cli-connect-timeout','5','--cli-read-timeout','20']
+            arguments+=['--profile','kanbien-dev','--region','eu-west-1','--output','json']
+            options={'capture_output':True,'text':True,'timeout':30}
+            if pager: options['env']={**os.environ,'AWS_PAGER':''}
+            if explicit_check: options['check']=False
+            for stdout in ['{}','',' \n','[]','null',canary]:
+                success=stdout=='{}' or (stdout=='' and empty!='reject') or (stdout==' \n' and empty=='whitespace') or (stdout in ('[]','null') and not object_only)
+                with self.subTest(owner=relative,stdout=stdout),patch.object(owner.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=stdout,stderr='')) as call:
+                    if success:
+                        expected={} if not stdout.strip() else json.loads(stdout)
+                        self.assertEqual(owner.aws('cloudformation','describe-stacks'),expected if typed else (True,expected,'ok'))
+                    elif typed:
+                        with self.assertRaises(owner.EvidenceFailure if hasattr(owner,'EvidenceFailure') else owner.RehearsalFailure) as raised:
+                            owner.aws('cloudformation','describe-stacks')
+                        self.assertEqual(str(raised.exception),prefix+'response-invalid')
+                    else:
+                        self.assertEqual(owner.aws('cloudformation','describe-stacks'),(False,None,'aws-command-invalid-json' if prefix=='rds' else 'aws-response-invalid'))
+                    call.assert_called_once_with(arguments,**options)
+            for stderr,classified in [('An error occurred (AccessDenied) when calling the Fixture operation: '+canary,'aws-access-denied'),(canary,'aws-command-failed')]:
+                with self.subTest(owner=relative,stderr=stderr),patch.object(owner.subprocess,'run',return_value=SimpleNamespace(returncode=254,stdout='',stderr=stderr)) as call:
+                    if typed:
+                        with self.assertRaises(owner.EvidenceFailure if hasattr(owner,'EvidenceFailure') else owner.RehearsalFailure) as raised: owner.aws('cloudformation','describe-stacks')
+                        self.assertEqual(str(raised.exception),prefix+('access-denied' if classified=='aws-access-denied' else 'observation-failed'))
+                    else: self.assertEqual(owner.aws('cloudformation','describe-stacks'),(False,None,'aws-command-failed' if prefix=='rds' else classified))
+                    call.assert_called_once_with(arguments,**options)
+            for error,code,suffix in [(OSError(canary),'aws-command-unavailable','command-unavailable'),
+                (subprocess.TimeoutExpired([canary],30),'aws-command-timeout','observation-timeout'),
+                (UnicodeDecodeError('utf8',b'\xff',0,1,canary),'aws-response-invalid','response-invalid')]:
+                with self.subTest(owner=relative,error=type(error).__name__),patch.object(owner.subprocess,'run',side_effect=error) as call:
+                    if prefix=='rds' and isinstance(error,UnicodeError):
+                        with self.assertRaises(UnicodeError) as raised: owner.aws('cloudformation','describe-stacks')
+                        self.assertIs(raised.exception,error) # Retain existing caller behavior, not a new fallback.
+                    elif typed:
+                        with self.assertRaises(owner.EvidenceFailure if hasattr(owner,'EvidenceFailure') else owner.RehearsalFailure) as raised: owner.aws('cloudformation','describe-stacks')
+                        self.assertEqual(str(raised.exception),prefix+suffix)
+                        self.assertIs(raised.exception.__cause__,error)
+                        self.assertNotIn(canary,str(raised.exception))
+                    else: self.assertEqual(owner.aws('cloudformation','describe-stacks'),(False,None,code))
+                    call.assert_called_once_with(arguments,**options)
+            if 'prepare-candidate' in relative:
+                owner._AWS_RESPONSE=SimpleNamespace(inventory_covered=lambda root:False)
+                with patch.object(owner.subprocess,'run') as call:
+                    self.assertEqual(owner.aws('cloudformation','describe-stacks'),(False,None,'delivery-inventory-not-covered'))
+                    call.assert_not_called()
 
     def test_provider_absence_is_operation_specific(self):
         path=ROOT/'scripts/04.deploy/shared/provider-adapters/aws/response.py'

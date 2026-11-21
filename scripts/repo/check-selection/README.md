@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 9
+version: 12
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-04"
+updated_on: "2026-11-19"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -23,6 +23,134 @@ used_by:
   path: scripts/repo/check-selection/script.sh
 -->
 # Focused Repository Verification
+
+## Development feedback
+
+Use one selector for three different decisions: quick development feedback,
+existing staged commit verification and complete affected integration proof.
+The [execution standard](../../../.agentic/shared/testing/standards/test-execution.md)
+owns those boundaries. [checks.yml](checks.yml) owns each command, its inputs,
+prerequisites and optional `feedback` declaration. No separate profile catalog,
+scheduler or nightly suite is introduced.
+
+[script.py](script.py) still owns impact selection and execution;
+[execution_policy.py](execution_policy.py) validates scheduling metadata and
+projects safe observations. [local_cache.py](local_cache.py) retains trusted
+proof and its existing identity/revalidation rules.
+
+```bash
+# Read-only decision inventory; unclassified checks are shown too.
+bash scripts/repo/check-selection/script.sh --inventory --explain
+# Inspect full affected obligations before executing anything.
+bash scripts/repo/check-selection/script.sh --paths apps/entity-smoke/features/test-entity/domain/services/update-test-entity.ts --development --explain
+# Run only declared fast local checks; report all other obligations pending.
+bash scripts/repo/check-selection/script.sh --paths apps/entity-smoke/features/test-entity/domain/services/update-test-entity.ts --development --execute-local --explain
+# At a stable checkpoint, complete the affected local integration selection.
+bash scripts/repo/check-selection/script.sh --paths apps/entity-smoke/features/test-entity/domain/services/update-test-entity.ts --execute-local --explain
+```
+
+`--development` requires path-scoped local integration selection. It cannot
+combine with explicit checks, aggregate-member execution, staged/preparation or
+CI modes. The full impact graph remains visible; only checks whose complete
+command aliases declare `feedback.development: true` may run. Undeclared or
+deferred prerequisites still block consumers. Success exits zero with verdict
+`partial`, coverage `integration-pending`; it never means integration passed.
+Without this flag, existing gate behavior is unchanged. `--checks` still proves
+only requested identities. There is no automatic time-based skipping.
+
+Feedback has exactly four fields: `development` (boolean), `expected_seconds`
+(integer 1–86400), `isolation` (`worktree` or `disposable-fixture`) and `rationale`
+(bounded single-line explanation). Development eligibility requires a local
+non-aggregate command. Invalid declarations fail closed. Missing declarations
+remain unclassified, not exempt. The pilot declares entity-smoke, DynamoDB and
+PostgreSQL connection fixtures eligible; server/product assembly and payload
+qualification stay integration-only. Other capabilities are not silently opted
+in. These local persistence tests do not contact AWS or prove real databases.
+
+JSON output adds `execution_policy`: owners, selection basis, dependencies,
+declared inputs, estimates, overrun observations and pending IDs. `--explain`
+renders a readable summary. Estimates are advisory command budgets, not timeouts
+or total wall-time guarantees; planning and runtime identity have separate
+timings in `execution_summary`. `not_selected` explains absent declared pilot
+checks. Supported impact still depends on declared consumers; no heuristic can
+prove an undeclared dependency safe.
+
+For example, a successful `--checks platform-server-runtime` run proves that
+requested check, not every consequence of a server change. The additive
+`evidence_summary` makes that distinction in JSON, `--explain` and retained run
+files. Its five sections are:
+
+| Section | What it reports |
+| --- | --- |
+| `requested_local` | Results of the local checks requested at this scheduling boundary. |
+| `affected_local_integration` | All selected local results; coverage is `complete-declared-impact` only after a nonempty impact-based integration selection passes without findings. Otherwise it is `not-established`. |
+| `package_qualification` | Selected package obligations, with coverage `not-evaluated` by this runner. |
+| `live_target_proof` | Selected live-target obligations, with coverage `not-evaluated`. |
+| `acceptance` | Selected acceptance obligations, with coverage `not-evaluated`. |
+
+Each section retains check IDs and original statuses. Its `observation` also
+distinguishes a pending check with absent proof, an observed signal interruption
+(negative process exit code), and input drift detected by the runner. It does
+not infer why an entirely missing run report is absent. Deferred and unselected
+later-stage checks are not successful proof or claims of non-applicability.
+Package/live/acceptance proof remains with the owning stage controllers; this
+projection neither reads their receipts nor changes command exit behavior.
+Explicit, development and commit-only passes never establish full impact.
+Matching local cache results may count only after existing revalidation succeeds.
+The projection adds no commands, scheduler, proof store or approval requirement.
+
+Executed runs create private, unique ignored
+`.cache/test-runs/<UTC-time-and-random-id>/report.json` and `summary.txt` files.
+The report binds revision and actual source/runtime fingerprints, including dirty
+inputs, and keeps statuses, reuse/invalidation observations and finite findings.
+It excludes raw child output and runtime/environment values. Unsafe retention
+paths produce a finding without rewriting check outcomes. Reports are disposable
+observations: they cannot seed cache reuse or qualify integration/live proof.
+No automatic retention cleanup is added. Trusted receipts remain in private
+worktree Git metadata; durable bounded outcomes/evidence belong in the session
+commit log. Do not copy raw private-cache reports into chat logs.
+
+### Understanding a failed check
+
+A nonzero check exit now has `failure_detail` in the JSON response and retained
+run report. The readable summary explains the same result. For example, the
+existing diagnostic-adoption check can report:
+
+```text
+failure: diagnostic-review-stale at scripts/example.py
+```
+
+This is an illustrative source path: the check found a review that no longer
+matches that file. [script.py](script.py) passes the executed child's bounded
+JSON to the [diagnostic owner](../diagnostic-coverage/script.py)'s `failure_detail`
+projection. The owner accepts only its known finding codes and retains a source
+path only when it matches a known input. [execution_policy.py](execution_policy.py)
+handles parsing and writes the safe result into the existing reports. Raw
+stdout/stderr remain excluded. Processing failure does not change the check's
+exit status, rerun it or make a failed result eligible for cache reuse.
+
+Diagnostic adoption is the first supported producer, selected by its registered
+command owner. Other formats—including ordinary test tracebacks—report
+`failure detail unavailable: unsupported-format`. Empty, malformed, oversized
+and unexpectedly unprocessable supported output have distinct reasons. Input
+is limited to 1,048,576 characters; at most 32 validated findings are retained,
+with explicit truncation. Unrecognised source locations are marked unavailable.
+This does not claim all checks now have detailed explanations.
+
+When a member or prerequisite fails, the combined check reports `blocked_by`
+with the runner-known dependency IDs. Its summary says, for example,
+`blocked by checks: diagnostic-adoption`; the failed child's own result contains
+the explanation. The combined command is not run merely to reproduce the
+failure. Older saved reports without these additive fields remain readable.
+The [mechanics tests](mechanics_test.py) exercise the real producer subprocess,
+retained JSON/text, private-output rejection and report-write failure.
+
+`entity-smoke-runtime` dispatches `app:entity-smoke:check`: the current feature
+typecheck (including nullable/enum/branded-ID assertions), runtime compilation
+and existing source-led runner. Tests remain under the app's themed/type folders.
+The package compiler and runner are reused; no feature test framework is added.
+
+## Full impact and integration
 
 This repository extension connects existing scope declarations, artifact
 `used_by` references and workspace package dependencies to existing checks. It
@@ -170,7 +298,8 @@ overhead. The buckets are disjoint within one report. Nested summaries explain
 executed/reused children; their elapsed time is already inside the wrapper's
 wall time and must not be added again. JSON progress on stderr contains only
 event/check identity, status and completed/total counts, never argv, environment
-values or child output. Stdout remains one machine-readable JSON report.
+values or child output. By default stdout is one machine-readable JSON report;
+`--explain` opts into the readable view instead.
 
 Diagnostic reviews bind relevant semantic entries and their actual sources,
 tests and definitions, not every other review merely through a shared ledger.

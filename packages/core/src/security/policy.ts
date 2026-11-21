@@ -8,7 +8,7 @@ import {
   type MessageKey,
   type MessageParams,
 } from "../shared/index";
-import { attachCoreDiagnosticRecord } from "../shared/diagnostics";
+import { attachCoreDiagnosticRecord } from "../shared/index";
 import { coreSecurityPrimitiveRecord } from "./diagnostics";
 
 export type SecurityPolicyId = Brand<string, "SecurityPolicyId">;

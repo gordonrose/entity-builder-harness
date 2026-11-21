@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -24,6 +24,8 @@ TAG="kanbien-core-server-persistence:qualification"
 PORT="39455"
 if [[ $# -eq 4 && "$1" == "--tag" && "$3" == "--port" ]]; then TAG="$2"; PORT="$4"; elif [[ $# -ne 0 ]]; then echo 'Usage: script.sh [--tag <image> --port <port>]' >&2; exit 2; fi
 [[ "$PORT" =~ ^[0-9]+$ ]] || { echo 'ERROR: port-invalid' >&2; exit 2; }
+postgresql_values="$(python3 -B "$ROOT/scripts/04.deploy/shared/postgresql-version.py" --contract "$ROOT/infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml" --shell-values)" || exit 1
+IFS=$'\t' read -r POSTGRES_IMAGE POSTGRES_VERSION_NUM POSTGRES_DATA <<<"$postgresql_values"
 command -v docker >/dev/null && docker info >/dev/null 2>&1 || { echo 'ERROR: Docker is required for persistence image qualification.' >&2; exit 1; }
 command -v openssl >/dev/null || { echo 'ERROR: openssl is required for disposable TLS qualification.' >&2; exit 1; }
 
@@ -38,9 +40,9 @@ fail() { echo "ERROR: $1" >&2; exit 1; }
 assert_safe_output() { local value="$1"; for marker in "$ADMIN_PASSWORD" "$IAM_TOKEN" "$REJECTED_PASSWORD" "$OLD_PASSWORD"; do [[ "$value" != *"$marker"* ]] || fail 'credential-canary-appeared-in-application-output'; done; }
 assert_database_logs_safe() {
   for marker in "$ADMIN_PASSWORD" "$IAM_TOKEN" "$REJECTED_PASSWORD" "$OLD_PASSWORD"; do
-    docker exec "$database" sh -ec 'if find /var/lib/postgresql/data/log -type f -exec grep -F -q -- "$1" {} +; then exit 1; fi' sh "$marker" || fail 'credential-canary-appeared-in-postgresql-server-log'
+    docker exec "$database" sh -ec 'if find "$PGDATA/log" -type f -exec grep -F -q -- "$1" {} +; then exit 1; fi' sh "$marker" || fail 'credential-canary-appeared-in-postgresql-server-log'
   done
-  docker exec "$database" sh -ec 'if find /var/lib/postgresql/data/log -type f -exec grep -E -q "SCRAM-SHA-256\\$" {} +; then exit 1; fi' || fail 'credential-verifier-appeared-in-postgresql-server-log'
+  docker exec "$database" sh -ec 'if find "$PGDATA/log" -type f -exec grep -E -q "SCRAM-SHA-256\\$" {} +; then exit 1; fi' || fail 'credential-verifier-appeared-in-postgresql-server-log'
 }
 expect_code() { local expected="$1"; shift; local output; if ! output="$("$@" 2>&1)"; then assert_safe_output "$output"; local observed; observed="$(grep -oE '"code":"[A-Z0-9_]+' <<<"$output" | tail -1 | tr -d '"' || true)"; printf 'INFO: package-expected-result=%s\n' "$expected" >&2; [[ -z "$observed" ]] || printf 'INFO: package-safe-result=%s\n' "$observed" >&2; fail 'persistence-administration-or-workload-rejected'; fi; assert_safe_output "$output"; grep -F '"code":"'"$expected"'"' <<<"$output" >/dev/null || fail 'persistence-program-safe-result-code-mismatch'; }
 
@@ -65,9 +67,12 @@ printf 'subjectAltName=DNS:postgres\n' > "$temporary/server.ext"
 safe_command_diagnostic PERSISTENCE_QUALIFICATION_CERTIFICATE_SIGNING_FAILED package 'Disposable TLS setup failed.' 'Inspect the local certificate setup fixture.' -- openssl x509 -req -in "$temporary/server.csr" -CA "$temporary/ca.crt" -CAkey "$temporary/ca.key" -CAcreateserial -out "$temporary/server.crt" -days 1 -extfile "$temporary/server.ext"
 safe_command_diagnostic PERSISTENCE_QUALIFICATION_NETWORK_CREATION_FAILED package 'Disposable resource creation failed.' 'Inspect the disposable resource fixture.' -- docker network create "$network"
 safe_command_diagnostic PERSISTENCE_QUALIFICATION_VOLUME_CREATION_FAILED package 'Disposable resource creation failed.' 'Inspect the disposable resource fixture.' -- docker volume create "$volume"
-safe_command_diagnostic PERSISTENCE_QUALIFICATION_CERTIFICATE_INSTALL_FAILED package 'Disposable certificate installation failed.' 'Inspect the disposable TLS setup fixture.' -- docker run --rm --name "$task" --user root -v "$temporary:/source:ro" -v "$volume:/certs" postgres:16-bookworm bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt'
-safe_command_diagnostic PERSISTENCE_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$database" --network "$network" --network-alias postgres -e POSTGRES_DB=kanbienpersistence -e POSTGRES_USER=fixture_root -e POSTGRES_PASSWORD="$ADMIN_PASSWORD" -v "$volume:/certs:ro" postgres:16-bookworm postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key -c log_destination=stderr -c logging_collector=on -c log_directory=/var/lib/postgresql/data/log -c log_filename=postgresql.log -c log_min_error_statement=error
-for attempt in $(seq 1 40); do docker exec -e PGPASSWORD="$ADMIN_PASSWORD" "$database" psql -X -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence -c 'SELECT 1' >/dev/null 2>&1 && break; [[ "$attempt" != 40 ]] || fail 'disposable-postgresql-unavailable'; sleep 1; done
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CERTIFICATE_INSTALL_FAILED package 'Disposable certificate installation failed.' 'Inspect the disposable TLS setup fixture.' -- docker run --rm --name "$task" --user root -v "$temporary:/source:ro" -v "$volume:/certs" "$POSTGRES_IMAGE" bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt'
+safe_command_diagnostic PERSISTENCE_QUALIFICATION_CONTAINER_START_FAILED package 'Disposable container start failed.' 'Inspect the disposable container fixture.' -- docker run --detach --rm --name "$database" --network "$network" --network-alias postgres -e POSTGRES_DB=kanbienpersistence -e POSTGRES_USER=fixture_root -e POSTGRES_PASSWORD="$ADMIN_PASSWORD" -v "$volume:/certs:ro" "$POSTGRES_IMAGE" postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key -c log_destination=stderr -c logging_collector=on -c "log_directory=$POSTGRES_DATA/log" -c log_filename=postgresql.log -c log_min_error_statement=error
+for attempt in $(seq 1 40); do docker exec -e PGPASSWORD="$ADMIN_PASSWORD" "$database" psql -h 127.0.0.1 -X -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence -c 'SELECT 1' >/dev/null 2>&1 && break; [[ "$attempt" != 40 ]] || fail 'disposable-postgresql-unavailable'; sleep 1; done
+observed_postgresql="$(docker exec "$database" psql -X -A -t -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence -c "SHOW server_version_num" 2>&1)" || { echo "ERROR: postgresql-qualification-observation-failed" >&2; exit 1; }
+[[ "$observed_postgresql" == "$POSTGRES_VERSION_NUM" ]] || { echo "ERROR: postgresql-qualification-version-mismatch" >&2; exit 1; }
+printf '{"engine_version":"%s.%s","evidence_class":"container-database-observation","qualification_complete":false}\n' "$((observed_postgresql / 10000))" "$((observed_postgresql % 10000))"
 # fixture_root is used only to approximate managed-RDS bootstrap. Every actual
 # administration entrypoint invocation below uses core_administrator, a
 # CREATEROLE identity with no superuser, createdb, replication or bypass-RLS

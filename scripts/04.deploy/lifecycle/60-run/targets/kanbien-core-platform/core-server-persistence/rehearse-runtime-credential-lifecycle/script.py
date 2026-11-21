@@ -9,10 +9,10 @@ new task.
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -151,10 +151,22 @@ def verifier_receipt() -> str | None:
 
 def administer(operation: str) -> bool:
     """Use the separately governed administrator task for credential state."""
-    return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh", "--operation", operation, "--json") is not None
+    command = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh"
+    observed = child(command, "--operation", operation, "--json")
+    checkpoint = observed if observed is not None else CHILD_CHECKPOINT
+    if not isinstance(checkpoint, dict) or checkpoint.get("verdict") not in {"accepted", "failed"}: return False
+    facts = checkpoint.get("facts", {})
+    if isinstance(facts, dict) and facts.get("evidence_reuse") == "historical-completion":
+        predecessor = facts.get("operation_id")
+        if not isinstance(predecessor, str): return False
+        observed = child(command, "--operation", operation, "--new-operation", "--expected-operation", predecessor, "--json")
+    return observed is not None
 
 def replace(receipt: Path) -> bool:
-    return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh", "--receipt", str(receipt), "--json") is not None
+    admission = LAST_SUCCESS.get("proof_receipt") if isinstance(LAST_SUCCESS, dict) else None
+    operation = LAST_SUCCESS.get("operation") if isinstance(LAST_SUCCESS, dict) else None
+    if not isinstance(admission, str) or operation not in {"revoke-runtime", "restore-runtime"}: return False
+    return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh", "--receipt", str(receipt), "--after-administration-receipt", admission, "--json") is not None
 
 def recover(receipt: Path) -> tuple[str, str | None]:
     """Restore only the bounded IAM identity after proven denied readiness."""

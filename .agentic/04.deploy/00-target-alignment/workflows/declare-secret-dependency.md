@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.declare-secret-dependency
-version: 5
+version: 6
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-25"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.secret-management
 disciplines: [agentic, security, sre]
@@ -56,6 +56,12 @@ a provider permission.
    If a completion task declares migration execution, authorise a matching
    `migration` credential for its named dependency; do not substitute runtime
    access.
+   For administrative execution, select the existing in-administrator runtime
+   probe or the separate-task variant defined by the secret-dependency standard.
+   For the latter, name the proof workload and application target explicitly;
+   connect both to the same runtime authentication reference. Do not deliver
+   administrative/migration credentials to the separate proof task. Keep real
+   application-path verification separate from direct database permission proof.
    A workload-identity token has a distinct `authentication_lifecycle`:
    provider task-role credentials renew independently, a new database token is
    generated for each new connection, and ordinary token expiry does not

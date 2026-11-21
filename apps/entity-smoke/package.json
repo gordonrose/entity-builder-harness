@@ -1,0 +1,1 @@
+{"name":"@kanbien/app-entity-smoke","private":true,"version":"0.0.0","type":"module","exports":{".":"./src/index.ts"},"files":["src","features"],"dependencies":{"@kanbien/core":"0.0.0","@kanbien/platform-contracts":"0.0.0"}}

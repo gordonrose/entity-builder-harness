@@ -14,7 +14,7 @@
     },
     {
       "path": "packages/core/src/authz/index.ts",
-      "sha256": "8701286d3c8ea644557288e86c5e32e7cdb4891c98f67f3cbb1e02d66db237e9",
+      "sha256": "b4df9b9626a31e2b6e9c0b2c565a9b2339cbc67131315793b5362907db864309",
       "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
     },
     {
@@ -50,11 +50,6 @@
     {
       "path": "packages/core/src/queues/index.ts",
       "sha256": "a42f903989b1605b9ef45a4eee7325dba49d4d1e927722eac330fac65742099b",
-      "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
-    },
-    {
-      "path": "packages/core/src/shared/index.ts",
-      "sha256": "980971bc5365beacc12f3dbdb6acad0d6d98200c5e6f2b832e82ecd645dc280f",
       "reason": "Pre-existing mixed index; no new or changed implementation allowed without explicit structural review."
     },
     {

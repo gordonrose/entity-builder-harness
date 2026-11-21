@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-restore-verifier
-//   version: 5
+//   version: 6
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-11-04"
+//   updated_on: "2026-11-15"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -20,11 +20,11 @@ import { connect as connectTcp } from "node:net";
 import { connect as connectTls } from "node:tls";
 
 import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields,
-  persistenceVerificationModeInput, persistenceExpectedRecordInput, persistenceVerificationInstructionsResult } from "./kanbien-core-server-persistence-configuration";
+  persistenceVerificationModeInput, persistenceExpectedRecordInput, persistenceVerificationInstructionsResult } from "./shared/persistence/configuration";
 import { persistenceConnectionDiagnosticMode } from "@kanbien/platform-persistence";
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { persistenceIamAuthenticationResult } from "./kanbien-core-server-persistence-iam-authentication";
-import { reportCoreServerPersistenceBoundary } from "./kanbien-core-server-persistence-operation-diagnostics";
+import { reportCoreServerPersistenceBoundary } from "./shared/persistence/operation-diagnostics";
 
 /**
  * This is intentionally a direct database client only for an isolated restore

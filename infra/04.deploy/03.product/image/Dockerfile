@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.dockerfile
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -50,6 +50,7 @@ COPY platform/ ./platform/
 COPY products/ ./products/
 COPY infra/04.deploy/03.product/entrypoints/ ./infra/04.deploy/03.product/entrypoints/
 COPY scripts/04.deploy/build-platform-shell-image/ ./scripts/04.deploy/build-platform-shell-image/
+COPY scripts/repo/workspace-build/declarations.mjs scripts/repo/workspace-build/compile.mjs scripts/repo/workspace-build/project-selection.mjs scripts/repo/workspace-build/script.mjs scripts/repo/workspace-build/runtime-packages.mjs ./scripts/repo/workspace-build/
 
 RUN npm ci --ignore-scripts \
   && npm run platform:server:image-build \

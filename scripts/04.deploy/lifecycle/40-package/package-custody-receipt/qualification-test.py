@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.package-qualification-binding
-#   version: 1
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-16"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -98,7 +98,7 @@ if name=='docker':
   operation=next((x.split('=',1)[1] for x in args if x.startswith('PERSISTENCE_ADMINISTRATION_OPERATION=')),None)
   if operation:stage=operation
   elif '--user' in args:stage='certificate-install'
-  elif 'postgres:16-bookworm' in args:stage='database'
+  elif any(x.startswith('postgres:') for x in args):stage='database'
   elif '--detach' in args:stage='server-'+str(ordinal('server'))
   elif any('LEGACY_PASSWORD=' in x for x in args):stage='legacy'
   elif any(x.endswith('persistence-migration.main.js') for x in args):stage='migration'
@@ -111,6 +111,7 @@ if stage==os.environ['FAIL_STAGE']:
 if name=='node':
  if stage=='digest':print('f'*64,end='')
  elif stage=='json':sys.stdin.read()
+if name=='docker' and 'SHOW server_version_num' in args:print('180003')
 if name=='docker' and args[0]=='run':
  codes={'bootstrap-identities':'PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED','observe-migration-state':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','confirm-runtime-iam-access':'PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED','migration':'PERSISTENCE_MIGRATION_APPLIED','grant-runtime-application-access':'PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED','read':'KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED','restore-read':'KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED','revoke-runtime':'PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED','restore-runtime':'PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED'}
  codes['prove-effective-privilege']='PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN'
@@ -143,7 +144,7 @@ if name=='docker' and args[0]=='run':
     def test_build_and_shell_smoke_children_are_bounded_and_fail_stop(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);binary=root/'bin';binary.mkdir();calls=root/'calls'
-            for relative in ['scripts/04.deploy/shared/safe-command-diagnostics.sh','scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py','infra/04.deploy/03.product/image/Dockerfile.dockerignore']:
+            for relative in ['scripts/04.deploy/shared/safe-command-diagnostics.sh','scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh','scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py','infra/04.deploy/03.product/image/Dockerfile.dockerignore']:
                 local=root/relative;local.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,local)
             commands={
                 'git':'#!/bin/sh\nif [ "$2" = HEAD ]; then printf "%040d\\n" 0; else printf "%s\\n" "$FIXTURE_ROOT"; fi\n',
@@ -224,6 +225,7 @@ with open(os.environ['FIXTURE_CALLS'],'a') as stream:stream.write(json.dumps(arg
 if args[:2] in (['container','inspect'],['network','inspect'],['volume','inspect']):
  kind,name=args[0],args[-1];messages={'container':'No such container: '+name,'network':'network '+name+' not found','volume':'get '+name+': no such volume'}
  print('Error response from daemon: '+messages[kind],file=sys.stderr);sys.exit(1)
+if 'SHOW server_version_num' in args:print('180003');sys.exit(0)
 if args[0]=='exec' and any(value.startswith('\\\\password ') for value in args):print('credential-canary-value',file=sys.stderr);sys.exit(39)
 sys.exit(0)
 ''');docker.chmod(0o755)
@@ -269,6 +271,7 @@ sys.exit(0)
                 original=(ROOT/'.github/workflows'/filename).read_text();workflow=yaml.safe_load(original)
                 local=root/'.github/workflows'/filename
                 shutil.copytree(ROOT/'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image',root/'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image')
+                shutil.copytree(ROOT/'scripts/04.deploy/lifecycle/40-package/build-candidate-image',root/'scripts/04.deploy/lifecycle/40-package/build-candidate-image')
                 def run(text, expected):
                     local.write_text(text)
                     args=['python3','-B',str(guard),'--json']
@@ -280,6 +283,16 @@ sys.exit(0)
                     relative='scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh'
                     nested=root/relative;nested.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,nested)
                 run(original,0)
+                if kind=='core-server-persistence':
+                    for stage in ['Prove fixed delivery read access','Retain pre-publication identity','Retain safe failed-operation evidence']:
+                        for change in ['omitted','suppressed','substituted','reordered']:
+                            broken=copy.deepcopy(workflow);steps=broken['jobs'][job_name]['steps'];item=next(x for x in steps if x.get('name')==stage)
+                            if change=='omitted':steps.remove(item)
+                            elif change=='suppressed':item['continue-on-error']=True
+                            elif change=='reordered':steps.remove(item);steps.insert(0,item)
+                            elif 'run' in item:item['run']=item['run'].replace('--operation reserve','--operation reconcile')
+                            else:item['with']['overwrite']=True
+                            run(yaml.safe_dump(broken,sort_keys=False),1)
                 if kind.endswith('collector'):
                     nested_original=nested.read_text()
                     proof=next(line for line in nested_original.splitlines() if line.startswith('exec python3'))
@@ -337,7 +350,11 @@ sys.exit(0)
                     else:
                         pubjob=broken['jobs']['complete-custody'] if kind.endswith('collector') else broken['jobs'][job_name]
                         publish=next(x for x in pubjob['steps'] if x.get('name','').startswith(('Publish immutable','Publish exact')))
-                        if mutation=='publication-failstop-disabled':publish['run']=publish['run'].replace('docker pull ', 'set +e\ndocker pull ')
+                        if kind=='core-server-persistence':
+                            if mutation=='publication-failstop-disabled':publish['run']+=' || true'
+                            elif mutation=='publication-identity-suppressed':publish['run']=publish['run'].replace('--operation publish','--operation reconcile')
+                            else:publish['run']=publish['run'].replace('/publication.py','/unrelated.py')
+                        elif mutation=='publication-failstop-disabled':publish['run']=publish['run'].replace('docker pull ', 'set +e\ndocker pull ')
                         elif mutation=='publication-identity-suppressed':publish['run']=publish['run'].replace('= "$qualified_image"','= "$qualified_image" || true')
                         else:publish['run']=publish['run'].replace('docker tag "$qualified_image"','docker tag unrelated:tag')
                     report=run(yaml.safe_dump(broken,sort_keys=False),1)

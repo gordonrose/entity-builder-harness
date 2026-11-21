@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.schema.secret-dependency-contract.v1.guide
-version: 4
+version: 5
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-23"
+updated_on: "2026-11-09"
 layer: 04.deploy
 domain: deployment.secret-management
 disciplines: [agentic, security, sre]
@@ -66,3 +66,36 @@ credential to the thing being tested.
 The validator rejects explicit value-bearing fields and common credential
 formats, but it is shape validation—not a general secret scanner. Repository
 artifacts, reports, logs, and diagnostics must never contain secret values.
+
+## Who tests runtime permissions?
+
+An administrative task configures access. Its `administrative_execution`
+declares a `runtime_identity_probe` describing who tests the resulting runtime
+permissions. Existing declarations use exactly `dependency`,
+`credential_access_class: runtime` and `purpose`; that administrator task must
+also have runtime workload-identity access.
+
+For a separate restricted task, add both selectors:
+
+```yaml
+runtime_identity_probe:
+  dependency: postgresql
+  credential_access_class: runtime
+  purpose: effective-runtime-permission-proof
+  workload: entity-smoke-database-proof
+  target_workload: entity-smoke-server
+```
+
+The named proof task and application must resolve to the same single runtime
+authentication reference for PostgreSQL. Their lifecycle-specific entries may
+be separate: a completion task has different failure behaviour from a server.
+The proof task cannot also be an administrator, migration executor or
+server-mediated verifier, nor receive administrative/migration credentials.
+It must declare successful completion. Omitting either selector, naming a
+missing/duplicate workload or using a different authentication reference fails.
+
+This declares the intended relationship only. Actual provider binding must
+match the database/schema/user and task policies; live permission checks must
+authenticate as that runtime user and test allowed and denied operations.
+The running application's real requests must still be tested independently.
+Neither a matching reference nor this declaration is live acceptance evidence.

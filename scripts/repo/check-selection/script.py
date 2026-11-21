@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 7
+#   version: 10
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-04"
+#   updated_on: "2026-11-19"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -36,6 +36,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'scripts/repo/check-selection'))
+import execution_policy
+import workspace_context
 from local_cache import (LocalCache, LocalCheckError, RuntimeIdentityWindow, runtime_identity,
                          valid_node_package, local_check_diagnostic, CACHE_INVALIDATION_REASONS, NO_PRIOR_EVIDENCE, TOOLS)
 sys.path.insert(0, str(ROOT / 'scripts/01.harness/artifact-metadata'))
@@ -245,10 +247,17 @@ def closure(changed: list[str], graph: dict[str, set[str]]) -> set[str]:
 def upstream_closure(references: set[str], graph: dict[str, set[str]]) -> set[str]:
     """Fingerprint the source inputs that feed selected consumers, not just the consumers."""
     reached = set(references)
-    while True:
-        sources = {source for source, targets in graph.items() if any(below(target, ref) or below(ref, target) for target in targets for ref in reached)}
-        if sources <= reached: return reached
+    frontier = reached.copy()
+    remaining = {source: targets for source, targets in graph.items() if source not in reached}
+    # Only new references can discover an unreached source. A source's edges
+    # can be retired once reached; cycles do not require another full sweep.
+    while frontier and remaining:
+        sources = {source for source, targets in remaining.items() if any(below(target, ref) or below(ref, target) for target in targets for ref in frontier)}
         reached |= sources
+        for source in sources:
+            del remaining[source]
+        frontier = sources
+    return reached
 
 
 def discover(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
@@ -375,6 +384,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     timings = {'planning_seconds': 0.0, 'fingerprinting_seconds': 0.0, 'runtime_identity_seconds': 0.0, 'receipt_validation_seconds': 0.0, 'command_execution_seconds': 0.0}
     root = args.root.resolve()
     boundary = getattr(args, 'boundary', 'integration')
+    development = getattr(args, 'development', False)
     record_preparation = getattr(args, 'record_preparation', False)
     require_preparation = getattr(args, 'require_preparation', False)
     catalog_path = args.catalog or root / 'scripts/repo/check-selection/checks.yml'
@@ -396,6 +406,12 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     checks = catalog.get('checks', {})
     findings: list[dict[str, str]] = []
     if catalog.get('schema') != 'repo/check-catalog/v1' or not isinstance(checks, dict): checks = {}; findings.append({'code': 'check-catalog-invalid'})
+    for check_id, check in checks.items():
+        if isinstance(check, dict): findings += execution_policy.validate_feedback(check_id, check)
+    if development and (not args.paths or args.staged or args.all or getattr(args, 'ci', False)
+                        or getattr(args, 'checks', None) is not None or getattr(args, 'aggregate_members', None)
+                        or args.stage != 'local' or boundary != 'integration' or record_preparation or require_preparation):
+        findings.append({'code': 'development-selection-context-invalid'})
     all_rule_inputs = [ref for check in checks.values() if isinstance(check, dict) for rule in check.get('focused_prerequisites', []) if isinstance(rule, dict) for ref in rule.get('inputs', []) if isinstance(ref, str)]
     _, graph_findings = verification_dependencies(checks, sorted(checks), all_rule_inputs)
     findings += graph_findings
@@ -438,6 +454,25 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         # Callers extend references. Never expose the cached set for mutation.
         return set(upstream_cache[key])
     consumers = downstream(changed)
+    package_context = {'checks': {}, 'discovery': []}
+    package_context_attempted = set()
+    def ensure_package_context(identities):
+        requested = set(identities) - package_context_attempted
+        if not requested: return
+        package_context_attempted.update(requested)
+        try:
+            observed = workspace_context.load(root, {key: checks[key] for key in requested if key in checks}, coverage.safe_path)
+            package_context['checks'].update(observed['checks'])
+            package_context['discovery'] = sorted(set(package_context['discovery']) | set(observed['discovery']))
+        except workspace_context.WorkspaceContextError as error:
+            findings.append({'code': error.code})
+    if explicit_checks is None and (args.all or any(
+        path in ('package.json', 'package-lock.json', '.npmrc')
+        or path.endswith(('.json', '.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs'))
+        or any(below(path, prefix) for prefix in ('packages', 'platform', 'apps', 'products',
+            'scripts/repo/workspace-build', 'scripts/repo/diagnostic-coverage/verify.sh',
+            'scripts/repo/check-selection/workspace_context.py')) for path in changed)):
+        ensure_package_context(checks)
     scopes, discovery_gaps = discover(root)
     findings += discovery_gaps
     inventory_spec = importlib.util.spec_from_file_location('delivery_inventory', ROOT / 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py')
@@ -557,6 +592,11 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     reviews_ref = 'scripts/repo/diagnostic-coverage/reviews.v1.json'
     if not isinstance(repository_rules, list):
         findings.append({'code': 'repository-input-rule-invalid'}); repository_rules = []
+    repository_rules = repository_rules + [
+        {'inputs': sorted(set(context['references']) | set(package_context['discovery'])
+                          | {path for path in changed if path.endswith('/package.json')}), 'checks': [identity]}
+        for identity, context in package_context['checks'].items()
+    ]
     # Ordinary code has diagnostic obligations even without a deployment scope.
     # Reviews name registered local checks; they never introduce executable argv.
     if 'diagnostic-adoption' in checks:
@@ -660,6 +700,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         try: reuse_cache = LocalCache.registered_source(root, Path(reuse_source))
         except (ValueError, OSError, subprocess.SubprocessError) as error: findings.append({'code': 'reuse-worktree-unavailable', **local_check_diagnostic(error)})
     results = dependency_order(list(selected.values()), dependencies)
+    ensure_package_context(identity for item in results for identity in item['catalog_entries'])
+    package_manifest_names = workspace_context.manifest_inventory(repository_paths(root)) if package_context['checks'] else ()
+    package_discovery_digest = source_fingerprint(set(package_context['discovery'])) if package_context['checks'] else None
     dependency_references = {child for values in dependencies.values() for child in values}
     for identity in dependency_references:
         instances = [item for item in results if identity in item['catalog_entries']]
@@ -690,14 +733,26 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         if len(item['catalog_entries']) > 1 and any(entry.get('members') for entry in item['catalog_entries'].values()):
             findings.append({'code': 'verification-aggregate-alias-ambiguous', 'check_id': item['check_id']})
     def required(item: dict) -> bool:
-        return STAGES[item['stage']] <= STAGES[args.stage] and BOUNDARIES[item['boundary']] <= BOUNDARIES[boundary]
+        return (STAGES[item['stage']] <= STAGES[args.stage] and BOUNDARIES[item['boundary']] <= BOUNDARIES[boundary]
+                and (not development or execution_policy.development_check(item)))
     runtime_identities: dict[str, dict] = {}
+    npm_ignore_observation = None
     runtime_window = RuntimeIdentityWindow(root)
     def reset_runtime_identities() -> None:
+        nonlocal npm_ignore_observation
+        npm_ignore_observation = None
         runtime_identities.clear()
         runtime_window.clear()
     def identity(item: dict) -> str:
+        nonlocal npm_ignore_observation
         phase_started = time.monotonic()
+        if item.get('workspace_npm_ignore_scripts') is not None:
+            if npm_ignore_observation is None: npm_ignore_observation = workspace_context.npm_ignore_scripts(root)
+            if npm_ignore_observation != item['workspace_npm_ignore_scripts']:
+                raise workspace_context.WorkspaceContextError('workspace-context-npm-config-changed')
+        if item.get('workspace_context') and (workspace_context.manifest_inventory(repository_paths(root)) != package_manifest_names
+            or source_fingerprint(set(package_context['discovery'])) != package_discovery_digest):
+            raise workspace_context.WorkspaceContextError('workspace-context-declarations-changed')
         if diagnostic_owner:
             current_reviews = diagnostic_owner.review_bindings(root)
             item['review_bindings'] = {alias: current_reviews[alias] for alias in item['catalog_entries'] if alias in current_reviews}
@@ -715,18 +770,29 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
                 runtime_identities[runtime_key] = runtime_identity(root, runtime, window=runtime_window)
                 timings['runtime_identity_seconds'] += time.monotonic() - phase_started
             item['runtime_identity'] = runtime_identities[runtime_key]
-        preparation = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_preparation_keys', 'review_bindings')}
+        preparation = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_preparation_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
         item['preparation_key'] = hashlib.sha256(json.dumps(preparation, sort_keys=True).encode()).hexdigest()
-        payload = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings')}
+        payload = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     for item in results:
         if item['catalog_input']: item['references'].add(catalog_ref)
+        for alias in item['catalog_entries']:
+            context = package_context['checks'].get(alias)
+            if context:
+                item['workspace_context'] = True
+                item['workspace_npm_ignore_scripts'] = context['inherited_ignore_scripts']
+                item['references'].update(context['references'])
+                item['runtime'] = {**item['runtime'], 'tools': sorted(set(item['runtime']['tools']) | {'npm'}), 'node_packages': sorted(set(item['runtime'].get('node_packages', [])) | set(context['node_packages']))}
         item['references'] = upstream(item['references'] | set(item['runtime'].get('config_inputs', [])), explicit=not item['scope_inputs'])
+        # Discovery manifests detect a new/removed workspace. Their mere
+        # inventory membership must not traverse every workspace's source
+        # dependency graph into this selected package's proof inputs.
+        if item.get('workspace_context'): item['references'].update(package_context['discovery'])
         # Metadata traversal may reintroduce the catalog, and a command parent
         # may contain it. Exclude that incidental file at both boundaries;
         # declared consumers still fingerprint the whole catalog normally.
         if not item['catalog_input']: item['references'].discard(catalog_ref)
-        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py'})
+        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py', 'scripts/repo/check-selection/workspace_context.py'})
         for review in item['review_bindings'].values():
             for entry in review: item['references'].update([source['path'] for source in entry['sources']] + entry['tests'] + entry.get('definitions', []))
         if parent_binding:
@@ -788,7 +854,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             except (ValueError, OSError, subprocess.SubprocessError): fresh = False
             if not fresh: blocked.append(child)
         if blocked:
-            item.update(status='blocked', reason='focused-or-member-proof-missing-or-stale')
+            item.update(status='blocked', reason='focused-or-member-proof-missing-or-stale', blocked_by=sorted(blocked))
             findings.append({'code': 'verification-prerequisite-not-passed', 'check_id': item['check_id'], 'check_ids': blocked})
             return False
         if not catalog_unchanged():
@@ -834,7 +900,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             item.update(status='passed', exit_code=0, evidence_source='trusted-worktree-cache', executed_revision=proof.get('executed_revision', proof.get('source_revision')))
             if item.get('reused_from_worktree') and cache:
                 cache.save({**item, 'references': sorted(item['references'])})
-        elif not required_now: item['status'] = 'deferred'; item['reason'] = 'required-before-' + (item['boundary'] if BOUNDARIES[item['boundary']] > BOUNDARIES[boundary] else item['stage'])
+        elif not required_now:
+            item['status'] = 'deferred'
+            item['reason'] = 'integration-pending' if development else 'required-before-' + (item['boundary'] if BOUNDARIES[item['boundary']] > BOUNDARIES[boundary] else item['stage'])
         elif args.execute_local and item['stage'] == 'local' and execution_preflight_passed:
             # Receipt-only checks share one window, but cannot authorize a new
             # command from that snapshot. Remeasure its prerequisites and own
@@ -870,6 +938,10 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             timings['command_execution_seconds'] += item['elapsed_seconds']
             item['stdout_tail'] = 'not-retained' if completed.stdout else ''
             item['stderr_tail'] = 'not-retained' if completed.stderr else ''
+            if completed.returncode:
+                projector = (diagnostic_owner.failure_detail if diagnostic_owner is not None and
+                             any(entry.get('owner') == 'repo.diagnostics.coverage' for entry in item['catalog_entries'].values()) else None)
+                item['failure_detail'] = execution_policy.child_failure_detail(completed.stdout, projector, item['references'])
             if any(entry.get('members') for entry in item['catalog_entries'].values()):
                 try:
                     nested = json.loads(completed.stdout)
@@ -932,11 +1004,21 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         preparation_status = 'recorded'
     report['preparation_status'] = preparation_status
     report['boundary'] = boundary
+    if development and not findings and args.execute_local:
+        report['verdict'] = 'partial'
+    report['execution_policy'] = execution_policy.execution_view(results, checks, development=development, explicit=explicit_checks is not None)
     if explicit_checks is not None:
         report['selection_mode'] = 'explicit-checks'
         report['requested_check_ids'] = explicit_checks
+    report['evidence_summary'] = execution_policy.evidence_summary(report, all_inputs=args.all)
     if args.evidence: report['evidence_import_status'] = 'rejected-untrusted-report'
     if cache:
+        if args.execute_local:
+            try: report['run_report_path'] = execution_policy.retain_run(root, report)
+            except (OSError, ValueError):
+                report['findings'].append({'code': 'test-run-retention-unavailable'})
+                report['verdict'] = 'gap'
+                report['evidence_summary'] = execution_policy.evidence_summary(report, all_inputs=args.all)
         report['local_report_path'] = str(cache.directory / 'latest-report.json')
         cache.save_report(report)
     return report
@@ -952,6 +1034,7 @@ def main() -> int:
     mode.add_argument('--staged', action='store_true')
     mode.add_argument('--all', action='store_true')
     mode.add_argument('--ci', action='store_true', help='Select the PR diff from BASE_SHA/HEAD_SHA, or all inputs for manual CI.')
+    mode.add_argument('--inventory', action='store_true', help='Read-only feedback declaration inventory; no proof or execution.')
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--catalog', type=Path)
     parser.add_argument('--stage', choices=STAGES, default='local')
@@ -963,7 +1046,13 @@ def main() -> int:
     parser.add_argument('--evidence', type=Path)
     parser.add_argument('--reuse-from-worktree', type=Path, help='Revalidate receipts from a registered worktree of this repository; reports are never accepted.')
     parser.add_argument('--json', action='store_true')
+    parser.add_argument('--development', action='store_true', help='Path-scoped local feedback only; full integration obligations remain pending.')
+    parser.add_argument('--explain', action='store_true', help='Render a readable selection summary instead of JSON.')
     args = parser.parse_args()
+    if args.development and (not args.paths or args.stage != 'local' or args.boundary != 'integration' or args.record_preparation or args.require_preparation):
+        parser.error('--development requires --paths at the local integration boundary, without preparation')
+    if args.inventory and (args.execute_local or args.development or args.record_preparation or args.require_preparation):
+        parser.error('--inventory is read-only')
     if args.record_preparation and args.require_preparation:
         parser.error('--record-preparation and --require-preparation are mutually exclusive')
     if args.require_preparation and not args.staged:
@@ -986,10 +1075,16 @@ def main() -> int:
                 args.paths = [path for path in git(args.root.resolve(), 'diff', '--name-only', '--no-renames', '-z', base, head).split('\0') if path]
             else:
                 args.all = True
-        report = plan(args)
+        if args.inventory:
+            catalog = coverage.document(args.catalog or args.root / 'scripts/repo/check-selection/checks.yml')
+            if catalog.get('schema') != 'repo/check-catalog/v1' or not isinstance(catalog.get('checks'), dict):
+                raise ValueError('check-catalog-invalid')
+            report = execution_policy.inventory(catalog['checks'])
+        else:
+            report = plan(args)
     except (OSError, ValueError, TypeError, ImportError, subprocess.SubprocessError) as error:
         report = {'schema': 'repo/check-selection-report/v1', 'verdict': 'gap', 'findings': [{'code': 'selection-input-or-runtime-invalid', 'error_type': safe_runtime_error_type(error)}]}
-    print(json.dumps(report, sort_keys=True))
+    print(execution_policy.render(report) if args.explain else json.dumps(report, sort_keys=True))
     return 1 if report['findings'] else 0
 
 if __name__ == '__main__':

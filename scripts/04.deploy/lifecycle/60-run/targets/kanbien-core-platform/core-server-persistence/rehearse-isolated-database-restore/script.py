@@ -60,6 +60,13 @@ def task_evidence():
     return module
 
 
+def task_operations():
+    path=Path(__file__).resolve().parents[8]/"scripts/04.deploy/shared/provider-adapters/aws/tasks.py"
+    spec=importlib.util.spec_from_file_location("persistence_restore_task_observation",path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module
+
+
 def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/isolated-persistence-restore-rehearsal-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
@@ -456,25 +463,19 @@ def terminal_result(m,arn):
  observation=observe_terminal_result(m,arn); return observation["status"],observation["result"]
 
 def verifier_tasks(m,operation,definition):
- arns = []
- family = definition.rsplit("/", 1)[-1].split(":", 1)[0]
- for state in ("RUNNING", "STOPPED"):
-     # AWS forbids combining startedBy with another ListTasks filter.
-     ok, listed, code = m.aws("ecs", "list-tasks", "--cluster", CLUSTER, "--family", family, "--max-results", "100", "--no-paginate", "--desired-status", state)
-     values = listed.get("taskArns") if ok and isinstance(listed, dict) else None
-     if not isinstance(values, list) or len(values)>100 or listed.get("nextToken") or not all(isinstance(value, str) for value in values):
-         return None, "persistence-restoration-verifier-observation-uncertain"
-     arns.extend(values)
- arns = list(dict.fromkeys(arns))
- matching = []
- for offset in range(0, len(arns), 100):
-     batch = arns[offset:offset + 100]
-     ok, described, code = m.aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", *batch)
-     tasks = described.get("tasks") if ok and isinstance(described, dict) else None
-     if not isinstance(tasks, list) or described.get("failures") or len(tasks) != len(batch) or not all(isinstance(task, dict) and isinstance(task.get("taskArn"), str) for task in tasks) or {task["taskArn"] for task in tasks} != set(batch):
-         return None, "persistence-restoration-verifier-observation-uncertain"
-     matching.extend(task["taskArn"] for task in tasks if operation is None or task.get("startedBy") == operation)
- return matching,"ok"
+ tasks=task_operations()
+ def provider(service,action,**parameters):
+  if service!="ecs" or action not in {"list-tasks","describe-tasks"}:raise tasks.ProviderFailure("persistence-restoration-verifier-observation-uncertain")
+  if action=="list-tasks":
+   arguments=("--cluster",parameters["cluster"],"--family",parameters["family"],"--max-results","100","--no-paginate","--desired-status",parameters["desiredStatus"])
+  else:arguments=("--cluster",parameters["cluster"],"--tasks",*parameters["tasks"])
+  ok,value,code=m.aws(service,action,*arguments)
+  if not ok:raise tasks.ProviderFailure(code)
+  return value
+ try:
+  observed=tasks.observed_tasks(provider,cluster=CLUSTER,definition=definition,operation_id=operation,maximum_list_size=100)
+  return [task["taskArn"] for task in observed],"ok"
+ except tasks.TaskFailure:return None,"persistence-restoration-verifier-observation-uncertain"
 def restore_run_identity(restored):
  # A snapshot can be restored more than once.  The ECS started-by value must
  # identify this particular isolated database incarnation, not merely the

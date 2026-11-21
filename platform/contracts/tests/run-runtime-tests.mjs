@@ -1,19 +1,29 @@
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { accessSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { join } from "node:path";
+import { loadWorkspaceGraph, selectWorkspaceProject } from "../../../scripts/repo/workspace-build/declarations.mjs";
+import { prepareWorkspaceRuntime } from "../../../scripts/repo/workspace-build/runtime-packages.mjs";
 
+const runtimeRoot = ".cache/platform-contracts-runtime";
 const testDirectory = ".cache/platform-contracts-runtime/platform/contracts/tests";
-const coreRoot = ".cache/platform-contracts-runtime/node_modules/@kanbien/core";
-mkdirSync(join(coreRoot, "diagnostics"), { recursive: true });
-writeFileSync(join(coreRoot, "package.json"), JSON.stringify({ name: "@kanbien/core", type: "commonjs", exports: { ".": "./index.js", "./diagnostics": "./diagnostics/index.js" } }));
-writeFileSync(join(coreRoot, "index.js"), 'module.exports = require("../../../packages/core/src/index.js");\n');
-writeFileSync(join(coreRoot, "diagnostics/index.js"), 'module.exports = require("../../../../packages/core/src/diagnostics/index.js");\n');
-const testFiles = readdirSync(testDirectory)
-  .filter((fileName) => fileName.endsWith("-runtime.test.js"))
-  .sort();
+const repository = process.cwd();
+const selection = { roots: [selectWorkspaceProject(loadWorkspaceGraph(repository), "platform/contracts/tsconfig.runtime-test.json")], includeRootDevDependencies: true };
+prepareWorkspaceRuntime({ repository, compiledRoot: runtimeRoot, selection });
 
-if (testFiles.length === 0) {
-  throw new Error(`No platform/contracts runtime tests found in ${testDirectory}.`);
+const sourceDirectory = "platform/contracts/tests";
+function runtimeSources(directory, relativeDirectory = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = join(relativeDirectory, entry.name);
+    if (entry.isSymbolicLink()) throw new Error(`Runtime test discovery does not support symlinks: ${relativePath}`);
+    if (entry.isDirectory()) return runtimeSources(join(directory, entry.name), relativePath);
+    return entry.isFile() && entry.name.endsWith("-runtime.test.ts") ? [relativePath] : [];
+  });
+}
+const testFiles = runtimeSources(sourceDirectory).sort().map((fileName) => fileName.replace(/\.ts$/, ".js"));
+if (testFiles.length === 0) throw new Error(`No runtime tests found in ${sourceDirectory}.`);
+for (const testFile of testFiles) {
+  try { accessSync(join(testDirectory, testFile)); }
+  catch { throw new Error(`Compiled runtime test unavailable: ${testFile}`); }
 }
 
 for (const testFile of testFiles) {

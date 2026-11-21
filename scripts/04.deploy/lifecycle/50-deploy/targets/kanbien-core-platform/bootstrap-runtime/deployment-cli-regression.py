@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -259,5 +259,30 @@ class DeploymentCli(unittest.TestCase):
         for raw in ['Value: !Sub {one: a, one: b}','Value: {Ref: hidden, Ref: reviewed}','Value: &cycle [*cycle]','Value: .nan']:
             with self.subTest(raw=raw):
                 with self.assertRaises(ValueError):parser.template(raw)
+
+    def test_shared_normalizer_compiled_and_safe_fallback_agree(self):
+        parser=loaded(ROOT/PARSER)
+        with patch.dict(parser.yaml.__dict__):
+            parser.yaml.__dict__.pop('CSafeLoader',None)
+            fallback=loaded(ROOT/PARSER)
+        self.assertTrue(issubclass(fallback.Loader,parser.yaml.SafeLoader))
+        if hasattr(parser.yaml,'CSafeLoader'):
+            self.assertTrue(issubclass(parser.Loader,parser.yaml.CSafeLoader))
+        accepted=['Value: !Ref Resource','Value: !GetAtt Resource.Arn','Value: !GetAtt [Resource, Arn]',
+                  'Value: !Sub ["${Name}", {Name: example}]','Value: !Join [":", [one, two]]',
+                  'Value: {enabled: true, count: 1, nullable: null, names: [one, two]}']
+        directory=ROOT/'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation'
+        accepted.extend((directory/name).read_text() for name in ('bootstrap-runtime.yml','entity-smoke.yml','entity-smoke-isolated-restore.yml'))
+        for raw in accepted:
+            with self.subTest(raw=raw[:32]):
+                self.assertEqual(json.dumps(parser.template(raw),sort_keys=True),json.dumps(fallback.template(raw),sort_keys=True))
+        invalid=['Resources: [','Value: {Ref: hidden, Ref: reviewed}','Value: !Sub {one: a, one: b}',
+                 'Value: &cycle [*cycle]','Value: .nan','Value: .inf','Value: 2026-11-08',
+                 'Value: {1: hidden}','Value: !!python/object:private-canary {}','[]','null','{}']
+        for owner in (parser,fallback):
+            self.assertFalse(owner.templates_equal({'Value':True},{'Value':1}))
+            for raw in invalid:
+                with self.subTest(loader=owner.Loader,raw=raw):
+                    with self.assertRaisesRegex(ValueError,'^cloudformation-template-body-invalid$'):owner.template(raw)
 
 if __name__=='__main__':unittest.main()

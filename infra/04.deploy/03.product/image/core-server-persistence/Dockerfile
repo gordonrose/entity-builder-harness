@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
-#   version: 2
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-15"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -39,23 +39,31 @@ COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-operation-diagnostics.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
+COPY scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs ./scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs
+COPY scripts/repo/workspace-build/runtime-packages.mjs ./scripts/repo/workspace-build/runtime-packages.mjs
+COPY scripts/repo/workspace-build/declarations.mjs ./scripts/repo/workspace-build/declarations.mjs
+COPY scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs ./scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs
+COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-dependencies.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-dependencies.mjs
+COPY scripts/repo/workspace-build/compile.mjs ./scripts/repo/workspace-build/compile.mjs
+COPY scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs ./scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs
+COPY scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs ./scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs
+COPY infra/04.deploy/03.product/entrypoints/runnable-program-index.yml ./infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
 RUN npm ci --ignore-scripts \
- && node_modules/.bin/tsc --project infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json --outDir /payload/artifacts --incremental false \
+ && node scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --program kanbien-core-server-persistence --outDir /payload/artifacts --incremental false \
  && node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root /payload/artifacts \
- && mkdir -p /payload/node_modules \
- && cp -a node_modules/pg node_modules/pg-connection-string node_modules/pg-pool node_modules/pg-protocol node_modules/pg-types node_modules/pg-int8 node_modules/pgpass node_modules/postgres-array node_modules/postgres-bytea node_modules/postgres-date node_modules/postgres-interval node_modules/split2 node_modules/xtend /payload/node_modules/ \
- && cp -a node_modules/@aws-sdk node_modules/@smithy node_modules/@aws node_modules/@opentelemetry node_modules/tslib /payload/node_modules/ \
+ && node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-dependencies.mjs /app /payload/node_modules \
  && NODE_PATH=/payload/node_modules node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root /payload/artifacts
 FROM ${RUNTIME_NODE_IMAGE}
 ARG SOURCE_COMMIT_SHA=unknown

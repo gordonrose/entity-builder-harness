@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-secret-dependency-declaration.implementation
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-09"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -336,6 +336,7 @@ def main() -> int:
             }
             administrative_executors: dict[str, str] = {}
             administrative_runtime_probes: dict[str, str] = {}
+            separate_runtime_probes: list[tuple[str, str, str]] = []
             for item in health["workloads"]:
                 if not isinstance(item, dict) or not text(item.get("id")) or "administrative_execution" not in item:
                     continue
@@ -343,12 +344,14 @@ def main() -> int:
                 dependency = execution.get("dependency") if isinstance(execution, dict) else None
                 probe = execution.get("runtime_identity_probe") if isinstance(execution, dict) else None
                 probe_dependency = probe.get("dependency") if isinstance(probe, dict) else None
+                legacy_fields = {"dependency", "credential_access_class", "purpose"}
+                separate_fields = legacy_fields | {"workload", "target_workload"}
                 if (
                     not isinstance(execution, dict)
                     or not text(dependency)
                     or execution.get("credential_access_class") != "administrative"
                     or not isinstance(probe, dict)
-                    or set(probe) != {"dependency", "credential_access_class", "purpose"}
+                    or set(probe) not in (legacy_fields, separate_fields)
                     or not text(probe_dependency)
                     or probe.get("credential_access_class") != "runtime"
                     or not text(probe.get("purpose"))
@@ -357,7 +360,36 @@ def main() -> int:
                     codes.append("administrative-executor-declaration-invalid")
                     continue
                 administrative_executors[item["id"]] = dependency
-                administrative_runtime_probes[item["id"]] = probe_dependency
+                if set(probe) == legacy_fields:
+                    administrative_runtime_probes[item["id"]] = probe_dependency
+                    continue
+                proof_id, target_id = probe.get("workload"), probe.get("target_workload")
+                # Resolve the exact declared workloads, not the last member of
+                # a duplicate-id dictionary. Normal health validation still
+                # owns the complete completion/deadline/binding contract.
+                proof_matches = [candidate for candidate in health["workloads"] if isinstance(candidate, dict) and candidate.get("id") == proof_id] if text(proof_id) else []
+                target_matches = [candidate for candidate in health["workloads"] if isinstance(candidate, dict) and candidate.get("id") == target_id] if text(target_id) else []
+                proof = proof_matches[0] if len(proof_matches) == 1 else {}
+                target = target_matches[0] if len(target_matches) == 1 else {}
+                completion = proof.get("completion")
+                success = completion.get("success") if isinstance(completion, dict) else None
+                if (
+                    proof_id == item["id"]
+                    or dependency not in declared_dependencies
+                    or proof.get("workload_type") != COMPLETION_TASK_TYPE
+                    or not isinstance(target.get("workload_type"), str)
+                    or target["workload_type"] not in SERVER_OR_WORKER_TYPES
+                    or any(key in proof for key in ("administrative_execution", "migration_execution", "server_mediated_dependency_proof"))
+                    or not isinstance(success, dict)
+                    or type(success.get("exit_code")) is not int
+                    or success["exit_code"] != 0
+                    or not isinstance(success.get("result_code"), str)
+                    or DIAGNOSTIC.fullmatch(success["result_code"]) is None
+                ):
+                    codes.append("runtime-identity-proof-workload-invalid")
+                    continue
+                administrative_runtime_probes[proof_id] = probe_dependency
+                separate_runtime_probes.append((proof_id, target_id, probe_dependency))
             entries = configuration["secret_dependencies"]
             identity_entries = configuration.get("workload_identity_dependencies", [])
             names = text_list(configuration["secret_names"])
@@ -448,6 +480,22 @@ def main() -> int:
                     for entry in valid_identity_entries
                 ):
                     codes.append("administrative-runtime-identity-probe-missing")
+            for proof_id, target_id, dependency in separate_runtime_probes:
+                def runtime_references(workload_id: str) -> set[str]:
+                    return {
+                        entry["authentication_reference_id"] for entry in valid_identity_entries
+                        if entry["access_class"] == "runtime" and entry["dependency"] == dependency
+                        and workload_id in entry["authorised_workloads"]
+                    }
+                proof_references, target_references = runtime_references(proof_id), runtime_references(target_id)
+                if len(proof_references) != 1 or proof_references != target_references:
+                    codes.append("runtime-identity-proof-authentication-mismatch")
+                if any(
+                    entry["access_class"] in {"administrative", "migration"}
+                    and proof_id in entry["authorised_workloads"]
+                    for entry in [*valid_entries, *valid_identity_entries]
+                ):
+                    codes.append("runtime-identity-proof-privileged-access-prohibited")
             runtime_identity_workloads: dict[str, set[str]] = {}
             for item in health["workloads"]:
                 if not isinstance(item, dict) or not text(item.get("id")):

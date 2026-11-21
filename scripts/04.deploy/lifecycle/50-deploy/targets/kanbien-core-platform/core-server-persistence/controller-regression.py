@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 8
+#   version: 15
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-06"
+#   updated_on: "2026-11-19"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -23,10 +23,12 @@ import importlib.util
 import io
 import json
 import sys
+import hashlib
 import subprocess
 import tempfile
 import unittest
 import yaml
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import call, patch
@@ -34,11 +36,19 @@ from unittest.mock import call, patch
 ROOT = Path(__file__).resolve().parents[7]
 DEPLOY = ROOT / 'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence'
 RUN = ROOT / 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence'
+FIXTURE_STACK = None
 
 def load(path):
     spec = importlib.util.spec_from_file_location(path.parent.name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if path.name == 'change-set-operations.py':
+        # Every update test uses a disposable store, including nested real callers.
+        directory = FIXTURE_STACK.enter_context(tempfile.TemporaryDirectory(prefix='persistence-update-fixture-'))
+        owner = module.Store(Path(directory))
+        module.store = lambda _root: owner
+    elif path == DEPLOY / 'prepare-candidate/script.py':
+        module._UPDATE_OPERATIONS = load(DEPLOY / 'change-set-operations.py')
     return module
 
 def result(call):
@@ -60,21 +70,114 @@ def temporary_receipts(controller):
         with patch.object(controller, 'proof_receipts', return_value=receipts), patch.object(controller, 'ROOT', root), (patch.object(controller, 'OPERATION_DIAGNOSTICS', root / 'operation-diagnostics') if hasattr(controller, 'OPERATION_DIAGNOSTICS') else contextlib.nullcontext()):
             yield receipts
 
+@contextlib.contextmanager
+def temporary_change_sets(controller):
+    """Exercise the real immutable protocol outside canonical Git metadata."""
+    owner = controller.operations()
+    with tempfile.TemporaryDirectory(prefix='persistence-change-set-fixture-') as directory:
+        store = owner.Store(Path(directory))
+        with patch.object(owner, 'store', return_value=store), patch.object(controller, 'operations', return_value=owner):
+            yield store
+
+
+@contextlib.contextmanager
+def temporary_replacements(controller):
+    owner = controller.operations()
+    with tempfile.TemporaryDirectory(prefix='persistence-replacement-fixture-') as directory:
+        store = owner.Store(Path(directory))
+        with patch.object(owner, 'store', return_value=store), patch.object(controller, 'operations', return_value=owner):
+            yield owner, store
+
+
 class Provider:
     def __init__(self, responder):
         self.calls = []
         self.responder = responder
+        self.change_tokens = {}
+        self.execution_token = None
     def aws(self, *parts):
         self.calls.append(parts)
         if parts[1] == 'list-tasks':
             assert not ('--started-by' in parts and ('--desired-status' in parts or '--family' in parts)), 'unsupported AWS filter combination'
-        return self.responder(parts)
+        if parts[1] == 'create-change-set' and '--description' in parts:
+            self.change_tokens[parts[parts.index('--change-set-name')+1]] = parts[parts.index('--description')+1]
+        if parts[1] == 'execute-change-set' and '--client-request-token' in parts:
+            self.execution_token = parts[parts.index('--client-request-token')+1]
+        if parts[1] == 'describe-stack-events' and self.execution_token:
+            return True, {'StackEvents':[{'PhysicalResourceId':'fixture-stack', 'ClientRequestToken':self.execution_token, 'ResourceStatus':'UPDATE_COMPLETE'}]}, 'ok'
+        outcome = self.responder(parts)
+        if parts[1] == 'describe-stacks' and outcome[0] and isinstance(outcome[1], dict) and self.change_tokens:
+            return outcome[0], {**outcome[1], 'Stacks':[{**stack, 'StackId':'fixture-stack'} for stack in outcome[1]['Stacks']]}, outcome[2]
+        if parts[1] == 'describe-change-set' and outcome[0] and isinstance(outcome[1], dict):
+            token = self.change_tokens.get(parts[parts.index('--change-set-name')+1])
+            if token and 'Description' not in outcome[1]:
+                return outcome[0], {**outcome[1], 'Description':token}, outcome[2]
+        return outcome
     def retained_release(self,receipt):
         return False
     def live_budget(self):
         return True, 'ok'
+    def update_owner(self):
+        if not hasattr(self, '_updates'):
+            self._updates = load(DEPLOY / 'change-set-operations.py')
+        return self._updates
+    def labelled_update_name(self, name, label):
+        return self.update_owner().labelled_name(name, label)
+    def begin_update(self, **arguments):
+        return self.update_owner().begin_update(ROOT, stack='kanbien-core-platform-core-server-persistence', **arguments)
+    def apply_update(self, **arguments):
+        # Keep synthetic provider responses, but exercise the actual shared
+        # command binding rather than replacing the extracted implementation.
+        return self.update_owner().apply_update(self.aws, root=ROOT, stack='kanbien-core-platform-core-server-persistence', **arguments)
 
 class ControllerRegression(unittest.TestCase):
+    def setUp(self):
+        global FIXTURE_STACK
+        FIXTURE_STACK = contextlib.ExitStack()
+        self.addCleanup(FIXTURE_STACK.close)
+    def test_foundation_checks_and_provider_failures_reach_preparation(self):
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        expected=prepare.INPUTS['foundation_expected']
+        outputs={key:'fixture' for key in prepare.REQUIRED_FOUNDATION}
+        outputs.update(ClusterArn=expected['cluster_arn'],LogGroupName=expected['log_group'],RepositoryUri=prepare.INPUTS['repository_uri'])
+        document={'Stacks':[{'StackStatus':'UPDATE_COMPLETE','Outputs':[{'OutputKey':key,'OutputValue':value} for key,value in outputs.items()]}]}
+        with patch.object(prepare,'aws',return_value=(True,document,'ok')) as provider:
+            self.assertEqual(prepare.foundation_outputs(),(outputs,'ok'))
+            self.assertEqual(json.loads(provider.call_args.args[-1]),{'StackName':prepare.FOUNDATION})
+            document['Stacks'][0]['Outputs'].append(copy.deepcopy(document['Stacks'][0]['Outputs'][0]))
+            self.assertEqual(prepare.foundation_outputs(),(None,'foundation-outputs-ambiguous'))
+        with patch.object(prepare,'aws',return_value=(False,None,'aws-access-denied')) as provider:
+            self.assertEqual(prepare.foundation_outputs(),(None,'aws-access-denied'))
+            provider.assert_called_once()
+        with patch.object(prepare,'aws',return_value=(True,document,'ok')), patch.object(prepare.FOUNDATION_CHECKS,'foundation',side_effect=prepare.FOUNDATION_CHECKS.FoundationFailure('foundation-cluster-mismatch')) as shared:
+            self.assertEqual(prepare.foundation_outputs(),(None,'foundation-cluster-mismatch'))
+            shared.assert_called_once_with(document,prepare.REQUIRED_FOUNDATION,expected)
+
+    def test_preparation_consumes_shared_image_checks(self):
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        digest='sha256:'+'a'*64; child='sha256:'+'b'*64;receipt={'image_digest':digest}
+        manifest={'images':[{'imageId':{'imageDigest':digest},'imageManifest':json.dumps({'mediaType':'application/vnd.oci.image.index.v1+json','manifests':[{'mediaType':'application/vnd.oci.image.manifest.v1+json','digest':child,'platform':{'architecture':'amd64','os':'linux'}}]})}]}
+        scan={'repositoryName':prepare.REPOSITORY,'imageId':{'imageDigest':child},'imageScanStatus':{'status':'COMPLETE'},'imageScanFindings':{'findingSeverityCounts':{}}}
+        for change,expected in [(None,(True,'ok')),('pending',(False,'ecr-scan-not-complete')),('identity',(False,'ecr-scan-identity-mismatch')),('severity',(False,'ecr-scan-blocked-severity'))]:
+            observed=copy.deepcopy(scan)
+            if change=='pending':observed['imageScanStatus']['status']='IN_PROGRESS'
+            if change=='identity':observed['imageId']['imageDigest']=digest
+            if change=='severity':observed['imageScanFindings']['findingSeverityCounts']={'HIGH':1}
+            with patch.object(prepare,'aws',side_effect=[(True,manifest,'ok'),(True,observed,'ok')]) as provider:
+                self.assertEqual(prepare.candidate_image(receipt),expected)
+            self.assertEqual(provider.call_count,2)
+            self.assertEqual(json.loads(provider.call_args_list[0].args[-1])['imageIds'],[{'imageDigest':digest}])
+            self.assertEqual(json.loads(provider.call_args_list[1].args[-1]),{'repositoryName':prepare.REPOSITORY,'imageId':{'imageDigest':child},'maxResults':1})
+        with patch.object(prepare.IMAGE_CHECKS,'check_image',side_effect=prepare.IMAGE_CHECKS.ScanFailure('ecr-scan-findings-invalid')) as shared:
+            self.assertEqual(prepare.candidate_image(receipt),(False,'ecr-scan-findings-invalid'))
+            shared.assert_called_once_with(prepare.image_observation,prepare.REPOSITORY,digest)
+        with patch.object(prepare.IMAGE_CHECKS,'runnable_digest',return_value=child) as shared:
+            self.assertEqual(prepare.candidate_runnable_manifest(receipt),(child,'ok'))
+            shared.assert_called_once_with(prepare.image_observation,prepare.REPOSITORY,digest)
+        with patch.object(prepare,'aws',return_value=(False,None,'aws-access-denied')) as provider:
+            self.assertEqual(prepare.candidate_image(receipt),(False,'aws-access-denied'))
+            self.assertEqual(provider.call_count,1)
+
     def test_native_reconciliation_shapes_are_unknown_without_mutations(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
         receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
@@ -93,10 +196,12 @@ class ControllerRegression(unittest.TestCase):
                 outcome,code=prepare.observe_update(name,{},lambda _change:(_ for _ in ()).throw(AssertionError('missing review is not replayed')))
             self.assertEqual(outcome,'uncertain');self.assertIn(code,{'persistence-update-stack-status-unobservable','persistence-update-stack-parameters-unobservable'})
             self.assertEqual([parts[1] for parts in provider.calls],['describe-change-set','describe-stacks'])
-        with patch.object(prepare,'candidate_runnable_manifest',return_value=('sha256:'+'b'*64,'ok')),patch.object(prepare,'aws',return_value=(True,{'imageScanStatus':None},'ok')):
-            self.assertEqual(prepare.candidate_image(receipt),(False,'persistence-candidate-image-scan-observation-invalid'))
-        with patch.object(prepare,'aws',return_value=(True,{'Budget':{'BudgetLimit':{'Amount':'sNaN','Unit':'USD'}}},'ok')):
-            self.assertEqual(prepare.live_budget(),(False,'target-budget-amount-observation-invalid'))
+        manifest={'images':[{'imageId':{'imageDigest':receipt['image_digest']},'imageManifest':json.dumps({'mediaType':'application/vnd.oci.image.manifest.v1+json'})}]}
+        scan={'repositoryName':prepare.REPOSITORY,'imageId':{'imageDigest':receipt['image_digest']},'imageScanStatus':None}
+        with patch.object(prepare,'aws',side_effect=[(True,manifest,'ok'),(True,scan,'ok')]):
+            self.assertEqual(prepare.candidate_image(receipt),(False,'ecr-scan-not-complete'))
+        with patch.object(prepare,'aws',return_value=(True,{'Budget':{**prepare.INPUTS['budget'],'BudgetLimit':{'Amount':'sNaN','Unit':'USD'}}},'ok')):
+            self.assertEqual(prepare.live_budget(),(False,'foundation-budget-amount-invalid'))
         create=load(DEPLOY/'create-change-set/script.py')
         for field,value,code in [('Status',[],'persistence-change-set-status-unobservable'),('Parameters',[{'ParameterKey':[],'ParameterValue':'private-native-canary'}],'persistence-change-set-parameters-unobservable')]:
             provider=Provider(lambda _parts:(True,{'ChangeSetName':name,'Status':'CREATE_COMPLETE','Parameters':[],field:value},'ok'));provider.change_name_matches=prepare.change_name_matches
@@ -124,7 +229,7 @@ class ControllerRegression(unittest.TestCase):
                 calls.append(parts[1]);return (False,None,'aws-resource-missing') if parts[1]=='describe-stacks' else (True,{},'ok')
             provider.aws=aws
             temporary=patch.object(module.tempfile,'NamedTemporaryFile',return_value=CleanupFailure()) if cleanup else patch.object(module.tempfile,'NamedTemporaryFile',side_effect=OSError('private-native-canary'))
-            with temporary,patch.object(module,'controls',return_value=provider),patch.object(module,'diagnostic_path_is_governed',return_value=True),patch.object(module,'diagnostics_ready',return_value=True),patch.object(module,'package_gates',return_value=True),patch.object(sys,'argv',['fixture','--receipt','fixture']):
+            with temporary_change_sets(module),temporary,patch.object(module,'controls',return_value=provider),patch.object(module,'diagnostic_path_is_governed',return_value=True),patch.object(module,'diagnostics_ready',return_value=True),patch.object(module,'package_gates',return_value=True),patch.object(sys,'argv',['fixture','--receipt','fixture']):
                 status,report,_=result(module.main)
             self.assertEqual((status,report['verdict']),(1,'uncertain' if cleanup else 'blocked'))
             self.assertEqual(calls,['describe-stacks','create-change-set'] if cleanup else ['describe-stacks'])
@@ -152,6 +257,389 @@ class ControllerRegression(unittest.TestCase):
             provider=Provider(lambda parts: (True,{**good,'ExecutionStatus':'EXECUTE_COMPLETE'},'ok') if parts[1]=='describe-change-set' else (True,{'Stacks':[{'StackStatus':status,'Parameters':good['Parameters']}]},'ok'))
             self.assertEqual(result(lambda:module.reconcile(provider,name,receipt))[1]['verdict'],verdict)
             self.assertFalse(any(parts[1]=='execute-change-set' for parts in provider.calls))
+
+    def test_baseline_change_set_actual_callers_reserve_and_never_replay(self):
+        receipt = {'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
+        name = 'kanbien-core-platform-persistence-create-'+'a'*12
+        stack_id = 'arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-core-platform-core-server-persistence/fixture-id'
+        for command, phase in [('create-change-set','create'),('deploy-candidate','execute')]:
+            for lost in (False, True):
+                module = load(DEPLOY/command/'script.py')
+                expected = {'ImageDigest':receipt['image_digest'],'SupportImageDigest':receipt['image_digest'],
+                            'RestoreVerifierImageDigest':receipt['image_digest'],'SourceRevision':receipt['source_revision'],
+                            'PrivateSubnetIds':'PRIVATE_PARAMETER_CANARY'}
+                state = {'submitted':False,'identity':None,'foreign':False}
+                calls = []
+                def aws(*parts):
+                    calls.append(parts)
+                    operation = parts[1]
+                    if operation in ('create-change-set','execute-change-set'):
+                        records = list(store.root.glob('*.json'))
+                        self.assertEqual(len(records),1)
+                        retained = json.loads(records[0].read_text())
+                        self.assertEqual(records[0].stat().st_mode & 0o777,0o600)
+                        token = '--client-token' if phase == 'create' else '--client-request-token'
+                        self.assertEqual(parts[parts.index(token)+1],retained['operation_id'])
+                        self.assertNotIn('PRIVATE_PARAMETER_CANARY',records[0].read_text())
+                        state.update(submitted=True,identity=retained['operation_id'])
+                        if phase == 'create':
+                            self.assertEqual(parts[parts.index('--description')+1],state['identity'])
+                            self.assertIn('CAPABILITY_NAMED_IAM',parts)
+                            self.assertNotIn('--on-stack-failure',parts)
+                        else: self.assertNotIn('--disable-rollback',parts)
+                        return (False,None,'aws-command-timeout') if lost else (True,{},'ok')
+                    if operation == 'describe-stacks':
+                        if phase == 'create' and not state['submitted']: return False,None,'aws-resource-missing'
+                        return True,{'Stacks':[{'StackId':stack_id,'StackStatus':'CREATE_COMPLETE' if phase == 'execute' and state['submitted'] else 'REVIEW_IN_PROGRESS',
+                                               'Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()]}]},'ok'
+                    if operation == 'describe-change-set':
+                        return True,{'ChangeSetName':name,'Description':'foreign' if state['foreign'] else state['identity'],
+                            'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE' if phase == 'execute' and state['submitted'] else 'AVAILABLE',
+                            'ChangeSetType':'CREATE','Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()],
+                            'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]},'ok'
+                    if operation == 'describe-stack-events':
+                        return True,{'StackEvents':[{'PhysicalResourceId':stack_id,'ClientRequestToken':'foreign' if state['foreign'] else state['identity']}]},'ok'
+                    raise AssertionError(parts)
+                provider = SimpleNamespace(validate_receipt=lambda _path:receipt,declaration_covered=lambda:True,
+                    foundation_outputs=lambda:({},'ok'),infrastructure_parameters=lambda _:({},'ok'),
+                    candidate_image=lambda _:(True,'ok'),live_budget=lambda:(True,'ok'),candidate_parameters=lambda *args:expected,
+                    change_name_matches=lambda actual,wanted:actual == wanted,aws=aws)
+                argv = ['fixture','--receipt','fixture'] + (['--approved-change-set',name] if phase == 'execute' else [])
+                with temporary_change_sets(module) as store, contextlib.ExitStack() as fixtures:
+                    fixtures.enter_context(patch.object(module,'controls',return_value=provider))
+                    fixtures.enter_context(patch.object(sys,'argv',argv))
+                    if phase == 'create':
+                        for key in ('diagnostic_path_is_governed','diagnostics_ready','package_gates'):
+                            fixtures.enter_context(patch.object(module,key,return_value=True))
+                        fixtures.enter_context(patch.object(module,'retain_diagnostic',return_value=None))
+                    first = result(module.main)[1]
+                    successful = 'created-awaiting-review' if phase == 'create' else 'deployed-awaiting-migration'
+                    self.assertEqual(first['verdict'],'uncertain' if lost else successful)
+                    retained = next(store.root.glob('*.json')).read_bytes()
+                    self.assertEqual(result(module.main)[1]['verdict'],successful)
+                    self.assertEqual(next(store.root.glob('*.json')).read_bytes(),retained)
+                    state['foreign'] = True
+                    self.assertIn(result(module.main)[1]['verdict'],('blocked','uncertain'))
+                    state['foreign'] = False
+                    expected['PrivateSubnetIds'] = 'changed-private-input'
+                    changed = result(module.main)[1]
+                    self.assertEqual(changed['findings'],[{'code':'persistence-change-set-reservation-mismatch'}])
+                    self.assertEqual(sum(parts[1] in ('create-change-set','execute-change-set') for parts in calls),1)
+    def test_all_update_entrypoints_use_shared_sequence_and_keep_guards(self):
+        commands = (
+            ('transition-qualified-release', 'transitioned', ['--operation', 'update']),
+            ('apply-private-verifier-route-update', 'updated', []),
+            ('apply-database-permission-surface', 'updated-awaiting-administration', ['--rollback-receipt', 'prior', '--rollback-compatibility-id', 'fixture']),
+            ('apply-observability-mvp-surface', 'updated-awaiting-observability-proof', ['--collector-receipt', 'collector', '--alert-email', 'private-canary@example.invalid']),
+            ('apply-restoration-verifier-surface', 'applied', ['--mode', 'image']),
+        )
+        for command, success, extra in commands:
+            for scenario in ('success', 'create-timeout', 'execute-timeout', 'unknown', 'resource-rejected', 'parameter-rejected', 'pending', 'failed'):
+                with self.subTest(command=command, scenario=scenario), contextlib.ExitStack() as contexts:
+                    module = load(DEPLOY / command / 'script.py')
+                    prepare = load(DEPLOY / 'prepare-candidate/script.py')
+                    owner = load(DEPLOY / 'change-set-operations.py')
+                    candidate = {'image_digest': 'sha256:'+'a'*64, 'source_revision': 'a'*40}
+                    collector = {**candidate, 'image_digest': 'sha256:'+'c'*64}
+                    previous = {**candidate, 'image_digest': 'sha256:'+'b'*64}
+                    foundation = {'RepositoryUri': prepare.INPUTS['repository_uri']}
+                    current = {**prepare.candidate_parameters(foundation, {}, previous), 'EnableObservability': 'false',
+                               'ObservabilityCollectorImage': 'old-collector', 'ObservabilityAlertEmail': '****', 'UnownedSetting': 'retained'}
+                    state = {'parameters': None, 'executed': False, 'name': None, 'description': None}
+                    if command in ('apply-database-permission-surface', 'apply-observability-mvp-surface'):
+                        changes = [{'ResourceChange': {'LogicalResourceId': logical, 'ResourceType': kind, 'Action': action}}
+                                   for action, collection in (('Add', module.ADDED), ('Modify', module.MODIFIED)) for logical, kind in collection.items()]
+                    elif command == 'apply-private-verifier-route-update':
+                        changes = [{'ResourceChange': {'LogicalResourceId': 'VerifierEgressToServer', 'ResourceType': 'AWS::EC2::SecurityGroupEgress', 'Action': 'Add'}}]
+                    else:
+                        changes = [{'ResourceChange': {'LogicalResourceId': 'CoreServerPersistenceRestorationVerifierTaskDefinition', 'ResourceType': 'AWS::ECS::TaskDefinition', 'Action': 'Modify'}}]
+                    if scenario == 'resource-rejected':
+                        changes.append({'ResourceChange': {'LogicalResourceId': 'UnrelatedBucket', 'ResourceType': 'AWS::S3::Bucket', 'Action': 'Add'}})
+                    def response(parts):
+                        operation = parts[1]
+                        if operation == 'describe-stacks':
+                            values = state['parameters'] if state['executed'] else current
+                            status = ('UPDATE_IN_PROGRESS' if scenario=='pending' else 'UPDATE_ROLLBACK_COMPLETE') if state['executed'] and scenario in ('pending','failed') else 'UPDATE_COMPLETE'
+                            return True, {'Stacks': [{'StackStatus': status, 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in values.items()]}]}, 'ok'
+                        if operation == 'describe-services':
+                            return True, {'services': [{'status': 'ACTIVE', 'desiredCount': 1, 'runningCount': 1}]}, 'ok'
+                        if operation == 'describe-change-set':
+                            if scenario == 'unknown': return False, None, 'aws-command-timeout'
+                            if state['parameters'] is None: return False, None, 'aws-resource-missing'
+                            values = {**state['parameters']}
+                            if scenario == 'parameter-rejected': values['UnownedSetting'] = 'private-parameter-canary'
+                            return True, {'ChangeSetName': state['name'], 'Description': state['description'], 'Status': 'CREATE_COMPLETE', 'ChangeSetType': 'UPDATE',
+                                          'ExecutionStatus': 'EXECUTE_COMPLETE' if state['executed'] else 'AVAILABLE', 'Changes': changes,
+                                          'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in values.items()]}, 'ok'
+                        if operation == 'create-change-set':
+                            state['name'] = parts[parts.index('--change-set-name')+1]
+                            state['description'] = parts[parts.index('--description')+1]
+                            self.assertEqual(state['description'], parts[parts.index('--client-token')+1])
+                            self.assertIsNotNone(owner.store(ROOT).read('update-create', request_seen[0]))
+                            submitted = json.loads(Path(parts[parts.index('--parameters')+1].removeprefix('file://')).read_text())
+                            state['parameters'] = {**current, **{item['ParameterKey']: current[item['ParameterKey']] if item.get('UsePreviousValue') else item['ParameterValue'] for item in submitted}}
+                            if command == 'apply-observability-mvp-surface':
+                                self.assertEqual(state['parameters']['ObservabilityAlertEmail'], 'private-canary@example.invalid')
+                                state['parameters']['ObservabilityAlertEmail'] = '****'
+                            self.assertEqual('--use-previous-template' in parts, command in ('transition-qualified-release', 'apply-restoration-verifier-surface'))
+                            self.assertIn('CAPABILITY_NAMED_IAM', parts)
+                            return (False, None, 'aws-command-timeout') if scenario == 'create-timeout' else (True, {}, 'ok')
+                        if operation == 'execute-change-set':
+                            reservation = owner.store(ROOT).read('update-execute', request_seen[0])
+                            self.assertEqual(parts[parts.index('--client-request-token')+1], reservation['operation_id'])
+                            state['executed'] = True
+                            return (False, None, 'aws-command-timeout') if scenario == 'execute-timeout' else (True, {}, 'ok')
+                        raise AssertionError(operation)
+                    provider = Provider(response)
+                    contexts.enter_context(patch.object(prepare, 'aws', provider.aws))
+                    contexts.enter_context(patch.object(prepare, '_UPDATE_OPERATIONS', owner))
+                    for key, value in {'validate_receipt': candidate, 'retained_release': False, 'rollback_compatibility': True,
+                                       'declaration_covered': True, 'live_budget': (True, 'ok'), 'foundation_outputs': (foundation, 'ok'),
+                                       'infrastructure_parameters': ({}, 'ok'), 'candidate_image': (True, 'ok')}.items():
+                        contexts.enter_context(patch.object(prepare, key, return_value=value))
+                    create = SimpleNamespace(package_gates=lambda _path: True)
+                    loader = 'module' if command == 'apply-private-verifier-route-update' else 'load'
+                    loader_mock = contexts.enter_context(patch.object(module, loader, side_effect=[prepare] if command == 'apply-restoration-verifier-surface' else [prepare, create]))
+                    contexts.enter_context(patch.object(module.time, 'sleep'))
+                    if command == 'transition-qualified-release':
+                        contexts.enter_context(patch.object(module, 'retain_failure_diagnostic', return_value=None))
+                    if command == 'apply-observability-mvp-surface':
+                        contexts.enter_context(patch.object(module, 'receipt', side_effect=lambda path, **_expected: collector if path.name == 'collector' else candidate))
+                        contexts.enter_context(patch.object(module, 'collector_image_available', return_value=True))
+                        contexts.enter_context(patch.object(subprocess, 'run', return_value=SimpleNamespace(returncode=0)))
+                    contexts.enter_context(patch.object(sys, 'argv', ['fixture', '--server-receipt' if command == 'apply-observability-mvp-surface' else '--receipt', 'candidate', *extra, '--operation-label', 'fixture']))
+                    request_seen = []
+                    original_begin = owner.begin_update
+                    def begin(*args, **kwargs):
+                        value = original_begin(*args, **kwargs)
+                        request_seen[:] = [value[0]]
+                        return value
+                    contexts.enter_context(patch.object(owner, 'begin_update', side_effect=begin))
+                    shared = contexts.enter_context(patch.object(owner.CHANGE_SETS, 'prepare', wraps=owner.CHANGE_SETS.prepare))
+                    execute = contexts.enter_context(patch.object(owner.CHANGE_SETS, 'execute', wraps=owner.CHANGE_SETS.execute))
+                    selection = contexts.enter_context(patch.object(owner.CHANGE_SETS, 'retained_execution', wraps=owner.CHANGE_SETS.retained_execution))
+                    status, report, _ = result(module.main)
+                    self.assertEqual(selection.call_count, 2)  # Admission and submission recheck use the same owner.
+                    self.assertEqual(shared.call_count, 1)
+                    expected = success if scenario == 'success' else scenario if scenario in ('pending','failed') else 'uncertain' if scenario in ('create-timeout', 'execute-timeout') else 'blocked'
+                    self.assertEqual(report['verdict'], expected, report)
+                    self.assertEqual(status, 0 if scenario == 'success' else 1)
+                    operations = [parts[1] for parts in provider.calls]
+                    self.assertEqual(operations.count('create-change-set'), 0 if scenario == 'unknown' else 1)
+                    self.assertEqual(operations.count('execute-change-set'), 1 if scenario in ('success', 'execute-timeout', 'pending', 'failed') else 0)
+                    self.assertEqual(execute.call_count, 1 if scenario in ('success', 'execute-timeout', 'pending', 'failed') else 0)
+                    self.assertNotIn('private-canary', json.dumps(report))
+                    self.assertNotIn('private-parameter-canary', json.dumps(report))
+                    if scenario in ('success', 'create-timeout', 'execute-timeout', 'pending', 'failed'):
+                        before = len(provider.calls)
+                        loader_mock.side_effect = [prepare] if command == 'apply-restoration-verifier-surface' else [prepare, create]
+                        # Ordinary invocation resumes; an executed attempt must
+                        # bypass gates demanding a healthy predecessor.
+                        if scenario != 'create-timeout':
+                            contexts.enter_context(patch.object(prepare, 'live_budget', side_effect=AssertionError('execution retry entered fresh gates')))
+                        selection.reset_mock()
+                        resumed = result(module.main)[1]
+                        self.assertEqual(selection.call_count, 2 if scenario == 'create-timeout' else 1)
+                        self.assertEqual(resumed['verdict'], scenario if scenario in ('pending','failed') else success)
+                        self.assertEqual(sum(parts[1]=='create-change-set' for parts in provider.calls), 1)
+                        self.assertEqual(sum(parts[1]=='execute-change-set' for parts in provider.calls), 1)
+                        if scenario != 'create-timeout':
+                            self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls[before:]))
+
+    def test_shared_update_parameter_transport_failures_and_renamed_binding(self):
+        owner = load(DEPLOY / 'change-set-operations.py')
+        class CleanupFailure(io.StringIO):
+            name = 'fixture-only.json'
+            def __exit__(self, *args):
+                super().__exit__(*args)
+                raise OSError('private-file-canary')
+        for mode in ('before', 'cleanup', 'provider-and-cleanup', 'renamed'):
+            with self.subTest(mode=mode), contextlib.ExitStack() as contexts:
+                calls = []
+                state = {}
+                def aws(*parts):
+                    calls.append(parts)
+                    self.assertEqual(parts[parts.index('--stack-name')+1], 'renamed-private-workload')
+                    if parts[1] == 'describe-change-set':
+                        return (True, state, 'ok') if state else (False, None, 'aws-resource-missing')
+                    if parts[1] == 'create-change-set':
+                        state.update(Description=parts[parts.index('--description')+1], ExecutionStatus='AVAILABLE')
+                    if mode == 'provider-and-cleanup': return False, None, 'aws-command-timeout'
+                    return True, {}, 'ok'
+                if mode == 'before': contexts.enter_context(patch.object(owner.tempfile, 'NamedTemporaryFile', side_effect=OSError('private-file-canary')))
+                elif mode != 'renamed': contexts.enter_context(patch.object(owner.tempfile, 'NamedTemporaryFile', return_value=CleanupFailure()))
+                request = {'stack':'renamed-private-workload','change_set':'renamed-review-'+mode,'inputs_sha256':'a'*64}
+                result_value = owner.apply_update(aws, root=ROOT, stack=request['stack'], name=request['change_set'], request=request, parameters=[{'ParameterKey': 'PrivateValue', 'ParameterValue': 'private-file-canary'}],
+                                                 template_arguments=('--use-previous-template',), review=lambda *_: (state, 'ok'),
+                                                 admit=lambda _: None, observe=lambda _reservation: ('complete', 'observed'), failure=lambda verdict, code: (verdict, code))
+                expected = {'before': ('blocked', 'persistence-update-parameter-file-unavailable'),
+                            'cleanup': ('uncertain', 'persistence-update-parameter-file-outcome-uncertain'),
+                            'provider-and-cleanup': ('uncertain', 'aws-command-timeout'), 'renamed': ('complete', 'observed')}[mode]
+                self.assertEqual(result_value, expected)
+                self.assertEqual(sum(parts[1]=='create-change-set' for parts in calls), 0 if mode=='before' else 1)
+                self.assertEqual(sum(parts[1]=='execute-change-set' for parts in calls), 1 if mode=='renamed' else 0)
+                self.assertNotIn('private-file-canary', repr(result_value))
+
+    def test_reserved_updates_bind_intent_and_never_replay_interrupted_submissions(self):
+        for scenario in ('missing-create', 'before-create', 'before-execute', 'foreign', 'changed-intent', 'changed-source', 'missing-source', 'changed-receipt', 'orphan', 'corrupt', 'new-label', 'delayed', 'expired-observation'):
+            with self.subTest(scenario=scenario):
+                owner = load(DEPLOY/'change-set-operations.py')
+                store = owner.store(ROOT)
+                calls, state = [], {}
+                receipt = {'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
+                intent = dict(stack='different-workload', name='review-one', receipt=receipt,
+                              controller=__file__, template=DEPLOY/'change-set-operations.py',
+                              settings={'private':'sensitive-intent-canary'})
+                def observation(reservation):
+                    if scenario=='expired-observation' and not state.get('authenticated'):
+                        prepare = load(DEPLOY/'prepare-candidate/script.py')
+                        with patch.object(prepare, 'aws', return_value=(False, None, 'aws-credentials-expired')) as read:
+                            result = prepare.observe_update(intent['name'], {}, lambda value: value, reservation=reservation)
+                            self.assertEqual(read.call_count, 1)
+                            self.assertEqual(read.call_args.args[:2], ('cloudformation', 'describe-change-set'))
+                            return result
+                    return ('observed', reservation['phase'])
+                failure = lambda verdict, code: (verdict, code)
+                def begin(**overrides):
+                    return owner.begin_update(ROOT, **{**intent, **overrides}, observe=observation, failure=failure)
+                request, resumed = begin()
+                self.assertIsNone(resumed)
+                def aws(*parts):
+                    calls.append(parts)
+                    if parts[1]=='describe-change-set':
+                        if scenario=='foreign': return True, {'Description':'unowned'}, 'ok'
+                        return (True, state, 'ok') if state else (False, None, 'aws-resource-missing')
+                    if parts[1]=='create-change-set':
+                        self.assertIsNotNone(store.read('update-create', request))
+                        if scenario=='missing-create': return False, None, 'aws-command-timeout'
+                        state.update(Description=parts[parts.index('--description')+1], ExecutionStatus='AVAILABLE')
+                        return True, {}, 'ok'
+                    if parts[1]=='execute-change-set':
+                        token=store.read('update-execute', request)['operation_id']
+                        self.assertEqual(parts[parts.index('--client-request-token')+1], token)
+                        return True, {}, 'ok'
+                    raise AssertionError(parts[1])
+                def apply():
+                    return owner.apply_update(aws, root=ROOT, stack=intent['stack'], name=request['change_set'], request=request,
+                        parameters=[], template_arguments=('--use-previous-template',),
+                        review=lambda value,_: (None if scenario=='delayed' and not state.get('ready') else value, 'ok'),
+                        admit=lambda _:None, observe=observation, failure=failure)
+                if scenario in ('before-create','before-execute'):
+                    reserve = store.reserve
+                    interrupted = 'update-create' if scenario=='before-create' else 'update-execute'
+                    def interrupt(phase, value):
+                        result = reserve(phase, value)
+                        if phase==interrupted: raise KeyboardInterrupt()
+                        return result
+                    with patch.object(store,'reserve',side_effect=interrupt), self.assertRaises(KeyboardInterrupt):
+                        apply()
+                else:
+                    first=apply()
+                    if scenario=='foreign': self.assertEqual(first, ('blocked','persistence-update-unowned-change-set'))
+                    if scenario=='missing-create': self.assertEqual(first, ('uncertain','aws-command-timeout'))
+                    if scenario=='expired-observation':
+                        self.assertEqual(first, ('uncertain','aws-credentials-expired'))
+                        retained = {path:path.read_bytes() for path in store.root.glob('*.json')}
+                        self.assertIsNotNone(store.read('update-execute', request))
+                        state['authenticated']=True
+                before = len(calls)
+                if scenario=='changed-intent':
+                    self.assertEqual(begin(settings={'private':'different'})[1], ('blocked','persistence-change-set-reservation-mismatch'))
+                elif scenario=='changed-receipt':
+                    self.assertEqual(begin(receipt={**receipt,'source_revision':'b'*40})[1], ('blocked','persistence-change-set-reservation-mismatch'))
+                elif scenario=='changed-source':
+                    original=Path.read_bytes
+                    with patch.object(Path,'read_bytes',lambda path: b'changed-controller' if path==Path(__file__) else original(path)):
+                        self.assertEqual(begin()[1], ('blocked','persistence-change-set-reservation-mismatch'))
+                elif scenario=='missing-source':
+                    self.assertEqual(begin(controller=store.root/'absent.py')[1], ('blocked','persistence-change-set-inputs-unavailable'))
+                elif scenario=='orphan':
+                    store.path_for('update-create',request).unlink()
+                    self.assertEqual(begin()[1], ('blocked','persistence-change-set-reservation-mismatch'))
+                    self.assertEqual(apply(), ('blocked','persistence-change-set-reservation-mismatch'))
+                elif scenario=='corrupt':
+                    store.path_for('update-execute',request).write_text('{malformed-sensitive-intent-canary')
+                    self.assertEqual(begin()[1], ('blocked','persistence-change-set-reservation-unavailable'))
+                elif scenario=='new-label':
+                    label=owner.labelled_name(intent['name'],'next-release')
+                    request,resumed=begin(name=label)
+                    self.assertIsNone(resumed)
+                    state.clear()
+                    self.assertEqual(apply(), ('observed','update-execute'))
+                    self.assertIsNone(owner.labelled_name(intent['name'],'../private'))
+                else:
+                    request,resumed=begin()
+                    if resumed is None:
+                        if scenario=='delayed': state['ready']=True
+                        resumed=apply()
+                    expected = ('observed','update-execute') if scenario in ('before-execute','delayed','expired-observation') else (
+                        ('blocked','persistence-update-change-set-lineage-not-confirmed') if scenario=='foreign'
+                        else ('uncertain','aws-resource-missing'))
+                    self.assertEqual(resumed, expected)
+                mutations=[parts[1] for parts in calls if parts[1] in ('create-change-set','execute-change-set')]
+                if scenario=='new-label': self.assertEqual(mutations, ['create-change-set','execute-change-set']*2)
+                elif scenario=='delayed': self.assertEqual(mutations, ['create-change-set','execute-change-set'])
+                else: self.assertTrue(all(parts[1].startswith('describe-') for parts in calls[before:]))
+                if scenario=='expired-observation':
+                    self.assertEqual(mutations, ['create-change-set','execute-change-set'])
+                    self.assertTrue(all(path.read_bytes()==raw for path,raw in retained.items()))
+                if scenario!='corrupt':
+                    for path in store.root.glob('*.json'):
+                        self.assertNotIn('sensitive-intent-canary',path.read_text())
+
+    def test_retained_execution_pair_is_read_only_and_preserves_failures(self):
+        owner = load(DEPLOY / 'change-set-operations.py')
+        store = owner.store(ROOT)
+        request = {'stack': 'another-workload', 'change_set': 'another-review', 'inputs_sha256': 'a' * 64}
+        def select():
+            return owner.CHANGE_SETS.retained_execution(store,
+                preparation_phase='update-create', preparation_request=request,
+                execution_phase='update-execute', execution_request=request,
+                missing_preparation=lambda: owner.OperationFailure('blocked', 'persistence-change-set-reservation-mismatch'))
+        self.assertIsNone(select())
+        self.assertEqual(list(store.root.glob('*.json')), [])
+        prepared, _ = store.reserve('update-create', request)
+        self.assertIsNone(select())
+        executed, _ = store.reserve('update-execute', request)
+        original = {path: path.read_bytes() for path in store.root.glob('*.json')}
+        with patch.object(store, 'reserve', side_effect=AssertionError('selection must not reserve')):
+            self.assertEqual(select(), executed)
+            self.assertTrue(all(path.read_bytes() == raw for path, raw in original.items()))
+            failure = owner.OperationFailure('blocked', 'persistence-change-set-reservation-unavailable')
+            with patch.object(store, 'read', side_effect=failure), self.assertRaises(owner.OperationFailure) as caught:
+                select()
+            self.assertIs(caught.exception, failure)
+            with patch.object(store, 'read', side_effect=[prepared, failure]), self.assertRaises(owner.OperationFailure) as caught:
+                select()
+            self.assertIs(caught.exception, failure)
+            with patch.object(store, 'read', side_effect=[prepared, executed]):
+                self.assertIs(select(), executed)
+
+    def test_reserved_update_completion_requires_its_own_terminal_event(self):
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        params={'ImageDigest':'sha256:'+'a'*64}
+        reservation={'phase':'update-execute','operation_id':'kp-'+'a'*32}
+        event={'PhysicalResourceId':'fixture-stack','ClientRequestToken':reservation['operation_id'],'ResourceStatus':'UPDATE_COMPLETE'}
+        stack={'StackId':'fixture-stack','StackStatus':'UPDATE_COMPLETE','Parameters':[{'ParameterKey':k,'ParameterValue':v} for k,v in params.items()]}
+        for events, phase, expected in (
+            ([event],'update-execute','complete'),
+            ([], 'update-execute','uncertain'),
+            ([{**event,'ClientRequestToken':'another-operation'}],'update-execute','uncertain'),
+            ([{**event,'PhysicalResourceId':'another-stack'}],'update-execute','uncertain'),
+            ([{**event,'ResourceStatus':'UPDATE_IN_PROGRESS'}],'update-execute','uncertain'),
+            ([event],'update-create','uncertain'),
+        ):
+            def aws(*parts):
+                if parts[1]=='describe-change-set':return False,None,'aws-resource-missing'
+                if parts[1]=='describe-stacks':return True,{'Stacks':[stack]},'ok'
+                if parts[1]=='describe-stack-events':return True,{'StackEvents':events},'ok'
+                raise AssertionError('unexpected mutation')
+            with patch.object(prepare,'aws',side_effect=aws):
+                result=prepare.observe_update('named-update',params,lambda _:True,reservation={**reservation,'phase':phase})
+                self.assertEqual(result[0],expected)
+                if expected=='uncertain':self.assertEqual(result[1],'persistence-update-execution-lineage-not-confirmed')
+                # Historical records retain their separate read-only contract.
+                self.assertEqual(prepare.observe_update('named-update',params,lambda _:True)[0],'complete')
 
     def test_update_submission_timeouts_preserve_operation_identity(self):
         receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
@@ -239,6 +727,83 @@ class ControllerRegression(unittest.TestCase):
         self.assertIn('--use-previous-template',submitted)
         self.assertNotIn('--template-body',submitted)
 
+    def test_shared_update_parameters_reject_ambiguous_rows_and_preserve_unowned_values(self):
+        transition = load(DEPLOY / 'transition-qualified-release/script.py')
+        prepare = load(DEPLOY / 'prepare-candidate/script.py')
+        shared = transition.CHANGE_SETS
+        current = {'ImageDigest': 'old', 'EnableObservability': 'true', 'PrivateSetting': '****'}
+        desired = {'ImageDigest': 'new'}
+        self.assertIs(transition.update_parameter_inputs, shared.update_parameter_inputs)
+        self.assertEqual(shared.update_parameter_inputs(current, desired), [
+            {'ParameterKey': 'EnableObservability', 'UsePreviousValue': True},
+            {'ParameterKey': 'PrivateSetting', 'UsePreviousValue': True},
+            {'ParameterKey': 'ImageDigest', 'ParameterValue': 'new'},
+        ])
+        inputs = [{'ParameterKey': key, 'ParameterValue': value} for key, value in current.items()]
+        self.assertEqual(shared.parameter_values(inputs), current)
+        self.assertEqual(shared.parameter_values([{'ParameterKey': 'key', 'ParameterValue': '****', 'ResolvedValue': 'private-canary'}]), {'key': '****'})
+        for invalid in (None, {}, [None], [{'ParameterKey': 'key'}],
+                        [{'ParameterKey': '', 'ParameterValue': 'private-canary'}],
+                        [{'ParameterKey': [], 'ParameterValue': 'private-canary'}],
+                        [{'ParameterKey': 'key', 'ParameterValue': 0}],
+                        inputs + [inputs[0]], inputs + [{'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'}]):
+            with self.subTest(invalid=type(invalid).__name__):
+                self.assertIsNone(shared.parameter_values(invalid))
+        for invalid in (None, [], {'ImageDigest': 1}, {'': 'private-canary'}):
+            self.assertIsNone(shared.update_parameter_inputs(invalid, desired))
+            self.assertIsNone(shared.update_parameter_inputs(current, invalid))
+            self.assertFalse(prepare.update_parameters_match(invalid, desired, current))
+        self.assertIsNone(shared.update_parameter_inputs(current, {'NewParameter': 'private-canary'}))
+        for actual, expected in (({**current, **desired}, True), (current, False),
+                                 ({**current, **desired, 'EnableObservability': 'false'}, False),
+                                 ({**current, **desired, 'Unexpected': 'private-canary'}, False),
+                                 (desired, False)):
+            self.assertEqual(prepare.update_parameters_match(actual, desired, current), expected)
+        owner = prepare.update_operations()
+        with patch.object(owner.CHANGE_SETS, 'update_parameters_match', return_value=False) as guard:
+            self.assertFalse(prepare.update_parameters_match({**current, **desired}, desired, current))
+            guard.assert_called_once_with({**current, **desired}, desired, current)
+
+    def test_update_reconciliation_rejects_ambiguous_completion_without_replay(self):
+        prepare = load(DEPLOY / 'prepare-candidate/script.py')
+        name, expected = 'fixture-update', {'ImageDigest': 'expected'}
+        row = {'ParameterKey': 'ImageDigest', 'ParameterValue': 'expected'}
+        for change in (None,
+                       {'ChangeSetName': name, 'Status': 'FAILED', 'ExecutionStatus': 'UNAVAILABLE', 'Changes': [], 'StatusReason': "The submitted information didn't contain changes."},
+                       {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE'}):
+            for rows in (None, [row, row], [{'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'}, row], [None, row]):
+                def response(parts):
+                    if parts[1] == 'describe-change-set':
+                        return (False, None, 'aws-resource-missing') if change is None else (True, change, 'ok')
+                    self.assertEqual(parts[1], 'describe-stacks')
+                    return True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': rows}]}, 'ok'
+                provider = Provider(response)
+                with patch.object(prepare, 'aws', provider.aws):
+                    observed = prepare.observe_update(name, expected, lambda _change: True)
+                self.assertEqual(observed, ('uncertain', 'persistence-update-stack-parameters-unobservable'))
+                self.assertEqual([parts[1] for parts in provider.calls], ['describe-change-set', 'describe-stacks'])
+                self.assertNotIn('private-canary', json.dumps(observed))
+
+    def test_image_transition_rejects_invalid_stack_parameters_before_provider_mutation(self):
+        module = load(DEPLOY / 'transition-qualified-release/script.py')
+        prepare = load(DEPLOY / 'prepare-candidate/script.py')
+        receipt = {'image_digest': 'sha256:' + 'a' * 64, 'source_revision': 'a' * 40}
+        row = {'ParameterKey': 'ImageDigest', 'ParameterValue': 'sha256:' + 'b' * 64}
+        for rows in (None, [row, row], [row, {'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'}], [row, None]):
+            for operation in ('update', 'discard-rejected-review'):
+                provider = Provider(lambda parts: (True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': rows}]}, 'ok'))
+                with patch.object(module, 'load', side_effect=[prepare, SimpleNamespace(package_gates=lambda _path: True)]), \
+                     patch.object(prepare, 'validate_receipt', return_value=receipt), \
+                     patch.object(prepare, 'retained_release', return_value=False), \
+                     patch.object(prepare, 'live_budget', return_value=(True, 'ok')), \
+                     patch.object(prepare, 'aws', provider.aws), \
+                     patch.object(sys, 'argv', ['fixture', '--receipt', 'candidate', '--operation', operation]):
+                    code, report, _ = result(module.main)
+                self.assertEqual(code, 1)
+                self.assertEqual(report['findings'], [{'code': 'persistence-release-transition-update-parameter-inputs-invalid'}])
+                self.assertEqual([parts[1] for parts in provider.calls], ['describe-stacks'])
+                self.assertNotIn('private-canary', json.dumps(report))
+
     def test_image_transition_uses_deployed_template_and_keeps_resource_guard(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
         prepare = load(DEPLOY/'prepare-candidate/script.py')
@@ -246,8 +811,9 @@ class ControllerRegression(unittest.TestCase):
         desired = {'ImageDigest': receipt['image_digest'], 'SupportImageDigest': receipt['image_digest'], 'RestoreVerifierImageDigest': receipt['image_digest'], 'SourceRevision': receipt['source_revision']}
         current = {**desired, 'ImageDigest': 'sha256:'+'b'*64, 'SupportImageDigest': 'sha256:'+'b'*64, 'RestoreVerifierImageDigest': 'sha256:'+'b'*64, 'SourceRevision': 'b'*40, 'EnableObservability': 'true'}
         name = 'kanbien-core-platform-persistence-update-' + receipt['image_digest'][7:19]
-        for forced_type in (None, 'AWS::IAM::Role', 'AWS::RDS::DBInstance'):
+        for forced_type in (None, 'AWS::IAM::Role', 'AWS::RDS::DBInstance', 'duplicate-parameter', 'malformed-parameter'):
             with self.subTest(forced_type=forced_type):
+                prepare = load(DEPLOY/'prepare-candidate/script.py')
                 state = {'submitted': None, 'executed': False, 'uses_deployed': False}
                 def response(parts):
                     operation = parts[1]
@@ -268,8 +834,11 @@ class ControllerRegression(unittest.TestCase):
                         # The real failed review brought in RDS/IAM changes from
                         # the repository template. A deployed-template request
                         # avoids that input, but never waives the result guard.
-                        resource_type = forced_type or ('AWS::ECS::TaskDefinition' if state['uses_deployed'] else 'AWS::RDS::DBInstance')
-                        return True, {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE' if state['executed'] else 'AVAILABLE', 'ChangeSetType': 'UPDATE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in state['submitted'].items()], 'Changes': [{'ResourceChange': {'ResourceType': resource_type}}]}, 'ok'
+                        resource_type = forced_type if forced_type in ('AWS::IAM::Role', 'AWS::RDS::DBInstance') else ('AWS::ECS::TaskDefinition' if state['uses_deployed'] else 'AWS::RDS::DBInstance')
+                        rows = [{'ParameterKey': k, 'ParameterValue': v} for k, v in state['submitted'].items()]
+                        if forced_type == 'duplicate-parameter': rows.insert(0, {'ParameterKey': 'ImageDigest', 'ParameterValue': 'private-canary'})
+                        if forced_type == 'malformed-parameter': rows.append(None)
+                        return True, {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE' if state['executed'] else 'AVAILABLE', 'ChangeSetType': 'UPDATE', 'Parameters': rows, 'Changes': [{'ResourceChange': {'ResourceType': resource_type}}]}, 'ok'
                     if operation == 'execute-change-set': state['executed'] = True; return True, {}, 'ok'
                     raise AssertionError(operation)
                 provider = Provider(response)
@@ -283,6 +852,7 @@ class ControllerRegression(unittest.TestCase):
                     self.assertEqual(report['verdict'], 'blocked')
                     self.assertEqual(report['findings'], [{'code': 'persistence-update-change-set-review-invalid'}])
                     self.assertFalse(state['executed'])
+                    self.assertNotIn('private-canary', json.dumps(report))
 
     def test_qualified_rollback_main_retains_support_and_restoration_images(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
@@ -296,17 +866,26 @@ class ControllerRegression(unittest.TestCase):
         desired = {**prepare.candidate_parameters(outputs, {}, retained), 'SupportImageDigest': support['image_digest'], 'RestoreVerifierImageDigest': support['image_digest'], 'EnableObservability': 'true'}
         name = 'kanbien-core-platform-persistence-rollback-' + retained['image_digest'][7:19]
         arguments = ['test', '--receipt', str(retained_path), '--operation', 'rollback', '--rollback-compatibility-id', 'rollback-compatibility-8f1ffbb5741c5ce923b0cfab', '--support-receipt', str(support_path), '--json']
-        for wrong_pin in (None, 'SupportImageDigest', 'RestoreVerifierImageDigest', 'support-scan', 'retained-scan', 'foundation'):
+        # This fixture owns transition/pin behavior, not live compatibility.
+        # The companion provider CLI fixtures exercise the actual immutable
+        # reader with valid and changed contracts. An old archive is not
+        # automatically compatible with today's template.
+        for wrong_pin in (None, 'stopped', 'wrong-service', 'wrong-definition', 'wrong-candidate', 'compatibility', 'SupportImageDigest', 'RestoreVerifierImageDigest', 'support-scan', 'retained-scan', 'foundation'):
             with self.subTest(wrong_pin=wrong_pin):
+                prepare = load(DEPLOY/'prepare-candidate/script.py')
                 current = {**original}
                 if wrong_pin in ('SupportImageDigest', 'RestoreVerifierImageDigest'): current[wrong_pin] = 'sha256:'+'a'*64
+                if wrong_pin == 'wrong-candidate': current['ImageDigest'] = 'sha256:' + 'a' * 64
                 state = {'submitted': None, 'executed': False}
                 def response(parts):
                     operation = parts[1]
                     if operation == 'describe-stacks':
                         params = desired if state['executed'] else current
-                        return True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in params.items()]}]}, 'ok'
-                    if operation == 'describe-services': return True, {'services': [{'desiredCount': 1, 'runningCount': 1}]}, 'ok'
+                        return True, {'Stacks': [{'StackStatus': 'UPDATE_COMPLETE', 'Parameters': [{'ParameterKey': k, 'ParameterValue': v} for k, v in params.items()],
+                            'Outputs': [{'OutputKey': 'CoreServerPersistenceTaskDefinitionArn', 'OutputValue': 'fixture-owned-definition'}]}]}, 'ok'
+                    if operation == 'describe-services': return True, {'services': [{'desiredCount': 1, 'runningCount': 0 if wrong_pin == 'stopped' else 1,
+                        'serviceName': 'wrong' if wrong_pin == 'wrong-service' else module.SERVICE,
+                        'taskDefinition': 'wrong' if wrong_pin == 'wrong-definition' else 'fixture-owned-definition'}]}, 'ok'
                     if operation == 'create-change-set':
                         self.assertIn('--use-previous-template', parts)
                         self.assertNotIn('--template-body', parts)
@@ -326,22 +905,26 @@ class ControllerRegression(unittest.TestCase):
                 def image_check(receipt):
                     failed = (wrong_pin=='support-scan' and receipt['image_digest']==support['image_digest']) or (wrong_pin=='retained-scan' and receipt['image_digest']==retained['image_digest'])
                     return not failed, 'persistence-candidate-image-scan-not-clean' if failed else 'ok'
-                infrastructure = (None, 'persistence-private-startup-endpoints-unavailable') if wrong_pin=='foundation' else ({}, 'ok')
-                with patch.object(module, 'load', side_effect=[prepare, create]), patch.object(sys, 'argv', arguments), patch.object(prepare, 'aws', provider.aws), patch.object(prepare, 'live_budget', return_value=(True, 'ok')), patch.object(prepare, 'foundation_outputs', return_value=(outputs, 'ok')), patch.object(prepare, 'infrastructure_parameters', return_value=infrastructure), patch.object(prepare, 'candidate_image', side_effect=image_check) as scans:
+                infrastructure = (None, 'foundation-endpoint-missing') if wrong_pin=='foundation' else ({}, 'ok')
+                with patch.object(module, 'load', side_effect=[prepare, create]), patch.object(sys, 'argv', arguments), patch.object(prepare, 'aws', provider.aws), patch.object(prepare, 'rollback_compatibility', return_value=wrong_pin != 'compatibility') as compatibility, patch.object(prepare, 'live_budget', return_value=(True, 'ok')), patch.object(prepare, 'foundation_outputs', return_value=(outputs, 'ok')), patch.object(prepare, 'infrastructure_parameters', return_value=infrastructure), patch.object(prepare, 'candidate_image', side_effect=image_check) as scans:
                     report = result(module.main)[1]
-                if wrong_pin is None:
+                compatibility.assert_called_once_with(retained, 'rollback-compatibility-8f1ffbb5741c5ce923b0cfab')
+                if wrong_pin in (None, 'stopped'):
                     self.assertEqual(report['verdict'], 'transitioned')
                     self.assertEqual([call.args[0]['image_digest'] for call in scans.call_args_list], [support['image_digest'], retained['image_digest']])
                     self.assertEqual(sum(parts[1]=='execute-change-set' for parts in provider.calls), 1)
                 else:
                     self.assertEqual(report['verdict'], 'blocked')
-                    code = {'support-scan': 'persistence-rollback-support-package-not-proven', 'RestoreVerifierImageDigest': 'persistence-rollback-restoration-image-mismatch', 'retained-scan': 'persistence-release-transition-alignment-not-proven', 'foundation': 'persistence-release-transition-alignment-not-proven'}.get(wrong_pin, 'persistence-rollback-support-image-mismatch')
+                    code = {**{key: 'persistence-rollback-current-candidate-mismatch' for key in ('wrong-service', 'wrong-definition', 'wrong-candidate')}, 'compatibility': 'persistence-rollback-compatibility-not-proven', 'support-scan': 'persistence-rollback-support-package-not-proven', 'RestoreVerifierImageDigest': 'persistence-rollback-restoration-image-mismatch', 'retained-scan': 'persistence-release-transition-alignment-not-proven', 'foundation': 'persistence-release-transition-alignment-not-proven'}.get(wrong_pin, 'persistence-rollback-support-image-mismatch')
                     self.assertEqual(report['findings'][0]['code'], code)
                     if wrong_pin in ('SupportImageDigest', 'RestoreVerifierImageDigest'): scans.assert_not_called()
                     if wrong_pin in ('support-scan', 'retained-scan', 'foundation'):
-                        reason = 'persistence-private-startup-endpoints-unavailable' if wrong_pin=='foundation' else 'persistence-candidate-image-scan-not-clean'
+                        reason = 'foundation-endpoint-missing' if wrong_pin=='foundation' else 'persistence-candidate-image-scan-not-clean'
                         self.assertEqual(report['findings'], [{'code': code}, {'code': reason}])
                     self.assertFalse(any(parts[1] in ('create-change-set', 'execute-change-set') for parts in provider.calls))
+                    if wrong_pin == 'compatibility':
+                        self.assertEqual(provider.calls, [])
+                        scans.assert_not_called()
         parameters = [{'ParameterKey': key, 'ParameterValue': value} for key, value in desired.items()]
         completed = {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'EXECUTE_COMPLETE', 'ChangeSetType': 'UPDATE', 'Parameters': parameters, 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::ECS::TaskDefinition'}}]}
         for restore_digest, expected in ((support['image_digest'], 'transitioned'), (retained['image_digest'], 'uncertain')):
@@ -398,9 +981,43 @@ class ControllerRegression(unittest.TestCase):
             provider.validate_receipt=lambda path:receipt;provider.declaration_covered=lambda:True
             provider.foundation_outputs=lambda:({},'ok');provider.infrastructure_parameters=lambda outputs:({},'ok')
             provider.candidate_image=lambda receipt:(True,'ok');provider.candidate_parameters=lambda *args:expected
-            with patch.object(module,'controls',return_value=provider),patch.object(sys,'argv',['test','--receipt','synthetic','--approved-change-set',name]):
+            with temporary_change_sets(module),patch.object(module,'controls',return_value=provider),patch.object(sys,'argv',['test','--receipt','synthetic','--approved-change-set',name]):
                 self.assertEqual(result(module.main)[1]['verdict'],'pending')
             self.assertFalse(any(parts[1]=='execute-change-set' for parts in provider.calls))
+
+    def test_default_execution_does_not_adopt_concurrent_foreign_completion(self):
+        module = load(DEPLOY/'deploy-candidate/script.py')
+        receipt = {'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
+        name = 'kanbien-core-platform-persistence-create-'+'a'*12
+        stack_id = 'arn:aws:cloudformation:eu-west-1:337159794548:stack/'+module.STACK+'/foreign-operation'
+        expected = {'ImageDigest':receipt['image_digest'],'SupportImageDigest':receipt['image_digest'],
+                    'RestoreVerifierImageDigest':receipt['image_digest'],'SourceRevision':receipt['source_revision']}
+        parameters = [{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()]
+        stack_reads = 0
+        def response(parts):
+            nonlocal stack_reads
+            if parts[1] == 'describe-change-set':
+                return True,{'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','ChangeSetType':'CREATE',
+                    'Parameters':parameters,'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]},'ok'
+            if parts[1] == 'describe-stacks':
+                stack_reads += 1
+                return True,{'Stacks':[{'StackId':stack_id,'StackStatus':'REVIEW_IN_PROGRESS' if stack_reads == 1 else 'CREATE_COMPLETE','Parameters':parameters}]},'ok'
+            if parts[1] == 'describe-stack-events':
+                return True,{'StackEvents':[{'PhysicalResourceId':stack_id,'ClientRequestToken':'foreign-token'}]},'ok'
+            raise AssertionError(('unexpected mutation',parts))
+        provider = Provider(response)
+        provider.validate_receipt=lambda _:receipt;provider.declaration_covered=lambda:True
+        provider.foundation_outputs=lambda:({},'ok');provider.infrastructure_parameters=lambda _:({},'ok')
+        provider.candidate_image=lambda _:(True,'ok');provider.candidate_parameters=lambda *args:expected
+        with temporary_change_sets(module),patch.object(module,'controls',return_value=provider),patch.object(sys,'argv',['fixture','--receipt','fixture','--approved-change-set',name]):
+            observed = result(module.main)[1]
+            self.assertEqual(observed['verdict'],'uncertain')
+            self.assertEqual(observed['findings'],[{'code':'persistence-stack-execution-lineage-unproven'}])
+            # Historical receipt inspection remains explicitly read-only and
+            # does not pretend the new local reservation executed that release.
+            with patch.object(sys,'argv',['fixture','--receipt','fixture','--approved-change-set',name,'--reconcile']):
+                self.assertEqual(result(module.main)[1]['verdict'],'deployed-awaiting-migration')
+        self.assertFalse(any(parts[1] == 'execute-change-set' for parts in provider.calls))
 
     def test_retirement_requires_complete_exact_service_quiescence(self):
         module=load(DEPLOY/'retire-failed-candidate/script.py')
@@ -432,9 +1049,137 @@ class ControllerRegression(unittest.TestCase):
         create=SimpleNamespace(package_gates=lambda path:True)
         for continuation in ([],['--reconcile-original-task','original']):
             provider.calls=[]
-            with patch.object(module,'module',side_effect=[provider,create]),patch.object(module,'current_task',return_value=(wrong,'ok','definition-safe')),patch.object(sys,'argv',['test','--receipt','synthetic',*continuation]):
+            with temporary_replacements(module),patch.object(module,'module',side_effect=[provider,create]),patch.object(module,'current_task',return_value=(wrong,'ok','definition-safe')),patch.object(sys,'argv',['test','--receipt','synthetic',*continuation]):
                 self.assertEqual(result(module.main)[1]['verdict'],'blocked')
             self.assertFalse(any(parts[1]=='stop-task' for parts in provider.calls))
+
+    def test_normal_replacement_retains_original_and_never_stops_successor(self):
+        """Run both normal command invocations through actual provider readers."""
+        for loss in ('none', 'submission', 'receipt', 'credential'):
+            with self.subTest(loss=loss):
+                module=load(RUN/'rehearse-server-replacement/script.py')
+                receipt={'image_digest':'sha256:'+'c'*64,'source_revision':'a'*40}
+                prefix='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'
+                definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:34'
+                image='337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@'+receipt['image_digest']
+                original={'taskArn':prefix+'a'*32,'taskDefinitionArn':definition,'group':'service:'+module.SERVICE,'lastStatus':'RUNNING','startedAt':'2026-11-15T12:00:00Z','containers':[{'name':'core-server-persistence','image':image,'imageDigest':receipt['image_digest'],'exitCode':137}]}
+                successor={**original,'taskArn':prefix+'b'*32,'startedAt':'2026-11-15T12:00:02Z'}
+                current=[original]
+                admin_definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:12'
+                # Support/admin image may legitimately differ from runtime after rollback.
+                admin_digest='sha256:'+'d'*64
+                with temporary_receipts(module) as receipts, temporary_replacements(module) as (owner,store):
+                    def response(parts):
+                        operation=parts[1]
+                        if operation=='describe-stacks': return True,{'Stacks':[{'Outputs':[{'OutputKey':'CoreServerPersistenceAdministrationTaskDefinitionArn','OutputValue':admin_definition}]}]},'ok'
+                        if operation=='describe-services': return True,{'services':[{'status':'ACTIVE','desiredCount':1,'runningCount':1,'taskDefinition':definition,'deployments':[{'status':'PRIMARY','rolloutState':'COMPLETED'}]}]},'ok'
+                        if operation=='list-tasks': return True,{'taskArns':[current[0]['taskArn']]},'ok'
+                        if operation=='describe-tasks': return True,{'tasks':[original if parts[-1]==original['taskArn'] else successor]},'ok'
+                        if operation=='describe-task-definition':
+                            if parts[-1]==admin_definition: return True,{'taskDefinition':{'taskDefinitionArn':admin_definition,'containerDefinitions':[{'name':'persistence-administration','image':'337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@'+admin_digest}]}},'ok'
+                            return True,{'taskDefinition':{'taskDefinitionArn':definition,'containerDefinitions':[{'name':'core-server-persistence','image':image,'environment':[{'name':'PLATFORM_SOURCE_COMMIT_SHA','value':receipt['source_revision']}]}]}},'ok'
+                        self.assertEqual(operation,'stop-task')
+                        selected=store.selected(receipt,active_admission[0])
+                        self.assertEqual(selected['request']['original_task'],original['taskArn'])
+                        self.assertEqual(store.selection_path(receipt,active_admission[0]).stat().st_mode & 0o777,0o600)
+                        self.assertEqual(parts,('ecs','stop-task','--cluster',module.CLUSTER,'--task',original['taskArn'],'--reason','governed core-server-persistence replacement rehearsal'))
+                        boundary=datetime.fromisoformat(selected['reserved_at'])
+                        original.update(lastStatus='STOPPED',stoppedAt=(boundary+timedelta(seconds=1)).isoformat(),stoppedReason=parts[-1])
+                        successor.update(createdAt=(boundary+timedelta(seconds=1)).isoformat(),startedAt=(boundary+timedelta(seconds=2)).isoformat());current[0]=successor
+                        return (False,{},'aws-command-timeout') if loss=='submission' else (True,{},'ok')
+                    active_admission=[None]
+                    prepare=Provider(response);prepare.ACCOUNT='337159794548';prepare.REGION='eu-west-1';prepare.REPOSITORY='kanbien-core-platform/core-server'
+                    prepare.validate_receipt=lambda _:receipt;prepare.candidate_runnable_manifest=lambda _:(receipt['image_digest'],'ok')
+                    create=SimpleNamespace(package_gates=lambda _:True)
+                    with patch.object(module,'module',side_effect=lambda path,name:prepare if name=='prepare' else create),patch.object(sys,'argv',['test','--receipt','synthetic']):
+                        with patch.object(receipts,'persist',side_effect=OSError('private-canary')) if loss=='receipt' else contextlib.nullcontext():
+                            first=result(module.main)[1]
+                        self.assertEqual(first['verdict'],'uncertain' if loss in {'submission','receipt'} else 'replaced',first)
+                        if loss=='submission': self.assertEqual(first['findings'],[{'code':'aws-command-timeout'}])
+                        self.assertNotIn('private-canary',json.dumps(first))
+                        second=result(module.main)[1]
+                        self.assertEqual(second['verdict'],'replaced',second)
+                        proof=module.ROOT/second['facts']['proof_receipt'];before=proof.read_bytes()
+                        third=result(module.main)[1]
+                        self.assertEqual(third['facts']['original_task'],original['taskArn'])
+                        self.assertEqual(third['facts']['replacement_task'],successor['taskArn'])
+                        self.assertEqual(proof.read_bytes(),before)
+                    self.assertEqual(sum(parts[1]=='stop-task' for parts in prepare.calls),1)
+                    selected=store.selected(receipt)
+                    changed={**selected['request'],'original_task':successor['taskArn']}
+                    with self.assertRaises(owner.OperationFailure): store.reserve(owner.PHASE,changed)
+                    self.assertEqual(store.selected(receipt),selected)
+                    # Newly reserved completions cannot adopt stale timestamps or a
+                    # historical receipt with a different reservation boundary.
+                    for target,key in ((original,'stoppedAt'),(successor,'createdAt'),(successor,'startedAt')):
+                        saved=target[key];target[key]='2020-01-01T00:00:00Z'
+                        report=result(lambda:module.replace_current(prepare,receipt))[1]
+                        self.assertEqual(report['findings'],[{'code':'persistence-replacement-reservation-lineage-not-confirmed'}])
+                        target[key]=saved
+                    altered=json.loads(proof.read_text());altered['context']['recovery_boundary']='2020-01-01T00:00:00Z'
+                    altered['integrity']['payload_sha256']=receipts.digest({key:value for key,value in altered.items() if key!='integrity'})
+                    proof.write_text(json.dumps(altered))
+                    self.assertEqual(result(lambda:module.replace_current(prepare,receipt))[1]['findings'],[{'code':'persistence-replacement-retained-reservation-mismatch'}])
+                    proof.write_bytes(before)
+                    if loss=='credential':
+                        lifecycle=load(RUN/'rehearse-runtime-credential-lifecycle/script.py')
+                        for index,operation in enumerate(('revoke-runtime','restore-runtime')):
+                            start=datetime.now(timezone.utc)-timedelta(seconds=10)
+                            admin={'taskArn':prefix+str(index+5)*32,'taskDefinitionArn':admin_definition,'lastStatus':'STOPPED','startedAt':start.isoformat(),'stoppedAt':(start+timedelta(seconds=1)).isoformat(),'containers':[{'exitCode':0}]}
+                            body=receipts.make(proof_type='administration',operation=operation,task=admin,image_digest=admin_digest,result_code='PERSISTENCE_RUNTIME_IAM_ACCESS_'+('REVOKED' if index==0 else 'RESTORED'),context={'completion_deadline_seconds':90,'completion_duration_seconds':1},controller='run-administration',collected_at=datetime.now(timezone.utc).isoformat())
+                            admission=receipts.persist(body).relative_to(module.ROOT).as_posix()
+                            admission_path=module.ROOT/admission;admission_bytes=admission_path.read_bytes()
+                            for field,value in (('operation','confirm-runtime-iam-access'),('exit_code',1),('result_code','PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED'),('controller','other-controller'),('evidence_class','live'),('definition',admin_definition[:-2]+'99'),('image_digest',receipt['image_digest']),('completion_duration_seconds',91)):
+                                rejected=copy.deepcopy(body)
+                                if field=='operation': rejected[field]=value
+                                elif field in {'controller','evidence_class'}: rejected['provenance'][field]=value
+                                elif field=='completion_duration_seconds': rejected['context'][field]=value
+                                else: rejected['task'][field]=value
+                                rejected['integrity']['payload_sha256']=receipts.digest({key:value for key,value in rejected.items() if key!='integrity'})
+                                admission_path.write_text(json.dumps(rejected))
+                                with self.assertRaises(owner.OperationFailure): owner.administration_admission(module.ROOT,admission,receipts,prepare.aws)
+                            admission_path.write_bytes(admission_bytes)
+                            active_admission[0]=owner.administration_admission(module.ROOT,admission,receipts,prepare.aws)[0]
+                            original=successor
+                            successor={**original,'taskArn':prefix+str(index+3)*32,'lastStatus':'RUNNING'}
+                            current[0]=original
+                            lifecycle.LAST_SUCCESS={'operation':operation,'proof_receipt':admission}
+                            def child(path,*args):
+                                self.assertTrue(path.endswith('rehearse-server-replacement/script.sh'))
+                                self.assertEqual(args,('--receipt','synthetic','--after-administration-receipt',admission,'--json'))
+                                with patch.object(module,'module',side_effect=lambda path,name:prepare if name=='prepare' else create),patch.object(sys,'argv',['test',*args]):
+                                    code,observed,_=result(module.main)
+                                self.assertEqual(code,0,observed)
+                                return observed
+                            with patch.object(lifecycle,'child',side_effect=child):
+                                self.assertTrue(lifecycle.replace(Path('synthetic')))
+                                self.assertTrue(lifecycle.replace(Path('synthetic')))
+                            selected=store.selected(receipt,active_admission[0])
+                            self.assertEqual(selected['request']['original_task'],original['taskArn'])
+                            with self.assertRaises(owner.OperationFailure): store.reserve(owner.PHASE,{**selected['request'],'original_task':successor['taskArn']})
+                        self.assertEqual(sum(parts[1]=='stop-task' for parts in prepare.calls),3)
+
+    def test_replacement_interrupted_reservation_never_reselects_or_replays(self):
+        module=load(RUN/'rehearse-server-replacement/script.py')
+        receipt={'image_digest':'sha256:'+'c'*64,'source_revision':'a'*40}
+        definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:34'
+        original={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32}
+        prepare=Provider(lambda _: (_ for _ in ()).throw(AssertionError('no mutation permitted')))
+        with temporary_replacements(module) as (owner,store),patch.object(module,'current_task',return_value=(original,'ok',definition)),patch.object(module,'receipt_matches_task',return_value=(True,'ok')):
+            reserve=store.reserve
+            def interrupted(*args):
+                reserve(*args)
+                raise KeyboardInterrupt()
+            with patch.object(store,'reserve',side_effect=interrupted),self.assertRaises(KeyboardInterrupt):
+                module.replace_current(prepare,receipt)
+            selected=store.selected(receipt)
+            self.assertEqual(selected['request']['original_task'],original['taskArn'])
+            # No fresh current-task selection on resume, even before any stop.
+            with patch.object(module,'current_task',side_effect=AssertionError('must retain original')),patch.object(module,'replacement_task',return_value=(None,'persistence-replacement-not-healthy')) as observed:
+                report=result(lambda:module.replace_current(prepare,receipt))[1]
+                self.assertEqual(report['verdict'],'pending')
+                self.assertEqual(observed.call_args.args[1:3],(original['taskArn'],definition))
+            self.assertFalse(prepare.calls)
 
     def test_replacement_wait_observes_original_before_new_task(self):
         module=load(RUN/'rehearse-server-replacement/script.py')
@@ -455,7 +1200,7 @@ class ControllerRegression(unittest.TestCase):
                     with patch.object(sys,'argv',['active','--target-root',str(target),'--json']),contextlib.redirect_stdout(io.StringIO()):
                         code=active.main()
                     return subprocess.CompletedProcess(command,code,stdout='',stderr='')
-                if '/validate-accepted-release/script.sh' in script:
+                if '/validate-accepted-release/script.sh' in script or script.endswith('/entity-smoke/acceptance-state.sh'):
                     return subprocess.CompletedProcess(command,0,stdout=json.dumps({'verdict':'validated'}),stderr='')
                 relevant='--scope-contract' in command and '/core-server-persistence/' in command[command.index('--scope-contract')+1]
                 for key in counts:
@@ -631,6 +1376,48 @@ class ControllerRegression(unittest.TestCase):
         replace.assert_called_once_with(receipt)
         self.assertEqual(healthy.call_args_list,[call('health-ready'),call('read')])
 
+    def test_verifier_failure_reference_requires_terminal_retained_evidence(self):
+        module=load(RUN/'verify-candidate/script.py')
+        task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,
+              'taskDefinitionArn':'arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:17',
+              'startedBy':'kp-'+'b'*32,'lastStatus':'STOPPED','containers':[{'exitCode':1}],
+              'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
+        with temporary_receipts(module) as receipts, patch.object(module,'image_digest',return_value='sha256:'+'a'*64), patch.object(module,'failed_task_log',return_value={}) as logs:
+            for altered in ({**task,'lastStatus':'RUNNING'},{**task,'containers':[{'exitCode':True}]},{**task,'stoppedAt':None}):
+                remembered=[]
+                report=result(lambda:module.accepted_completion(altered,120,'read',remembered.append))[1]
+                self.assertEqual(report['verdict'],'uncertain')
+                self.assertNotIn('proof_receipt',report['facts'])
+                self.assertEqual(remembered,[])
+            logs.assert_not_called()
+            remembered=[]
+            report=result(lambda:module.accepted_completion(task,120,'read',remembered.append))[1]
+            self.assertEqual(report['verdict'],'failed')
+            self.assertEqual(len(remembered),1)
+            path=remembered[0]; proof=receipts.validate(json.loads(path.read_text()))
+            self.assertEqual(proof['task']['arn'],task['taskArn'])
+            self.assertEqual(proof['task']['exit_code'],1)
+            self.assertEqual(report['facts']['proof_receipt'],path.relative_to(module.ROOT).as_posix())
+            self.assertEqual(report['facts']['proof_sha256'],hashlib.sha256(path.read_bytes()).hexdigest())
+            value={'proof_receipt':report['facts']['proof_receipt'],'proof_sha256':report['facts']['proof_sha256'],
+                   'mode':'read','task_arn':task['taskArn'],'operation_id':task['startedBy'],'request':{'task_definition':task['taskDefinitionArn']}}
+            with patch.object(module,'aws',side_effect=AssertionError('retained observation must not launch a task')):
+                retained=result(lambda:module.observe_reserved(value,module.ROOT/'unused',120,'read'))[1]
+            self.assertEqual(retained['verdict'],'failed')
+            self.assertEqual(retained['facts']['proof_sha256'],report['facts']['proof_sha256'])
+            self.assertEqual(retained['facts']['evidence_reuse'],'historical-completion')
+            def broken_journal(_path): raise OSError('private-canary')
+            failed=result(lambda:module.accepted_completion(task,120,'read',broken_journal))[1]
+            self.assertEqual(failed['verdict'],'failed')
+            self.assertNotIn('proof_receipt',failed['facts'])
+            self.assertNotIn('private-canary',json.dumps(failed))
+            with patch.object(receipts,'persist',side_effect=OSError('private-canary')):
+                failed=result(lambda:module.accepted_completion(task,120,'read',remembered.append))[1]
+            self.assertNotIn('proof_receipt',failed['facts'])
+            self.assertEqual(len(remembered),1)
+            unjournalled=result(lambda:module.accepted_completion(task,120,'read'))[1]
+            self.assertNotIn('proof_receipt',unjournalled['facts'])
+
     def test_migration_rejection_preserves_only_closed_safe_log_facts(self):
         module=load(RUN/'run-migration/script.py')
         task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,'startedBy':'kp-'+'b'*32,'lastStatus':'STOPPED','containers':[{'exitCode':1}],'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
@@ -649,6 +1436,30 @@ class ControllerRegression(unittest.TestCase):
         self.assertNotIn('safe_result_code',report['facts'])
         self.assertNotIn('synthetic-canary',json.dumps(report))
 
+    def test_administration_terminal_failure_requires_retained_receipt_and_callback(self):
+        module=load(RUN/'run-administration/script.py')
+        task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,
+              'taskDefinitionArn':'arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:17',
+              'startedBy':'kp-'+'b'*32,'lastStatus':'STOPPED','containers':[{'exitCode':1}],
+              'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
+        with tempfile.TemporaryDirectory() as directory, patch.object(module,'ROOT',Path(directory)), \
+             patch.object(module.RECEIPTS,'RECEIPTS',Path(directory)/'proofs'), \
+             patch.object(module.MIGRATION,'image_digest',return_value='sha256:'+'a'*64), \
+             patch.object(module.MIGRATION,'aws',return_value=(True,{'events':[]},'ok')):
+            retained=[]
+            report=result(lambda:module.accept(task,120,'observe-migration-state',retained.append))[1]
+            self.assertEqual(report['verdict'],'failed')
+            self.assertEqual(report['facts']['proof_sha256'],hashlib.sha256(retained[0].read_bytes()).hexdigest())
+            self.assertEqual(report['facts']['operation_id'],task['startedBy'])
+            for altered in ({**task,'lastStatus':'RUNNING'},{**task,'containers':[{'exitCode':True}]}):
+                rejected=result(lambda:module.accept(altered,120,'observe-migration-state',retained.append))[1]
+                self.assertNotIn('proof_receipt',rejected.get('facts',{}))
+            def broken(_): raise OSError('private-canary')
+            rejected=result(lambda:module.accept(task,120,'observe-migration-state',broken))[1]
+            self.assertEqual(rejected['verdict'],'uncertain')
+            self.assertNotIn('proof_receipt',rejected.get('facts',{}))
+            self.assertNotIn('private-canary',json.dumps(rejected))
+
     def test_administration_completion_requires_a_closed_safe_result_record(self):
         module=load(RUN/'run-administration/script.py')
         task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32}
@@ -665,10 +1476,11 @@ class ControllerRegression(unittest.TestCase):
     def test_administration_observation_retry_reuses_exact_retained_receipt(self):
         """An interrupted observation retry must not start a second task."""
         module=load(RUN/'run-administration/script.py')
-        digest='sha256:'+'d'*64;definition='definition-safe'
+        digest='sha256:'+'d'*64;definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:7'
         task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'d'*32,'taskDefinitionArn':definition,'lastStatus':'STOPPED','startedAt':'2026-10-26T12:00:00Z','stoppedAt':'2026-10-26T12:00:08Z','stoppedReason':'Essential container in task exited','containers':[{'exitCode':0}]}
         receipt=module.RECEIPTS.make(proof_type='administration',operation='prove-effective-privilege',task=task,image_digest=digest,result_code='PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN',context={'completion_deadline_seconds':300,'completion_duration_seconds':8},controller='run-administration',collected_at='2026-10-26T12:00:09Z')
         with tempfile.TemporaryDirectory(prefix='administration-retained-receipt-') as directory:
+            subprocess.run(['git','init','--quiet',directory],check=True)
             destination=Path(directory)/'proof-receipts'
             with patch.object(module,'ROOT',Path(directory)),patch.object(module,'deadline',return_value=300),patch.object(module.RECEIPTS,'RECEIPTS',destination),patch.object(module.MIGRATION,'outputs',side_effect=[({'CoreServerPersistenceAdministrationTaskDefinitionArn':definition,'PersistenceAdministrationSecurityGroupId':'sg-safe'},'ok'),({'PrivateSubnetIds':'subnet-safe'},'ok')]),patch.object(module.MIGRATION,'image_digest',return_value=digest),patch.object(module.MIGRATION,'aws',side_effect=AssertionError('retained observation retry must not submit or query a task')):
                 path=module.RECEIPTS.persist(receipt)
@@ -752,7 +1564,7 @@ class ControllerRegression(unittest.TestCase):
             provider.infrastructure_parameters=lambda outputs:({},'ok')
             provider.candidate_image=lambda receipt:(True,'ok')
             provider.candidate_parameters=lambda *args:expected
-            with patch.object(module,'controls',return_value=provider),patch.object(sys,'argv',['test','--receipt','synthetic.json','--approved-change-set',name]):
+            with temporary_change_sets(module),patch.object(module,'controls',return_value=provider),patch.object(sys,'argv',['test','--receipt','synthetic.json','--approved-change-set',name]):
                 report=result(module.main)[1]
                 self.assertEqual(report['findings'][0]['code'],'persistence-change-set-live-parameters-mismatch')
             self.assertFalse(any(parts[1]=='execute-change-set' for parts in provider.calls))
@@ -772,26 +1584,64 @@ class ControllerRegression(unittest.TestCase):
         self.assertEqual(report['facts']['child_checkpoint']['facts'],{'administration_task':'a'*32})
         self.assertNotIn('must-not-escape',json.dumps(report))
 
-    def test_malformed_endpoint_group_blocks_before_mutation(self):
+    def test_shared_network_and_endpoint_prerequisites(self):
         module=load(DEPLOY/'prepare-candidate/script.py')
         endpoints=[{'ServiceName':name,'State':'available','Groups':[{'GroupId':'sg-safe'}],'VpcId':'vpc-safe','VpcEndpointType':'Interface','PrivateDnsEnabled':True} for name in module.INTERFACE_SERVICES]
         outputs={'VpcId':'vpc-safe','ServiceDiscoveryArn':'arn/service-safe','PrivateSubnetIds':'subnet-safe','ClusterArn':'cluster-safe','VerifierSecurityGroupId':'sg-safe','LogGroupName':'logs-safe'}
         def response(parts):
-            if parts[1]=='describe-vpcs':return True,{'Vpcs':[{'CidrBlock':'10.0.0.0/16'}]},'ok'
+            if parts[1]=='describe-vpcs':return True,{'Vpcs':[{'VpcId':'vpc-safe','State':'available','CidrBlock':'10.0.0.0/16'}]},'ok'
+            if parts[1]=='describe-subnets':return True,{'Subnets':[{'SubnetId':'subnet-safe','VpcId':'vpc-safe','State':'available','MapPublicIpOnLaunch':False}]},'ok'
             if parts[1]=='get-service':return True,{'Service':{'DnsConfig':{'NamespaceId':'ns-safe'}}},'ok'
+            if parts[1]=='get-namespace':return True,{'Namespace':{'Id':'ns-safe','Name':module.INPUTS['foundation_expected']['namespace'],'Type':'DNS_PRIVATE','Properties':{'DnsProperties':{'HostedZoneId':'Z123'}}}},'ok'
+            if parts[1]=='get-hosted-zone':return True,{'HostedZone':{'Config':{'PrivateZone':True}},'VPCs':[{'VPCId':'vpc-safe','VPCRegion':module.REGION}]},'ok'
             if parts[1]=='describe-vpc-endpoints':return True,{'VpcEndpoints':endpoints},'ok'
             if parts[1]=='describe-managed-prefix-lists':return True,{'PrefixLists':[{'PrefixListId':'pl-safe'}]},'ok'
             raise AssertionError(parts)
         provider=Provider(response)
         with patch.object(module,'aws',provider.aws):
-            self.assertIsNotNone(module.infrastructure_parameters(outputs)[0])
-            for field,value in [('VpcId','vpc-unrelated'),('VpcEndpointType','Gateway'),('PrivateDnsEnabled',False)]:
-                original=endpoints[0][field]; endpoints[0][field]=value
-                self.assertEqual(module.infrastructure_parameters(outputs)[1],'persistence-private-startup-endpoint-posture-invalid')
-                endpoints[0][field]=original
-            for groups in [[],[{'GroupId':'sg-safe'},{'GroupId':'sg-other'}],None]:
-                endpoints[0]['Groups']=groups
-                self.assertEqual(module.infrastructure_parameters(outputs)[1],'persistence-endpoint-security-group-unavailable')
+            with patch.object(module.FOUNDATION_CHECKS,'private_endpoints',wraps=module.FOUNDATION_CHECKS.private_endpoints) as shared, patch.object(module.FOUNDATION_CHECKS,'s3_prefix_list',wraps=module.FOUNDATION_CHECKS.s3_prefix_list) as prefix:
+                facts,code=module.infrastructure_parameters(outputs)
+                self.assertEqual((code,facts['EndpointSecurityGroupId'],facts['S3ArtifactPrefixListId']),('ok','sg-safe','pl-safe'))
+                self.assertEqual(module.INTERFACE_SERVICES,{'com.amazonaws.'+module.REGION+'.'+name for name in ('ecr.api','ecr.dkr','logs')})
+                shared.assert_called_once_with(module.foundation_observation,outputs['VpcId'],module.INTERFACE_SERVICES)
+                prefix.assert_called_once_with(module.foundation_observation,module.REGION)
+            with patch.object(module.FOUNDATION_CHECKS,'private_network',side_effect=module.FOUNDATION_CHECKS.FoundationFailure('foundation-subnet-not-private')) as shared:
+                before=len(provider.calls)
+                self.assertEqual(module.infrastructure_parameters(outputs),(None,'foundation-subnet-not-private'))
+                self.assertEqual(len(provider.calls),before)
+                shared.assert_called_once_with(module.foundation_observation,outputs,module.INPUTS['foundation_expected']['namespace'],module.REGION)
+            for owner,reason,last_call in [('private_endpoints','foundation-endpoint-group-invalid','get-hosted-zone'),('s3_prefix_list','foundation-s3-prefix-missing','describe-vpc-endpoints')]:
+                with patch.object(module.FOUNDATION_CHECKS,owner,side_effect=module.FOUNDATION_CHECKS.FoundationFailure(reason)):
+                    self.assertEqual(module.infrastructure_parameters(outputs),(None,reason))
+                    self.assertEqual(provider.calls[-1][1],last_call)
+            endpoints[0]['Groups']=[{'GroupId':[]}]
+            self.assertEqual(module.infrastructure_parameters(outputs),(None,'foundation-endpoint-group-invalid'))
+            self.assertEqual(provider.calls[-1][1],'describe-vpc-endpoints')
+            for operation in ('describe-vpc-endpoints','describe-managed-prefix-lists'):
+                denied=Provider(lambda parts: (False,None,'aws-access-denied') if parts[1]==operation else response(parts))
+                endpoints[0]['Groups']=[{'GroupId':'sg-safe'}]
+                with patch.object(module,'aws',denied.aws):
+                    self.assertEqual(module.infrastructure_parameters(outputs),(None,'aws-access-denied'))
+                self.assertEqual(denied.calls[-1][1],operation)
+
+    def test_credential_lifecycle_main_keeps_distinct_recovery_order(self):
+        module=load(RUN/'rehearse-runtime-credential-lifecycle/script.py')
+        recovery=[('administration','restore-runtime'),('replace',),('health','health-ready'),('health','read')]
+        revoked=[('health','health-ready'),('administration','revoke-runtime'),('replace',),('health','health-unready')]
+        for operation,expected,verdict in [('revoke-and-recover',revoked+recovery,'accepted'),('revoke-await-observability',revoked,'prepared'),('recover-after-revocation',[('health','health-unready')]+recovery,'accepted')]:
+            for fail_at in [None,*range(len(expected))]:
+                with self.subTest(operation=operation,fail_at=fail_at):
+                    calls=[]
+                    def invoke(*parts):
+                        calls.append(parts)
+                        return len(calls)-1!=fail_at
+                    prepare=SimpleNamespace(validate_receipt=lambda _: {'image_digest':'sha256:'+'a'*64},live_budget=lambda:(True,'ok'))
+                    create=SimpleNamespace(package_gates=lambda _:True)
+                    with patch.object(module,'module',side_effect=[prepare,create]),patch.object(module,'healthy',side_effect=lambda mode:invoke('health',mode)),patch.object(module,'administer',side_effect=lambda mode:invoke('administration',mode)),patch.object(module,'replace',side_effect=lambda _:invoke('replace')),patch.object(module,'verifier_receipt',return_value='retained-proof.json'),patch.object(sys,'argv',['fixture','--receipt','candidate','--operation',operation]):
+                        report=result(module.main)[1]
+                    self.assertEqual(calls,expected if fail_at is None else expected[:fail_at+1])
+                    self.assertEqual(report['verdict'],verdict if fail_at is None else 'blocked')
+                    if operation=='recover-after-revocation':self.assertNotIn(('administration','revoke-runtime'),calls)
 
     def test_snapshot_reobserves_existing_operation(self):
         module=load(RUN/'create-recovery-point/script.py'); sid='kanbien-core-platform-persistence-recovery-20261024'
@@ -803,16 +1653,85 @@ class ControllerRegression(unittest.TestCase):
             self.assertEqual(len(provider.calls),1)
         provider=Provider(lambda parts:(False,None,'aws-resource-missing') if parts[1]=='describe-db-snapshots' else (False,None,'aws-command-timeout'))
         self.assertEqual(result(lambda:module.observe_or_create(provider,sid))[1]['verdict'],'uncertain')
-        self.assertEqual([parts[1] for parts in provider.calls],['describe-db-snapshots','create-db-snapshot'])
+        self.assertEqual([parts[1] for parts in provider.calls],['describe-db-snapshots'])
         provider.calls=[]
         self.assertEqual(result(lambda:module.observe_or_create(provider,sid,True))[1]['verdict'],'uncertain')
         self.assertEqual([parts[1] for parts in provider.calls],['describe-db-snapshots'])
 
+    def test_snapshot_normal_path_reserves_source_and_never_replays(self):
+        module=load(RUN/'create-recovery-point/script.py');owner=module.operations()
+        sid='kanbien-core-platform-persistence-recovery-20261115';resource='db-ABCDEFGHIJKLMNOP'
+        for failure in ('none','lost','interrupted','preexisting'):
+            with self.subTest(failure=failure),tempfile.TemporaryDirectory() as directory:
+                store=owner.Store(Path(directory)); state={'snapshot':None,'tags':[], 'resource':resource}
+                request={'database':module.DATABASE,'snapshot':sid,'source_resource_id':resource}
+                if failure=='preexisting':state['snapshot']={'DBSnapshotIdentifier':sid,'DBInstanceIdentifier':module.DATABASE,'Encrypted':True,'Status':'available'}
+                def response(parts):
+                    operation=parts[1]
+                    if operation=='describe-services':return True,{'services':[{'desiredCount':1,'runningCount':1}]},'ok'
+                    if operation=='describe-db-instances':return True,{'DBInstances':[{'DBInstanceIdentifier':module.DATABASE,'DbiResourceId':state['resource'],'DBInstanceStatus':'available','PubliclyAccessible':False,'StorageEncrypted':True}]},'ok'
+                    if operation=='describe-db-snapshots':
+                        return (True,{'DBSnapshots':[state['snapshot']]},'ok') if state['snapshot'] else (False,None,'aws-resource-missing')
+                    if operation=='list-tags-for-resource':return True,{'TagList':state['tags']},'ok'
+                    if operation=='create-db-snapshot':
+                        reservation=store.read('create-recovery-point',request)
+                        self.assertIsNotNone(reservation)
+                        self.assertEqual(store.path_for('create-recovery-point',request).stat().st_mode & 0o777,0o600)
+                        self.assertEqual(parts[:6],('rds','create-db-snapshot','--db-instance-identifier',module.DATABASE,'--db-snapshot-identifier',sid))
+                        state['tags']=json.loads(parts[7])
+                        self.assertEqual(state['tags'],[{'Key':'Target','Value':'kanbien-core-platform'},{'Key':'Scope','Value':'core-server-persistence'},{'Key':'Operation','Value':reservation['operation_id']}])
+                        state['snapshot']={'DBSnapshotIdentifier':sid,'DBSnapshotArn':'arn:aws:rds:eu-west-1:337159794548:snapshot:'+sid,'DBInstanceIdentifier':module.DATABASE,'DbiResourceId':resource,'Encrypted':True,'SnapshotType':'manual','SnapshotCreateTime':datetime.now(timezone.utc).isoformat(),'Status':'available'}
+                        if failure=='lost':return False,None,'aws-command-timeout'
+                        return True,{},'ok'
+                    raise AssertionError(parts)
+                provider=Provider(response);provider.live_budget=lambda:(True,'ok')
+                argv=['test','--snapshot-id',sid]
+                with patch.object(module,'load',return_value=provider),patch.object(module,'operations',return_value=owner),patch.object(owner,'store',return_value=store),patch.object(sys,'argv',argv):
+                    if failure=='interrupted':
+                        original=store.reserve
+                        def interrupt(*args):
+                            original(*args)
+                            raise KeyboardInterrupt()
+                        with patch.object(store,'reserve',side_effect=interrupt):
+                            with self.assertRaises(KeyboardInterrupt):result(module.main)
+                        report=result(module.main)[1]
+                        self.assertEqual(report['findings'],[{'code':'persistence-recovery-point-operation-not-observed'}])
+                    else:
+                        first=result(module.main)[1]
+                        self.assertEqual(first['verdict'],{'none':'pending','lost':'uncertain','preexisting':'blocked'}[failure])
+                        if failure=='lost':self.assertEqual(first['findings'],[{'code':'aws-command-timeout'}])
+                        report=result(module.main)[1]
+                        self.assertEqual(report['verdict'],'uncertain' if failure=='preexisting' else 'available')
+                    submitted=[parts for parts in provider.calls if parts[1]=='create-db-snapshot']
+                    self.assertEqual(len(submitted),0 if failure in {'interrupted','preexisting'} else 1)
+                    state['resource']='db-CHANGED'
+                    self.assertEqual(result(module.main)[1]['findings'],[{'code':'persistence-recovery-point-reservation-mismatch'}])
+                    state['resource']=resource
+                    if failure in {'none','lost'}:
+                        for field,altered in [('DbiResourceId','db-FOREIGN'),('SnapshotCreateTime','2000-01-01T00:00:00+00:00'),('SnapshotType','automated'),('DBSnapshotArn','arn:foreign')]:
+                            prior=state['snapshot'][field];state['snapshot'][field]=altered
+                            self.assertEqual(result(module.main)[1]['findings'],[{'code':'persistence-recovery-point-lineage-not-confirmed'}])
+                            state['snapshot'][field]=prior
+                        original_tags=copy.deepcopy(state['tags'])
+                        for tags in ([],original_tags+[original_tags[0]],[{**row,'Value':'foreign'} for row in original_tags]):
+                            state['tags']=tags
+                            self.assertEqual(result(module.main)[1]['findings'],[{'code':'persistence-recovery-point-ownership-not-confirmed'}])
+                        state['tags']=original_tags
+                        state['snapshot']=None
+                        self.assertEqual(result(module.main)[1]['findings'],[{'code':'persistence-recovery-point-operation-not-observed'}])
+                        self.assertEqual(len([parts for parts in provider.calls if parts[1]=='create-db-snapshot']),1)
+                    # Historical mode remains read-only and does not require new intent/tags.
+                    state['snapshot']={'DBSnapshotIdentifier':sid,'DBInstanceIdentifier':module.DATABASE,'Encrypted':True,'Status':'available'}
+                    with patch.object(sys,'argv',argv+['--observe-only']),patch.object(owner,'store',side_effect=AssertionError('historical reader reached new store')):
+                        self.assertEqual(result(module.main)[1]['verdict'],'available')
+
     def test_task_reconciliation_and_lost_submission(self):
         for name,mode_arg,mode,output_key in [('run-migration','--migration-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn'),('verify-candidate','--mode','create','CoreServerPersistenceVerifierTaskDefinitionArn')]:
             module=load(RUN/name/'script.py'); operation='kp-'+'a'*32
+            family='migration' if name=='run-migration' else 'verifier'
+            definition=f'arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-{family}:7'
             arn=f'arn:aws:ecs:{module.REGION}:{module.ACCOUNT}:task/{module.CLUSTER}/'+'b'*32
-            task={'taskArn':arn,'taskDefinitionArn':'definition-safe','startedBy':operation,'lastStatus':'STOPPED','containers':[{'exitCode':0}],'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
+            task={'taskArn':arn,'taskDefinitionArn':definition,'startedBy':operation,'lastStatus':'STOPPED','containers':[{'exitCode':0}],'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
             expected_env={'PERSISTENCE_MIGRATION_OPERATION':mode} if name=='run-migration' else {'PERSISTENCE_VERIFIER_MODE':mode,'PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT':module.FACT}
             task['overrides']={'inferenceAcceleratorOverrides':[],'containerOverrides':[{'name':'persistence-migration' if name=='run-migration' else 'private-persistence-verifier','environment':[{'name':key,'value':value} for key,value in expected_env.items()]}]}
             def response(parts):
@@ -822,7 +1741,7 @@ class ControllerRegression(unittest.TestCase):
                 if parts[1]=='describe-task-definition':return True,{'taskDefinition':{'containerDefinitions':[{'image':'synthetic.invalid/persistence@sha256:'+'c'*64}]}},'ok'
                 raise AssertionError(f'unexpected mutation {parts}')
             provider=Provider(response)
-            output={output_key:'definition-safe','PersistenceMigrationSecurityGroupId':'sg-safe','PrivateSubnetIds':'subnet-safe','VerifierSecurityGroupId':'sg-safe'}
+            output={output_key:definition,'PersistenceMigrationSecurityGroupId':'sg-safe','PrivateSubnetIds':'subnet-safe','VerifierSecurityGroupId':'sg-safe'}
             with contextlib.ExitStack() as stack:
                 stack.enter_context(patch.object(module,'outputs',return_value=(output,'ok')))
                 stack.enter_context(patch.object(module,'deadline',return_value=120))
@@ -1078,6 +1997,42 @@ class ControllerRegression(unittest.TestCase):
             identifier='kanbien-core-platform-persistence-recovery-20261024'+suffix
             self.assertIsNone(snapshot.PATTERN.fullmatch(identifier))
             self.assertIsNone(restore.restore_id(identifier))
+
+    def test_restore_task_discovery_uses_shared_complete_observation(self):
+        module=load(RUN/'rehearse-isolated-database-restore/script.py');shared=module.task_operations()
+        definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/renamed-private-reader:4'
+        prefix='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'
+        first,second=prefix+'a'*32,prefix+'b'*32
+        for mode in ('complete','all','empty','pagination','oversized','missing','foreign','duplicates','provider-failure'):
+            with self.subTest(mode=mode):
+                def response(parts):
+                    if parts[1]=='list-tasks':
+                        self.assertEqual(parts[2:10],('--cluster',module.CLUSTER,'--family','renamed-private-reader','--max-results','100','--no-paginate','--desired-status'))
+                        if mode=='provider-failure':return False,None,'aws-command-timeout'
+                        values=[] if mode=='empty' else [first,second]
+                        if mode=='oversized':values=[first]*101
+                        return True,{'taskArns':values,**({'nextToken':'private-page-canary'} if mode=='pagination' else {})},'ok'
+                    self.assertEqual(parts,('ecs','describe-tasks','--cluster',module.CLUSTER,'--tasks',first,second))
+                    values=[{'taskArn':first,'startedBy':'original'},{'taskArn':second,'startedBy':'different'}]
+                    if mode=='missing':values.pop()
+                    if mode=='foreign':values[1]['taskArn']=prefix+'c'*32
+                    if mode=='duplicates':values[1]=values[0]
+                    return True,{'tasks':values},'ok'
+                provider=Provider(response)
+                with patch.object(module,'task_operations',return_value=shared),patch.object(shared,'observed_tasks',wraps=shared.observed_tasks) as observed:
+                    value,code=module.verifier_tasks(provider,None if mode=='all' else 'original',definition)
+                self.assertEqual(observed.call_count,1)
+                self.assertEqual(value, [first,second] if mode=='all' else [first] if mode=='complete' else [] if mode=='empty' else None)
+                self.assertEqual(code,'ok' if mode in {'complete','all','empty'} else 'persistence-restoration-verifier-observation-uncertain')
+                self.assertFalse(any(parts[1]=='run-task' for parts in provider.calls))
+                self.assertNotIn('private-page-canary',repr((value,code)))
+        # The discovery API's all-operation mode must not widen exact-one callers.
+        for matches,operation,accepted in [([{'startedBy':'foreign'}],None,False),([{'startedBy':None}],None,True),([{'startedBy':'original'},{'startedBy':'original'}],'original',False),([], 'original', False)]:
+            with patch.object(shared,'observed_tasks',return_value=matches):
+                action=lambda:shared.reconcile_task(lambda *_:None,cluster='fixture',definition=definition,operation_id=operation,validate_task=lambda task:task)
+                if accepted:self.assertEqual(action(),matches[0])
+                else:
+                    with self.assertRaises(shared.TaskFailure):action()
 
     def test_restore_reconciliation_pending_failed_and_strict_evidence(self):
         module=load(RUN/'rehearse-isolated-database-restore/script.py'); sid='kanbien-core-platform-persistence-recovery-20261024'; rid=module.restore_id(sid)

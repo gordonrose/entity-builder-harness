@@ -4,7 +4,7 @@ id: shared.plan.governed-diagnostic-coverage
 version: 23
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-06"
+updated_on: "2026-11-09"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -1553,9 +1553,9 @@ anchors to extend/reuse, not current completion evidence.
 
 | Work group | Narrow development proof | Final registered owner(s), only if affected |
 | --- | --- | --- |
-| Core + reference | Existing `packages/core/tests/diagnostic-record-runtime.test.ts`, `diagnostic-record-types.test.ts`, `foundation-diagnostics-runtime.test.ts`, `events-runtime.test.ts`, `audit-runtime.test.ts`; other named Core consumer runtime/type fixtures as affected | `core-runtime`, `diagnostic-catalog-readers`, `module-index-structure` for changed structure |
-| Config/runtime + real target | `platform/config/tests/evidence-runtime.test.ts`, `configuration-loading-runtime.test.ts`; Runtime `diagnostics-runtime.test.ts`, `lifecycle-diagnostics-runtime.test.ts`, `mount-boundary-diagnostics-runtime.test.ts`, `context-diagnostics-runtime.test.ts`; existing core-server composition configuration/startup fixtures | `platform-config-runtime`, `platform-runtime-runtime`, `persistence-composition`; affected connected package units from existing reviews |
-| DynamoDB | `platform/adapters/aws/persistence/dynamodb/tests/dynamodb-persistence-adapter-runtime.test.ts` and `dynamodb-persistence-adapter-boundaries.test.mjs`; assert every mapped native failure/actual store operation, ordinary config alternatives, exact error+record attribution, canaries and no replay | `dynamodb-persistence-runtime`; `platform-persistence-runtime` if shared mapping changes; `platform-shell-payload` only for genuinely affected compiled compatibility consumers |
+| Core + reference | Existing `packages/core/tests/diagnostics/contract/diagnostic-record-runtime.test.ts`, `diagnostic-record-types.test.ts`, `foundation-diagnostics-runtime.test.ts`, `events-runtime.test.ts`, `audit-runtime.test.ts`; other named Core consumer runtime/type fixtures as affected | `core-runtime`, `diagnostic-catalog-readers`, `module-index-structure` for changed structure |
+| Config/runtime + real target | `platform/config/tests/integration/evidence-runtime.test.ts`, `configuration-loading-runtime.test.ts`; Runtime `diagnostics-runtime.test.ts`, `lifecycle-diagnostics-runtime.test.ts`, `mount-boundary-diagnostics-runtime.test.ts`, `context-diagnostics-runtime.test.ts`; existing core-server composition configuration/startup fixtures | `platform-config-runtime`, `platform-runtime-runtime`, `persistence-composition`; affected connected package units from existing reviews |
+| DynamoDB | `platform/adapters/aws/persistence/dynamodb/tests/contract/dynamodb-persistence-adapter-runtime.test.ts` and `dynamodb-persistence-adapter-boundaries.test.mjs`; assert every mapped native failure/actual store operation, ordinary config alternatives, exact error+record attribution, canaries and no replay | `dynamodb-persistence-runtime`; `platform-persistence-runtime` if shared mapping changes; `platform-shell-payload` only for genuinely affected compiled compatibility consumers |
 | CloudWatch | Existing `cloudwatch-otel-adapter-runtime.test.ts`, `cloudwatch-otel-lifecycle-runtime.test.ts`, `cloudwatch-otel-adapter-boundaries.test.mjs`; Platform `configuration-runtime.test.ts`, `metric-diagnostics-runtime.test.ts`, `metric-lifecycle-diagnostics-runtime.test.ts`, `diagnostics-runtime.test.ts` | `cloudwatch-observability-runtime`, `platform-observability-runtime`, affected `persistence-composition` binding proof |
 | Imported commands | Adjacent `smoke-test.sh` fixtures in startup/resolver, session-reader/update/prepare/record, worktree/paths, refresh/conflict/rehearsal/audit, merge, recovery/import, command/dispatcher/package-scripts, export and upstream bootstrap/integration-preparation; command doubles and disposable repos, never real mutation | Existing `chat-export-regression`, `chat-commit-metrics-regression`, `chat-session-preparation-regression`, `chat-local-merge-regression`, `chat-main-refresh-regression`, `harness-header-regression`, `task-classification-fixtures` as applicable. Not every adjacent fixture is currently dispatched: prove membership or add a narrow registered leaf in `scripts/repo/check-selection/checks.yml` with dispatcher tests; do not invoke an unrelated whole runner suite. |
 | Imported portability | Existing `scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh` and `validate-llm-workbench-portability/script.sh` using their disposable fixture setup | Generated/temporary-installed target checks once for the stable imported batch; no installation or dependency fetching in the active worktree. Missing suitable registered identity is recorded/resolved, not represented as existing coverage. |
@@ -2305,7 +2305,7 @@ Registered IDs exist unless explicitly marked registration-required.
 
 | Batch | Connected delivery / acceptance | Focused owners and exact test anchors |
 | --- | --- | --- |
-| B01 Readiness/health truth | Separate invalid configuration, returned not-ready, rejected/thrown probe and observed deadline; preserve actual dependency/security evidence through event/reporter/health output; no deadline→transport inference, cancellation or scheduling redesign. | `platform-health-runtime`, `platform-observability-runtime`, `platform-server-runtime`, `diagnostic-catalog-readers`; `platform/health/tests/platform-health-runtime.test.ts`, `platform/observability/tests/platform-observability-runtime.test.ts`, `platform/server/tests/platform-server-runtime.test.ts`; changed target consumers add `persistence-composition`/`platform-shell-payload`. |
+| B01 Readiness/health truth | Separate invalid configuration, returned not-ready, rejected/thrown probe and observed deadline; preserve actual dependency/security evidence through event/reporter/health output; no deadline→transport inference, cancellation or scheduling redesign. | `platform-health-runtime`, `platform-observability-runtime`, `platform-server-runtime`, `diagnostic-catalog-readers`; `platform/health/tests/integration/platform-health-runtime.test.ts`, `platform/observability/tests/integration/platform-observability-runtime.test.ts`, `platform/server/tests/integration/platform-server-runtime.test.ts`; changed target consumers add `persistence-composition`/`platform-shell-payload`. |
 | B02 Configuration/validation/registration | Complete C01/C02/C09/C11/C16/C21/C22/C25/C26/C27 applicability and known-setting/predicate preservation, including startup before reporter and combined independent issues where compatible. Retain completed IAM/admin/certificate/HTTP/telemetry parsers. | `core-runtime`, `platform-contracts-runtime`, `platform-config-runtime`, `platform-testing-runtime`, affected server/worker/security/app/product units, `security-cognito-diagnostics`, `security-shared-rate-limit-diagnostics`, catalog/readers and affected compiled fixtures. Extend existing `*-types.test.ts`, config/contract/diagnostic tests and `configuration-test.mjs`; don't assert every listed unit is needed for every source. |
 | B03 Runtime/HTTP process lifecycle | Exact failed lifecycle phase/resource and propagation through mount/start/listen/request/drain/close, safe transport predicates and ECS trust selection. Retain first-failure/reverse-cleanup/public response semantics; current security hooks reused. | `platform-runtime-runtime`, `platform-server-runtime`, `platform-workers-runtime`, `core-dependency-boundary`, affected payload/composition and catalog/readers. Tests: runtime/server runtime files, workers process runtime, ECS adapter runtime. Existing `platform:adapter:aws:runtime:ecs-fargate:check` requires verified registered ownership before final proof. |
 | B04 Core/Platform persistence and PostgreSQL operations | Shared mutation/transaction/state predicates, actual acquire/begin/body/commit/rollback/release/migration observations; pool resource evidence and original target create/read/delete/reconciliation path. Preserve primary failure plus bounded rollback evidence, unknown write effects and current results. | `core-runtime`, `platform-persistence-runtime`, `postgresql-connection-diagnostics`, `persistence-composition`, `restore-connection-diagnostics`, catalog/readers and affected app/server output. Extend `persistence-runtime.test.ts`, `postgresql-diagnostics.test.ts`, `postgresql-persistence-adapter-runtime.test.ts`, composition `runtime-test.mjs`/`restore-diagnostic-test.mjs`. Actual DB proof: `postgresql-disposable-diagnostics` (package). |
@@ -2460,7 +2460,7 @@ that accepted handoff. Snapshot-relative review uses
 | Probe invocation throws / awaited result rejects | Distinguish invocation from awaiting; unknown dependency effect, no transport/credential cause inference. Preserve only selected validated upstream primary/related records. | Observability runtime, dependency/security fixtures, reporter rejection and canaries. |
 | Probe wait expires | Observer-owned deadline meaning, pending/unknown probe outcome, not transport failure and not cancellation. Exactly one original invocation; late completion is still possible. | Literal deadline assertions replace unsupported transport expectation; late-resolving fixture, no replay or extra probe. |
 | Probe returns ready / not-ready with approved, absent or unapproved code | Preserve actual selected dependency observation; otherwise observer-owned not-ready meaning, not configured transport attribution. Preserve invalid default/allowlist rejection where old policy rejected. Healthy observations remain diagnostic-silent. | Returned-code alternatives, invalid policy, event/log/metric counts and exact approved upstream records. |
-| Generic health invocation / await / result projection | Observe the actual failed phase; projection failure is not mislabelled as a thrown health operation. Retain the same safe fallback summary and check ordering/count. | `platform/health/tests/platform-health-runtime.test.ts`, type tests; same public output and reporter failure isolation. |
+| Generic health invocation / await / result projection | Observe the actual failed phase; projection failure is not mislabelled as a thrown health operation. Retain the same safe fallback summary and check ordering/count. | `platform/health/tests/integration/platform-health-runtime.test.ts`, type tests; same public output and reporter failure isolation. |
 | Health returns healthy / degraded / unhealthy; runtime readiness input false | Observe actual status/lifecycle input, not an invented cause; aggregate result/HTTP policy unchanged. Registered check index is a bounded safe location, not raw app/check names or metadata. | Health runtime, server runtime and worker health() integration. |
 | Upstream probe/health records pass through target app helper | Real target currently reduces readinessObservation to state; preserve its primary/security records through health producer and reporter with one query, retaining fallback readiness() for implementations without observation. | `kanbien-core-server-persistence.app.ts`, composition runtime/observability fixtures and strict catalog selection. |
 | Diagnostic delivery fails synchronously or returns a rejecting promise/thenable | Independent reporting must not alter health work, create an unhandled native rejection, await/replay or recursively use failing metric port. Reuse safe captured-native-then precedent and stated constructor/species limit. | Reporter helper assertions, native own-then getter regression, rejected/absent sinks and malformed companion tests. |
@@ -4545,12 +4545,12 @@ reentry and sink failure. Update adapter test dispatch to include both tests and
 prove child failure propagation. Extend existing target composition fixture for
 real diagnostic delivery and old constructor injection. Preserve all prior tests.
 
-Exact planned tests: `platform/contracts/tests/platform-contracts-types.test.ts`
-and `platform/observability/tests/diagnostics-runtime.test.ts` prove stage
+Exact planned tests: `platform/contracts/tests/type-level/platform-contracts-types.test.ts`
+and `platform/observability/tests/integration/diagnostics-runtime.test.ts` prove stage
 acceptance (`platform-contracts-runtime`, `platform-observability-runtime`). New
-`platform/observability/tests/metric-lifecycle-diagnostics-runtime.test.ts` proves
+`platform/observability/tests/integration/metric-lifecycle-diagnostics-runtime.test.ts` proves
 schemas, literal meaning, quota/provenance/sink isolation under the latter check.
-New `platform/adapters/aws/observability/cloudwatch/tests/cloudwatch-otel-lifecycle-runtime.test.ts`
+New `platform/adapters/aws/observability/cloudwatch/tests/contract/cloudwatch-otel-lifecycle-runtime.test.ts`
 proves SDK predicates/delegation and existing `tests/run-runtime-tests.mjs` dispatch
 under `cloudwatch-observability-runtime`. Existing
 `scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs`
@@ -5382,17 +5382,17 @@ packages/core/README.md
 packages/core/src/config/issues.ts
 packages/core/src/config/schema.ts
 packages/core/src/config/index.ts
-packages/core/tests/config-runtime.test.ts
-packages/core/tests/config-types.test.ts
+packages/core/tests/config/unit/config-runtime.test.ts
+packages/core/tests/config/type-level/config-types.test.ts
 platform/config/src/diagnostics.ts
 platform/config/src/index.ts
-platform/config/tests/platform-config-runtime.test.ts
-platform/config/tests/platform-config-types.test.ts
+platform/config/tests/integration/platform-config-runtime.test.ts
+platform/config/tests/type-level/platform-config-types.test.ts
 platform/adapters/aws/persistence/postgresql/src/config.ts
 platform/adapters/aws/persistence/postgresql/src/credentials.ts
 platform/adapters/aws/persistence/postgresql/src/rds-iam-authentication.ts
 platform/adapters/aws/persistence/postgresql/src/index.ts
-platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts
+platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts
 infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
 infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
 infra/04.deploy/03.product/entrypoints/contracts/diagnostics.v1.json
@@ -5651,7 +5651,7 @@ commit, publication, image qualification or live deployment authority.
 
 Runtime: platform/server/src/configuration/{runtime,index}.ts, src/{index,main,
 diagnostics}.ts; generated contracts/diagnostics.v1.json. Tests: new
-platform/server/tests/configuration-runtime.test.ts and existing
+platform/server/tests/integration/configuration-runtime.test.ts and existing
 platform-server-types.test.ts. Existing compiled proofs: core-server-dependency-
 boundary/runtime-test.mjs, core-server-persistence-composition/observability-
 runtime-test.mjs, build-platform-shell-image/verify-runtime-payload.mjs. Readers:

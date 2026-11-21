@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.coverage-compiler
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-19"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre, agentic]
@@ -32,6 +32,33 @@ ROOTS = {"packages", "platform", "apps", "products", "scripts", "infra", "bin"}
 EXTENSIONS = {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".sh"}
 DORMANT = ("scripts/02.rag-rulebook/", "infra/04.deploy/02.rag-rulebook/")
 REVIEW_ERRORS = {"diagnostic-review-contract-invalid", "diagnostic-review-required-fields-invalid", "diagnostic-partial-review-debt-missing", "diagnostic-review-proof-reference-invalid", "diagnostic-review-check-unregistered", "diagnostic-adoption-proof-missing"}
+
+def failure_detail(report: object, allowed_paths: set[str]) -> dict | None:
+    """Project this owner's findings; never expose supplied paths or native text."""
+    if not isinstance(report, dict) or report.get('schema') != 'repo/diagnostic-coverage-report/v1':
+        return None
+    path_codes = {'diagnostic-review-source-invalid', 'diagnostic-review-stale',
+                  'diagnostic-source-boundary-invalid', 'diagnostic-new-or-changed-code-unreviewed',
+                  'diagnostic-review-source-not-discovered'}
+    codes = REVIEW_ERRORS | path_codes | {'diagnostic-coverage-input-unavailable-or-invalid'}
+    findings = report.get('findings')
+    if report.get('verdict') != 'failed' or type(findings) is not list or not findings:
+        raise ValueError('failure-detail-invalid')
+    safe = []
+    for item in findings:
+        if type(item) is not dict or not set(item) <= {'code', 'path'} or type(item.get('code')) is not str or item['code'] not in codes:
+            raise ValueError('failure-detail-invalid')
+        if ('path' in item) != (item['code'] in path_codes) or ('path' in item and type(item['path']) is not str):
+            raise ValueError('failure-detail-invalid')
+        if len(safe) < 32:
+            projected = {'code': item['code']}
+            if 'path' in item:
+                if item['path'] in allowed_paths and len(item['path']) <= 512 and item['path'].isprintable():
+                    projected['path'] = item['path']
+                else:
+                    projected['location'] = 'unavailable'
+            safe.append(projected)
+    return {'status': 'available', 'findings': safe, 'truncated': len(findings) > len(safe)}
 
 def git(root: Path, *args: str) -> bytes:
     return subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True).stdout

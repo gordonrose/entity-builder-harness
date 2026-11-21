@@ -1,0 +1,432 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.entity-smoke.aws.runtime-template
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-08"
+#   updated_on: "2026-11-09"
+#   layer: 04.deploy
+#   domain: deployment.entity-smoke
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Add an isolated private feature runtime and tasks using a separate schema and roles on the existing core-platform PostgreSQL dependency.
+#   portability: {class: internal, targets: []}
+#   used_by:
+#   - id: deploy.plan.entity-smoke-core-platform
+#     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Isolated entity-smoke scope; no staging resources, database replacement or public ingress.
+Parameters:
+  VpcId: { Type: 'AWS::EC2::VPC::Id' }
+  VpcCidr: { Type: String, AllowedPattern: '^(10|172|192)\.[0-9]{1,3}\.[0-9]{1,3}\.0/[0-9]{1,2}$' }
+  PrivateSubnetIds: { Type: 'List<AWS::EC2::Subnet::Id>' }
+  ClusterArn: { Type: String, AllowedPattern: '^arn:aws:ecs:eu-west-1:[0-9]{12}:cluster/kanbien-core-platform$' }
+  NamespaceId: { Type: String, AllowedPattern: '^ns-[a-z0-9]+$' }
+  EndpointSecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
+  S3ArtifactPrefixListId: { Type: String, AllowedPattern: '^pl-[a-z0-9]+$' }
+  LogGroupName: { Type: String, AllowedValues: ['/aws/ecs/kanbien-core-platform'] }
+  DatabaseEndpoint: { Type: String, AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9.-]+$' }
+  DatabaseName: { Type: String, AllowedPattern: '^[a-z][a-z0-9_]{0,62}$' }
+  DatabaseResourceId: { Type: String, AllowedPattern: '^db-[A-Za-z0-9]+$' }
+  DatabaseSecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
+  AdministratorSecretArn: { Type: String, AllowedPattern: '^arn:aws:secretsmanager:eu-west-1:[0-9]{12}:secret:[A-Za-z0-9/_+=.@-]+$' }
+  ImageRepositoryUri: { Type: String, AllowedPattern: '^[0-9]{12}\.dkr\.ecr\.eu-west-1\.amazonaws\.com/kanbien-core-platform/entity-smoke$' }
+  ImageRepositoryArn: { Type: String, AllowedPattern: '^arn:aws:ecr:eu-west-1:[0-9]{12}:repository/kanbien-core-platform/entity-smoke$' }
+  ImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
+  SourceRevision: { Type: String, AllowedPattern: '^[a-f0-9]{40}$' }
+  ServerDesiredCount: { Type: Number, Default: 0, AllowedValues: [0, 1] }
+Resources:
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private entity-smoke server only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: entity-smoke }]
+      SecurityGroupEgress:
+        - { IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroupId }
+  EndpointIngressFromServer:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref ServerSecurityGroup }
+  DatabaseIngressFromServer:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref DatabaseSecurityGroupId, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref ServerSecurityGroup }
+  MigrationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private entity-smoke migration only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: entity-smoke }]
+      SecurityGroupEgress:
+        - { IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroupId }
+  EndpointIngressFromMigration:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref MigrationSecurityGroup }
+  DatabaseIngressFromMigration:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref DatabaseSecurityGroupId, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref MigrationSecurityGroup }
+  AdministrationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private entity-smoke administration only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: entity-smoke }]
+      SecurityGroupEgress:
+        - { IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroupId }
+  EndpointIngressFromAdministration:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref AdministrationSecurityGroup }
+  DatabaseIngressFromAdministration:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref DatabaseSecurityGroupId, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref AdministrationSecurityGroup }
+  VerifierSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private entity-smoke verifier only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: entity-smoke }]
+      SecurityGroupEgress:
+        - { IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
+        - { IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup }
+  EndpointIngressFromVerifier:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
+  ServerIngressFromVerifier:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
+  FeatureServiceDiscovery:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: entity-smoke
+      DnsConfig: { NamespaceId: !Ref NamespaceId, DnsRecords: [{ Type: A, TTL: 10 }] }
+      HealthCheckCustomConfig: { FailureThreshold: 1 }
+  ServerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-server-delivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'ecr:GetAuthorizationToken', Resource: '*' }
+              - { Effect: Allow, Action: ['ecr:BatchCheckLayerAvailability', 'ecr:GetDownloadUrlForLayer', 'ecr:BatchGetImage'], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: ['logs:CreateLogStream', 'logs:PutLogEvents'], Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:entity-smoke-*' }
+  ServerTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-server-database
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'rds-db:connect', Resource: !Sub 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/entity_smoke_runtime' }
+  MigrationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-migration-delivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'ecr:GetAuthorizationToken', Resource: '*' }
+              - { Effect: Allow, Action: ['ecr:BatchCheckLayerAvailability', 'ecr:GetDownloadUrlForLayer', 'ecr:BatchGetImage'], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: ['logs:CreateLogStream', 'logs:PutLogEvents'], Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:entity-smoke-*' }
+  MigrationTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-migration-database
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'rds-db:connect', Resource: !Sub 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/entity_smoke_migration' }
+  AdministrationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-administration-delivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'ecr:GetAuthorizationToken', Resource: '*' }
+              - { Effect: Allow, Action: ['ecr:BatchCheckLayerAvailability', 'ecr:GetDownloadUrlForLayer', 'ecr:BatchGetImage'], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: ['logs:CreateLogStream', 'logs:PutLogEvents'], Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:entity-smoke-*' }
+              - { Effect: Allow, Action: 'secretsmanager:GetSecretValue', Resource: !Ref AdministratorSecretArn }
+  VerifierExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-verifier-delivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'ecr:GetAuthorizationToken', Resource: '*' }
+              - { Effect: Allow, Action: ['ecr:BatchCheckLayerAvailability', 'ecr:GetDownloadUrlForLayer', 'ecr:BatchGetImage'], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: ['logs:CreateLogStream', 'logs:PutLogEvents'], Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:entity-smoke-*' }
+  ServerTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-entity-smoke-server
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ExecutionRoleArn: !GetAtt ServerExecutionRole.Arn
+      TaskRoleArn: !GetAtt ServerTaskRole.Arn
+      ContainerDefinitions:
+        - Name: entity-smoke-server
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Command: [artifacts/kanbien-entity-smoke.main.js]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: entity-smoke-server }
+          Environment:
+            - { Name: NODE_ENV, Value: production }
+            - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
+            - { Name: PERSISTENCE_POSTGRES_HOST, Value: !Ref DatabaseEndpoint }
+            - { Name: PERSISTENCE_POSTGRES_PORT, Value: '5432' }
+            - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: !Ref DatabaseName }
+            - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: entity_smoke }
+            - { Name: PERSISTENCE_POSTGRES_CA_PATH, Value: /app/assets/rds-eu-west-1-bundle.crt }
+            - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+            - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/entity_smoke_runtime' }
+            - { Name: PERSISTENCE_RUNTIME_DATABASE_USERNAME, Value: entity_smoke_runtime }
+            - { Name: HOST, Value: '0.0.0.0' }
+            - { Name: PORT, Value: '3000' }
+            - { Name: PLATFORM_DEPLOYMENT_EXPOSURE, Value: private }
+          PortMappings: [{ ContainerPort: 3000, Protocol: tcp }]
+          HealthCheck:
+            Command: [CMD, /nodejs/bin/node, '-e', "fetch('http://127.0.0.1:3000/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+            Interval: 10
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 20
+  MigrationTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-entity-smoke-migration
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ExecutionRoleArn: !GetAtt MigrationExecutionRole.Arn
+      TaskRoleArn: !GetAtt MigrationTaskRole.Arn
+      ContainerDefinitions:
+        - Name: entity-smoke-migration
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Command: [artifacts/kanbien-entity-smoke-migration.main.js]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: entity-smoke-migration }
+          Environment:
+            - { Name: NODE_ENV, Value: production }
+            - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
+            - { Name: PERSISTENCE_POSTGRES_HOST, Value: !Ref DatabaseEndpoint }
+            - { Name: PERSISTENCE_POSTGRES_PORT, Value: '5432' }
+            - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: !Ref DatabaseName }
+            - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: entity_smoke }
+            - { Name: PERSISTENCE_POSTGRES_CA_PATH, Value: /app/assets/rds-eu-west-1-bundle.crt }
+            - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+            - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/entity_smoke_migration' }
+            - { Name: PERSISTENCE_MIGRATION_DATABASE_USERNAME, Value: entity_smoke_migration }
+  AdministrationTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-entity-smoke-administration
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ExecutionRoleArn: !GetAtt AdministrationExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: entity-smoke-administration
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Command: [artifacts/kanbien-entity-smoke-administration.main.js]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: entity-smoke-administration }
+          Environment:
+            - { Name: NODE_ENV, Value: production }
+            - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
+            - { Name: PERSISTENCE_POSTGRES_HOST, Value: !Ref DatabaseEndpoint }
+            - { Name: PERSISTENCE_POSTGRES_PORT, Value: '5432' }
+            - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: !Ref DatabaseName }
+            - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: entity_smoke }
+            - { Name: PERSISTENCE_POSTGRES_CA_PATH, Value: /app/assets/rds-eu-west-1-bundle.crt }
+            - { Name: PERSISTENCE_RUNTIME_DATABASE_USERNAME, Value: entity_smoke_runtime }
+            - { Name: PERSISTENCE_MIGRATION_DATABASE_USERNAME, Value: entity_smoke_migration }
+            - { Name: PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE, Value: !Ref AdministratorSecretArn }
+          Secrets:
+            - { Name: PERSISTENCE_ADMINISTRATOR_CREDENTIALS, ValueFrom: !Ref AdministratorSecretArn }
+  VerifierTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-entity-smoke-verifier
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ExecutionRoleArn: !GetAtt VerifierExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: entity-smoke-verifier
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Command: [artifacts/kanbien-entity-smoke-verifier.main.js]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: entity-smoke-verifier }
+          Environment:
+            - { Name: NODE_ENV, Value: production }
+            - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
+            - { Name: ENTITY_SMOKE_VERIFICATION_URL, Value: 'http://entity-smoke.kanbien-core-platform.internal:3000/' }
+            - { Name: ENTITY_SMOKE_EXPECTED_SOURCE, Value: !Ref SourceRevision }
+  DatabaseProofSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private entity-smoke database-proof only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: entity-smoke }]
+      SecurityGroupEgress:
+        - { IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroupId }
+  EndpointIngressFromDatabaseProof:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref DatabaseProofSecurityGroup }
+  DatabaseIngressFromDatabaseProof:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref DatabaseSecurityGroupId, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref DatabaseProofSecurityGroup }
+  DatabaseProofExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-database-proof-delivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'ecr:GetAuthorizationToken', Resource: '*' }
+              - { Effect: Allow, Action: ['ecr:BatchCheckLayerAvailability', 'ecr:GetDownloadUrlForLayer', 'ecr:BatchGetImage'], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: ['logs:CreateLogStream', 'logs:PutLogEvents'], Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:entity-smoke-*' }
+  DatabaseProofTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: entity-smoke-database-proof-database
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'rds-db:connect', Resource: !Sub 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/entity_smoke_runtime' }
+  DatabaseProofTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-entity-smoke-database-proof
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ExecutionRoleArn: !GetAtt DatabaseProofExecutionRole.Arn
+      TaskRoleArn: !GetAtt DatabaseProofTaskRole.Arn
+      ContainerDefinitions:
+        - Name: entity-smoke-database-proof
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Command: [artifacts/kanbien-entity-smoke-database-proof.main.js]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: entity-smoke-database-proof }
+          Environment:
+            - { Name: NODE_ENV, Value: production }
+            - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
+            - { Name: PERSISTENCE_POSTGRES_HOST, Value: !Ref DatabaseEndpoint }
+            - { Name: PERSISTENCE_POSTGRES_PORT, Value: '5432' }
+            - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: !Ref DatabaseName }
+            - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: entity_smoke }
+            - { Name: PERSISTENCE_POSTGRES_CA_PATH, Value: /app/assets/rds-eu-west-1-bundle.crt }
+            - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+            - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/entity_smoke_runtime' }
+            - { Name: PERSISTENCE_RUNTIME_DATABASE_USERNAME, Value: entity_smoke_runtime }
+            - { Name: PLATFORM_DEPLOYMENT_EXPOSURE, Value: private }
+  FeatureService:
+    Type: AWS::ECS::Service
+    DependsOn: [DatabaseIngressFromServer, EndpointIngressFromServer, ServerIngressFromVerifier]
+    Properties:
+      ServiceName: kanbien-core-platform-entity-smoke
+      Cluster: !Ref ClusterArn
+      DesiredCount: !Ref ServerDesiredCount
+      LaunchType: FARGATE
+      TaskDefinition: !Ref ServerTaskDefinition
+      DeploymentConfiguration: { MaximumPercent: 200, MinimumHealthyPercent: 100, DeploymentCircuitBreaker: { Enable: true, Rollback: false } }
+      NetworkConfiguration:
+        AwsvpcConfiguration: { AssignPublicIp: DISABLED, Subnets: !Ref PrivateSubnetIds, SecurityGroups: [!Ref ServerSecurityGroup] }
+      ServiceRegistries: [{ RegistryArn: !GetAtt FeatureServiceDiscovery.Arn }]
+Outputs:
+  FeatureServiceArn: { Value: !Ref FeatureService }
+  ServerTaskDefinitionArn: { Value: !Ref ServerTaskDefinition }
+  MigrationTaskDefinitionArn: { Value: !Ref MigrationTaskDefinition }
+  AdministrationTaskDefinitionArn: { Value: !Ref AdministrationTaskDefinition }
+  VerifierTaskDefinitionArn: { Value: !Ref VerifierTaskDefinition }
+  ServerSecurityGroupId: { Value: !Ref ServerSecurityGroup }
+  MigrationSecurityGroupId: { Value: !Ref MigrationSecurityGroup }
+  AdministrationSecurityGroupId: { Value: !Ref AdministrationSecurityGroup }
+  VerifierSecurityGroupId: { Value: !Ref VerifierSecurityGroup }
+  DatabaseProofTaskDefinitionArn: { Value: !Ref DatabaseProofTaskDefinition }
+  DatabaseProofSecurityGroupId: { Value: !Ref DatabaseProofSecurityGroup }
+

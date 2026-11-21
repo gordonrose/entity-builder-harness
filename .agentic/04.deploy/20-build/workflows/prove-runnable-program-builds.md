@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.runnable-program-candidates
-version: 3
+version: 5
 status: active
 created_on: "2026-10-19"
-updated_on: "2026-10-25"
+updated_on: "2026-11-15"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -48,6 +48,17 @@ the resulting package candidate.
    field names needed for qualification.
 6. Run the report-only contract checker. A failed diagnostic blocks package
    construction until the declaration or selected boundary is corrected.
+   For declared workspace builds, this includes a fixed read-only local Node
+   reader of the project, package exports and approved dependency closure. It
+   does not invoke a compiler or npm scripts. Keep these declarations current
+   when adding, changing or removing a package; do not add handwritten alias or
+   runtime shim maps to make a check pass.
+   Derive compiler aliases and runtime public-export maps through the shared
+   workspace build owners. The neutral compiler and governed package-check
+   projector reject nonempty effective `paths`, including inherited mappings
+   and plain `tsc` bypasses, as `compiler-aliases-must-be-derived` before child
+   compilation. Declaration-only and Bundler routes outside governed package
+   checks remain unchanged.
 7. Pass the valid contract and observed dependency report to the package-phase
    image build and payload checks.
 
