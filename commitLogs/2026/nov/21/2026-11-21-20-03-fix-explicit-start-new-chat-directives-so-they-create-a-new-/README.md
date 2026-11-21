@@ -8,19 +8,19 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-11-21T20:03:06Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-11-21T20:54:31Z
+latest_commit_sha: 8cdc7a8b
+chat_duration: 3085s (00:00:51:25)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -71,13 +71,30 @@ fix explicit start-new-chat directives so they create a new governed session ins
 
 Initial intent: fix explicit start-new-chat directives so they create a new governed session instead of prompting to continue.
 
+
+### 2026-11-21T20:54:31Z - Commit recorded
+
+Commit: `8cdc7a8b`
+
+Message: fix(chat): honor explicit new-chat directives
+
+Summary: Honor an opening explicit start-new-chat directive before recorded-session routing, add regressions and lifecycle documentation, and repair a covered package-smoke diagnostic.
+
+ADR impact: no
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `8cdc7a8b`
+  Time UTC: 2026-11-21T20:54:31Z
+  Message: fix(chat): honor explicit new-chat directives
+  Summary: Honor an opening explicit start-new-chat directive before recorded-session routing, add regressions and lifecycle documentation, and repair a covered package-smoke diagnostic.
+  ADR impact: no
 
 ## Main Refresh Conflicts
 
@@ -92,12 +109,12 @@ Reason: This is a narrow correction to the existing startup routing contract. It
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:03:06Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-11-21T20:54:31Z
+Latest commit SHA: 8cdc7a8b
+Chat duration: 3085s (00:00:51:25)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
