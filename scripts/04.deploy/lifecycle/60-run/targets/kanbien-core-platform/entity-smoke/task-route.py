@@ -181,7 +181,6 @@ def prepare(args, provider, *, retained_source_evidence=None):
     if retained_source_evidence is None and proof_stage == "acceptance":
         retained_source_evidence = ACCEPTANCE.acceptance_owner().retained_source_evidence(args, receipt)
     C.ALIGN.source_preflight(receipt, **({"retained_source_evidence": retained_source_evidence} if retained_source_evidence is not None else {}))
-    C.local_checks()
     artifact = C.source_digest()
     if proof_stage == "activation": args.activation_generation = artifact
     alignment, parameters, _ = C.ALIGN.inspect(provider, receipt, C.now())

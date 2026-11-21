@@ -275,7 +275,8 @@ def run():
             business = M.plan(args, provider)
             assert business["plan"]["preflight_label"] == planned["plan"]["preflight_label"] and business["plan_sha256"] != planned["plan_sha256"]
         assert all(operation not in {"run-task", "create-change-set", "execute-change-set"} for _, operation, _ in provider.observed[start:])
-        assert calls.count("local-proof-double") == calls.count("clean-source-custody-double")
+        assert calls.count("clean-source-custody-double") > 0
+        assert "local-proof-double" not in calls
         saved = cache / "receipts/create.json"
         bytes_before = saved.read_bytes(); moved = saved.with_suffix(".temporarily-moved"); saved.rename(moved)
         fails(lambda: M.plan(args, provider), "infrastructure-input-unavailable")
@@ -683,18 +684,6 @@ def run():
         assert startup_calls.count("run-task") == 1 and "get-log-events" not in startup_calls
         assert not (root / "public-startup-receipts").exists()
         M.parse, M.Provider, M.execute = old_parse, old_factory, old_execute
-        reference = ".cache/test-runs/20261108T000000Z-" + "0" * 32 + "/report.json"
-        report = root / reference; report.parent.mkdir(parents=True); report.write_text('{"fixture":true}')
-        old_parse, old_factory, old_subprocess = M.parse, M.Provider, M.C.subprocess.run
-        M.parse, M.Provider = lambda: SimpleNamespace(**vars(args), validate_arguments=False, execute=False), lambda: provider
-        M.C.local_checks = original["local_checks"]
-        M.C.subprocess.run = lambda *arguments, **options: SimpleNamespace(returncode=1, stdout=json.dumps({"run_report_path": reference, "checks": [], "findings": []}), stderr=CANARY)
-        output = io.StringIO(); provider_calls = len(provider.observed)
-        with redirect_stdout(output): status = M.main()
-        failure = json.loads(output.getvalue())
-        assert status == 1 and failure["condition"] == "infrastructure-local-proof-not-passed" and failure["evidence_reference"] == reference
-        assert len(provider.observed) == provider_calls and CANARY not in output.getvalue()
-        M.parse, M.Provider, M.C.subprocess.run = old_parse, old_factory, old_subprocess
     M.prepare, M.BINDING.DEPLOY.source = old_prepare, old_binding_source
     provider_class.enable_task = old_enable_task
     for name, value in original.items(): setattr(M.C, name, value)

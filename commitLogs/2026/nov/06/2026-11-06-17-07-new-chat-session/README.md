@@ -7911,3 +7911,16 @@ passed, as did registered acceptance-controls in
 `.cache/test-runs/20261121T180659Z-e96f2964b2594143b45aefe10bcb01a7/report.json`.
 The user requested a 15-minute target at 18:00 UTC; these results do not
 establish acceptance or a successful deployment-time budget.
+
+At the user's instruction, stopped the local final-task planner and its suite
+before any new AWS task launch. Planning had unnecessarily started the full
+composition suite again after the controller correction. Removed that call from
+the task planner; package qualification, committed-source checks, current target
+inspection and task admission remain. The task-route fixture now asserts that
+planning never invokes the suite while still checking source custody. Other
+controllers retain their existing checks; this change does not claim they have
+been consolidated. The interrupted run is not passing evidence.
+The actual task planner was exercised with controlled dependencies: source
+custody was checked and target inspection was reached; an attempted invocation
+of the old local suite would have failed that check. This is focused local
+evidence, not another live task result.

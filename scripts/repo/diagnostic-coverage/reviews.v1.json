@@ -1417,7 +1417,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route.py",
-          "sha256": "d00136a6f1c2c835624d26e55781d06457e66735a8bfb77bf3b3aeb7065940e2"
+          "sha256": "dd40bc609307d0711c78bfc55b0ca59f67d2a90a4c562dc405034a1f21b18436"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-steps.py",
