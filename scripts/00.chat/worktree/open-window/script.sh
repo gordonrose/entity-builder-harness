@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-21"
 #   layer: 00.chat
 #   domain: worktree
 #   disciplines:
@@ -131,7 +131,7 @@ verify_chat_owned_worktree() {
   target_branch="$(git -C "$target_root" branch --show-current 2>/dev/null)" || { echo "ERROR: window-target-branch-read-failed" >&2; return 2; }
 
   if ! target_session_id="$(chat_session_id_from_branch "$target_branch")"; then
-    echo "ERROR: refusing to open non-chat worktree branch" >&2
+    echo "ERROR: refusing to open non-chat worktree branch: $target_branch" >&2
     echo "Use the chat open-window command from a chat branch or pass a chat-owned worktree/session log." >&2
     return 1
   fi

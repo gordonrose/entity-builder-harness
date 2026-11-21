@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-10-22"
+  updated_on: "2026-11-21"
   layer: 00.chat
   domain: startup
   disciplines:
@@ -36,6 +36,19 @@ First run:
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/resolve-current-chat-session/script.sh "<opening user message>"
+```
+
+An explicit new-chat directive has priority over existing-session lookup. It is
+the first non-empty line, exactly `start new chat` (case-insensitive; spacing
+between the words may vary). All remaining text is the required new-chat task
+summary. The resolver delegates it to the existing new-session creator, so a
+recorded session never triggers a continue-or-new choice for that request.
+
+If the directive has no remaining task summary, it returns
+`new-chat-task-summary-required`. Respond exactly:
+
+```txt
+What should the new chat be about?
 ```
 
 This startup bootstrap is governed by the opening prompt. It may create or

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-21"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -28,6 +28,24 @@ set -euo pipefail
 #   - stages-files
 
 OPENING_PROMPT="${*:-}"
+
+FIRST_NONEMPTY_LINE="$(printf '%s\n' "$OPENING_PROMPT" | awk 'NF { print; exit }')"
+
+if [[ "$FIRST_NONEMPTY_LINE" =~ ^[[:space:]]*[Ss][Tt][Aa][Rr][Tt][[:space:]]+[Nn][Ee][Ww][[:space:]]+[Cc][Hh][Aa][Tt][[:space:]]*$ ]]; then
+  NEW_CHAT_TASK="$(printf '%s\n' "$OPENING_PROMPT" | awk '
+    !seen && /^[[:space:]]*$/ { next }
+    !seen { seen = 1; next }
+    { print }
+  ')"
+
+  if [[ ! "$NEW_CHAT_TASK" =~ [^[:space:]] ]]; then
+    echo "ERROR: new-chat-task-summary-required"
+    echo "Required action: Ask what the new chat should be about."
+    exit 3
+  fi
+
+  exec bash scripts/00.chat/startup/start-new-chat/script.sh "$NEW_CHAT_TASK"
+fi
 
 set +e
 CURRENT_METADATA="$(bash scripts/00.chat/session-log/read-current-chat-log/script.sh 2>&1)"
