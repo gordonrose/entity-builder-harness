@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-21T18:47:54Z
-latest_commit_sha: 0942e528
-chat_duration: 1302047s (15:01:40:47)
+latest_commit_at_utc: 2026-11-21T19:56:36Z
+latest_commit_sha: 12282929
+chat_duration: 1306169s (15:02:49:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3220,6 +3220,17 @@ Summary: Records the completed evidence-led audit, raw inventories, script-topol
 
 ADR impact: No ADR; findings precede the next architecture decision.
 
+
+### 2026-11-21T19:56:36Z - Commit recorded
+
+Commit: `12282929`
+
+Message: docs(deploy): record verification and timeout audit
+
+Summary: Completed audit of redundant verification, diagnostic losses, timeout/restart failures and opaque script topology, with evidence inventories and ranked remediation.
+
+ADR impact: No ADR; the next chat will define the destination architecture before implementation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3596,6 +3607,13 @@ ADR impact: No ADR; findings precede the next architecture decision.
   Summary: Records the completed evidence-led audit, raw inventories, script-topology finding and ranked subtractive remediation; no runtime or AWS behavior changes.
   ADR impact: No ADR; findings precede the next architecture decision.
 
+
+- Commit: `12282929`
+  Time UTC: 2026-11-21T19:56:36Z
+  Message: docs(deploy): record verification and timeout audit
+  Summary: Completed audit of redundant verification, diagnostic losses, timeout/restart failures and opaque script topology, with evidence inventories and ranked remediation.
+  ADR impact: No ADR; the next chat will define the destination architecture before implementation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3609,9 +3627,9 @@ Reason: The audit records findings and a ranked remediation sequence but does no
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-21T18:47:54Z
-Latest commit SHA: 0942e528
-Chat duration: 1302047s (15:01:40:47)
+Latest commit at UTC: 2026-11-21T19:56:36Z
+Latest commit SHA: 12282929
+Chat duration: 1306169s (15:02:49:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
