@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-21T18:45:43Z
-latest_commit_sha: e0a8d2b1
-chat_duration: 1301916s (15:01:38:36)
+latest_commit_at_utc: 2026-11-21T18:47:54Z
+latest_commit_sha: 0942e528
+chat_duration: 1302047s (15:01:40:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3160,6 +3160,17 @@ Summary: Removed redundant read renewal and accepted retained evidence with live
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-21T18:47:54Z - Commit recorded
+
+Commit: `0942e528`
+
+Message: Record accepted entity smoke release
+
+Summary: Retained the validated accepted release and session retrospective.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3524,6 +3535,13 @@ ADR impact: covered by session ADR disposition
   Summary: Removed redundant read renewal and accepted retained evidence with live identity checks.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `0942e528`
+  Time UTC: 2026-11-21T18:47:54Z
+  Message: Record accepted entity smoke release
+  Summary: Retained the validated accepted release and session retrospective.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3537,9 +3555,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-21T18:45:43Z
-Latest commit SHA: e0a8d2b1
-Chat duration: 1301916s (15:01:38:36)
+Latest commit at UTC: 2026-11-21T18:47:54Z
+Latest commit SHA: 0942e528
+Chat duration: 1302047s (15:01:40:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
