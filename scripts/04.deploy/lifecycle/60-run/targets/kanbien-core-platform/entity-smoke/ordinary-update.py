@@ -110,9 +110,7 @@ class Consumer:
             stage, workload, operation, step = selection
             actual = ("ready" if workload == "verifier" else "preflight") if step == "preflight" else operation
             self.require((plan.get("schema") == "deploy/entity-smoke-task-plan/v2" and "preflight_renewal" not in plan
-                          or plan.get("schema") == "deploy/entity-smoke-task-plan/v3" and isinstance(plan.get("preflight_renewal"), dict)
-                          or plan.get("schema") == "deploy/entity-smoke-task-plan/v4" and isinstance(plan.get("final_read_renewal"), dict)
-                              and selection[:3] == ("acceptance", "verifier", "read"))
+                          or plan.get("schema") == "deploy/entity-smoke-task-plan/v3" and isinstance(plan.get("preflight_renewal"), dict))
                 and all(plan.get(k) == v for k, v in {"proof_stage": stage, "workload": workload, "prepared_operation": operation,
                     "operation": actual, "phase": step, "database_effect": self.K.T.EFFECTS[actual], "expected_record_digest": ctx.values["expected_digest"],
                     "task_count": 1, "automatic_retry": False, "execution_route_available": True, "pending_prerequisite": None}.items()), "delivery-plan-outside-approval")

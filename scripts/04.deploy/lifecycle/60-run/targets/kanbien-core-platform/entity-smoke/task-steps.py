@@ -87,7 +87,6 @@ def key(args, delivery=None):
     if stage(args) == "activation": suffix += ":" + activation_generation(args)
     if delivery is not None: suffix += ":delivery:" + delivery["delivery_id"]
     if renewed(args): suffix += ":preflight-renewal-1"
-    if final_renewed(args): suffix += ":final-read-renewal-1"
     return "task-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":" + args.phase + suffix).encode()).hexdigest()[:48]
 
 
@@ -97,7 +96,6 @@ def path(context, args):
     if args.phase == "preflight" and context.get("failed_observation_sha256"):
         suffix += "-terminal-observation-recovery-1"
     if renewed(args): suffix += "-preflight-renewal-1"
-    if final_renewed(args): suffix += "-final-read-renewal-1"
     if stage(args) == "activation":
         generation = activation_generation(args)
         require(context["artifact"] == "sha256:" + generation, "task-activation-controller-mismatch")
@@ -111,49 +109,6 @@ def renewed(args):
 
 def renewal_label(original):
     return "entity-smoke-" + POLICY.observation_renewal_id(original)
-
-
-def final_renewed(args):
-    return getattr(args, "final_read_renewal_selection", None) == (stage(args), args.workload, args.operation)
-
-
-def final_renewal_label(original):
-    return "entity-smoke-" + POLICY.observation_renewal_id(original, completed_read=True)
-
-
-def select_final_read(route, context, args, provider, base):
-    """Renew only the completed final read-only pair, keeping original custody."""
-    args.final_read_renewal_selection = None
-    plan = context["report"]["plan"]
-    plan.pop("final_read_renewal", None)
-    if (stage(args), args.workload, args.operation) != ("acceptance", "verifier", "read"):
-        return False
-    original_args = SimpleNamespace(**{**vars(args), "phase": "operation"})
-    target = path(context, original_args)
-    if not route.COMPLETION.path(target).is_file(): return False
-    original = observe_packet(route, context, original_args, provider, historical=True, select=False)
-    completion = route.COMPLETION.read(route, context, original_args, target)
-    if not POLICY.observation_expired(original["receipt"]["collected_at"], route.C.now(), route.RUNNER.EVIDENCE.timestamp):
-        return False
-    # Original operation admission already binds its successful ready receipt.
-    # Independently require that ready phase's terminal completion as well.
-    probe = SimpleNamespace(**{**vars(original_args), "phase": "preflight"})
-    if "preflight_renewal" in original["plan"]:
-        probe.preflight_renewal_selection = (stage(args), args.workload, args.operation)
-    prior_context = {**context, "report": {"plan": original["plan"]}}
-    require(observe_packet(route, prior_context, probe, provider, historical=True, select=False) is not None,
-            "acceptance-final-ready-completion-required")
-    args.final_read_renewal_selection = (stage(args), args.workload, args.operation)
-    plan["preflight_label"] = final_renewal_label(base)
-    if "schema" in plan: plan["schema"] = "deploy/entity-smoke-task-plan/v4"
-    plan["final_read_renewal"] = {"packet": original, "completion": completion,
-        "gate": route.C.read_json(route.C.ROOT / completion["realization_evidence"])}
-    latest_args = SimpleNamespace(**{**vars(args), "phase": "operation"})
-    if route.COMPLETION.path(path(context, latest_args)).is_file():
-        latest = observe_packet(route, context, latest_args, provider, historical=True, select=False)
-        require(not POLICY.observation_expired(latest["receipt"]["collected_at"], route.C.now(), route.RUNNER.EVIDENCE.timestamp),
-                "acceptance-final-renewal-exhausted")
-    return True
 
 
 def select_preflight(route, context, args, provider):
@@ -171,7 +126,6 @@ def select_preflight(route, context, args, provider):
     plan.pop("preflight_renewal", None)
     if "schema" in plan: plan["schema"] = "deploy/entity-smoke-task-plan/v2"
     args.preflight_renewal_selection = None
-    if select_final_read(route, context, args, provider, base): return
     probe = SimpleNamespace(**{**vars(args), "phase": "preflight"})
     operation = SimpleNamespace(**{**vars(args), "phase": "operation"})
     original_path = path(context, probe)
@@ -205,22 +159,19 @@ def select_preflight(route, context, args, provider):
 def validate_renewal(route, plan, binding, delivery, args):
     """Closed historical proof, not present-tense permission to launch."""
     base = route.C.delivery_preflight_label(delivery, stage(args), args.workload, args.operation)
-    final = "final_read_renewal" in plan
-    previous = plan.get("final_read_renewal" if final else "preflight_renewal")
+    previous = plan.get("preflight_renewal")
     if previous is None:
         require(plan["preflight_label"] == base, "task-step-delivery-label-mismatch")
         return
     require(isinstance(previous, dict) and set(previous) == {"packet", "completion", "gate"}, "preflight-renewal-custody-invalid")
     packet, completion, gate = (previous[name] for name in ("packet", "completion", "gate"))
     require(isinstance(packet, dict) and isinstance(packet.get("plan"), dict)
-        and ("final_read_renewal" not in packet["plan"] if final else "preflight_renewal" not in packet["plan"]), "preflight-renewal-custody-invalid")
-    require(not final or (stage(args), args.workload, args.operation) == ("acceptance", "verifier", "read"),
-            "acceptance-final-read-selection-invalid")
-    probe = SimpleNamespace(**{**vars(args), "phase": "operation" if final else "preflight"})
+        and "preflight_renewal" not in packet["plan"], "preflight-renewal-custody-invalid")
+    probe = SimpleNamespace(**{**vars(args), "phase": "preflight"})
     validate_delivery_step(route, packet, binding, delivery, probe)
     require(all(plan[key] == packet["plan"][key] for key in ("task_definition_sha256", "configuration_sha256", "roles_sha256", "network_sha256", "prerequisites_sha256", "expected_record_digest", "package_custody_reference")),
         "preflight-renewal-binding-changed")
-    if not final: route.RUNNER.PREFLIGHT.validate_launch(packet["reservation"]["request"])
+    route.RUNNER.PREFLIGHT.validate_launch(packet["reservation"]["request"])
     route.RUNNER.EVIDENCE.validate_retained(packet["receipt"], packet["reservation"])
     document = lambda value: "sha256:" + hashlib.sha256(route.RUNNER.CONTROL.canonical(value) + b"\n").hexdigest()
     require(isinstance(completion, dict) and set(completion) == {"schema", "step_sha256", "plan_sha256", "realization_evidence", "realization_evidence_sha256"}
@@ -230,7 +181,7 @@ def validate_renewal(route, plan, binding, delivery, args):
     graph = route.GRAPH.contract(args.workload, route.C.GATE)
     artifacts = {item["id"]: packet["plan"]["controller_sha256"] if item["id"] == route.GRAPH.CONTROLLER_SOURCE else binding["image_digest"] for item in graph["artifacts"]}
     route.COMPLETION.validate_gate(route, graph, gate, packet["plan_sha256"], artifacts)
-    require(plan["preflight_label"] == (final_renewal_label(base) if final else renewal_label(base)), "task-step-delivery-label-mismatch")
+    require(plan["preflight_label"] == renewal_label(base), "task-step-delivery-label-mismatch")
 
 
 def request(route, context, args):
@@ -274,8 +225,7 @@ def validate_delivery_step(route, value, binding, delivery, args):
               "automatic_retry", "delivery", "prerequisites_sha256", "pending_prerequisite", "execution_route_available", "request_sha256"}
     require(value["delivery"] == delivery and isinstance(plan, dict)
             and ((set(plan) == fields and plan["schema"] == "deploy/entity-smoke-task-plan/v2")
-                 or (set(plan) == fields | {"preflight_renewal"} and plan["schema"] == "deploy/entity-smoke-task-plan/v3")
-                 or (set(plan) == fields | {"final_read_renewal"} and plan["schema"] == "deploy/entity-smoke-task-plan/v4"))
+                 or (set(plan) == fields | {"preflight_renewal"} and plan["schema"] == "deploy/entity-smoke-task-plan/v3"))
             and plan["delivery"] == delivery and C.DEPLOY.fingerprint(plan) == value["plan_sha256"]
             and plan["binding"] == binding and plan["request_sha256"] == C.DEPLOY.fingerprint(expected)
             and isinstance(value["prerequisites"], dict) and plan["prerequisites_sha256"] == C.DEPLOY.fingerprint(value["prerequisites"])
@@ -286,9 +236,6 @@ def validate_delivery_step(route, value, binding, delivery, args):
     if "preflight_renewal" in plan:
         original = plan["preflight_renewal"]["packet"]
         require(POLICY.observation_expired(original["receipt"]["task"]["stopped_at"], value["receipt"]["task"]["created_at"], route.RUNNER.EVIDENCE.timestamp), "preflight-renewal-before-expiry")
-    if "final_read_renewal" in plan:
-        original = plan["final_read_renewal"]["packet"]
-        require(POLICY.observation_expired(original["receipt"]["collected_at"], value["receipt"]["task"]["created_at"], route.RUNNER.EVIDENCE.timestamp), "acceptance-final-renewal-before-expiry")
     return value
 
 

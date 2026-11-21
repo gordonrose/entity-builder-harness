@@ -239,7 +239,7 @@ def prepare(args, provider, *, retained_source_evidence=None):
     safe["execution_route_available"] = (STEPS.selected(args) is not None or FEATURE.supported(args) or RECOVERY.supported(args) or CREDENTIAL.supported(args) or ACCEPTANCE.supported(args)) and prerequisites is not None
     context["prerequisites"] = prerequisites
     safe["request_sha256"] = C.DEPLOY.fingerprint(STEPS.request(dependencies(), context, args))
-    if delivery and ("preflight_renewal" in safe or "final_read_renewal" in safe):
+    if delivery and "preflight_renewal" in safe:
         STEPS.validate_renewal(dependencies(), safe, binding, delivery, args)
     selected_digest = C.DEPLOY.fingerprint(safe)
     book.bind_plan(selected_digest)

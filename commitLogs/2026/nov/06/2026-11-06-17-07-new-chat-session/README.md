@@ -7924,3 +7924,22 @@ The actual task planner was exercised with controlled dependencies: source
 custody was checked and target inspection was reached; an attempted invocation
 of the old local suite would have failed that check. This is focused local
 evidence, not another live task result.
+
+The user rejected requiring a new database read solely because the earlier
+successful read aged. Promotion reuses its retained, validated evidence and
+checks the same live task/image and database identity. The original historical
+read remains dated; these identity checks cannot establish that out-of-band
+database permissions are unchanged, so promotion does not claim current database
+readiness. The existing source guard, historical-controller check, candidate
+validator and release-succession owner remain in use. A changed task, image,
+database identity, invalid proof or source mismatch blocks promotion. No new
+AWS task or business operation was submitted. The stopped read-only planning
+attempt ended with `task-step-completion-artifacts-mismatch`; the controller
+hash of the original collected candidate was independently located in the
+existing Git ancestry. That diagnosis did not make the plan successful.
+Removed the unused completed-final-read renewal plan, task protocol and
+collection branch that were introduced for the rejected expiry requirement.
+No such renewed task or receipt was created. The connected acceptance fixture
+checks an aged result, changed task, unhealthy task and changed database before
+promotion; the focused alignment fixture and diagnostic adoption check passed.
+The original 25 task results and historical candidate remain unchanged.

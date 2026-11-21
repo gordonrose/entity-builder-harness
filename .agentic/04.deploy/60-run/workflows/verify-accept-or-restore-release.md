@@ -148,7 +148,9 @@ more reusable successor route.
    neither a blanket ignore nor a caller-supplied CLI allowlist is permitted.
    This classification grants no AWS authority, freshness, successful collection
    or acceptance. Promotion validates retained proof and rechecks the current
-   workload identity and health; unchanged historical proof is not recollected.
+   workload identity and health and database identity; unchanged historical proof
+   is not recollected or invalidated solely by age. Historical proof alone does
+   not establish that database permissions remain unchanged out of band.
    The [collector](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py)
    derives the selection; the
    [source guard](../../../../scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py)

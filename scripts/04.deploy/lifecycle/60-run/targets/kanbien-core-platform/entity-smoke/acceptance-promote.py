@@ -50,6 +50,12 @@ def parse(arguments=None):
 def current_runtime(packet, provider):
     """Recheck only the live workload; retained proof is already validated."""
     runtime, binding = packet["runtime"], packet["binding"]
+    database = K.C.ALIGN.only(provider("rds", "describe-db-instances",
+        DBInstanceIdentifier=K.C.ALIGN.DATABASE), "DBInstances")
+    K.require(database.get("DBInstanceStatus") == "available"
+              and database.get("DbiResourceId") == runtime["source_resource_id"]
+              and database.get("DBName") == runtime["database_name"],
+              "acceptance-promotion-database-changed")
     service = K.C.RESOURCE.service(provider, runtime["definition"], 1)
     arns = K.C.RESOURCE.running_service_tasks(provider)
     K.require(len(arns) == 1 and arns[0] == runtime["task"]
@@ -82,13 +88,13 @@ def run(args, provider, progress):
             selected = K.resolve_inputs(K.parse(["--inputs", str(args.inputs), "--write-candidate"]))
             K.require((getattr(selected, "expected_predecessor", None) or "none") == args.expected_predecessor,
                       "acceptance-promotion-predecessor-mismatch")
-            K.A.fresh_final(candidate["packet"]["tasks"]["final-read"]["operation"],
-                K.final_required_after(candidate["packet"]), K.C.now())
             custody = K.C.ALIGN.read_receipt(selected.receipt.absolute())
             K.C.ALIGN.source_preflight(custody, retained_source_evidence=K.retained_source_evidence(selected, custody))
             current_runtime(candidate["packet"], provider)
             rechecked = owner.candidate(args.candidate_record)
-            K.require(rechecked["sha256"] == candidate["sha256"] and K.C.source_digest() == candidate["packet"]["controller_sha256"], "acceptance-promotion-candidate-changed")
+            K.require(rechecked["sha256"] == candidate["sha256"], "acceptance-promotion-candidate-changed")
+            K.C.retained_controller({"binding": candidate["packet"]["binding"],
+                "plan": {"controller_sha256": candidate["packet"]["controller_sha256"]}}, K.C.source_digest())
         progress["effect"] = "release-custody-reconciliation-required"
         release_verdict, release_id = S.promote(owner.root, target=K.TARGET, scope=K.SCOPE, identity=candidate["identity"],
             source_path=candidate["path"], source_digest=candidate["sha256"], expected_predecessor=args.expected_predecessor, legacy=False)
@@ -100,7 +106,7 @@ def run(args, provider, progress):
             raise K.CollectionFailure(code if re.fullmatch(r"scope-promotion-[a-z0-9-]+", code) else "acceptance-scope-promotion-not-confirmed") from None
         owner.current()
         return {"verdict": "accepted" if not (already_current or reconciling) else "retained", "release_id": release_id,
-            "release_verdict": release_verdict, "scope_verdict": scope["verdict"], "evidence_class": "live", "current_readiness": not (already_current or reconciling),
+            "release_verdict": release_verdict, "scope_verdict": scope["verdict"], "evidence_class": "live", "current_readiness": False,
             "effect": "local-custody-and-scope-only-no-provider-mutation"}
 
 

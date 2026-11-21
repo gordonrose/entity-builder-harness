@@ -279,17 +279,12 @@ requests, ninety-second completion and fresh 900-second admission still apply.
 The shared release proof policy owns expiry and replacement identity; the
 existing task store, runner and collector own execution and custody.
 
-For an unaccepted delivery whose completed final read aged out during collection
-or promotion, the same task route may renew the final read-only pair once. Both
-original phases must have successful immutable completion and gate custody;
-failed, unknown or incomplete operations do not qualify. The renewed plan binds
-the original read, unchanged operational configuration and original record
-digest. Use a deterministic separate reservation, ready label and receipt path
-for each renewed phase; never replay or restamp the completed original. Keep
-the original collected candidate and observation, and retain the replacement
-collection separately. Its ready admission and final-read freshness must pass
-normally before promotion. A second renewal is prohibited. No business writes,
-deployment, snapshot, restore or cleanup are repeated by this permission.
+For acceptance, retain a successful final read as evidence of what happened at
+its recorded time. Time passing alone does not require another database read.
+Before promoting that release, check the same running task, image and database
+identity and the qualified operational inputs. A different identity or changed
+operational input requires new relevant proof. A historical read does not prove
+that permissions have remained unchanged outside the observed controls.
 
 Checked controller-only repairs may preserve completed delivery tasks under
 their actual original controller hashes. The existing Git source comparison

@@ -647,32 +647,21 @@ def candidate_material(packet):
 def retained_source_evidence(args, custody=None):
     cache = collection_cache(args, custody)
     custody = C.ALIGN.read_receipt(args.receipt.absolute()) if custody is None else custody
-    files = {}
-    for directory in (cache, cache / "acceptance-final-renewal-1"):
-        observation = directory / "acceptance-observation.json"
-        C.RESOURCE.CONTROL.no_symlinks(observation)
-        if not observation.exists(): continue
-        packet = read_packet(observation)
-        binding = packet["binding"]
-        require(binding["source_revision"] == custody["source_revision"] and binding["image_digest"] == custody["image_digest"]
-                and packet["package"]["receipt_reference"] == custody["receipt_reference"] and binding["proof_label"] == args.proof_label
-                and binding["record_digest"] == args.expected_digest, "acceptance-source-evidence-binding-mismatch")
-        # Historical files remain exact bytes across checked controller-only
-        # repairs; this is not current health or permission to restamp proof.
-        try: C.retained_controller({"binding": binding, "plan": {"controller_sha256": packet["controller_sha256"]}}, C.source_digest())
-        except C.InfrastructureFailure: raise CollectionFailure("acceptance-source-evidence-binding-mismatch") from None
-        material = candidate_material(packet)
-        files.update({str(path.relative_to(C.ROOT)): {"sha256": S.sha256_bytes(payload), "size_bytes": len(payload)}
-                      for path, payload in (material["proof"], material["candidate"])})
-    if not files: return None
+    observation = cache / "acceptance-observation.json"
+    C.RESOURCE.CONTROL.no_symlinks(observation)
+    if not observation.exists(): return None
+    packet = read_packet(observation)
+    binding = packet["binding"]
+    require(binding["source_revision"] == custody["source_revision"] and binding["image_digest"] == custody["image_digest"]
+            and packet["package"]["receipt_reference"] == custody["receipt_reference"] and binding["proof_label"] == args.proof_label
+            and binding["record_digest"] == args.expected_digest, "acceptance-source-evidence-binding-mismatch")
+    try: C.retained_controller({"binding": binding, "plan": {"controller_sha256": packet["controller_sha256"]}}, C.source_digest())
+    except C.InfrastructureFailure: raise CollectionFailure("acceptance-source-evidence-binding-mismatch") from None
+    material = candidate_material(packet)
+    files = {str(path.relative_to(C.ROOT)): {"sha256": S.sha256_bytes(payload), "size_bytes": len(payload)}
+             for path, payload in (material["proof"], material["candidate"])}
     return {"source_revision": custody["source_revision"], "image_digest": custody["image_digest"],
             "files": files}
-
-
-def observation_cache(cache):
-    completion = cache / "task-steps/verifier-read-acceptance-final-read-renewal-1-operation.completion.json"
-    C.RESOURCE.CONTROL.no_symlinks(completion)
-    return cache / "acceptance-final-renewal-1" if completion.is_file() else cache
 
 
 def retain(packet, cache, *, root=None):
@@ -694,8 +683,7 @@ def retain(packet, cache, *, root=None):
 
 
 def collect(args, provider):
-    proof_cache = collection_cache(args)
-    cache = observation_cache(proof_cache)
+    cache = collection_cache(args)
     observation = cache / "acceptance-observation.json"
     C.RESOURCE.CONTROL.no_symlinks(observation)
     if observation.exists():
@@ -709,7 +697,7 @@ def collect(args, provider):
         # Original captured observation only: no fresh provider claims or jobs.
         return retain(packet, cache), "retained"
     packet, selected_cache = gather(args, provider)
-    require(selected_cache == proof_cache, "acceptance-proof-cache-mismatch")
+    require(selected_cache == cache, "acceptance-proof-cache-mismatch")
     A.fresh_final(packet["tasks"]["final-read"]["operation"], final_required_after(packet), C.now())
     require(len(T.RUNNER.CONTROL.canonical(packet)) + 1 <= MAX_PACKET_BYTES, "acceptance-collected-proof-too-large")
     # Reserve the immutable observation before any durable copy. A lost response

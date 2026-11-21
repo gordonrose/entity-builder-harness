@@ -164,8 +164,8 @@ def retained_evidence_files(receipt, selection):
     prefix = str(Path(SCOPE).parent.parent / "30-release-evidence") + "/"
     patterns = [re.escape(prefix) + r"proof-receipts/entity-smoke-[a-f0-9]{64}\.json",
                 re.escape(prefix) + r"release-candidates/release-[a-f0-9]{24}\.yml"]
-    require(isinstance(files, dict) and len(files) in {2, 4}
-            and all(sum(isinstance(name, str) and re.fullmatch(pattern, name) is not None for name in files) == len(files) // 2 for pattern in patterns), "alignment-retained-evidence-invalid")
+    require(isinstance(files, dict) and len(files) == 2
+            and all(sum(isinstance(name, str) and re.fullmatch(pattern, name) is not None for name in files) == 1 for pattern in patterns), "alignment-retained-evidence-invalid")
     for name, expected in files.items():
         require(isinstance(expected, dict) and set(expected) == {"sha256", "size_bytes"}
                 and isinstance(expected["sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", expected["sha256"]) is not None
