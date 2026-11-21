@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-20"
-  updated_on: "2026-10-20"
+  updated_on: "2026-11-21"
   layer: 00.chat
   domain: startup
   disciplines:
@@ -36,4 +36,6 @@ instructions, and any repo-provided context router if one exists.
 Agents following chat-start should use `resolve-current-chat-session` as the
 startup entrypoint. It reads existing chat metadata when available and
 auto-starts a missing session from the opening prompt when the repo is still on
-root `main` or otherwise lacks a matching chat log.
+root `main` or otherwise lacks a matching chat log. An explicit `start new
+chat` directive on the first non-empty line takes priority over existing-session
+reuse; its remaining text is delegated as the new task summary.

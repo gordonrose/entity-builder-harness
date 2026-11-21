@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-21"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -127,9 +127,56 @@ grep -q '^task: use the existing chat start process$' "$TMP_ROOT/resolve-existin
 grep -q '^chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md$' "$TMP_ROOT/resolve-existing.out" \
   || fail "resolver existing-session metadata did not include chat lifecycle workflow"
 
+session_log="$(find "$worktree_path/commitLogs" -name README.md -print -quit)"
+if [ -z "$session_log" ]; then
+  fail "resolver-created chat worktree did not contain a session log"
+fi
+sed -i 's/^latest_commit_sha:.*/latest_commit_sha: recorded-smoke-commit/' "$session_log"
+
+if bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
+  bash scripts/00.chat/startup/resolve-current-chat-session/script.sh "use the existing chat start process" \
+  >"$TMP_ROOT/resolve-recorded.out" 2>&1; then
+  fail "recorded existing session did not require explicit continuation approval"
+fi
+
+grep -q '^ERROR: recorded-session-approval-required$' "$TMP_ROOT/resolve-recorded.out" \
+  || fail "recorded existing session did not retain its approval requirement"
+
+branch_count_after_recorded="$(git -C "$REPO" branch --format='%(refname:short)' | grep -c '^chat/')"
+if [ "$branch_count_after_recorded" != "$branch_count_before" ]; then
+  fail "recorded existing session created another chat branch"
+fi
+
+if bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
+  bash scripts/00.chat/startup/resolve-current-chat-session/script.sh "start new chat" \
+  >"$TMP_ROOT/resolve-new-chat-without-summary.out" 2>&1; then
+  fail "bare explicit new-chat directive unexpectedly created a session"
+fi
+
+test "$(cat "$TMP_ROOT/resolve-new-chat-without-summary.out")" = $'ERROR: new-chat-task-summary-required\nRequired action: Ask what the new chat should be about.' \
+  || fail "bare explicit new-chat directive did not return the required summary result"
+
+branch_count_after_bare_directive="$(git -C "$REPO" branch --format='%(refname:short)' | grep -c '^chat/')"
+if [ "$branch_count_after_bare_directive" != "$branch_count_before" ]; then
+  fail "bare explicit new-chat directive created another chat branch"
+fi
+
+AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
+CHAT_CLEANUP_EMPTY_BRANCHES=skip \
+CHAT_COPY_PROMPT=skip \
+CHAT_OPEN_WORKTREE_WINDOW=skip \
+  bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
+  bash scripts/00.chat/startup/resolve-current-chat-session/script.sh $'start new chat\ncreate a separate session from an explicit directive' \
+  >"$TMP_ROOT/resolve-explicit-new-chat.out"
+
+grep -q 'Created branch: chat/' "$TMP_ROOT/resolve-explicit-new-chat.out" \
+  || fail "explicit new-chat directive did not create a separate chat branch"
+grep -q '^Task: create a separate session from an explicit directive$' "$TMP_ROOT/resolve-explicit-new-chat.out" \
+  || fail "explicit new-chat directive did not pass the remaining prompt as its task"
+
 branch_count_after="$(git -C "$REPO" branch --format='%(refname:short)' | grep -c '^chat/')"
-if [ "$branch_count_after" != "$branch_count_before" ]; then
-  fail "resolver created another chat branch despite existing metadata"
+if [ "$branch_count_after" -ne $((branch_count_before + 1)) ]; then
+  fail "explicit new-chat directive did not create exactly one additional chat branch"
 fi
 
 # A failed observation must not masquerade as a missing session and create one.

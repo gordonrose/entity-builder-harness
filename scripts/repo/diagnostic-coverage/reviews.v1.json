@@ -2646,7 +2646,7 @@
     {
       "owner": "imported-session-lookup-diagnostics",
       "status": "partial",
-      "reason": "Directory scan, metadata read and ambiguous lookup failures are distinguished from genuine missing session state. The actual resolver consumes only fixed missing/non-chat messages and cannot create a new session from failed observation. Historical recorded-session approval, success metadata and lookup precedence remain unchanged.",
+      "reason": "Directory scan, metadata read and ambiguous lookup failures are distinguished from genuine missing session state. The actual resolver consumes only fixed missing/non-chat messages and cannot create a new session from failed observation. An explicit first non-empty `start new chat` directive is recognized before the session read; it delegates only a non-empty remaining task to the existing creator, while a bare directive returns a finite summary-required result without effects. Ordinary successful metadata and recorded-session approval remain unchanged for non-directive prompts.",
       "remaining_debt": [
         "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
       ],
@@ -2674,7 +2674,7 @@
         },
         {
           "path": "scripts/00.chat/startup/resolve-current-chat-session/script.sh",
-          "sha256": "2a478ba780b3adb0da0acab8da65cde0e408d0b279d6cf39ddb595b49514d524"
+          "sha256": "caf15d5b850c2f4291cfb9b79f6189ef8ed5a8038afe11118338dfb1cd628252"
         }
       ]
     },
@@ -2800,7 +2800,7 @@
     {
       "owner": "imported-worktree-observation-diagnostics",
       "status": "partial",
-      "reason": "A failed registration read or reduction returns unavailable rather than not registered; ensure refuses creation after failed enumeration. Cleanliness checks preserve both status reads and bookkeeping policy. Write-location, ensure and window callers preserve failed root/branch/metadata/reference reads rather than diagnosing mismatch. Creation failure preserves original status with effect unknown; optional window failure remains a safe warning. Actual-caller doubles prove these outcomes including valid-looking metadata followed by failure. Native failure text is not copied.",
+      "reason": "A failed registration read or reduction returns unavailable rather than not registered; ensure refuses creation after failed enumeration. Cleanliness checks preserve both status reads and bookkeeping policy. Write-location, ensure and window callers preserve failed root/branch/metadata/reference reads rather than diagnosing mismatch. A verified non-chat worktree rejection identifies the observed branch name, not a supplied path or native failure text. Creation failure preserves original status with effect unknown; optional window failure remains a safe warning. Actual-caller doubles prove these outcomes including valid-looking metadata followed by failure. Native failure text is not copied.",
       "remaining_debt": [
         "The imported census and consumer reconciliation are recorded in the DIAG-012 plan; final registered proof is tracked there separately. This partial review covers the named observation and propagation paths, not every OS/command failure or sink delivery. Imported installation hashes remain unchanged; upstream incorporation is separate."
       ],
@@ -2836,7 +2836,7 @@
         },
         {
           "path": "scripts/00.chat/worktree/open-window/script.sh",
-          "sha256": "341a4a3b163b01960f91b116ee881f8e53f9891f102a9140cf6c89dfd5bcadd7"
+          "sha256": "18273767b3f7593e35e31a5976899986c592460aced752f2cdd3aa893c558690"
         }
       ]
     },
