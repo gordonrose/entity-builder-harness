@@ -34,9 +34,11 @@ def observation_expired(stopped_at, current_time, timestamp):
     return timestamp(current_time) - timestamp(stopped_at) > timedelta(seconds=900)
 
 
-def observation_renewal_id(original):
+def observation_renewal_id(original, *, completed_read=False):
     """One deterministic replacement identity, never an unbounded retry count."""
-    return hashlib.sha256((original + ":preflight-renewal-1").encode()).hexdigest()[:24]
+    require(type(completed_read) is bool, "observation-renewal-selection-invalid")
+    suffix = ":final-read-renewal-1" if completed_read else ":preflight-renewal-1"
+    return hashlib.sha256((original + suffix).encode()).hexdigest()[:24]
 
 
 def failed_observation_id(original, terminal, expected, *, dependent_reserved):

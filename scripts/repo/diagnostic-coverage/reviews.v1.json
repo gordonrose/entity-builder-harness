@@ -17,7 +17,7 @@
         {"path": "scripts/04.deploy/lifecycle/60-run/release-succession/ordinary-update.py", "sha256": "82113e154c64692d523fb806f367c190f635afc03244b11b61077a5b54c10bb6"},
         {"path": "scripts/04.deploy/lifecycle/60-run/release-succession/ordinary-update.sh", "sha256": "ee157b79b709be46c5ba81a4c8f4dacaed64a7dd1463f761589e4a78d3c3331c"},
         {"path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ordinary-update.py", "sha256": "00a06bf825c0d3cac685be7afe827afa8b115597b8dd2b18a9a72c603d214d48"},
-        {"path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/ordinary-update.py", "sha256": "1f037552540cf7b02cf1f330794165b9c6d872b792dbec391be92ff219f9a527"}
+        {"path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/ordinary-update.py", "sha256": "947c2166fe51b3eda6f79a748de64aa65f5258e6f128618c4cdbac8d6cc7b3be"}
       ]
     },
     {
@@ -728,7 +728,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py",
-          "sha256": "faa50c6e7aeaa72ff3f457d62217e8beeae0c89428f1f274e5ba69c0bef6d115"
+          "sha256": "a1ccab8b330f5d758b3559c367cf497b4f26cb25b08bf4fda42bee9a995a658d"
         },
         {
           "path": "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.sh",
@@ -994,7 +994,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-promote.py",
-          "sha256": "b3f004e9fef2bafde217fc4acfc5d81a0dbcc601c6cf7db9d8198c735dd37a4c"
+          "sha256": "7181cca50dd09bf66d63308e56ecf731699fb9c041bb56524ea0464a61bf7722"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/collect-acceptance.sh",
@@ -1042,7 +1042,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py",
-          "sha256": "23ebe82c8df2153d439ae85e923bdfdb969d777f09fd482e942e11af5d48c2a3"
+          "sha256": "da098ddcf6f93dcfcadc12de9cde791c582712a2b0f324d19d84c4a592cad4e6"
         }
       ],
       "definitions": [
@@ -1077,7 +1077,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py",
-          "sha256": "3883408c6ccee33cbc344dbcee7ae3aff9431c30a553496ad16ad65597cd6432"
+          "sha256": "72e96d120960b18c2c22b7c905b528ff4798174f2ab080ba42dfe60d13691927"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-controls.py",
@@ -1126,7 +1126,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-steps.py",
-          "sha256": "56896679face4beddd75d01ca89600bb5e2644636b70a11607583c688e5c4d17"
+          "sha256": "e149926a19ab4332f5ee3c8f07c83a2d8116c9b7ab4f1ef5dc448a71f51593aa"
         }
       ]
     },
@@ -1417,11 +1417,11 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route.py",
-          "sha256": "75b96aec6dcd92570049e7811d4976a19fa0a42b62f9586e99b4d3436a506661"
+          "sha256": "d00136a6f1c2c835624d26e55781d06457e66735a8bfb77bf3b3aeb7065940e2"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-steps.py",
-          "sha256": "9b98ac69f06a365eb3c945bc7e6eefba901b1cd47d2f49395df9f7805d07f90d"
+          "sha256": "23d06dcdb1a3573c6b47a04d00d49b384fb53a6bdaf9a0ad10371250de2889d2"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh",

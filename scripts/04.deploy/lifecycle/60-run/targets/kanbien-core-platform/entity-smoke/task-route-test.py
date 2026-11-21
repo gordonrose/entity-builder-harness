@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -801,7 +801,7 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
                     predecessor_source=prior["source_revision"], candidate_source=receipt["source_revision"], input_paths=["platform"],
                     predecessor_inputs_sha256="sha256:" + "8" * 64, candidate_inputs_sha256="sha256:" + "9" * 64,
                     changed_bindings=["recovery_inputs"])
-            predecessor_owner = SimpleNamespace(successor_parent=lambda *args: predecessor)
+            predecessor_owner = SimpleNamespace(successor_parent=lambda *args: predecessor, retained_source_evidence=lambda *args: None)
             with patch.object(M.ACCEPTANCE, "acceptance_owner", lambda: predecessor_owner), patch.object(M.C.TRANSITION, "RETIRED_PROOF_LABEL", binding["proof_label"]):
                 previous_stop = deployment["result"]["facts"]["completed_at"]
                 for stage, workload, operation in (M.ACCEPTANCE.REQUALIFICATION_PREFIX if requalify else M.ACCEPTANCE.SUCCESSOR_STEPS):
@@ -867,6 +867,7 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
                     successor_recovery_protocols(provider, live, args, binding, delivery, cache, evidence, failed_recovery=failed_recovery)
                     return
                 # Actual prerequisite owner rejects absent and stale predecessors.
+                final_renewal_protocols(provider, args, context, evidence, consumer)
                 with patch.object(M.STEPS, "observe_packet", lambda *args, **kwargs: None):
                     try: M.ACCEPTANCE.successor_prerequisites(M.dependencies(), context, args, live())
                     except M.STEPS.PrerequisiteMissing: pass
@@ -911,6 +912,52 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
             assert not (root / ".cache/entity-smoke-live" / binding["proof_label"] / "task-steps").exists()
             for path in cache.rglob("*.json"):
                 assert CANARY not in path.read_text() and F.PARAMETERS["AdministratorSecretArn"] not in path.read_text()
+
+
+def final_renewal_protocols(provider, args, context, evidence, consumer):
+    """Real task owner, immutable custody and archive, with controlled AWS/time."""
+    real_datetime, offset = datetime, timedelta(seconds=901)
+    class Later(real_datetime):
+        @classmethod
+        def now(cls, tz=None): return real_datetime.now(tz) + offset
+    original_root = M.C.ROOT
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-final-renewal-") as temporary:
+        root = Path(temporary)
+        shutil.copytree(original_root / ".cache", root / ".cache")
+        remote = copy.deepcopy(provider)
+        def live():
+            value = M.Provider(); value._invoke = lambda service, operation, parameters: remote(service, operation, **parameters)
+            return value
+        current = SimpleNamespace(**vars(args))
+        with patch.object(M.C, "ROOT", root), patch.dict(globals(), datetime=Later), \
+             patch.object(M.C, "datetime", Later), patch.object(M, "datetime", Later), \
+             patch.object(M.RUNNER, "datetime", Later), patch.object(M.RUNNER.CONTROL, "datetime", Later), \
+             patch.object(M.C.GATE, "datetime", Later):
+            cache = M.C.delivery_cache(current.proof_label, context["delivery"])
+            original_paths = list((cache / "task-steps").glob("*acceptance-*.json"))
+            original_bytes = {path: path.read_bytes() for path in original_paths}
+            before = sum(op == "run-task" for _, op, _ in remote.observed)
+            for phase in ("preflight", "operation"):
+                current.phase = phase
+                prepared = M.prepare(current, live())
+                plan = prepared["report"]["plan"]
+                assert plan["schema"] == "deploy/entity-smoke-task-plan/v4" and "final_read_renewal" in plan
+                current.approved_plan = consumer.approved_plan(prepared["report"], selection=("acceptance", "verifier", "read", phase))
+                completed = M.execute(current, live())
+                assert completed["verdict"] == "completed" and not completed["reused"]
+                archive = evidence.capture_task(M, prepared, current, live(), "final-read", {**context["binding"], "record_digest": "1" * 64})
+                old = plan["final_read_renewal"]["packet"]
+                assert archive["packet"]["reservation"]["operation_id"] != old["reservation"]["operation_id"]
+                assert M.execute(current, live())["reused"]
+                changed = copy.deepcopy(archive["packet"])
+                changed["plan"]["final_read_renewal"]["completion"]["step_sha256"] = "sha256:" + "0" * 64
+                changed["plan_sha256"] = M.C.DEPLOY.fingerprint(changed["plan"])
+                fails(lambda: M.STEPS.validate_delivery_step(M.dependencies(), changed, context["binding"], context["delivery"], current), "preflight-renewal-custody-invalid")
+            assert sum(op == "run-task" for _, op, _ in remote.observed) == before + 2
+            assert all(path.read_bytes() == payload for path, payload in original_bytes.items())
+            offset += timedelta(seconds=901)
+            fails(lambda: M.prepare(current, live()), "acceptance-final-renewal-exhausted")
+            assert sum(op == "run-task" for _, op, _ in remote.observed) == before + 2
 
 
 def renewal_protocols(provider, args, context, evidence, consumer):

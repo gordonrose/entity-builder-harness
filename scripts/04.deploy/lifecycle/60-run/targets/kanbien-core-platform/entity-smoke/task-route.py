@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -178,6 +178,8 @@ def prepare(args, provider, *, retained_source_evidence=None):
     provider = BINDING.observation_scope(provider)
     proof_stage = STEPS.stage(args)
     receipt = C.ALIGN.read_receipt(args.receipt.absolute())
+    if retained_source_evidence is None and proof_stage == "acceptance":
+        retained_source_evidence = ACCEPTANCE.acceptance_owner().retained_source_evidence(args, receipt)
     C.ALIGN.source_preflight(receipt, **({"retained_source_evidence": retained_source_evidence} if retained_source_evidence is not None else {}))
     C.local_checks()
     artifact = C.source_digest()
@@ -223,7 +225,8 @@ def prepare(args, provider, *, retained_source_evidence=None):
     declaration = C.yaml.safe_load((C.CONTRACT.parent / "declaration-contract.yml").read_text())
     deadlines = {row["id"].removeprefix("entity-smoke-"): row["completion"]["deadline_seconds"] for row in declaration["health_recovery"]["workloads"] if "completion" in row}
     context = {"report": {"plan": safe}, "book": book, "cache": cache, "binding": binding, "checked": checked,
-               "parameters": selected, "resources": resources, "artifact": artifact, "custody": receipt, "callees": callees, "completion_deadlines": deadlines, "binding_snapshot": binding_snapshot}
+               "parameters": selected, "resources": resources, "artifact": artifact, "custody": receipt, "callees": callees, "completion_deadlines": deadlines, "binding_snapshot": binding_snapshot,
+               "retained_source_evidence": retained_source_evidence}
     if delivery: context["delivery"] = delivery
     STEPS.select_preflight(dependencies(), context, args, provider)
     # Missing prior work is visible in a plan, not manufactured as success.
@@ -237,7 +240,7 @@ def prepare(args, provider, *, retained_source_evidence=None):
     safe["execution_route_available"] = (STEPS.selected(args) is not None or FEATURE.supported(args) or RECOVERY.supported(args) or CREDENTIAL.supported(args) or ACCEPTANCE.supported(args)) and prerequisites is not None
     context["prerequisites"] = prerequisites
     safe["request_sha256"] = C.DEPLOY.fingerprint(STEPS.request(dependencies(), context, args))
-    if delivery and "preflight_renewal" in safe:
+    if delivery and ("preflight_renewal" in safe or "final_read_renewal" in safe):
         STEPS.validate_renewal(dependencies(), safe, binding, delivery, args)
     selected_digest = C.DEPLOY.fingerprint(safe)
     book.bind_plan(selected_digest)
@@ -316,7 +319,8 @@ def execute(args, provider):
     def guard():
         observed = BINDING.observation_scope(provider)
         source_guard()
-        C.ALIGN.source_preflight(context["custody"])
+        C.ALIGN.source_preflight(context["custody"], **({"retained_source_evidence": context["retained_source_evidence"]}
+            if context.get("retained_source_evidence") is not None else {}))
         alignment, parameters, _ = C.ALIGN.inspect(observed, context["custody"], C.now())
         original_binding = {**C.binding_for(context["custody"], alignment), "proof_label": args.proof_label}
         current_binding = original_binding

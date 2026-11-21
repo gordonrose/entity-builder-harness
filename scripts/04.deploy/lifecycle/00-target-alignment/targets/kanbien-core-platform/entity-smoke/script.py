@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -31,6 +31,8 @@ TARGET = "infra/04.deploy/03.product/targets/kanbien-core-platform"
 SCOPE = TARGET + "/20-scopes/entity-smoke/00-declaration/declaration-contract.yml"
 CONTROLLER_DIRECTORY = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/"
 CONTROLLER_REPAIR_FILES = frozenset({
+    "AGENTS.md",
+    ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
     "scripts/04.deploy/shared/provider-adapters/aws/response.py",
     "scripts/04.deploy/shared/provider-adapters/aws/cli.py",
     "scripts/04.deploy/shared/provider-adapters/aws/tasks.py",
@@ -162,8 +164,8 @@ def retained_evidence_files(receipt, selection):
     prefix = str(Path(SCOPE).parent.parent / "30-release-evidence") + "/"
     patterns = [re.escape(prefix) + r"proof-receipts/entity-smoke-[a-f0-9]{64}\.json",
                 re.escape(prefix) + r"release-candidates/release-[a-f0-9]{24}\.yml"]
-    require(isinstance(files, dict) and len(files) == 2
-            and all(sum(isinstance(name, str) and re.fullmatch(pattern, name) is not None for name in files) == 1 for pattern in patterns), "alignment-retained-evidence-invalid")
+    require(isinstance(files, dict) and len(files) in {2, 4}
+            and all(sum(isinstance(name, str) and re.fullmatch(pattern, name) is not None for name in files) == len(files) // 2 for pattern in patterns), "alignment-retained-evidence-invalid")
     for name, expected in files.items():
         require(isinstance(expected, dict) and set(expected) == {"sha256", "size_bytes"}
                 and isinstance(expected["sha256"], str) and re.fullmatch(r"sha256:[a-f0-9]{64}", expected["sha256"]) is not None
@@ -219,7 +221,12 @@ def source_checkpoint(receipt, *, controller_revision=None):
         def controller(path):
             relative = path.removeprefix(CONTROLLER_DIRECTORY)
             return path.startswith(CONTROLLER_DIRECTORY) and "/" not in relative and relative.endswith((".py", ".sh"))
-        require(all(path.startswith("commitLogs/") or path in CONTROLLER_REPAIR_FILES or controller(path) or path == FOUNDATION for path in paths), "alignment-source-checkpoint-mismatch")
+        evidence_prefix = str(Path(SCOPE).parent.parent / "30-release-evidence") + "/"
+        def evidence_addition(path):
+            pattern = re.escape(evidence_prefix) + r"(?:proof-receipts/entity-smoke-[a-f0-9]{64}\.json|release-candidates/release-[a-f0-9]{24}\.yml)"
+            if re.fullmatch(pattern, path) is None: return False
+            return command(["git", "diff", "--no-renames", "--diff-filter=A", "--name-only", source, current, "--", path]).strip() == path
+        require(all(path.startswith("commitLogs/") or path in CONTROLLER_REPAIR_FILES or controller(path) or path == FOUNDATION or evidence_addition(path) for path in paths), "alignment-source-checkpoint-mismatch")
         if FOUNDATION in paths: foundation_sources(source, current)
         checked = [path for path in paths if not path.startswith("commitLogs/")]
         if checked:

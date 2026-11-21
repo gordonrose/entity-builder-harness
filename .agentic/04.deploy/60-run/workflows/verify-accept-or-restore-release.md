@@ -4,7 +4,7 @@ id: deploy.workflow.verify-accept-or-restore-release
 version: 11
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-11-19"
+updated_on: "2026-11-21"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -147,7 +147,8 @@ more reusable successor route.
    files for normal evidence validation and the later evidence commit;
    neither a blanket ignore nor a caller-supplied CLI allowlist is permitted.
    This classification grants no AWS authority, freshness, successful collection
-   or acceptance: promotion still reobserves the full declared live proof.
+   or acceptance. Promotion validates retained proof and rechecks the current
+   workload identity and health; unchanged historical proof is not recollected.
    The [collector](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py)
    derives the selection; the
    [source guard](../../../../scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py)

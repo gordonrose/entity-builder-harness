@@ -1,0 +1,24 @@
+schema: deploy/release-candidate/v1
+target: kanbien-core-platform
+scope: entity-smoke
+status: verified
+evidence_class: live
+release:
+  id: release-98f40c26981890ef5fac0e7d
+  source_revision: 19b0fd3ff1a36dd247de4d820742d2e68bdc9727
+  image_digest: sha256:1a42ed0bd3ad9f001fad9eae26556e73a5541a0d6cea19aa5d958a919a7eb7b8
+  configuration_contract:
+    path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+    sha256: sha256:0c9f049c6d1f76b1fe18bfc56700c180cb590e12d7c58db3134f8151cb0926ab
+  permission_contract:
+    path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
+    sha256: sha256:9cc78bcf444b08f24c47401a11d35d9d59ce22a4713f358a52d7780cb5e3fec7
+  proof_set_sha256: sha256:2e632f2b0495879511c9ba9504dbf715b3307d10115a4e763d07c48f87a33f0a
+  expected_predecessor: release-53798ef563be4ce9a8c5b2f0
+proof:
+  accepted_at: '2026-11-21T12:11:37Z'
+  receipt_count: 1
+proof_set:
+  entity-smoke-complete-proof:
+    path: proof-receipts/entity-smoke-3efeb83c4d5fefddadafc451c1dbee6b9cc698280a622eea73553382e4de7ba7.json
+    sha256: sha256:1521d63e264c667d63e9c4651c4a8813d5d654cafacb719c40ba30ec5738d1fe

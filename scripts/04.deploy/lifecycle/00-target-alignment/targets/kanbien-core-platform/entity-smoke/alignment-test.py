@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -349,6 +349,12 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
         repair = commit("controller-only correction")
         assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": repair}
         assert M.source_checkpoint(custody, controller_revision=source)["controller_revision"] == source
+        evidence = str(Path(M.SCOPE).parent.parent / "30-release-evidence")
+        write(evidence + "/proof-receipts/entity-smoke-" + "a" * 64 + ".json", "retained proof\n")
+        write(evidence + "/release-candidates/release-" + "b" * 24 + ".yml", "retained candidate\n")
+        repair = commit("retain generated evidence")
+        assert M.source_checkpoint(custody)["controller_revision"] == repair
+        M.source_preflight(custody)
         controller_spec = importlib.util.spec_from_file_location("retained_controller_fixture", old_root / M.CONTROLLER_DIRECTORY / "script.py")
         controller = importlib.util.module_from_spec(controller_spec); controller_spec.loader.exec_module(controller)
         with patch.object(controller, "ROOT", M.ROOT), patch.object(controller, "ALIGN", M), \

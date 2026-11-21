@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -47,10 +47,17 @@ def parse(arguments=None):
     return args
 
 
-def same_observation(first, second):
-    def retained(value):
-        return {**value, "runtime": {key: item for key, item in value["runtime"].items() if key != "observed_at"}}
-    return retained(first) == retained(second)
+def current_runtime(packet, provider):
+    """Recheck only the live workload; retained proof is already validated."""
+    runtime, binding = packet["runtime"], packet["binding"]
+    service = K.C.RESOURCE.service(provider, runtime["definition"], 1)
+    arns = K.C.RESOURCE.running_service_tasks(provider)
+    K.require(len(arns) == 1 and arns[0] == runtime["task"]
+              and service.get("runningCount") == 1 and service.get("pendingCount") == 0,
+              "acceptance-promotion-candidate-not-current")
+    running = K.C.RESOURCE.task(provider, arns[0], runtime["definition"], binding["image_digest"])
+    K.require(running.get("lastStatus") == "RUNNING" and running.get("healthStatus") == "HEALTHY",
+              "acceptance-promotion-candidate-not-current")
 
 
 def run(args, provider, progress):
@@ -75,10 +82,11 @@ def run(args, provider, progress):
             selected = K.resolve_inputs(K.parse(["--inputs", str(args.inputs), "--write-candidate"]))
             K.require((getattr(selected, "expected_predecessor", None) or "none") == args.expected_predecessor,
                       "acceptance-promotion-predecessor-mismatch")
-            fresh, _ = K.gather(selected, provider)
-            K.require(same_observation(candidate["packet"], fresh), "acceptance-promotion-candidate-not-current")
             K.A.fresh_final(candidate["packet"]["tasks"]["final-read"]["operation"],
                 K.final_required_after(candidate["packet"]), K.C.now())
+            custody = K.C.ALIGN.read_receipt(selected.receipt.absolute())
+            K.C.ALIGN.source_preflight(custody, retained_source_evidence=K.retained_source_evidence(selected, custody))
+            current_runtime(candidate["packet"], provider)
             rechecked = owner.candidate(args.candidate_record)
             K.require(rechecked["sha256"] == candidate["sha256"] and K.C.source_digest() == candidate["packet"]["controller_sha256"], "acceptance-promotion-candidate-changed")
         progress["effect"] = "release-custody-reconciliation-required"

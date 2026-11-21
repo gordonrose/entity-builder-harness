@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -355,8 +355,8 @@ def gather_successor(args, provider):
     requalify = predecessor["applicability"].get("mode") == "requalify"
     cleanup = None
     if requalify:
-        value = D.source(args, provider, **options)
-        cleanup = D.completed_cleanup(value, args, provider)
+        cleanup = value["acceptance_cleanup"]
+        value = value["acceptance_source"]
     deployed = C.completed_deployment(provider, value["binding"], value["parameters"], value["delivery"])
     binding = {**value["binding"], "record_digest": args.expected_digest}
     checked, tasks = {}, {}
@@ -645,19 +645,34 @@ def candidate_material(packet):
 
 
 def retained_source_evidence(args, custody=None):
-    observation = collection_cache(args, custody) / "acceptance-observation.json"
-    C.RESOURCE.CONTROL.no_symlinks(observation)
-    if not observation.exists(): return None
-    packet = read_packet(observation)
+    cache = collection_cache(args, custody)
     custody = C.ALIGN.read_receipt(args.receipt.absolute()) if custody is None else custody
-    binding = packet["binding"]
-    require(binding["source_revision"] == custody["source_revision"] and binding["image_digest"] == custody["image_digest"]
-            and packet["package"]["receipt_reference"] == custody["receipt_reference"] and binding["proof_label"] == args.proof_label
-            and binding["record_digest"] == args.expected_digest and packet["controller_sha256"] == C.source_digest(), "acceptance-source-evidence-binding-mismatch")
-    material = candidate_material(packet)
+    files = {}
+    for directory in (cache, cache / "acceptance-final-renewal-1"):
+        observation = directory / "acceptance-observation.json"
+        C.RESOURCE.CONTROL.no_symlinks(observation)
+        if not observation.exists(): continue
+        packet = read_packet(observation)
+        binding = packet["binding"]
+        require(binding["source_revision"] == custody["source_revision"] and binding["image_digest"] == custody["image_digest"]
+                and packet["package"]["receipt_reference"] == custody["receipt_reference"] and binding["proof_label"] == args.proof_label
+                and binding["record_digest"] == args.expected_digest, "acceptance-source-evidence-binding-mismatch")
+        # Historical files remain exact bytes across checked controller-only
+        # repairs; this is not current health or permission to restamp proof.
+        try: C.retained_controller({"binding": binding, "plan": {"controller_sha256": packet["controller_sha256"]}}, C.source_digest())
+        except C.InfrastructureFailure: raise CollectionFailure("acceptance-source-evidence-binding-mismatch") from None
+        material = candidate_material(packet)
+        files.update({str(path.relative_to(C.ROOT)): {"sha256": S.sha256_bytes(payload), "size_bytes": len(payload)}
+                      for path, payload in (material["proof"], material["candidate"])})
+    if not files: return None
     return {"source_revision": custody["source_revision"], "image_digest": custody["image_digest"],
-            "files": {str(path.relative_to(C.ROOT)): {"sha256": S.sha256_bytes(payload), "size_bytes": len(payload)}
-                      for path, payload in (material["proof"], material["candidate"])}}
+            "files": files}
+
+
+def observation_cache(cache):
+    completion = cache / "task-steps/verifier-read-acceptance-final-read-renewal-1-operation.completion.json"
+    C.RESOURCE.CONTROL.no_symlinks(completion)
+    return cache / "acceptance-final-renewal-1" if completion.is_file() else cache
 
 
 def retain(packet, cache, *, root=None):
@@ -679,7 +694,8 @@ def retain(packet, cache, *, root=None):
 
 
 def collect(args, provider):
-    cache = collection_cache(args)
+    proof_cache = collection_cache(args)
+    cache = observation_cache(proof_cache)
     observation = cache / "acceptance-observation.json"
     C.RESOURCE.CONTROL.no_symlinks(observation)
     if observation.exists():
@@ -693,7 +709,7 @@ def collect(args, provider):
         # Original captured observation only: no fresh provider claims or jobs.
         return retain(packet, cache), "retained"
     packet, selected_cache = gather(args, provider)
-    require(selected_cache == cache, "acceptance-proof-cache-mismatch")
+    require(selected_cache == proof_cache, "acceptance-proof-cache-mismatch")
     A.fresh_final(packet["tasks"]["final-read"]["operation"], final_required_after(packet), C.now())
     require(len(T.RUNNER.CONTROL.canonical(packet)) + 1 <= MAX_PACKET_BYTES, "acceptance-collected-proof-too-large")
     # Reserve the immutable observation before any durable copy. A lost response
@@ -744,7 +760,7 @@ def failure_details(failure, context=None):
              A.T.RUNNER.CONTROL.TaskFailure, A.C.RESOURCE.CONTROL.TaskFailure, C.RESOURCE.CONTROL.TaskFailure,
              A.T.RUNNER.EVIDENCE.EvidenceFailure, A.T.RUNNER.PREFLIGHT.PreflightFailure, A.T.RUNNER.UNREADY.UnreadyFailure,
              A.C.RESOURCE.ResourceFailure, A.C.RESOURCE.EVIDENCE.EvidenceFailure, A.T.BINDING.BindingFailure, A.C.InfrastructureFailure,
-             C.RESOURCE.EVIDENCE.EvidenceFailure, T.RUNNER.UNREADY.UnreadyFailure, S.SuccessionFailure) + D.known()
+             C.RESOURCE.EVIDENCE.EvidenceFailure, T.RUNNER.UNREADY.UnreadyFailure, T.ACCEPTANCE.AcceptanceFailure, S.SuccessionFailure) + D.known()
     condition = str(failure) if isinstance(failure, S.SuccessionFailure) and re.fullmatch(r"release-succession-[a-z0-9-]{1,100}", str(failure)) else failure.code if isinstance(failure, known) and not isinstance(failure, S.SuccessionFailure) else "acceptance-boundary-not-confirmed"
     if isinstance(failure, (CollectionFailure, CONTROL.ControlFailure, A.EvidenceFailure)) and failure.item is not None: context["item"] = failure.item
     if isinstance(failure, CONTROL.ControlFailure) and failure.field is not None: context["field"] = failure.field
@@ -753,10 +769,13 @@ def failure_details(failure, context=None):
     recovery_item = T.RECOVERY.failure_item(failure)
     if recovery_item is not None: context["item"] = recovery_item
     diagnostics = {}
+    if isinstance(failure, T.ACCEPTANCE.AcceptanceFailure):
+        context.update(failure.context)
+        diagnostics.update(failure.diagnostics)
     for owner in (T.RUNNER.EVIDENCE, C.RESOURCE.EVIDENCE, D.R.EVIDENCE, A.T.RUNNER.EVIDENCE, A.C.RESOURCE.EVIDENCE):
         if isinstance(failure, owner.EvidenceFailure):
             diagnostics = owner.failure_report(failure); break
-    reference = failure.evidence_reference if isinstance(failure, (C.InfrastructureFailure, A.C.InfrastructureFailure)) else None
+    reference = failure.evidence_reference if isinstance(failure, (C.InfrastructureFailure, A.C.InfrastructureFailure, T.ACCEPTANCE.AcceptanceFailure)) else None
     return {"condition": condition, "context": context, **diagnostics, **({"evidence_reference": reference} if reference is not None else {})}
 
 

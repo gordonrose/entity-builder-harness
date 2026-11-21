@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -563,6 +563,10 @@ def run():
             assert cleanup_calls == [args.expected_digest] and terminal_calls == [{"reservation": None}]
             assert reservation_reads == [(T.STEPS.key(args), {"fixture": "exact-final-request"})]
             assert provider_calls == [], "controlled prerequisites cannot reach AWS"
+            context["retained_source_evidence"] = {"fixture": "exact-validated-generated-files"}
+            M.prerequisites(route, context, args, no_provider)
+            assert source_calls[-1][1]["retained_source_evidence"] == context["retained_source_evidence"]
+            assert context["acceptance_source"] == selected and context["acceptance_cleanup"] == completed
             for key in ("binding", "artifact", "parameters", "resources"):
                 before_cleanup = len(cleanup_calls)
                 previous = selected[key]; selected[key] = {"wrong": True}

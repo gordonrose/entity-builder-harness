@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -78,10 +78,15 @@ def prerequisites(route, context, args, provider):
         except route.C.InfrastructureFailure as failure:
             raise owner.C.InfrastructureFailure(failure.code, failure.evidence_reference) from None
     try:
-        value = owner.source(args, observation, source_proof=False, require_terminal_jobs=False)
+        options = {"retained_source_evidence": context["retained_source_evidence"]} if context.get("retained_source_evidence") is not None else {}
+        value = owner.source(args, observation, source_proof=False, require_terminal_jobs=False, **options)
         require(value["binding"] == context["binding"] and value["artifact"] == context["artifact"]
                 and value["parameters"] == context["parameters"] and value["resources"] == context["resources"], "acceptance-current-binding-mismatch")
         completed = owner.completed_cleanup(value, args, observation)
+        # Reuse only inside this observation phase; a new submission guard calls
+        # this owner again with its own fresh provider observations.
+        context["acceptance_source"] = value
+        context["acceptance_cleanup"] = completed
     except owner.known() as failure:
         safe = {}
         if isinstance(failure, owner.TASK.BINDING.BindingFailure):

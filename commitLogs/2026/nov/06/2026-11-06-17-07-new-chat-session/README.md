@@ -7745,3 +7745,169 @@ execution of those existing controls before the one request; prior runtime
 results remain input-bound and are not replaced by this prose change. No new
 ADR is needed for this bounded incident exception. Full diagnostic improvement
 and deployment latency remain retrospective items, not claimed repaired here.
+
+### All live task phases passed; acceptance promotion blocked — 2026-11-21
+
+The approved bounded cleanup recovery was submitted once with the original
+token and exact stack ARN. Its exclusive intent and outcome are retained under
+`attempts/es-78e4b2c1d1db4d0ea42b7e6ea504dfc2-same-token-recovery-{intent,outcome}.json`
+in the existing delivery cache. The outcome records response receipt at
+2026-11-21T11:30:40Z, not deletion success by itself. AWS subsequently reported
+DELETE_COMPLETE. Ordinary original-journal reconciliation returned completed
+under original cleanup plan `c4f559858a9168c947fda480ae9c414458b2a701b670b3aa5da0d52e95bb6516`.
+`restore-cleanup-receipt.json` retains verified resource absence/deactivation,
+original successful clone read and protected source/snapshot evidence. No third
+DeleteStack request was made. The source database and source snapshot remain.
+
+Both final task phases then passed, bringing the live task count to 25/25:
+
+- Ready plan `7123b04ed49ec3aad2d7e8cc3491e1a3510f12d89c67edf2028119810ea272ec`,
+  operation `es-97756be09e3843d09871b8343fceb1b4`, receipt
+  `task-steps/verifier-read-acceptance-preflight.json`.
+- Original-record read plan
+  `cdaf04b75a48043c6debb434ad39465c88c3f65037a87ccdb7e21b5cdbb1010b`,
+  operation `es-c3091bf09a2343eeb9506d75b99f9ebd`, receipt
+  `task-steps/verifier-read-acceptance-operation.json`. Task started
+  12:01:17.233Z, stopped 12:01:42.602Z and was collected at
+  12:01:48.430616Z. This is approximately 25 seconds of task execution,
+  distinct from minutes of controller preparation and acceptance processing.
+
+Acceptance collection began immediately after final task completion. Its first
+attempt returned `aws-command-failed`, no provider mutation/no promotion. STS
+still confirmed the expected account. The underlying AWS failure was not
+established; do not attribute it to expired authentication or permissions.
+One read-only collection retry succeeded, producing live candidate
+`release-98f40c26981890ef5fac0e7d` and proof receipt
+`entity-smoke-3efeb83c4d5fefddadafc451c1dbee6b9cc698280a622eea73553382e4de7ba7.json`
+under the scope's existing `30-release-evidence` directory. Candidate validation
+returned validated, live evidence, zero findings. These results do not promote
+the accepted reference or claim current readiness.
+
+Promotion then returned `acceptance-boundary-not-confirmed`, effect not-started.
+A read-only diagnostic invocation of the existing collector, exposing only
+exception type, finite code and source-frame names/lines, confirmed the actual
+condition: `entity_smoke_task_route_acceptance.AcceptanceFailure` carrying
+`alignment-committed-source-required`. The call chain is
+`gather_successor -> task-route.prepare -> task-steps.prerequisites ->
+acceptance-steps.prerequisites` (line 94). The top-level source check receives
+the exact validated collector-file allowance, but the nested restore source
+check does not receive it. The collector's two generated files are therefore
+rejected as unrelated uncommitted source. The public acceptance reporter also
+omits this known exception family and loses the supported reason.
+
+The original final read's 900-second freshness window expired during this
+investigation. Do not restamp it, weaken freshness, overwrite the immutable
+candidate/observation, replay its completed task reservation, or manually
+promote the pointer. The retained historical final pair remains successful.
+The current generic renewal rule covers an unused expired preflight, not a
+completed final pair; the old collector-refresh exception is pinned to another
+incident and cannot be silently applied to this delivery.
+
+Required correction scope, not yet implemented: propagate the existing exact
+retained-evidence allowance through the nested source check; preserve the
+known acceptance failure at the public reporter; establish a bounded fresh
+final ready/read and collection path preserving the original successful pair
+and candidate. Review repeated collection/promotion reads against the freshness
+budget before another live attempt. Prove the real nested collector-to-promotion
+path, not only isolated allowance helpers. No business-operation, snapshot,
+clone creation or deletion replay is needed. No broader permissions are needed.
+
+Retrospective additions: another generated-evidence acceptance deadlock escaped
+the existing tests; a supported reason was hidden by a generic fallback; the
+read-only collection retry and repeated validation consumed freshness; interim
+pre-launch wording inferred too much from missing progress output; several
+diagnostic searches named nonexistent files before locating their actual owners.
+All failures remain failures. The 25 passed phases are not completed acceptance,
+unattended reliability or a ten-minute deployment result. Current accepted
+release remains the predecessor. Checkpoints are `3f2232fc` (bounded recovery
+rule) and `543d1573` (session bookkeeping); the two generated candidate/proof
+files and this session update are pending preservation/commit. No proof command
+remains running at this checkpoint. Context carry-forward is the exact failure
+chain, immutable evidence locations and incomplete acceptance boundary above.
+
+### Approved acceptance closeout repair — 2026-11-21
+
+The user explicitly requested completion. The bounded implementation reuses
+`task-route.py`, `task-steps.py`, `acceptance-steps.py`, `acceptance-route.py`
+and the shared `release-succession/proof-policy.py`; no second executor or
+workload runtime is introduced. Consumers include the ordinary-update plan
+reader, retained task validator, collector, candidate state reader and promoter.
+The provider applicability standard owns permission for one completed final
+read-only pair renewal. Original task, gate, observation and candidate bytes
+remain immutable. Runtime/image/schema/permissions are unchanged. Only the
+expired final ready/read pair needs fresh execution, not the other 23 phases.
+
+Diagnostic predicates: the nested source guard must receive the exact generated
+file allowance; changed/unrelated files still fail before effects. Known
+AcceptanceFailure conditions and safe context must reach the collector/promoter,
+while arbitrary exceptions remain private. Renewal requires successful original
+completion, expired freshness and identical operational binding; unknown/failed
+work and second renewal remain rejected. Existing task admission, controller
+ancestry and seventh-gate custody remain authoritative. Tests will exercise
+these real callers, immutable retention and tampered evidence rejection.
+
+Repeated restore source/cleanup work within one collection is removed by passing
+its already-validated result forward. New task admission still makes its fresh
+live-state checks. The collection namespace distinguishes the one renewed final
+pair so an interrupted copy can resume without overwriting the first candidate.
+Planned verification: existing acceptance/task-route fixtures, diagnostic source
+review and impact-selected checks, followed by the bounded live final pair and
+acceptance. These are planned results, not yet passed evidence. Preserve the
+user's verification-efficiency edit in AGENTS.md verbatim.
+
+Consolidated self-review: the shared proof policy supplies the deterministic
+completed-read renewal identity; existing task admission/receipt/gate owners
+remain the only execution machinery. The v4 task plan binds original completed
+read custody; v2/v3 historical plans remain readable. The ordinary-update
+consumer accepts v4 only for final verifier/read. Generated-file allowance is
+still exact bytes and at most the original plus renewed proof/candidate pair;
+unrelated, changed, staged or symlinked files remain rejected. AGENTS.md is an
+instruction-only permitted controller-repair input, not an application input.
+The existing controller-ancestor check validates old collection custody after
+repair. No metadata-only change grants new runtime or AWS permissions.
+
+Reviewed failure propagation through acceptance prerequisites and the public
+collector. Existing partial diagnostic adoption/debt is retained; only changed
+reviewed source hashes are refreshed. Counterexamples cover dropped allowance,
+tampered original completion, changed request/configuration, extra generated
+files, source drift, unknown exception privacy, replay and second renewal.
+Acceptance-control and extended acceptance-route exploratory fixtures passed;
+task-route fixture remains running. One fixture initially omitted its fake
+restore owner's TASK/R interface and failed; the fixture was corrected and
+rerun successfully. No live proof was manufactured. AWS STS separately reports
+expired SSO with refresh failure; the user was asked to sign in while local
+verification continues. Polling cannot extend the SSO lifetime.
+
+Closeout checkpoint update: renewed AWS identity was verified in account
+337159794548. The registered acceptance-controls, composition suite and
+infrastructure-route checks passed; the composition aggregate passed using its
+members. Ordinary-update regression is still running at this writing and must
+pass before using the checkpoint. Preparation passed against the user's latest
+AGENTS.md bytes, which are preserved unchanged. The direct task-route fixture
+and diagnostic coverage also passed. No fresh final task has been launched.
+The remaining sequence is the checked controller checkpoint, one final
+read-only ready/read pair, collection and acceptance, then durable evidence
+closeout. No new image, migration, permission change or replay of the other
+23 live phases is required. This correction follows existing controller and
+acceptance ownership; no additional architecture decision/ADR is introduced.
+
+Follow-on simplification requested by the user: promotion reuses the candidate
+validator's retained evidence and rechecks only current workload identity and
+health, source custody and freshness. The promotion consumer and its existing
+controlled-provider fixture own this change. Missing, changed or unhealthy
+runtime and changed source must still reject promotion before an effect; unknown
+provider failures remain uncertain. The collector and historical proof formats
+remain the evidence owners. No additional provider mutation is introduced.
+The commit gate also selected the original untracked proof files, while the
+source checkpoint disallowed committing them. Alignment now permits only
+additions in the existing generated evidence locations; changed application
+and configuration inputs still reject the controller-only checkpoint. Existing
+proof and candidate validation remains responsible for their content. The
+alignment fixture covers evidence additions and existing source-rejection cases.
+An initial registered acceptance rerun reported input changed during execution
+because alignment was edited concurrently; that run is not passing evidence.
+On stable inputs, the actual alignment fixture and acceptance route fixture
+passed, as did registered acceptance-controls in
+`.cache/test-runs/20261121T180659Z-e96f2964b2594143b45aefe10bcb01a7/report.json`.
+The user requested a 15-minute target at 18:00 UTC; these results do not
+establish acceptance or a successful deployment-time budget.

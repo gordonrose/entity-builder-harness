@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-21"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -333,7 +333,8 @@ def promotion_protocols(base):
     now = datetime.now(timezone.utc)
     stamp = lambda seconds: (now + timedelta(seconds=seconds)).isoformat()
     packet = {"controller_sha256": "sha256:" + "a" * 64,
-        "runtime": {"task": "controlled-runtime", "observed_at": stamp(-1)},
+        "runtime": {"task": "controlled-runtime", "definition": "controlled-definition", "observed_at": stamp(-1)},
+        "binding": {"image_digest": "sha256:" + "c" * 64},
         "controls": {"restore-cleanup": {"facts": {"observed_at": stamp(-10)}}},
         "tasks": {"final-read": {"operation": {"name": "final-read", "phase": "operation", "packet": {"receipt": {
             "task": {"created_at": stamp(-5), "stopped_at": stamp(-4)}, "collected_at": stamp(-3)}}}}}}
@@ -345,30 +346,24 @@ def promotion_protocols(base):
         def __init__(self): self.root = root
         def candidate(self, path): calls.append("candidate"); return candidate
         def current(self): calls.append("checked-current"); return {"reference": {"release_id": identifier}}
-    fresh = {"value": copy.deepcopy(packet), "failure": None}
-    fresh["value"]["runtime"]["observed_at"] = stamp(0)
-    def gather(args, provider):
-        calls.append("gather")
-        if fresh["failure"] is not None: raise fresh["failure"]
-        return fresh["value"], root
+    runtime = {"task": "controlled-runtime", "healthy": True}
     def promote(*args, **values):
         calls.append("release-promotion"); assert values["expected_predecessor"] == "none"
         return "promoted", identifier
     def scope(*args, **values): calls.append("scope-promotion"); return {"verdict": "promoted"}
     args = SimpleNamespace(inputs=base / "controlled-input.yml", candidate_record=candidate["path"],
         scope_contract=K.C.CONTRACT.parent / "declaration-contract.yml", expected_predecessor="none")
-    with patch.object(P.STATE, "State", CheckedState), patch.object(K, "resolve_inputs", return_value=SimpleNamespace()), patch.object(K, "gather", side_effect=gather), patch.object(K.C, "source_digest", return_value=packet["controller_sha256"]), patch.object(S, "current", return_value=None), patch.object(S, "promote", side_effect=promote), patch.object(K, "module", return_value=SimpleNamespace(promote=scope)):
+    with patch.object(P.STATE, "State", CheckedState), patch.object(K, "resolve_inputs", return_value=SimpleNamespace(receipt=base / "receipt")), patch.object(K.C.ALIGN, "read_receipt", return_value={}), patch.object(K.C.ALIGN, "source_preflight"), patch.object(K, "retained_source_evidence", return_value=None), patch.object(K, "gather", side_effect=AssertionError("promotion must reuse retained proof")), patch.object(K.C.RESOURCE, "service", return_value={"runningCount": 1, "pendingCount": 0}), patch.object(K.C.RESOURCE, "running_service_tasks", side_effect=lambda provider: [runtime["task"]]), patch.object(K.C.RESOURCE, "task", side_effect=lambda *a: {"lastStatus": "RUNNING", "healthStatus": "HEALTHY" if runtime["healthy"] else "UNHEALTHY"}), patch.object(K.C, "source_digest", return_value=packet["controller_sha256"]), patch.object(S, "current", return_value=None), patch.object(S, "promote", side_effect=promote), patch.object(K, "module", return_value=SimpleNamespace(promote=scope)):
         progress = {"effect": "not-started"}
         assert P.run(args, object(), progress)["current_readiness"] is True
-        assert calls.count("gather") == calls.count("release-promotion") == calls.count("scope-promotion") == 1
-        calls.clear(); fresh["value"]["runtime"]["task"] = "different-current-task"
+        assert calls.count("release-promotion") == calls.count("scope-promotion") == 1
+        calls.clear(); runtime["task"] = "different-current-task"
         rejection(lambda: P.run(args, object(), {}), K.CollectionFailure, "acceptance-promotion-candidate-not-current")
         assert "release-promotion" not in calls and "scope-promotion" not in calls
-        fresh["value"] = copy.deepcopy(packet); calls.clear()
-        fresh["failure"] = K.CollectionFailure("restore-cleanup-completion-required")
-        rejection(lambda: P.run(args, object(), {}), K.CollectionFailure, "restore-cleanup-completion-required")
+        runtime["task"] = "controlled-runtime"; runtime["healthy"] = False; calls.clear()
+        rejection(lambda: P.run(args, object(), {}), K.CollectionFailure, "acceptance-promotion-candidate-not-current")
         assert "release-promotion" not in calls and "scope-promotion" not in calls
-        fresh["failure"] = None; calls.clear()
+        runtime["healthy"] = True; calls.clear()
         with patch.object(K.C, "source_digest", return_value="sha256:" + "0" * 64):
             rejection(lambda: P.run(args, object(), {}), K.CollectionFailure, "acceptance-promotion-candidate-changed")
         assert "release-promotion" not in calls
@@ -459,6 +454,25 @@ def source_boundary_protocols(base):
         assert proof.read_bytes() == material["proof"][1] and candidate.read_bytes() == material["candidate"][1]
         rejection(lambda: M.source_preflight(custody), M.AlignmentFailure, "alignment-committed-source-required")
         M.source_preflight(custody, retained_source_evidence=K.retained_source_evidence(args, custody))
+        # Real nested acceptance prerequisite -> committed-source guard, with
+        # controlled restore work after that boundary (no AWS or acceptance).
+        nested = K.T.ACCEPTANCE
+        class SourceReached(Exception): pass
+        def nested_source(values, provider, **options):
+            M.source_preflight(custody, **{key: value for key, value in options.items() if key == "retained_source_evidence"})
+            raise SourceReached()
+        owner = SimpleNamespace(C=K.D.C, TASK=K.D.TASK, R=K.D.R, source=nested_source, known=lambda: (M.AlignmentFailure,))
+        nested_args = K.selected_args(args, "acceptance", "verifier", "read")
+        with patch.object(nested, "restore_owner", return_value=owner):
+            try: nested.prerequisites(K.T.dependencies(), {"retained_source_evidence": selection}, nested_args, object())
+            except SourceReached: pass
+            else: raise AssertionError("nested source guard did not preserve generated allowance")
+            with patch.object(K, "collect", side_effect=lambda *a: nested.prerequisites(K.T.dependencies(), {}, nested_args, object())), \
+                 patch.object(sys, "argv", ["acceptance-route.py", "--receipt", str(args.receipt), "--proof-label", args.proof_label,
+                     "--expected-digest", args.expected_digest, "--write-candidate"]):
+                status, result, raw = report(K.main)
+            assert status == 1 and result["condition"] == "alignment-committed-source-required"
+            assert result["effect"] == "no-provider-mutation-no-scope-promotion" and "private-source-boundary-canary" not in raw
         # Keep every real source-guard link in the fresh gather path. Stop at
         # its first provider observer, after real Git validation has passed.
         class AfterSource(Exception): pass
@@ -490,6 +504,27 @@ def source_boundary_protocols(base):
             fresh, returned_cache = K.gather(args, object())
         assert returned_cache == cache and fresh == packet
         assert source_call.call_args.kwargs == {"retained_source_evidence": selection}
+        # An independently completed renewed pair selects separate collection
+        # storage. Task custody is exercised by the actual task-route fixture;
+        # this fixture controls only that selector and collection observations.
+        renewed = copy.deepcopy(packet)
+        renewed["runtime"]["observed_at"] = (datetime.fromisoformat(packet["runtime"]["observed_at"].replace("Z", "+00:00")) + timedelta(seconds=1)).isoformat()
+        completion = cache / "task-steps/verifier-read-acceptance-final-read-renewal-1-operation.completion.json"
+        completion.parent.mkdir(parents=True, exist_ok=True); completion.write_text("{}")
+        with patch.object(K, "gather", return_value=(renewed, cache)), patch.object(K.C, "now", return_value=renewed["runtime"]["observed_at"]):
+            renewed_marker, verdict = K.collect(args, object())
+        assert verdict == "collected" and renewed_marker["candidate_record"] != marker["candidate_record"]
+        combined = K.retained_source_evidence(args, custody)
+        assert len(combined["files"]) == 4
+        M.source_preflight(custody, retained_source_evidence=combined)
+        with patch.object(K, "gather", side_effect=AssertionError("retained renewed collection must not reobserve")):
+            assert K.collect(args, object()) == (renewed_marker, "retained")
+        assert observation.read_bytes() == original_observation and candidate.read_bytes() == material["candidate"][1]
+        renewed_material = K.candidate_material(renewed)
+        for key in ("proof", "candidate"): renewed_material[key][0].unlink()
+        for name in ("acceptance-observation.json", "acceptance-collection.json"):
+            (cache / "acceptance-final-renewal-1" / name).unlink()
+        completion.unlink()
         for path in (proof, candidate):
             original = path.read_bytes()
             for changed in (b"x" * len(original), original + b"\n"):
@@ -516,7 +551,8 @@ def source_boundary_protocols(base):
         proof.unlink(); proof.write_bytes(original)
         for field, value in (("source_revision", "0" * 40), ("image_digest", "sha256:" + "0" * 64), ("receipt_reference", "wrong-receipt")):
             rejection(lambda: K.retained_source_evidence(args, {**custody, field: value}), K.CollectionFailure, "acceptance-source-evidence-binding-mismatch")
-        with patch.object(K.C, "source_digest", return_value="sha256:" + "0" * 64):
+        with patch.object(K.C, "source_digest", return_value="sha256:" + "0" * 64), \
+             patch.object(K.C, "retained_controller", side_effect=K.C.InfrastructureFailure("task-step-completion-artifacts-mismatch")):
             rejection(lambda: K.retained_source_evidence(args, custody), K.CollectionFailure, "acceptance-source-evidence-binding-mismatch")
         invalid = copy.deepcopy(selection)
         descriptor = next(iter(invalid["files"].values()))
