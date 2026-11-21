@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-21T02:01:50Z
-latest_commit_sha: 77cd94ec
-chat_duration: 1241683s (14:08:54:43)
+latest_commit_at_utc: 2026-11-21T11:19:04Z
+latest_commit_sha: 3f2232fc
+chat_duration: 1275117s (14:18:11:57)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3116,6 +3116,17 @@ Summary: Approved one bounded terminal-observation replacement; preserved origin
 
 ADR impact: No new architecture: extends existing proof policy, task journal and checked controller history.
 
+
+### 2026-11-21T11:19:04Z - Commit recorded
+
+Commit: `3f2232fc`
+
+Message: fix(deploy): govern bounded same-token restore cleanup recovery
+
+Summary: Approved exact-token cleanup procedure and 23/25 live progress recorded. Nine local checks passed, six executed and three reused, with no findings; report .cache/test-runs/20261121T111756Z-e7eee78cd2c04a02ad49da7bc7cda134/report.json. Commit gate passed. No image/runtime change or AWS resubmission yet.
+
+ADR impact: No new ADR: bounded incident recovery using existing owners.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3452,6 +3463,13 @@ ADR impact: No new architecture: extends existing proof policy, task journal and
   Summary: Approved one bounded terminal-observation replacement; preserved original negative evidence, completed controller history, source image and no-replay semantics. Registered focused checks and 67 impact-selected local checks passed; live proof remains 21/25 pending replacement clone probe/read, cleanup and final acceptance.
   ADR impact: No new architecture: extends existing proof policy, task journal and checked controller history.
 
+
+- Commit: `3f2232fc`
+  Time UTC: 2026-11-21T11:19:04Z
+  Message: fix(deploy): govern bounded same-token restore cleanup recovery
+  Summary: Approved exact-token cleanup procedure and 23/25 live progress recorded. Nine local checks passed, six executed and three reused, with no findings; report .cache/test-runs/20261121T111756Z-e7eee78cd2c04a02ad49da7bc7cda134/report.json. Commit gate passed. No image/runtime change or AWS resubmission yet.
+  ADR impact: No new ADR: bounded incident recovery using existing owners.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3465,9 +3483,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-21T02:01:50Z
-Latest commit SHA: 77cd94ec
-Chat duration: 1241683s (14:08:54:43)
+Latest commit at UTC: 2026-11-21T11:19:04Z
+Latest commit SHA: 3f2232fc
+Chat duration: 1275117s (14:18:11:57)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
