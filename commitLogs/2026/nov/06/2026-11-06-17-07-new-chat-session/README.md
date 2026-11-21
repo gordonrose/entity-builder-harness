@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-21T11:19:04Z
-latest_commit_sha: 3f2232fc
-chat_duration: 1275117s (14:18:11:57)
+latest_commit_at_utc: 2026-11-21T18:45:43Z
+latest_commit_sha: e0a8d2b1
+chat_duration: 1301916s (15:01:38:36)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3127,6 +3127,39 @@ Summary: Approved exact-token cleanup procedure and 23/25 live progress recorded
 
 ADR impact: No new ADR: bounded incident recovery using existing owners.
 
+
+### 2026-11-21T18:45:43Z - Commit recorded
+
+Commit: `2d53f461`
+
+Message: Fix entity smoke acceptance handoff
+
+Summary: Preserved collected live evidence and repaired acceptance handoff.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-11-21T18:45:43Z - Commit recorded
+
+Commit: `8a39ed56`
+
+Message: Remove repeated suite from task planning
+
+Summary: Removed repeated full suite from task planning.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-11-21T18:45:43Z - Commit recorded
+
+Commit: `e0a8d2b1`
+
+Message: Reuse retained acceptance proof without repeating read
+
+Summary: Removed redundant read renewal and accepted retained evidence with live identity checks.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3470,6 +3503,27 @@ ADR impact: No new ADR: bounded incident recovery using existing owners.
   Summary: Approved exact-token cleanup procedure and 23/25 live progress recorded. Nine local checks passed, six executed and three reused, with no findings; report .cache/test-runs/20261121T111756Z-e7eee78cd2c04a02ad49da7bc7cda134/report.json. Commit gate passed. No image/runtime change or AWS resubmission yet.
   ADR impact: No new ADR: bounded incident recovery using existing owners.
 
+
+- Commit: `2d53f461`
+  Time UTC: 2026-11-21T18:45:43Z
+  Message: Fix entity smoke acceptance handoff
+  Summary: Preserved collected live evidence and repaired acceptance handoff.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `8a39ed56`
+  Time UTC: 2026-11-21T18:45:43Z
+  Message: Remove repeated suite from task planning
+  Summary: Removed repeated full suite from task planning.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `e0a8d2b1`
+  Time UTC: 2026-11-21T18:45:43Z
+  Message: Reuse retained acceptance proof without repeating read
+  Summary: Removed redundant read renewal and accepted retained evidence with live identity checks.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -3483,9 +3537,9 @@ Reason: This implementation applies the existing PostgreSQL identity-separation 
 ## Session Metrics
 
 Raised at UTC: 2026-11-06T17:07:07Z
-Latest commit at UTC: 2026-11-21T11:19:04Z
-Latest commit SHA: 3f2232fc
-Chat duration: 1275117s (14:18:11:57)
+Latest commit at UTC: 2026-11-21T18:45:43Z
+Latest commit SHA: e0a8d2b1
+Chat duration: 1301916s (15:01:38:36)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -7943,3 +7997,23 @@ No such renewed task or receipt was created. The connected acceptance fixture
 checks an aged result, changed task, unhealthy task and changed database before
 promotion; the focused alignment fixture and diagnostic adoption check passed.
 The original 25 task results and historical candidate remain unchanged.
+
+### Acceptance completed
+
+The user directed reuse of the completed read without another AWS task.
+Promotion accepted `release-98f40c26981890ef5fac0e7d` using the retained live
+candidate and read-only task/database identity observations; current-state
+validation returned the same release with zero findings. The operation updated
+only local release custody; it made no provider mutation. The retained read
+proves the database operation at its recorded time, not current database
+readiness or absence of out-of-band permission changes. The source database and
+source snapshot remain protected; disposable clone cleanup had already passed.
+
+Local checkpoints `2d53f461`, `8a39ed56` and `e0a8d2b1` record acceptance
+handoff repair, removal of the repeated planner suite, and removal of the
+unnecessary read-renewal path respectively. The earlier 15-minute closeout
+target was missed; no ten-minute delivery or unattended operation claim is
+established. The gate selected 114 then 110 entries for small corrections and
+one run failed solely because metadata preparation changed a reviewed hash.
+Those costs, the duplicate collection, unnecessary renewal rule, lost error,
+extra approval interruptions and repeated checks remain retrospective findings.

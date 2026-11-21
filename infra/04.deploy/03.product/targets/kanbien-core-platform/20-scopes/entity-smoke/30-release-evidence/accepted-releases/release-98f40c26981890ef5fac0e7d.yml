@@ -1,0 +1,21 @@
+schema: deploy/accepted-release-history/v1
+target: kanbien-core-platform
+scope: entity-smoke
+status: accepted
+release:
+  id: release-98f40c26981890ef5fac0e7d
+  source_revision: 19b0fd3ff1a36dd247de4d820742d2e68bdc9727
+  image_digest: sha256:1a42ed0bd3ad9f001fad9eae26556e73a5541a0d6cea19aa5d958a919a7eb7b8
+  contract_revisions:
+    configuration:
+      path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+      sha256: sha256:0c9f049c6d1f76b1fe18bfc56700c180cb590e12d7c58db3134f8151cb0926ab
+    permissions:
+      path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
+      sha256: sha256:9cc78bcf444b08f24c47401a11d35d9d59ce22a4713f358a52d7780cb5e3fec7
+  proof_set_sha256: sha256:2e632f2b0495879511c9ba9504dbf715b3307d10115a4e763d07c48f87a33f0a
+predecessor: release-53798ef563be4ce9a8c5b2f0
+evidence:
+  path: release-candidates/release-98f40c26981890ef5fac0e7d.yml
+  sha256: sha256:d4e2555c42c17cecb15b5b77b6b0899566467d3c3f16ea26d0ee7bd663eb450f
+  kind: verified-release-candidate
