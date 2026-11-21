@@ -7637,3 +7637,93 @@ failed probe or earlier credential-recovery operations. Preserve source database
 source snapshot, other baselines and staging. Authentication—not another approval
 or source repair—is the current external blocker. Local success is not live
 acceptance, and this supervised run does not establish the delivery-time target.
+
+### Renewed access; clone proof passed; cleanup uncertainty — 2026-11-21
+
+The user confirmed sign-in and requested that mistakes, delays and missed checks
+continue to be recorded for a full retrospective. STS confirmed account
+337159794548. No application/image/controller source changed during this resume.
+
+The replacement clone connection probe passed under plan
+`sha256:61ee35c253f9c0f34e731007bda0f909666dce76b2a5986182d4fae996657b40`,
+original recovery label `entity-smoke-ba0c00ec23b728547707e6ac`, operation
+`es-1613c5475a8e4665bbd1ebbb47e6bea3`. Its completed receipt is
+`task-steps/restore-reader-restore-read-isolated-restore-connection-recovery-1-terminal-observation-recovery-1-preflight.json`
+under the existing delivery cache. The original failed probe and negative
+evidence remain intact. This success does not retrospectively establish the
+cause of that original failure.
+
+The immediately following clone original-record read also passed, under plan
+`sha256:7f42df8a4a74954ad57fc1412f809234868343da3150df7b02774f5126b04a8f`,
+task `a44334a169f5485ab2a3dee8059f657c`, receipt
+`task-steps/restore-reader-restore-read-isolated-restore-operation.json`.
+It confirmed the original expected digest. Progress is now 23/25 live task
+phases, not accepted delivery. Final verifier readiness/read, owned cleanup and
+acceptance collection/validation/promotion remain incomplete.
+
+Cleanup plan
+`sha256:c4f559858a9168c947fda480ae9c414458b2a701b670b3aa5da0d52e95bb6516`
+binds the original eight-resource clone, source/snapshot identity, successful
+reader and resource hash
+`sha256:25c1264fde274dc49167a0efe7b9ecc8c17d967dad1545aec2bfd987120011b7`.
+The exact stack is
+`arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-core-platform-entity-smoke-restore-104261dd18363aa576a5600c/ef43c330-e53c-11f1-bc16-02ffd692b10d`.
+Execution reserved `es-78e4b2c1d1db4d0ea42b7e6ea504dfc2` at
+2026-11-21T10:07:16.997895Z, with request hash
+`92254bfbef9b16596d103ccd7bba34be66a48c9e9432d1d10432aa24f105c988`.
+It returned `restore-cleanup-submission-uncertain-reconcile-only`,
+`provider_condition=aws-command-failed`, effect `unknown-reconcile-only`.
+The same-plan existing-journal reconciliation made no second submission and
+returned `restore-cleanup-not-confirmed`. Direct read-only observation showed
+CREATE_COMPLETE and termination protection false. Two time-bounded CloudTrail
+lookups and a latest-event lookup found no matching DeleteStack event; absence
+is not proof of non-submission. No pre-existing AWS CLI history database was
+available to recover the underlying response. No resource is claimed deleted.
+
+Failure boundary: the CLI adapter maps unrecognised stderr to the generic finite
+condition and does not retain the underlying safe provider reason for later
+reconciliation. The restore wrapper preserves that generic condition but cannot
+determine whether the request reached AWS. Cause remains unknown; neither
+permissions nor transport failure is established. This missing diagnostic and
+the unsupported recovery path belong in the retrospective. Do not replay the
+request, reset the journal or manufacture a cleanup receipt.
+
+AWS's DeleteStack API documents retrying the identical request with its original
+ClientRequestToken to ensure receipt, rather than selecting another stack with
+the same name:
+https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeleteStack.html
+The current harness provides an analogous bounded ECS procedure but no adopted
+DeleteStack recovery procedure. A narrow rule decision was requested: one
+identical request for this exact stack ARN and original token, an exclusive
+recovery intent, preserved original evidence and normal verified completion.
+No additional deletion targets, permission changes or new logical operation
+were requested. Pending that decision, only read-only reconciliation is allowed.
+
+Retrospective carry-forward: plan and execute each repeat live validation;
+clone-read planning took approximately five minutes and execution approximately
+nine minutes, with no intervening regression run. Cleanup also spent several
+minutes before submission. Measure these separately from task runtime and AWS
+deletion time; no deletion processing time is established here. Some interim
+updates inferred pre-launch state from file-list probes too strongly: lack of
+a listed reservation did not prove no launch. Completed controller receipts and
+provider observations, not those file-list probes, establish the outcomes above.
+A missing jq binary and two nonexistent diagnostic search paths caused harmless
+read-only command failures; JSON/source inspection continued with available
+tools. None of these checks mutated AWS or justify a passed proof claim.
+Preserve these mistakes as well as successes. The resumed run still does not
+meet the ten-minute target or establish unattended reliability.
+
+The user approved the bounded same-token cleanup recovery and completion.
+Implementation scope is the existing provider applicability standard plus this
+session record; reuse existing restore preparation, ownership readers, GateBook,
+Provider guard and exclusive writer. No second controller, retry engine, runtime
+code, image or diagnostic vocabulary is added. The procedure is operator-driven,
+not an unattended capability. The parent reviewed the exact token/ARN/request,
+one exclusive intent, first-six gates, protected resources and observation-only
+completion against the existing runner and AWS API documentation. Ordinary
+no-replay behavior remains unchanged outside this explicitly named request.
+Proportionate verification is governed preparation/commit checks and read-only
+execution of those existing controls before the one request; prior runtime
+results remain input-bound and are not replaced by this prose change. No new
+ADR is needed for this bounded incident exception. Full diagnostic improvement
+and deployment latency remain retrospective items, not claimed repaired here.

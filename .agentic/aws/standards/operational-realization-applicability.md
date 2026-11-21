@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 19
+version: 20
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-21"
@@ -417,6 +417,43 @@ write, database replacement or cleanup before successful original-record read.
 The completed snapshot and clone deployment retain their exact original
 controller/receipt/gate hashes through checked controller-only Git ancestry;
 all request, incarnation, plan, graph and live ownership checks remain required.
+
+### Bounded same-token restore-cleanup delivery recovery
+
+For the expressly approved cleanup recovery of 2026-11-21 only, permit one
+additional delivery of the original DeleteStack request reserved as
+`es-78e4b2c1d1db4d0ea42b7e6ea504dfc2`, under plan
+`sha256:c4f559858a9168c947fda480ae9c414458b2a701b670b3aa5da0d52e95bb6516`.
+Use the full original stack ARN from that plan and the original operation ID as
+ClientRequestToken. No new reservation, token, stack-name lookup, RoleARN,
+retention override or force-delete option is permitted.
+
+This bounded operator procedure uses the documented
+[DeleteStack request-token recovery](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeleteStack.html),
+reviewed 2026-11-21. It does not infer non-submission from missing audit events
+or unchanged stack status. The original uncertain result remains uncertain.
+It distinguishes delivery of the same provider-bound request from a new logical
+deletion operation; other no-replay rules and historical exceptions are unchanged.
+
+<!-- deterministic-check: allow reason="this expressly approved one-operation operator procedure reuses restore-route preparation, GateBook, Provider and exclusive evidence writer; it does not introduce an unattended retry engine" -->
+First run the existing restore-route preparation without mutation and require
+the exact original plan, request, journal, controller, successful clone reader
+and source/snapshot bindings. Recheck the original live stack and eight owned
+resource identities through the existing deployment and binding readers.
+Require CREATE_COMPLETE, no termination or database deletion protection, no
+running reader and all existing first-six gates. If deletion has already
+started or completed, use observation only. Do not broaden ownership or effects.
+
+Before the additional request, exclusively retain a recovery intent beside the
+original journal, binding its digest, exact request/token and plan. An existing
+intent permits observation only, even if the response is lost. Use the existing
+restore Provider capability, exact payload check and fresh before-I/O guard;
+send once, without SDK/CLI mutation retries, and retain its actual safe outcome.
+Do not replace original journals, plans, receipts or failed observations.
+Then use the ordinary existing-journal cleanup controller to observe verified
+absence and retain normal completion evidence. A successful HTTP response alone
+does not pass cleanup or acceptance. No new runtime/image, permissions, resources,
+business writes or source-database/snapshot deletion are authorized.
 
 ### Unsubmitted restore-cleanup plan correction
 
