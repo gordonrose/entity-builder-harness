@@ -7596,3 +7596,44 @@ the upstream login's lifetime. No new live probe has launched. Next: approved
 local controller checkpoint, one replacement clone probe, original clone read,
 owned cleanup, final readiness/read and collector/promotion. Existing candidate
 image, source snapshot, database, other baselines and staging remain unchanged.
+
+### Verified checkpoint; AWS authentication blocked — 2026-11-21 02:09 UTC
+
+Repair checkpoint `77cd94ec` and session checkpoint `5f28404d` are local and
+committed. The mandatory commit gate passed. No push or application-image
+change was required for this controller-only repair.
+
+The resumed planner first rejected its local preparation. Direct selector
+inspection identified `secret-dependency-declaration-regression`, not a failing
+test or changed application. The initial assumption that bookkeeping alone
+caused it was incorrect: impact selection and the controller's explicit check
+selection produce different scope-input identities. Normal lifecycle preparation
+was completed for the fourteen committed repair paths plus the unchanged
+entity-smoke `00-declaration/declaration-contract.yml`. The existing selector's
+documented `--record-preparation --task-paths ... --checks entity-smoke-composition
+secret-dependency-declaration-regression` mode then recorded the exact live-stage
+selection, preserving lifecycle evidence. All four selected units had matching
+passing results. No selector, declaration, gate or test was changed or bypassed.
+
+Planning then reached AWS but returned `aws-command-failed`, effect
+`not-started`. Independent `aws sts get-caller-identity --profile kanbien-dev
+--region eu-west-1` returned: token expired and refresh failed. Earlier periodic
+STS checks had succeeded, including during integration verification; API traffic
+does not extend the underlying sign-in session. One read-only plan retry also
+returned before effects. No replacement RunTask reservation or launch occurred.
+Browser reauthentication was requested through the existing terminal command
+`aws sso login --profile kanbien-dev`; no login process is running on the user's
+behalf and no proof command remains running.
+
+Live progress remains 21/25. Resume the same candidate/publication, delivery
+namespace, failed-observation digest and deterministic replacement label recorded
+above. The next command is `restore-reader.sh` with the existing common receipt,
+proof-label, predecessor and expected-digest arguments, `--phase preflight
+--mode plan`; review the resulting bounded plan, execute once, then immediately
+plan/execute the original clone read. After successful readback, remove only the
+positively owned disposable clone, run final verifier ready/read, then collect,
+validate and promote acceptance. Do not replay snapshot/restore, the original
+failed probe or earlier credential-recovery operations. Preserve source database,
+source snapshot, other baselines and staging. Authentication—not another approval
+or source repair—is the current external blocker. Local success is not live
+acceptance, and this supervised run does not establish the delivery-time target.
