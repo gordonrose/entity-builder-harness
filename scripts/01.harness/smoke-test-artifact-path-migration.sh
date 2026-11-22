@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.smoke-test-artifact-path-migration
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-22"
 #   layer: 01.harness
 #   domain: migration
 #   disciplines:
@@ -44,8 +44,10 @@ git -C "$REPO" init -q
 
 mkdir -p \
   "$REPO/.agentic/01.harness/workflows" \
+  "$REPO/.agentic/02.rag-rulebook/recognition-sources/generated" \
   "$REPO/.agentic/02.rag-rulebook/retirements/example" \
   "$REPO/.agentic/harness-renamed/plans/migration" \
+  "$REPO/infra/04.deploy/03.product/targets/example/20-scopes/example/30-release-evidence/proof-receipts" \
   "$REPO/scripts/01.harness" \
   "$REPO/docs/00.chat/bootstrap" \
   "$REPO/commitLogs/2026/jun/20/example"
@@ -113,6 +115,14 @@ retired_artifacts:
   - path: .agentic/01.harness
 EOF
 
+  cat > .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml <<'EOF'
+historical_evidence_path: .agentic/01.harness
+EOF
+
+  cat > infra/04.deploy/03.product/targets/example/20-scopes/example/30-release-evidence/proof-receipts/accepted.json <<'EOF'
+{"historical_source_path":".agentic/01.harness"}
+EOF
+
   if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/plan-missing.out" 2>"$TMP_ROOT/plan-missing.err"; then
     fail "checker allowed migration-plan old-path references without an explicit plan path"
   fi
@@ -122,6 +132,34 @@ EOF
     .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/plan.out"
   grep -q '^plan_path=.agentic/harness-renamed/plans/migration/example.md$' "$TMP_ROOT/plan.out" || fail "checker did not report plan path"
   grep -q '^active_old_refs=none$' "$TMP_ROOT/plan.out" || fail "checker did not ignore explicit plan evidence"
+
+  cat > infra/04.deploy/03.product/targets/example/20-scopes/example/30-release-evidence/current-accepted-release.yml <<'EOF'
+current_source_path: .agentic/01.harness
+EOF
+  if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" \
+    --plan .agentic/harness-renamed/plans/migration/example.md \
+    .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/current-release.out" 2>"$TMP_ROOT/current-release.err"; then
+    fail "checker treated the active current-release pointer as historical evidence"
+  fi
+  grep -q '^infra/04.deploy/03.product/targets/example/20-scopes/example/30-release-evidence/current-accepted-release.yml:1$' "$TMP_ROOT/current-release.err" || fail "checker dropped current-release finding location"
+  sed -i 's#\.agentic/01\.harness#\.agentic/harness-renamed#g' infra/04.deploy/03.product/targets/example/20-scopes/example/30-release-evidence/current-accepted-release.yml
+
+  cat > scripts/01.harness/active-old-path.sh <<'EOF'
+#!/usr/bin/env bash
+echo .agentic/01.harness
+EOF
+  if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" \
+    --plan .agentic/harness-renamed/plans/migration/example.md \
+    .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/active-script.out" 2>"$TMP_ROOT/active-script.err"; then
+    fail "checker treated an active script reference as historical evidence"
+  fi
+  grep -q '^scripts/01.harness/active-old-path.sh:2$' "$TMP_ROOT/active-script.err" || fail "checker dropped active script finding location"
+  sed -i 's#\.agentic/01\.harness#\.agentic/harness-renamed#g' scripts/01.harness/active-old-path.sh
+
+  bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" \
+    --plan .agentic/harness-renamed/plans/migration/example.md \
+    .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/historical.out"
+  grep -q '^active_old_refs=none$' "$TMP_ROOT/historical.out" || fail "checker did not retain only historical evidence"
 )
 
 # Exercise the actual commands with only disposable Git/grep/sort ports replaced.

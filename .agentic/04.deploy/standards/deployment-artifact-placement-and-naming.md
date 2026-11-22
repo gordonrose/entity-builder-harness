@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.deployment-artifact-placement-and-naming
-version: 2
+version: 3
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-25"
+updated_on: "2026-11-22"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -137,15 +137,46 @@ For AWS-specific target procedures during the transition:
 .agentic/aws/<phase>/workflows/targets/<target>/20-scopes/<scope>/<clear-action>.md
 ```
 
-For executable deployment capabilities:
+The historical executable capability form remains valid for unmigrated paths:
 
 ```text
 scripts/04.deploy/lifecycle/<phase>/targets/<target>/<scope>/<clear-action>/
 ```
 
+New or intentionally migrated executable capability components use the
+objective-oriented form below. A role directory is not a catch-all: a component
+directory names the narrow job performed inside its capability.
+
+```text
+scripts/04.deploy/
+  commands/<public-command>/command.<ext>
+  shared/provider-adapters/<provider>/<capability>/<objective>/
+    implementation.<ext>
+    tests/
+    fixtures/
+  lifecycle/<phase>/capabilities/<capability>/<objective>/
+    implementation.<ext>
+    tests/
+    fixtures/
+  lifecycle/<phase>/targets/<target>/<scope>/bindings/<capability>/<objective>/
+    binding.<ext>
+    tests/
+    fixtures/
+```
+
+`commands/` contains stable public invocation boundaries only. `capabilities/`
+contains the single reusable implementation owner. A provider adapter translates
+provider evidence or requests; a target binding supplies declared target/workload
+facts and cannot hide reusable provider or lifecycle machinery. Tests and
+fixtures mirror their exact objective. Add an objective directory when it has
+several parts or its own proof boundary; do not manufacture empty folder trees
+for a cohesive single file.
+
 Generic scripts omit `targets/<target>/<scope>` only when they truly accept no
 target-specific facts. Do not give a target-bound script a free-form target
-argument merely to avoid this path.
+argument merely to avoid this path. Existing paths remain valid until their
+approved capability migration; this destination form does not authorise a
+blanket rename.
 
 Cross-phase standards and workflows whose authority spans lifecycle phases
 remain in `.agentic/04.deploy/standards/` and `workflows/`; validate these with
@@ -170,6 +201,15 @@ without prior harness vocabulary.
 | target declaration | declared noun + role | `runtime-alignment-contract.yml` | `runtime.yml` |
 | provider template | provider resource purpose | `bootstrap-runtime.yml` | `stack.yml` |
 | evidence | dated event or stable accepted state | `release-b-to-a-2026-10-21.yml` | `latest.yml` |
+
+For executable components, use a role name only at the exact role boundary:
+`command`, `implementation`, and `binding` are permitted inside their named
+objective directories. The objective itself must describe the work, such as
+`receipt-validation`, `change-set-submission`, or `task-observation`. Do not add
+new broad-root `script.py`, `control.py`, `steps.py`, `route.py`, `helpers.py`,
+or `utils.py` files. A `route` is valid only below a named operation and a
+`binding` only below a named capability. Existing generic names are migration
+candidates, not automatically invalid historical paths.
 
 Use a name such as `runnable-program` only when the file itself defines that
 term or its parent folder makes its purpose obvious. Do not use internal labels

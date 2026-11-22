@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-21"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -203,7 +203,7 @@ def operator_protocols():
 
 def run():
     operator_protocols()
-    original = {name: getattr(M.C, name) for name in ("ROOT", "source_digest", "digest_file", "local_checks")}
+    original = {name: getattr(M.C, name) for name in ("ROOT", "source_digest", "digest_file", "local_qualification")}
     old_read, old_source, old_inspect = M.C.ALIGN.read_receipt, M.C.ALIGN.source_preflight, M.C.ALIGN.inspect
     with tempfile.TemporaryDirectory(prefix="entity-smoke-task-plan-") as temporary:
         root = Path(temporary); M.C.ROOT = root
@@ -211,7 +211,7 @@ def run():
         M.C.digest_file = lambda path: actual_digest(path) if path.is_file() else "sha256:" + "c" * 64
         M.C.source_digest = lambda: "sha256:" + "f" * 64
         calls = []
-        M.C.local_checks = lambda: calls.append("local-proof-double")
+        M.C.local_qualification = lambda *_: calls.append("local-qualification-double")
         receipt = {"source_revision": F.BINDING["source_revision"], "image_digest": F.BINDING["image_digest"], "receipt_reference": "github-actions-run:controlled-not-qualification"}
         M.C.ALIGN.read_receipt = lambda path: receipt
         M.C.ALIGN.source_preflight = lambda selected: calls.append("clean-source-custody-double")
@@ -276,7 +276,7 @@ def run():
             assert business["plan"]["preflight_label"] == planned["plan"]["preflight_label"] and business["plan_sha256"] != planned["plan_sha256"]
         assert all(operation not in {"run-task", "create-change-set", "execute-change-set"} for _, operation, _ in provider.observed[start:])
         assert calls.count("clean-source-custody-double") > 0
-        assert "local-proof-double" not in calls
+        assert "local-qualification-double" not in calls
         saved = cache / "receipts/create.json"
         bytes_before = saved.read_bytes(); moved = saved.with_suffix(".temporarily-moved"); saved.rename(moved)
         fails(lambda: M.plan(args, provider), "infrastructure-input-unavailable")
@@ -731,7 +731,7 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
         actual_digest = M.C.digest_file
         with patch.object(M.C, "ROOT", root), patch.object(M.C, "source_digest", lambda: "sha256:" + "f" * 64), \
              patch.object(M.C, "digest_file", lambda path: actual_digest(path) if path.is_file() else "sha256:" + "c" * 64), \
-             patch.object(M.C, "local_checks", lambda: None), patch.object(M.C.ALIGN, "source_preflight", lambda *args, **kwargs: None), \
+             patch.object(M.C, "local_qualification", lambda *_: None), patch.object(M.C.ALIGN, "source_preflight", lambda *args, **kwargs: None), \
              patch.object(M.C.ALIGN, "read_receipt", lambda path: receipt), \
              patch.object(M.C.ALIGN, "inspect", lambda *args: ({"dependency_incarnation_sha256": F.BINDING["dependency_incarnation_sha256"]}, copy.deepcopy(F.PARAMETERS), "fixture")), \
              patch.object(M.C.SUCCESSION, "current", lambda path: current), patch.object(M.C.SUCCESSION, "history_record_for_id", lambda *args: (history, b"controlled")), \

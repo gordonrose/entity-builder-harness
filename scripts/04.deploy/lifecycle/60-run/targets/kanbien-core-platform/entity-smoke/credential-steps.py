@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.credential-steps
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-21"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -252,7 +252,7 @@ def replacement_context(route, args, provider):
             callees={"server": route.BINDING.inspect(provider, "server", context["parameters"], context["resources"], context.get("binding_snapshot"))})
         return context, value["base"]["baseline_read"]
     custody = C.ALIGN.read_receipt(args.receipt.absolute())
-    C.ALIGN.source_preflight(custody); C.local_checks()
+    C.ALIGN.source_preflight(custody); C.local_qualification(custody)
     state = route.RECOVERY.STATE.context(route, args, provider, custody)
     context = {**state["task_context"], "custody": custody, "artifact": C.source_digest(), "provider": provider,
                "callees": {"server": state["server"]}}
