@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-22T17:53:54Z
-latest_commit_sha: 9d3c9bc4
-chat_duration: 78796s (00:21:53:16)
+latest_commit_at_utc: 2026-11-22T19:28:47Z
+latest_commit_sha: d11eb22b
+chat_duration: 84489s (00:23:28:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -56,7 +56,10 @@ Phase 1 deployment script topology classification and migration proposal
 
 ## Context Hygiene
 
-- None recorded yet.
+
+
+- Summary: The scheduler foundation remains deliberately local while the harness now selects direct changed inputs for preparation, commit, and recorded promotion.
+  Durable evidence: Focused selector tests, both chat-gate smoke tests, repository contract tests, and the commit-boundary module-index check passed; broad integration mappings remain explicitly deferred.
 
 ## Activity Log
 
@@ -653,6 +656,31 @@ Summary: Recorded the user-authored plain-English collaboration rule: explain ea
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-22T19:27:33Z - Context hygiene
+
+Summary: The scheduler foundation remains deliberately local while the harness now selects direct changed inputs for preparation, commit, and recorded promotion.
+
+Durable evidence: Focused selector tests, both chat-gate smoke tests, repository contract tests, and the commit-boundary module-index check passed; broad integration mappings remain explicitly deferred.
+
+
+### 2026-11-22T19:27:42Z - ADR disposition
+
+ADR needed: no
+
+Reason: This extends existing selector and chat commit-gate owners without changing product, runtime, deployment, or scheduler architecture.
+
+
+### 2026-11-22T19:28:47Z - Commit recorded
+
+Commit: `d11eb22b`
+
+Message: feat(harness): scope verification to changed inputs
+
+Summary: Adds direct changed-input selection for preparation, staged commits, and recorded promotion; keeps broad checks as explicit hygiene or integration work.
+
+ADR impact: No ADR needed; existing selector and chat-gate ownership was extended.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -695,22 +723,29 @@ ADR impact: covered by session ADR disposition
   Summary: Recorded the user-authored plain-English collaboration rule: explain each meaningful change, identify the focused check, and avoid unnecessary terminology.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `d11eb22b`
+  Time UTC: 2026-11-22T19:28:47Z
+  Message: feat(harness): scope verification to changed inputs
+  Summary: Adds direct changed-input selection for preparation, staged commits, and recorded promotion; keeps broad checks as explicit hygiene or integration work.
+  ADR impact: No ADR needed; existing selector and chat-gate ownership was extended.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
 
 ## ADR Disposition
 
-ADR needed: unknown
+ADR needed: no
 ADR path:
-Reason:
+Reason: This extends existing selector and chat commit-gate owners without changing product, runtime, deployment, or scheduler architecture.
 
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-22T17:53:54Z
-Latest commit SHA: 9d3c9bc4
-Chat duration: 78796s (00:21:53:16)
+Latest commit at UTC: 2026-11-22T19:28:47Z
+Latest commit SHA: d11eb22b
+Chat duration: 84489s (00:23:28:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
