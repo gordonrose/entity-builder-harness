@@ -40,7 +40,10 @@ Phase 1 deployment script topology classification and migration proposal
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Promotion verification selected 63 checks for the accumulated branch and exceeded the delivery budget after one completed regression.
+  Resolution: The verifier was interrupted during active-workload-health-recovery-regression. Promotion remains intentionally unperformed; audit broad scripts and repository mappings before retrying.
 
 ## Decisions Made
 
@@ -680,6 +683,13 @@ Message: feat(harness): scope verification to changed inputs
 Summary: Adds direct changed-input selection for preparation, staged commits, and recorded promotion; keeps broad checks as explicit hygiene or integration work.
 
 ADR impact: No ADR needed; existing selector and chat-gate ownership was extended.
+
+
+### 2026-11-22T19:32:20Z - Issue
+
+Raised: Promotion verification selected 63 checks for the accumulated branch and exceeded the delivery budget after one completed regression.
+
+Resolution: The verifier was interrupted during active-workload-health-recovery-regression. Promotion remains intentionally unperformed; audit broad scripts and repository mappings before retrying.
 
 ## Sub-Agent Activity
 
