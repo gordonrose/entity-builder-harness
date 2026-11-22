@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-22T22:08:08Z
-latest_commit_sha: 751d8d6bccb2c4ab6924749178b72832a9d643c6
-chat_duration: 94050s (01:02:07:30)
+latest_commit_at_utc: 2026-11-22T22:54:08Z
+latest_commit_sha: b14bf4f8dd7aa5c82e1dc252fa3382f53fb457f8
+chat_duration: 96810s (01:02:53:30)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -742,6 +742,17 @@ Summary: Repaired scoped workspace selection, versioned persistence diagnostics,
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-22T22:54:08Z - Commit recorded
+
+Commit: `b14bf4f8dd7aa5c82e1dc252fa3382f53fb457f8`
+
+Message: fix(harness): isolate legacy verification prerequisites
+
+Summary: Separated active Core qualification from retained kanbien-staging payload checks, made inactive prerequisite declarations fail during planning, and preserved focused dependency proof.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -805,6 +816,13 @@ ADR impact: covered by session ADR disposition
   Summary: Repaired scoped workspace selection, versioned persistence diagnostics, and stale composition fixtures; recorded focused qualification and the periodic-hygiene adoption finding.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `b14bf4f8dd7aa5c82e1dc252fa3382f53fb457f8`
+  Time UTC: 2026-11-22T22:54:08Z
+  Message: fix(harness): isolate legacy verification prerequisites
+  Summary: Separated active Core qualification from retained kanbien-staging payload checks, made inactive prerequisite declarations fail during planning, and preserved focused dependency proof.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -818,9 +836,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-22T22:08:08Z
-Latest commit SHA: 751d8d6bccb2c4ab6924749178b72832a9d643c6
-Chat duration: 94050s (01:02:07:30)
+Latest commit at UTC: 2026-11-22T22:54:08Z
+Latest commit SHA: b14bf4f8dd7aa5c82e1dc252fa3382f53fb457f8
+Chat duration: 96810s (01:02:53:30)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
