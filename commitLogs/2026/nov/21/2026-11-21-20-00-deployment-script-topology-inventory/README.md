@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-22T20:21:07Z
-latest_commit_sha: c63b7ab8
-chat_duration: 87629s (01:00:20:29)
+latest_commit_at_utc: 2026-11-22T22:08:08Z
+latest_commit_sha: 751d8d6bccb2c4ab6924749178b72832a9d643c6
+chat_duration: 94050s (01:02:07:30)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -731,6 +731,17 @@ Summary: Separated lockfile evidence invalidation from selection, made the repos
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-22T22:08:08Z - Commit recorded
+
+Commit: `751d8d6bccb2c4ab6924749178b72832a9d643c6`
+
+Message: fix(verification): preserve scoped qualification contracts
+
+Summary: Repaired scoped workspace selection, versioned persistence diagnostics, and stale composition fixtures; recorded focused qualification and the periodic-hygiene adoption finding.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -787,6 +798,13 @@ ADR impact: covered by session ADR disposition
   Summary: Separated lockfile evidence invalidation from selection, made the repository contract census periodic hygiene, and aligned direct refresh fixtures with promotion mode.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `751d8d6bccb2c4ab6924749178b72832a9d643c6`
+  Time UTC: 2026-11-22T22:08:08Z
+  Message: fix(verification): preserve scoped qualification contracts
+  Summary: Repaired scoped workspace selection, versioned persistence diagnostics, and stale composition fixtures; recorded focused qualification and the periodic-hygiene adoption finding.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -800,9 +818,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-22T20:21:07Z
-Latest commit SHA: c63b7ab8
-Chat duration: 87629s (01:00:20:29)
+Latest commit at UTC: 2026-11-22T22:08:08Z
+Latest commit SHA: 751d8d6bccb2c4ab6924749178b72832a9d643c6
+Chat duration: 94050s (01:02:07:30)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
