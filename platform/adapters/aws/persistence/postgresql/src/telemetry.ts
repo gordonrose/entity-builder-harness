@@ -8,9 +8,11 @@ import {
 import { postgreSqlPersistenceProviderFailureClass, type PostgreSqlPersistenceOperation } from "./errors";
 
 export type PostgreSqlPersistenceTelemetryOutcome = "succeeded" | "failed" | "rolled_back";
+/** Command diagnostics do not yet describe schedule-store telemetry callbacks. */
+export type PostgreSqlPersistenceTelemetryOperation = Exclude<PostgreSqlPersistenceOperation, "create_schedule" | "read_schedule" | "list_due_schedules" | "handover_schedule">;
 
 export interface PostgreSqlPersistenceTelemetry {
-  readonly operation: PostgreSqlPersistenceOperation;
+  readonly operation: PostgreSqlPersistenceTelemetryOperation;
   readonly outcome: PostgreSqlPersistenceTelemetryOutcome;
   readonly durationBucket: "under-10ms" | "under-100ms" | "under-1000ms" | "one-second-or-more";
   readonly errorClass?: ReturnType<typeof postgreSqlPersistenceProviderFailureClass>;
@@ -22,7 +24,7 @@ export type PostgreSqlPersistenceTelemetrySink = (observation: PostgreSqlPersist
 export function recordPostgreSqlPersistenceTelemetry(
   sink: PostgreSqlPersistenceTelemetrySink | undefined,
   input: {
-    readonly operation: PostgreSqlPersistenceOperation;
+    readonly operation: PostgreSqlPersistenceTelemetryOperation;
     readonly outcome: PostgreSqlPersistenceTelemetryOutcome;
     readonly durationMs: number;
     readonly error?: unknown;
@@ -31,7 +33,7 @@ export function recordPostgreSqlPersistenceTelemetry(
   diagnostics?: PlatformPersistenceDiagnosticOptions,
 ): void {
   if (sink === undefined) return;
-  let operation: PostgreSqlPersistenceOperation | undefined;
+  let operation: PostgreSqlPersistenceTelemetryOperation | undefined;
   let boundary: "encoding" | "callback" = "encoding";
   try {
     const observation = {
@@ -82,7 +84,7 @@ function consumeRejection(pending: unknown, rejected: (cause: unknown) => void):
 }
 
 function observeTelemetryFailure(diagnostics: PlatformPersistenceDiagnosticOptions | undefined,
-  operation: PostgreSqlPersistenceOperation | undefined, boundary: "encoding" | "callback", cause: unknown): void {
+  operation: PostgreSqlPersistenceTelemetryOperation | undefined, boundary: "encoding" | "callback", cause: unknown): void {
   try {
     if (operation !== undefined) {
       // Encoding here means the local observation projection, never SQL encoding.

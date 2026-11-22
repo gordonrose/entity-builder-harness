@@ -12,10 +12,13 @@ import {
   type OutboxEntry,
   type RecordChange,
 } from "@kanbien/core/persistence";
-import { causationId, isoDateTimeFromDate } from "@kanbien/core/shared";
+import { causationId, isoDateTimeFromDate, uuid } from "@kanbien/core/shared";
+import { platformJobName } from "@kanbien/platform-contracts";
 import {
   createInMemoryPlatformOutboxStore,
+  createInMemoryPlatformScheduleStore,
   createInMemoryPlatformProcessingStore,
+  createPlatformSchedule,
   platformOutboxQueueMessage,
   platformPersistenceFence,
   platformPersistenceLeaseOwner,
@@ -28,6 +31,8 @@ import {
   type PlatformOutboxQueuePayload,
   type PlatformOutboxStore,
   type PlatformProcessingStore,
+  type PlatformSchedule,
+  type PlatformScheduleStore,
 } from "../../src/index";
 
 const now = isoDateTimeFromDate(new Date("2026-09-23T12:00:00.000Z"));
@@ -54,6 +59,14 @@ const entry: OutboxEntry = outboxEntry({
 });
 const outbox: PlatformOutboxStore = createInMemoryPlatformOutboxStore();
 const processing: PlatformProcessingStore = createInMemoryPlatformProcessingStore();
+const jobName = platformJobName("entity-smoke.test-entity.purge-expired");
+if (!jobName.ok) throw new Error("Expected valid job name.");
+const generatedId = uuid("e1d06aac-3d17-4292-b9f3-1fe370772a5d");
+if (!generatedId.ok) throw new Error("Expected valid UUID.");
+const scheduleResult = createPlatformSchedule({ jobName: jobName.value, dueAt: "2026-09-23T12:00:00Z" }, { generate: () => generatedId });
+if (!scheduleResult.ok) throw new Error("Expected valid schedule.");
+const schedule: PlatformSchedule = scheduleResult.value;
+const schedules: PlatformScheduleStore = createInMemoryPlatformScheduleStore();
 
 const recordKindResult = recordKind("platform-smoke.work-item");
 const recordIdResult = recordId("work-1");
@@ -91,6 +104,8 @@ if (!ownerResult.ok || !fenceResult.ok) {
 void entry;
 void outbox;
 void processing;
+void schedule;
+void schedules;
 void change;
 void mutation;
 void relayPayload;
@@ -115,6 +130,9 @@ processing.complete({ outboxEntryId: entry.id, fence: 1, outcome: "succeeded", c
 
 // @ts-expect-error a lease owner must be a validated branded identifier.
 outbox.claim({ id: entry.id, owner: "worker-a", acquiredAt: now, leaseDurationMs: 1_000 });
+
+// @ts-expect-error a schedule requires a registered, branded platform job name.
+createPlatformSchedule({ jobName: "entity-smoke.test-entity.purge-expired", dueAt: "2026-09-23T12:00:00Z" }, { generate: () => generatedId });
 
 // @ts-expect-error processing release requires a branded persistence fence.
 processing.release({ outboxEntryId: entry.id, fence: 1, releasedAt: now });

@@ -81,6 +81,32 @@ export function postgreSqlPersistenceFoundationMigration(schema: string): Postgr
   };
 }
 
+/**
+ * The target chooses the immutable migration ID; the adapter owns only the
+ * PostgreSQL representation of the provider-neutral schedule record.
+ */
+export function postgreSqlPlatformScheduleMigration(schema: string, id: string): PostgreSqlMigration {
+  const schedule = qualified(schema, "platform_schedule");
+  const statements: readonly PostgreSqlStatement[] = [
+    { text: `CREATE TABLE IF NOT EXISTS ${schedule} (id uuid PRIMARY KEY, job_name text NOT NULL, due_at timestamptz NOT NULL, state text NOT NULL CHECK (state = 'waiting'))` },
+  ];
+  return { id, checksum: postgreSqlMigrationChecksum(statements), statements };
+}
+
+/** Extends the immutable waiting-table shape so a handoff and its outbox row can be committed together. */
+export function postgreSqlPlatformScheduleHandoffMigration(schema: string, id: string): PostgreSqlMigration {
+  const schedule = qualified(schema, "platform_schedule");
+  const outbox = qualified(schema, "platform_outbox");
+  const statements: readonly PostgreSqlStatement[] = [
+    { text: `ALTER TABLE ${schedule} ADD COLUMN outbox_entry_id text` },
+    { text: `ALTER TABLE ${schedule} DROP CONSTRAINT platform_schedule_state_check` },
+    { text: `ALTER TABLE ${schedule} ADD CONSTRAINT platform_schedule_state_check CHECK ((state = 'waiting' AND outbox_entry_id IS NULL) OR (state = 'delivery-created' AND outbox_entry_id IS NOT NULL))` },
+    { text: `ALTER TABLE ${schedule} ADD CONSTRAINT platform_schedule_outbox_entry_id_fkey FOREIGN KEY (outbox_entry_id) REFERENCES ${outbox} (id)` },
+    { text: `CREATE INDEX platform_schedule_due ON ${schedule} (state, due_at, id)` },
+  ];
+  return { id, checksum: postgreSqlMigrationChecksum(statements), statements };
+}
+
 export function postgreSqlMigrationChecksum(statements: readonly PostgreSqlStatement[]): string {
   return createHash("sha256").update(statements.map((statement) => statement.text).join("\n")).digest("hex");
 }
