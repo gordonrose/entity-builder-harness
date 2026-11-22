@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-11-21"
   layer: 00.chat
   domain: command
   disciplines:
@@ -89,6 +89,12 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 
 If the opening message is exactly `new`, the agent asks what the chat should be
 about before creating a session.
+
+To deliberately replace an existing recorded session, make the first non-empty
+line of the opening message `start new chat`, then place the task summary below
+it. The resolver routes that directive to the normal `new` creator before
+checking current-session metadata. A directive without a summary asks what the
+new chat should be about and creates nothing.
 
 ## Adding A Command
 
