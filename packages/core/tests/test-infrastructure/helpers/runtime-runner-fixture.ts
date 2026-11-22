@@ -109,6 +109,17 @@ export function verifyRuntimeRunner(owner: string, expectedFailureExitCode?: num
     equal(actual.stdout.trim(), "selected", "unrelated compiled runtime tests do not run under safe changed-path selection");
   });
 
+  if (owner === "packages/core") fixture((root, source) => {
+    source("first-runtime.test.ts", 'console.log("first");');
+    source("shared/time/unit/second-runtime.test.ts", 'console.log("second");');
+
+    const actual = run(root, ["scripts/repo/check-selection/script.py"]);
+
+    equal(actual.status, 0, "external harness changes retain complete Core runtime proof");
+    deepEqual(actual.stdout.trim().split(/\r?\n/), ["first", "second"],
+      "external changed paths do not manufacture a partial Core test selection");
+  });
+
   for (const childExitCode of [7, 9]) {
     fixture((root, source) => {
       if (childExitCode === 9) source("first-runtime.test.ts", 'console.log("successful case");');

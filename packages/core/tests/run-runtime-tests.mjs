@@ -34,6 +34,11 @@ function selectedRuntimeSources() {
   const all = runtimeSources(sourceDirectory).sort();
   const changed = changedPaths();
   if (changed === undefined) return all;
+  // Static import selection is meaningful only when the entire change set is
+  // owned by Core's source or test tree. A harness, build, or workspace change
+  // can alter how every Core test is compiled or launched, so it must retain
+  // the complete local suite rather than manufacture a partial proof.
+  if (!changed.every(path => path.startsWith("packages/core/src/") || path.startsWith("packages/core/tests/"))) return all;
   const selection = selectAffectedRuntimeTests({
     root: repositoryRoot,
     sourceDirectory: "packages/core/src",
