@@ -775,6 +775,34 @@ class SelectionTests(FixtureSupport):
         _, findings = selection.verification_dependencies({'root': {**base, 'members': ['missing']}}, ['root'], ['src'])
         self.assertIn('verification-dependency-unknown', {item['code'] for item in findings})
 
+    def test_inactive_dependency_is_a_planning_gap_not_a_late_blocker(self):
+        base = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
+        graph, findings = selection.verification_dependencies(
+            {'root': {**base, 'members': ['retained']}, 'retained': base},
+            ['root'], ['src'], active=lambda identity: identity != 'retained',
+        )
+
+        self.assertEqual(graph['root'], set())
+        self.assertIn(
+            {'code': 'verification-dependency-inactive-context', 'check_id': 'root', 'dependency': 'retained'},
+            findings,
+        )
+
+    def test_inactive_aggregate_cannot_propagate_prerequisites_to_active_members(self):
+        base = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
+        graph, findings = selection.verification_dependencies(
+            {
+                'retained-aggregate': {**base, 'members': ['active-member'], 'focused_prerequisites': [{'inputs': ['src'], 'checks': ['retained-proof']}]},
+                'active-member': base,
+                'retained-proof': base,
+            },
+            ['retained-aggregate'], ['src'], active=lambda identity: identity != 'retained-aggregate',
+        )
+
+        self.assertEqual(graph['retained-aggregate'], set())
+        self.assertNotIn('active-member', graph)
+        self.assertFalse(findings)
+
 
     def test_focused_member_peers_do_not_gain_artificial_cycles(self):
         leaf = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}

@@ -117,7 +117,7 @@ class InputSymlinkError(ValueError):
     pass
 
 
-def verification_dependencies(checks: dict, seeds: list[str], context: list[str] | None) -> tuple[dict[str, set[str]], list[dict]]:
+def verification_dependencies(checks: dict, seeds: list[str], context: list[str] | None, *, active=None) -> tuple[dict[str, set[str]], list[dict]]:
     """Catalog is the only aggregate/prerequisite membership authority."""
     dependencies: dict[str, set[str]] = {}
     findings = []
@@ -126,6 +126,12 @@ def verification_dependencies(checks: dict, seeds: list[str], context: list[str]
         check = checks.get(identity)
         if not isinstance(check, dict):
             findings.append({'code': 'verification-dependency-unknown', 'check_id': identity}); return
+        # Retained systems are deliberately excluded from ordinary active
+        # qualification.  Do not let an inactive aggregate propagate one of
+        # its focused prerequisites into a shared active member.
+        if active is not None and not active(identity):
+            dependencies.setdefault(identity, set())
+            return
         if identity in visiting:
             findings.append({'code': 'verification-dependency-cycle', 'check_id': identity}); return
         members = check.get('members', [])
@@ -141,6 +147,17 @@ def verification_dependencies(checks: dict, seeds: list[str], context: list[str]
             if context is not None and any(below(path, ref) or below(ref, path) for path in context for ref in rule['inputs']):
                 focused.update(rule['checks'])
         required = set(members) | focused
+        # An active verification route cannot depend on a deliberately
+        # isolated route.  Report the contradictory catalog declaration
+        # during planning instead of allowing the parent to become blocked
+        # only after unrelated checks have executed.
+        inactive = sorted(
+            child for child in required
+            if active is not None and active(identity) and not active(child)
+        )
+        for child in inactive:
+            findings.append({'code': 'verification-dependency-inactive-context', 'check_id': identity, 'dependency': child})
+        required.difference_update(inactive)
         prior = dependencies.get(identity, set())
         if identity in dependencies and required <= prior: return
         dependencies[identity] = prior | required
@@ -860,7 +877,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             seeds.update(triggered_rule_checks(rule))
             seeds.update(set(rule['checks']) & catalog_check_changes)
     dependency_context = sorted(downstream(task_context)) if task_context is not None else None
-    dependencies, dependency_findings = verification_dependencies(checks, sorted(seeds), dependency_context)
+    dependencies, dependency_findings = verification_dependencies(
+        checks, sorted(seeds), dependency_context, active=isolated_check_active
+    )
     findings += dependency_findings
     already_bound = {identity for item in selected.values() for identity in item['catalog_entries']}
     dependency_ids = sorted(set(dependencies) - already_bound - ({aggregate_owner} if aggregate_owner else set()))
@@ -933,7 +952,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     # command proof. Otherwise a standalone focused receipt cannot be reused
     # when the same unit appears inside a conditional broad aggregate.
     proof_dependencies = {
-        identity: verification_dependencies(checks, [identity], dependency_context)[0].get(identity, set())
+        identity: verification_dependencies(
+            checks, [identity], dependency_context, active=isolated_check_active
+        )[0].get(identity, set())
         for identity in dependencies
     }
     planning_fingerprint_token = FINGERPRINT_ENTRY_CACHE.set({})
