@@ -69,6 +69,79 @@ class SelectionTests(FixtureSupport):
         self.assertEqual(report['scopes'], [])
         self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
 
+    def test_recorded_ci_branch_diff_uses_direct_inputs_without_repository_wide_scans(self):
+        path = self.root / 'src/branch-diff.py'
+        path.write_text('value = 1\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['src/branch-diff.py'], 'checks': ['local']}]
+        self.save()
+
+        with patch.object(selection, 'repository_paths', side_effect=AssertionError('repository-wide scan')):
+            with patch.object(selection, 'discover', side_effect=AssertionError('scope discovery')):
+                report = self.run_plan(paths=['src/branch-diff.py'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['impact_analysis'], 'direct-branch-diff')
+        self.assertEqual(report['delivery_inventory'], {'status': 'deferred-to-ci-delivery-coverage'})
+        self.assertEqual(report['scopes'], [])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+
+    def test_named_commit_preparation_uses_direct_inputs_without_repository_wide_scans(self):
+        path = self.root / 'src/preparation.py'
+        path.write_text('value = 1\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['src/preparation.py'], 'checks': ['local']}]
+        self.save()
+
+        with patch.object(selection, 'repository_paths', side_effect=AssertionError('repository-wide scan')):
+            with patch.object(selection, 'discover', side_effect=AssertionError('scope discovery')):
+                report = self.run_plan(paths=['src/preparation.py'], boundary='commit',
+                                       record_preparation=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['impact_analysis'], 'direct-preparation')
+        self.assertEqual(report['delivery_inventory'], {'status': 'deferred-to-integration'})
+        self.assertEqual(report['scopes'], [])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+
+    def test_staged_commit_reuses_direct_preparation_without_repository_wide_scans(self):
+        for name in ('main.ts', 'old.ts'):
+            (self.root / 'src' / name).write_text('value = 1\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['src'], 'checks': ['local']}]
+        self.save()
+        prepared = self.run_plan(paths=['src/main.ts', 'src/old.ts'], boundary='commit',
+                                 record_preparation=True, changed_only=True)
+        self.assertFalse(prepared['findings'], prepared['findings'])
+
+        with patch.object(selection, 'repository_paths', side_effect=AssertionError('repository-wide scan')):
+            with patch.object(selection, 'discover', side_effect=AssertionError('scope discovery')):
+                report = self.run_plan(boundary='commit', staged=True, require_preparation=True,
+                                       changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['impact_analysis'], 'direct-preparation')
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+
+    def test_recorded_ci_branch_diff_uses_declared_catalog_self_check_without_consumer_expansion(self):
+        self.catalog['checks']['catalog-check'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.catalog['checks']['catalog-check']['inputs'] = ['scripts/repo/check-selection/checks.yml']
+        self.catalog['repository_inputs'] = [{'inputs': ['scripts/repo/check-selection/checks.yml'], 'checks': ['catalog-check']}]
+        self.save()
+
+        with patch.object(selection, 'changed_catalog_checks', side_effect=AssertionError('catalog consumer expansion')):
+            report = self.run_plan(paths=['scripts/repo/check-selection/checks.yml'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['catalog-check'])
+
+    def test_recorded_ci_branch_diff_defers_hygiene_even_when_its_input_changed(self):
+        self.catalog['checks']['local']['cadence'] = 'hygiene'
+        self.catalog['repository_inputs'] = [{'inputs': ['src/main.ts'], 'checks': ['local']}]
+        self.save()
+
+        report = self.run_plan(paths=['src/main.ts'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['checks'], [])
+
     def test_shared_or_topology_commit_changes_require_full_impact_analysis(self):
         args = argparse.Namespace(stage='local', all=False, ci=False, checks=None, aggregate_members=None)
         for path in ('packages/core/src/value.py', 'platform/contracts/src/value.ts',
@@ -89,6 +162,8 @@ class SelectionTests(FixtureSupport):
             with self.subTest(path=path):
                 self.assertTrue(selection.delivery_inventory_required(args, [path], catalog))
         self.assertTrue(selection.delivery_inventory_required(argparse.Namespace(all=False, ci=True), ['packages/core/src/value.ts'], catalog))
+        self.assertFalse(selection.delivery_inventory_required(argparse.Namespace(all=False, ci=True, changed_only=True), ['packages/core/src/value.ts'], catalog))
+        self.assertTrue(selection.delivery_inventory_required(argparse.Namespace(all=False, ci=True, changed_only=True), ['scripts/04.deploy/lifecycle/check.py'], catalog))
         self.assertTrue(selection.delivery_inventory_required(argparse.Namespace(all=True, ci=False), ['packages/core/src/value.ts'], catalog))
 
     def test_planning_fingerprint_reuses_identical_snapshot_without_leaking_to_fresh_validation(self):

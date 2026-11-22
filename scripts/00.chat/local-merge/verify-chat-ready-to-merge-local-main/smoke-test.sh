@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-22"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -338,7 +338,7 @@ PYTHON
 cat > "$worktree/scripts/repo/check-selection/script.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-[[ "$*" == '--ci --boundary integration --execute-local --json' ]]
+[[ "$*" == '--ci --changed-only --boundary integration --execute-local --json' ]]
 test -f "$(git rev-parse --git-path delivery-invoked)"
 [[ "$(git rev-parse HEAD)" == "$HEAD_SHA" ]]
 git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA"

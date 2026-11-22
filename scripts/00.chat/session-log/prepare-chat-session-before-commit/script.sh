@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 4
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-22"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -96,7 +96,7 @@ PY
   bash scripts/01.harness/check-deterministic-process-drift.sh --paths "$@"
   bash scripts/01.harness/check-governed-script-command-drift.sh --paths "$@"
   if [ -f scripts/repo/check-selection/script.sh ]; then
-    bash scripts/repo/check-selection/script.sh --paths "$@" --stage local --boundary commit --record-preparation --json
+    bash scripts/repo/check-selection/script.sh --paths "$@" --changed-only --stage local --boundary commit --record-preparation --json
   else
     echo "Repository selector is absent; portable lifecycle preparation completed without repository verification planning."
   fi

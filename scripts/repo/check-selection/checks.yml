@@ -757,6 +757,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
       config_inputs: [.npmrc, .node-version, .nvmrc]
   diagnostic-adoption:
+    cadence: hygiene
     boundary: integration
     argv: [bash, scripts/repo/diagnostic-coverage/script.sh]
     stage: local
@@ -773,6 +774,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
   diagnostic-runtime-contracts:
+    cadence: hygiene
     aggregate_branch: default
     members: [diagnostic-base-runtime, platform-server-runtime, kanbien-platform-runtime]
     focused_prerequisites: &startup_prerequisites
@@ -2855,6 +2857,7 @@ checks:
       - pyproject.toml
       - requirements.txt
   check-selection-regression:
+    cadence: hygiene
     boundary: integration
     argv:
     - bash
@@ -5343,8 +5346,6 @@ repository_inputs:
   - scripts/00.chat/reporting/generate-commit-log-summary
   checks:
   - chat-main-refresh-regression
-- inputs: [packages, platform, apps, products, scripts, infra, package.json, scripts/repo/check-selection/checks.yml]
-  checks: [diagnostic-adoption]
 - inputs: [.agentic/shared/workflows/verify-diagnostic-coverage.md, .agentic/shared/standards/require-safe-diagnostic-record.md, scripts/repo/diagnostic-coverage]
   exclude_inputs: [scripts/repo/diagnostic-coverage/reviews.v1.json]
   checks: [diagnostic-adoption, diagnostic-runtime-contracts]

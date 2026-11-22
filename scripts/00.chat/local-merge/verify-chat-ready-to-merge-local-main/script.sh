@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-22"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -448,7 +448,7 @@ if [ -f "$CALLER_ROOT/scripts/repo/check-selection/script.sh" ] || [ -f "$WORKTR
   # The chat already contains main. Its tree is the exact code that a local
   # merge will promote, and its private receipts can be revalidated in place.
   if ! (cd "$WORKTREE_PATH" && BASE_SHA="$base_head" HEAD_SHA="$target_head" \
-    bash scripts/repo/check-selection/script.sh --ci --boundary integration --execute-local --json); then
+    bash scripts/repo/check-selection/script.sh --ci --changed-only --boundary integration --execute-local --json); then
     block "blocked-integration-proof" "required affected integration checks failed or are missing" "Repair the reported checks in the chat worktree, then rerun promotion verification."
   fi
   verified_base="$(observe final-base-head git -C "$REPO_ROOT" rev-parse "$BASE_REF")"

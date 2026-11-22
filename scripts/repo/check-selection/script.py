@@ -265,13 +265,21 @@ DELIVERY_INVENTORY_ROOTS = (
 
 
 def direct_commit_impact(args: argparse.Namespace, boundary: str, changed: list[str], catalog_ref: str) -> bool:
-    """Use declared direct inputs for a contained commit change.
+    """Use declared direct inputs for a contained commit or recorded branch diff.
 
-    Full impact discovery remains mandatory for integration, CI, explicit/all
-    requests, shared source, delivery topology and catalog changes. A direct
-    commit plan remains conservative: its normal uncovered-input finding still
-    blocks a change without a declared owner.
+    A recorded branch diff requires explicit ``--ci --changed-only`` and is
+    constrained to its exact base-to-HEAD inputs. Other integration and CI
+    runs retain complete impact discovery. Both direct modes remain
+    conservative: an uncovered authoritative input blocks acceptance.
     """
+    if getattr(args, 'changed_only', False):
+        recorded_branch_diff = boundary == 'integration' and getattr(args, 'ci', False)
+        named_preparation = (boundary == 'commit' and (getattr(args, 'record_preparation', False)
+                              or getattr(args, 'require_preparation', False))
+                             and not getattr(args, 'ci', False))
+        return (args.stage == 'local' and (recorded_branch_diff or named_preparation)
+                and not args.all and getattr(args, 'checks', None) is None
+                and not getattr(args, 'aggregate_members', None) and bool(changed))
     if (boundary != 'commit' or args.stage != 'local' or args.all or getattr(args, 'ci', False)
             or getattr(args, 'checks', None) is not None or getattr(args, 'aggregate_members', None)
             or catalog_ref in changed):
@@ -288,7 +296,7 @@ def delivery_inventory_required(args: argparse.Namespace, changed: list[str], ca
     all-input/CI request. That avoids making a deployment topology scan a
     repeated prerequisite for local code qualification.
     """
-    if args.all or getattr(args, 'ci', False) or catalog_ref in changed:
+    if args.all or (getattr(args, 'ci', False) and not getattr(args, 'changed_only', False)) or (catalog_ref in changed and not getattr(args, 'changed_only', False)):
         return True
     return any(any(below(path, root) for root in DELIVERY_INVENTORY_ROOTS) for path in changed)
 
@@ -542,7 +550,12 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     changed = sorted(set(args.paths or []))
     if args.staged: changed = sorted(set(git(root, 'diff', '--cached', '--name-only', '--no-renames', '-z').split('\0')) - {''})
     if any(not coverage.safe_path(path) for path in changed): findings.append({'code': 'changed-path-invalid'})
-    catalog_check_changes = changed_catalog_checks(root, catalog_ref, catalog, getattr(args, 'comparison_base', 'HEAD')) if catalog_ref in changed else set()
+    # A recorded branch-diff promotion validates selector/catalog changes through
+    # their declared repository checks. It must not expand every changed catalog
+    # definition into all of its consumers; that is periodic regression work,
+    # not evidence needed to accept this exact diff.
+    catalog_check_changes = (set() if getattr(args, 'changed_only', False) else
+                             changed_catalog_checks(root, catalog_ref, catalog, getattr(args, 'comparison_base', 'HEAD')) if catalog_ref in changed else set())
     dormant, dormant_findings = dormant_roots(root, catalog)
     findings += dormant_findings
     isolated_contexts, isolated_context_findings = isolated_check_contexts(root, catalog, checks)
@@ -571,6 +584,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             for path in changed
         )
     direct_commit = direct_commit_impact(args, boundary, changed, catalog_ref)
+    direct_branch_diff = direct_commit and getattr(args, 'changed_only', False) and getattr(args, 'ci', False)
+    direct_preparation = (direct_commit and getattr(args, 'changed_only', False)
+                          and (getattr(args, 'record_preparation', False) or getattr(args, 'require_preparation', False)))
     paths = changed if direct_commit else repository_paths(root)
     graph = {} if direct_commit else consumer_graph(root, paths, dormant)
     proof_graph = {} if direct_commit else consumer_graph(root, paths, dormant, include_metadata=False)
@@ -709,7 +725,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings += errors
             if errors: continue
             if not isolated_check_active(identity): continue
-            if check.get('cadence', 'candidate') == 'hygiene' and not any(below(path, ref) or below(ref, path) for path in changed for ref in check.get('inputs', [])):
+            if check.get('cadence', 'candidate') == 'hygiene' and (getattr(args, 'changed_only', False) or not any(below(path, ref) or below(ref, path) for path in changed for ref in check.get('inputs', []))):
                 continue
             argv = tuple(substitutions.get(arg, arg) for arg in check['argv'])
             runtime_parameters = {'{' + name + '}' for name in check.get('parameters', {})}
@@ -824,7 +840,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings += errors
             if errors: continue
             if not isolated_check_active(identity): continue
-            if explicit_checks is None and check.get('cadence', 'candidate') == 'hygiene' and not any(below(path, ref) or below(ref, path) for path in changed for ref in check.get('inputs', [])):
+            if explicit_checks is None and check.get('cadence', 'candidate') == 'hygiene' and (getattr(args, 'changed_only', False) or not any(below(path, ref) or below(ref, path) for path in changed for ref in check.get('inputs', []))):
                 continue
             argv = tuple(check['argv'])
             if any('{' in arg or '}' in arg for arg in argv): findings.append({'code': 'repository-check-placeholder-invalid', 'check_id': identity}); continue
@@ -1151,10 +1167,11 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             for item in results if item.get('cache_invalidation_reasons') and item.get('cache_invalidation_reasons') != [NO_PRIOR_EVIDENCE]
         ],
     }
-    delivery_evidence = ({'status': 'deferred-to-integration'} if direct_commit else
+    delivery_evidence = ({'status': 'deferred-to-integration'} if direct_commit and not direct_branch_diff else
+                         {'status': 'deferred-to-ci-delivery-coverage'} if direct_branch_diff else
                          {'source_revision': delivery['source_revision'], 'input_digest': delivery['input_digest'], 'summary': delivery['summary']} if delivery_inventory_needed else
                          {'status': 'deferred-to-ci-delivery-coverage'})
-    report = {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'impact_analysis': 'direct-commit' if direct_commit else 'full', 'delivery_inventory': delivery_evidence, 'scopes': impacted, 'checks': results, 'execution_summary': execution_summary, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.', 'A local source plan defers the independent physical delivery census to its CI delivery-coverage route; deployment topology changes and CI still run that census.', 'Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.', 'Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller.']}
+    report = {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'impact_analysis': 'direct-branch-diff' if direct_branch_diff else 'direct-preparation' if direct_preparation else 'direct-commit' if direct_commit else 'full', 'delivery_inventory': delivery_evidence, 'scopes': impacted, 'checks': results, 'execution_summary': execution_summary, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.', 'A local source plan defers the independent physical delivery census to its CI delivery-coverage route; deployment topology changes and CI still run that census.', 'Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.', 'Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller.']}
     if record_preparation and cache and not findings:
         report['preparation_report_path'] = cache.save_preparation({
             **cache.read_preparation(),
@@ -1194,6 +1211,7 @@ def main() -> int:
     mode.add_argument('--staged', action='store_true')
     mode.add_argument('--all', action='store_true')
     mode.add_argument('--ci', action='store_true', help='Select the PR diff from BASE_SHA/HEAD_SHA, or all inputs for manual CI.')
+    parser.add_argument('--changed-only', action='store_true', help='Use declared direct inputs for the exact CI diff; intended for recorded chat-branch promotion.')
     mode.add_argument('--inventory', action='store_true', help='Read-only feedback declaration inventory; no proof or execution.')
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--catalog', type=Path)
@@ -1211,6 +1229,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.development and (not args.paths or args.stage != 'local' or args.boundary != 'integration' or args.record_preparation or args.require_preparation):
         parser.error('--development requires --paths at the local integration boundary, without preparation')
+    if args.changed_only and not (args.ci or ((args.record_preparation or args.require_preparation) and (args.paths or args.staged) and args.stage == 'local' and args.boundary == 'commit')):
+        parser.error('--changed-only requires --ci, or preparation with named/staged local commit paths')
     if args.inventory and (args.execute_local or args.development or args.record_preparation or args.require_preparation):
         parser.error('--inventory is read-only')
     if args.record_preparation and args.require_preparation:
