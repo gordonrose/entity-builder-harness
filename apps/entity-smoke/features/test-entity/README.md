@@ -24,10 +24,13 @@ empty array remains distinct from `null`.
 
 Ordinary reads and the named `status, createdAt` index exclude logically deleted
 records. Archive is business visibility only. Core controls logical deletion,
-restore-window calculation and purge eligibility; this feature never performs a
-hard purge. Archive does not itself hide a record from this repository's ordinary
-reads: it changes the separate `visibility` attribute. The in-memory repository
-is local-test infrastructure only.
+restore-window calculation and purge eligibility. Its disposable cleanup job
+permanently removes only rows that are both archived and logically deleted for
+more than five minutes. Entity Smoke has no legal-hold feature, so that rule is
+explicitly test-only; it is not a platform-wide retention period. Archive does
+not itself hide a record from this repository's ordinary reads: it changes the
+separate `visibility` attribute. The in-memory repository is local-test
+infrastructure only.
 
 ## Relational storage
 

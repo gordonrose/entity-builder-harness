@@ -1,1 +1,1 @@
-export const entitySmokeAppManifest = { appId: "entity-smoke", packageName: "@kanbien/app-entity-smoke", displayName: "Entity Smoke", routeBasePath: "/entity-smoke", permissions: [], jobs: [], healthChecks: ["entity-smoke.readiness"], requiredConfig: [] } as const;
+export const entitySmokeAppManifest = { appId: "entity-smoke", packageName: "@kanbien/app-entity-smoke", displayName: "Entity Smoke", routeBasePath: "/entity-smoke", permissions: [], jobs: ["entity-smoke.test-entity.purge-expired"], healthChecks: ["entity-smoke.readiness"], requiredConfig: [] } as const;

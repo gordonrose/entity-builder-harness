@@ -57,6 +57,20 @@ async function main(): Promise<void> {
   const listing = statements.at(-1)!;
   deepEqual(listing.values, ["draft"]);
   equal(listing.text.includes("status = $1 AND lifecycle->>'state' = 'active' ORDER BY created_at, id"), true);
+  const deletedLifecycle = { state: "deleted", deletedAt: moment, restoreEligibleUntil: "2026-11-07T12:01:00.000Z", retentionPolicy: "test-entity.retention" };
+  rows = [{ ...row, visibility: "archived", lifecycle: deletedLifecycle }];
+  const archivedDeleted = await repository.listArchivedDeleted();
+  equal(archivedDeleted.length, 1);
+  const cleanupList = statements.at(-1)!;
+  deepEqual(cleanupList.values, []);
+  equal(cleanupList.text.includes("visibility = 'archived' AND lifecycle->>'state' = 'deleted'"), true);
+  rowCount = 1; rows = [{ id }];
+  const purged = await repository.purgeArchivedDeleted(id);
+  equal(purged.ok, true); if (!purged.ok) throw new Error("Expected purge query success.");
+  equal(purged.value, true);
+  const purge = statements.at(-1)!;
+  deepEqual(purge.values, [id]);
+  equal(purge.text.includes("DELETE FROM __SCHEMA__.test_entity WHERE id = $1 AND visibility = 'archived' AND lifecycle->>'state' = 'deleted'"), true);
   rows = [];
   equal(await repository.get(id), null); deepEqual(await repository.listByStatus("draft"), []);
 

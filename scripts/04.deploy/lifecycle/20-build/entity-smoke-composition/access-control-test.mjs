@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-11"
+//   updated_on: "2026-11-22"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -120,11 +120,11 @@ function ownedFixture({ rejectHistory = false, rejectObservation = false, reject
     if (text.startsWith('SELECT pg_has_role')) return { rows: [{ member: true }] };
     if (text.startsWith('SELECT NOT EXISTS (WITH RECURSIVE memberships')) return { rows: authentication };
     if (text.startsWith('SELECT pg_get_userbyid')) return { rows: [{ owner: 'entity_smoke_migration' }] };
-    if (text.startsWith('SELECT checksum FROM')) {
+    if (text.startsWith('SELECT migration_id, checksum FROM')) {
       assert(selected, 'migration history cannot be read before selecting its noninherited owner');
       if (rejectHistory) throw Object.assign(new Error(canary), { code: '42501' });
       const { entitySmokeMigrationManifest } = require(join(root, 'infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.js'));
-      return { rows: [{ checksum: entitySmokeMigrationManifest().migrations[0].checksum }] };
+      return { rows: entitySmokeMigrationManifest().migrations.map(migration => ({ migration_id: migration.id, checksum: migration.checksum })) };
     }
     if (text.startsWith('SELECT has_schema_privilege')) {
       assert(selected, 'permission observation needs explicit owner-schema resolution');
