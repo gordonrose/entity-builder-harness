@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-22T23:25:32Z
-latest_commit_sha: 2c53da5fd89b84509bc909ab31500448ecc444e8
-chat_duration: 98694s (01:03:24:54)
+latest_commit_at_utc: 2026-11-22T23:46:57Z
+latest_commit_sha: 9e2e1730affb443cdedd33526e4ecb53f1edc55a
+chat_duration: 99979s (01:03:46:19)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -764,6 +764,17 @@ Summary: Restored full Core runtime qualification when branch changes include ha
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-22T23:46:57Z - Commit recorded
+
+Commit: `9e2e1730affb443cdedd33526e4ecb53f1edc55a`
+
+Message: fix(persistence): version schedule diagnostics additively
+
+Summary: Restored the public schedule-definition export and aligned persistence runtime proof with immutable v2 plus additive v4/v5 schedule diagnostics.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -841,6 +852,13 @@ ADR impact: covered by session ADR disposition
   Summary: Restored full Core runtime qualification when branch changes include harness or other external inputs; preserved precise source-only test selection and added regression proof.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `9e2e1730affb443cdedd33526e4ecb53f1edc55a`
+  Time UTC: 2026-11-22T23:46:57Z
+  Message: fix(persistence): version schedule diagnostics additively
+  Summary: Restored the public schedule-definition export and aligned persistence runtime proof with immutable v2 plus additive v4/v5 schedule diagnostics.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -854,9 +872,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-22T23:25:32Z
-Latest commit SHA: 2c53da5fd89b84509bc909ab31500448ecc444e8
-Chat duration: 98694s (01:03:24:54)
+Latest commit at UTC: 2026-11-22T23:46:57Z
+Latest commit SHA: 9e2e1730affb443cdedd33526e4ecb53f1edc55a
+Chat duration: 99979s (01:03:46:19)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
