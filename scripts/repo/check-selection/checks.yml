@@ -570,6 +570,10 @@ checks:
     - infra
     - package.json
     - package-lock.json
+    # The module index is the candidate-bound lockfile integrity owner.
+    # Other checks retain the lockfile in their proof identity but are selected
+    # only by their own source or manifest inputs.
+    select_on_lockfile: true
     runtime:
       tools: [bash, node, typescript]
       node_packages: [typescript]
@@ -2581,8 +2585,9 @@ checks:
       - requirements.txt
       node_packages: []
   check-selection-repository-contracts:
-    feedback: {development: false, expected_seconds: 360, isolation: disposable-fixture, rationale: Repository-wide graph and gate contracts are stable checkpoint verification.}
+    feedback: {development: false, expected_seconds: 360, isolation: disposable-fixture, rationale: Repository-wide graph and gate contracts are periodic architecture hygiene; focused mechanics prove candidate changes.}
     boundary: integration
+    cadence: hygiene
     argv:
     - bash
     - scripts/repo/check-selection/smoke-test.sh

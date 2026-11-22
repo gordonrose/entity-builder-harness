@@ -142,6 +142,27 @@ class SelectionTests(FixtureSupport):
         self.assertEqual(report['verdict'], 'planned', report['findings'])
         self.assertEqual(report['checks'], [])
 
+    def test_recorded_ci_branch_diff_selects_only_the_lockfile_integrity_owner(self):
+        (self.root / 'package-lock.json').write_text('{"lockfileVersion": 3}\n')
+        self.check_script('lockfile', ['read-only', 'writes-files'], 'echo lockfile >> counts\n')
+        self.catalog['checks']['lockfile'] = {
+            **copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/lockfile.sh'],
+            'inputs': ['package-lock.json'],
+            'scope_inputs': False,
+            'select_on_lockfile': True,
+        }
+        self.catalog['checks']['local']['inputs'] = ['package-lock.json']
+        self.catalog['repository_inputs'] = [
+            {'inputs': ['package-lock.json'], 'checks': ['local', 'lockfile']},
+        ]
+        self.save()
+
+        report = self.run_plan(paths=['package-lock.json'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['lockfile'])
+
     def test_shared_or_topology_commit_changes_require_full_impact_analysis(self):
         args = argparse.Namespace(stage='local', all=False, ci=False, checks=None, aggregate_members=None)
         for path in ('packages/core/src/value.py', 'platform/contracts/src/value.ts',
@@ -2255,6 +2276,12 @@ used_by:
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
+        # Refresh now revalidates the exact promoted diff in changed-only mode.
+        # The fixture must therefore declare the one local owner of src/, just
+        # as a real repository catalog does; scope discovery is deliberately
+        # unavailable in this direct mode.
+        self.catalog['repository_inputs'] = [{'inputs': ['src'], 'checks': ['local']}]
+        self.save()
         (self.root / '.gitignore').write_text('counts\n.cache/\n')
         (self.root / 'package.json').write_text(json.dumps({'scripts': {'fixture:coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         def command(directory, *argv):
@@ -2280,12 +2307,14 @@ used_by:
             output = command(self.root, 'bash', 'scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh', branch)
             applied = json.loads(next(line for line in output.splitlines() if line.startswith('{')))
             self.assertEqual(applied['execution_summary']['executed_check_ids'], [])
-            self.assertEqual(applied['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+            self.assertEqual(applied['execution_summary']['reused_check_ids'], ['local'])
             self.assertFalse(preflight.exists())
             self.assertFalse((self.root / 'counts').exists(), 'Refresh must not repeat the behavioral command.')
             self.assertFalse((self.root / 'operations').exists(), 'Refresh must not build images or invoke providers.')
-            retained = json.loads(command(self.root, 'bash', 'scripts/repo/check-selection/script.sh', '--paths', 'src/main.ts', '--execute-local', '--json'))
+            retained = self.run_plan(paths=['src/main.ts'], boundary='integration', ci=True,
+                                     changed_only=True, execute=True)
             self.assertEqual(retained['execution_summary']['executed_check_ids'], [])
+            self.assertEqual(retained['execution_summary']['reused_check_ids'], ['local'])
 
 
     def test_imported_report_cannot_qualify_local_check(self):

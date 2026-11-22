@@ -57,12 +57,20 @@ Phase 1 deployment script topology classification and migration proposal
   consumes it for environment-specific execution; runtime verification observes
   the deployed identity and does not silently repair it.
 
+
+- Decision: Promotion uses declared direct inputs; repository-wide selector contracts are periodic hygiene.
+  Rationale: Lockfile and workspace inventory remain proof invalidators, but only the module-index integrity owner is selected solely by a lockfile change; focused mechanics cover candidate routing while the repository architecture census remains available as hygiene.
+
 ## Context Hygiene
 
 
 
 - Summary: The scheduler foundation remains deliberately local while the harness now selects direct changed inputs for preparation, commit, and recorded promotion.
   Durable evidence: Focused selector tests, both chat-gate smoke tests, repository contract tests, and the commit-boundary module-index check passed; broad integration mappings remain explicitly deferred.
+
+
+- Summary: Direct promotion no longer fans out from workspace inventory or package-lock changes; the broad repository-contract census is explicitly hygiene.
+  Durable evidence: The repaired refresh-receipt and lockfile-routing mechanics tests passed; the real promotion plan has 62 declared checks, no findings, and no selected hygiene checks.
 
 ## Activity Log
 
@@ -691,6 +699,27 @@ Raised: Promotion verification selected 63 checks for the accumulated branch and
 
 Resolution: The verifier was interrupted during active-workload-health-recovery-regression. Promotion remains intentionally unperformed; audit broad scripts and repository mappings before retrying.
 
+
+### 2026-11-22T20:19:56Z - Decision
+
+Decision: Promotion uses declared direct inputs; repository-wide selector contracts are periodic hygiene.
+
+Rationale: Lockfile and workspace inventory remain proof invalidators, but only the module-index integrity owner is selected solely by a lockfile change; focused mechanics cover candidate routing while the repository architecture census remains available as hygiene.
+
+
+### 2026-11-22T20:19:57Z - Context hygiene
+
+Summary: Direct promotion no longer fans out from workspace inventory or package-lock changes; the broad repository-contract census is explicitly hygiene.
+
+Durable evidence: The repaired refresh-receipt and lockfile-routing mechanics tests passed; the real promotion plan has 62 declared checks, no findings, and no selected hygiene checks.
+
+
+### 2026-11-22T20:19:57Z - ADR disposition
+
+ADR needed: no
+
+Reason: This refines existing check-selection and chat-refresh owners without changing product, deployment, or scheduler architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -748,7 +777,7 @@ Resolution: The verifier was interrupted during active-workload-health-recovery-
 
 ADR needed: no
 ADR path:
-Reason: This extends existing selector and chat commit-gate owners without changing product, runtime, deployment, or scheduler architecture.
+Reason: This refines existing check-selection and chat-refresh owners without changing product, deployment, or scheduler architecture.
 
 ## Session Metrics
 

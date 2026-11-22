@@ -754,9 +754,17 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     reviews_ref = 'scripts/repo/diagnostic-coverage/reviews.v1.json'
     if not isinstance(repository_rules, list):
         findings.append({'code': 'repository-input-rule-invalid'}); repository_rules = []
+    # Workspace discovery is proof invalidation for a check that was selected
+    # by one of its declared inputs; it is not an input to every workspace
+    # check.  Treating the complete manifest inventory as a selection trigger
+    # meant that one package manifest (or the lockfile) selected every
+    # package-runtime suite during a focused branch promotion.  Each resolved
+    # package context already declares the manifests and sources it consumes.
+    # Keep the complete discovery set in the selected check's fingerprint
+    # below, so a newly added or removed workspace still invalidates reusable
+    # evidence without manufacturing unrelated test obligations.
     repository_rules = repository_rules + [
-        {'inputs': sorted(set(context['references']) | set(package_context['discovery'])
-                          | {path for path in changed if path.endswith('/package.json')}), 'checks': [identity]}
+        {'inputs': sorted(set(context['references'])), 'checks': [identity]}
         for identity, context in package_context['checks'].items()
     ]
     # Ordinary code has diagnostic obligations even without a deployment scope.
@@ -778,12 +786,37 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings.append({'code': 'diagnostic-adoption-selection-invalid'})
     if explicit_checks is not None:
         repository_rules = [{'inputs': [catalog_ref], 'checks': explicit_checks}] if explicit_checks else []
-    def rule_triggered(rule):
+    def triggered_rule_checks(rule):
+        """Return the exact checks whose declared selection inputs changed.
+
+        ``package-lock.json`` is a shared evidence input: it must invalidate
+        the proof for a selected workspace test, but a lockfile update must
+        not independently select every workspace test.  A catalogued check
+        can explicitly opt in when it is the repository's lockfile-integrity
+        owner.  All non-lockfile declared inputs retain their ordinary direct
+        selection semantics.
+        """
         exclusions = rule.get('exclude_inputs', [])
         if not coverage.strings(exclusions, empty=True) or any(not coverage.safe_path(path) for path in exclusions):
-            findings.append({'code': 'repository-input-exclusion-invalid'}); return False
+            findings.append({'code': 'repository-input-exclusion-invalid'}); return []
+        identities = rule.get('checks', [])
+        if not coverage.strings(identities):
+            findings.append({'code': 'repository-input-rule-invalid'}); return []
+        if rule.get('dependency_selection', False) or explicit_checks is not None or args.all:
+            return list(identities)
         relevant = {path for path in consumers if not any(below(path, excluded) for excluded in exclusions)}
-        return explicit_checks is not None or args.all or any(below(path, ref) or below(ref, path) for path in relevant for ref in rule['inputs'])
+        ordinary_match = any(
+            path != 'package-lock.json' and (below(path, ref) or below(ref, path))
+            for path in relevant for ref in rule['inputs']
+        )
+        if ordinary_match:
+            return list(identities)
+        lockfile_match = ('package-lock.json' in relevant
+                          and any(below('package-lock.json', ref) or below(ref, 'package-lock.json') for ref in rule['inputs']))
+        if lockfile_match:
+            return [identity for identity in identities if isinstance(checks.get(identity), dict)
+                    and checks[identity].get('select_on_lockfile', False) is True]
+        return []
     task_context = (paths if args.all else changed) if explicit_checks is None else getattr(args, 'task_paths', None)
     preparation_context = None
     parent_binding = None
@@ -809,7 +842,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     if aggregate_owner: seeds.add(aggregate_owner)
     for rule in repository_rules:
         if isinstance(rule, dict) and coverage.strings(rule.get('inputs')) and coverage.strings(rule.get('checks')):
-            if rule_triggered(rule): seeds.update(rule['checks'])
+            seeds.update(triggered_rule_checks(rule))
             seeds.update(set(rule['checks']) & catalog_check_changes)
     dependency_context = sorted(downstream(task_context)) if task_context is not None else None
     dependencies, dependency_findings = verification_dependencies(checks, sorted(seeds), dependency_context)
@@ -819,7 +852,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     if dependency_ids: repository_rules = repository_rules + [{'inputs': [catalog_ref], 'checks': dependency_ids, 'dependency_selection': True}]
     for rule in repository_rules:
         if isinstance(rule, dict) and coverage.strings(rule.get('inputs')) and coverage.strings(rule.get('checks')):
-            covered.update(path for path in changed if any(below(consumer, ref) or below(ref, consumer) for consumer in downstream([path]) for ref in rule['inputs']))
+            selected_identities = set(triggered_rule_checks(rule)) | (set(rule['checks']) & catalog_check_changes)
+            if selected_identities:
+                covered.update(path for path in changed if any(below(consumer, ref) or below(ref, consumer) for consumer in downstream([path]) for ref in rule['inputs']))
     non_applicable = []
     for path in changed:
         if path in covered: continue
@@ -829,9 +864,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     for rule in repository_rules:
         if not isinstance(rule, dict) or not coverage.strings(rule.get('inputs')) or not coverage.strings(rule.get('checks')):
             findings.append({'code': 'repository-input-rule-invalid'}); continue
-        triggered = rule.get('dependency_selection', False) or rule_triggered(rule)
+        triggered_ids = set(triggered_rule_checks(rule))
         for identity in rule['checks']:
-            if not triggered and identity not in catalog_check_changes: continue
+            if identity not in triggered_ids and identity not in catalog_check_changes: continue
             check = checks.get(identity)
             command = check.get('argv', [None, None])[1] if isinstance(check, dict) and isinstance(check.get('argv'), list) and len(check['argv']) > 1 else None
             if explicit_checks is None and isinstance(command, str) and any(below(command, owner) for owner in dormant) and not args.all and not dormant_changed:

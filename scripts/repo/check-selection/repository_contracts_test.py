@@ -1080,6 +1080,13 @@ class RepositoryContractTests(unittest.TestCase):
 
 
     def test_actual_diagnostic_paths_select_focused_checks(self):
+        """Direct promotion routing must not require a repository-wide graph.
+
+        These cases assert declared changed-path ownership.  Running the full
+        planner here repeats an unrelated source census four times and makes
+        the check a delivery bottleneck without increasing the assertion's
+        strength.  Full-impact graph behaviour is covered by its own fixtures.
+        """
         catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
         for paths, expected in [
             (['platform/adapters/aws/persistence/dynamodb/src/transactions.ts'], {'dynamodb-persistence-runtime'}),
@@ -1087,7 +1094,9 @@ class RepositoryContractTests(unittest.TestCase):
             (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
             (['scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py', '.agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml'], {'restore-connection-diagnostics', 'deployment-operation-diagnostics-regression'}),
         ]:
-            args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
+            args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False,
+                                      stage='local', boundary='integration', ci=True, changed_only=True,
+                                      execute_local=False, evidence=None, json=True)
             report = selection.plan(args)
             self.assertEqual(report['verdict'], 'planned', report.get('findings'))
             selected = {check['check_id'] for check in report['checks']}
@@ -1209,8 +1218,8 @@ class RepositoryContractTests(unittest.TestCase):
             ('platform/adapters/aws/persistence/postgresql/src/index.ts', {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics'}, {'check-selection-mechanics'}),
             ('platform/adapters/aws/runtime/ecs-fargate/src/index.ts', {'ecs-fargate-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('platform/server/src/configuration/runtime.ts', {'platform-server-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'check-selection-regression', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
-            ('scripts/repo/check-selection/script.py', {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression', *owners}, set()),
-            ('scripts/repo/check-selection/checks.yml', {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression', *owners}, set()),
+            ('scripts/repo/check-selection/script.py', {'check-selection-mechanics', 'check-selection-repository-contracts', *owners}, {'check-selection-regression'}),
+            ('scripts/repo/check-selection/checks.yml', {'check-selection-mechanics', 'check-selection-repository-contracts', *owners}, {'check-selection-regression'}),
             ('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml', {'check-selection-mechanics', 'check-selection-repository-contracts'}, set()),
             ('scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh', {'chat-main-refresh-regression', 'check-selection-repository-contracts'}, {'check-selection-regression', 'check-selection-mechanics'}),
             ('bin/llm-workbench.js', {'chat-export-regression'}, {'chat-commit-metrics-regression', 'check-selection-regression', 'check-selection-mechanics'}),
@@ -1238,7 +1247,9 @@ class RepositoryContractTests(unittest.TestCase):
         with patch.object(selection, 'git', side_effect=git), patch.object(selection, 'runtime_identity', return_value={'pure_plan_fixture': 'no-execution'}), patch.object(selection, 'fingerprint', side_effect=planning_fingerprint):
             for path, required, forbidden in cases:
                 with self.subTest(path=path):
-                    args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
+                    args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False, all=False,
+                                              stage='local', boundary='integration', ci=True, changed_only=True,
+                                              execute_local=False, evidence=None, json=True)
                     report = selection.plan(args)
                     self.assertEqual(report['verdict'], 'planned', report['findings'])
                     selected = {item['check_id'] for item in report['checks']}
