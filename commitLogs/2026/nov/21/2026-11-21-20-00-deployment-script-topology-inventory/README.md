@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-22T19:28:47Z
-latest_commit_sha: d11eb22b
-chat_duration: 84489s (00:23:28:09)
+latest_commit_at_utc: 2026-11-22T20:21:07Z
+latest_commit_sha: c63b7ab8
+chat_duration: 87629s (01:00:20:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -720,6 +720,17 @@ ADR needed: no
 
 Reason: This refines existing check-selection and chat-refresh owners without changing product, deployment, or scheduler architecture.
 
+
+### 2026-11-22T20:21:07Z - Commit recorded
+
+Commit: `c63b7ab8`
+
+Message: fix(harness): narrow changed-input verification
+
+Summary: Separated lockfile evidence invalidation from selection, made the repository contract census periodic hygiene, and aligned direct refresh fixtures with promotion mode.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -769,6 +780,13 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
   Summary: Adds direct changed-input selection for preparation, staged commits, and recorded promotion; keeps broad checks as explicit hygiene or integration work.
   ADR impact: No ADR needed; existing selector and chat-gate ownership was extended.
 
+
+- Commit: `c63b7ab8`
+  Time UTC: 2026-11-22T20:21:07Z
+  Message: fix(harness): narrow changed-input verification
+  Summary: Separated lockfile evidence invalidation from selection, made the repository contract census periodic hygiene, and aligned direct refresh fixtures with promotion mode.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -782,9 +800,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-22T19:28:47Z
-Latest commit SHA: d11eb22b
-Chat duration: 84489s (00:23:28:09)
+Latest commit at UTC: 2026-11-22T20:21:07Z
+Latest commit SHA: c63b7ab8
+Chat duration: 87629s (01:00:20:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
