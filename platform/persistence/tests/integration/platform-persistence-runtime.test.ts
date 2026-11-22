@@ -34,6 +34,7 @@ import {
   persistenceStoredRecordDiagnostic, persistenceStoredRecordDiagnosticRecord,
   persistenceBoundaryDiagnostic, persistenceBoundaryDiagnosticRecord, persistenceCrudObservedDiagnosticRecord,
   persistenceObservedDiagnosticRecord, persistenceDiagnosticDefinitions, persistenceCurrentDiagnosticDefinitions,
+  persistenceScheduleDiagnosticDefinitions,
   persistenceCrudDiagnosticDefinitions,
   persistenceReconciliationDiagnostic, persistenceReconciliationDiagnosticRecord,
   persistenceCommandDiagnosticDefinitions, persistenceCommandConditionDiagnostic, persistenceCommandDiagnosticRecord,
@@ -747,8 +748,13 @@ async function main(): Promise<void> {
   equal(persistenceObservedDiagnosticRecord({ classification: "timeout", phase: "query", code_status: "recognized" }, "write_facts").definitionVersion, 2);
   for (const definition of persistenceDiagnosticDefinitions) equal(definition.version, 1);
   for (const definition of persistenceCurrentDiagnosticDefinitions) equal(definition.version, 2);
+  for (const definition of persistenceScheduleDiagnosticDefinitions) {
+    equal(definition.version, ["persistence.credential-rejected", "persistence.runtime-permission-denied", "persistence.transport-unavailable", "persistence.operation-timed-out", "persistence.unclassified-failure"].includes(definition.code) ? 5 : 4);
+  }
   const historicalOperations = ["connect", "readiness", "transaction", "migration", "create_outbox", "write_facts", "write_atomic", "read_outbox", "list_outbox", "claim_outbox", "publish_outbox", "read_processing", "claim_processing", "complete_processing", "release_processing", "append_lineage", "read_lineage"];
-  for (const [definitions, expectedOperations] of [[persistenceDiagnosticDefinitions, historicalOperations], [persistenceCurrentDiagnosticDefinitions, [...historicalOperations, "administration", "restore_verification", "create_schedule", "read_schedule", "list_due_schedules", "handover_schedule"]]] as const) {
+  const currentOperations = [...historicalOperations, "administration", "restore_verification"];
+  const scheduleOperations = [...currentOperations, "create_schedule", "read_schedule", "list_due_schedules", "handover_schedule"];
+  for (const [definitions, expectedOperations] of [[persistenceDiagnosticDefinitions, historicalOperations], [persistenceCurrentDiagnosticDefinitions, currentOperations], [persistenceScheduleDiagnosticDefinitions, scheduleOperations]] as const) {
     for (const definition of definitions) {
       if (definition.detail.type !== "object" || definition.detail.properties["operation"]?.type !== "enum") throw new Error("Expected operation enum");
       deepEqual(definition.detail.properties["operation"].values, expectedOperations);
