@@ -136,6 +136,7 @@ class FixtureSupport(unittest.TestCase):
             if check['stage'] == 'local': check['runtime'] = {'tools': ['bash', 'python3'], 'environment': ['LANG', 'PYTHONPATH']}
         self.catalog['checks']['local'].update(scope_inputs=False, inputs=['src', 'program.yml', 'image.yml'])
         self.catalog['checks']['runnable-program'].update(scope_inputs=False, inputs=['program.yml'])
+        self.catalog['repository_inputs'] = [{'inputs': ['src', 'program.yml', 'image.yml'], 'checks': ['local']}]
         self.catalog_path = self.root / 'scripts/repo/check-selection/checks.yml'
         self.save()
 

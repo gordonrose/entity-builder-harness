@@ -285,6 +285,7 @@ class SelectionTests(FixtureSupport):
             'effects': ['writes-files'],
             'argv': ['bash', selection.workspace_context.WRAPPER, '--unit', 'core'],
             'inputs': ['packages/ledger'], 'runtime': {'tools': ['bash', 'node'], 'node_packages': [], 'environment': []}}
+        self.catalog['checks']['workspace']['select_on_workspace_manifest'] = True
         self.save()
         return package
 
@@ -767,7 +768,7 @@ class SelectionTests(FixtureSupport):
 
 
     def test_dependency_contracts_reject_cycles_unknown_refs_and_external_children(self):
-        base = {'stage': 'local', 'effects': ['writes-files']}
+        base = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
         for child, expected in [({'stage': 'package', 'effects': ['network']}, 'verification-dependency-boundary-invalid'), ({**base, 'members': ['root']}, 'verification-dependency-cycle')]:
             graph, findings = selection.verification_dependencies({'root': {**base, 'members': ['child']}, 'child': child}, ['root'], ['src'])
             self.assertIn(expected, {item['code'] for item in findings})
@@ -776,7 +777,7 @@ class SelectionTests(FixtureSupport):
 
 
     def test_focused_member_peers_do_not_gain_artificial_cycles(self):
-        leaf = {'stage': 'local', 'effects': ['writes-files']}
+        leaf = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
         graph, findings = selection.verification_dependencies({'root': {**leaf, 'members': ['first', 'second', 'work'], 'focused_prerequisites': [{'inputs': ['src'], 'checks': ['first', 'second']}]}, **{name: leaf for name in ['first', 'second', 'work']}}, ['root'], ['src'])
         self.assertFalse(findings)
         self.assertEqual(graph['first'], set())
@@ -2165,7 +2166,7 @@ used_by:
         self.assertNotIn('local', commit['execution_summary']['executed_check_ids'])
         self.assertFalse((self.root / 'counts').exists())
         verified = self.run_plan(execute=True)
-        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local'])
+        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
         commit = self.run_plan(execute=True, boundary='commit', staged=True, require_preparation=True)
         integrated = self.run_plan(execute=True)
         for report in (commit, integrated):

@@ -136,7 +136,7 @@ for (const [settings, field, condition] of [
   [{ tables: { history: "history", entity: "orphan", index: null, schedule: null, outbox: null, processing: null, lineage: null }, history: [] }, "table-state", "mismatch"],
   [{ history: [{ migration_id: "unreviewed", checksum: manifest.migrations[0].checksum }] }, "history-id", "mismatch"],
   [{ history: [{ migration_id: manifest.migrations[0].id, checksum: canary }] }, "history-checksum", "mismatch"],
-  [{ history: [{}, {}, {}] }, "history-count", "count-mismatch"],
+  [{ history: Array.from({ length: manifest.migrations.length + 1 }, () => ({})) }, "history-count", "count-mismatch"],
   [{ tables: { history: "history", entity: null, index: "index", schedule: "schedule", outbox: "outbox", processing: "processing", lineage: "lineage" } }, "table-state", "missing"],
   [{ tables: { history: "history", entity: "entity", index: "index", schedule: null, outbox: null, processing: null, lineage: null }, history: manifest.migrations.slice(0, 2).map(migration => ({ migration_id: migration.id, checksum: migration.checksum })) }, "table-state", "missing"],
   [{ tables: { history: undefined, entity: null, index: null, schedule: null, outbox: null, processing: null, lineage: null } }, "table-state", "not-confirmed"],
@@ -326,7 +326,8 @@ try {
 } finally { await started.value.close(); }
 let captured;
 feature.mount({ registerDiagnosticCatalog: () => shared.ok(undefined), registerObservabilityProfile: () => shared.ok(undefined),
-  registerHealthCheck: () => shared.ok(undefined), registerRoute: route => { captured = route.handler; return shared.ok(undefined); } });
+  registerHealthCheck: () => shared.ok(undefined), registerJob: () => shared.ok(undefined),
+  registerRoute: route => { captured = route.handler; return shared.ok(undefined); } });
 const beforeObserverFailure = saves;
 const observedFailure = await captured.handle({ body: { action: "create", input } }, { onDiagnostic: () => { throw new Error(canary); } });
 assert.equal(observedFailure.status, 503); assert.equal(saves, beforeObserverFailure + 1);

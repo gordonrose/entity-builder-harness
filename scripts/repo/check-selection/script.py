@@ -764,7 +764,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     # below, so a newly added or removed workspace still invalidates reusable
     # evidence without manufacturing unrelated test obligations.
     repository_rules = repository_rules + [
-        {'inputs': sorted(set(context['references'])), 'checks': [identity]}
+        {'inputs': sorted(set(context['references'])),
+         'workspace_manifest_inputs': sorted(set(package_context['discovery'])),
+         'checks': [identity]}
         for identity, context in package_context['checks'].items()
     ]
     # Ordinary code has diagnostic obligations even without a deployment scope.
@@ -786,6 +788,16 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings.append({'code': 'diagnostic-adoption-selection-invalid'})
     if explicit_checks is not None:
         repository_rules = [{'inputs': [catalog_ref], 'checks': explicit_checks}] if explicit_checks else []
+    def workspace_manifest_match(rule, path):
+        return path.endswith('/package.json') and (
+            any(below(path, ref) or below(ref, path)
+                for ref in rule.get('workspace_manifest_inputs', []))
+            # A removed manifest cannot be present in the current discovery
+            # inventory. An opted-in workspace owner must still refresh its
+            # declaration-derived evidence for that removal.
+            or not (root / path).exists()
+        )
+
     def triggered_rule_checks(rule):
         """Return the exact checks whose declared selection inputs changed.
 
@@ -816,6 +828,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         if lockfile_match:
             return [identity for identity in identities if isinstance(checks.get(identity), dict)
                     and checks[identity].get('select_on_lockfile', False) is True]
+        if any(workspace_manifest_match(rule, path) for path in relevant):
+            return [identity for identity in identities if isinstance(checks.get(identity), dict)
+                    and checks[identity].get('select_on_workspace_manifest', False) is True]
         return []
     task_context = (paths if args.all else changed) if explicit_checks is None else getattr(args, 'task_paths', None)
     preparation_context = None
@@ -854,7 +869,11 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         if isinstance(rule, dict) and coverage.strings(rule.get('inputs')) and coverage.strings(rule.get('checks')):
             selected_identities = set(triggered_rule_checks(rule)) | (set(rule['checks']) & catalog_check_changes)
             if selected_identities:
-                covered.update(path for path in changed if any(below(consumer, ref) or below(ref, consumer) for consumer in downstream([path]) for ref in rule['inputs']))
+                covered.update(path for path in changed if (
+                    any(below(consumer, ref) or below(ref, consumer)
+                        for consumer in downstream([path]) for ref in rule['inputs'])
+                    or workspace_manifest_match(rule, path)
+                ))
     non_applicable = []
     for path in changed:
         if path in covered: continue
