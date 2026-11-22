@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.module-structure.readme
-version: 5
+version: 6
 status: active
 created_on: "2026-11-01"
-updated_on: "2026-11-15"
+updated_on: "2026-11-22"
 layer: 03.product
 domain: architecture
 disciplines: [architecture, agentic]
@@ -35,9 +35,10 @@ owns the rule and its treatment of refactoring; this guide explains the tools.
   There is no refresh command; changing an allowance needs the approval and
   review described in the standard. Config has no allowance.
 - [smoke-test.sh](smoke-test.sh) runs [smoke-test.mjs](smoke-test.mjs), which tests
-  valid exports, rejected declarations, legacy changes and the actual config
-  index. Its counterexample adds a function to a copy in memory and proves the
-  check rejects it; it does not modify the real index.
+  valid exports, rejected declarations, legacy changes and configuration access
+  using deliberate in-memory examples. Its counterexample adds a function to a
+  copy in memory and proves the check rejects it; it does not read or modify
+  the real repository source.
   It also runs the shared dependency inspector's isolated workspace fixtures;
   those create and remove their own temporary files, not repository sources.
 
@@ -108,11 +109,17 @@ actual source tree and prohibited/permitted future callers are fixture-tested.
 
 ## Running it
 
-Use the registered checks for final proof:
+The registered real-source check is the normal protection for a relevant code
+change:
 
 ```bash
-bash scripts/repo/check-selection/script.sh --checks module-index-structure module-index-structure-regression --execute-local --json
+bash scripts/repo/check-selection/script.sh --checks module-index-structure --execute-local --json
 ```
+
+The fixture regression proves the checker itself. It is selected when its
+checker or fixture files change, and is included in complete integration
+verification; an ordinary application or platform source change does not need
+to rerun it.
 
 For a narrow exploratory run:
 

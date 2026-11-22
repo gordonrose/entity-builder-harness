@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.execution-policy
-#   version: 4
+#   version: 6
 #   status: active
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-22"
 #   layer: 06.shared
 #   domain: testing
 #   disciplines: [agentic, security, sre]
@@ -134,7 +134,7 @@ def execution_view(results: list[dict], checks: dict, *, development: bool, expl
         feedback = feedback_for(checks[item['check_id']])
         rows.append({
             'check_id': item['check_id'], 'owner': checks[item['check_id']].get('owner'),
-            'boundary': item['boundary'], 'stage': item['stage'], 'status': item['status'],
+            'boundary': item['boundary'], 'cadence': item['cadence'], 'stage': item['stage'], 'status': item['status'],
             'feedback': feedback, 'development_eligible': development_check(item),
             'selection_basis': 'explicit-request' if explicit else 'declared-impact-or-prerequisite',
             'required_by': sorted(parent['check_id'] for parent in results if item['check_id'] in parent['dependency_ids']),
@@ -161,7 +161,7 @@ def execution_view(results: list[dict], checks: dict, *, development: bool, expl
 def inventory(checks: dict) -> dict:
     findings = [finding for identity, check in checks.items() if isinstance(check, dict) for finding in validate_feedback(identity, check)]
     return {'schema': 'repo/check-feedback-inventory/v1', 'verdict': 'gap' if findings else 'planned', 'findings': findings,
-            'checks': [{'check_id': identity, 'owner': check.get('owner'), 'boundary': check.get('boundary', 'commit'),
+            'checks': [{'check_id': identity, 'owner': check.get('owner'), 'boundary': check.get('boundary'), 'cadence': check.get('cadence', 'candidate'),
                         'stage': check.get('stage'), 'effects': check.get('effects'), 'feedback': check.get('feedback')}
                        for identity, check in sorted(checks.items()) if isinstance(check, dict)],
             'limitation': 'Missing feedback is unclassified; existing gates are unchanged. This inventory executes no checks.'}
@@ -214,7 +214,7 @@ def safe_run(report: dict, run_id: str) -> dict:
         'selection_mode': report['execution_policy']['mode'],
         'integration_claim': False if report['execution_policy']['mode'] in ('development', 'explicit') else None,
         'changed_inputs': report['changed_inputs'],
-        'checks': [{**{key: item[key] for key in ('check_id', 'stage', 'boundary', 'status', 'exit_code', 'elapsed_seconds',
+        'checks': [{**{key: item[key] for key in ('check_id', 'stage', 'boundary', 'cadence', 'status', 'exit_code', 'elapsed_seconds',
                                                    'input_digest', 'evidence_key', 'evidence_source', 'cache_invalidation_reasons',
                                                    'failure_detail', 'blocked_by') if key in item},
                     'runtime_digest': hashlib.sha256(json.dumps(item['runtime_identity'], sort_keys=True).encode()).hexdigest() if item.get('runtime_identity') else None}
@@ -238,7 +238,7 @@ def render(report: dict) -> str:
     for item in policy.get('checks', report.get('checks', [])):
         feedback = feedback_for(item)
         rationale = feedback['rationale'] if feedback else 'Feedback unclassified; existing gate retained.'
-        lines.append(f"{item['check_id']}: {item.get('status', 'declared')} | {item.get('boundary')} / {item.get('stage')} | {rationale}")
+        lines.append(f"{item['check_id']}: {item.get('status', 'declared')} | {item.get('cadence', 'candidate')} / {item.get('boundary')} / {item.get('stage')} | {rationale}")
         if item.get('prerequisites'):
             lines.append('  prerequisites: ' + ', '.join(item['prerequisites']))
         if 'selection_basis' in item:

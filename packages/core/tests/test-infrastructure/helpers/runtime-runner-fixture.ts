@@ -29,7 +29,8 @@ export function verifyRuntimeRunner(owner: string, expectedFailureExitCode?: num
   const relativeTests = relative(configurationValue(configuration, "rootDir"), resolve(owner, "tests"));
 
 
-  function fixture(check: (root: string, source: (name: string, compiled?: string) => void, compiled: (name: string, body: string) => void) => void): void {
+  function fixture(check: (root: string, source: (name: string, compiled?: string, contents?: string) => void, compiled: (name: string, body: string) => void,
+                           implementation: (name: string, contents: string) => void) => void): void {
     const root = mkdtempSync(join(tmpdir(), "core-test-runner-"));
     const sourceRoot = join(root, owner, "tests");
     const compiledRoot = join(root, outputRoot, relativeTests);
@@ -38,10 +39,11 @@ export function verifyRuntimeRunner(owner: string, expectedFailureExitCode?: num
       writeFileSync(file, body);
     };
     const compiled = (name: string, body: string) => write(join(compiledRoot, name), body);
-    const source = (name: string, body?: string) => {
-      write(join(sourceRoot, name), "export {};\n");
+    const source = (name: string, body?: string, contents = "export {};\n") => {
+      write(join(sourceRoot, name), contents);
       if (body !== undefined) compiled(name.replace(/\.ts$/, ".js"), body);
     };
+    const implementation = (name: string, contents: string) => write(join(root, owner, "src", name), contents);
     try {
       mkdirSync(sourceRoot, { recursive: true });
       mkdirSync(compiledRoot, { recursive: true });
@@ -57,14 +59,17 @@ export function verifyRuntimeRunner(owner: string, expectedFailureExitCode?: num
           if (target.endsWith(".ts")) write(join(root, outputRoot, relativeSource.replace(/\.ts$/, ".js")), "module.exports = {};\n");
         }
       }
-      check(root, source, compiled);
+      check(root, source, compiled, implementation);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   }
 
-  function run(root: string) {
-    return spawnSync(process.execPath, [runner], { cwd: root, encoding: "utf8", timeout: 10_000, env: { ...process.env, KANBIEN_CLOUDWATCH_OTEL_RUNTIME_ROOT: join(root, outputRoot) } });
+  function run(root: string, changedPaths?: string[]) {
+    return spawnSync(process.execPath, [runner], { cwd: root, encoding: "utf8", timeout: 10_000, env: {
+      ...process.env, KANBIEN_CLOUDWATCH_OTEL_RUNTIME_ROOT: join(root, outputRoot),
+      ...(changedPaths === undefined ? {} : { REPO_CHECK_CHANGED_PATHS: JSON.stringify(changedPaths) }),
+    } });
   }
 
   fixture((root, source, compiled) => {
@@ -91,6 +96,17 @@ export function verifyRuntimeRunner(owner: string, expectedFailureExitCode?: num
     notEqual(actual.status, 0, "missing nested compilation fails the runner");
     match(actual.stderr, /Compiled (?:Core )?runtime test unavailable: .*missing-runtime\.test\.js/);
     equal(actual.stdout, "", "missing compilation is detected before other cases execute");
+  });
+
+  if (owner === "packages/core") fixture((root, source, _compiled, implementation) => {
+    implementation("shared.ts", "export const shared = 1;\n");
+    source("selected-runtime.test.ts", 'console.log("selected");', 'import { shared } from "../src/shared.js"; void shared;\n');
+    source("unrelated-runtime.test.ts", 'console.log("unrelated");');
+
+    const actual = run(root, ["packages/core/src/shared.ts"]);
+
+    equal(actual.status, 0, "declared changed Core source selects its importing runtime test");
+    equal(actual.stdout.trim(), "selected", "unrelated compiled runtime tests do not run under safe changed-path selection");
   });
 
   for (const childExitCode of [7, 9]) {

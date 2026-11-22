@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 12
+version: 17
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-19"
+updated_on: "2026-11-22"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -32,6 +32,19 @@ The [execution standard](../../../.agentic/shared/testing/standards/test-executi
 owns those boundaries. [checks.yml](checks.yml) owns each command, its inputs,
 prerequisites and optional `feedback` declaration. No separate profile catalog,
 scheduler or nightly suite is introduced.
+
+Checks default to `cadence: candidate`: they are selected for an affected
+candidate. `cadence: hygiene` is retained for broad regression and
+unusual-environment checks. Hygiene checks run automatically only when their
+own declared inputs change at integration, or when deliberately requested with
+`--checks`; they do not run at every commit. This records selection only; it
+does not install a periodic scheduler.
+
+Every catalogue check also declares its `boundary`: `commit` for the small
+checks that must finish before a commit, or `integration` for complete affected
+verification before merge/promotion. There is no fallback timing. A missing or
+unknown boundary makes the selector stop rather than treating a check as a
+commit obligation by accident.
 
 [script.py](script.py) still owns impact selection and execution;
 [execution_policy.py](execution_policy.py) validates scheduling metadata and
@@ -182,6 +195,24 @@ bash scripts/repo/check-selection/smoke-test.sh
 repository-relative changed paths, including paths deleted by the change.
 Directory input matching observes slash boundaries, so `src-extra` cannot
 silently match an input declared as `src`.
+
+## Commit planning cost
+
+A contained local commit uses direct declared inputs first. It does not build
+the repository-wide consumer graph, discover every deployment scope, or read
+the delivery inventory before deciding whether a local check applies. Its
+report identifies this as `impact_analysis: direct-commit` and records delivery
+inventory as deferred to integration. An unmapped authoritative source still
+fails as uncovered; this fast path never treats uncertainty as no impact.
+
+Local source planning still builds the complete consumer graph, including for
+Core, packages, contracts and platform code. Its separate physical delivery
+census is deferred to the `delivery-coverage` CI route unless the changed path
+is deployment topology, the check catalogue, or an explicit `--all`/`--ci`
+request. That CI route always runs the inventory before selected proof.
+Deployment topology and CI therefore retain the complete delivery analysis;
+ordinary local code qualification does not repeat it. This is selection-cost
+control, not a waiver of package, target, acceptance or integration proof.
 
 The default is a plan, with pending checks and explicit later-stage obligations.
 For focused verification of an already identified registered unit, use:
@@ -413,6 +444,15 @@ contracts and configuration need executable coverage; an unmapped definition is
 remain covered by their mandatory metadata/process checks. Scope requirements
 cannot omit mandatory inventory/runnable checks, and unsupported impact is
 reported explicitly.
+
+`isolated_check_contexts` handles a retained system whose scripts are spread
+through otherwise active folders. A check marked with `isolated_context` is
+selected only for an explicit request, a complete `--all` request, a change to
+that check's catalogue contract, or a non-prose change beneath that context's
+declared `activation_inputs`. Its ordinary repository mappings remain recorded,
+but do not pull the retained system into unrelated work. This is how the
+retained Kanbien staging route stays runnable for staging maintenance without
+becoming part of Kanbien Core Platform qualification.
 
 The repository commit hook adds inventory coverage and focused local checks.
 The preparation wrapper and repository hook both declare their local-test write

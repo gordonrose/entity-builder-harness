@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 10
+#   version: 17
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-22"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -29,6 +29,7 @@ import subprocess
 import sys
 import time
 import uuid
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
 import yaml
@@ -47,10 +48,12 @@ assert spec and spec.loader
 coverage = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(coverage)
 BOUNDARIES = {'commit': 0, 'integration': 1}
+CADENCES = {'candidate', 'hygiene'}
 STAGES = {'local': 0, 'package': 1, 'deploy': 2, 'acceptance': 3}
 CLASSES = {'local': {'static', 'local-runtime'}, 'package': {'container-qualification', 'ci'}, 'deploy': {'live'}, 'acceptance': {'live'}}
 LOCAL_EFFECTS = {'read-only', 'writes-files'}
 PLACEHOLDERS = {'{scope_contract}', '{workload_binding}', '{target_root}', '{program_contract}'}
+ISOLATED_CONTEXT_NAME = re.compile(r'^[a-z][a-z0-9-]*$')
 
 
 def safe_nested_execution_summary(value: object, allowed_ids: set[str]) -> dict:
@@ -144,7 +147,7 @@ def verification_dependencies(checks: dict, seeds: list[str], context: list[str]
         visiting.add(identity)
         for child in sorted(required):
             other = checks.get(child)
-            if isinstance(other, dict) and (STAGES.get(other.get('stage'), 999) > STAGES.get(check.get('stage'), -1) or BOUNDARIES.get(other.get('boundary', 'commit'), 999) > BOUNDARIES.get(check.get('boundary', 'commit'), -1) or not (set(other.get('effects', [])) - {'read-only'}) <= set(check.get('effects', []))):
+            if isinstance(other, dict) and (STAGES.get(other.get('stage'), 999) > STAGES.get(check.get('stage'), -1) or BOUNDARIES.get(other.get('boundary'), 999) > BOUNDARIES.get(check.get('boundary'), -1) or (other.get('cadence', 'candidate') == 'hygiene' and check.get('cadence', 'candidate') != 'hygiene') or not (set(other.get('effects', [])) - {'read-only'}) <= set(check.get('effects', []))):
                 findings.append({'code': 'verification-dependency-boundary-invalid', 'check_id': identity, 'dependency': child}); continue
             visit(child, focused if child in members and child not in focused else ())
         visiting.remove(identity)
@@ -203,6 +206,91 @@ def dormant_roots(root: Path, catalog: dict[str, Any]) -> tuple[list[str], list[
     if len(set(roots)) != len(roots):
         return [], [{'code': 'dormant-impact-roots-duplicate'}]
     return roots, []
+
+
+def isolated_check_contexts(root: Path, catalog: dict[str, Any], checks: dict[str, Any]) -> tuple[dict[str, tuple[str, ...]], list[dict[str, str]]]:
+    """Read retained systems whose checks must not spill into active work.
+
+    An isolated context names its own concrete activation inputs. This keeps a
+    retained system executable for maintenance while preventing a shared input
+    mapping from making it an automatic obligation of unrelated work.
+    """
+    declared = catalog.get('isolated_check_contexts', {})
+    if not isinstance(declared, dict):
+        return {}, [{'code': 'isolated-check-contexts-invalid'}]
+    contexts: dict[str, tuple[str, ...]] = {}
+    findings: list[dict[str, str]] = []
+    for name, definition in declared.items():
+        if not isinstance(name, str) or not ISOLATED_CONTEXT_NAME.fullmatch(name) or not isinstance(definition, dict):
+            findings.append({'code': 'isolated-check-context-invalid'})
+            continue
+        inputs = definition.get('activation_inputs')
+        if (not coverage.strings(inputs) or len(set(inputs)) != len(inputs)
+                or any(not coverage.safe_path(item) or not (root / item).exists() for item in inputs)):
+            findings.append({'code': 'isolated-check-context-inputs-invalid', 'context': name})
+            continue
+        contexts[name] = tuple(inputs)
+    for check_id, check in checks.items():
+        if not isinstance(check, dict) or 'isolated_context' not in check:
+            continue
+        context = check['isolated_context']
+        if not isinstance(context, str) or context not in contexts:
+            findings.append({'code': 'check-isolated-context-invalid', 'check_id': check_id})
+    return contexts, findings
+
+
+FULL_IMPACT_ROOTS = (
+    '.github/workflows',
+    'infra/04.deploy',
+    'packages',
+    'platform',
+    'products',
+    'scripts/repo/check-selection',
+    'scripts/repo/workspace-build',
+)
+
+# The delivery inventory is a repository-wide deployment census. It is owned
+# by the delivery-coverage CI route, where it remains mandatory. A local
+# source-change plan still builds its full consumer graph, but must not repeat
+# that independent census unless the change can affect delivery topology or
+# the selection authority which feeds it.
+DELIVERY_INVENTORY_ROOTS = (
+    '.github/workflows',
+    '.agentic/04.deploy',
+    'docs/04.deploy',
+    'infra/04.deploy',
+    'scripts/04.deploy',
+    'scripts/repo/check-selection',
+)
+
+
+def direct_commit_impact(args: argparse.Namespace, boundary: str, changed: list[str], catalog_ref: str) -> bool:
+    """Use declared direct inputs for a contained commit change.
+
+    Full impact discovery remains mandatory for integration, CI, explicit/all
+    requests, shared source, delivery topology and catalog changes. A direct
+    commit plan remains conservative: its normal uncovered-input finding still
+    blocks a change without a declared owner.
+    """
+    if (boundary != 'commit' or args.stage != 'local' or args.all or getattr(args, 'ci', False)
+            or getattr(args, 'checks', None) is not None or getattr(args, 'aggregate_members', None)
+            or catalog_ref in changed):
+        return False
+    return bool(changed) and not any(any(below(path, root) for root in FULL_IMPACT_ROOTS) for path in changed)
+
+
+def delivery_inventory_required(args: argparse.Namespace, changed: list[str], catalog_ref: str) -> bool:
+    """Keep the independent delivery census at its deployment/CI boundary.
+
+    The local planner still performs complete source impact analysis for an
+    ordinary Core or product change. The full physical delivery census is
+    required only where a change can alter that census, or by an explicit
+    all-input/CI request. That avoids making a deployment topology scan a
+    repeated prerequisite for local code qualification.
+    """
+    if args.all or getattr(args, 'ci', False) or catalog_ref in changed:
+        return True
+    return any(any(below(path, root) for root in DELIVERY_INVENTORY_ROOTS) for path in changed)
 
 
 def consumer_graph(root: Path, paths: list[str], dormant: list[str] | tuple[str, ...] = (), *, include_metadata: bool = True) -> dict[str, set[str]]:
@@ -293,8 +381,11 @@ def validate_check(root: Path, check_id: str, check: Any) -> list[dict[str, str]
     def fail(code: str) -> list[dict[str, str]]: return [{'code': code, 'check_id': check_id}]
     if not isinstance(check, dict): return fail('required-check-missing')
     stage, argv, effects = check.get('stage'), check.get('argv'), check.get('effects')
-    if check.get('boundary', 'commit') not in BOUNDARIES: return fail('check-boundary-invalid')
+    if 'boundary' not in check: return fail('check-boundary-missing')
+    if check['boundary'] not in BOUNDARIES: return fail('check-boundary-invalid')
+    if check.get('cadence', 'candidate') not in CADENCES: return fail('check-cadence-invalid')
     if not isinstance(check.get('scope_inputs', True), bool): return fail('check-input-contract-invalid')
+    if not isinstance(check.get('changed_path_context', False), bool): return fail('check-input-contract-invalid')
     if not isinstance(stage, str) or stage not in STAGES or not isinstance(check.get('evidence_class'), str) or check['evidence_class'] not in CLASSES[stage]: return fail('check-stage-invalid')
     if not isinstance(argv, list) or len(argv) < 2 or argv[0] != 'bash' or not all(isinstance(arg, str) and arg and not any(c in arg for c in '\n\r\0;|&`$') for arg in argv): return fail('check-argv-invalid')
     parameters = check.get('parameters', {})
@@ -337,25 +428,52 @@ def validate_check(root: Path, check_id: str, check: Any) -> list[dict[str, str]
 
 
 def fingerprint(root: Path, refs: set[str], *, exclude: set[str] | frozenset[str] = frozenset()) -> str:
+    """Hash exact declared files, with optional planning-only entry reuse.
+
+    Execution revalidation clears the context cache before calling this
+    function. Initial planning may reuse bytes already read through an
+    overlapping declared directory, preserving the digest format while
+    avoiding repeated repository walks.
+    """
     digest = hashlib.sha256()
+    entry_cache = FINGERPRINT_ENTRY_CACHE.get()
     for ref in sorted(refs):
         if ref in exclude: continue
-        path = coverage.within(root, ref)
-        if path is None: digest.update(('invalid:' + ref).encode()); continue
-        entries = sorted(item for item in path.rglob('*') if not any(part in {'node_modules', '__pycache__', '.git', '.cache'} for part in item.relative_to(path).parts)) if path.is_dir() else [path]
-        for item in entries:
-            if item.is_symlink(): raise InputSymlinkError('input-symlink:' + item.relative_to(root).as_posix())
-        files = [item for item in entries if item.is_file()] if path.is_dir() else entries
-        for item in files:
-            if item.relative_to(root).as_posix() in exclude: continue
-            try:
-                content = item.read_bytes()
-                mode = item.stat().st_mode & 0o777
-            except OSError:
-                content, mode = b'<missing>', None
-            digest.update(json.dumps([item.relative_to(root).as_posix(), mode, len(content)]).encode())
-            digest.update(content)
+        cache_key = (ref, tuple(sorted(exclude)))
+        entries = entry_cache.get(cache_key) if entry_cache is not None else None
+        if entries is None:
+            path = coverage.within(root, ref)
+            if path is None:
+                entries = [('invalid:' + ref, None, b'')]
+            else:
+                discovered = sorted(item for item in path.rglob('*') if not any(part in {'node_modules', '__pycache__', '.git', '.cache'} for part in item.relative_to(path).parts)) if path.is_dir() else [path]
+                for item in discovered:
+                    if item.is_symlink(): raise InputSymlinkError('input-symlink:' + item.relative_to(root).as_posix())
+                entries = []
+                for item in ([item for item in discovered if item.is_file()] if path.is_dir() else discovered):
+                    relative = item.relative_to(root).as_posix()
+                    if relative in exclude: continue
+                    try:
+                        content = item.read_bytes()
+                        mode = item.stat().st_mode & 0o777
+                    except OSError:
+                        content, mode = b'<missing>', None
+                    entries.append((relative, mode, content))
+            if entry_cache is not None:
+                entry_cache[cache_key] = entries
+        for relative, mode, content in entries:
+            if relative.startswith('invalid:'):
+                digest.update(relative.encode())
+            else:
+                digest.update(json.dumps([relative, mode, len(content)]).encode())
+                digest.update(content)
     return digest.hexdigest()
+
+
+# This cache is invocation-local. It exists only while initial planning
+# computes overlapping identities; fresh revalidation clears it before a
+# command runs or a passed result is retained.
+FINGERPRINT_ENTRY_CACHE: ContextVar[dict[tuple[str, tuple[str, ...]], list[tuple[str, int | None, bytes]]] | None] = ContextVar('fingerprint-entry-cache', default=None)
 
 
 def changed_catalog_checks(root: Path, catalog_ref: str, current: dict[str, Any], baseline: str = 'HEAD') -> set[str]:
@@ -425,9 +543,10 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     if args.staged: changed = sorted(set(git(root, 'diff', '--cached', '--name-only', '--no-renames', '-z').split('\0')) - {''})
     if any(not coverage.safe_path(path) for path in changed): findings.append({'code': 'changed-path-invalid'})
     catalog_check_changes = changed_catalog_checks(root, catalog_ref, catalog, getattr(args, 'comparison_base', 'HEAD')) if catalog_ref in changed else set()
-    paths = repository_paths(root)
     dormant, dormant_findings = dormant_roots(root, catalog)
     findings += dormant_findings
+    isolated_contexts, isolated_context_findings = isolated_check_contexts(root, catalog, checks)
+    findings += isolated_context_findings
     # Incidental maintenance prose does not reactivate a dormant subsystem.
     # Authoritative definitions, executable inputs and explicit checks still do.
     # Missing files cannot be classified from a header and remain conservative.
@@ -436,8 +555,25 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         and (not (root / path).is_file() or not governance_prose(root, path))
         for path in changed
     )
-    graph = consumer_graph(root, paths, dormant)
-    proof_graph = consumer_graph(root, paths, dormant, include_metadata=False)
+    def isolated_check_active(identity: str) -> bool:
+        check = checks.get(identity)
+        context = check.get('isolated_context') if isinstance(check, dict) else None
+        if context is None:
+            return True
+        # Explicit maintenance and complete inventory requests intentionally
+        # include retained systems. A normal plan activates one only from its
+        # declared source/configuration inputs or when its own contract changed.
+        if explicit_checks is not None or args.all or identity in catalog_check_changes:
+            return True
+        return any(
+            any(below(path, reference) or below(reference, path) for reference in isolated_contexts.get(context, ()))
+            and (not (root / path).is_file() or not governance_prose(root, path))
+            for path in changed
+        )
+    direct_commit = direct_commit_impact(args, boundary, changed, catalog_ref)
+    paths = changed if direct_commit else repository_paths(root)
+    graph = {} if direct_commit else consumer_graph(root, paths, dormant)
+    proof_graph = {} if direct_commit else consumer_graph(root, paths, dormant, include_metadata=False)
     # This graph is immutable for one plan. Cache traversals only within that
     # invocation; later plans must observe new metadata and dependency edges.
     downstream_cache: dict[frozenset[str], frozenset[str]] = {}
@@ -473,13 +609,18 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             'scripts/repo/workspace-build', 'scripts/repo/diagnostic-coverage/verify.sh',
             'scripts/repo/check-selection/workspace_context.py')) for path in changed)):
         ensure_package_context(checks)
-    scopes, discovery_gaps = discover(root)
-    findings += discovery_gaps
-    inventory_spec = importlib.util.spec_from_file_location('delivery_inventory', ROOT / 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py')
-    assert inventory_spec and inventory_spec.loader
-    inventory = importlib.util.module_from_spec(inventory_spec)
-    inventory_spec.loader.exec_module(inventory)
-    delivery = inventory.report(root, source_revision=git(root, 'rev-parse', 'HEAD').strip(), routes_only=True)
+    scopes = []
+    delivery = {'routes': [], 'findings': []}
+    delivery_inventory_needed = delivery_inventory_required(args, changed, catalog_ref)
+    if not direct_commit:
+        scopes, discovery_gaps = discover(root)
+        findings += discovery_gaps
+        if delivery_inventory_needed:
+            inventory_spec = importlib.util.spec_from_file_location('delivery_inventory', ROOT / 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py')
+            assert inventory_spec and inventory_spec.loader
+            inventory = importlib.util.module_from_spec(inventory_spec)
+            inventory_spec.loader.exec_module(inventory)
+            delivery = inventory.report(root, source_revision=git(root, 'rev-parse', 'HEAD').strip(), routes_only=True)
     # Delivery inventory is repository-wide source coverage.  Its independent
     # CI route owns unrelated legacy gaps; a focused change plan must not
     # report another target's pre-existing gap as though the selected change
@@ -567,21 +708,26 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             errors = validate_check(root, identity, check)
             findings += errors
             if errors: continue
+            if not isolated_check_active(identity): continue
+            if check.get('cadence', 'candidate') == 'hygiene' and not any(below(path, ref) or below(ref, path) for path in changed for ref in check.get('inputs', [])):
+                continue
             argv = tuple(substitutions.get(arg, arg) for arg in check['argv'])
             runtime_parameters = {'{' + name + '}' for name in check.get('parameters', {})}
             if any(not arg or (('{' in arg or '}' in arg) and arg not in runtime_parameters) for arg in argv): findings.append({'code': 'check-arguments-unresolved', 'check_id': identity}); continue
             key = identity + ':' + hashlib.sha256(json.dumps(argv).encode()).hexdigest()[:16]
-            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'scopes': [], 'references': set(), 'status': 'pending', 'runtime': check.get('runtime', {}), 'parameters': check.get('parameters', {}), 'applicability': check.get('applicability', {})})
-            if any(item[field] != check.get(field, {}) for field in ('stage', 'effects', 'evidence_class', 'runtime', 'parameters')): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
+            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'cadence': check.get('cadence', 'candidate'), 'changed_path_context': check.get('changed_path_context', False), 'scopes': [], 'references': set(), 'status': 'pending', 'runtime': check.get('runtime', {}), 'parameters': check.get('parameters', {}), 'applicability': check.get('applicability', {})})
+            if any(item[field] != check.get(field, 'candidate' if field == 'cadence' else False if field == 'changed_path_context' else {}) for field in ('stage', 'effects', 'evidence_class', 'cadence', 'changed_path_context', 'runtime', 'parameters')): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
             bind_catalog_entry(item, identity, check, argv)
-            if item.get('boundary', check.get('boundary', 'commit')) != check.get('boundary', 'commit'): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
+            if item.get('boundary', check['boundary']) != check['boundary']: findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
             item['scopes'].append(report['scope'])
             # Scope impact selects obligations. Only checks declaring that they
             # consume the scope inherit its references in their proof identity.
             scope_refs = refs if check.get('scope_inputs', True) else set()
             implementation = argv[1] if check.get('scope_inputs') is False else str(Path(argv[1]).parent)
             item['references'].update(scope_refs | set(check.get('inputs', [])) | {implementation} | ({check['capability']} if 'capability' in check else set()) | {arg for arg in argv[2:] if coverage.safe_path(arg) and (root / arg).exists()})
-            item['boundary'] = check.get('boundary', 'commit')
+            item['boundary'] = check['boundary']
+            item['cadence'] = check.get('cadence', 'candidate')
+            item['changed_path_context'] = item['changed_path_context'] or check.get('changed_path_context', False)
             item['scope_inputs'] = item.get('scope_inputs', False) or check.get('scope_inputs', True)
     # Authoritative definitions follow the same transitive consumer graph as
     # executable source. Only prose may rely solely on portable process gates.
@@ -677,18 +823,23 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             errors = validate_check(root, identity, check)
             findings += errors
             if errors: continue
+            if not isolated_check_active(identity): continue
+            if explicit_checks is None and check.get('cadence', 'candidate') == 'hygiene' and not any(below(path, ref) or below(ref, path) for path in changed for ref in check.get('inputs', [])):
+                continue
             argv = tuple(check['argv'])
             if any('{' in arg or '}' in arg for arg in argv): findings.append({'code': 'repository-check-placeholder-invalid', 'check_id': identity}); continue
             key = identity + ':' + hashlib.sha256(json.dumps(argv).encode()).hexdigest()[:16]
-            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'scopes': [], 'references': set(), 'status': 'pending', 'runtime': check.get('runtime', {}), 'parameters': check.get('parameters', {}), 'applicability': check.get('applicability', {})})
-            if any(item[field] != check.get(field, {}) for field in ('stage', 'effects', 'evidence_class', 'runtime', 'parameters')): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
+            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'cadence': check.get('cadence', 'candidate'), 'changed_path_context': check.get('changed_path_context', False), 'scopes': [], 'references': set(), 'status': 'pending', 'runtime': check.get('runtime', {}), 'parameters': check.get('parameters', {}), 'applicability': check.get('applicability', {})})
+            if any(item[field] != check.get(field, 'candidate' if field == 'cadence' else False if field == 'changed_path_context' else {}) for field in ('stage', 'effects', 'evidence_class', 'cadence', 'changed_path_context', 'runtime', 'parameters')): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
             bind_catalog_entry(item, identity, check, argv)
-            if item.get('boundary', check.get('boundary', 'commit')) != check.get('boundary', 'commit'): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
+            if item.get('boundary', check['boundary']) != check['boundary']: findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
             # Mapping triggers are selection authority, not consumed inputs.
             implementation = argv[1] if check.get('scope_inputs') is False else str(Path(argv[1]).parent)
             item['references'].update(set(check.get('inputs', [])) | {implementation} | ({check['capability']} if 'capability' in check else set()) | {arg for arg in argv[2:] if coverage.safe_path(arg) and (root / arg).exists()})
             if identity == 'diagnostic-adoption': item['references'].update(diagnostic_inputs)
-            item['boundary'] = check.get('boundary', 'commit')
+            item['boundary'] = check['boundary']
+            item['cadence'] = check.get('cadence', 'candidate')
+            item['changed_path_context'] = item['changed_path_context'] or check.get('changed_path_context', False)
             item['scope_inputs'] = item.get('scope_inputs', False) or check.get('scope_inputs', True)
     cache = None
     reuse_cache = None
@@ -715,6 +866,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         identity: verification_dependencies(checks, [identity], dependency_context)[0].get(identity, set())
         for identity in dependencies
     }
+    planning_fingerprint_token = FINGERPRINT_ENTRY_CACHE.set({})
     for item in results:
         item['review_bindings'] = {alias: diagnostic_bindings.get(alias, []) for alias in item['catalog_entries'] if alias in diagnostic_bindings}
         item['dependency_ids'] = sorted({child for alias in item['catalog_entries'] for child in dependencies.get(alias, set())})
@@ -734,6 +886,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings.append({'code': 'verification-aggregate-alias-ambiguous', 'check_id': item['check_id']})
     def required(item: dict) -> bool:
         return (STAGES[item['stage']] <= STAGES[args.stage] and BOUNDARIES[item['boundary']] <= BOUNDARIES[boundary]
+                and (item['cadence'] != 'hygiene' or boundary == 'integration' or explicit_checks is not None)
                 and (not development or execution_policy.development_check(item)))
     runtime_identities: dict[str, dict] = {}
     npm_ignore_observation = None
@@ -770,9 +923,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
                 runtime_identities[runtime_key] = runtime_identity(root, runtime, window=runtime_window)
                 timings['runtime_identity_seconds'] += time.monotonic() - phase_started
             item['runtime_identity'] = runtime_identities[runtime_key]
-        preparation = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_preparation_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
+        preparation = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'cadence', 'changed_path_context', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_preparation_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
         item['preparation_key'] = hashlib.sha256(json.dumps(preparation, sort_keys=True).encode()).hexdigest()
-        payload = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
+        payload = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'cadence', 'changed_path_context', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     for item in results:
         if item['catalog_input']: item['references'].add(catalog_ref)
@@ -809,6 +962,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings.append({'code': code, 'check_id': item['check_id'], **detail})
         if parent_binding and item.get('preparation_key') != parent_binding.get('selected_inputs', {}).get(item['check_id'], {}).get('preparation_key'):
             findings.append({'code': 'verification-parent-inputs-changed', 'check_id': item['check_id']})
+    FINGERPRINT_ENTRY_CACHE.reset(planning_fingerprint_token)
     if args.staged:
         # The hook must prove the bytes that would be committed. Unrelated
         # unstaged work remains outside this selected-input boundary.
@@ -924,6 +1078,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             environment = dict(os.environ)
             environment.pop('REPO_CHECK_TASK_PATHS', None)
             environment.pop('REPO_CHECK_PARENT_BINDING', None)
+            environment.pop('REPO_CHECK_CHANGED_PATHS', None)
+            if item['changed_path_context'] and not args.all:
+                environment['REPO_CHECK_CHANGED_PATHS'] = json.dumps(changed)
             binding, previous_binding = None, None
             if any(entry.get('members') for entry in item['catalog_entries'].values()) and cache:
                 binding = {'token': uuid.uuid4().hex, 'aggregate_owner': item['check_id'], 'catalog_digest': catalog_snapshot, 'task_paths': task_context,
@@ -994,7 +1151,10 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             for item in results if item.get('cache_invalidation_reasons') and item.get('cache_invalidation_reasons') != [NO_PRIOR_EVIDENCE]
         ],
     }
-    report = {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'delivery_inventory': {'source_revision': delivery['source_revision'], 'input_digest': delivery['input_digest'], 'summary': delivery['summary']}, 'scopes': impacted, 'checks': results, 'execution_summary': execution_summary, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.', 'Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.', 'Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller.']}
+    delivery_evidence = ({'status': 'deferred-to-integration'} if direct_commit else
+                         {'source_revision': delivery['source_revision'], 'input_digest': delivery['input_digest'], 'summary': delivery['summary']} if delivery_inventory_needed else
+                         {'status': 'deferred-to-ci-delivery-coverage'})
+    report = {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'impact_analysis': 'direct-commit' if direct_commit else 'full', 'delivery_inventory': delivery_evidence, 'scopes': impacted, 'checks': results, 'execution_summary': execution_summary, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.', 'A local source plan defers the independent physical delivery census to its CI delivery-coverage route; deployment topology changes and CI still run that census.', 'Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.', 'Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller.']}
     if record_preparation and cache and not findings:
         report['preparation_report_path'] = cache.save_preparation({
             **cache.read_preparation(),

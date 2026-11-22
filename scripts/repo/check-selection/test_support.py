@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.support
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-22"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -124,6 +124,7 @@ class FixtureSupport(unittest.TestCase):
             'acceptance': {'argv': ['bash', 'scripts/acceptance.sh'], 'stage': 'acceptance', 'effects': ['aws-mutation'], 'evidence_class': 'live'},
             'live': {'argv': ['bash', 'scripts/live.sh'], 'stage': 'deploy', 'effects': ['aws-mutation'], 'evidence_class': 'live'}}}
         for identity, check in self.catalog['checks'].items():
+            check['boundary'] = 'commit'
             if identity in {'scope-inventory', 'runnable-program'}:
                 parameter = 'target_root' if identity == 'scope-inventory' else 'program_contract'
                 check['applicability'] = {'kind': 'generic', 'contract_schema': 'deploy/target-scope-contract/v1' if identity == 'scope-inventory' else 'deploy/runnable-program-contract/v1', 'context_parameters': [parameter]}

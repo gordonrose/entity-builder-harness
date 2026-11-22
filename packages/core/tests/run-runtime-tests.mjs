@@ -1,9 +1,11 @@
 import { accessSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
+import { selectAffectedRuntimeTests } from "../../../scripts/repo/workspace-build/runtime-test-selection.mjs";
 
-const sourceDirectory = "packages/core/tests";
-const compiledDirectory = ".cache/packages-core-runtime/tests";
+const repositoryRoot = resolve(process.cwd());
+const sourceDirectory = resolve(repositoryRoot, "packages/core/tests");
+const compiledDirectory = resolve(repositoryRoot, ".cache/packages-core-runtime/tests");
 
 function runtimeSources(directory, relativeDirectory = "") {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -16,8 +18,38 @@ function runtimeSources(directory, relativeDirectory = "") {
   });
 }
 
+function changedPaths() {
+  const value = process.env.REPO_CHECK_CHANGED_PATHS;
+  if (value === undefined) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed) || !parsed.every(path => typeof path === "string")) throw new Error();
+    return parsed;
+  } catch {
+    throw new Error("Core runtime-test changed-path context is invalid.");
+  }
+}
+
+function selectedRuntimeSources() {
+  const all = runtimeSources(sourceDirectory).sort();
+  const changed = changedPaths();
+  if (changed === undefined) return all;
+  const selection = selectAffectedRuntimeTests({
+    root: repositoryRoot,
+    sourceDirectory: "packages/core/src",
+    testDirectory: "packages/core/tests",
+    changedPaths: changed,
+  });
+  if (selection.mode === "full") return all;
+  return selection.testFiles.map(path => {
+    const value = relative(sourceDirectory, resolve(repositoryRoot, path));
+    if (!value || value === ".." || value.startsWith(`..${sep}`)) throw new Error("Core runtime-test selection escaped its test root.");
+    return value;
+  }).sort();
+}
+
 // Source-led discovery prevents stale compiled files from creating extra cases.
-const testFiles = runtimeSources(sourceDirectory).sort()
+const testFiles = selectedRuntimeSources()
   .map((fileName) => join(compiledDirectory, fileName.replace(/\.ts$/, ".js")));
 
 if (testFiles.length === 0) {
