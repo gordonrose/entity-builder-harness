@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-23"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -343,7 +343,7 @@ def log_has_code(kind: str, arn: str, code: str) -> None:
 def safe_result(event: object, code: str) -> bool:
     if not isinstance(event, dict) or not isinstance(event.get("message"), str): return False
     try:
-        value = controller("scripts/04.deploy/shared/deployment-operation-diagnostics.py").validate_verifier_result(json.loads(event["message"]))
+        value = controller("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py").validate_verifier_result(json.loads(event["message"]))
     except Exception: return False
     return value["verdict"] == "accepted" and value["code"] == code
 

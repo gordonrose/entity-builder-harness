@@ -8,10 +8,10 @@ turn a completed observation into a reason to repeat an IAM revocation.
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.rehearse-observability-readiness
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-23"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -111,7 +111,7 @@ def last_report(text: str, command: str | None = None) -> dict[str, Any] | None:
             if command is None:
                 return value
             try:
-                contract = load("scripts/04.deploy/shared/deployment-operation-diagnostics.py", "observability_checkpoint_diagnostics")
+                contract = load("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py", "observability_checkpoint_diagnostics")
                 selected = contract.validate_persistence_controller_checkpoint(value, command)
             except Exception:
                 continue

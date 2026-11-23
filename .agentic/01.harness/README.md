@@ -4,7 +4,7 @@ id: harness.readme
 version: 2
 status: active
 created_on: "2026-06-15"
-updated_on: "2026-11-04"
+updated_on: "2026-11-23"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -95,6 +95,7 @@ workflow.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.
 - `standards/professional-review-agent-quality.md` - defines the professional-grade quality bar for review-agent rubrics, fixtures, and validation.
 - `standards/repo-terminology.md` - defines canonical repo terminology and prevents duplicate definitions across harness artifacts.
+- `standards/script-admission.md` - requires a small role, owner, risk, consumer, lane, and reuse decision before adding a repository script.
 
 ## Templates
 

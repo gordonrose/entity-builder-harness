@@ -2,15 +2,15 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.deployment-operation-diagnostics
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-23"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
 #   kind: script
-#   purpose: Prove failure classification and retained report validation remain safe and fail closed.
+#   purpose: Prove shared failure classification, generic retained report validation, command-line handling, and wrapper dispatch remain safe and fail closed.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   effects: [read-only, writes-files]
 #   used_by:
@@ -65,6 +65,12 @@ def fails(report):
 
 diagnostics.validate(valid())
 diagnostics.validate(valid(collection={"status": "collected", "observation": "incomplete", "attempts": 3}))
+try:
+    diagnostics.validate(valid(), extension_validators={"target": lambda value: value})
+except diagnostics.DiagnosticFailure as error:
+    assert error.codes == ("report-extension-profile-invalid",)
+else:
+    raise AssertionError("an extension profile replaced a generic report field")
 fails(valid(collection={"status": "pending"}))
 fails(valid(collection={"status": "partial"}))
 
@@ -116,114 +122,10 @@ assert "synthetic-only" not in json.dumps(diagnostics.classify_cloudformation_fa
 assert diagnostics.classify_cloudformation_failure({"Status": "FAILED"}, historical) == ("provider-details-unavailable", {"provider_status": "FAILED"}, "rejected")
 assert diagnostics.classify_cloudformation_failure({"Status": "PRIVATE_CF_CANARY"}, historical) == ("provider-details-unavailable", {}, "unknown")
 
-# Private task source bundles are selected independently of own observations;
-# old verifier/configuration/native readers are not widened to accept them.
-def source(ordinal):
- return {"schema":"core/diagnostic-record/v1","code":"core.persistence.in-memory-boundary-failed","definitionVersion":1,"detail":{"operation":"initialize","phase":"get-id","reason":"boundary-threw","effect":"write-not-reached","ordinal":ordinal}}
-sources=[source(index) for index in range(9)]
-own={"schema":"core/diagnostic-record/v1","code":"kanbien-core-server.operations.verification-boundary-failed","definitionVersion":1,"detail":{"task":"verification","operation":"verification","phase":"fetch","condition":"rejected","effect":"unknown"}}
-failure={"schema":"deploy/persistence-task-failure/v1","task":"verification","verdict":"rejected","code":"KANBIEN_CORE_PERSISTENCE_VERIFICATION_UNAVAILABLE","diagnostic":sources[0],"related_diagnostics":sources[1:],"observations":[own]}
-checked=diagnostics.validate_persistence_task_failure(failure,"verification")
-assert checked==failure and checked is not failure and checked["diagnostic"] is not failure["diagnostic"]
-diagnostics.validate(valid(task_failure=failure))
-for mutate in [
- lambda v:v.update(extra="PRIVATE_TASK_CANARY"),lambda v:v.update(code="BOOTSTRAP_PRIVATE_TASK_CANARY"),
- lambda v:v.update(task="administration"),lambda v:v.update(observations=[own]*9),
- lambda v:v.update(related_diagnostics=sources),lambda v:v.update(diagnostic=own),
- lambda v:v["diagnostic"]["detail"].update(private="PRIVATE_TASK_CANARY"),
- lambda v:v.update(source_bundles=[{"diagnostic":source(10)}]*9),
- lambda v:v.update(source_bundles=[{"diagnostic":sources[0],"related_diagnostics":sources[1:]}]),
- lambda v:v.update(overflow={"observations":0,"source_bundles":0}),
- lambda v:v.update(overflow={"observations":True,"source_bundles":1}),
- lambda v:v.update(overflow={"observations":-1,"source_bundles":0}),
- lambda v:v.update(overflow={"observations":1,"source_bundles":0,"private":"PRIVATE_TASK_CANARY"}),
-]:
- malformed=copy.deepcopy(failure);mutate(malformed)
- try:diagnostics.validate_persistence_task_failure(malformed,"verification")
- except diagnostics.DiagnosticFailure as error:assert error.codes==("persistence-task-failure-invalid",)
- else:raise AssertionError("malformed/unselected private task evidence admitted")
-try:diagnostics.validate_verifier_result(failure)
-except diagnostics.DiagnosticFailure:pass
-else:raise AssertionError("private task envelope widened historical verifier reader")
-different_companions={"diagnostic":sources[0],"related_diagnostics":[*sources[1:8],source(9)]}
-extended={**failure,"source_bundles":[different_companions],"overflow":{"observations":2,"source_bundles":1}}
-assert diagnostics.validate_persistence_task_failure(extended,"verification")==extended
-def event(value):return {"message":json.dumps(value)}
-selected,observation=diagnostics.collect_persistence_task_failure({"events":[{"message":"PRIVATE_TASK_CANARY"},event(failure),event({"private":"PRIVATE_TASK_CANARY"}),event({**failure,"diagnostic":source(10),"related_diagnostics":sources[1:]})]},"verification")
-assert observation=="malformed" and selected["diagnostic"]==sources[0] and selected["related_diagnostics"]==sources[1:]
-assert selected["source_bundles"]==[{"diagnostic":source(10),"related_diagnostics":sources[1:]}] and selected["observations"]==[own,own]
-full={**failure,"observations":[own]*8,"source_bundles":[{"diagnostic":source(index),"related_diagnostics":sources[1:]} for index in range(10,18)]}
-later={**failure,"diagnostic":source(20),"observations":[own,own],"overflow":{"observations":3,"source_bundles":4}}
-merged,state=diagnostics.collect_persistence_task_failure({"events":[event(full),event(later)]},"verification")
-assert state=="complete" and merged["diagnostic"]==sources[0] and merged["related_diagnostics"]==sources[1:]
-assert merged["observations"]==[own]*8 and merged["source_bundles"]==full["source_bundles"] and merged["overflow"]=={"observations":5,"source_bundles":5}
-maximum=diagnostics.runtime_contract().persistence_task_failure_contract()["maxOverflowCount"]
-first={**failure,"overflow":{"observations":maximum,"source_bundles":0}}
-merged,state=diagnostics.collect_persistence_task_failure({"events":[event(first),event({**failure,"overflow":{"observations":1,"source_bundles":0}})]},"verification")
-assert state=="incomplete" and merged==first
-merged,state=diagnostics.collect_persistence_task_failure({"events":[event(failure)]+[event({})]*100},"verification")
-assert state=="incomplete" and merged==failure
-
-run_prefix="scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/"
-command=run_prefix+"verify-candidate/script.sh"
-task_arn="arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/"+"a"*32
-controller_report={"schema":"deploy/private-persistence-verification-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":"failed","findings":[{"code":"PRIVATE_TASK_CANARY"}],"facts":{"operation_id":"kp-"+"b"*32,"verifier_task":task_arn,"task_failure":failure}}
-checkpoint=diagnostics.validate_persistence_controller_checkpoint(controller_report,command)
-assert checkpoint["facts"]==controller_report["facts"]
-for key,value in [("operation_id","kp-PRIVATE_TASK_CANARY"),("verifier_task",task_arn.replace("337159794548","000000000000")),("proof_receipt","../PRIVATE_TASK_CANARY.json"),("completed_at","2026-10-31T00:00:00"),("evidence_reuse","PRIVATE_TASK_CANARY")]:
- changed=copy.deepcopy(controller_report);changed["facts"][key]=value
- checked=diagnostics.validate_persistence_controller_checkpoint(changed,command)
- assert key not in checked["facts"] and checked["facts"]["task_failure"]==failure
-changed=copy.deepcopy(controller_report);changed["facts"]["task_failure"]["diagnostic"]["detail"]["private"]="PRIVATE_TASK_CANARY"
-assert diagnostics.validate_persistence_controller_checkpoint(changed,command)["facts"]=={"operation_id":"kp-"+"b"*32,"verifier_task":task_arn}
-assert diagnostics.validate_persistence_controller_checkpoint({**controller_report,"schema":"other"},command) is None
-assert diagnostics.validate_persistence_controller_checkpoint(controller_report,run_prefix+"run-administration/script.sh") is None
-
-def load_controller(relative):
- spec=importlib.util.spec_from_file_location("isolated_diagnostic_controller",ROOT/relative)
- result=importlib.util.module_from_spec(spec);assert spec and spec.loader;spec.loader.exec_module(result);return result
-identity=load_controller(run_prefix+"rehearse-runtime-credential-lifecycle/script.py")
-pending={**controller_report,"verdict":"pending","facts":{"operation_id":"kp-"+"b"*32,"verifier_task":task_arn}}
-for timeout in (False,True):
- completed=subprocess.CompletedProcess([],17,json.dumps(controller_report),"PRIVATE_CHILD_CANARY\n"+json.dumps(pending))
- fault=subprocess.TimeoutExpired(["bash"],180,output=completed.stdout.encode(),stderr=completed.stderr.encode()) if timeout else None
- with patch.object(identity.subprocess,"run",side_effect=fault,return_value=completed) as child:
-  assert identity.child(command,"--mode","create","--json") is None
-  assert child.call_count==1
- assert identity.CHILD_CHECKPOINT["facts"]["task_failure"]==failure
- assert identity.CHILD_CHECKPOINT["facts"]["operation_id"]=="kp-"+"b"*32
- capture=io.StringIO()
- with redirect_stdout(capture):assert identity.report("blocked","outer-original-code")==1
- body=json.loads(capture.getvalue());assert body["verdict"]=="failed" and body["findings"]==[{"code":"outer-original-code"}]
- assert "PRIVATE_CHILD_CANARY" not in capture.getvalue()
- outer=load_controller(run_prefix+"rehearse-observability-readiness/script.py")
- wrapped=body
- expired=subprocess.TimeoutExpired(["bash"],420,output=json.dumps(wrapped).encode(),stderr=b"PRIVATE_CHILD_CANARY")
- with patch.object(outer.subprocess,"run",side_effect=expired) as child:
-  try:outer.lifecycle(Path("unused-receipt"),"revoke-await-observability")
-  except outer.RehearsalFailure as error:assert str(error)=="observability-rehearsal-lifecycle-outcome-uncertain"
-  else:raise AssertionError("outer timeout was accepted")
-  assert child.call_count==1
- capture=io.StringIO()
- with redirect_stdout(capture):assert outer.report("blocked","observability-rehearsal-lifecycle-outcome-uncertain")==1
- body=json.loads(capture.getvalue());assert body["verdict"]=="blocked"
- assert body["facts"]["child_checkpoint"]["facts"]["child_checkpoint"]["facts"]["task_failure"]==failure
- assert "PRIVATE_CHILD_CANARY" not in capture.getvalue()
-
-# Finite legacy verdict propagation uses the selected checkpoint only; an
-# unknown child verdict cannot replace the outer blocked result or leak text.
-for child_verdict in ["pending","failed","uncertain","PRIVATE_CHILD_VERDICT_CANARY"]:
- completed=subprocess.CompletedProcess([],17,json.dumps({**controller_report,"verdict":child_verdict}),"")
- with patch.object(identity.subprocess,"run",return_value=completed):assert identity.child(command,"--json") is None
- capture=io.StringIO()
- with redirect_stdout(capture):assert identity.report("blocked","outer-original-code")==1
- body=json.loads(capture.getvalue())
- assert body["verdict"]==(child_verdict if child_verdict!="PRIVATE_CHILD_VERDICT_CANARY" else "blocked")
- assert body["findings"]==[{"code":"outer-original-code"}]
- assert "PRIVATE_CHILD_VERDICT_CANARY" not in capture.getvalue()
- if child_verdict!="PRIVATE_CHILD_VERDICT_CANARY":assert body["facts"]["child_checkpoint"]["facts"]["task_failure"]==failure
-
-surface=load_controller("scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py")
+surface_spec = importlib.util.spec_from_file_location("restoration_verifier_surface", ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py")
+surface = importlib.util.module_from_spec(surface_spec)
+assert surface_spec and surface_spec.loader
+surface_spec.loader.exec_module(surface)
 digest="sha256:"+"a"*64;name=surface.change_name(digest,"image");parameters={"RestoreVerifierImageDigest":digest}
 rejected_review={"Status":"CREATE_COMPLETE","ExecutionStatus":"AVAILABLE","ChangeSetName":name,"Parameters":[{"ParameterKey":key,"ParameterValue":value} for key,value in parameters.items()],"Changes":[]}
 for failed_delete in (True,False):
@@ -246,75 +148,6 @@ def restricted(*parts):calls.append(parts);return True,rejected_review,"ok"
 capture=io.StringIO()
 with redirect_stdout(capture):assert surface.discard_rejected_image_review(SimpleNamespace(aws=restricted),name,digest,{"RestoreVerifierImageDigest":"sha256:"+"b"*64})==1
 assert len(calls)==1 and json.loads(capture.getvalue())["verdict"]=="blocked"
-
-administration=load_controller(run_prefix+"run-administration/script.py")
-admin_own={"schema":"core/diagnostic-record/v1","code":"kanbien-core-server.operations.administration-boundary-failed","definitionVersion":1,"detail":{"task":"administration","operation":"administration","phase":"task-body","condition":"threw","effect":"unknown"}}
-admin_failure={**failure,"task":"administration","code":"PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED","observations":[admin_own]}
-configuration={"schema":"core/diagnostic-record/v1","code":"kanbien-core-server.configuration-invalid","definitionVersion":1,"detail":{"issues":[{"setting":"database.host","reason":"missing"}]}}
-legacy_codes=["PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID","PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED","PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED","PERSISTENCE_ADMINISTRATION_ACCESS_DENIED","PERSISTENCE_ADMINISTRATION_CREDENTIAL_REJECTED"]
-legacy=[]
-for safe_code in legacy_codes:
- record=configuration if safe_code==legacy_codes[0] else sources[0]
- legacy.append({"verdict":"rejected","code":safe_code,"diagnostic":record,**({"related_diagnostics":sources[1:]} if record is sources[0] else {})})
-for rejected in [admin_failure,*legacy]:
- capture=io.StringIO()
- with patch.object(administration.MIGRATION,"duration",return_value=1),patch.object(administration.MIGRATION,"task_exit",return_value=False),patch.object(administration.MIGRATION,"aws",return_value=(True,{"events":[event(rejected)]},"ok")) as provider,redirect_stdout(capture):
-  assert administration.accept({"taskArn":task_arn},30,"prove-effective-privilege")==1
- assert provider.call_args.args==("logs","get-log-events","--log-group-name",administration.LOG_GROUP,"--log-stream-name","persistence-administration/persistence-administration/"+"a"*32,"--start-from-head")
- body=json.loads(capture.getvalue());assert body["verdict"]=="blocked" and body["findings"]==[{"code":"persistence-administration-unsuccessful-completion"}]
- assert body["facts"]["administration_task"]=="a"*32 and body["facts"]["safe_result_code"]==rejected["code"]
- if rejected is admin_failure:assert body["facts"]["task_failure"]==admin_failure
- else:
-  assert body["facts"]["diagnostic"]==rejected["diagnostic"]
-  if "related_diagnostics" in rejected:assert body["facts"]["related_diagnostics"]==sources[1:]
-
-# New task evidence requires positively observed target identity. The old
-# unsuccessful-completion verdict and the existing single log call stay intact.
-capture=io.StringIO()
-with patch.object(administration.MIGRATION,"duration",return_value=1),patch.object(administration.MIGRATION,"task_exit",return_value=False),patch.object(administration.MIGRATION,"aws",return_value=(True,{"events":[event(admin_failure)]},"ok")) as provider,redirect_stdout(capture):
- assert administration.accept({"taskArn":task_arn.replace("337159794548","000000000000")},30,"prove-effective-privilege")==1
-assert provider.call_count==1
-assert json.loads(capture.getvalue())["facts"]=={"task_log_observation":"unavailable"}
-
-replacement=load_controller(run_prefix+"rehearse-server-replacement/script.py")
-for original_arn in [task_arn,task_arn.replace("337159794548","000000000000")]:
- capture=io.StringIO();errors=io.StringIO();calls=[]
- owner=replacement.operations()
- def interrupted_stop(*parts):
-  calls.append(parts)
-  checkpoint=json.loads(errors.getvalue())
-  assert checkpoint["schema"]=="deploy/persistence-server-replacement-report/v1"
-  assert checkpoint["target"]=="kanbien-core-platform" and checkpoint["scope"]=="core-server-persistence"
-  assert checkpoint["verdict"]=="pending" and "recovery_boundary" in checkpoint["facts"]
-  assert checkpoint["facts"]["original_task"]==task_arn
-  assert diagnostics.validate_persistence_controller_checkpoint(checkpoint,run_prefix+"rehearse-server-replacement/script.sh")["facts"]==checkpoint["facts"]
-  return False,None,"aws-command-timeout"
- receipt={"source_revision":"a"*40,"image_digest":"sha256:"+"b"*64}
- definition="arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:1"
- prepare=SimpleNamespace(validate_receipt=lambda _:receipt,live_budget=lambda:(True,"ok"),aws=interrupted_stop)
- create=SimpleNamespace(package_gates=lambda _:True)
- with tempfile.TemporaryDirectory(prefix="replacement-checkpoint-fixture-") as directory:
-  store=owner.Store(Path(directory))
-  with patch.object(replacement,"operations",return_value=owner),patch.object(owner,"store",return_value=store),patch.object(replacement,"module",side_effect=[prepare,create]),patch.object(replacement,"current_task",return_value=({"taskArn":original_arn},"ok",definition)),patch.object(replacement,"receipt_matches_task",return_value=(True,"ok")),patch.object(sys,"argv",["replacement","--receipt","unused.json"]),redirect_stdout(capture),patch.object(sys,"stderr",errors):
-   assert replacement.main()==1
-  observed=json.loads(capture.getvalue())
-  if original_arn==task_arn:
-   assert calls==[("ecs","stop-task","--cluster",replacement.CLUSTER,"--task",original_arn,"--reason","governed core-server-persistence replacement rehearsal")]
-   assert observed["verdict"]=="uncertain" and observed["findings"]==[{"code":"aws-command-timeout"}]
-   assert diagnostics.validate_persistence_controller_checkpoint(observed,run_prefix+"rehearse-server-replacement/script.sh")["facts"]==observed["facts"]
-   assert store.selected(receipt)["request"]["original_task"]==task_arn
-  else:
-   assert not calls and not errors.getvalue()
-   assert observed["verdict"]=="blocked" and observed["findings"]==[{"code":"persistence-replacement-request-invalid"}]
-# Choice errors keep argparse's exit 2 without projecting the rejected value.
-for owner,args,expected in [(administration,["--operation","PRIVATE_ARGUMENT_CANARY"],"persistence-administration-arguments-invalid"),(identity,["--operation","PRIVATE_ARGUMENT_CANARY"],"persistence-runtime-identity-lifecycle-arguments-invalid"),(outer,["--operation","PRIVATE_ARGUMENT_CANARY"],"observability-rehearsal-arguments-invalid"),(surface,["--mode","PRIVATE_ARGUMENT_CANARY"],"persistence-restoration-surface-arguments-invalid")]:
- capture=io.StringIO();errors=io.StringIO()
- with patch.object(sys,"argv",["isolated-controller",*args]),redirect_stdout(capture),patch.object(sys,"stderr",errors):
-  try:owner.main()
-  except SystemExit as error:assert error.code==2
-  else:raise AssertionError("invalid choice did not retain exit 2")
- assert json.loads(capture.getvalue())["findings"]==[{"code":expected}]
- assert "PRIVATE_ARGUMENT_CANARY" not in capture.getvalue()+errors.getvalue()
 
 with tempfile.TemporaryDirectory() as directory:
     report_path = Path(directory) / "diagnostic.json"
@@ -347,11 +180,6 @@ assert set(schema['allowed_collection_statuses'])==diagnostics.COLLECTION=={'col
 assert set(schema['allowed_operation_outcomes'])==diagnostics.OUTCOMES=={'rejected','failed','pending','unknown'}
 for status in ["absent", "unrecognized"]:
  diagnostics.validate_execution({**execution,"classification":"authentication_material_invalid","code_status":status})
-for value in [{"verdict":"rejected","code":"SAFE_REJECTED"},{"schema":"deploy/persistence-restore-verifier-result/v2","verdict":"rejected","code":"SAFE_REJECTED","execution":execution}]:diagnostics.validate_verifier_result(value)
-for value in [{"verdict":"accepted","code":"SAFE_RESULT","provider_message":"synthetic-canary"},{"schema":"deploy/persistence-restore-verifier-result/v2","verdict":"accepted","code":"SAFE_RESULT","execution":execution}]:
- try:diagnostics.validate_verifier_result(value)
- except diagnostics.DiagnosticFailure:pass
- else:raise AssertionError('unsafe result envelope accepted')
 with tempfile.TemporaryDirectory() as directory:
  path=Path(directory)/'report.json'
  command=[sys.executable,str(ROOT/'scripts/04.deploy/shared/deployment-operation-diagnostics.py'),'record','--target','test-target','--scope','test-scope','--operation-id','test-operation','--stage','run','--original-code','SAFE_REJECTED','--exit-status','7','--outcome','failed','--classification','test-classified','--evidence-reference','provider-operation:test-operation','--next-decision','inspect-retained-evidence','--collection-observation','incomplete','--collection-attempts','3','--task-log-observation','malformed','--task-log-attempts','2','--execution-phase','pool_connect','--execution-elapsed-ms','12','--execution-code-status','recognized','--execution-classification','authentication_rejected','--report',str(path)]
@@ -399,5 +227,8 @@ with tempfile.TemporaryDirectory() as directory:
   environment={**os.environ,'PATH':str(binary)+os.pathsep+os.environ['PATH'],'B10_FIXTURE_ROOT':str(fixture),'B10_FIXTURE_LOG':str(log),'B10_FIRST_STATUS':str(first),'B10_SECOND_STATUS':str(second)}
   result=subprocess.run([shutil.which('bash'),str(ROOT/'scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh')],env=environment,capture_output=True,text=True,timeout=10)
   assert result.returncode==status and result.stdout==result.stderr==''
-  assert log.read_text().splitlines()==['python:-B '+str(children/'deployment-operation-diagnostics-smoke-test.py')]+([] if first else ['bash-suite'])
-print("Deployment-operation diagnostics regression tests passed (historical/v2 readers, schema parity, safe CLI and actual two-suite dispatch).")
+  binding_path=fixture/'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/tests/binding-test.py'
+  expected=['python:-B '+str(children/'deployment-operation-diagnostics-smoke-test.py')]
+  if not first:expected+=['python:-B '+str(binding_path),'bash-suite']
+  assert log.read_text().splitlines()==expected
+print("Shared deployment-operation diagnostics tests passed (report, CloudFormation, safe CLI and wrapper dispatch).")
