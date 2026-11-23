@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 17
+#   version: 18
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-23"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -48,7 +48,7 @@ assert spec and spec.loader
 coverage = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(coverage)
 BOUNDARIES = {'commit': 0, 'integration': 1}
-CADENCES = {'candidate', 'hygiene'}
+CADENCES = {'candidate', 'hygiene', 'deferred'}
 STAGES = {'local': 0, 'package': 1, 'deploy': 2, 'acceptance': 3}
 CLASSES = {'local': {'static', 'local-runtime'}, 'package': {'container-qualification', 'ci'}, 'deploy': {'live'}, 'acceptance': {'live'}}
 LOCAL_EFFECTS = {'read-only', 'writes-files'}
@@ -742,6 +742,28 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings += errors
             if errors: continue
             if not isolated_check_active(identity): continue
+            # Scope discovery tells us that the scope is relevant; it is not
+            # authority to run every proof belonging to that scope.  An
+            # ordinary source change must match this proof's declared inputs.
+            # The complete set remains necessary if the scope declaration,
+            # its index, or the individual check contract itself changes.
+            runtime = check.get('runtime', {})
+            direct_inputs = set(check.get('inputs', []))
+            direct_inputs.update(runtime.get('config_inputs', []) if isinstance(runtime, dict) else [])
+            command = check['argv'][1]
+            if coverage.safe_path(command): direct_inputs.add(str(Path(command).parent))
+            scope_definition_changed = any(
+                below(path, contract_ref) or below(contract_ref, path)
+                or below(path, scope['index'].relative_to(root).as_posix()) or below(scope['index'].relative_to(root).as_posix(), path)
+                for path in changed
+            )
+            direct_input_changed = any(
+                below(path, ref) or below(ref, path)
+                for path in changed for ref in direct_inputs
+            )
+            if not (args.all or identity in catalog_check_changes or scope_definition_changed
+                    or check.get('scope_inputs', True) or direct_input_changed):
+                continue
             if check.get('cadence', 'candidate') == 'hygiene' and (getattr(args, 'changed_only', False) or not any(below(path, ref) or below(ref, path) for path in changed for ref in check.get('inputs', []))):
                 continue
             argv = tuple(substitutions.get(arg, arg) for arg in check['argv'])
@@ -799,7 +821,15 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             if any(identity not in checks or checks[identity].get('stage') != 'local' for identity in diagnostic_bindings):
                 findings.append({'code': 'diagnostic-review-check-unregistered'})
             if explicit_checks is None:
-                repository_rules = repository_rules + diagnostic_adoption.review_rules(root, comparison_base=getattr(args, 'comparison_base', 'HEAD'), ledger_changed=reviews_ref in changed)
+                repository_rules = repository_rules + diagnostic_adoption.review_rules(
+                    root,
+                    comparison_base=getattr(args, 'comparison_base', 'HEAD'),
+                    # A review-ledger edit is governance evidence, not an
+                    # implementation edit to every reviewed subsystem. Its
+                    # complete transition audit remains periodic hygiene;
+                    # recorded promotion keeps the direct source rules only.
+                    ledger_changed=reviews_ref in changed and not getattr(args, 'changed_only', False),
+                )
             if explicit_checks is None or 'diagnostic-adoption' in explicit_checks: diagnostic_inputs = diagnostic_adoption.proof_inputs(root)
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
             findings.append({'code': 'diagnostic-adoption-selection-invalid'})
@@ -977,7 +1007,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings.append({'code': 'verification-aggregate-alias-ambiguous', 'check_id': item['check_id']})
     def required(item: dict) -> bool:
         return (STAGES[item['stage']] <= STAGES[args.stage] and BOUNDARIES[item['boundary']] <= BOUNDARIES[boundary]
-                and (item['cadence'] != 'hygiene' or boundary == 'integration' or explicit_checks is not None)
+                and (item['cadence'] == 'candidate'
+                     or item['cadence'] == 'hygiene' and (boundary == 'integration' or explicit_checks is not None)
+                     or item['cadence'] == 'deferred' and explicit_checks is not None)
                 and (not development or execution_policy.development_check(item)))
     runtime_identities: dict[str, dict] = {}
     npm_ignore_observation = None

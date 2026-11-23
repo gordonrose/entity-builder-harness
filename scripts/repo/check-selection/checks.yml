@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 33
+#   version: 34
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-23"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -553,6 +553,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   module-index-structure:
     boundary: commit
+    cadence: deferred
     argv: [bash, scripts/repo/module-structure/script.sh]
     stage: local
     evidence_class: static
@@ -761,7 +762,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
       config_inputs: [.npmrc, .node-version, .nvmrc]
   diagnostic-adoption:
-    cadence: hygiene
+    cadence: deferred
     boundary: integration
     argv: [bash, scripts/repo/diagnostic-coverage/script.sh]
     stage: local
@@ -778,7 +779,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
   diagnostic-runtime-contracts:
-    cadence: hygiene
+    cadence: deferred
     aggregate_branch: default
     members: [diagnostic-base-runtime, platform-server-runtime, kanbien-platform-runtime]
     focused_prerequisites: &startup_prerequisites
@@ -1992,10 +1993,12 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
     inputs:
-    - scripts/04.deploy
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery
     - scripts/repo/diagnostic-coverage/runtime_contract.py
-    - infra/04.deploy/03.product
-    - .agentic/04.deploy
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke
+    - .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml
     - .agentic/aws/standards/operational-realization-applicability.md
     - packages/core
     - apps/entity-smoke/contracts
@@ -2322,6 +2325,11 @@ checks:
       - pyproject.toml
       - requirements.txt
     scope_inputs: false
+    feedback:
+      development: false
+      expected_seconds: 90
+      isolation: worktree
+      rationale: Exercise controlled candidate, failed-candidate, migration, verifier and recovery controls without AWS; integration retains the complete target proof.
   persistence-container:
     boundary: integration
     argv:
@@ -2585,7 +2593,7 @@ checks:
   check-selection-repository-contracts:
     feedback: {development: false, expected_seconds: 360, isolation: disposable-fixture, rationale: Repository-wide graph and gate contracts are periodic architecture hygiene; focused mechanics prove candidate changes.}
     boundary: integration
-    cadence: hygiene
+    cadence: deferred
     argv:
     - bash
     - scripts/repo/check-selection/smoke-test.sh
@@ -2860,7 +2868,7 @@ checks:
       - pyproject.toml
       - requirements.txt
   check-selection-regression:
-    cadence: hygiene
+    cadence: deferred
     boundary: integration
     argv:
     - bash
@@ -3303,6 +3311,8 @@ checks:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/tests/binding-test.py
     - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh
@@ -4640,7 +4650,7 @@ checks:
     - bash
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh
     stage: local
-    cadence: hygiene
+    cadence: deferred
     evidence_class: local-runtime
     effects:
     - read-only
@@ -5477,6 +5487,10 @@ repository_inputs:
   - persistence-provider-regression
   - deployment-operation-diagnostics-regression
 - inputs:
+  - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate
+  checks:
+  - persistence-provider-regression
+- inputs:
   - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
   - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody
   - scripts/04.deploy/shared/deployment-operation-diagnostics.py
@@ -5490,6 +5504,8 @@ repository_inputs:
   checks:
   - postgresql-connection-diagnostics
   - postgresql-disposable-diagnostics
+  - persistence-composition
+  - persistence-container
 - inputs:
   - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore

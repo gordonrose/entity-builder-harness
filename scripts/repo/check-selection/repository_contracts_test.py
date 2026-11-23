@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 23
+#   version: 24
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-23"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -495,25 +495,27 @@ class RepositoryContractTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assert_binding(stale)
 
-    def test_module_structure_is_a_shared_commit_gate_with_bounded_regression(self):
+    def test_module_structure_is_a_retained_manual_scan_with_bounded_regression(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
         checks = catalog['checks']
-        for identity, command, owner, boundary in [
-            ('module-index-structure', 'script.sh', 'repo.module-structure.command', 'commit'),
-            ('module-index-structure-regression', 'smoke-test.sh', 'repo.module-structure.regression', 'integration'),
+        for identity, command, owner, boundary, cadence in [
+            ('module-index-structure', 'script.sh', 'repo.module-structure.command', 'commit', 'deferred'),
+            ('module-index-structure-regression', 'smoke-test.sh', 'repo.module-structure.regression', 'integration', 'candidate'),
         ]:
             check = checks[identity]
             self.assertEqual(check['argv'], ['bash', 'scripts/repo/module-structure/' + command])
             self.assertEqual(check['owner'], owner)
             self.assertEqual(check['boundary'], boundary)
+            self.assertEqual(check.get('cadence', 'candidate'), cadence)
             self.assertEqual(check['effects'], ['read-only'] if boundary == 'commit' else ['read-only', 'writes-files'])
             self.assertEqual(check['stage'], 'local')
             self.assertFalse(selection.validate_check(ROOT, identity, check))
             self.assertIn('typescript', check['runtime']['node_packages'])
         rules = catalog['repository_inputs']
 
-        # Current repository source is protected by the small commit command.
-        # The slower fixture command tests the checker only when its own inputs change.
+        # The complete source scan stays manually available with all of its
+        # invalidators declared. The slower fixture command tests the checker
+        # automatically only when its own inputs change.
         source_rule = checks['module-index-structure']
         regression_rule = checks['module-index-structure-regression']
         fixture_inputs = {
@@ -753,6 +755,8 @@ class RepositoryContractTests(unittest.TestCase):
                 'proof-receipts.py', 'rehearse-runtime-credential-lifecycle/script.py',
                 'rehearse-observability-readiness/script.py', 'rehearse-server-replacement/script.py')
         } | {
+            run + 'deployment-diagnostics/binding.py',
+            run + 'deployment-diagnostics/tests/binding-test.py',
             'packages/core/contracts', 'apps/platform-smoke/contracts',
             'infra/04.deploy/03.product/entrypoints/contracts',
             'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py'
@@ -1077,6 +1081,71 @@ class RepositoryContractTests(unittest.TestCase):
         report = selection.coverage.inspect(ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml', ROOT, catalog)
         self.assertEqual(report['verdict'], 'covered', report)
         self.assertIn('persistence-composition', report['required_checks'])
+
+    def test_candidate_preparation_selects_its_direct_persistence_proof(self):
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        args = argparse.Namespace(root=ROOT, catalog=catalog,
+            paths=['scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh'],
+            staged=False, all=False, stage='local', boundary='integration', ci=True,
+            changed_only=True, execute_local=False, evidence=None, json=True)
+        report = selection.plan(args)
+        self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+        selected = {check['check_id'] for check in report['checks']}
+        self.assertIn('persistence-provider-regression', selected)
+        self.assertNotIn('deployment-operation-diagnostics-regression', selected)
+
+    def test_development_scope_selection_requires_a_direct_proof_input(self):
+        """A scope trigger cannot turn every scope proof into editing feedback."""
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        original_fingerprint = selection.fingerprint
+        def planning_fingerprint(root, references, *, exclude=frozenset()):
+            if references == {'scripts/repo/check-selection/checks.yml'}:
+                return original_fingerprint(root, references, exclude=exclude)
+            import hashlib
+            return hashlib.sha256(json.dumps(sorted(set(references) - set(exclude))).encode()).hexdigest()
+        cases = [
+            ('scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/publication.py',
+             {'entity-smoke-publication-contract'},
+             {'entity-smoke-runtime', 'entity-smoke-composition-suite', 'entity-smoke-acceptance-controls'}),
+        ]
+        with patch.object(selection, 'fingerprint', side_effect=planning_fingerprint), patch.object(selection, 'runtime_identity', return_value={'selection_fixture': 'no-execution'}):
+            for path, required, forbidden in cases:
+                with self.subTest(path=path):
+                    args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False,
+                        all=False, stage='local', boundary='integration', ci=False, changed_only=False,
+                        execute_local=False, evidence=None, json=True, development=True,
+                        checks=None, aggregate_members=None, record_preparation=False,
+                        require_preparation=False, task_paths=None, explain=False)
+                    report = selection.plan(args)
+                    self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+                    selected = {check['check_id'] for check in report['checks'] if check['status'] == 'pending'}
+                    self.assertTrue(required <= selected, (path, required - selected))
+                    self.assertFalse(forbidden & selected, (path, forbidden & selected))
+
+    def test_development_scope_contract_change_retains_the_complete_scope_proof(self):
+        """The direct-input rule must not weaken a changed scope declaration."""
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        original_fingerprint = selection.fingerprint
+        def planning_fingerprint(root, references, *, exclude=frozenset()):
+            if references == {'scripts/repo/check-selection/checks.yml'}:
+                return original_fingerprint(root, references, exclude=exclude)
+            import hashlib
+            return hashlib.sha256(json.dumps(sorted(set(references) - set(exclude))).encode()).hexdigest()
+        args = argparse.Namespace(root=ROOT, catalog=catalog,
+            paths=['infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml'],
+            staged=False, all=False, stage='local', boundary='integration', ci=False,
+            changed_only=False, execute_local=False, evidence=None, json=True,
+            development=True, checks=None, aggregate_members=None,
+            record_preparation=False, require_preparation=False, task_paths=None,
+            explain=False)
+        with patch.object(selection, 'fingerprint', side_effect=planning_fingerprint), patch.object(selection, 'runtime_identity', return_value={'selection_fixture': 'no-execution'}):
+            report = selection.plan(args)
+        self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+        selected = {check['check_id'] for check in report['checks'] if check['status'] == 'pending'}
+        self.assertTrue({'entity-smoke-runtime', 'entity-smoke-composition-suite',
+                         'entity-smoke-infrastructure-route',
+                         'entity-smoke-acceptance-controls',
+                         'entity-smoke-publication-contract'} <= selected)
 
 
     def test_actual_diagnostic_paths_select_focused_checks(self):

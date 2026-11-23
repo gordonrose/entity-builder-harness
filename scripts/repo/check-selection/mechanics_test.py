@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 13
+#   version: 14
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-23"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -132,6 +132,28 @@ class SelectionTests(FixtureSupport):
         self.assertEqual(report['verdict'], 'planned', report['findings'])
         self.assertEqual([item['check_id'] for item in report['checks']], ['catalog-check'])
 
+    def test_recorded_ci_branch_diff_does_not_expand_diagnostic_review_ledger(self):
+        ledger = 'scripts/repo/diagnostic-coverage/reviews.v1.json'
+        (self.root / ledger).parent.mkdir(parents=True, exist_ok=True)
+        (self.root / ledger).write_text('{"schema":"fixture"}\n')
+        self.catalog['checks']['diagnostic-adoption'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.catalog['repository_inputs'] = [{'inputs': [ledger], 'checks': ['local']}]
+        self.save()
+        observed = []
+        diagnostic = SimpleNamespace(
+            review_bindings=lambda _root: {},
+            review_rules=lambda _root, *, comparison_base, ledger_changed: observed.append(ledger_changed) or [],
+            proof_inputs=lambda _root: [],
+        )
+        specification = SimpleNamespace(loader=SimpleNamespace(exec_module=lambda _module: None))
+        with patch.object(selection.importlib.util, 'spec_from_file_location', return_value=specification), \
+             patch.object(selection.importlib.util, 'module_from_spec', return_value=diagnostic):
+            report = self.run_plan(paths=[ledger], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+        self.assertEqual(observed, [False])
+
     def test_recorded_ci_branch_diff_defers_hygiene_even_when_its_input_changed(self):
         self.catalog['checks']['local']['cadence'] = 'hygiene'
         self.catalog['repository_inputs'] = [{'inputs': ['src/main.ts'], 'checks': ['local']}]
@@ -227,6 +249,28 @@ class SelectionTests(FixtureSupport):
 
         explicit = self.run_plan(checks=['hygiene'], execute=True)
         self.assertEqual(explicit['checks'][0]['status'], 'passed')
+
+    def test_deferred_check_runs_only_when_explicitly_named(self):
+        self.check_script('deferred', ['read-only', 'writes-files'], 'echo deferred >> deferred-counts\n')
+        self.catalog['checks']['deferred'] = {
+            **copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/deferred.sh'],
+            'cadence': 'deferred',
+            'inputs': ['scripts/deferred.sh'],
+            'scope_inputs': False,
+        }
+        self.catalog['repository_inputs'] = [{'inputs': ['scripts/deferred.sh'], 'checks': ['deferred']}]
+        self.save()
+
+        for boundary in ['commit', 'integration']:
+            automatic = self.run_plan(paths=['scripts/deferred.sh'], boundary=boundary, execute=True)
+            deferred = next(item for item in automatic['checks'] if item['check_id'] == 'deferred')
+            self.assertEqual(deferred['status'], 'deferred')
+            self.assertFalse((self.root / 'deferred-counts').exists())
+
+        explicit = self.run_plan(checks=['deferred'], execute=True)
+        self.assertEqual(explicit['checks'][0]['status'], 'passed')
+        self.assertEqual((self.root / 'deferred-counts').read_text(), 'deferred\n')
 
     def test_invalid_check_cadence_is_rejected(self):
         self.catalog['checks']['local']['cadence'] = 'monthly'

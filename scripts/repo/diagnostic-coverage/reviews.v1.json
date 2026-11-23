@@ -5377,11 +5377,11 @@
       "sources": [
         {
           "path": "scripts/repo/check-selection/mechanics_test.py",
-          "sha256": "a182427c5566bc9c8e1e7ecd5fa6f55fb95ac1ce2f69facd200ad22889e8e924"
+          "sha256": "11cff1e1bb44085f99954b4b8663a51e044f25bab0e9c427f439dd08ded8297a"
         },
         {
           "path": "scripts/repo/check-selection/repository_contracts_test.py",
-          "sha256": "a475c3ca7d96f339ef44aa2cd3c4533bb41c83135e37e38193d2ef7adb2a1db3"
+          "sha256": "b8133e39b5eab5eeeeca1d4b9e0f8975d7256bbe7de699adea826678accbdf94"
         }
       ]
     },
@@ -5400,7 +5400,7 @@
         "check-selection-repository-contracts"
       ],
       "remaining_debt": [
-        "Focused mechanics and invalidation proof passed. The real-repository selection method was interrupted during mutable census inputs and is not a passing complete proof. Complete source-stable registered selection and final affected local proof remain required."
+        "Focused mechanics and invalidation proof passed. The real-repository selection method was interrupted during mutable census inputs and is not a passing complete proof. Complete source-stable registered selection and final affected local proof remain required. M2 source review confirms scope discovery now requires a proof's direct declared input for editing feedback, while changed scope contracts retain the full proof; the focused contract tests reject both over-selection and weakened scope-contract selection."
       ],
       "sources": [
         {
@@ -5409,7 +5409,7 @@
         },
         {
           "path": "scripts/repo/check-selection/script.py",
-          "sha256": "dbb15aad67d6341a61ee511b2cec7c008c2b06d39d4657170263cf3cee4c6bec"
+          "sha256": "bd22fe5ef417ac0e60eb76346ff7036a75fa84fe19c5ed5ce9f2d4f818b7678e"
         }
       ]
     },
