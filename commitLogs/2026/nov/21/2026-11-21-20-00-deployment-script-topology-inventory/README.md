@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-22T23:46:57Z
-latest_commit_sha: 9e2e1730affb443cdedd33526e4ecb53f1edc55a
-chat_duration: 99979s (01:03:46:19)
+latest_commit_at_utc: 2026-11-23T21:19:22Z
+latest_commit_sha: d7bfe422
+chat_duration: 177524s (02:01:18:44)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -71,6 +71,10 @@ Phase 1 deployment script topology classification and migration proposal
 
 - Summary: Direct promotion no longer fans out from workspace inventory or package-lock changes; the broad repository-contract census is explicitly hygiene.
   Durable evidence: The repaired refresh-receipt and lockfile-routing mechanics tests passed; the real promotion plan has 62 declared checks, no findings, and no selected hygiene checks.
+
+
+- Summary: M1–M6 changes are prepared as three coherent commits: lean selector policy, Core Server Persistence diagnostics binding, then audit and admission governance. Broad selected integration checks were planned but intentionally not executed; focused selector and diagnostics evidence is recorded in the implementation plan and audit.
+  Durable evidence: Durable evidence: .agentic/shared/plans/implementation/script-library-simplification.md; scripts/helpers/{selection-audit,audit}.md; deployment diagnostics wrapper and binding tests; selector focused test methods. The governed preparation receipt is stored in the active worktree Git metadata.
 
 ## Activity Log
 
@@ -775,6 +779,35 @@ Summary: Restored the public schedule-definition export and aligned persistence 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-11-23T21:13:00Z - Context hygiene
+
+Summary: M1–M6 changes are prepared as three coherent commits: lean selector policy, Core Server Persistence diagnostics binding, then audit and admission governance. Broad selected integration checks were planned but intentionally not executed; focused selector and diagnostics evidence is recorded in the implementation plan and audit.
+
+Durable evidence: Durable evidence: .agentic/shared/plans/implementation/script-library-simplification.md; scripts/helpers/{selection-audit,audit}.md; deployment diagnostics wrapper and binding tests; selector focused test methods. The governed preparation receipt is stored in the active worktree Git metadata.
+
+
+### 2026-11-23T21:15:24Z - Commit recorded
+
+Commit: `b239f7b9`
+
+Message: feat(selection): defer broad repository hygiene
+
+Summary: Marks repository-wide module-structure inspection and five broad hygiene checks as explicit-only, retains focused regressions, and records direct-input selection proof.
+
+ADR impact: No ADR: this is an implementation of the accepted verification-selection direction, not a new architecture decision.
+
+
+### 2026-11-23T21:19:22Z - Commit recorded
+
+Commit: `d7bfe422`
+
+Message: refactor(deploy): separate persistence diagnostics binding
+
+Summary: Moves Core Server Persistence-only task-evidence validation and controller checkpoint logic into a target binding, leaves shared report mechanics generic, completes the helper audit, and establishes script admission.
+
+ADR impact: No ADR: implements the existing accepted owner/domain/capability direction without changing the overall topology.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -859,6 +892,20 @@ ADR impact: covered by session ADR disposition
   Summary: Restored the public schedule-definition export and aligned persistence runtime proof with immutable v2 plus additive v4/v5 schedule diagnostics.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `b239f7b9`
+  Time UTC: 2026-11-23T21:15:24Z
+  Message: feat(selection): defer broad repository hygiene
+  Summary: Marks repository-wide module-structure inspection and five broad hygiene checks as explicit-only, retains focused regressions, and records direct-input selection proof.
+  ADR impact: No ADR: this is an implementation of the accepted verification-selection direction, not a new architecture decision.
+
+
+- Commit: `d7bfe422`
+  Time UTC: 2026-11-23T21:19:22Z
+  Message: refactor(deploy): separate persistence diagnostics binding
+  Summary: Moves Core Server Persistence-only task-evidence validation and controller checkpoint logic into a target binding, leaves shared report mechanics generic, completes the helper audit, and establishes script admission.
+  ADR impact: No ADR: implements the existing accepted owner/domain/capability direction without changing the overall topology.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -872,9 +919,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-22T23:46:57Z
-Latest commit SHA: 9e2e1730affb443cdedd33526e4ecb53f1edc55a
-Chat duration: 99979s (01:03:46:19)
+Latest commit at UTC: 2026-11-23T21:19:22Z
+Latest commit SHA: d7bfe422
+Chat duration: 177524s (02:01:18:44)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
