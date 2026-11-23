@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-23T21:19:22Z
-latest_commit_sha: d7bfe422
-chat_duration: 177524s (02:01:18:44)
+latest_commit_at_utc: 2026-11-23T23:11:43Z
+latest_commit_sha: 511e12ac
+chat_duration: 184265s (02:03:11:05)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -808,6 +808,17 @@ Summary: Moves Core Server Persistence-only task-evidence validation and control
 
 ADR impact: No ADR: implements the existing accepted owner/domain/capability direction without changing the overall topology.
 
+
+### 2026-11-23T23:11:43Z - Commit recorded
+
+Commit: `511e12ac`
+
+Message: fix(selection): reuse unchanged promotion proof
+
+Summary: Keeps selector-source changes from invalidating unchanged application proof; adds a focused promotion check.
+
+ADR impact: No ADR: implementation of the existing script-library simplification plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -906,6 +917,13 @@ ADR impact: No ADR: implements the existing accepted owner/domain/capability dir
   Summary: Moves Core Server Persistence-only task-evidence validation and controller checkpoint logic into a target binding, leaves shared report mechanics generic, completes the helper audit, and establishes script admission.
   ADR impact: No ADR: implements the existing accepted owner/domain/capability direction without changing the overall topology.
 
+
+- Commit: `511e12ac`
+  Time UTC: 2026-11-23T23:11:43Z
+  Message: fix(selection): reuse unchanged promotion proof
+  Summary: Keeps selector-source changes from invalidating unchanged application proof; adds a focused promotion check.
+  ADR impact: No ADR: implementation of the existing script-library simplification plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -919,9 +937,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-23T21:19:22Z
-Latest commit SHA: d7bfe422
-Chat duration: 177524s (02:01:18:44)
+Latest commit at UTC: 2026-11-23T23:11:43Z
+Latest commit SHA: 511e12ac
+Chat duration: 184265s (02:03:11:05)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
