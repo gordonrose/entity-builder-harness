@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 11
+version: 12
 status: draft
 created_on: "2026-11-23"
 updated_on: "2026-11-23"
@@ -284,9 +284,59 @@ The programme succeeds only if both conditions hold:
 - Preserve the user's rule that every new file has a metadata header and that
   a new source file exceeding 50 lines of code requires approval.
 
+## M7 — Preserve unchanged proof when promotion selection changes
+
+**Approved follow-on scope:** the local merge verifier already supplies the
+exact branch diff to direct selection. The remaining blocker is proof reuse:
+the selector currently adds its own implementation files to every selected
+check's evidence inputs. A selector change therefore invalidates unrelated
+application proof and can turn a narrowly selected promotion into a long
+sequence of unrelated reruns.
+
+**Named risk:** a changed selector could choose the wrong proof, while an
+unchanged application proof could be rerun merely because the selection engine
+changed. Both need evidence, but they are different risks.
+
+**Consumers and retained route:**
+
+- `scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh`
+  invokes the exact-diff promotion selector.
+- `scripts/repo/check-selection/script.py` owns evidence identities and reuse.
+- `check-selection-mechanics` remains the explicit, complete selector/cache
+  regression route for periodic or deliberate review.
+
+**Bounded change:** stop treating the selector implementation as an input to
+every unrelated subject proof. Register a small focused promotion-selection
+proof, using existing fixture tests, for selector changes. It must prove exact
+branch-diff routing, hygiene deferral, no catalogue-consumer expansion, and
+reuse of proof whose direct subject inputs did not change. It does not alter
+application/package/deployment proof inputs, create a scheduler, or add a
+second selector/wrapper system.
+
+**Complete when:** an unchanged selected subject proof reuses its matching
+receipt after a selector-only edit; a selector edit still selects and runs the
+focused promotion-selection proof; the full mechanics suite remains directly
+runnable but is deferred from ordinary promotion; and focused fixture evidence
+passes.
+
+**Evidence and review:**
+
+- `mechanics-promotion` ran its six direct fixture cases in 4.7 seconds. It
+  proved exact-diff routing, catalogue and review-ledger containment, hygiene
+  deferral, explicit deferred execution, and reuse after a selector-only edit.
+- The focused actual-catalogue contracts proved that selector paths select the
+  new focused proof while the complete mechanics suite stays deferred.
+- The registered `check-selection-promotion` command passed in 4.8 seconds.
+- Metadata headers and whitespace passed for all seven changed artifacts.
+- Source review confirmed that subject fingerprints still include their own
+  declared code, configuration, command and direct catalogue inputs; only the
+  previously global selector-engine additions were removed. A command that
+  actually consumes selector files must continue to declare them directly.
+
+**Current status:** complete.
+
 ## Current completion boundary
 
-Milestones M1–M6 are complete. This programme has not authorised a repository-
-wide folder migration, a new scheduler, a registry, or changes to the separate
-workspace-build ownership mismatches. Any such work requires a new bounded,
-approved slice.
+Milestones M1–M7 are complete. This programme still does not authorise a
+repository-wide folder migration, a new scheduler, a registry, or changes to
+the separate workspace-build ownership mismatches.

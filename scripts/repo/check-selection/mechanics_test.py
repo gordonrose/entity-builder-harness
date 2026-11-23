@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 14
+#   version: 15
 #   status: active
 #   created_on: "2026-10-29"
 #   updated_on: "2026-11-23"
@@ -18,6 +18,7 @@
 #     path: scripts/repo/check-selection/smoke-test.sh
 from __future__ import annotations
 from test_support import *
+from types import SimpleNamespace
 
 
 class SelectionTests(FixtureSupport):
@@ -1671,6 +1672,20 @@ PY
         self.assertEqual(changed['evidence_source'], 'local-runner')
         self.assertNotEqual(changed['evidence_key'], first['evidence_key'])
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
+
+
+    def test_cli_selector_change_reuses_unchanged_subject_proof(self):
+        """Changing routing must not rerun a proof whose subject is unchanged."""
+        self.prepare_selector_cli()
+        first = self.local_command_result(self.run_selector_cli())
+        selector = self.root / 'scripts/repo/check-selection/script.py'
+        selector.write_text(selector.read_text() + '\n# Fixture-only selection implementation change.\n')
+
+        reused = self.local_command_result(self.run_selector_cli())
+
+        self.assertEqual(reused['evidence_key'], first['evidence_key'])
+        self.assertEqual(reused['evidence_source'], 'trusted-worktree-cache')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
 
 
     def test_cli_selected_catalog_fields_invalidate_or_block(self):

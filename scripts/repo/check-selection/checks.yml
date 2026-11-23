@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 34
+#   version: 35
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-23"
@@ -2532,6 +2532,7 @@ checks:
   check-selection-mechanics:
     feedback: {development: false, expected_seconds: 300, isolation: disposable-fixture, rationale: Full selector and cache mechanics are checkpoint proof; focused fixture cases provide editing feedback.}
     boundary: integration
+    cadence: deferred
     argv:
     - bash
     - scripts/repo/check-selection/smoke-test.sh
@@ -2585,6 +2586,40 @@ checks:
       - PYTHONHASHSEED
       - NODE_OPTIONS
       - NODE_PATH
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      node_packages: []
+  check-selection-promotion:
+    feedback: {development: false, expected_seconds: 30, isolation: disposable-fixture, rationale: "Selector changes require direct-promotion routing and proof-reuse evidence, not the periodic full mechanics census."}
+    boundary: integration
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    - --unit
+    - mechanics-promotion
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs:
+    - scripts/repo/check-selection
+    runtime:
+      tools:
+      - bash
+      - python3
+      - git
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
       config_inputs:
       - .python-version
       - pyproject.toml
@@ -5292,6 +5327,7 @@ repository_inputs:
   - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime
   - scripts/repo/diagnostic-coverage/runtime_contract.py
   checks:
+  - check-selection-promotion
   - check-selection-mechanics
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh

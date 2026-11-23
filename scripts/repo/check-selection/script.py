@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 18
+#   version: 19
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-23"
@@ -1068,7 +1068,12 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         # may contain it. Exclude that incidental file at both boundaries;
         # declared consumers still fingerprint the whole catalog normally.
         if not item['catalog_input']: item['references'].discard(catalog_ref)
-        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/repo/check-selection/execution_policy.py', 'scripts/repo/check-selection/workspace_context.py'})
+        # The selector determines *which* proof is required; it is not an
+        # application proof input. Including its engine files in every subject
+        # fingerprint made one selector correction invalidate every selected
+        # application receipt. Selection changes have their own focused
+        # promotion proof. A command that truly consumes one of these files
+        # must declare it in that command's own inputs.
         for review in item['review_bindings'].values():
             for entry in review: item['references'].update([source['path'] for source in entry['sources']] + entry['tests'] + entry.get('definitions', []))
         if parent_binding:

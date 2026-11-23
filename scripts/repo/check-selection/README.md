@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 17
+version: 18
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-22"
+updated_on: "2026-11-23"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -217,6 +217,11 @@ control, not a waiver of package, target, acceptance or integration proof.
 Recorded chat-branch promotion uses `--ci --changed-only`. It reads the exact
 `BASE_SHA..HEAD_SHA` diff, selects only registered checks whose declared inputs
 cover those paths, and fails when an authoritative changed path has no owner.
+Changing the selector itself runs its focused promotion-selection proof. It
+does not make the selector implementation an input to every unrelated
+application proof, so an unchanged subject may reuse its matching local
+evidence. The complete selector/cache mechanics suite remains an explicit
+deferred review route.
 Named pre-commit preparation, and the staged commit gate that consumes it, use
 the same direct-input rule for their explicit uncommitted/staged task paths.
 They record and reuse only the preparation evidence needed for those paths;
