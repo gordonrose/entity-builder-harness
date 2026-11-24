@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-23T23:11:43Z
-latest_commit_sha: 511e12ac
-chat_duration: 184265s (02:03:11:05)
+latest_commit_at_utc: 2026-11-24T18:13:05Z
+latest_commit_sha: b5f432da11ad5e33e0f3d30f5b7fa511a3e7288f
+chat_duration: 252747s (02:22:12:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -819,6 +819,28 @@ Summary: Keeps selector-source changes from invalidating unchanged application p
 
 ADR impact: No ADR: implementation of the existing script-library simplification plan.
 
+
+### 2026-11-24T18:10:40Z - Commit recorded
+
+Commit: `127fd9e96c1b35e22db9ff335ee41b72cc0b852a`
+
+Message: refactor(verification): split entity-smoke qualification routes
+
+Summary: Splits Entity Smoke's full qualification suite into bounded base and route checks, retains the full suite for explicit use, and records advisory timing without cancelling a successful check.
+
+ADR impact: No ADR: this applies the existing verification-selection plan without changing deployment architecture.
+
+
+### 2026-11-24T18:13:05Z - Commit recorded
+
+Commit: `b5f432da11ad5e33e0f3d30f5b7fa511a3e7288f`
+
+Message: fix(diagnostics): bind reader regression to persistence owner
+
+Summary: Updates the broad diagnostics reader regression to call the Core Server Persistence binding that owns verifier-result validation after the shared helper split.
+
+ADR impact: No ADR: aligns an existing reader with the established diagnostics ownership boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -924,6 +946,20 @@ ADR impact: No ADR: implementation of the existing script-library simplification
   Summary: Keeps selector-source changes from invalidating unchanged application proof; adds a focused promotion check.
   ADR impact: No ADR: implementation of the existing script-library simplification plan.
 
+
+- Commit: `127fd9e96c1b35e22db9ff335ee41b72cc0b852a`
+  Time UTC: 2026-11-24T18:10:40Z
+  Message: refactor(verification): split entity-smoke qualification routes
+  Summary: Splits Entity Smoke's full qualification suite into bounded base and route checks, retains the full suite for explicit use, and records advisory timing without cancelling a successful check.
+  ADR impact: No ADR: this applies the existing verification-selection plan without changing deployment architecture.
+
+
+- Commit: `b5f432da11ad5e33e0f3d30f5b7fa511a3e7288f`
+  Time UTC: 2026-11-24T18:13:05Z
+  Message: fix(diagnostics): bind reader regression to persistence owner
+  Summary: Updates the broad diagnostics reader regression to call the Core Server Persistence binding that owns verifier-result validation after the shared helper split.
+  ADR impact: No ADR: aligns an existing reader with the established diagnostics ownership boundary.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -937,9 +973,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-23T23:11:43Z
-Latest commit SHA: 511e12ac
-Chat duration: 184265s (02:03:11:05)
+Latest commit at UTC: 2026-11-24T18:13:05Z
+Latest commit SHA: b5f432da11ad5e33e0f3d30f5b7fa511a3e7288f
+Chat duration: 252747s (02:22:12:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
