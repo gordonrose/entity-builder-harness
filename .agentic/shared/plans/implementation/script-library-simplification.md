@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 12
+version: 14
 status: draft
 created_on: "2026-11-23"
-updated_on: "2026-11-23"
+updated_on: "2026-11-24"
 layer: 06.shared
 domain: governance
 disciplines: [agentic, architecture, sre]
@@ -177,6 +177,22 @@ catalogue change still retains the complete scope proof. The M2 record in
 `scripts/helpers/selection-audit.md` gives the before/after counts, executed
 commands, bounded durations, direct-risk evidence, and the remaining Entity
 Smoke aggregate boundary.
+
+**Follow-on correction (2026-11-24):** Entity Smoke now keeps its existing
+combined composition suite as a deferred, explicit local-qualification or
+maintenance proof. Ordinary route work selects the shared base proof and the
+affected route fixture(s); route fixtures that import another fixture select
+that direct dependency. The full suite still runs the routes in
+parallel when explicitly requested. Its 60-second estimate was replaced by
+route-level advisory estimates; an estimate overrun is recorded for redesign,
+not treated as an automatic cancellation.
+
+**Timing evidence (2026-11-24):** The selector's existing runner records an
+estimate overrun in the execution-policy report without changing a successful
+check's passed status or exit result. A disposable fixture now proves that
+behaviour directly. There is intentionally no new selector timeout: any future
+hard stop must be separately governed as a genuine stuck-process safeguard,
+not derived from `expected_seconds`.
 
 ### M3 — Finish the current evidence-based helper audit
 

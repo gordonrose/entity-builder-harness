@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 24
+#   version: 25
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-24"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -66,31 +66,75 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(source.count(fixture), 1)
         self.assertIn('infrastructure) exec python3 -B ' + fixture + ' ;;', source)
         self.assertLess(source.index(fixture), source.index('entity_smoke_build='))
+        self.assertEqual(parent['inputs'], [wrapper])
         for identity, unit in zip(parent['members'], ['infrastructure', 'suite']):
             child = checks[identity]
             self.assertEqual(child['argv'], ['bash', wrapper, '--unit', unit])
-            self.assertEqual(child['inputs'], parent['inputs'])
             self.assertEqual(selection.validate_check(ROOT, identity, child), [])
         self.assertEqual(selection.validate_check(ROOT, 'entity-smoke-composition', parent), [])
         self.assertEqual(checks['entity-smoke-infrastructure-route']['runtime']['tools'], ['bash', 'python3'])
-        for identity in ['entity-smoke-composition', *parent['members']]:
+        route_units = {
+            'entity-smoke-composition-base': 'base',
+            'entity-smoke-task-route': 'task-route',
+            'entity-smoke-failure-route': 'failure-route',
+            'entity-smoke-restart-route': 'restart-route',
+            'entity-smoke-credential-route': 'credential-route',
+        }
+        for identity, unit in route_units.items():
+            child = checks[identity]
+            self.assertEqual(child['argv'], ['bash', wrapper, '--unit', unit])
+            self.assertIn('base|suite)' if unit == 'base' else unit + ')', source)
+            self.assertEqual(selection.validate_check(ROOT, identity, child), [])
+        for identity in ['entity-smoke-composition', *parent['members'], *route_units]:
             self.assertEqual(selection.execution_policy.validate_feedback(identity, checks[identity]), [])
         self.assertFalse(parent['feedback']['development'])
-        self.assertTrue(all(checks[child]['feedback']['development'] for child in parent['members']))
+        self.assertTrue(checks['entity-smoke-infrastructure-route']['feedback']['development'])
+        self.assertFalse(checks['entity-smoke-composition-suite']['feedback']['development'])
+        self.assertEqual(checks['entity-smoke-composition-suite']['cadence'], 'deferred')
+        suite = checks['entity-smoke-composition-suite']
         for reference in [
             fixture, fixture.replace("infrastructure-route-test.py", "acceptance-control-test.sh"),
             'scripts/repo/check-selection/execution_policy.py',
         ]:
-            self.assertTrue(any(selection.below(reference, declared) for declared in parent['inputs']))
+            self.assertTrue(any(selection.below(reference, declared) for declared in suite['inputs']))
             with tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 path = root / reference; path.parent.mkdir(parents=True); path.write_text('first')
-                before = selection.fingerprint(root, set(parent['inputs']))
+                before = selection.fingerprint(root, set(suite['inputs']))
                 path.write_text('changed')
-                self.assertNotEqual(selection.fingerprint(root, set(parent['inputs'])), before)
+                self.assertNotEqual(selection.fingerprint(root, set(suite['inputs'])), before)
         for arguments in [('--unit', 'unknown'), ('--unit', 'infrastructure', 'extra'), ('--unit',)]:
             result = subprocess.run(['bash', wrapper, *arguments], cwd=ROOT, capture_output=True)
             self.assertEqual(result.returncode, 2)
+
+    def test_entity_smoke_route_selection_avoids_the_full_aggregate(self):
+        """Direct route work must select its dependent route leaves, not the full suite."""
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        original_fingerprint = selection.fingerprint
+        def planning_fingerprint(root, references, *, exclude=frozenset()):
+            if references == {'scripts/repo/check-selection/checks.yml'}:
+                return original_fingerprint(root, references, exclude=exclude)
+            import hashlib
+            return hashlib.sha256(json.dumps(sorted(set(references) - set(exclude))).encode()).hexdigest()
+        path = 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route-test.py'
+        args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False,
+            all=False, stage='local', boundary='integration', ci=False, changed_only=False,
+            execute_local=False, evidence=None, json=True, development=True,
+            checks=None, aggregate_members=None, record_preparation=False,
+            require_preparation=False, task_paths=None, explain=False)
+        # This is a catalogue-routing test, not another repository census. A
+        # separate explicit planner probe below this test's boundary covers
+        # real scope discovery; repeatedly rebuilding it here is no stronger.
+        with patch.object(selection, 'fingerprint', side_effect=planning_fingerprint), \
+             patch.object(selection, 'runtime_identity', return_value={'selection_fixture': 'no-execution'}), \
+             patch.object(selection, 'repository_paths', return_value=[path]), \
+             patch.object(selection, 'discover', return_value=([], [])):
+            report = selection.plan(args)
+        self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+        selected = {check['check_id'] for check in report['checks'] if check['status'] == 'pending'}
+        self.assertTrue({'entity-smoke-task-route', 'entity-smoke-restart-route',
+                         'entity-smoke-credential-route'} <= selected)
+        self.assertFalse({'entity-smoke-composition', 'entity-smoke-composition-suite'} & selected)
 
     def test_described_aggregate_branches_preserve_exact_execution_gate(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())

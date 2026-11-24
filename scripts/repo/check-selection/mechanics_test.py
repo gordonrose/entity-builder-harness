@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 15
+#   version: 16
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-24"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -521,6 +521,22 @@ class SelectionTests(FixtureSupport):
             'development': True, 'expected_seconds': 30, 'isolation': 'worktree',
             'rationale': 'Fast disposable local behavior.'}
         self.save()
+
+    def test_estimate_overrun_is_reported_without_cancelling_a_successful_check(self):
+        self.declare_development_feedback()
+        self.catalog['checks']['local']['feedback']['expected_seconds'] = 1
+        self.check_script('local', ['read-only', 'writes-files'], 'sleep 1.1\necho local >> counts\n')
+        self.save()
+
+        report = self.run_plan(development=True, execute=True)
+
+        self.assertFalse(report['findings'], report['findings'])
+        result = next(item for item in report['checks'] if item['check_id'] == 'local')
+        policy = next(item for item in report['execution_policy']['checks'] if item['check_id'] == 'local')
+        self.assertEqual((result['status'], result['exit_code']), ('passed', 0))
+        self.assertGreater(result['elapsed_seconds'], 1)
+        self.assertTrue(policy['budget_exceeded'])
+        self.assertIn('estimate exceeded: True', selection.execution_policy.render(report))
 
     def test_development_retains_obligations_and_integration_reuses_only_matching_success(self):
         self.declare_development_feedback()
