@@ -15,6 +15,20 @@ export function inMemoryTestEntityRepository(initial: readonly TestEntity[] = []
       return [...entries.values()].filter((entity) => entity.lifecycle.state === "active" && entity.status === status)
         .sort((left, right) => testEntityStatusIndexKey(left)[1].localeCompare(testEntityStatusIndexKey(right)[1])).map(copy);
     },
+    async listArchivedDeleted() {
+      return [...entries.values()]
+        .filter((entity) => entity.visibility === "archived" && entity.lifecycle.state === "deleted")
+        .sort((left, right) => left.lifecycle.state === "deleted" && right.lifecycle.state === "deleted"
+          ? String(left.lifecycle.deletedAt).localeCompare(String(right.lifecycle.deletedAt))
+          : 0)
+        .map(copy);
+    },
+    async purgeArchivedDeleted(id) {
+      const entity = entries.get(id);
+      if (entity === undefined || entity.visibility !== "archived" || entity.lifecycle.state !== "deleted") return ok(false);
+      entries.delete(id);
+      return ok(true);
+    },
   };
 }
 function copy(entity: TestEntity): TestEntity { return { ...entity, categories: [...entity.categories], notes: [...entity.notes], ...(entity.secondaryCategories === null ? { secondaryCategories: null } : { secondaryCategories: [...entity.secondaryCategories] }), lifecycle: entity.lifecycle.state === "active" ? { state: "active" } : { ...entity.lifecycle } }; }

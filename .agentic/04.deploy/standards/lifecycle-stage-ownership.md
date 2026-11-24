@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.lifecycle-stage-ownership
-version: 2
+version: 3
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-11-15"
+updated_on: "2026-11-22"
 layer: 04.deploy
 domain: deployment.lifecycle
 disciplines:
@@ -44,6 +44,11 @@ used_by:
   affected checks first.
 - Keep one capability authoritative. A capability may cite upstream or
   downstream phases but must not duplicate their checks or approval gates.
+- For a new or intentionally migrated capability, use the objective-oriented
+  command, capability, adapter, binding, test and fixture homes in the placement
+  standard. A role folder alone is not an owner: its child objective must name
+  the focused responsibility. Existing mixed folders are migration inventory
+  evidence, not permission to add further generic files there.
 
 ## Workload and machinery boundary
 

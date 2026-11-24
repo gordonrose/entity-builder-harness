@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.local-check-cache
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-22"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -312,7 +312,7 @@ class LocalCache:
                 value = json.load(stream)
             if not isinstance(value, dict) or value.get('schema') != 'repo/local-check-cache/v1' or value.get('worktree') != self.worktree: return {}
             if value.get('evidence_key') != key or value.get('stage') != 'local' or value.get('status') != 'passed' or value.get('exit_code') != 0: return {}
-            payload = {field: value.get(field) for field in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
+            payload = {field: value.get(field) for field in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'cadence', 'changed_path_context', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'dependency_evidence_keys', 'review_bindings', 'workspace_npm_ignore_scripts')}
             if hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest() != key: return {}
             return value
         except (OSError, ValueError): return {}
@@ -369,7 +369,7 @@ class LocalCache:
             reasons.append(RUNTIME_CHANGED)
         if previous.get('dependency_evidence_keys') != item.get('dependency_evidence_keys'):
             reasons.append(DEPENDENCY_CHANGED)
-        if any(previous.get(field) != item.get(field) for field in ('argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'review_bindings')):
+        if any(previous.get(field) != item.get(field) for field in ('argv', 'effects', 'stage', 'boundary', 'cadence', 'changed_path_context', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries', 'dependency_contracts', 'review_bindings')):
             reasons.append(CONTRACT_CHANGED)
         return reasons or [KEY_CHANGED]
 

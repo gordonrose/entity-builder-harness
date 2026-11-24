@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 12
+version: 18
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-19"
+updated_on: "2026-11-23"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -32,6 +32,19 @@ The [execution standard](../../../.agentic/shared/testing/standards/test-executi
 owns those boundaries. [checks.yml](checks.yml) owns each command, its inputs,
 prerequisites and optional `feedback` declaration. No separate profile catalog,
 scheduler or nightly suite is introduced.
+
+Checks default to `cadence: candidate`: they are selected for an affected
+candidate. `cadence: hygiene` is retained for broad regression and
+unusual-environment checks. Hygiene checks run automatically only when their
+own declared inputs change at integration, or when deliberately requested with
+`--checks`; they do not run at every commit. This records selection only; it
+does not install a periodic scheduler.
+
+Every catalogue check also declares its `boundary`: `commit` for the small
+checks that must finish before a commit, or `integration` for complete affected
+verification before merge/promotion. There is no fallback timing. A missing or
+unknown boundary makes the selector stop rather than treating a check as a
+commit obligation by accident.
 
 [script.py](script.py) still owns impact selection and execution;
 [execution_policy.py](execution_policy.py) validates scheduling metadata and
@@ -183,6 +196,42 @@ repository-relative changed paths, including paths deleted by the change.
 Directory input matching observes slash boundaries, so `src-extra` cannot
 silently match an input declared as `src`.
 
+## Commit planning cost
+
+A contained local commit uses direct declared inputs first. It does not build
+the repository-wide consumer graph, discover every deployment scope, or read
+the delivery inventory before deciding whether a local check applies. Its
+report identifies this as `impact_analysis: direct-commit` and records delivery
+inventory as deferred to integration. An unmapped authoritative source still
+fails as uncovered; this fast path never treats uncertainty as no impact.
+
+Local source planning still builds the complete consumer graph, including for
+Core, packages, contracts and platform code. Its separate physical delivery
+census is deferred to the `delivery-coverage` CI route unless the changed path
+is deployment topology, the check catalogue, or an explicit `--all`/`--ci`
+request. That CI route always runs the inventory before selected proof.
+Deployment topology and CI therefore retain the complete delivery analysis;
+ordinary local code qualification does not repeat it. This is selection-cost
+control, not a waiver of package, target, acceptance or integration proof.
+
+Recorded chat-branch promotion uses `--ci --changed-only`. It reads the exact
+`BASE_SHA..HEAD_SHA` diff, selects only registered checks whose declared inputs
+cover those paths, and fails when an authoritative changed path has no owner.
+Changing the selector itself runs its focused promotion-selection proof. It
+does not make the selector implementation an input to every unrelated
+application proof, so an unchanged subject may reuse its matching local
+evidence. The complete selector/cache mechanics suite remains an explicit
+deferred review route.
+Named pre-commit preparation, and the staged commit gate that consumes it, use
+the same direct-input rule for their explicit uncommitted/staged task paths.
+They record and reuse only the preparation evidence needed for those paths;
+they do not turn an ordinary commit into repository-wide analysis.
+It does not build the repository-wide consumer graph or run the independent
+delivery census; delivery topology remains covered by its dedicated CI route,
+and broad regressions remain hygiene work for an explicit or future scheduled
+route rather than a promotion gate. This selector change does not create that
+scheduler.
+
 The default is a plan, with pending checks and explicit later-stage obligations.
 For focused verification of an already identified registered unit, use:
 
@@ -257,12 +306,12 @@ The default scheduling boundary is `integration`. `--boundary commit` requires
 only checks scheduled for commit preparation. The catalogue's `boundary` field
 is independent of `stage`, `effects` and evidence class: an integration check
 does not acquire network, provider or publication permission. CI retains its
-protected command and uses the integration default. Direct local-main promotion
-runs the same integration selection in the clean chat worktree after confirming
-that it contains the base; failure or branch/input drift blocks promotion.
-Promotion also reconciles the independent current delivery census before receipt
-reuse, as CI does. The structural selector regression binds repository-wide
-governance, metadata and script owners because its fixtures inspect the real graph.
+protected command and uses the integration default. Recorded local-main
+promotion instead uses its exact branch diff after confirming that the clean
+chat worktree contains the recorded base; failure or branch/input drift blocks
+promotion. The independent delivery census remains with its dedicated CI route.
+The structural selector regression binds repository-wide governance, metadata
+and script owners because its fixtures inspect the real graph.
 `--execute-local` runs only catalogued local checks whose effects agree with the
 command metadata and contain only `read-only` and/or `writes-files`. This flag
 requires task authorization for local execution. It never executes package,
@@ -413,6 +462,15 @@ contracts and configuration need executable coverage; an unmapped definition is
 remain covered by their mandatory metadata/process checks. Scope requirements
 cannot omit mandatory inventory/runnable checks, and unsupported impact is
 reported explicitly.
+
+`isolated_check_contexts` handles a retained system whose scripts are spread
+through otherwise active folders. A check marked with `isolated_context` is
+selected only for an explicit request, a complete `--all` request, a change to
+that check's catalogue contract, or a non-prose change beneath that context's
+declared `activation_inputs`. Its ordinary repository mappings remain recorded,
+but do not pull the retained system into unrelated work. This is how the
+retained Kanbien staging route stays runnable for staging maintenance without
+becoming part of Kanbien Core Platform qualification.
 
 The repository commit hook adds inventory coverage and focused local checks.
 The preparation wrapper and repository hook both declare their local-test write

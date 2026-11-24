@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-21"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -488,7 +488,7 @@ def source_boundary_protocols(base):
         # Keep every real source-guard link in the fresh gather path. Stop at
         # its first provider observer, after real Git validation has passed.
         class AfterSource(Exception): pass
-        with patch.object(K.C, "local_checks", return_value=None), patch.object(M, "inspect", side_effect=AfterSource):
+        with patch.object(K.C, "local_qualification", return_value=None), patch.object(M, "inspect", side_effect=AfterSource):
             try: K.gather(args, object())
             except AfterSource: pass
             else: raise AssertionError("fresh gather did not reach its controlled provider boundary")

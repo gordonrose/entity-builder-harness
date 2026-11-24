@@ -92,6 +92,10 @@ def diagnostics():
  spec=importlib.util.spec_from_file_location("deployment_operation_diagnostics",Path(__file__).resolve().parents[8]/"scripts/04.deploy/shared/deployment-operation-diagnostics.py")
  module=importlib.util.module_from_spec(spec); assert spec and spec.loader; spec.loader.exec_module(module); return module
 
+def persistence_diagnostics():
+ spec=importlib.util.spec_from_file_location("persistence_deployment_diagnostics",Path(__file__).resolve().parents[8]/"scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py")
+ module=importlib.util.module_from_spec(spec); assert spec and spec.loader; spec.loader.exec_module(module); return module
+
 def classify_restored_postgresql_log_events(events):
  """Closed observations only; provider text never crosses this boundary."""
  if not isinstance(events,list) or any(not isinstance(event,dict) or not isinstance(event.get("message"),str) for event in events):return "persistence-restore-server-log-observation-invalid"
@@ -422,7 +426,7 @@ def task_duration(task):
 def observe_terminal_result(m,arn,diagnostic=False):
  """At most three read-only log pages/observations; never replay a task."""
  tid=arn.rsplit("/",1)[-1]; token=None; results=[]; malformed=False; unrecognized=False
- try:contract=diagnostics()
+ try:contract=persistence_diagnostics()
  except Exception:return {"status":"failed","result":None,"execution":None,"attempts":1}
  def finish(status,attempt):
   failures=[result for result in results if result["verdict"] in {"rejected","diagnostic-failed"}]

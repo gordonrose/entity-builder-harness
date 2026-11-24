@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.validate-artifact-placement
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -49,6 +49,10 @@ KIND_PATTERNS = {
     "generic-schema": r"^\.agentic/04\.deploy/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)/schemas/[a-z0-9]+(?:-[a-z0-9]+)*\.v[0-9]+\.schema\.yml$",
     "aws-target-workflow": r"^\.agentic/aws/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)/workflows/targets/[a-z0-9-]+/20-scopes/[a-z0-9-]+/[a-z0-9]+(?:-[a-z0-9]+)*\.md$",
     "lifecycle-script": r"^scripts/04\.deploy/lifecycle/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)(?:/targets/[a-z0-9-]+/[a-z0-9-]+)?/[a-z0-9]+(?:-[a-z0-9]+)*/script\.(?:sh|py)$",
+    "public-deploy-command": r"^scripts/04\.deploy/commands/[a-z0-9]+(?:-[a-z0-9]+)*/command\.(?:sh|py|js|mjs)$",
+    "lifecycle-capability": r"^scripts/04\.deploy/lifecycle/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)/capabilities/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/implementation\.(?:py|sh|js|mjs)$",
+    "target-capability-binding": r"^scripts/04\.deploy/lifecycle/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)/targets/[a-z0-9-]+/[a-z0-9-]+/bindings/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/binding\.(?:py|sh|js|mjs)$",
+    "provider-adapter": r"^scripts/04\.deploy/shared/provider-adapters/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/implementation\.(?:py|sh|js|mjs)$",
 }
 
 

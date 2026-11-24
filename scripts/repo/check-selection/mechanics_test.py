@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 7
+#   version: 15
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-23"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -18,9 +18,290 @@
 #     path: scripts/repo/check-selection/smoke-test.sh
 from __future__ import annotations
 from test_support import *
+from types import SimpleNamespace
 
 
 class SelectionTests(FixtureSupport):
+    def test_isolated_context_checks_do_not_spill_into_unrelated_work(self):
+        (self.root / 'legacy').mkdir()
+        (self.root / 'legacy/definition.yml').write_text('retained system\n')
+        self.check_script('legacy', ['read-only', 'writes-files'], 'echo legacy >> counts\n')
+        self.catalog['isolated_check_contexts'] = {
+            'legacy-system': {'activation_inputs': ['legacy', 'scripts/legacy.sh']},
+        }
+        self.catalog['checks']['legacy'] = {
+            **copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/legacy.sh'],
+            'inputs': ['scripts/legacy.sh'],
+            'scope_inputs': False,
+            'isolated_context': 'legacy-system',
+        }
+        self.catalog['repository_inputs'] = [{'inputs': ['src', 'legacy'], 'checks': ['legacy']}]
+        self.save()
+
+        ordinary = self.run_plan(paths=['src/main.ts'])
+        self.assertFalse(ordinary['findings'], ordinary['findings'])
+        self.assertNotIn('legacy', [item['check_id'] for item in ordinary['checks']])
+
+        maintenance = self.run_plan(paths=['legacy/definition.yml'])
+        self.assertFalse(maintenance['findings'], maintenance['findings'])
+        self.assertIn('legacy', [item['check_id'] for item in maintenance['checks']])
+
+        explicit = self.run_plan(checks=['legacy'])
+        self.assertIn('legacy', [item['check_id'] for item in explicit['checks']])
+
+        self.catalog['checks']['legacy']['isolated_context'] = 'unknown-system'
+        self.save()
+        self.assertIn('check-isolated-context-invalid', self.codes(self.run_plan()))
+
+    def test_contained_commit_uses_direct_inputs_without_repository_wide_scans(self):
+        path = self.root / 'src/contained.py'
+        path.write_text('value = 1\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['src/contained.py'], 'checks': ['local']}]
+        self.save()
+
+        with patch.object(selection, 'repository_paths', side_effect=AssertionError('repository-wide scan')):
+            with patch.object(selection, 'discover', side_effect=AssertionError('scope discovery')):
+                report = self.run_plan(paths=['src/contained.py'], boundary='commit')
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['impact_analysis'], 'direct-commit')
+        self.assertEqual(report['delivery_inventory'], {'status': 'deferred-to-integration'})
+        self.assertEqual(report['scopes'], [])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+
+    def test_recorded_ci_branch_diff_uses_direct_inputs_without_repository_wide_scans(self):
+        path = self.root / 'src/branch-diff.py'
+        path.write_text('value = 1\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['src/branch-diff.py'], 'checks': ['local']}]
+        self.save()
+
+        with patch.object(selection, 'repository_paths', side_effect=AssertionError('repository-wide scan')):
+            with patch.object(selection, 'discover', side_effect=AssertionError('scope discovery')):
+                report = self.run_plan(paths=['src/branch-diff.py'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['impact_analysis'], 'direct-branch-diff')
+        self.assertEqual(report['delivery_inventory'], {'status': 'deferred-to-ci-delivery-coverage'})
+        self.assertEqual(report['scopes'], [])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+
+    def test_named_commit_preparation_uses_direct_inputs_without_repository_wide_scans(self):
+        path = self.root / 'src/preparation.py'
+        path.write_text('value = 1\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['src/preparation.py'], 'checks': ['local']}]
+        self.save()
+
+        with patch.object(selection, 'repository_paths', side_effect=AssertionError('repository-wide scan')):
+            with patch.object(selection, 'discover', side_effect=AssertionError('scope discovery')):
+                report = self.run_plan(paths=['src/preparation.py'], boundary='commit',
+                                       record_preparation=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['impact_analysis'], 'direct-preparation')
+        self.assertEqual(report['delivery_inventory'], {'status': 'deferred-to-integration'})
+        self.assertEqual(report['scopes'], [])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+
+    def test_staged_commit_reuses_direct_preparation_without_repository_wide_scans(self):
+        for name in ('main.ts', 'old.ts'):
+            (self.root / 'src' / name).write_text('value = 1\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['src'], 'checks': ['local']}]
+        self.save()
+        prepared = self.run_plan(paths=['src/main.ts', 'src/old.ts'], boundary='commit',
+                                 record_preparation=True, changed_only=True)
+        self.assertFalse(prepared['findings'], prepared['findings'])
+
+        with patch.object(selection, 'repository_paths', side_effect=AssertionError('repository-wide scan')):
+            with patch.object(selection, 'discover', side_effect=AssertionError('scope discovery')):
+                report = self.run_plan(boundary='commit', staged=True, require_preparation=True,
+                                       changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['impact_analysis'], 'direct-preparation')
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+
+    def test_recorded_ci_branch_diff_uses_declared_catalog_self_check_without_consumer_expansion(self):
+        self.catalog['checks']['catalog-check'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.catalog['checks']['catalog-check']['inputs'] = ['scripts/repo/check-selection/checks.yml']
+        self.catalog['repository_inputs'] = [{'inputs': ['scripts/repo/check-selection/checks.yml'], 'checks': ['catalog-check']}]
+        self.save()
+
+        with patch.object(selection, 'changed_catalog_checks', side_effect=AssertionError('catalog consumer expansion')):
+            report = self.run_plan(paths=['scripts/repo/check-selection/checks.yml'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['catalog-check'])
+
+    def test_recorded_ci_branch_diff_does_not_expand_diagnostic_review_ledger(self):
+        ledger = 'scripts/repo/diagnostic-coverage/reviews.v1.json'
+        (self.root / ledger).parent.mkdir(parents=True, exist_ok=True)
+        (self.root / ledger).write_text('{"schema":"fixture"}\n')
+        self.catalog['checks']['diagnostic-adoption'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.catalog['repository_inputs'] = [{'inputs': [ledger], 'checks': ['local']}]
+        self.save()
+        observed = []
+        diagnostic = SimpleNamespace(
+            review_bindings=lambda _root: {},
+            review_rules=lambda _root, *, comparison_base, ledger_changed: observed.append(ledger_changed) or [],
+            proof_inputs=lambda _root: [],
+        )
+        specification = SimpleNamespace(loader=SimpleNamespace(exec_module=lambda _module: None))
+        with patch.object(selection.importlib.util, 'spec_from_file_location', return_value=specification), \
+             patch.object(selection.importlib.util, 'module_from_spec', return_value=diagnostic):
+            report = self.run_plan(paths=[ledger], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['local'])
+        self.assertEqual(observed, [False])
+
+    def test_recorded_ci_branch_diff_defers_hygiene_even_when_its_input_changed(self):
+        self.catalog['checks']['local']['cadence'] = 'hygiene'
+        self.catalog['repository_inputs'] = [{'inputs': ['src/main.ts'], 'checks': ['local']}]
+        self.save()
+
+        report = self.run_plan(paths=['src/main.ts'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual(report['checks'], [])
+
+    def test_recorded_ci_branch_diff_selects_only_the_lockfile_integrity_owner(self):
+        (self.root / 'package-lock.json').write_text('{"lockfileVersion": 3}\n')
+        self.check_script('lockfile', ['read-only', 'writes-files'], 'echo lockfile >> counts\n')
+        self.catalog['checks']['lockfile'] = {
+            **copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/lockfile.sh'],
+            'inputs': ['package-lock.json'],
+            'scope_inputs': False,
+            'select_on_lockfile': True,
+        }
+        self.catalog['checks']['local']['inputs'] = ['package-lock.json']
+        self.catalog['repository_inputs'] = [
+            {'inputs': ['package-lock.json'], 'checks': ['local', 'lockfile']},
+        ]
+        self.save()
+
+        report = self.run_plan(paths=['package-lock.json'], boundary='integration', ci=True, changed_only=True)
+
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertEqual([item['check_id'] for item in report['checks']], ['lockfile'])
+
+    def test_shared_or_topology_commit_changes_require_full_impact_analysis(self):
+        args = argparse.Namespace(stage='local', all=False, ci=False, checks=None, aggregate_members=None)
+        for path in ('packages/core/src/value.py', 'platform/contracts/src/value.ts',
+                     'infra/04.deploy/target.yml', '.github/workflows/delivery.yml',
+                     'scripts/repo/check-selection/checks.yml'):
+            with self.subTest(path=path):
+                self.assertFalse(selection.direct_commit_impact(args, 'commit', [path], 'scripts/repo/check-selection/checks.yml'))
+        self.assertFalse(selection.direct_commit_impact(args, 'integration', ['apps/entity-smoke/feature.py'], 'scripts/repo/check-selection/checks.yml'))
+
+    def test_delivery_inventory_is_deferred_for_local_source_planning_but_required_for_delivery_or_ci(self):
+        args = argparse.Namespace(all=False, ci=False)
+        catalog = 'scripts/repo/check-selection/checks.yml'
+        for path in ('packages/core/src/value.ts', 'platform/persistence/src/value.ts', 'apps/entity-smoke/src/index.ts'):
+            with self.subTest(path=path):
+                self.assertFalse(selection.delivery_inventory_required(args, [path], catalog))
+        for path in ('infra/04.deploy/target.yml', 'scripts/04.deploy/lifecycle/check.py',
+                     '.github/workflows/delivery-coverage.yml', catalog):
+            with self.subTest(path=path):
+                self.assertTrue(selection.delivery_inventory_required(args, [path], catalog))
+        self.assertTrue(selection.delivery_inventory_required(argparse.Namespace(all=False, ci=True), ['packages/core/src/value.ts'], catalog))
+        self.assertFalse(selection.delivery_inventory_required(argparse.Namespace(all=False, ci=True, changed_only=True), ['packages/core/src/value.ts'], catalog))
+        self.assertTrue(selection.delivery_inventory_required(argparse.Namespace(all=False, ci=True, changed_only=True), ['scripts/04.deploy/lifecycle/check.py'], catalog))
+        self.assertTrue(selection.delivery_inventory_required(argparse.Namespace(all=True, ci=False), ['packages/core/src/value.ts'], catalog))
+
+    def test_planning_fingerprint_reuses_identical_snapshot_without_leaking_to_fresh_validation(self):
+        source = self.root / 'src/main.ts'
+        before = selection.fingerprint(self.root, {'src'})
+        token = selection.FINGERPRINT_ENTRY_CACHE.set({})
+        try:
+            self.assertEqual(selection.fingerprint(self.root, {'src'}), before)
+            source.write_text('changed after planning snapshot\n')
+            self.assertEqual(selection.fingerprint(self.root, {'src'}), before)
+        finally:
+            selection.FINGERPRINT_ENTRY_CACHE.reset(token)
+        self.assertNotEqual(selection.fingerprint(self.root, {'src'}), before)
+
+    def test_hygiene_check_runs_only_for_its_own_changed_input_or_explicit_request(self):
+        self.check_script('hygiene', ['read-only', 'writes-files'], 'echo hygiene >> hygiene-counts\n')
+        self.catalog['checks']['hygiene'] = {
+            **copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/hygiene.sh'],
+            'cadence': 'hygiene',
+            'inputs': ['scripts/hygiene.sh'],
+            'scope_inputs': False,
+        }
+        self.catalog['repository_inputs'] = [{'inputs': ['scripts/hygiene.sh'], 'checks': ['hygiene']}]
+        self.save()
+
+        routine = self.run_plan(paths=['src/main.ts'], execute=True)
+        self.assertNotIn('hygiene', [item['check_id'] for item in routine['checks']])
+        self.assertFalse((self.root / 'hygiene-counts').exists())
+
+        commit = self.run_plan(paths=['scripts/hygiene.sh'], boundary='commit', execute=True)
+        hygiene = next(item for item in commit['checks'] if item['check_id'] == 'hygiene')
+        self.assertEqual(hygiene['status'], 'deferred')
+        self.assertFalse((self.root / 'hygiene-counts').exists())
+
+        integration = self.run_plan(paths=['scripts/hygiene.sh'], execute=True)
+        hygiene = next(item for item in integration['checks'] if item['check_id'] == 'hygiene')
+        self.assertEqual(hygiene['status'], 'passed')
+        self.assertEqual((self.root / 'hygiene-counts').read_text(), 'hygiene\n')
+
+        explicit = self.run_plan(checks=['hygiene'], execute=True)
+        self.assertEqual(explicit['checks'][0]['status'], 'passed')
+
+    def test_deferred_check_runs_only_when_explicitly_named(self):
+        self.check_script('deferred', ['read-only', 'writes-files'], 'echo deferred >> deferred-counts\n')
+        self.catalog['checks']['deferred'] = {
+            **copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/deferred.sh'],
+            'cadence': 'deferred',
+            'inputs': ['scripts/deferred.sh'],
+            'scope_inputs': False,
+        }
+        self.catalog['repository_inputs'] = [{'inputs': ['scripts/deferred.sh'], 'checks': ['deferred']}]
+        self.save()
+
+        for boundary in ['commit', 'integration']:
+            automatic = self.run_plan(paths=['scripts/deferred.sh'], boundary=boundary, execute=True)
+            deferred = next(item for item in automatic['checks'] if item['check_id'] == 'deferred')
+            self.assertEqual(deferred['status'], 'deferred')
+            self.assertFalse((self.root / 'deferred-counts').exists())
+
+        explicit = self.run_plan(checks=['deferred'], execute=True)
+        self.assertEqual(explicit['checks'][0]['status'], 'passed')
+        self.assertEqual((self.root / 'deferred-counts').read_text(), 'deferred\n')
+
+    def test_invalid_check_cadence_is_rejected(self):
+        self.catalog['checks']['local']['cadence'] = 'monthly'
+        self.save()
+        self.assertIn('check-cadence-invalid', self.codes(self.run_plan()))
+
+    def test_changed_path_context_is_declared_and_isolated_to_its_selected_command(self):
+        self.check_script('context', ['read-only', 'writes-files'], 'test "$REPO_CHECK_CHANGED_PATHS" = \'["src/main.ts"]\'\n')
+        self.catalog['checks']['context'] = {
+            **copy.deepcopy(self.catalog['checks']['local']),
+            'argv': ['bash', 'scripts/context.sh'],
+            'inputs': ['scripts/context.sh'],
+            'scope_inputs': False,
+            'changed_path_context': True,
+        }
+        self.catalog['repository_inputs'] = [{'inputs': ['src/main.ts'], 'checks': ['context']}]
+        self.save()
+
+        report = self.run_plan(paths=['src/main.ts'], execute=True)
+        self.assertFalse(report['findings'], report['findings'])
+        self.assertEqual(report['checks'][0]['status'], 'passed')
+
+        reused = self.run_plan(paths=['src/main.ts'], execute=True)
+        self.assertEqual(reused['execution_summary']['executed_check_ids'], [])
+        self.assertEqual(reused['execution_summary']['reused_check_ids'], ['context', 'local', 'runnable-program', 'scope-inventory'])
+
+        self.catalog['checks']['context']['changed_path_context'] = 'yes'
+        self.save()
+        self.assertIn('check-input-contract-invalid', self.codes(self.run_plan(paths=['src/main.ts'])))
+
     def workspace_context_fixture(self):
         folder = self.root / 'scripts/repo/workspace-build'
         shutil.copytree(ROOT / 'scripts/repo/workspace-build', folder)
@@ -49,6 +330,7 @@ class SelectionTests(FixtureSupport):
             'effects': ['writes-files'],
             'argv': ['bash', selection.workspace_context.WRAPPER, '--unit', 'core'],
             'inputs': ['packages/ledger'], 'runtime': {'tools': ['bash', 'node'], 'node_packages': [], 'environment': []}}
+        self.catalog['checks']['workspace']['select_on_workspace_manifest'] = True
         self.save()
         return package
 
@@ -531,16 +813,44 @@ class SelectionTests(FixtureSupport):
 
 
     def test_dependency_contracts_reject_cycles_unknown_refs_and_external_children(self):
-        base = {'stage': 'local', 'effects': ['writes-files']}
+        base = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
         for child, expected in [({'stage': 'package', 'effects': ['network']}, 'verification-dependency-boundary-invalid'), ({**base, 'members': ['root']}, 'verification-dependency-cycle')]:
             graph, findings = selection.verification_dependencies({'root': {**base, 'members': ['child']}, 'child': child}, ['root'], ['src'])
             self.assertIn(expected, {item['code'] for item in findings})
         _, findings = selection.verification_dependencies({'root': {**base, 'members': ['missing']}}, ['root'], ['src'])
         self.assertIn('verification-dependency-unknown', {item['code'] for item in findings})
 
+    def test_inactive_dependency_is_a_planning_gap_not_a_late_blocker(self):
+        base = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
+        graph, findings = selection.verification_dependencies(
+            {'root': {**base, 'members': ['retained']}, 'retained': base},
+            ['root'], ['src'], active=lambda identity: identity != 'retained',
+        )
+
+        self.assertEqual(graph['root'], set())
+        self.assertIn(
+            {'code': 'verification-dependency-inactive-context', 'check_id': 'root', 'dependency': 'retained'},
+            findings,
+        )
+
+    def test_inactive_aggregate_cannot_propagate_prerequisites_to_active_members(self):
+        base = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
+        graph, findings = selection.verification_dependencies(
+            {
+                'retained-aggregate': {**base, 'members': ['active-member'], 'focused_prerequisites': [{'inputs': ['src'], 'checks': ['retained-proof']}]},
+                'active-member': base,
+                'retained-proof': base,
+            },
+            ['retained-aggregate'], ['src'], active=lambda identity: identity != 'retained-aggregate',
+        )
+
+        self.assertEqual(graph['retained-aggregate'], set())
+        self.assertNotIn('active-member', graph)
+        self.assertFalse(findings)
+
 
     def test_focused_member_peers_do_not_gain_artificial_cycles(self):
-        leaf = {'stage': 'local', 'effects': ['writes-files']}
+        leaf = {'stage': 'local', 'boundary': 'commit', 'effects': ['writes-files']}
         graph, findings = selection.verification_dependencies({'root': {**leaf, 'members': ['first', 'second', 'work'], 'focused_prerequisites': [{'inputs': ['src'], 'checks': ['first', 'second']}]}, **{name: leaf for name in ['first', 'second', 'work']}}, ['root'], ['src'])
         self.assertFalse(findings)
         self.assertEqual(graph['first'], set())
@@ -1364,6 +1674,20 @@ PY
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
 
 
+    def test_cli_selector_change_reuses_unchanged_subject_proof(self):
+        """Changing routing must not rerun a proof whose subject is unchanged."""
+        self.prepare_selector_cli()
+        first = self.local_command_result(self.run_selector_cli())
+        selector = self.root / 'scripts/repo/check-selection/script.py'
+        selector.write_text(selector.read_text() + '\n# Fixture-only selection implementation change.\n')
+
+        reused = self.local_command_result(self.run_selector_cli())
+
+        self.assertEqual(reused['evidence_key'], first['evidence_key'])
+        self.assertEqual(reused['evidence_source'], 'trusted-worktree-cache')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+
     def test_cli_selected_catalog_fields_invalidate_or_block(self):
         self.prepare_selector_cli()
         first = self.local_command_result(self.run_selector_cli())
@@ -1929,7 +2253,7 @@ used_by:
         self.assertNotIn('local', commit['execution_summary']['executed_check_ids'])
         self.assertFalse((self.root / 'counts').exists())
         verified = self.run_plan(execute=True)
-        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local'])
+        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
         commit = self.run_plan(execute=True, boundary='commit', staged=True, require_preparation=True)
         integrated = self.run_plan(execute=True)
         for report in (commit, integrated):
@@ -1940,6 +2264,10 @@ used_by:
 
 
     def test_missing_explicit_inputs_and_invalid_scheduling_fail_closed(self):
+        self.catalog['checks']['local'].pop('boundary')
+        self.save()
+        self.assertIn('check-boundary-missing', self.codes(self.run_plan(execute=True)))
+        self.catalog['checks']['local']['boundary'] = 'commit'
         self.catalog['checks']['local'].pop('inputs')
         self.save()
         self.assertIn('check-input-contract-missing', self.codes(self.run_plan(execute=True)))
@@ -2036,6 +2364,12 @@ used_by:
             target = self.root / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
+        # Refresh now revalidates the exact promoted diff in changed-only mode.
+        # The fixture must therefore declare the one local owner of src/, just
+        # as a real repository catalog does; scope discovery is deliberately
+        # unavailable in this direct mode.
+        self.catalog['repository_inputs'] = [{'inputs': ['src'], 'checks': ['local']}]
+        self.save()
         (self.root / '.gitignore').write_text('counts\n.cache/\n')
         (self.root / 'package.json').write_text(json.dumps({'scripts': {'fixture:coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         def command(directory, *argv):
@@ -2061,12 +2395,14 @@ used_by:
             output = command(self.root, 'bash', 'scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh', branch)
             applied = json.loads(next(line for line in output.splitlines() if line.startswith('{')))
             self.assertEqual(applied['execution_summary']['executed_check_ids'], [])
-            self.assertEqual(applied['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+            self.assertEqual(applied['execution_summary']['reused_check_ids'], ['local'])
             self.assertFalse(preflight.exists())
             self.assertFalse((self.root / 'counts').exists(), 'Refresh must not repeat the behavioral command.')
             self.assertFalse((self.root / 'operations').exists(), 'Refresh must not build images or invoke providers.')
-            retained = json.loads(command(self.root, 'bash', 'scripts/repo/check-selection/script.sh', '--paths', 'src/main.ts', '--execute-local', '--json'))
+            retained = self.run_plan(paths=['src/main.ts'], boundary='integration', ci=True,
+                                     changed_only=True, execute=True)
             self.assertEqual(retained['execution_summary']['executed_check_ids'], [])
+            self.assertEqual(retained['execution_summary']['reused_check_ids'], ['local'])
 
 
     def test_imported_report_cannot_qualify_local_check(self):

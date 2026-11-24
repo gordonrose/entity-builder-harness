@@ -10,6 +10,7 @@ export const persistenceDiagnosticCodes = [
   "persistence.runtime-permission-denied", "persistence.capacity-exhausted", "persistence.schema-incompatible",
   "persistence.operation-timed-out", "persistence.outcome-uncertain", "persistence.unclassified-failure",
 ] as const;
+const persistenceCommandCodes = ["persistence.credential-rejected", "persistence.runtime-permission-denied", "persistence.transport-unavailable", "persistence.operation-timed-out", "persistence.unclassified-failure"] as const;
 export const persistenceObservedPhases = ["pool_connect", "pool_query", "query", "authentication_value", "tcp_probe", "tls_probe", "unknown"] as const;
 export const persistenceFailureClassifications = [
   "authentication_rejected", "authentication_material_invalid", "permission_denied", "content_unavailable",
@@ -17,6 +18,8 @@ export const persistenceFailureClassifications = [
 ] as const;
 const historicalPersistenceOperations = ["connect", "readiness", "transaction", "migration", "create_outbox", "write_facts", "write_atomic", "read_outbox", "list_outbox", "claim_outbox", "publish_outbox", "read_processing", "claim_processing", "complete_processing", "release_processing", "append_lineage", "read_lineage"] as const;
 export const persistenceOperations = [...historicalPersistenceOperations, "administration", "restore_verification"] as const;
+const persistenceScheduleOperations = ["create_schedule", "read_schedule", "list_due_schedules", "handover_schedule"] as const;
+const persistenceCurrentOperations = [...persistenceOperations] as const;
 
 const kinds: Record<(typeof persistenceDiagnosticCodes)[number], FailureKind> = {
   "persistence.transport-unavailable": "dependency_unavailable", "persistence.trust-validation-failed": "configuration",
@@ -41,7 +44,13 @@ export const persistenceDiagnosticDefinitions = persistenceDiagnosticCodes.map((
 export const persistenceCurrentDiagnosticDefinitions = persistenceDiagnosticDefinitions.map((definition) => defineDiagnostic({
   ...definition, version: 2,
   classification: { ...definition.classification, failureSource: definition.code === "persistence.trust-validation-failed" ? "unknown" : "provider" },
-  detail: { ...historicalDetail, properties: { ...historicalDetail.properties, operation: { type: "enum", values: persistenceOperations } } },
+  detail: { ...historicalDetail, properties: { ...historicalDetail.properties, operation: { type: "enum", values: persistenceCurrentOperations } } },
+} as const));
+/** Schedule operations extend, rather than rewrite, the established v2 records. */
+export const persistenceScheduleDiagnosticDefinitions = persistenceDiagnosticDefinitions.map((definition) => defineDiagnostic({
+  ...definition, version: persistenceCommandCodes.includes(definition.code as (typeof persistenceCommandCodes)[number]) ? 5 : 4,
+  classification: { ...definition.classification, failureSource: definition.code === "persistence.trust-validation-failed" ? "unknown" : definition.classification.failureSource },
+  detail: { ...historicalDetail, properties: { ...historicalDetail.properties, operation: { type: "enum", values: [...persistenceOperations, ...persistenceScheduleOperations] } } },
 } as const));
 /** Store bindings contain no provider names, addresses, or submitted identifiers. */
 export const persistenceConfigurationDiagnostic = defineDiagnostic({ code: "persistence.configuration-invalid", version: 1,
@@ -81,6 +90,46 @@ export const persistenceLocalRejectionDiagnostic = defineDiagnostic({ code: "per
 } as const);
 export type PersistenceLocalRejectionDetail = NonNullable<typeof persistenceLocalRejectionDiagnostic.__detail>;
 export function persistenceLocalRejectionDiagnosticRecord(detail: PersistenceLocalRejectionDetail) { return requiredRecord(persistenceLocalRejectionDiagnostic, detail); }
+
+/** Schedule-store rejections are separate so historical local-rejection v1 stays unchanged. */
+export const persistenceScheduleRejectionDiagnostic = defineDiagnostic({ code: "persistence.schedule-rejected", version: 1,
+  classification: { failureKind: "validation", failureSource: "platform", severity: "error", recovery: "manual_investigation" },
+  detail: { type: "object", properties: {
+    operation: { type: "enum", values: ["create", "list-due", "handover"] },
+    field: { type: "enum", values: ["id", "limit", "schedule", "outbox-entry"] },
+    condition: { type: "enum", values: ["duplicate", "not-found", "not-integer", "not-positive", "too-large"] },
+    effect: { type: "enum", values: ["local-state-unchanged"] },
+  } },
+} as const);
+export type PersistenceScheduleRejectionDetail = NonNullable<typeof persistenceScheduleRejectionDiagnostic.__detail>;
+export function persistenceScheduleRejectionDiagnosticRecord(detail: PersistenceScheduleRejectionDetail) { return requiredRecord(persistenceScheduleRejectionDiagnostic, detail); }
+
+/** Durable schedule-store conflicts are distinct from the in-memory proof's known local effect. */
+export const persistenceScheduleStoreRejectionDiagnostic = defineDiagnostic({ code: "persistence.schedule-store-rejected", version: 1,
+  classification: { failureKind: "conflict", failureSource: "provider", severity: "error", recovery: "manual_investigation" },
+  detail: { type: "object", properties: {
+    operation: { type: "enum", values: ["create"] },
+    field: { type: "enum", values: ["id"] },
+    condition: { type: "enum", values: ["duplicate"] },
+    effect: { type: "enum", values: ["unknown"] },
+  } },
+} as const);
+export type PersistenceScheduleStoreRejectionDetail = NonNullable<typeof persistenceScheduleStoreRejectionDiagnostic.__detail>;
+export function persistenceScheduleStoreRejectionDiagnosticRecord(detail: PersistenceScheduleStoreRejectionDetail) { return requiredRecord(persistenceScheduleStoreRejectionDiagnostic, detail); }
+
+/** Schedule rows are a new stored shape, so the older generic v1 record vocabulary remains fixed. */
+export const persistenceScheduleStoredRecordDiagnostic = defineDiagnostic({ code: "persistence.schedule-stored-record-observed", version: 1,
+  classification: { failureKind: "data_integrity", failureSource: "unknown", severity: "error", recovery: "manual_investigation" },
+  detail: { type: "object", properties: {
+    operation: { type: "enum", values: ["create", "read", "list-due", "handover"] },
+    reduction: { type: "enum", values: ["returned", "null"] },
+    effect: { type: "enum", values: ["unknown", "not-assessed"] },
+    field: { type: "enum", values: ["row", "id", "job-name", "due-at", "state", "outbox-entry"] },
+    condition: { type: "enum", values: ["absent", "invalid"] },
+  } },
+} as const);
+export type PersistenceScheduleStoredRecordDetail = NonNullable<typeof persistenceScheduleStoredRecordDiagnostic.__detail>;
+export function persistenceScheduleStoredRecordDiagnosticRecord(detail: PersistenceScheduleStoredRecordDetail) { return requiredRecord(persistenceScheduleStoredRecordDiagnostic, detail); }
 
 export const persistenceStoredRecordDiagnostic = defineDiagnostic({ code: "persistence.stored-record-observed", version: 1,
   classification: { failureKind: "data_integrity", failureSource: "unknown", severity: "error", recovery: "manual_investigation" },
@@ -157,7 +206,7 @@ const commandDetail = { type: "object", properties: {
     } } },
   } },
 }, optional: ["cancellation"] } as const;
-const commandCodes = ["persistence.credential-rejected", "persistence.runtime-permission-denied", "persistence.transport-unavailable", "persistence.operation-timed-out", "persistence.unclassified-failure"] as const;
+const commandCodes = persistenceCommandCodes;
 export const persistenceCommandDiagnosticDefinitions = commandCodes.map((code) => defineDiagnostic({ code, version: 4,
   classification: { failureKind: kinds[code], failureSource: code === "persistence.unclassified-failure" ? "unknown" : "provider", severity: "error", recovery: "manual_investigation" },
   detail: commandDetail,
@@ -223,10 +272,11 @@ export const persistenceRelayBoundaryDiagnostic = defineDiagnostic({ code: "pers
 export type PersistenceRelayBoundaryDetail = NonNullable<typeof persistenceRelayBoundaryDiagnostic.__detail>;
 export function persistenceRelayBoundaryDiagnosticRecord(detail: PersistenceRelayBoundaryDetail) { return requiredRecord(persistenceRelayBoundaryDiagnostic, detail); }
 
-export const platformPersistenceDiagnosticCatalog = { owner: "persistence", definitions: [...persistenceLeasingDiagnosticCatalog.definitions, ...persistenceMaintenanceDiagnosticCatalog.definitions, ...persistenceDiagnosticDefinitions, ...persistenceCurrentDiagnosticDefinitions,
+export const platformPersistenceDiagnosticCatalog = { owner: "persistence", definitions: [...persistenceLeasingDiagnosticCatalog.definitions, ...persistenceMaintenanceDiagnosticCatalog.definitions, ...persistenceDiagnosticDefinitions, ...persistenceCurrentDiagnosticDefinitions, ...persistenceScheduleDiagnosticDefinitions,
   ...persistenceCrudDiagnosticDefinitions, persistenceConfigurationDiagnostic, persistenceLocalRejectionDiagnostic, persistenceStoredRecordDiagnostic, persistenceBoundaryDiagnostic,
   persistenceReconciliationDiagnostic, ...persistenceCommandDiagnosticDefinitions, persistenceCommandConditionDiagnostic, persistenceStoredAttributeDiagnostic, persistenceStateReconciliationDiagnostic,
-  persistenceRelayBoundaryDiagnostic, persistenceConfigurationInputDiagnostic] } as const;
+  persistenceRelayBoundaryDiagnostic, persistenceConfigurationInputDiagnostic, persistenceScheduleRejectionDiagnostic,
+  persistenceScheduleStoreRejectionDiagnostic, persistenceScheduleStoredRecordDiagnostic] } as const;
 
 export interface PlatformPersistenceDiagnosticOptions {
   readonly diagnosticDefinitions?: readonly DiagnosticDefinition[];
@@ -282,10 +332,13 @@ export function persistenceObservedDiagnosticRecord(facts: {
   readonly classification: (typeof persistenceFailureClassifications)[number];
   readonly code_status: "recognized" | "unrecognized" | "absent";
   readonly phase: (typeof persistenceObservedPhases)[number];
-}, operation: (typeof persistenceOperations)[number]) {
+}, operation: (typeof persistenceCurrentOperations)[number] | (typeof persistenceScheduleOperations)[number]) {
   const code = observedCode(facts.classification);
-  const effect = operation === "connect" ? "not-started" : ["readiness", "restore_verification", "read_outbox", "list_outbox", "read_processing", "read_lineage"].includes(operation) ? "not-assessed" : "unknown";
-  const definition = persistenceCurrentDiagnosticDefinitions.find((item) => item.code === code)!;
+  const effect = operation === "connect" ? "not-started" : ["readiness", "restore_verification", "read_outbox", "list_outbox", "read_processing", "read_lineage", "read_schedule", "list_due_schedules"].includes(operation) ? "not-assessed" : "unknown";
+  const definitions = persistenceScheduleOperations.includes(operation as (typeof persistenceScheduleOperations)[number])
+    ? persistenceScheduleDiagnosticDefinitions
+    : persistenceCurrentDiagnosticDefinitions;
+  const definition = definitions.find((item) => item.code === code)!;
   const record = createDiagnosticRecord(definition, { phase: facts.phase, classification: facts.classification, codeStatus: facts.code_status, operation, effect });
   if (!record.ok) throw new TypeError("PLATFORM_PERSISTENCE_DIAGNOSTIC_INVALID");
   return record.value;

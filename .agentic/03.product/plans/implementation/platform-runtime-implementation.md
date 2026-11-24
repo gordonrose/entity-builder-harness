@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.architecture.plan.platform-runtime-implementation
-version: 44
+version: 46
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-10-20"
+updated_on: "2026-11-22"
 layer: 03.product
 domain: platform-runtime
 disciplines:
@@ -574,10 +574,12 @@ Acceptance for the eventual slice:
 
 ### 6b. Defer Scheduler And Product/Operator CLI Targets
 
-Status: deliberately deferred. The current platform does not yet contain a
-scheduler runtime, a scheduler entrypoint, a product/operator CLI, or their
-deployment targets. Existing harness and development scripts remain harness
-tools; they must not be presented as product runtime commands.
+Status: scheduler runtime, entrypoint, and deployment target remain deliberately
+deferred. The first app-owned cleanup job is now implemented and locally proven;
+the platform work that will store and deliver its schedule remains a separate,
+bounded persistence-and-delivery design.
+Existing harness and development scripts remain harness tools; they must not be
+presented as product runtime commands.
 
 The scheduler and CLI serve different arrival models:
 
@@ -585,6 +587,49 @@ The scheduler and CLI serve different arrival models:
 | --- | --- | --- |
 | Scheduler | A time-based trigger becomes due. | It creates or triggers a registered app-owned job with observable delivery evidence. |
 | Product/operator CLI | An authorised person or automation explicitly invokes a command. | It returns a clear success, failure, or dry-run exit status and audit record. |
+
+#### First scheduler use case: entity-smoke retention cleanup
+
+The first consumer is the registered `entity-smoke.test-entity.purge-expired`
+job. The app owns what qualifies for retention cleanup: Entity Smoke is a
+disposable test feature, so it removes only archived, logically deleted rows
+after five minutes and has no legal-hold feature. This is not a platform-wide
+retention rule. Platform scheduling must only make a safe, observable request
+for that already-registered job.
+
+The first scheduler implementation is deliberately smaller than recurrence:
+
+- locally prove one one-off schedule record that names its registered job and
+  exact due instant; the first retention-cleanup job needs no extra information;
+- accept a valid ISO timestamp with either `Z` or an explicit offset, then
+  normalise it to the existing Core UTC representation;
+- retain that record in a deterministic in-memory proof store, returning a
+  duplicate-ID rejection without changing the stored record;
+- treat timezone, DST, recurrence, missed-run policy, tenant selection, and a
+  runnable scheduler process as later decisions.
+
+The selected first durable location is the existing PostgreSQL deployment for
+`kanbien-core-platform`, in its isolated `entity_smoke` schema. The existing
+Entity Smoke migration task adds one immutable schedule-table migration; the
+PostgreSQL adapter provides the durable implementation of the schedule store.
+When an Entity Smoke test entity is already archived and becomes logically
+deleted, the app saves one reminder for its existing purge job, due just after
+the five-minute retention boundary. The app deliberately saves that reminder
+before saving the deletion: a later entity-write failure leaves only a harmless
+generic reminder, while a schedule-write failure leaves the entity unchanged.
+This still does not run a due schedule or alter the server into a scheduler
+process.
+
+The next storage slice selects the existing platform outbox foundation in the
+Entity Smoke schema, then adds a later immutable migration that permits a
+schedule to change from `waiting` to `delivery-created` and retain its outbox
+ID. `handoverDue` locks the due schedule row, writes one supplied outbox entry,
+and makes that state change in one PostgreSQL transaction. It does not create a
+second queue-delivery mechanism. It is deliberately storage only: a later
+due-runner must choose a registered job's message type, call this operation,
+and then rely on the existing outbox relay and worker path. The app job remains
+local proof only. This does not authorise a scheduler package, scheduler
+entrypoint, or deployment/cloud resources.
 
 For a future scheduler:
 

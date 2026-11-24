@@ -8,4 +8,8 @@ export interface TestEntityRepository {
   create(entity: TestEntity): Promise<Result<TestEntity, TestEntityError>>;
   save(entity: TestEntity): Promise<Result<TestEntity, TestEntityError>>;
   listByStatus(status: TestEntityStatus): Promise<readonly TestEntity[]>;
+  /** Cleanup sees only records that were deliberately archived and then logically deleted. */
+  listArchivedDeleted(): Promise<readonly TestEntity[]>;
+  /** Re-check the cleanup predicate at the storage boundary before removing a row. */
+  purgeArchivedDeleted(id: TestEntityId): Promise<Result<boolean, TestEntityError>>;
 }

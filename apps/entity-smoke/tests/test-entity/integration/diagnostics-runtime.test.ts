@@ -137,7 +137,8 @@ async function main(): Promise<void> {
       const result = await createTestEntityService(input, { ...deps,
         clock: { now() { clockCalls++; throw new Error("UUID failure must precede time generation."); } },
         repository: { get: unexpectedRepositoryCall, create: unexpectedRepositoryCall,
-          save: unexpectedRepositoryCall, listByStatus: unexpectedRepositoryCall },
+          save: unexpectedRepositoryCall, listByStatus: unexpectedRepositoryCall,
+          listArchivedDeleted: unexpectedRepositoryCall, purgeArchivedDeleted: unexpectedRepositoryCall },
         uuidGenerator: { generate() { generatorCalls++; sourceResult = systemUuidGenerator.generate(); return sourceResult; } },
       });
       equal(result.ok, false, condition);

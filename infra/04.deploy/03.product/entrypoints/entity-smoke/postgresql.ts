@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-22"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -21,7 +21,7 @@ import { diagnosticRelatedRecordLimit } from "@kanbien/core/diagnostics";
 import { coreDiagnosticCatalog } from "@kanbien/core";
 import { platformSecurityDiagnosticCatalog } from "@kanbien/platform-security";
 import { postgreSqlFailureDiagnostic, postgreSqlPersistenceOperationError, postgreSqlMigrationChecksum,
-  postgreSqlSecurityDiagnosticRecords, type PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+  postgreSqlPersistenceFoundationMigration, postgreSqlPlatformScheduleHandoffMigration, postgreSqlPlatformScheduleMigration, postgreSqlSecurityDiagnosticRecords, type PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { persistenceCrudObservedDiagnosticRecord, platformPersistenceError,
   selectPlatformPersistenceDiagnosticEvidence, platformPersistenceDiagnosticCatalog } from "@kanbien/platform-persistence";
 
@@ -35,10 +35,14 @@ export function entitySmokeSql(text: string): string {
 }
 
 export function entitySmokeMigrationManifest() {
-  const statements = testEntityMigration.statements.map(statement => ({ text: entitySmokeSql(statement.text) }));
-  return { schema: entitySmokeSchema, schemaPreprovisioned: true, migrations: [
-    { id: testEntityMigration.id, statements, checksum: postgreSqlMigrationChecksum(statements) },
-  ] } as const;
+  const foundation = postgreSqlPersistenceFoundationMigration(entitySmokeSchema);
+  const migrations = [testEntityMigration, postgreSqlPlatformScheduleMigration(entitySmokeSchema, "v0004_entity_smoke_platform_schedule"),
+    { ...foundation, id: "v0005_entity_smoke_platform_outbox_foundation" },
+    postgreSqlPlatformScheduleHandoffMigration(entitySmokeSchema, "v0006_entity_smoke_platform_schedule_handoff")];
+  return { schema: entitySmokeSchema, schemaPreprovisioned: true, migrations: migrations.map(migration => {
+    const statements = migration.statements.map(statement => ({ text: entitySmokeSql(statement.text) }));
+    return { id: migration.id, statements, checksum: postgreSqlMigrationChecksum(statements) };
+  }) } as const;
 }
 
 export function createEntitySmokePostgreSqlRuntime(pool: PostgreSqlConnectionPool) {

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.snapshot.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-21"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -81,7 +81,7 @@ def actor(provider, snapshot):
 def context(args, provider, *, source_proof=True, require_terminal_jobs=True, retained_source_evidence=None):
     custody = C.ALIGN.read_receipt(args.receipt.absolute())
     C.ALIGN.source_preflight(custody, **({"retained_source_evidence": retained_source_evidence} if retained_source_evidence is not None else {}))
-    if source_proof: C.local_checks()
+    if source_proof: C.local_qualification(custody)
     artifact = C.source_digest()
     alignment, parameters, subnet_group = C.ALIGN.inspect(provider, custody, C.now())
     binding = {**C.binding_for(custody, alignment), "proof_label": args.proof_label}

@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -77,7 +77,7 @@ def unconditional_run(step):
     return lines
 
 
-def reserved_publication_binding(steps, qualification_index, *, command, stem, target, access_commands=()):
+def reserved_publication_binding(steps, qualification_index, *, command, stem, target, access_commands=(), prepublication_artifacts=()):
     """Require the shared publisher's durable reservation and no-replay route."""
     credentials = [(i, step) for i, step in enumerate(steps) if str(step.get("uses", "")).startswith("aws-actions/configure-aws-credentials@")]
     if len(credentials) != 1:
@@ -89,9 +89,10 @@ def reserved_publication_binding(steps, qualification_index, *, command, stem, t
     access_index, access = protected_step(steps, "Prove fixed delivery read access",
         [*access_commands, ["python3", command, "--operation", "reserve"]])
     retained_index, retained = protected_step(steps, "Retain pre-publication identity")
+    retained_paths = "${{ runner.temp }}/" + stem + "-publication-reservation.json\n${{ runner.temp }}/qualified-image.json\n" + "".join(path + "\n" for path in prepublication_artifacts)
     if retained != {"name": "Retain pre-publication identity", "uses": "actions/upload-artifact@v4", "with": {
         "name": target + "-" + stem + "-reservation-${{ github.run_id }}",
-        "path": "${{ runner.temp }}/" + stem + "-publication-reservation.json\n${{ runner.temp }}/qualified-image.json\n",
+        "path": retained_paths,
         "if-no-files-found": "error", "overwrite": False, "retention-days": 30}}:
         raise ValueError("publication-reservation-retention-invalid")
     login_index, login = protected_step(steps, "Log in to Amazon ECR")
@@ -112,7 +113,7 @@ def reserved_publication_binding(steps, qualification_index, *, command, stem, t
     return index
 
 
-def custody_tail(steps, *, published_index, target, environment, region, candidate, contract, program, stem, artifact_name, qualification_outcome, scan_outcome, scan_check, provenance_name, attestation_name, capture_name, upload_name, receipt_filename, extra_artifacts, registry_expression):
+def custody_tail(steps, *, published_index, target, environment, region, candidate, contract, program, stem, artifact_name, qualification_outcome, scan_outcome, scan_check, provenance_name, attestation_name, capture_name, upload_name, receipt_filename, extra_artifacts, registry_expression, local_qualification_filename=None):
     """Protect the producer/consumer proof boundaries; route identities stay with callers."""
     sbom_index, sbom = protected_step(steps, "Generate SBOM")
     provenance_index, provenance = protected_step(steps, provenance_name)
@@ -124,6 +125,8 @@ def custody_tail(steps, *, published_index, target, environment, region, candida
     if attestation.get("id") != "sbom-attestation" or attestation.get("uses") != "actions/attest@v4" or attestation.get("with") != {**common,"sbom-path":"${{ runner.temp }}/"+file}: raise ValueError("custody-sbom-attestation-substituted")
     receipt = receipt_filename
     capture_command=["python3","scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py","--target",target,"--environment-class",environment,"--provider-region-alias",region,"--candidate",candidate,"--package-contract",contract,"--program",program,"--scan-check",scan_check,"--sbom","$RUNNER_TEMP/"+file,"--output","$RUNNER_TEMP/"+receipt]
+    if local_qualification_filename is not None:
+        capture_command[-2:-2] = ["--local-qualification", "$RUNNER_TEMP/" + local_qualification_filename]
     validate_command=["bash","scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh","--receipt","$RUNNER_TEMP/"+receipt,"--expected-target",target,"--expected-candidate",candidate,"--expected-package-contract",contract,"--expected-program",program,"--json"]
     outcomes={"IMAGE_DIGEST":"${{ steps.image.outputs.digest }}","QUALIFICATION_OUTCOME":qualification_outcome,"ACCESS_OUTCOME":"${{ steps.access.outcome }}","PUBLICATION_OUTCOME":"${{ steps.image.outcome }}","SCAN_OUTCOME":scan_outcome,"SBOM_OUTCOME":"${{ steps.sbom.outcome }}","PROVENANCE_OUTCOME":"${{ steps.provenance.outcome }}","SBOM_ATTESTATION_OUTCOME":"${{ steps.sbom-attestation.outcome }}"}
     capture_index,capture=protected_step(steps,capture_name,[capture_command,validate_command],environment=outcomes)

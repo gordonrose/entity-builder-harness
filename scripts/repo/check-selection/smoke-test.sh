@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.wrapper
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-23"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -57,6 +57,7 @@ case "$2" in
   chat-conflict-classification) exec bash scripts/00.chat/main-refresh/classify-conflict/smoke-test.sh ;;
   chat-log-deletion) exec bash scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh ;;
   mechanics|repository-contracts) exec python3 -B scripts/repo/check-selection/smoke-test.py --suite "$2" ;;
+  mechanics-promotion) exec python3 -B scripts/repo/check-selection/smoke-test.py --suite mechanics --focus promotion ;;
   harness-lifecycle) exec bash scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh ;;
   harness-header) exec bash scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh ;;
   harness-index) exec bash scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh ;;

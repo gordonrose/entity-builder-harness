@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.consolidate-core-platform-deployment-routes
-version: 3
+version: 5
 status: draft
 created_on: "2026-11-14"
-updated_on: "2026-11-21"
+updated_on: "2026-11-22"
 layer: 04.deploy
 domain: deployment.consolidation
 disciplines: [architecture, sre, security]
@@ -4624,3 +4624,98 @@ and restrict the additive field to restore-deployment only. Existing historical
 archives remain valid; complete control validation still requires original
 custody. Focused acceptance controls test both shapes and malformed/misplaced
 values; the connected restore fixture covers the actual archive handoff.
+
+## Phase 1 — deployment script topology and objective layout (Nov21)
+
+This approved Phase 1 adds a read-only, source-backed topology view before any
+structural migration. It reuses the delivery-control inventory, artifact
+metadata, existing caller references and placement validator; it does not
+create a second registry or change a live deployment route. The view records
+each script source unit's path, owner, role, callers, effects, scope, nearby
+overlap, proposed objective-oriented destination, provisional disposition and
+migration dependencies. Its compact report is a decision aid; JSON is the
+complete review artifact.
+
+The placement owner now accepts the objective-oriented shape for newly
+migrated slices: public commands, shared lifecycle capabilities, provider
+adapters and target/workload bindings distinguish their implementation or
+binding from tests and fixtures. Existing canonical lifecycle paths remain
+valid until an approved path-migration plan moves their consumers. New generic
+root names such as `script`, `control`, `steps`, `route`, `helpers` and `utils`
+are not a substitute for an objective; a generic existing path is surfaced for
+review rather than silently reclassified.
+
+Consumer and diagnostic inventory: the delivery-control CLI and shell wrapper
+expose the view; its README defines the output boundary; the delivery-inventory
+regression constructs disposable public-command, adapter, binding, test,
+fixture and transitional examples; and the placement regression accepts each
+new valid shape and rejects a missing objective segment. The topology must be
+read-only, must not execute discovered units, and cannot combine with
+delivery-coverage `--check`. Invalid topology input returns the same bounded
+inventory failure envelope. Role classification is lexical and metadata-backed,
+not a claim that static source inspection proves semantic ownership.
+
+No files move in this phase. The next proposal must select one bounded slice,
+first inventory its import/caller, shell/package/check-catalog and metadata
+consumers, then use the governed artifact-path migration workflow with
+compatibility only where a concrete consumer needs it.
+
+## Operating boundary — qualification, deployment, and runtime verification
+
+The next slices follow three separate machines, each with a distinct authority
+and evidence product:
+
+| Machine | Owns | Must not do | Evidence handoff |
+| --- | --- | --- | --- |
+| Qualification | Source checks, artifact construction, artifact integrity/provenance, and exact local proof selection | Read, mutate, or depend on a live target | An immutable, input-bound qualification record naming source revision, artifact digest, declared inputs and passed proof identities |
+| Deployment and bounded recovery | Target preflight, approved plan application, reconciliation and explicitly governed recovery of an uncertain or failed provider operation | Rerun broad source/artifact regressions or silently repair an unqualified artifact | Deployment plan, execution/recovery result and exact target observation |
+| Runtime verification | Probes and acceptance checks against the deployed identity and runtime contract | Mutate a deployment or substitute a local test for live observation | Acceptance or incident evidence tied to the deployed identity |
+
+Qualification normally spans target alignment, build and package ownership;
+deployment is owned by the deployment stage; runtime verification is owned by
+the run stage. These lifecycle labels do not permit a machine to absorb another
+machine's work. In particular, a live route consumes immutable qualification
+evidence and performs only environment-specific preflight, execution and
+verification. It cannot launch broad local regressions. A runtime verifier that
+finds a problem creates evidence for a governed corrective deployment or a new
+qualified artifact; it does not apply an ad-hoc fix.
+
+The candidate first migration slice is therefore not an in-route shared test
+runner. It is a qualification-to-deployment handoff for entity-smoke's existing
+`entity-smoke-composition` and `secret-dependency-declaration-regression`
+proofs. First inventory whether existing custody/acceptance evidence can carry
+their exact input-bound result; reuse that owner if it can. If it cannot, pause
+and design one durable evidence contract rather than treating a temporary local
+test-run path as deployment proof. Only then add a thin entity binding that
+validates target, source, artifact, declared inputs and proof identities before
+provider work, and remove the duplicated `local_checks()` invocations from live
+entity-smoke routes. Preserve the existing checks as the proof owners and add
+negative coverage for absent, stale, malformed, wrong-target, wrong-artifact
+and wrong-input evidence. No move or implementation is authorised by this plan
+change.
+
+### First-slice consumer inventory and implementation decision (Nov21)
+
+Inspection found that the existing package-custody receipt already binds a
+published entity-smoke image to its source revision, but its v1 schema does not
+carry local check identities or selector input/evidence identities. The selector
+already emits those facts for each registered check. Extend the existing
+package-custody owner with a backwards-readable v2 receipt carrying one bounded
+`local_qualification` record; do not add a new receipt store or test runner.
+The entity publication workflow remains the producer: it executes the existing
+three qualifying leaf checks before packaging, captures their source/input/
+evidence identities, and embeds the checked record in its normal custody
+receipt. The entity run binding consumes and validates that record before any
+provider read or mutation.
+
+Affected consumers are the package-custody capture/validation owner, entity
+publication workflow and workflow validator, entity source-alignment reader,
+the existing infrastructure/restart/credential/snapshot/failure callers, their
+controlled fixtures, the check catalog input mapping, and diagnostic-review
+ledger. V1 receipts remain readable for unrelated historical owners; entity
+live routes require the v2 qualification field once this slice is active. The
+counterexamples are a missing qualification, wrong target/scope, changed source,
+missing/extra check identity, malformed selector digest/key, and a local proof
+runner invoked from a live route. The new focused capability and binding tests
+must reject each before provider work; existing publication and entity
+composition checks prove the connected workflow and callers.

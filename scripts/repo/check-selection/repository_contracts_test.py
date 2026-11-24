@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 17
+#   version: 24
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-23"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -22,6 +22,39 @@ from test_support import *
 
 class RepositoryContractTests(unittest.TestCase):
     def codes(self, report): return {item["code"] for item in report["findings"]}
+
+    def test_retained_staging_catalogue_is_explicitly_isolated(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        contexts, findings = selection.isolated_check_contexts(ROOT, catalog, catalog['checks'])
+        self.assertFalse(findings, findings)
+        self.assertIn('kanbien-staging', contexts)
+        retained = [identity for identity in catalog['checks']
+                    if identity == 'platform-shell-payload' or identity.startswith('shell-')]
+        self.assertEqual(len(retained), 42)
+        for identity in retained:
+            with self.subTest(check=identity):
+                self.assertEqual(catalog['checks'][identity].get('isolated_context'), 'kanbien-staging')
+        rag = [identity for identity, check in catalog['checks'].items()
+               if check['argv'][1].startswith('scripts/02.rag-rulebook/')
+               or identity == 'rag-retirement-regression']
+        self.assertEqual(len(rag), 15)
+        self.assertIn('rag-rulebook', contexts)
+        for identity in rag:
+            with self.subTest(check=identity):
+                self.assertEqual(catalog['checks'][identity].get('isolated_context'), 'rag-rulebook')
+
+    def test_every_catalogue_check_declares_its_scheduling_boundary(self):
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        for identity, check in checks.items():
+            with self.subTest(check=identity):
+                self.assertIn('boundary', check)
+                self.assertIn(check['boundary'], selection.BOUNDARIES)
+
+    def test_core_runtime_alone_receives_declared_changed_path_context(self):
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        declared = {identity for identity, check in checks.items() if check.get('changed_path_context')}
+        self.assertEqual(declared, {'core-runtime'})
+        self.assertEqual(selection.validate_check(ROOT, 'core-runtime', checks['core-runtime']), [])
 
     def test_infrastructure_composition_partition(self):
         checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
@@ -303,7 +336,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(checks['dynamodb-persistence-runtime']['feedback']['development'])
         self.assertTrue(checks['postgresql-connection-diagnostics']['feedback']['development'])
         for identity in ('platform-server-runtime', 'kanbien-platform-runtime', 'platform-shell-payload',
-                         'check-selection-mechanics', 'check-selection-repository-contracts'):
+                         'check-selection-mechanics', 'check-selection-promotion',
+                         'check-selection-repository-contracts'):
             self.assertFalse(checks[identity]['feedback']['development'], identity)
             self.assertEqual(checks[identity]['boundary'], 'integration', identity)
         self.assertTrue(checks['diagnostic-runtime-contracts']['focused_prerequisites'])
@@ -462,31 +496,56 @@ class RepositoryContractTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assert_binding(stale)
 
-    def test_module_structure_is_a_shared_commit_gate_with_bounded_regression(self):
+    def test_module_structure_is_a_retained_manual_scan_with_bounded_regression(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
         checks = catalog['checks']
-        for identity, command, owner, boundary in [
-            ('module-index-structure', 'script.sh', 'repo.module-structure.command', 'commit'),
-            ('module-index-structure-regression', 'smoke-test.sh', 'repo.module-structure.regression', 'integration'),
+        for identity, command, owner, boundary, cadence in [
+            ('module-index-structure', 'script.sh', 'repo.module-structure.command', 'commit', 'deferred'),
+            ('module-index-structure-regression', 'smoke-test.sh', 'repo.module-structure.regression', 'integration', 'candidate'),
         ]:
             check = checks[identity]
             self.assertEqual(check['argv'], ['bash', 'scripts/repo/module-structure/' + command])
             self.assertEqual(check['owner'], owner)
             self.assertEqual(check['boundary'], boundary)
+            self.assertEqual(check.get('cadence', 'candidate'), cadence)
             self.assertEqual(check['effects'], ['read-only'] if boundary == 'commit' else ['read-only', 'writes-files'])
             self.assertEqual(check['stage'], 'local')
             self.assertFalse(selection.validate_check(ROOT, identity, check))
             self.assertIn('typescript', check['runtime']['node_packages'])
-            for root in ['packages', 'platform', 'apps', 'products', 'infra']:
-                self.assertIn(root, check['inputs'], 'dependency discovery inputs must invalidate both checks')
         rules = catalog['repository_inputs']
+
+        # The complete source scan stays manually available with all of its
+        # invalidators declared. The slower fixture command tests the checker
+        # automatically only when its own inputs change.
+        source_rule = checks['module-index-structure']
+        regression_rule = checks['module-index-structure-regression']
+        fixture_inputs = {
+            'scripts/repo/module-structure/check.mjs',
+            'scripts/repo/module-structure/smoke-test.mjs',
+            'scripts/repo/module-structure/smoke-test.sh',
+            'scripts/repo/workspace-build/dependencies.mjs',
+            'scripts/repo/workspace-build/declarations.mjs',
+            'scripts/repo/workspace-build/dependencies-test.mjs',
+            'package.json',
+            'package-lock.json',
+        }
+        self.assertEqual(set(regression_rule['inputs']), fixture_inputs)
+        for root in ['packages', 'platform', 'apps', 'products', 'infra']:
+            self.assertIn(root, source_rule['inputs'], 'real-source inspection must invalidate the commit command')
+            self.assertNotIn(root, regression_rule['inputs'], 'fixture proof must not rerun for ordinary source changes')
+
+        def selected(ref):
+            return {identity for rule in rules if any(selection.below(ref, item) for item in rule['inputs'])
+                    for identity in rule['checks']}
+
         for ref in ['packages/core/src/config/index.ts', 'packages/future/src/index.ts',
                     'platform/future/src/index.ts', 'apps/future/src/index.ts',
                     'products/future/src/index.ts', 'infra/04.deploy/future.ts', 'scripts/repo/module-structure/legacy.v1.json',
                     '.agentic/03.product/standards/public-module-structure.md']:
-            selected = {identity for rule in rules if any(selection.below(ref, item) for item in rule['inputs'])
-                        for identity in rule['checks']}
-            self.assertIn('module-index-structure', selected, ref)
+            self.assertIn('module-index-structure', selected(ref), ref)
+            self.assertNotIn('module-index-structure-regression', selected(ref), ref)
+        for ref in fixture_inputs - {'package.json', 'package-lock.json'}:
+            self.assertTrue({'module-index-structure', 'module-index-structure-regression'} <= selected(ref), ref)
         baseline = json.loads((ROOT / 'scripts/repo/module-structure/legacy.v1.json').read_text())
         self.assertNotIn('packages/core/src/config/index.ts', [row['path'] for row in baseline['legacy']])
         self.assertIn('module-structure/check.mjs', (ROOT / 'packages/core/tests/test-infrastructure/static-validation/core-boundaries.test.mjs').read_text())
@@ -496,18 +555,29 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_workspace_dependency_inspection_uses_existing_gate_and_real_input_closure(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
-        identities = {'module-index-structure', 'module-index-structure-regression'}
-        references = ['scripts/repo/workspace-build/dependencies.mjs',
-                      'scripts/repo/workspace-build/declarations.mjs',
-                      'scripts/repo/workspace-build/dependencies-test.mjs',
-                      'scripts/future/imported-test-tool.mjs', 'apps/future/package.json',
-                      'apps/future/tests/fixture.ts', 'infra/future/probe.ts']
-        for reference in references:
+        real_source = 'module-index-structure'
+        fixture_regression = 'module-index-structure-regression'
+        fixture_references = ['scripts/repo/workspace-build/dependencies.mjs',
+                              'scripts/repo/workspace-build/declarations.mjs',
+                              'scripts/repo/workspace-build/dependencies-test.mjs']
+
+        def selected(reference):
+            return {identity for rule in catalog['repository_inputs']
+                    if any(selection.below(reference, item) for item in rule['inputs'])
+                    for identity in rule['checks']}
+
+        for reference in fixture_references:
+            self.assertTrue({real_source, fixture_regression} <= selected(reference), reference)
+        for reference in ['scripts/future/imported-test-tool.mjs', 'apps/future/package.json',
+                          'apps/future/tests/fixture.ts', 'infra/future/probe.ts']:
+            self.assertIn(real_source, selected(reference), reference)
+            self.assertNotIn(fixture_regression, selected(reference), reference)
+
+        for reference in fixture_references:
             selected = {identity for rule in catalog['repository_inputs']
                         if any(selection.below(reference, item) for item in rule['inputs'])
                         for identity in rule['checks']}
-            self.assertTrue(identities <= selected, reference)
-            for identity in identities:
+            for identity in {real_source, fixture_regression}:
                 with tempfile.TemporaryDirectory(prefix='workspace-import-input-') as directory:
                     root = Path(directory)
                     source = root / reference
@@ -531,10 +601,11 @@ class RepositoryContractTests(unittest.TestCase):
     def test_configuration_access_uses_the_existing_gate_and_policy_inputs(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
         policy = '.agentic/03.product/standards/config-runtime-settings.md'
-        for identity in ['module-index-structure', 'module-index-structure-regression']:
-            self.assertIn(policy, catalog['checks'][identity]['inputs'])
-            self.assertTrue(any(policy in rule['inputs'] and identity in rule['checks']
-                                for rule in catalog['repository_inputs']))
+        identity = 'module-index-structure'
+        self.assertIn(policy, catalog['checks'][identity]['inputs'])
+        self.assertTrue(any(policy in rule['inputs'] and identity in rule['checks']
+                            for rule in catalog['repository_inputs']))
+        self.assertNotIn(policy, catalog['checks']['module-index-structure-regression']['inputs'])
         implementation = (ROOT / 'scripts/repo/module-structure/check.mjs').read_text()
         self.assertIn('const access = inspectConfigurationAccess(sources)', implementation)
         self.assertIn('...access.findings', implementation)
@@ -685,6 +756,8 @@ class RepositoryContractTests(unittest.TestCase):
                 'proof-receipts.py', 'rehearse-runtime-credential-lifecycle/script.py',
                 'rehearse-observability-readiness/script.py', 'rehearse-server-replacement/script.py')
         } | {
+            run + 'deployment-diagnostics/binding.py',
+            run + 'deployment-diagnostics/tests/binding-test.py',
             'packages/core/contracts', 'apps/platform-smoke/contracts',
             'infra/04.deploy/03.product/entrypoints/contracts',
             'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py'
@@ -1010,20 +1083,95 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(report['verdict'], 'covered', report)
         self.assertIn('persistence-composition', report['required_checks'])
 
+    def test_candidate_preparation_selects_its_direct_persistence_proof(self):
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        args = argparse.Namespace(root=ROOT, catalog=catalog,
+            paths=['scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh'],
+            staged=False, all=False, stage='local', boundary='integration', ci=True,
+            changed_only=True, execute_local=False, evidence=None, json=True)
+        report = selection.plan(args)
+        self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+        selected = {check['check_id'] for check in report['checks']}
+        self.assertIn('persistence-provider-regression', selected)
+        self.assertNotIn('deployment-operation-diagnostics-regression', selected)
+
+    def test_development_scope_selection_requires_a_direct_proof_input(self):
+        """A scope trigger cannot turn every scope proof into editing feedback."""
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        original_fingerprint = selection.fingerprint
+        def planning_fingerprint(root, references, *, exclude=frozenset()):
+            if references == {'scripts/repo/check-selection/checks.yml'}:
+                return original_fingerprint(root, references, exclude=exclude)
+            import hashlib
+            return hashlib.sha256(json.dumps(sorted(set(references) - set(exclude))).encode()).hexdigest()
+        cases = [
+            ('scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/publication.py',
+             {'entity-smoke-publication-contract'},
+             {'entity-smoke-runtime', 'entity-smoke-composition-suite', 'entity-smoke-acceptance-controls'}),
+        ]
+        with patch.object(selection, 'fingerprint', side_effect=planning_fingerprint), patch.object(selection, 'runtime_identity', return_value={'selection_fixture': 'no-execution'}):
+            for path, required, forbidden in cases:
+                with self.subTest(path=path):
+                    args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False,
+                        all=False, stage='local', boundary='integration', ci=False, changed_only=False,
+                        execute_local=False, evidence=None, json=True, development=True,
+                        checks=None, aggregate_members=None, record_preparation=False,
+                        require_preparation=False, task_paths=None, explain=False)
+                    report = selection.plan(args)
+                    self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+                    selected = {check['check_id'] for check in report['checks'] if check['status'] == 'pending'}
+                    self.assertTrue(required <= selected, (path, required - selected))
+                    self.assertFalse(forbidden & selected, (path, forbidden & selected))
+
+    def test_development_scope_contract_change_retains_the_complete_scope_proof(self):
+        """The direct-input rule must not weaken a changed scope declaration."""
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        original_fingerprint = selection.fingerprint
+        def planning_fingerprint(root, references, *, exclude=frozenset()):
+            if references == {'scripts/repo/check-selection/checks.yml'}:
+                return original_fingerprint(root, references, exclude=exclude)
+            import hashlib
+            return hashlib.sha256(json.dumps(sorted(set(references) - set(exclude))).encode()).hexdigest()
+        args = argparse.Namespace(root=ROOT, catalog=catalog,
+            paths=['infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml'],
+            staged=False, all=False, stage='local', boundary='integration', ci=False,
+            changed_only=False, execute_local=False, evidence=None, json=True,
+            development=True, checks=None, aggregate_members=None,
+            record_preparation=False, require_preparation=False, task_paths=None,
+            explain=False)
+        with patch.object(selection, 'fingerprint', side_effect=planning_fingerprint), patch.object(selection, 'runtime_identity', return_value={'selection_fixture': 'no-execution'}):
+            report = selection.plan(args)
+        self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+        selected = {check['check_id'] for check in report['checks'] if check['status'] == 'pending'}
+        self.assertTrue({'entity-smoke-runtime', 'entity-smoke-composition-suite',
+                         'entity-smoke-infrastructure-route',
+                         'entity-smoke-acceptance-controls',
+                         'entity-smoke-publication-contract'} <= selected)
+
 
     def test_actual_diagnostic_paths_select_focused_checks(self):
+        """Direct promotion routing must not require a repository-wide graph.
+
+        These cases assert declared changed-path ownership.  Running the full
+        planner here repeats an unrelated source census four times and makes
+        the check a delivery bottleneck without increasing the assertion's
+        strength.  Full-impact graph behaviour is covered by its own fixtures.
+        """
         catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
         for paths, expected in [
-            (['platform/adapters/aws/persistence/dynamodb/src/transactions.ts'], {'dynamodb-persistence-runtime', 'platform-shell-payload'}),
-            (['platform/adapters/aws/queue/sqs/src/worker.ts'], {'sqs-queue-runtime', 'platform-shell-payload'}),
+            (['platform/adapters/aws/persistence/dynamodb/src/transactions.ts'], {'dynamodb-persistence-runtime'}),
+            (['platform/adapters/aws/queue/sqs/src/worker.ts'], {'sqs-queue-runtime'}),
             (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
             (['scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py', '.agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml'], {'restore-connection-diagnostics', 'deployment-operation-diagnostics-regression'}),
         ]:
-            args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
+            args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False,
+                                      stage='local', boundary='integration', ci=True, changed_only=True,
+                                      execute_local=False, evidence=None, json=True)
             report = selection.plan(args)
             self.assertEqual(report['verdict'], 'planned', report.get('findings'))
             selected = {check['check_id'] for check in report['checks']}
             self.assertTrue(expected <= selected, (paths, selected))
+            self.assertNotIn('platform-shell-payload', selected, paths)
             if 'postgresql-disposable-diagnostics' in expected:
                 engine = next(check for check in report['checks'] if check['check_id'] == 'postgresql-disposable-diagnostics')
                 self.assertEqual(engine['stage'], 'package'); self.assertEqual(engine['evidence_class'], 'ci')
@@ -1118,6 +1266,9 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(len(parent['members']), len(expected))
         self.assertEqual(parent['inputs'], ['scripts/repo/check-selection'])
         self.assertEqual(checks['check-selection-mechanics']['runtime']['node_packages'], [])
+        self.assertEqual(checks['check-selection-mechanics']['cadence'], 'deferred')
+        self.assertEqual(checks['check-selection-promotion']['inputs'], ['scripts/repo/check-selection'])
+        self.assertNotIn('cadence', checks['check-selection-promotion'])
         self.assertTrue({'scripts/repo/diagnostic-coverage/script.py',
                          'scripts/repo/diagnostic-coverage/script.sh'} <= set(checks['check-selection-mechanics']['inputs']))
         for excluded in ['platform', 'packages/core', 'docs', '.agentic', 'scripts/04.deploy']:
@@ -1136,12 +1287,12 @@ class RepositoryContractTests(unittest.TestCase):
         owners = {'harness-lifecycle-metadata-regression', 'harness-header-regression', 'chat-session-preparation-regression', 'chat-local-merge-regression', 'chat-main-refresh-regression'}
         cases = [
             ('apps/entity-smoke/features/test-entity/domain/services/update-test-entity.ts', {'entity-smoke-runtime', 'kanbien-platform-runtime'}, {'check-selection-mechanics'}),
-            ('platform/adapters/aws/persistence/dynamodb/src/index.ts', {'dynamodb-persistence-runtime', 'platform-shell-payload'}, {'check-selection-mechanics'}),
+            ('platform/adapters/aws/persistence/dynamodb/src/index.ts', {'dynamodb-persistence-runtime'}, {'check-selection-mechanics'}),
             ('platform/adapters/aws/persistence/postgresql/src/index.ts', {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics'}, {'check-selection-mechanics'}),
-            ('platform/adapters/aws/runtime/ecs-fargate/src/index.ts', {'ecs-fargate-runtime', 'platform-shell-payload', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
+            ('platform/adapters/aws/runtime/ecs-fargate/src/index.ts', {'ecs-fargate-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('platform/server/src/configuration/runtime.ts', {'platform-server-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'check-selection-regression', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
-            ('scripts/repo/check-selection/script.py', {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression', *owners}, set()),
-            ('scripts/repo/check-selection/checks.yml', {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression', *owners}, set()),
+            ('scripts/repo/check-selection/script.py', {'check-selection-promotion', 'check-selection-mechanics', 'check-selection-repository-contracts', *owners}, {'check-selection-regression'}),
+            ('scripts/repo/check-selection/checks.yml', {'check-selection-promotion', 'check-selection-mechanics', 'check-selection-repository-contracts', *owners}, {'check-selection-regression'}),
             ('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml', {'check-selection-mechanics', 'check-selection-repository-contracts'}, set()),
             ('scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh', {'chat-main-refresh-regression', 'check-selection-repository-contracts'}, {'check-selection-regression', 'check-selection-mechanics'}),
             ('bin/llm-workbench.js', {'chat-export-regression'}, {'chat-commit-metrics-regression', 'check-selection-regression', 'check-selection-mechanics'}),
@@ -1169,12 +1320,15 @@ class RepositoryContractTests(unittest.TestCase):
         with patch.object(selection, 'git', side_effect=git), patch.object(selection, 'runtime_identity', return_value={'pure_plan_fixture': 'no-execution'}), patch.object(selection, 'fingerprint', side_effect=planning_fingerprint):
             for path, required, forbidden in cases:
                 with self.subTest(path=path):
-                    args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
+                    args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False, all=False,
+                                              stage='local', boundary='integration', ci=True, changed_only=True,
+                                              execute_local=False, evidence=None, json=True)
                     report = selection.plan(args)
                     self.assertEqual(report['verdict'], 'planned', report['findings'])
                     selected = {item['check_id'] for item in report['checks']}
                     self.assertTrue(required <= selected, (required - selected, selected))
-                    self.assertFalse(forbidden & selected, forbidden & selected)
+                    self.assertFalse((forbidden | {'platform-shell-payload'}) & selected,
+                                     (forbidden | {'platform-shell-payload'}) & selected)
 
     def test_foreign_imports_preserve_fixture_and_facade_without_launching_suites(self):
         import sys

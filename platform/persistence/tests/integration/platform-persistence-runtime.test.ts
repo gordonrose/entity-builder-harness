@@ -15,14 +15,17 @@ import {
 } from "@kanbien/core/persistence";
 import * as coreQueue from "@kanbien/core/queues";
 import { inMemoryQueue, queueError, type Queue } from "@kanbien/core/queues";
-import { causationId, correlationId, isoDateTimeFromDate, ok, type ISODateTime } from "@kanbien/core/shared";
+import { causationId, correlationId, isoDateTimeFromDate, ok, uuid, type ISODateTime } from "@kanbien/core/shared";
 import { tenantId } from "@kanbien/core/tenancy";
+import { platformJobName } from "@kanbien/platform-contracts";
 import { createDiagnosticRecord, defineDiagnostic, parseDiagnosticRecord, type DiagnosticRecord } from "@kanbien/core/diagnostics";
 import {
   createInMemoryPlatformOutboxStore,
+  createInMemoryPlatformScheduleStore,
   createInMemoryPlatformProcessingStore,
   createInMemoryPlatformRecordChangeStore,
   createPlatformOutboxRelay,
+  createPlatformSchedule,
   platformPersistenceFence,
   platformPersistenceLeaseOwner,
   platformPersistenceMutation,
@@ -31,6 +34,7 @@ import {
   persistenceStoredRecordDiagnostic, persistenceStoredRecordDiagnosticRecord,
   persistenceBoundaryDiagnostic, persistenceBoundaryDiagnosticRecord, persistenceCrudObservedDiagnosticRecord,
   persistenceObservedDiagnosticRecord, persistenceDiagnosticDefinitions, persistenceCurrentDiagnosticDefinitions,
+  persistenceScheduleDiagnosticDefinitions,
   persistenceCrudDiagnosticDefinitions,
   persistenceReconciliationDiagnostic, persistenceReconciliationDiagnosticRecord,
   persistenceCommandDiagnosticDefinitions, persistenceCommandConditionDiagnostic, persistenceCommandDiagnosticRecord,
@@ -39,6 +43,9 @@ import {
   resolvePlatformPersistenceDiagnosticOptions, observePlatformPersistenceDiagnostic,
   platformOutboxRecord, platformOutboxQueueMessage, persistenceRelayBoundaryDiagnostic, platformPersistenceError,
   persistenceRelayBoundaryDiagnosticRecord, type PlatformOutboxStore, type PlatformPersistenceObserver, type PlatformPersistenceLeaseOwner,
+  persistenceScheduleRejectionDiagnostic, persistenceScheduleRejectionDiagnosticRecord,
+  persistenceScheduleStoreRejectionDiagnostic, persistenceScheduleStoreRejectionDiagnosticRecord,
+  persistenceScheduleStoredRecordDiagnostic, persistenceScheduleStoredRecordDiagnosticRecord,
   persistenceConfigurationInputDiagnostic, persistenceConfigurationInputDiagnosticRecord,
   persistenceConfigurationDiagnostic, persistenceConfigurationDiagnosticRecord, platformPersistenceDiagnosticCatalog,
   type PlatformOutboxQueuePayload,
@@ -71,6 +78,47 @@ async function main(): Promise<void> {
   equal(parseDiagnosticRecord(inputDefinition, historical).ok, false);
   const baseTime = new Date("2026-09-23T12:00:00.000Z");
   const at = (milliseconds: number) => isoDateTimeFromDate(new Date(baseTime.getTime() + milliseconds));
+  const jobName = accepted(platformJobName("entity-smoke.test-entity.purge-expired"));
+  const schedule = createPlatformSchedule({
+    jobName,
+    dueAt: "2026-09-23T13:30:00+01:00",
+  }, { generate: () => acceptedResult(uuid("e1d06aac-3d17-4292-b9f3-1fe370772a5d")) });
+  equal(schedule.ok, true);
+  if (!schedule.ok) throw new Error("Expected schedule creation to succeed.");
+  deepEqual(schedule.value, {
+    id: "e1d06aac-3d17-4292-b9f3-1fe370772a5d",
+    jobName,
+    dueAt: "2026-09-23T12:30:00.000Z",
+    state: "waiting",
+  });
+
+  const invalidSchedule = createPlatformSchedule({ jobName, dueAt: "not-a-date" }, { generate: () => acceptedResult(uuid("e1d06aac-3d17-4292-b9f3-1fe370772a5d")) });
+  equal(invalidSchedule.ok, false);
+  if (!invalidSchedule.ok) equal(invalidSchedule.error.code, "INVALID_ISO_DATE_TIME");
+
+  const schedules = createInMemoryPlatformScheduleStore();
+  const storedSchedule = await schedules.create(schedule.value);
+  equal(storedSchedule.ok, true);
+  deepEqual(await schedules.get(schedule.value.id), schedule.value);
+  const duplicateSchedule = await schedules.create(schedule.value);
+  equal(duplicateSchedule.ok, false);
+  if (!duplicateSchedule.ok) {
+    equal(duplicateSchedule.error.code, "PLATFORM_PERSISTENCE_DUPLICATE_SCHEDULE");
+    deepEqual(duplicateSchedule.error.diagnosticRecord, persistenceScheduleRejectionDiagnosticRecord({
+      operation: "create", field: "id", condition: "duplicate", effect: "local-state-unchanged",
+    }));
+    equal(parseDiagnosticRecord(persistenceScheduleRejectionDiagnostic, duplicateSchedule.error.diagnosticRecord!).ok, true);
+  }
+  deepEqual(persistenceScheduleStoreRejectionDiagnosticRecord({ operation: "create", field: "id", condition: "duplicate", effect: "unknown" }), {
+    schema: "core/diagnostic-record/v1", code: "persistence.schedule-store-rejected", definitionVersion: 1,
+    detail: { operation: "create", field: "id", condition: "duplicate", effect: "unknown" },
+  });
+  deepEqual(persistenceScheduleStoredRecordDiagnosticRecord({ operation: "read", reduction: "null", effect: "not-assessed", field: "state", condition: "invalid" }), {
+    schema: "core/diagnostic-record/v1", code: "persistence.schedule-stored-record-observed", definitionVersion: 1,
+    detail: { operation: "read", reduction: "null", effect: "not-assessed", field: "state", condition: "invalid" },
+  });
+  equal(parseDiagnosticRecord(persistenceScheduleStoreRejectionDiagnostic, persistenceScheduleStoreRejectionDiagnosticRecord({ operation: "create", field: "id", condition: "duplicate", effect: "unknown" })).ok, true);
+  equal(parseDiagnosticRecord(persistenceScheduleStoredRecordDiagnostic, persistenceScheduleStoredRecordDiagnosticRecord({ operation: "read", reduction: "null", effect: "not-assessed", field: "state", condition: "invalid" })).ok, true);
   const record = recordReference({
     kind: accepted(recordKind("platform-smoke.work-item")),
     id: accepted(recordId("work-1")),
@@ -83,6 +131,34 @@ async function main(): Promise<void> {
     createdAt: at(0),
     causationId: causationId("request-1"),
   });
+  const scheduleDelivery = outboxEntry({
+    id: outboxEntryId("schedule-handoff-1"),
+    subject: record,
+    messageType: accepted(outboxMessageType("platform.schedule.due")),
+    deliveryPolicy: accepted(outboxDeliveryPolicy("platform-short-idempotent-work.v1")),
+    createdAt: schedule.value.dueAt,
+  });
+  const tooEarly = await schedules.handoverDue({ scheduleId: schedule.value.id, asOf: at(0), outboxEntry: scheduleDelivery });
+  equal(tooEarly.ok, true);
+  if (!tooEarly.ok) throw new Error("Expected a harmless early handoff result.");
+  equal(tooEarly.value.disposition, "not-due");
+  const dueSchedules = await schedules.listDue({ asOf: schedule.value.dueAt, limit: 1 });
+  equal(dueSchedules.ok, true);
+  if (!dueSchedules.ok) throw new Error("Expected one due schedule.");
+  deepEqual(dueSchedules.value, [schedule.value]);
+  const handoff = await schedules.handoverDue({ scheduleId: schedule.value.id, asOf: schedule.value.dueAt, outboxEntry: scheduleDelivery });
+  equal(handoff.ok, true);
+  if (!handoff.ok || handoff.value.disposition !== "outbox-created") throw new Error("Expected the outbox handoff.");
+  equal(handoff.value.schedule.state, "delivery-created");
+  equal(handoff.value.schedule.outboxEntryId, scheduleDelivery.id);
+  const repeatHandoff = await schedules.handoverDue({ scheduleId: schedule.value.id, asOf: schedule.value.dueAt, outboxEntry: scheduleDelivery });
+  equal(repeatHandoff.ok, true);
+  if (!repeatHandoff.ok) throw new Error("Expected an idempotent handoff observation.");
+  equal(repeatHandoff.value.disposition, "outbox-already-created");
+  const noneDue = await schedules.listDue({ asOf: schedule.value.dueAt, limit: 1 });
+  equal(noneDue.ok, true);
+  if (!noneDue.ok) throw new Error("Expected no due schedule after handoff.");
+  deepEqual(noneDue.value, []);
   const relayA = accepted(platformPersistenceLeaseOwner("relay-a"));
   const relayB = accepted(platformPersistenceLeaseOwner("relay-b"));
   const workerA = accepted(platformPersistenceLeaseOwner("worker-a"));
@@ -672,8 +748,13 @@ async function main(): Promise<void> {
   equal(persistenceObservedDiagnosticRecord({ classification: "timeout", phase: "query", code_status: "recognized" }, "write_facts").definitionVersion, 2);
   for (const definition of persistenceDiagnosticDefinitions) equal(definition.version, 1);
   for (const definition of persistenceCurrentDiagnosticDefinitions) equal(definition.version, 2);
+  for (const definition of persistenceScheduleDiagnosticDefinitions) {
+    equal(definition.version, ["persistence.credential-rejected", "persistence.runtime-permission-denied", "persistence.transport-unavailable", "persistence.operation-timed-out", "persistence.unclassified-failure"].includes(definition.code) ? 5 : 4);
+  }
   const historicalOperations = ["connect", "readiness", "transaction", "migration", "create_outbox", "write_facts", "write_atomic", "read_outbox", "list_outbox", "claim_outbox", "publish_outbox", "read_processing", "claim_processing", "complete_processing", "release_processing", "append_lineage", "read_lineage"];
-  for (const [definitions, expectedOperations] of [[persistenceDiagnosticDefinitions, historicalOperations], [persistenceCurrentDiagnosticDefinitions, [...historicalOperations, "administration", "restore_verification"]]] as const) {
+  const currentOperations = [...historicalOperations, "administration", "restore_verification"];
+  const scheduleOperations = [...currentOperations, "create_schedule", "read_schedule", "list_due_schedules", "handover_schedule"];
+  for (const [definitions, expectedOperations] of [[persistenceDiagnosticDefinitions, historicalOperations], [persistenceCurrentDiagnosticDefinitions, currentOperations], [persistenceScheduleDiagnosticDefinitions, scheduleOperations]] as const) {
     for (const definition of definitions) {
       if (definition.detail.type !== "object" || definition.detail.properties["operation"]?.type !== "enum") throw new Error("Expected operation enum");
       deepEqual(definition.detail.properties["operation"].values, expectedOperations);
@@ -918,6 +999,11 @@ function accepted<TValue, TError>(result: { readonly ok: true; readonly value: T
   }
 
   return result.value;
+}
+
+function acceptedResult<TValue, TError>(result: { readonly ok: true; readonly value: TValue } | { readonly ok: false; readonly error: TError }): { readonly ok: true; readonly value: TValue } {
+  if (!result.ok) throw new Error("Expected valid test fixture value.");
+  return result;
 }
 
 main()

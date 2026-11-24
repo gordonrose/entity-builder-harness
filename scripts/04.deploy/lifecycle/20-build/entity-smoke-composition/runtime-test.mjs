@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-22"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -66,10 +66,15 @@ const forbiddenToken = config.entitySmokeDatabaseSettings({ ...environment, NODE
 assert.equal(forbiddenToken.ok, false); assert.equal(forbiddenToken.error.diagnosticRecord.detail.field, "identity");
 const manifest = target.entitySmokeMigrationManifest();
 assert.equal(manifest.schema, "entity_smoke"); assert.equal(manifest.schemaPreprovisioned, true);
-assert.equal(manifest.migrations.length, 1); assert.equal(manifest.migrations[0].id, "v0003_entity_smoke_test_entity");
+assert.equal(manifest.migrations.length, 4); assert.deepEqual(manifest.migrations.map(migration => migration.id), ["v0003_entity_smoke_test_entity", "v0004_entity_smoke_platform_schedule", "v0005_entity_smoke_platform_outbox_foundation", "v0006_entity_smoke_platform_schedule_handoff"]);
 assert(manifest.migrations[0].statements.every(statement => !statement.text.includes("__SCHEMA__") && statement.text.includes('"entity_smoke".test_entity')));
 assert(manifest.migrations[0].statements[1].text.includes("test_entity_status_created_at_idx"));
-assert.equal(manifest.migrations[0].checksum, createHash("sha256").update(manifest.migrations[0].statements.map(statement => statement.text).join("\n")).digest("hex"));
+assert(manifest.migrations[1].statements.every(statement => !statement.text.includes("__SCHEMA__") && statement.text.includes('"entity_smoke"."platform_schedule"')));
+assert(manifest.migrations[2].statements.every(statement => !statement.text.includes("__SCHEMA__") && statement.text.includes('"entity_smoke".')));
+assert(manifest.migrations[2].statements.some(statement => statement.text.includes('"entity_smoke"."platform_outbox"')));
+assert(manifest.migrations[3].statements.every(statement => !statement.text.includes("__SCHEMA__") && statement.text.includes('"entity_smoke"."platform_schedule"')));
+assert(manifest.migrations[3].statements.some(statement => statement.text.includes('platform_schedule_outbox_entry_id_fkey')));
+for (const migration of manifest.migrations) assert.equal(migration.checksum, createHash("sha256").update(migration.statements.map(statement => statement.text).join("\n")).digest("hex"));
 
 // The separate administrative observer reads one snapshot under the adapter's
 // real migration lock. None of these injected results is database proof.
@@ -99,7 +104,7 @@ for (const [change, code, detail] of [
     assert(!JSON.stringify(reports).includes(canary));
   } finally { process.exitCode = previousExit; console.error = previousError; }
 }
-function administrationFixture({ tables = { history: "history", entity: "entity", index: "index" }, history = [{ migration_id: manifest.migrations[0].id, checksum: manifest.migrations[0].checksum }], acquired = true, cause } = {}) {
+function administrationFixture({ tables = { history: "history", entity: "entity", index: "index", schedule: "schedule", outbox: "outbox", processing: "processing", lineage: "lineage" }, history = manifest.migrations.map(migration => ({ migration_id: migration.id, checksum: migration.checksum })), acquired = true, cause } = {}) {
   const statements = []; let releases = 0;
   const client = { query: async statement => {
     statements.push(statement);
@@ -113,8 +118,11 @@ function administrationFixture({ tables = { history: "history", entity: "entity"
     query: async () => { throw new Error("observer must use its connected client"); }, end: async () => {} } };
 }
 for (const [settings, expected] of [
-  [{ tables: { history: null, entity: null, index: null } }, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"],
-  [{ tables: { history: "history", entity: null, index: null }, history: [] }, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"],
+  [{ tables: { history: null, entity: null, index: null, schedule: null, outbox: null, processing: null, lineage: null } }, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"],
+  [{ tables: { history: "history", entity: null, index: null, schedule: null, outbox: null, processing: null, lineage: null }, history: [] }, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"],
+  [{ tables: { history: "history", entity: "entity", index: "index", schedule: null, outbox: null, processing: null, lineage: null }, history: [{ migration_id: manifest.migrations[0].id, checksum: manifest.migrations[0].checksum }] }, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"],
+  [{ tables: { history: "history", entity: "entity", index: "index", schedule: "schedule", outbox: null, processing: null, lineage: null }, history: manifest.migrations.slice(0, 2).map(migration => ({ migration_id: migration.id, checksum: migration.checksum })) }, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"],
+  [{ tables: { history: "history", entity: "entity", index: "index", schedule: "schedule", outbox: "outbox", processing: "processing", lineage: "lineage" }, history: manifest.migrations.slice(0, 3).map(migration => ({ migration_id: migration.id, checksum: migration.checksum })) }, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"],
   [{}, "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED"],
 ]) {
   const fixture = administrationFixture(settings);
@@ -124,13 +132,14 @@ for (const [settings, expected] of [
 for (const [settings, field, condition] of [
   [{ acquired: false }, "migration-lock", "already-running"],
   [{ acquired: "invalid" }, "migration-lock", "not-confirmed"],
-  [{ tables: { history: null, entity: "orphan", index: null } }, "table-state", "mismatch"],
-  [{ tables: { history: "history", entity: "orphan", index: null }, history: [] }, "table-state", "mismatch"],
+  [{ tables: { history: null, entity: "orphan", index: null, schedule: null, outbox: null, processing: null, lineage: null } }, "table-state", "mismatch"],
+  [{ tables: { history: "history", entity: "orphan", index: null, schedule: null, outbox: null, processing: null, lineage: null }, history: [] }, "table-state", "mismatch"],
   [{ history: [{ migration_id: "unreviewed", checksum: manifest.migrations[0].checksum }] }, "history-id", "mismatch"],
   [{ history: [{ migration_id: manifest.migrations[0].id, checksum: canary }] }, "history-checksum", "mismatch"],
-  [{ history: [{}, {}] }, "history-count", "count-mismatch"],
-  [{ tables: { history: "history", entity: null, index: "index" } }, "table-state", "missing"],
-  [{ tables: { history: undefined, entity: null, index: null } }, "table-state", "not-confirmed"],
+  [{ history: Array.from({ length: manifest.migrations.length + 1 }, () => ({})) }, "history-count", "count-mismatch"],
+  [{ tables: { history: "history", entity: null, index: "index", schedule: "schedule", outbox: "outbox", processing: "processing", lineage: "lineage" } }, "table-state", "missing"],
+  [{ tables: { history: "history", entity: "entity", index: "index", schedule: null, outbox: null, processing: null, lineage: null }, history: manifest.migrations.slice(0, 2).map(migration => ({ migration_id: migration.id, checksum: migration.checksum })) }, "table-state", "missing"],
+  [{ tables: { history: undefined, entity: null, index: null, schedule: null, outbox: null, processing: null, lineage: null } }, "table-state", "not-confirmed"],
 ]) {
   const fixture = administrationFixture(settings);
   await assert.rejects(() => administration.performEntitySmokeAdministration(fixture.pool, "observe-migration-state", "entityfixture"), error => {
@@ -317,7 +326,8 @@ try {
 } finally { await started.value.close(); }
 let captured;
 feature.mount({ registerDiagnosticCatalog: () => shared.ok(undefined), registerObservabilityProfile: () => shared.ok(undefined),
-  registerHealthCheck: () => shared.ok(undefined), registerRoute: route => { captured = route.handler; return shared.ok(undefined); } });
+  registerHealthCheck: () => shared.ok(undefined), registerJob: () => shared.ok(undefined),
+  registerRoute: route => { captured = route.handler; return shared.ok(undefined); } });
 const beforeObserverFailure = saves;
 const observedFailure = await captured.handle({ body: { action: "create", input } }, { onDiagnostic: () => { throw new Error(canary); } });
 assert.equal(observedFailure.status, 503); assert.equal(saves, beforeObserverFailure + 1);

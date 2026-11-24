@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.testing.workflow.write-and-verify-tests
-version: 2
+version: 3
 status: active
 created_on: "2026-11-06"
-updated_on: "2026-11-09"
+updated_on: "2026-11-22"
 layer: 06.shared
 domain: testing
 disciplines: [agentic, architecture]
@@ -38,6 +38,12 @@ Locate the current runner, file discovery, fixtures, compiler setup and suitable
 registered checks. Inspect real commands and configuration rather than assuming
 that a file named `*.test.ts` runs automatically. Keep existing test locations
 and runners unless a separate approved migration changes them.
+
+Name the verification machine for each required result: local qualification,
+deployment/recovery, deployed-runtime proof or periodic hygiene. Keep their
+receipts and commands separate. Record the risk, invalidating inputs and
+consuming boundary in the existing task inventory; do not create a second
+scheduler, cache or proof store for the same owner.
 
 If the behaviour contract or required governance is absent or ambiguous, stop
 at that gap and ask for direction under the owning workflow. Do not invent a
@@ -80,6 +86,12 @@ to report failure. Inspect negative type assertions with their actual compiler
 check. Review new fixtures and expected-output changes rather than accepting
 them automatically. Apply the standard's resource cleanup and external-service
 safeguards before exercising integrations.
+
+Before final focused evidence, identify the registered catalogue command or its
+declared runner wrapper. Do not mistake importing a test module for executing
+its tests. Set a proportionate wall-clock budget for a broad run before starting
+it and record passed, failed or incomplete; a timeout is incomplete evidence,
+not a pass or a reason to skip the owner.
 
 ## 4. Review the complete change
 

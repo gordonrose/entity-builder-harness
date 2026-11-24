@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-22"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -228,7 +228,7 @@ if [ -f scripts/repo/check-selection/script.sh ]; then
   # worktree is removed. Changed inputs rerun only their affected local checks.
   base_head="$(observe base-head git rev-parse main)"
   BASE_SHA="$base_head" HEAD_SHA="$PROMOTED_COMMIT" \
-    bash scripts/repo/check-selection/script.sh --ci --boundary integration \
+    bash scripts/repo/check-selection/script.sh --ci --changed-only --boundary integration \
     --execute-local --reuse-from-worktree "$PREFLIGHT_WORKTREE" --json
 fi
 

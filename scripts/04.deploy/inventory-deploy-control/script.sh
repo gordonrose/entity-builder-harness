@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.inventory-deploy-control
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-06"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.governance
 #   disciplines:

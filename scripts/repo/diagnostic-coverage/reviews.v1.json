@@ -809,7 +809,7 @@
     {
       "owner": "entity-smoke-runtime-composition-and-configuration",
       "status": "partial",
-      "reason": "Reviewed the complete checked configuration, fixed-schema PostgreSQL runtime/repository adapter, target runtime and four source entrypoints, with generated wrappers and compiled runtime/preflight consumers. Configuration uses the existing Config/Platform loader, IAM region/text rules and certificate validator, enforces the isolated roles/schema/private exposure/CA path and test-only token, and prevents dependent reads on early rejection. SQL substitution is fixed source-owned schema, statement values remain bound; read/write/collision mappings retain selected primary/security companions and readiness cannot invent success after failed SQL. Runtime selects Core clock/UUID and lifecycle policy and explicitly separates migration. The actual target startup fixture reproduced two pool-close attempts after failed startup plus failed close, then proved the correction: returned rejection and thrown startup each close once; close failure is separately reported as close/not-assessed; success retains pool ownership and invalid checked configuration constructs no pool or server. Ten cases keep actual configuration, adapter/policy and app construction while explicitly controlling pg, CA-file I/O and the server result; exact original primary/related and canary assertions are separate from the real mounted HTTP fixture. Source entrypoints and generated wrappers retain their own operation and rejected task exit; the HTTP verifier rejects credential delivery and unsupported modes before requests. These are local composition protocols, not a running qualified image or effective database permissions.",
+      "reason": "Reviewed the complete checked configuration, fixed-schema PostgreSQL runtime/repository adapter, target runtime and four source entrypoints, with generated wrappers and compiled runtime/preflight consumers. Configuration uses the existing Config/Platform loader, IAM region/text rules and certificate validator, enforces the isolated roles/schema/private exposure/CA path and test-only token, and prevents dependent reads on early rejection. SQL substitution is fixed source-owned schema, statement values remain bound; read/write/collision mappings retain selected primary/security companions and readiness cannot invent success after failed SQL. Runtime selects Core clock/UUID and lifecycle policy and explicitly separates migration. The actual target startup fixture reproduced two pool-close attempts after failed startup plus failed close, then proved the correction: returned rejection and thrown startup each close once; close failure is separately reported as close/not-assessed; success retains pool ownership and invalid checked configuration constructs no pool or server. Ten cases keep actual configuration, adapter/policy and app construction while explicitly controlling pg, CA-file I/O and the server result; exact original primary/related and canary assertions are separate from the real mounted HTTP fixture. Source entrypoints and generated wrappers retain their own operation and rejected task exit; the HTTP verifier rejects credential delivery and unsupported modes before requests. The manifest adds the target-selected schedule table, then the existing platform outbox/processing/lineage foundation, after the feature migration using the existing checksum runner. Runtime supplies the app's existing purge-job name and schedule store, so an archived logical deletion can store a reminder; it does not deliver or execute it. These are local composition protocols, not a running qualified image or effective database permissions.",
       "remaining_debt": [
         "Not every configuration missing/empty/type/certificate/role/region combination, adapter constructor, pool event, filesystem or diagnostic-processing failure is injected at each source/generated CLI. The startup fixture controls the server-result protocol; the separate real mounted server fixture does not invoke the entire production target or prove signal/shutdown behavior for a packaged process.",
         "Effective RDS IAM/TLS, schema/grants/index/lifecycle durability and actual replacement/recovery require real image/live proof. The full registered composition is still failing at the separately unapproved restore cleanup graph; freshly compiled direct slice passes cannot establish complete composition, integration, a source checkpoint or acceptance."
@@ -829,11 +829,11 @@
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts",
-          "sha256": "07a36709a9427667729fea56dc6398bee9b989198e820a4db8159403801c0fe9"
+          "sha256": "e0abfc22996e634aa4ab11c824387ff89d07bc9b96bf0254ee9199af442bdfbf"
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/entity-smoke/runtime.ts",
-          "sha256": "263ea08d254ce949de747ef29b496d4921fd79720d1d5a02daafdc8300ac582e"
+          "sha256": "6e70b5dead32de655da5d444935f6e32d5e0929b47239085d813ee0fb3bffcea"
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.main.ts",
@@ -950,7 +950,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/verify-workflow.py",
-          "sha256": "c3948d50a886e1b8c006e05afb96a52d277b2288378760fd52fd34ea0e91ec6d"
+          "sha256": "46833012bf8a6a0e4abbf53944e5bbdfad7b7c8b8ff15d4ded69af96229f1652"
         }
       ]
     },
@@ -1161,7 +1161,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py",
-          "sha256": "6716cea88204351f4feb87186258b7fb055d95e4cf52ca9d4c0e50bf430e8ffd"
+          "sha256": "0a3f6c498f4dba7316c3487e09ba34444eada99fca0c0dba0ef0cba5592fb28a"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot.sh",
@@ -1196,7 +1196,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-steps.py",
-          "sha256": "6de4f8d46c16e8028f469b2bf043711d8364b6ed1b39646d814eaf1c370acf5a"
+          "sha256": "a85ed249322c54113694c012e07fa9e45dfe560e4cf16c3cfd6b2a908db92ff4"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-completion.py",
@@ -1228,7 +1228,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py",
-          "sha256": "bf46995ffca94f0d528feeb653668a020474b771544fba2f4e728b3f1cf38245"
+          "sha256": "4456cc7d06494ab21b4f3ac15e5289ea7e44f24dc9f5dcd0875a497261f7f49e"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh",
@@ -1341,7 +1341,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py",
-          "sha256": "4d691df09a609697389c0f0481256ff6f982a15a25ddc40897822e068cc3ffaa"
+          "sha256": "c1142af51084c27a5acf09b8acea5457055bb5e52d4f81a1dc4a344c5464f33c"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh",
@@ -1493,7 +1493,7 @@
     {
       "owner": "entity-smoke-target-database-preflight",
       "status": "partial",
-      "reason": "Self-reviewed the complete new read-only SQL helper, target diagnostic definitions/reporter, administration and migration programs, database-proof main and selected adapter/role helpers. Preflight uses one actual configured connection and a read-only snapshot, validates current identity/database and selected authority/schema facts, and cannot perform role/schema/DML/DDL setup. Exact tests distinguish count/type/mismatch/not-confirmed predicates with safe fixed identity categories. Rollback/release failures prevent success; cleanup after a body failure preserves that original error and a separate safe companion. All three own SQL program callers now withhold success until pool end succeeds. The actual entrypoint fixture keeps configuration and adapter constructors real while doubling only pg transport and the selected CA-file read. It asserts source diagnostic preservation, exact recognized SQL-denial readiness classification/phase/effect, semantic rejection, rollback/release/end failures, no success or query retry and sensitive canary exclusion. The existing source exporter generated the additive target definition and the Python task collector reads that actual catalogue. No Core diagnostic vocabulary or accepted baseline behavior was rewritten. Re-reviewed the whole reporter and actual startup caller after finding supported Server records were dropped: startup-only selection now consumes the existing public Server built-in owners, without widening SQL mappings or duplicate server registration. A literal valid server-start failure reproduced the generic substitution before the fix; the actual runEntitySmokeMain fixture asserts exact primary and TLS companions, separate close failure, unknown throw privacy and unchanged non-startup selection. Not every built-in-family startup record or processing fallback is independently injected, so adoption remains partial. Re-reviewed actual authentication membership: one exported target-owned predicate recursively follows pg_auth_members from session_user, includes NOINHERIT/SET FALSE grants and does not confuse superuser privileges with authentication membership. Both real callers select that predicate; malformed/false responses retain existing authority/memberships diagnostics and rollback behavior. The compiled actual-caller fixtures pass. A real disposable PostgreSQL18.3 test executed the source predicate and confirmed absent/direct/indirect/revoked cases in a rolled-back transaction; its owned container cleanup passed. Full corrected image and AWS proof remain pending. C03 canonical migration review preserves implementation predicates and public diagnostic identities while moving shared helper ownership and actual callers. Compatibility wrappers are separately reviewed as support; implementation adoption status and existing debt are unchanged.",
+      "reason": "Self-reviewed the complete new read-only SQL helper, target diagnostic definitions/reporter, administration and migration programs, database-proof main and selected adapter/role helpers. Preflight uses one actual configured connection and a read-only snapshot, validates current identity/database and selected authority/schema facts, and cannot perform role/schema/DML/DDL setup. Exact tests distinguish count/type/mismatch/not-confirmed predicates with safe fixed identity categories. Rollback/release failures prevent success; cleanup after a body failure preserves that original error and a separate safe companion. All three own SQL program callers now withhold success until pool end succeeds. The actual entrypoint fixture keeps configuration and adapter constructors real while doubling only pg transport and the selected CA-file read. It asserts source diagnostic preservation, exact recognized SQL-denial readiness classification/phase/effect, semantic rejection, rollback/release/end failures, no success or query retry and sensitive canary exclusion. The existing source exporter generated the additive target definition and the Python task collector reads that actual catalogue. No Core diagnostic vocabulary or accepted baseline behavior was rewritten. Re-reviewed the whole reporter and actual startup caller after finding supported Server records were dropped: startup-only selection now consumes the existing public Server built-in owners, without widening SQL mappings or duplicate server registration. A literal valid server-start failure reproduced the generic substitution before the fix; the actual runEntitySmokeMain fixture asserts exact primary and TLS companions, separate close failure, unknown throw privacy and unchanged non-startup selection. Not every built-in-family startup record or processing fallback is independently injected, so adoption remains partial. Re-reviewed actual authentication membership: one exported target-owned predicate recursively follows pg_auth_members from session_user, includes NOINHERIT/SET FALSE grants and does not confuse superuser privileges with authentication membership. Both real callers select that predicate; malformed/false responses retain existing authority/memberships diagnostics and rollback behavior. The compiled actual-caller fixtures pass. A real disposable PostgreSQL18.3 test executed the source predicate and confirmed absent/direct/indirect/revoked cases in a rolled-back transaction; its owned container cleanup passed. The immutable Entity Smoke manifest now composes the selected platform schedule table after the existing feature migration. Administration compares ordered complete history, treats a valid old prefix as safe to resume, proves table presence only for a complete history, and grants runtime read/insert only after exact history confirmation. Existing target diagnostic meanings remain; no schedule runner or target action is added. Full corrected image and AWS proof remain pending. C03 canonical migration review preserves implementation predicates and public diagnostic identities while moving shared helper ownership and actual callers. Compatibility wrappers are separately reviewed as support; implementation adoption status and existing debt are unchanged.",
       "remaining_debt": [
         "Authentication repair full-file re-review: the former restricted-PostgreSQL fixture encouraged a persistent owner grant that broke RDS password authentication through indirect rds_iam membership. Actual bounded RDS recovery proved that its non-superuser administrator already selects the migration owner without that membership. Bootstrap removes the grant; bootstrap/grant-runtime verify session-user IAM nonmembership before COMMIT, rejecting missing/multiple/nonboolean/false observations through the existing memberships diagnostic and rolling back. Administration preflight also requires IAM nonmembership using its existing authority diagnostic. Actual-caller fixtures reject the old grant, preserve owner-before-history/read and test all new failed observations without commit/replay. Restricted runtime privileges and read-only observers stay unchanged. Updated package qualification and corrected-image live proof remain required; prior successful migration is retained, never replayed.",
         "The rest of administration/bootstrap/grant/migration-state and database-proof business behavior has existing bounded fixtures, not exhaustive diagnostic adoption. Constructor/startup/unexpected callback and all multi-failure permutations remain incompletely covered; this review is not a universal safe-delivery claim.",
@@ -1523,11 +1523,11 @@
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/entity-smoke/administration.ts",
-          "sha256": "8e1a6ec01b40c471662498c0abea306eb7cc24b77ea2c26f67dcbd5d125257a0"
+          "sha256": "db885e1c9a1e814fa83d1729d88b60ca5f316933dee3070a6b6a9c8b60ef7344"
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/entity-smoke/migrations.ts",
-          "sha256": "11ca3a46e1dff97ff75c059cb361bf26b35d808baa69dddfa708fa46eec282ec"
+          "sha256": "1a47e900a8598d2c76b6f44b143fda6215ea0207fcda2bbd201cef9b86f0327b"
         },
         {
           "path": "infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts",
@@ -1562,7 +1562,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py",
-          "sha256": "feae15a03d099495985e7f1a743ac6aa155ce8c4f0ef7c78649147ece13cedf6"
+          "sha256": "d67194981337647d2f7edd023e30d38bc6cb4a6133f78f982fd76fb0913cebaf"
         },
         {
           "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.sh",
@@ -1680,14 +1680,14 @@
       "sources": [
         {
           "path": "scripts/repo/check-selection/execution_policy.py",
-          "sha256": "a73eef01beb98ec6856666ec3ae0625c6e5c51a4a465264d0ddf9183294cd67e"
+      "sha256": "13ce89ed07b905f86c732afad26cb468c180d4bee4186b78c1ebac8c2624bf83"
         }
       ]
     },
     {
       "owner": "entity-smoke-test-entity",
       "status": "partial",
-      "reason": "Reviewed all feature contracts, schema predicates, entity decisions, individual use cases, local repository cloning and migration declaration. Corrected the new uncommitted diagnostic namespace to match its app-owned catalog; root input is reported as input, and missing/type/format/value/item reasons preserve the first actual schema issue rather than collapse to invalid-value. Real create/update service fixtures assert exact code/version/detail, rejection before generation/save, multiple-issue order, nullable success, private canaries, closed parsing and primary UUID source identity. Existing integration proves local CRUD/archive/delete/restore/eligibility. Product server/worker mounting proves registration through the public app root. This is bounded local evidence, not whole-feature adoption, database execution or delivery proof. Re-reviewed all nineteen listed sources on 2026-11-09, including insert-only conflict handling, source-envelope preservation and exclusion of deleted records from archive restoration. The UUID mapping now preserves the existing Core primary and companion array without copying native causes; actual system-generation invalid-output, invocation-throw and unavailable-Crypto cases assert exact meanings at the public create service, descriptor cleanup, no generation replay and no clock or repository calls. Existing lifecycle wrappers use the same companion-preserving constructor; normal Core lifecycle errors currently carry only their primary. These additions do not establish HTTP/logger delivery or exhaustive lifecycle-failure adoption.",
+      "reason": "Reviewed all feature contracts, schema predicates, entity decisions, individual use cases, local repository cloning and migration declaration. Corrected the new uncommitted diagnostic namespace to match its app-owned catalog; root input is reported as input, and missing/type/format/value/item reasons preserve the first actual schema issue rather than collapse to invalid-value. Real create/update service fixtures assert exact code/version/detail, rejection before generation/save, multiple-issue order, nullable success, private canaries, closed parsing and primary UUID source identity. Existing integration proves local CRUD/archive/delete/restore/eligibility. Product server/worker mounting proves registration through the public app root. This is bounded local evidence, not whole-feature adoption, database execution or delivery proof. Re-reviewed all nineteen listed sources on 2026-11-09, including insert-only conflict handling, source-envelope preservation and exclusion of deleted records from archive restoration. The UUID mapping now preserves the existing Core primary and companion array without copying native causes; actual system-generation invalid-output, invocation-throw and unavailable-Crypto cases assert exact meanings at the public create service, descriptor cleanup, no generation replay and no clock or repository calls. Existing lifecycle wrappers use the same companion-preserving constructor; normal Core lifecycle errors currently carry only their primary. The disposable cleanup service reuses Core eligibility with an explicit five-minute app rule and an explicit no-hold fact. An archived entity that becomes deleted now saves one reminder for the existing purge job before saving the deletion; a schedule failure preserves the record instead. A later entity write failure can leave a harmless generic purge reminder, but cannot leave eligible data without one. The local test proves its exact due time and excludes merely deleted data. These additions do not establish HTTP/logger delivery, a scheduled process, or exhaustive lifecycle-failure adoption.",
       "remaining_debt": [
         "Feature not-found and archive/visibility rejection errors have no feature-owned diagnostic records. Core lifecycle records are forwarded, but exact failure alternatives at the feature caller remain unproved; this review does not mark those paths adopted.",
         "Getters/proxies, changing inputs between explain and diagnose, injected clock/repository throws, directly thrown custom generators, diagnostic-processing isolation and native-cause preservation are not fully exercised or adopted. Normal system-generator returned failures now preserve their source primary and companions; this is not universal error-path adoption. The local Map repository has no durable provider, transaction or purge-execution claim.",
@@ -1699,6 +1699,7 @@
       "tests": [
         "apps/entity-smoke/tests/test-entity/type-level/test-entity-types.test.ts",
         "apps/entity-smoke/tests/test-entity/integration/diagnostics-runtime.test.ts",
+        "apps/entity-smoke/tests/test-entity/integration/retention-cleanup-job-runtime.test.ts",
         "apps/entity-smoke/tests/test-entity/integration/test-entity-runtime.test.ts",
         "products/kanbien-platform/tests/integration/kanbien-platform-runtime.test.ts",
         "products/kanbien-platform/tests/test-infrastructure/static-validation/kanbien-platform-boundaries.test.mjs"
@@ -1742,11 +1743,19 @@
         },
         {
           "path": "apps/entity-smoke/features/test-entity/domain/services/delete-test-entity.ts",
-          "sha256": "72c0e9d9d0c35cfc1446d743c2c800755450c99eae3bebee897628b6b1b8ef22"
+          "sha256": "efd029c302e89a06d58989b38c872d74573c26e8567e6bf2e6c563a564b8117a"
+        },
+        {
+          "path": "apps/entity-smoke/features/test-entity/domain/services/purge-expired-test-entities.ts",
+          "sha256": "24cd4684b4abd26581d25a9c0135f09d0d4f2edb7f2d695c57a8a63b1cf10199"
         },
         {
           "path": "apps/entity-smoke/features/test-entity/domain/services/dependencies.ts",
-          "sha256": "8fbee1b1728b630b660aec10ac01d79ed5c322cd853452c85e87b5ee9c02d171"
+          "sha256": "13f1ae54b4fd0720a29e6196d696ee256b0a919b56d36c49287fc81e6ce668a1"
+        },
+        {
+          "path": "apps/entity-smoke/features/test-entity/domain/services/remember-expired-purge.ts",
+          "sha256": "c235a1356d7556e81e13b66fedba43b8784e169ff80d3aa6b0551f0d32e1cdfd"
         },
         {
           "path": "apps/entity-smoke/features/test-entity/domain/services/get-test-entity.ts",
@@ -1769,8 +1778,12 @@
           "sha256": "29107406453bf001787fcb132dbce9b98ff46659698bb74c6f0dc2c85c492e75"
         },
         {
+          "path": "apps/entity-smoke/features/test-entity/domain/retention.ts",
+          "sha256": "4ce0166e32cfdc4fd6a873c807ace2a9ee3c8f1816fcaf09197298a4abce2baa"
+        },
+        {
           "path": "apps/entity-smoke/features/test-entity/index.ts",
-          "sha256": "7f7502fa74d5b0bbdca490d50c08a3dadd8cc9ebbd1d59900cce7f344f285b64"
+          "sha256": "de5f99d74f7910fe9a18734321856e439cd4664ef91048d61e556f6c76cad40d"
         },
         {
           "path": "apps/entity-smoke/features/test-entity/migrations/v0001-test-entity.ts",
@@ -1778,11 +1791,11 @@
         },
         {
           "path": "apps/entity-smoke/features/test-entity/persistence/in-memory.ts",
-          "sha256": "f02f9f45c154ceac7fd0caff0adc17ce7dc5ad3b323ad5d66ff28e7fbc89d3be"
+          "sha256": "830155ab96907327694bc867f3f0614a17ccc93a0896165b9ad4a69962b62ba4"
         },
         {
           "path": "apps/entity-smoke/features/test-entity/persistence/repository.ts",
-          "sha256": "6173466fa75a4203fb8264d537408143c2512bb709eb75d576c7e1fe6dea778c"
+          "sha256": "4a40f29147a6df3ef7ae1385efc2bb4dbdd5b9bbff453656e28cc56b0d73c888"
         }
       ]
     },
@@ -1813,7 +1826,7 @@
     {
       "owner": "entity-smoke-product-composition",
       "status": "support",
-      "reason": "Reviewed constant app metadata, re-export-only public index and the product's public app-root composition. Manifest metadata matches two composed apps; server/worker mount tests exercise both public mounts and existing product behavior. Closed boundary fixtures accept only the two declared app roots and reject unknown apps, private app paths and Core/Platform dependencies. These files supply composition/export plumbing, not app-owned validation, provider classification or operational diagnostic producers. Re-reviewed the current public app index: it additionally re-exports the explicit durable app factory/options and relational feature surface; implementation remains in owning files. The product still selects the static local app; target composition explicitly chooses the durable mount. The registered app unit compiles and exercises those public exports; no package/image or live readiness is inferred.",
+      "reason": "Reviewed constant app metadata, re-export-only public index and the product's public app-root composition. Manifest metadata matches two composed apps; server/worker mount tests exercise both public mounts and existing product behavior. Closed boundary fixtures accept only the two declared app roots and reject unknown apps, private app paths and Core/Platform dependencies. These files supply composition/export plumbing, not app-owned validation, provider classification or operational diagnostic producers. Re-reviewed the current public app index: it additionally re-exports the explicit durable app factory/options, cleanup-job identity and relational feature surface; implementation remains in owning files. The product still selects the static local app; target composition explicitly chooses the durable mount. The registered app unit compiles and exercises those public exports; no package/image or live readiness is inferred.",
       "tests": [
         "products/kanbien-platform/tests/integration/kanbien-platform-runtime.test.ts",
         "products/kanbien-platform/tests/test-infrastructure/static-validation/kanbien-platform-boundaries.test.mjs",
@@ -1826,11 +1839,11 @@
       "sources": [
         {
           "path": "apps/entity-smoke/src/app.manifest.ts",
-          "sha256": "310e0d1f70c1db4203d6f0e3b78a5d4438eecaae0328797bbfa61c0baec44f0b"
+          "sha256": "08834b2efbfbe5f9abe5f990430ef4ab8e25dcef8b4b8fa8df0f555ad7f16151"
         },
         {
           "path": "apps/entity-smoke/src/index.ts",
-          "sha256": "883b2d7b48c9094c438e968b5594c6b60262db7d7132e5b015f6b2563fdbb656"
+          "sha256": "45e2fc5e938426857ac5019203c713743cfb6748c1ee41197d274eac52ab87b3"
         },
         {
           "path": "products/kanbien-platform/src/product.manifest.ts",
@@ -1841,7 +1854,7 @@
     {
       "owner": "entity-smoke-relational-persistence",
       "status": "partial",
-      "reason": "Reviewed the executor contract, all row/parameter/lifecycle mapping and every SQL access path. SQL text and values stay separate; create is INSERT-only, save is UPDATE-only and omits created_at, raw get retains deleted facts for restore and status listing filters deleted rows. Returned write cardinality must establish one row. The existing public-app repository fixture asserts bigint/date/null-versus-empty conversions, exact parameter order and SQL, all six stored-record field classes, malformed list rejection without partial results, zero/null/multiple write-evidence alternatives, exact returned/thrown source error and companion-array identity, and one executor invocation without replay. These are controlled executor/local service assertions, not actual PostgreSQL observations.",
+      "reason": "Reviewed the executor contract, all row/parameter/lifecycle mapping and every SQL access path. SQL text and values stay separate; create is INSERT-only, save is UPDATE-only and omits created_at, raw get retains deleted facts for restore and status listing filters deleted rows. Cleanup lists only archived-and-deleted rows and repeats those predicates in its DELETE statement, so a row restored or made visible after selection is not removed. Returned write cardinality must establish one row. The existing public-app repository fixture asserts bigint/date/null-versus-empty conversions, exact parameter order and SQL, all six stored-record field classes, malformed list rejection without partial results, zero/null/multiple write-evidence alternatives, exact returned/thrown source error and companion-array identity, and one executor invocation without replay. These are controlled executor/local service assertions, not actual PostgreSQL observations.",
       "remaining_debt": [
         "Unexpected row getters/proxies, executor throws, serialization faults, changed inputs during repeated validation and diagnostic-builder/selection failures are not fully adopted. Stored-record diagnostics establish failure to return an entity, not absence of an earlier committed database write.",
         "Actual SQL/schema/index behavior, database constraints/concurrency, migration execution, credentials/TLS, packaged-image and live AWS behavior remain separate target-owned qualification and acceptance obligations."
@@ -1866,7 +1879,7 @@
         },
         {
           "path": "apps/entity-smoke/features/test-entity/persistence/relational/repository.ts",
-          "sha256": "2dffcdbeb89a73cf1aaf7d679df5dceb4984cb60436c4ee2d4b4e8e83111b348"
+          "sha256": "224b4948dc50a7968617aa28cae40d6414febdefe8454f7c594e5b5b7fcec170"
         }
       ]
     },
@@ -1900,7 +1913,7 @@
     {
       "owner": "entity-smoke-durable-app-mount",
       "status": "partial",
-      "reason": "Reviewed explicit factory options and the public durable mount: exact feature catalog, fixed command observation profile, readiness contribution, private-target command route and delegated close hook. Existing required helper throws the original registration error rather than copying only its message. Public mounted fixtures use the actual app factory and public validators with a narrow recording registry; they assert selected catalog identity, exact profile/route declarations, healthy/unhealthy source envelopes and companion-array identity, rejection at each registration phase with original error identity and no later registration, and one delegated close. The existing local-server composition fixture supplies separate actual server/profile/log integration, not live AWS proof; current full composition completion remains pending.",
+      "reason": "Reviewed explicit factory options and the public durable mount: exact feature catalog, fixed command observation profile, readiness contribution, private-target command route, registered cleanup job and delegated close hook. Existing required helper throws the original registration error rather than copying only its message. Public mounted fixtures use the actual app factory and public validators with a narrow recording registry; they assert selected catalog identity, exact profile/route/job declarations, healthy/unhealthy source envelopes and companion-array identity, rejection at each registration phase with original error identity and no later registration, and one delegated close. The cleanup handler delegates to the feature service and adds no app-specific message data or diagnostic vocabulary. The existing local-server composition fixture supplies separate actual server/profile/log integration, not live AWS proof; current full composition completion remains pending.",
       "remaining_debt": [
         "Recording-registry tests do not prove all Platform namespace/duplicate/profile enforcement or real startup logger delivery; those retain their owning Platform/composition proof. Factory/options accessors, readiness/clock/close throws, health-result processing faults and arbitrary registration evidence are not fully adopted.",
         "The health interface carries only base health fields; source diagnostics are preserved as runtime attachments consumed by Platform selection, not promoted to a new Core health contract. Real database readiness, image packaging and live target acceptance remain separate pending obligations."
@@ -1910,6 +1923,7 @@
       ],
       "tests": [
         "apps/entity-smoke/tests/test-entity/integration/mounted-command-runtime.test.ts",
+        "apps/entity-smoke/tests/test-entity/integration/retention-cleanup-job-runtime.test.ts",
         "scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/runtime-test.mjs"
       ],
       "checks": [
@@ -1919,7 +1933,7 @@
       "sources": [
         {
           "path": "apps/entity-smoke/src/persistence/app.mount.ts",
-          "sha256": "df91f9174aa20f2f6dded8bb2cbd906c353cfc4e8cf30bf74acc36373d087797"
+          "sha256": "b6776116190c00f659103d869aa092018da88e514c1cd9b92fd1d2e79a2918be"
         }
       ]
     },
@@ -2883,7 +2897,7 @@
       "sources": [
         {
           "path": "scripts/01.harness/check-artifact-path-migration.sh",
-          "sha256": "e2f9362befd88622d394a8c264c5d62e7ec8f169d2450424d33b0a3cc42948f3"
+          "sha256": "d21bbd4671eb13093e8d2a94c888e23f3b77ef360badecf6c6daf61e2d3afff5"
         },
         {
           "path": "scripts/01.harness/plan-artifact-path-migration.sh",
@@ -3592,7 +3606,7 @@
     {
       "owner": "postgresql-telemetry-boundary-observation",
       "status": "partial",
-      "reason": "The optional existing persistence diagnostic port observes local telemetry encoding versus sink callback failure, consumes returned rejection without awaiting/replay, and independently retains selected source9. A failed operation getter does not invent an owning operation. All three actual transaction call sites supply the observer while preserving SQL/result/rollback/release/getter behavior. Existing complete PostgreSQL type/runtime fixtures cover raw/frozen/primitive errors, native/shadowed/thenable rejection and sensitive canaries.",
+      "reason": "The optional existing persistence diagnostic port observes local telemetry encoding versus sink callback failure, consumes returned rejection without awaiting/replay, and independently retains selected source9. A failed operation getter does not invent an owning operation. All three actual transaction call sites supply the observer while preserving SQL/result/rollback/release/getter behavior. Schedule storage deliberately has no telemetry hook yet, because the existing command diagnostic vocabulary does not describe its two operations. Existing complete PostgreSQL type/runtime fixtures cover raw/frozen/primitive errors, native/shadowed/thenable rejection and sensitive canaries.",
       "remaining_debt": [
         "Optional observation is not proof of real PostgreSQL, package/container, collector or live provider delivery. Final source-matched integrated and applicable B14 proof remain required; usable native constructor/species hooks are an explicit rejection-isolation assumption."
       ],
@@ -3610,7 +3624,7 @@
       "sources": [
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/telemetry.ts",
-          "sha256": "8becfb13770a45d0fd26203972fe73f995b7e63b6e18efc85d2c6d520857e1de"
+          "sha256": "6b5d091f79181c876b9d6ec6a22c9625ba39042593e043fccbf076ae79ee4d4e"
         }
       ]
     },
@@ -3989,7 +4003,7 @@
     {
       "owner": "postgresql-observed-failure-translation",
       "status": "adopted",
-      "reason": "Translate bounded machine-code, causal and actual-invocation evidence; recover observed phases through private wrappers, retain the existing primary classification precedence and attach selected shared-security observations only to TLS-classified failures. No provider fault, safe replay or schema/capacity cause is inferred. B04 retains selected Core/Persistence/explicit source primary and eight companions independently of own boundary and positive TLS peer observations. Opaque body failures report unknown rather than invented provider evidence; explicit transaction delivery avoids duplicate source reporting. Native-code precedence and retained schemas remain unchanged; TLS peers fill only unused companion slots and remain independently observable when full.",
+      "reason": "Translate bounded machine-code, causal and actual-invocation evidence; recover observed phases through private wrappers, retain the existing primary classification precedence and attach selected shared-security observations only to TLS-classified failures. No provider fault, safe replay or schema/capacity cause is inferred. B04 retains selected Core/Persistence/explicit source primary and eight companions independently of own boundary and positive TLS peer observations. Opaque body failures report unknown rather than invented provider evidence; explicit transaction delivery avoids duplicate source reporting. Native-code precedence and retained schemas remain unchanged; TLS peers fill only unused companion slots and remain independently observable when full. The schedule store uses the same observed-error path with distinct create/read operation names; a read still claims only not-assessed effect.",
       "tests": [
         "platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts",
         "platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts"
@@ -4010,7 +4024,7 @@
       "sources": [
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/errors.ts",
-          "sha256": "66b774bfc5101652b97f0d9e3997c363fe68a1563b2edb7307d4949b49f67390"
+          "sha256": "a62259ffa30d5b775a51a367f1bb590693f6e0138e2c3fd09008f630584a4511"
         }
       ]
     },
@@ -4031,7 +4045,7 @@
       "sources": [
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/index.ts",
-          "sha256": "8afa4c69e0f7e167a2e90a9ce24521ee54da438f0ed6feae7f8056a0a7802cea"
+          "sha256": "dc8d033f7b175ea99dd8c3d6334da6f5e6f1f915aba05d045e8e073c90310cee"
         },
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/rds-iam-authentication.ts",
@@ -4282,7 +4296,7 @@
     {
       "owner": "platform-persistence-diagnostics",
       "status": "partial",
-      "reason": "Versioned persistence attribution and bounded related-record retention preserve historical v1 definitions and existing transition logs/metric labels. Transition observers report primary and explicitly selected companion records, honor operational-log opt-outs and isolate sink failure from work outcomes. Persistence owns exact blank/oversized store/index configuration meaning; adapter bindings retain legacy first-failure/error details. B04 adds exact mutation/lease/state predicates, bounded stored-row findings and unknown boundary meanings, preserving original getter counts and legacy results. Generic CRUD v3 and informational reconciliation are additive; historical v1/v2 schemas and emission remain exact. Transition delivery accepts an independent own record plus selected source primary/eight through default or injected reporters and honors profile opt-outs. B05 adds immutable command v4, neutral informational conditional-command v1, bounded attribute v1 and state-reconciliation v2. Optional invocation-local writer diagnostics preserve omitted defaults identity and callback receivers; explicit empty options silence defaults. Profile-governed independent store observations do not invent transitions. B06 adds exact relay boundary/effect records for raw and returned failures, missing-lease evidence and independently retained Core type/version predicates. The existing observer distinguishes relay from store delivery and isolates native/thenable rejection without changing transition metrics, work, clock counts or raw throws. B07 publishes the exact finite owned code set, composes explicit profile classes, and observes transition nomenclature/class/log/metric/trace projection failures before the outer port's original isolation. Direct record throws preserve identity; selected original error/observation source9 survives without accessor rereads or replay. N01A adds a separate configuration-input v1 definition selecting shared missing/wrong-type/wrong-shape names and finite locations; historical configuration v1 remains exact. Constructor/parser, actual adapter and canary tests cover the additive contract. N05 reuses the leasing module for relay construction and nextPlatformPersistenceLease, consumes the checked duration and reads its source once. Relay validation precedes clock/store/queue use. Historical lease failure definitions and numeric error params remain; nonnumeric input is represented by fixed invalid rather than coercing arbitrary objects.",
+      "reason": "Versioned persistence attribution and bounded related-record retention preserve historical v1 definitions and existing transition logs/metric labels. Transition observers report primary and explicitly selected companion records, honor operational-log opt-outs and isolate sink failure from work outcomes. Persistence owns exact blank/oversized store/index configuration meaning; adapter bindings retain legacy first-failure/error details. B04 adds exact mutation/lease/state predicates, bounded stored-row findings and unknown boundary meanings, preserving original getter counts and legacy results. Generic CRUD v3 and informational reconciliation are additive; historical v1/v2 schemas and emission remain exact. Transition delivery accepts an independent own record plus selected source primary/eight through default or injected reporters and honors profile opt-outs. B05 adds immutable command v4, neutral informational conditional-command v1, bounded attribute v1 and state-reconciliation v2. Optional invocation-local writer diagnostics preserve omitted defaults identity and callback receivers; explicit empty options silence defaults. Profile-governed independent store observations do not invent transitions. B06 adds exact relay boundary/effect records for raw and returned failures, missing-lease evidence and independently retained Core type/version predicates. The existing observer distinguishes relay from store delivery and isolates native/thenable rejection without changing transition metrics, work, clock counts or raw throws. B07 publishes the exact finite owned code set, composes explicit profile classes, and observes transition nomenclature/class/log/metric/trace projection failures before the outer port's original isolation. Direct record throws preserve identity; selected original error/observation source9 survives without accessor rereads or replay. N01A adds a separate configuration-input v1 definition selecting shared missing/wrong-type/wrong-shape names and finite locations; historical configuration v1 remains exact. Constructor/parser, actual adapter and canary tests cover the additive contract. N05 reuses the leasing module for relay construction and nextPlatformPersistenceLease, consumes the checked duration and reads its source once. Relay validation precedes clock/store/queue use. Historical lease failure definitions and numeric error params remain; nonnumeric input is represented by fixed invalid rather than coercing arbitrary objects. The scheduling proof reuses Core UUID and UTC-normalisation contracts and requires a registered platform job name. Its in-memory store rejects duplicate IDs without changing its record. Durable storage adds separate provider-conflict and malformed-row v1 records, preserving the earlier in-memory and generic stored-row vocabularies. It does not create delivery work.",
       "remaining_debt": [
         "B11 owns task lifecycle/cleanup outside the reviewed relay/telemetry boundaries.",
         "Actual database engine, container and live target proof remain B14; selected catalogs and local sink acceptance cannot establish remote delivery."
@@ -4309,15 +4323,19 @@
       "sources": [
         {
           "path": "platform/persistence/src/diagnostics.ts",
-          "sha256": "259983964f3edbf00497fca08f9cb94d45acd5ab2b340c368c66e45883582790"
+          "sha256": "ad57a64a4ceee161f2309599640e7984b86091a5c212580575c2fa1a18036b5e"
         },
         {
           "path": "platform/persistence/src/errors.ts",
-          "sha256": "32d26a7fbcb8d35792fd0f8c57da9ba515c5b6625fb7d74508a915d3aeaa4de3"
+          "sha256": "23fc203673a8c35fac4947d07e5a5d875fb82e0ae9c8fb779a3e040b504de93b"
         },
         {
           "path": "platform/persistence/src/index.ts",
-          "sha256": "14c1bea0c3aba9cc6a3f8ca509db756ed713b1e52069a7ce7e1fd3c86bf5000e"
+          "sha256": "42f90491d2c764b923b3fd94c5760f7bb90a2a0b095e1e336c684e6f0d60f161"
+        },
+        {
+          "path": "platform/persistence/src/scheduling.ts",
+          "sha256": "e63fe2964a0b3b902f76d564dd32f0c251da9efec4ea48b18cb838205eeacd35"
         },
         {
           "path": "platform/persistence/src/observability/integration.ts",
@@ -5359,18 +5377,18 @@
       "sources": [
         {
           "path": "scripts/repo/check-selection/mechanics_test.py",
-          "sha256": "9d4b964401783a40e4ce3b7d3b06f7e0bd4d4c14c603461afe33cf0fd2abdb0d"
+          "sha256": "11cff1e1bb44085f99954b4b8663a51e044f25bab0e9c427f439dd08ded8297a"
         },
         {
           "path": "scripts/repo/check-selection/repository_contracts_test.py",
-          "sha256": "685d21f6760ccb9014a608a3a89ea4899958c21df81eb1c51ac86e732c5c8551"
+          "sha256": "b8133e39b5eab5eeeeca1d4b9e0f8975d7256bbe7de699adea826678accbdf94"
         }
       ]
     },
     {
       "owner": "runner-core-verification-enforcement",
       "status": "partial",
-      "reason": "Runner and cache proof ownership is separate from runtime exports and adapter behavior. Source/input/runtime/contract identity, fresh command-boundary validation, permission boundaries and fixture-only checks are proved by mechanics and actual catalog contracts. Structural proof is not semantic completeness. B12 replaces arbitrary child output retention with fixed markers and validates selected bounded nested observations while preserving statuses, cache/reuse/invalidation, permissions and the original seven-member aggregate. Typed owning failures retain finite distinctions without package/path/native text. This support review does not make nested summaries proof authority. Checkpoint correction: reviewed native skill-entry prose classification and its focused regression. Scripts, nested lookalikes and authoritative contracts remain uncovered without executable checks; no execution permissions or runtime proof are waived. Qualification review: a registered same-repository preflight with an absent optional cache supplies no reusable proof, so selected checks execute locally. Registration, symlink, repository and unsafe-cache checks remain enforced. The actual-runner regression distinguishes absent cache from unsafe permissions and asserts execution versus reuse explicitly. Feedback pilot review: path-only development filtering retains affected obligations and permission boundaries. Closed feedback validation, rejected gate contexts, blocked prerequisites, matching-success reuse, source invalidation, private observations and explicit retention failures are covered by focused fixtures. Complete registered proof is recorded separately. Evidence-reporting safeguard review: the existing selector projects requested local checks, declared-impact local integration and unevaluated package/live/acceptance stages without changing execution or trusted proof ownership. Original row statuses remain; absent, interrupted, per-check/global catalog drift and deferred observations are explicit. Partial/empty selection cannot establish complete impact. Retention failure recomputes coverage, safe saved fields exclude raw output/runtime values, and legacy reports remain readable. Five added mechanics cases and three extended actual-caller/retention/prerequisite cases cover these boundaries; final registered verification remains pending. Package check inputs now come from the actual wrapper npm projection and existing declaration reader. Changed manifests or npm configuration select their affected checks and enter proof identity; discovery inventories are fingerprinted after selected upstream traversal so unrelated source is not automatically included. Before execution/reuse the existing identity window rechecks inventory/content and effective inherited npm ignore mode. Failed/changed observations block or mark uncertainty rather than run or replay a command. Explicit selectors still prove only requested checks; final combined registered proof remains required. Parent reviewed the receipt-key correction after the registered mechanics failure: strict cache verification now includes the writer's workspace_npm_ignore_scripts field, and changed effective npm lifecycle policy is classified as runtime change. The real-projector/private-cache fixture proves matching false/true policy reuse, changed-policy execution and rejection of edited bool/null/string under the retained hash. The former privacy error and prior nonworkspace reuse cases pass. No hash mismatch fallback or proof-authority relaxation is introduced; complete matching registered proof remains pending. Preparation-cost review (Nov18): upstream closure visits new references and retires reached sources within one invocation. No discovery, overlap, fingerprint, invalidation or diagnostic semantics change. Differential tests cover 80 graphs and a cyclic chain, input immutability and reduced comparison count; existing discovery/invalidation tests pass. A real 29-entry plan retains reference sets, dependency IDs, findings, consumers and scheduling. Registered final results are recorded separately. Safe failure-detail review (Nov19): only nonzero completed child results use the registered diagnostic-adoption owner's finite projection; unrelated formats remain unavailable. Known prerequisite/member IDs are preserved on blocked rows. Original process status, drift checks, success-cache admission and execution ordering are unchanged. Connected tests assert actual failure detail in both retained formats and the caller response without replay.",
+      "reason": "Runner and cache proof ownership is separate from runtime exports and adapter behavior. Source/input/runtime/contract identity, fresh command-boundary validation, permission boundaries and fixture-only checks are proved by mechanics and actual catalog contracts. Structural proof is not semantic completeness. B12 replaces arbitrary child output retention with fixed markers and validates selected bounded nested observations while preserving statuses, cache/reuse/invalidation, permissions and the original seven-member aggregate. Typed owning failures retain finite distinctions without package/path/native text. This support review does not make nested summaries proof authority. Checkpoint correction: reviewed native skill-entry prose classification and its focused regression. Scripts, nested lookalikes and authoritative contracts remain uncovered without executable checks; no execution permissions or runtime proof are waived. Qualification review: a registered same-repository preflight with an absent optional cache supplies no reusable proof, so selected checks execute locally. Registration, symlink, repository and unsafe-cache checks remain enforced. The actual-runner regression distinguishes absent cache from unsafe permissions and asserts execution versus reuse explicitly. Feedback pilot review: path-only development filtering retains affected obligations and permission boundaries. Closed feedback validation, rejected gate contexts, blocked prerequisites, matching-success reuse, source invalidation, private observations and explicit retention failures are covered by focused fixtures. Complete registered proof is recorded separately. Evidence-reporting safeguard review: the existing selector projects requested local checks, declared-impact local integration and unevaluated package/live/acceptance stages without changing execution or trusted proof ownership. Original row statuses remain; absent, interrupted, per-check/global catalog drift and deferred observations are explicit. Partial/empty selection cannot establish complete impact. Retention failure recomputes coverage, safe saved fields exclude raw output/runtime values, and legacy reports remain readable. Five added mechanics cases and three extended actual-caller/retention/prerequisite cases cover these boundaries; final registered verification remains pending. Package check inputs now come from the actual wrapper npm projection and existing declaration reader. Changed manifests or npm configuration select their affected checks and enter proof identity; discovery inventories are fingerprinted after selected upstream traversal so unrelated source is not automatically included. Before execution/reuse the existing identity window rechecks inventory/content and effective inherited npm ignore mode. Failed/changed observations block or mark uncertainty rather than run or replay a command. Explicit selectors still prove only requested checks; final combined registered proof remains required. Parent reviewed the receipt-key correction after the registered mechanics failure: strict cache verification now includes the writer's workspace_npm_ignore_scripts field, and changed effective npm lifecycle policy is classified as runtime change. The real-projector/private-cache fixture proves matching false/true policy reuse, changed-policy execution and rejection of edited bool/null/string under the retained hash. The former privacy error and prior nonworkspace reuse cases pass. No hash mismatch fallback or proof-authority relaxation is introduced; complete matching registered proof remains pending. Preparation-cost review (Nov18): upstream closure visits new references and retires reached sources within one invocation. No discovery, overlap, fingerprint, invalidation or diagnostic semantics change. Differential tests cover 80 graphs and a cyclic chain, input immutability and reduced comparison count; existing discovery/invalidation tests pass. A real 29-entry plan retains reference sets, dependency IDs, findings, consumers and scheduling. Registered final results are recorded separately. Safe failure-detail review (Nov19): only nonzero completed child results use the registered diagnostic-adoption owner's finite projection; unrelated formats remain unavailable. Known prerequisite/member IDs are preserved on blocked rows. Original process status, drift checks, success-cache admission and execution ordering are unchanged. Connected tests assert actual failure detail in both retained formats and the caller response without replay. Changed-path context review: only a catalogue entry that explicitly declares it receives the validated changed path array; ordinary leaves and explicit all-inventory execution retain no such environment. Mechanics rejects an invalid declaration and proves the declared child alone observes the bounded context. This is verification plumbing, not a product diagnostic boundary.",
       "tests": [
         "scripts/repo/check-selection/mechanics_test.py",
         "scripts/repo/check-selection/repository_contracts_test.py",
@@ -5382,16 +5400,16 @@
         "check-selection-repository-contracts"
       ],
       "remaining_debt": [
-        "Focused mechanics and invalidation proof passed. The real-repository selection method was interrupted during mutable census inputs and is not a passing complete proof. Complete source-stable registered selection and final affected local proof remain required."
+        "Focused mechanics and invalidation proof passed. The real-repository selection method was interrupted during mutable census inputs and is not a passing complete proof. Complete source-stable registered selection and final affected local proof remain required. M2 source review confirms scope discovery now requires a proof's direct declared input for editing feedback, while changed scope contracts retain the full proof; the focused contract tests reject both over-selection and weakened scope-contract selection."
       ],
       "sources": [
         {
           "path": "scripts/repo/check-selection/local_cache.py",
-          "sha256": "40dadca6483503e8c8ccc153535da238fc44fa0b979c0767d02d45b7f28cfcb7"
+          "sha256": "3a2ef43d83559c8dd3dc991c307e2ee97120c475df5bca4cbeaceb383aa614f0"
         },
         {
           "path": "scripts/repo/check-selection/script.py",
-          "sha256": "b793544548e92bed631c4256574b428f89df46f5ef43f316ec33910672e8a2c2"
+          "sha256": "bd22fe5ef417ac0e60eb76346ff7036a75fa84fe19c5ed5ce9f2d4f818b7678e"
         }
       ]
     },
@@ -5987,7 +6005,7 @@
     {
       "owner": "postgresql-persistence-operation-boundaries",
       "status": "partial",
-      "reason": "Adapter-owned observations locate actual pool/transaction/migration/atomic/store predicates and bounded decode reductions without changing SQL, retries, results, callback/traversal truthiness, raw throws, double rollback or release precedence. Unknown decoder/body throws do not prove invalid data; matched lease reconciliation does not prove expiry. Precise native classification is retained. Primary/eight source evidence, independent own boundaries and positive TLS peers are safely delivered without raw values or companion eviction. B05 upgrades the per-run diagnostic port with a separate internal argument, retaining pool/telemetry getter counts, old callers, raw cleanup precedence and concurrent source9 isolation. B13 supplies existing diagnostic options at all three actual telemetry calls without changed SQL, result, rollback, release or read behavior. The telemetry producer is independently owned by postgresql-telemetry-boundary-observation.",
+      "reason": "Adapter-owned observations locate actual pool/transaction/migration/atomic/store predicates and bounded decode reductions without changing SQL, retries, results, callback/traversal truthiness, raw throws, double rollback or release precedence. Unknown decoder/body throws do not prove invalid data; matched lease reconciliation does not prove expiry. Precise native classification is retained. Primary/eight source evidence, independent own boundaries and positive TLS peers are safely delivered without raw values or companion eviction. B05 upgrades the per-run diagnostic port with a separate internal argument, retaining pool/telemetry getter counts, old callers, raw cleanup precedence and concurrent source9 isolation. B13 supplies existing diagnostic options at all three actual telemetry calls without changed SQL, result, rollback, release or read behavior. The telemetry producer is independently owned by postgresql-telemetry-boundary-observation. The reusable schedule store uses parameterized ID/job/time/state values, validates returned rows, distinguishes a provider-confirmed duplicate from an invalid stored row, and does not infer whether a failed write changed the database. Its schema helper accepts a target-selected immutable migration ID.",
       "remaining_debt": [
         "Optional adapter observation does not prove every surrounding task/controller consumer delivers every record. Concrete remaining task/controller obligations belong to those owners rather than an unimplemented B13 telemetry path; final source-matched registered integration remains required.",
         "The existing PostgreSQL engine/disposable integration, package/container and live target obligations remain B14, not satisfied by fake pools or local pg protocol/TLS fixtures."
@@ -5999,6 +6017,7 @@
       ],
       "tests": [
         "platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-persistence-adapter-runtime.test.ts",
+        "platform/adapters/aws/persistence/postgresql/tests/contract/postgresql-schedule-store-runtime.test.ts",
         "platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-diagnostics-runtime.test.ts"
       ],
       "checks": [
@@ -6015,7 +6034,7 @@
         },
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/migrations.ts",
-          "sha256": "4992a758f6ca7f32e8b8b61861cd6df439fb4e331fbb211b40dac890536ef79a"
+          "sha256": "74e0eba6a40dcd1866f1cbae1e1ecfecb37b165636b3bcbc12a733bb2303dd73"
         },
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/outbox.ts",
@@ -6036,6 +6055,10 @@
         {
           "path": "platform/adapters/aws/persistence/postgresql/src/observations.ts",
           "sha256": "ad1cba77c6be1d137dbc15594108ef8a8062bf12e5b67d6f72c3c2261922f538"
+        },
+        {
+          "path": "platform/adapters/aws/persistence/postgresql/src/scheduling.ts",
+          "sha256": "2e319a2faabc7b096a2660accbe7ad37dfbddbe1b2ac4d522feed98d577efc95"
         }
       ]
     },
@@ -6606,7 +6629,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/script.py",
-          "sha256": "b8bc65505b9fe6de0b790ea9434324553b3eda8134ea3b1922163d0a2f097a34"
+          "sha256": "f9867699cd2581d4a9fc49f739e42230afe0e2afbca2a60aba5508b6c6ca793f"
         }
       ]
     },
@@ -6740,7 +6763,7 @@
       "sources": [
         {
           "path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py",
-          "sha256": "dfac6f1b8b159d71a5e1865fed45df9a20d3ca4c29ec18dc264871ddd2cecf49"
+          "sha256": "0a132412d3d81480fae6816d75eb83c6e57e13f8b7418776f4ee6b36b81136bb"
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
@@ -6748,11 +6771,11 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py",
-          "sha256": "d1e8092e6959092d3e466f98d896dfb2eb477bc776b1d285a4c1aea40194fdec"
+          "sha256": "f089170af9cd0f52f4eb0b4cb16fd71b7109f3d93cd236dab4da2544d2aba4e0"
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py",
-          "sha256": "1920d8248258f61c5ede0bdf41164650864e225e89db1c039b32f9df0707beee"
+          "sha256": "41f30decbbc8ebfdd3b222ac67c7e22b19e886e836e490dda0840bceb343e0db"
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh",
@@ -7238,7 +7261,7 @@
     {
       "owner": "public-module-index-structure",
       "status": "support",
-      "reason": "Static architecture verification plumbing. TypeScript syntax distinguishes export declarations from implementation; exact legacy pins allow only unchanged non-export code. Finite source/syntax/baseline/argument/check failure codes never include source text or native exception messages. No product operation, runtime predicate, provider call or diagnostic definition changes. The same AST checker now enforces adopted contract/domain dependency roles, internal type/runtime cycles, own-index imports, relative and workspace-alias private imports and the exact catalog assembly exception. Future modules adopt through real role folders and index files, without a manifest. Discovery and cache/selection bindings include actual infra consumers; independent fixtures prove emitted-JS/TSX and transitive boundary cases without executing product source. DIAG-003 adds bounded TS/TSX Node-environment source-access findings through this existing gate. Explicit loaders and syntactic/lexical limitations are documented; fixtures cover aliases, permitted checked consumers, specialised validators and future modules. Only fixed finding codes and safe locations are emitted. No import-presence or universal data-flow claim is made. November 2 B/C review preserves predicates and moved bodies while grouping config reading, validation and reporting; the config-owned catalogue and generated public JSON are additive, with byte-identical whole-Core export and exact nested assembly exception. Existing runtime/type, nested-boundary and disposable catalogue/reader fixtures reject the corresponding bypasses; status and prior debt are unchanged. The existing check additionally calls the declaration-owned static import inspector. Runtime versus development ownership, missing direct edges, relative workspace bypasses and runtime-to-test helpers produce bounded path/line findings. Native inspection failures become finite concerns. The eleven renamed-source cases and actual repository module check pass; computed imports are counted, not claimed proven.",
+      "reason": "Static architecture verification plumbing. TypeScript syntax distinguishes export declarations from implementation; exact legacy pins allow only unchanged non-export code. Finite source/syntax/baseline/argument/check failure codes never include source text or native exception messages. No product operation, runtime predicate, provider call or diagnostic definition changes. The same AST checker now enforces adopted contract/domain dependency roles, internal type/runtime cycles, own-index imports, relative and workspace-alias private imports and the exact catalog assembly exception. Future modules adopt through real role folders and index files, without a manifest. Discovery and cache/selection bindings include actual infra consumers; independent fixtures prove emitted-JS/TSX and transitive boundary cases without executing product source. DIAG-003 adds bounded TS/TSX Node-environment source-access findings through this existing gate. Explicit loaders and syntactic/lexical limitations are documented; fixtures cover aliases, permitted checked consumers, specialised validators and future modules. Only fixed finding codes and safe locations are emitted. No import-presence or universal data-flow claim is made. November 2 B/C review preserves predicates and moved bodies while grouping config reading, validation and reporting; the config-owned catalogue and generated public JSON are additive, with byte-identical whole-Core export and exact nested assembly exception. Existing runtime/type, nested-boundary and disposable catalogue/reader fixtures reject the corresponding bypasses; status and prior debt are unchanged. The existing check additionally calls the declaration-owned static import inspector. Runtime versus development ownership, missing direct edges, relative workspace bypasses and runtime-to-test helpers produce bounded path/line findings. Native inspection failures become finite concerns. The eleven renamed-source cases and actual repository module check pass; computed imports are counted, not claimed proven. Scheduling-split review: the real command remains the sole current-repository observation. The fixture command now exercises only controlled in-memory and temporary-workspace counterexamples, so normal source changes cannot be accepted without the real rule and no provider/runtime/diagnostic behavior changes.",
       "tests": [
         "scripts/repo/module-structure/smoke-test.mjs",
         "scripts/repo/check-selection/repository_contracts_test.py",
@@ -7588,6 +7611,66 @@
         {
           "path": "scripts/04.deploy/shared/postgresql-version.py",
           "sha256": "6837e934b412cd5685f7f113ce9944915973b7d89800a9318a7cbe226f3769b0"
+        }
+      ]
+    },
+    {
+      "owner": "entity-smoke-local-qualification-handoff",
+      "status": "partial",
+      "reason": "Package qualification captures only exact successful local-runner proofs from the current source revision and binds their input and evidence identities to the v2 custody receipt. The receipt and target binding require the same target, source revision and exact three proof identities before provider admission. Live routes consume this package-bound proof and no longer run the local selector. The publication workflow and workflow guard retain the proof with the ordinary custody evidence; v1 receipt readers remain available for unrelated historical candidates.",
+      "remaining_debt": [
+        "Hosted package execution and live deployment acceptance remain owned by their separate controllers."
+      ],
+      "definitions": [
+        "scripts/04.deploy/lifecycle/20-build/capabilities/local-qualification/entity-smoke-proof/implementation.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/bindings/local-qualification/entity-smoke-proof/binding.py"
+      ],
+      "tests": [
+        "scripts/04.deploy/lifecycle/20-build/capabilities/local-qualification/entity-smoke-proof/tests/implementation-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/bindings/local-qualification/entity-smoke-proof/tests/binding-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/verify-workflow.py"
+      ],
+      "checks": [
+        "entity-smoke-composition-suite",
+        "entity-smoke-infrastructure-route",
+        "secret-dependency-declaration-regression",
+        "entity-smoke-publication-contract"
+      ],
+      "sources": [
+        {
+          "path": "scripts/04.deploy/lifecycle/20-build/capabilities/local-qualification/entity-smoke-proof/implementation.py",
+          "sha256": "360836f9da78da558a0c664c0df539c27bb06eac4de1e072238fe456c71443b6"
+        },
+        {
+          "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/bindings/local-qualification/entity-smoke-proof/binding.py",
+          "sha256": "b44317a9b368ff0837a0bb5b5225de024049669a557062154f5173d11bdf2c61"
+        }
+      ]
+    },
+    {
+      "owner": "deployment-script-topology-inventory",
+      "status": "support",
+      "reason": "The read-only topology CLI derives a bounded, metadata-backed migration view from the working tree without executing discovered scripts, contacting providers, or asserting that lexical classification proves semantic ownership. Its public wrapper preserves the existing delivery census default and rejects mixing this observation with the delivery enforcement gate. Disposable CLI fixtures cover role/disposition/caller projection and retain the existing builder's fail-stop inventory dependency; the complete inventory smoke preserves the established delivery census behavior.",
+      "tests": [
+        "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+        "scripts/04.deploy/inventory-deploy-control/smoke-test.sh"
+      ],
+      "checks": [
+        "delivery-inventory-regression"
+      ],
+      "sources": [
+        {
+          "path": "scripts/04.deploy/inventory-deploy-control/script.py",
+          "sha256": "8a9d29e7e2447e1f004a60a539636b4b8dbad3ed6aafb7b91448fcadd888a464"
+        },
+        {
+          "path": "scripts/04.deploy/inventory-deploy-control/script.sh",
+          "sha256": "d5c164437d51dd76f82223fc94ef9eacfb231eca50680d2e0a089cf8d97f3e6b"
+        },
+        {
+          "path": "scripts/04.deploy/inventory-deploy-control/script_topology.py",
+          "sha256": "e4afb6ca162a1ccb4e1ec9844a513ff69d6efb2a4ef6b50f860bacb70ef924b0"
         }
       ]
     }

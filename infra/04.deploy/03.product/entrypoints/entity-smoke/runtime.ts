@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-22"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -15,10 +15,10 @@
 //   - id: deploy.plan.entity-smoke-core-platform
 //     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
 
-import { createEntitySmokePersistenceApp } from "@kanbien/app-entity-smoke";
+import { createEntitySmokePersistenceApp, entitySmokeExpiredPurgeJobName } from "@kanbien/app-entity-smoke";
 import { systemClock, systemUuidGenerator } from "@kanbien/core/shared";
 import { recordLifecyclePolicy, recordRetentionPolicyReference } from "@kanbien/core/persistence";
-import { createNodePostgreSqlTokenConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { createNodePostgreSqlTokenConnectionPool, createPostgreSqlPlatformScheduleStore } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { definePlatformApp, platformAppId, platformRouteName, platformObservabilityProfileName, platformCapabilityName } from "@kanbien/platform-contracts";
 import { platformReleaseVerificationResponse, resolvePlatformReleaseIdentity } from "@kanbien/platform-server";
 import { startPlatformServerProcess } from "@kanbien/platform-server/main";
@@ -35,8 +35,10 @@ export async function runEntitySmokeMain(env: NodeJS.ProcessEnv = process.env): 
   if (!policy.ok) throw policy.error;
   const pool = createNodePostgreSqlTokenConnectionPool(settings.value.configuration, settings.value.credentials);
   const runtime = createEntitySmokePostgreSqlRuntime(pool);
+  const expiredPurgeReminder = { jobName: entitySmokeExpiredPurgeJobName,
+    store: createPostgreSqlPlatformScheduleStore({ configuration: settings.value.configuration, pool }) };
   const app = createEntitySmokePersistenceApp({ ...runtime,
-    services: { repository: runtime.repository, clock: systemClock, uuidGenerator: systemUuidGenerator, lifecyclePolicy: policy.value } });
+    services: { repository: runtime.repository, clock: systemClock, uuidGenerator: systemUuidGenerator, lifecyclePolicy: policy.value, expiredPurgeReminder } });
   try {
     const started = await startPlatformServerProcess({ apps: [app, releaseApp(env)], env, diagnosticCatalogs: entitySmokeServerDiagnosticCatalogs });
     if (started.ok) return;

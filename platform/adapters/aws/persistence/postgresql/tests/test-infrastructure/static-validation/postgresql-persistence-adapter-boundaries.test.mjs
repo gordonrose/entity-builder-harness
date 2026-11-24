@@ -9,7 +9,7 @@ const srcRoot = path.join(packageRoot, "src");
 const packageJsonPath = path.join(packageRoot, "package.json");
 const disposableIntegrationRunnerPath = path.join(packageRoot, "tests", "run-disposable-integration.mjs");
 const repositoryRoot = path.resolve(packageRoot, "../../../../..");
-const allowedSourceImportPattern = /^(?:node:crypto|node:async_hooks|pg|@aws-sdk\/rds-signer|@kanbien\/core(?:\/[^"']+)?|@kanbien\/platform-persistence|@kanbien\/platform-security|\.\.?\/[^"']+)$/;
+const allowedSourceImportPattern = /^(?:node:crypto|node:async_hooks|pg|@aws-sdk\/rds-signer|@kanbien\/core(?:\/[^"']+)?|@kanbien\/platform-contracts|@kanbien\/platform-persistence|@kanbien\/platform-security|\.\.?\/[^"']+)$/;
 
 async function walk(dir) {
   const entries = await readdir(dir);
@@ -27,6 +27,7 @@ const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
 assert.equal(packageJson.name, "@kanbien/platform-adapter-aws-persistence-postgresql");
 assert.equal(packageJson.dependencies?.pg, "^8.23.0");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-persistence"], "0.0.0");
+assert.equal(packageJson.dependencies?.["@kanbien/platform-contracts"], "0.0.0", "schedule jobs use the shared branded job name");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-security"], "0.0.0", "adapter translates evidence into shared security definitions");
 
 assert.deepEqual(Object.keys(packageJson.exports), ["."], "the supported package entry remains the root");

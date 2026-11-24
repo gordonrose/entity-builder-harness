@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.delivery-inventory
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -20,6 +20,7 @@ from pathlib import Path
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import unittest
@@ -46,6 +47,46 @@ class DeliveryInventoryCLI(unittest.TestCase):
         result = subprocess.run(['python3', str(ROOT / 'scripts/04.deploy/inventory-deploy-control/script.py'), '--root', str(self.root), '--delivery', '--check', '--json'], cwd=self.root, env=self.env, text=True, capture_output=True)
         self.assertTrue(result.stdout, result.stderr)
         return result.returncode, json.loads(result.stdout)
+
+    def invoke_topology(self):
+        header_discovery = 'scripts/01.harness/artifact-metadata/header_discovery.py'
+        destination = self.root / header_discovery
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / header_discovery, destination)
+        result = subprocess.run(['python3', str(ROOT / 'scripts/04.deploy/inventory-deploy-control/script.py'), '--root', str(self.root), '--topology', '--json'], cwd=self.root, env=self.env, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(result.stdout, result.stderr)
+        return json.loads(result.stdout)
+
+    def topology_source(self, relative, body=''):
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        identity = 'fixture.' + re.sub(r'[^a-z0-9]+', '-', relative.lower()).strip('-')
+        path.write_text('# agentic-artifact:\n#   schema: agentic-artifact/v3\n#   id: ' + identity + '\n#   version: 1\n#   status: active\n#   created_on: "2026-11-21"\n#   updated_on: "2026-11-21"\n#   layer: 04.deploy\n#   domain: deployment.fixture\n#   disciplines: [architecture]\n#   kind: script\n#   purpose: Disposable topology classification fixture.\n#   portability: { class: reusable, targets: [entity-builder] }\n#   effects: [read-only]\n' + body)
+
+    def test_script_topology_classifies_roles_and_preserves_caller_evidence(self):
+        command = 'scripts/04.deploy/run-synthetic/script.sh'
+        adapter = 'scripts/04.deploy/shared/provider-adapters/aws/synthetic/request.py'
+        binding = 'scripts/04.deploy/lifecycle/60-run/targets/synthetic/worker/script.py'
+        test = 'scripts/04.deploy/lifecycle/60-run/targets/synthetic/worker/route-test.py'
+        fixture_path = 'scripts/04.deploy/lifecycle/60-run/targets/synthetic/worker/fixtures/route-fixture.py'
+        transition = 'scripts/04.deploy/lifecycle/60-run/targets/synthetic/worker/source-transition.py'
+        self.topology_source(command, '#!/usr/bin/env bash\npython3 ' + adapter + '\n')
+        self.topology_source(adapter, 'print("adapter")\n')
+        self.topology_source(binding, 'print("binding")\n')
+        self.topology_source(test, 'print("test")\n')
+        self.topology_source(fixture_path, 'print("fixture")\n')
+        self.topology_source(transition, 'print("transition")\n')
+        units = {item['current_path']: item for item in self.invoke_topology()['units']}
+        self.assertTrue({'current_path', 'owner', 'role', 'current_callers', 'effects', 'scope', 'overlap_candidates', 'proposed_destination', 'disposition', 'migration_dependencies'} <= set(units[command]))
+        self.assertEqual(units[command]['role'], 'public command')
+        self.assertEqual(units[adapter]['role'], 'provider adapter')
+        self.assertEqual(units[binding]['role'], 'target/workload binding')
+        self.assertEqual(units[binding]['disposition'], 'merge')
+        self.assertEqual(units[test]['role'], 'test')
+        self.assertEqual(units[fixture_path]['role'], 'fixture')
+        self.assertEqual(units[transition]['disposition'], 'remove')
+        self.assertIn(command, units[adapter]['current_callers'])
 
     def test_valid_second_target_has_bound_report(self):
         code, report = self.invoke()
@@ -501,7 +542,7 @@ class DeliveryInventoryCLI(unittest.TestCase):
                     self.assertIn(('delivery-ci-enforcement-invalid', 'ci-pull-request-restrictions-unsupported'), {(f['code'], f.get('reference')) for f in report['findings']})
 
     def test_actual_builder_blocks_before_compilation_or_docker(self):
-        for path in ('scripts/04.deploy/inventory-deploy-control/script.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/04.deploy/shared/safe-command-diagnostics.sh'):
+        for path in ('scripts/04.deploy/inventory-deploy-control/script.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/inventory-deploy-control/script_topology.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/04.deploy/shared/safe-command-diagnostics.sh'):
             target = self.root / path; target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(ROOT / path, target)
         (self.root / 'package.json').write_text(json.dumps({'scripts': {'inventory': 'python3 scripts/04.deploy/inventory-deploy-control/script.py', 'coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         (self.fixture.target / 'scope-index.yml').unlink()

@@ -9,10 +9,10 @@ new task.
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-23"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -72,7 +72,7 @@ def last_report(stdout: str, command: str | None = None) -> dict[str, Any] | Non
             if command is None:
                 return value
             try:
-                contract = module(ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py", "lifecycle_checkpoint_diagnostics")
+                contract = module(ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py", "lifecycle_checkpoint_diagnostics")
                 selected = contract.validate_persistence_controller_checkpoint(value, command)
             except Exception:
                 continue
@@ -101,7 +101,7 @@ def child(path: str, *args: str) -> dict[str, Any] | None:
         observed = {**body, "facts": {**fallback["facts"], **body["facts"]}}
         if "task_failure" in fallback["facts"] and "task_failure" in body["facts"]:
             try:
-                contract = module(ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py", "lifecycle_checkpoint_merge")
+                contract = module(ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py", "lifecycle_checkpoint_merge")
                 frames = [fallback["facts"]["task_failure"], body["facts"]["task_failure"]]
                 failure, observation = contract.collect_persistence_task_failure({"events": [{"message": json.dumps(item)} for item in frames]}, frames[0]["task"])
                 if failure is not None:

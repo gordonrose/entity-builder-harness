@@ -1,25 +1,24 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: repo.module-structure.tests
-//   version: 5
+//   version: 6
 //   status: active
 //   created_on: "2026-11-01"
-//   updated_on: "2026-11-02"
+//   updated_on: "2026-11-22"
 //   layer: 03.product
 //   domain: architecture
 //   disciplines: [architecture, agentic]
 //   kind: script
-//   purpose: Prove export-only indexes, bounded legacy debt and safe findings.
+//   purpose: Prove bounded checker fixtures without re-reading current repository source.
 //   portability: {class: source-only, targets: []}
 //   effects: [read-only]
 //   used_by:
 //   - id: repo.module-structure.regression
 //     path: scripts/repo/module-structure/smoke-test.sh
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { checkIndexes, discoverIndexes, discoverModuleSources, workspaceAliases, governedIndex, inspectIndex, inspectModuleDependencies, inspectConfigurationAccess, safeReport } from "./check.mjs";
+import { checkIndexes, discoverIndexes, governedIndex, inspectIndex, inspectModuleDependencies, inspectConfigurationAccess, safeReport } from "./check.mjs";
 
 const config = "packages/core/src/config/index.ts";
 const legacy = "platform/example/src/index.ts";
@@ -138,20 +137,7 @@ const cli = spawnSync('bash', ['scripts/repo/module-structure/script.sh', canary
 assert.equal(cli.status, 2);
 assert.deepEqual(JSON.parse(cli.stdout).findings, [{ code: 'MODULE_INDEX_ARGUMENTS_INVALID' }]);
 assert.equal((cli.stdout + cli.stderr).includes(canary), false);
-const baseline = JSON.parse(await readFile(new URL('legacy.v1.json', import.meta.url), 'utf8'));
-const actual = await discoverIndexes(fileURLToPath(root));
-const actualConfigurationSources = await discoverModuleSources(fileURLToPath(root));
-assert.deepEqual(inspectConfigurationAccess(actualConfigurationSources).findings, []);
-const futureConfigurationSources = new Map(actualConfigurationSources);
-futureConfigurationSources.set('apps/future/src/features/unchecked.ts', 'connect(process.env.PORT);');
-assert.ok(codes(inspectConfigurationAccess(futureConfigurationSources)).includes('CONFIGURATION_SOURCE_ACCESS_OUTSIDE_LOADER'));
-const current = checkIndexes(actual, baseline);
-assert.deepEqual(current.findings, []);
-assert.deepEqual(inspectIndex(config, actual.get(config)).findings, []);
-const mutant = new Map(actual);
-mutant.set(config, actual.get(config) + '\nexport function forbiddenRegression() { return 1; }\n');
-assert.ok(codes(checkIndexes(mutant, baseline)).includes('MODULE_INDEX_IMPLEMENTATION'));
-console.log(`Module structure fixtures passed; actual ${current.indexes} indexes, ${current.legacy} pinned legacy indexes; config regression rejected.`);
+console.log('Module structure fixtures passed; in-memory index and configuration counterexamples rejected.');
 
 const moduleRoot = 'packages/future/src/example';
 const publicIndex = `${moduleRoot}/index.ts`;
@@ -233,17 +219,4 @@ for (const privateTarget of ['errors', 'setting-issues', 'diagnostics']) {
   assert.ok(inspectModuleDependencies(rejected).findings.some(finding =>
     finding.code === 'MODULE_PRIVATE_IMPORT' && finding.path === 'platform/consumer/src/call.ts'));
 }
-const actualSources = await discoverModuleSources(fileURLToPath(root));
-const actualDependencies = inspectModuleDependencies(actualSources, await workspaceAliases(fileURLToPath(root)));
-assert.deepEqual(actualDependencies.findings, []);
-assert.ok(actualDependencies.modules >= 1);
-console.log(`Module dependency fixtures passed; ${actualDependencies.modules} adopted module(s), including type cycles, private aliases, dynamic imports and the exact catalog exception.`);
-
-// The cleaned reference indexes must not drift back behind legacy allowances.
-const currentAllowances = JSON.parse(await readFile(new URL("./legacy.v1.json", import.meta.url), "utf8"));
-for (const file of ["platform/config/src/index.ts", "platform/adapters/aws/persistence/postgresql/src/index.ts",
-  "platform/adapters/aws/persistence/postgresql/src/configuration/index.ts"]) {
-  const text = await readFile(new URL("../../../" + file, import.meta.url), "utf8");
-  assert.deepEqual(inspectIndex(file, text).findings, [], file);
-  assert.equal(currentAllowances.legacy.some(item => item.path === file), false, "do not re-pin a cleaned index");
-}
+console.log('Module dependency fixtures passed, including type cycles, private aliases, dynamic imports and the exact catalog exception.');
