@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-24T18:13:05Z
-latest_commit_sha: b5f432da11ad5e33e0f3d30f5b7fa511a3e7288f
-chat_duration: 252747s (02:22:12:27)
+latest_commit_at_utc: 2026-11-24T19:19:53Z
+latest_commit_sha: f2c0fcbf
+chat_duration: 256755s (02:23:19:15)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -841,6 +841,17 @@ Summary: Updates the broad diagnostics reader regression to call the Core Server
 
 ADR impact: No ADR: aligns an existing reader with the established diagnostics ownership boundary.
 
+
+### 2026-11-24T19:19:53Z - Commit recorded
+
+Commit: `f2c0fcbf`
+
+Message: fix(verification): stop promotion selection fan-out
+
+Summary: Narrowed normal promotion selection so selector-catalogue and shared diagnostic-reader test edits do not trigger unrelated runtime or architecture checks; retained explicit deferred routes.
+
+ADR impact: No ADR: this is a bounded scheduling correction within the existing script-library simplification plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -960,6 +971,13 @@ ADR impact: No ADR: aligns an existing reader with the established diagnostics o
   Summary: Updates the broad diagnostics reader regression to call the Core Server Persistence binding that owns verifier-result validation after the shared helper split.
   ADR impact: No ADR: aligns an existing reader with the established diagnostics ownership boundary.
 
+
+- Commit: `f2c0fcbf`
+  Time UTC: 2026-11-24T19:19:53Z
+  Message: fix(verification): stop promotion selection fan-out
+  Summary: Narrowed normal promotion selection so selector-catalogue and shared diagnostic-reader test edits do not trigger unrelated runtime or architecture checks; retained explicit deferred routes.
+  ADR impact: No ADR: this is a bounded scheduling correction within the existing script-library simplification plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -973,9 +991,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-24T18:13:05Z
-Latest commit SHA: b5f432da11ad5e33e0f3d30f5b7fa511a3e7288f
-Chat duration: 252747s (02:22:12:27)
+Latest commit at UTC: 2026-11-24T19:19:53Z
+Latest commit SHA: f2c0fcbf
+Chat duration: 256755s (02:23:19:15)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
