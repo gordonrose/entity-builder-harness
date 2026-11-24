@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 36
+#   version: 37
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-24"
@@ -553,7 +553,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   module-index-structure:
     boundary: commit
-    cadence: deferred
+    cadence: hygiene
     argv: [bash, scripts/repo/module-structure/script.sh]
     stage: local
     evidence_class: static
@@ -5408,7 +5408,6 @@ repository_inputs:
   - apps
   - products
   - infra
-  - scripts
   - .agentic/03.product/standards/public-module-structure.md
   - .agentic/03.product/standards/config-runtime-settings.md
   - package.json
@@ -5450,7 +5449,14 @@ repository_inputs:
   checks: [chat-commit-metrics-regression]
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
-  - scripts/repo/check-selection
+  - scripts/repo/check-selection/checks.yml
+  - scripts/repo/check-selection/script.py
+  - scripts/repo/check-selection/local_cache.py
+  - scripts/repo/check-selection/execution_policy.py
+  - scripts/repo/check-selection/smoke-test.py
+  - scripts/repo/check-selection/mechanics_test.py
+  - scripts/repo/check-selection/repository_contracts_test.py
+  - scripts/repo/check-selection/test_support.py
   - scripts/repo/commit-gates
   - scripts/repo/diagnostic-coverage/script.py
   - scripts/01.harness/artifact-metadata/header_discovery.py
@@ -5472,7 +5478,6 @@ repository_inputs:
   - scripts/repo/diagnostic-coverage/runtime_contract.py
   checks:
   - check-selection-promotion
-  - check-selection-mechanics
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
   - .agentic
@@ -5481,7 +5486,6 @@ repository_inputs:
   - scripts/00.chat
   - scripts/01.harness
   - scripts/00.chat/main-refresh/apply-rehearsed-refresh
-  - scripts/repo/check-selection
   - package.json
   - package-lock.json
   - infra/04.deploy/03.product/entrypoints
@@ -5539,9 +5543,19 @@ repository_inputs:
   - scripts/00.chat/reporting/generate-commit-log-summary
   checks:
   - chat-main-refresh-regression
-- inputs: [.agentic/shared/workflows/verify-diagnostic-coverage.md, .agentic/shared/standards/require-safe-diagnostic-record.md, scripts/repo/diagnostic-coverage]
-  exclude_inputs: [scripts/repo/diagnostic-coverage/reviews.v1.json]
-  checks: [diagnostic-adoption, diagnostic-runtime-contracts]
+- inputs:
+  - .agentic/shared/workflows/verify-diagnostic-coverage.md
+  - .agentic/shared/standards/require-safe-diagnostic-record.md
+  - scripts/repo/diagnostic-coverage/script.py
+  - scripts/repo/diagnostic-coverage/script.sh
+  checks: [diagnostic-adoption]
+- inputs:
+  - scripts/repo/diagnostic-coverage/verify.sh
+  - scripts/repo/diagnostic-coverage/runtime_contract.py
+  - scripts/repo/diagnostic-coverage/export-catalogs.mjs
+  - scripts/repo/diagnostic-coverage/compatibility.mjs
+  - scripts/repo/diagnostic-coverage/tsconfig.json
+  checks: [diagnostic-runtime-contracts]
 - inputs: [platform/config/contracts, platform/server/contracts, platform/workers/contracts, platform/persistence/contracts, apps/platform-smoke/contracts, infra/04.deploy/03.product/entrypoints/contracts]
   checks: [diagnostic-runtime-contracts]
 - inputs: [docs/03.product/rules/core/layers/packages-core.yml, docs/03.product/rules/core/concerns/validation-api-errors.yml, docs/03.product/rules/platform/layers/platform.yml, .agentic/03.product/standards/config-runtime-settings.md]
@@ -5592,16 +5606,6 @@ repository_inputs:
   checks:
   - rag-source-coverage-scope-regression
   - rag-source-coverage-validation
-- inputs:
-  - scripts/repo/check-selection
-  - scripts/repo/commit-gates
-  - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
-  - scripts/00.chat/session-log/prepare-chat-session-before-commit
-  - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main
-  - scripts/00.chat/main-refresh/apply-rehearsed-refresh
-  - scripts/01.harness/artifact-metadata
-  checks:
-  - check-selection-regression
 - inputs:
   - .agentic/routing-policy.yaml
   - scripts/00.chat/classification/classify-task

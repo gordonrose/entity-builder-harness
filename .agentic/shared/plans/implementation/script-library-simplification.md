@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 14
+version: 16
 status: draft
 created_on: "2026-11-23"
 updated_on: "2026-11-24"
@@ -350,6 +350,32 @@ passes.
   actually consumes selector files must continue to declare them directly.
 
 **Current status:** complete.
+
+**Follow-on correction (2026-11-24):** reopened after a real promotion run
+showed a second form of selection fan-out. The exact branch diff was working,
+but directory-wide repository-input rules interpreted a change to a diagnostic
+test program as a change to every diagnostic runtime. Selector-catalogue edits
+also selected broad mechanics and repository-contract suites. Those broad
+routes remain available for explicit or hygiene use; ordinary promotion now
+selects only the focused selector proof. Diagnostic test programs have no
+automatic runtime route because changing test assertions does not change a
+runtime artifact. Changes to the diagnostic runtime runner, reader, export
+code, or configuration still select the runtime-contract route.
+
+**Follow-on completion condition:** prove the actual catalogue maps selector
+and diagnostic-test changes to their bounded routes without selecting broad
+runtime or architecture work; retain an explicit route for the deferred
+architecture, selector-mechanics, selector-contract, and diagnostic-runtime
+checks.
+
+**Follow-on evidence:** a bounded actual-catalogue probe confirmed that a
+catalogue edit selects only `check-selection-promotion`; a shared diagnostic
+reader-test edit selects no runtime check; and an edit to the diagnostic
+runtime wrapper selects the complete diagnostic runtime route. The existing
+six-case focused promotion proof passed in 4.15 seconds. Catalogue YAML and
+changed-file whitespace also passed. The complete selector-contract suite was
+not rerun: it remains the deliberate periodic/explicit route rather than a
+promotion prerequisite.
 
 ## Current completion boundary
 

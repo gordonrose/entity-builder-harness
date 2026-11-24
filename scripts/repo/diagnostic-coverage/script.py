@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.coverage-compiler
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-24"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre, agentic]
@@ -118,9 +118,14 @@ def review_rules(root: Path, *, comparison_base: str = 'HEAD', ledger_changed: b
     """Selector consumes review-owned check identities, never arbitrary commands."""
     current = review_document(json.loads((root / REVIEWS).read_text()))
     # A verification owner can truthfully be both executable source and proof.
-    # Preserve every dependency and its first occurrence without emitting an
-    # invalid duplicate input to the selector.
-    rules = [{"inputs": list(dict.fromkeys([source["path"] for source in review["sources"]] + review["tests"] + review.get('definitions', []))), "checks": review["checks"]} for review in current]
+    # The shared diagnostic reader test is listed under many reviews, but an
+    # edit to its assertions does not change any reviewed runtime artifact.
+    # Keep other test inputs direct while this one remains on the explicit
+    # diagnostic-reader route.
+    rules = [{"inputs": list(dict.fromkeys(
+        [source["path"] for source in review["sources"]]
+        + [path for path in review["tests"] if path != "scripts/repo/diagnostic-coverage/smoke-test.py"]
+        + review.get('definitions', []))), "checks": review["checks"]} for review in current]
     if ledger_changed:
         # A valid tree with no ledger is first adoption, not an unreadable base.
         git(root, 'rev-parse', '--verify', comparison_base + '^{commit}')

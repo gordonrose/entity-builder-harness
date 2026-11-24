@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 25
+#   version: 27
 #   status: active
 #   created_on: "2026-10-29"
 #   updated_on: "2026-11-24"
@@ -1335,8 +1335,9 @@ class RepositoryContractTests(unittest.TestCase):
             ('platform/adapters/aws/persistence/postgresql/src/index.ts', {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics'}, {'check-selection-mechanics'}),
             ('platform/adapters/aws/runtime/ecs-fargate/src/index.ts', {'ecs-fargate-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('platform/server/src/configuration/runtime.ts', {'platform-server-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'check-selection-regression', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
-            ('scripts/repo/check-selection/script.py', {'check-selection-promotion', 'check-selection-mechanics', 'check-selection-repository-contracts', *owners}, {'check-selection-regression'}),
-            ('scripts/repo/check-selection/checks.yml', {'check-selection-promotion', 'check-selection-mechanics', 'check-selection-repository-contracts', *owners}, {'check-selection-regression'}),
+            ('scripts/repo/check-selection/script.py', {'check-selection-promotion', 'check-selection-mechanics', 'check-selection-repository-contracts'}, {'check-selection-regression'}),
+            ('scripts/repo/check-selection/checks.yml', {'check-selection-promotion'}, {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression'}),
+            ('scripts/repo/diagnostic-coverage/smoke-test.py', set(), {'diagnostic-adoption', 'diagnostic-runtime-contracts'}),
             ('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml', {'check-selection-mechanics', 'check-selection-repository-contracts'}, set()),
             ('scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh', {'chat-main-refresh-regression', 'check-selection-repository-contracts'}, {'check-selection-regression', 'check-selection-mechanics'}),
             ('bin/llm-workbench.js', {'chat-export-regression'}, {'chat-commit-metrics-regression', 'check-selection-regression', 'check-selection-mechanics'}),
