@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 20
+#   version: 21
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-25"
@@ -890,7 +890,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             return [identity for identity in identities if isinstance(checks.get(identity), dict)
                     and checks[identity].get('select_on_workspace_manifest', False) is True]
         return []
-    task_context = (paths if args.all else changed) if explicit_checks is None else getattr(args, 'task_paths', None)
+    task_context = (paths if args.all else (changed or None)) if explicit_checks is None else getattr(args, 'task_paths', None)
     preparation_context = None
     parent_binding = None
     if explicit_checks is not None:

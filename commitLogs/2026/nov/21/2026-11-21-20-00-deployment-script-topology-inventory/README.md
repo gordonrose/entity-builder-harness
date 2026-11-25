@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-25T01:26:18Z
-latest_commit_sha: ccdfd5cb
-chat_duration: 278740s (03:05:25:40)
+latest_commit_at_utc: 2026-11-25T02:05:40Z
+latest_commit_sha: 4bc30ec8
+chat_duration: 281102s (03:06:05:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -84,6 +84,37 @@ Phase 1 deployment script topology classification and migration proposal
   Durable evidence: Plan revision 18: .agentic/shared/plans/implementation/script-library-simplification.md; full audit revision 10: scripts/helpers/audit.md; selection audit revision 7: scripts/helpers/selection-audit.md. Baseline HEAD 33f479b12453db7f09e2c2cfbc77cecd55952145; 690 files / 155,763 physical lines; inventory/content digest 58ad1d06bc15128e2cf6b99a550d2063991d0eca70007639c0cac17575b2a2c9. Complete reading advances P4 preparation, not layout approval or migration. Documentation only; no reviewed module imported/executed, source changes, tests, installation, container/cloud operations, commit, merge or push. Static evidence is not runtime acceptance or a guarantee of no further defects.
 
 ## Activity Log
+
+### 2026-11-25 - P3 published; completion follow-up
+
+- Task commit ccdfd5cb, qualified source aa294fd0ac95814740935e6f78108366c88625d9
+  and its earlier branch commits were merged/pushed normally. Local and actual
+  remote main were verified at 21365c767f4b94ba4e6e4d2ac22d048ab6ed8bf1; its
+  tree exactly matched the qualified source. No force push, history rewrite,
+  unrelated cleanup, task-worktree switch or cloud operation occurred.
+- First actual root readiness attempt passed: 42 required local instances,
+  35 executed/seven reused, zero findings; six retained and nine later-stage
+  operations stayed deferred. Wall time 1293 seconds MISSES the ten-minute
+  target. Heavy connected route fixtures remain measured P5 work, not resolved
+  by a passing check. Complete evidence:
+  .cache/test-runs/20261125T014918Z-83ac0867f7ea4dda88c013ff0ab43137/report.json.
+- Completion refresh created preflight
+  agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-aa294fd0ac95/20261125015247
+  at /tmp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-aa294fd0ac95-20261125015247.
+  Recorded base is published main 21365c76; result e78e50d1 has that exact tree.
+  The preliminary selector failed with verification-task-context-invalid for
+  its empty diff. The parent erroneously invoked apply before consuming that
+  failure. Apply advanced the chat to e78e50d1, then post-verification failed;
+  both trees remained clean and source-identical, with preflight retained.
+- Bounded correction changes implicit empty context only, preserves explicit
+  empty/forged aggregate rejection and adds the actual-CI case to the existing
+  promotion dispatch. Three focused cases passed in 6.718 seconds; registered
+  promotion owner passed in 12.293 seconds. Evidence:
+  .cache/test-runs/20261125T020047Z-e9ae7ad69121401ebac8d0006a1801f5/report.json.
+- Complete this small follow-up through normal commit/proof/publication and
+  validated clean preflight cleanup; no repeated source regression merely for
+  bookkeeping. Programme v22 and selection audit v11 record the published
+  milestone and measured remaining costs. P4 still requires user approval.
 
 ### 2026-11-25 - P3 implementation prepared; publication pending
 
@@ -1011,6 +1042,17 @@ Summary: Complete P1/P2 selection/context fixes and audited P3 workspace/base/ob
 
 ADR impact: No new ADR; existing verification and chat lifecycle owners extended.
 
+
+### 2026-11-25T02:05:40Z - Commit recorded
+
+Commit: `4bc30ec8`
+
+Message: fix(verification): accept source-identical refreshes and record P3
+
+Summary: Record the successfully published 21365c76 checkpoint and repair implicit empty-diff context, preserving explicit context rejection. Existing focused and registered promotion proof passed; normal follow-up publication pending.
+
+ADR impact: No new ADR; bounded correction at existing selector and refresh handoff.
+
 ## Sub-Agent Activity
 
 
@@ -1157,6 +1199,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Complete P1/P2 selection/context fixes and audited P3 workspace/base/observer/bootstrap repairs; focused registered owners and staged commit gates passed. Exact candidate integration and publication remain pending.
   ADR impact: No new ADR; existing verification and chat lifecycle owners extended.
 
+
+- Commit: `4bc30ec8`
+  Time UTC: 2026-11-25T02:05:40Z
+  Message: fix(verification): accept source-identical refreshes and record P3
+  Summary: Record the successfully published 21365c76 checkpoint and repair implicit empty-diff context, preserving explicit context rejection. Existing focused and registered promotion proof passed; normal follow-up publication pending.
+  ADR impact: No new ADR; bounded correction at existing selector and refresh handoff.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1170,9 +1219,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-25T01:26:18Z
-Latest commit SHA: ccdfd5cb
-Chat duration: 278740s (03:05:25:40)
+Latest commit at UTC: 2026-11-25T02:05:40Z
+Latest commit SHA: 4bc30ec8
+Chat duration: 281102s (03:06:05:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
