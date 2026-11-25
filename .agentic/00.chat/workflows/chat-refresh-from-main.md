@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.workflows.chat-refresh-from-main
-  version: 2
+  version: 3
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-10-26"
+  updated_on: "2026-11-25"
   layer: 00.chat
   domain: main-refresh
   disciplines:
@@ -211,6 +211,13 @@ refresh should be rehearsed before mutating the active chat worktree.
    worktree through the existing private cache; changed inputs or runtimes rerun
    affected checks. Complete any remaining owning-layer obligations before a
    task commit or promotion to `main`.
+   Rehearsal records the resolved base commit in the preflight branch's existing
+   Git configuration and merges that exact commit. Application requires that
+   identity and proves it belongs to the rehearsed result before changing the
+   active branch; proof uses this recorded base, not a newly resolved local
+   main. Old preflights without this identity must be inspected/rehearsed through
+   the current owner, not guessed or silently accepted. Cleanup removes only
+   the already-governed temporary branch/worktree after required proof succeeds.
 
 ## Preserved Replay Before The First Task Commit
 

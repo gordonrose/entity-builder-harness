@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection
-#   version: 9
+#   version: 10
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-25"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -28,9 +28,9 @@ import repository_contracts_test
 selection = mechanics_test.selection  # Retained known foreign-fixture import surface.
 
 PROMOTION_MECHANICS_TESTS = (
-    'test_recorded_ci_branch_diff_uses_direct_inputs_without_repository_wide_scans',
-    'test_recorded_ci_branch_diff_uses_declared_catalog_self_check_without_consumer_expansion',
-    'test_recorded_ci_branch_diff_does_not_expand_diagnostic_review_ledger',
+    'test_ci_modes_share_complete_consumer_analysis',
+    'test_ci_modes_select_changed_check_contracts',
+    'test_ci_modes_apply_consumed_review_ledger_transitions',
     'test_recorded_ci_branch_diff_defers_hygiene_even_when_its_input_changed',
     'test_deferred_check_runs_only_when_explicitly_named',
     'test_cli_selector_change_reuses_unchanged_subject_proof',

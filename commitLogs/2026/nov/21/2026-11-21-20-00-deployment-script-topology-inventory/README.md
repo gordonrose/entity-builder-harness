@@ -76,7 +76,135 @@ Phase 1 deployment script topology classification and migration proposal
 - Summary: M1–M6 changes are prepared as three coherent commits: lean selector policy, Core Server Persistence diagnostics binding, then audit and admission governance. Broad selected integration checks were planned but intentionally not executed; focused selector and diagnostics evidence is recorded in the implementation plan and audit.
   Durable evidence: Durable evidence: .agentic/shared/plans/implementation/script-library-simplification.md; scripts/helpers/{selection-audit,audit}.md; deployment diagnostics wrapper and binding tests; selector focused test methods. The governed preparation receipt is stored in the active worktree Git metadata.
 
+
+- Summary: Completed requested source-backed script-library audit and revised the existing programme for milestone-based execution by Sol. Earlier implemented work remains credited, but blanket completion is withdrawn: latest six commits still lack accepted publication. This turn changes documentation only; no source implementation, test suite, merge, push or cloud execution.
+  Durable evidence: Plan revision 17: .agentic/shared/plans/implementation/script-library-simplification.md; audit revision 6: scripts/helpers/selection-audit.md, current 2026-11-24 section with 22 findings. Baseline HEAD 33f479b12453db7f09e2c2cfbc77cecd55952145; local/cached remote main 13f16e1f10afc313ee3c55ddd854ffb1b9249876. Inventory: 690 source files; 184 registered checks. P1-P7 include exact owners, acceptance, recovery, authority and Sol goal handoff. Metadata/links/whitespace validated locally; no current behavioral pass claimed.
+
+- Summary: Completed full-body static review of all 690 tracked script-source files in the recorded November 21 worktree. The existing helper audit now contains one evidence record per source file and 93 grouped finding records; these overlap and are not 93 independent bugs or required new tests. The existing programme keeps selection/evidence correctness and authorised publication first, with other repairs conditional on the affected behavior.
+  Durable evidence: Plan revision 18: .agentic/shared/plans/implementation/script-library-simplification.md; full audit revision 10: scripts/helpers/audit.md; selection audit revision 7: scripts/helpers/selection-audit.md. Baseline HEAD 33f479b12453db7f09e2c2cfbc77cecd55952145; 690 files / 155,763 physical lines; inventory/content digest 58ad1d06bc15128e2cf6b99a550d2063991d0eca70007639c0cac17575b2a2c9. Complete reading advances P4 preparation, not layout approval or migration. Documentation only; no reviewed module imported/executed, source changes, tests, installation, container/cloud operations, commit, merge or push. Static evidence is not runtime acceptance or a guarantee of no further defects.
+
 ## Activity Log
+
+### 2026-11-25 - P3 implementation prepared; publication pending
+
+- User approved P3 with "proceed", covering its governed task commit, local
+  merge and normal push outcome. Task editing remains in this November 21
+  worktree; root main is the clean integration console only. Fresh origin fetch
+  succeeded and both base refs remain 13f16e1f10afc313ee3c55ddd854ffb1b9249876.
+- Existing workspace reporting retains absent registered directories while
+  target actions remain strict; actual report completes all 36 chat rows.
+  Rehearsal/application share a pinned base in existing preflight Git metadata.
+  Lifecycle/deletion observation failures cannot become absence. The root gate
+  can execute clean committed candidate code with matching candidate helpers,
+  checking same repository/registration/branch and retaining root/target gates.
+- Exploratory existing owner smoke tests passed; real selector/cache handoff
+  with newer non-main base passed in 2.408 seconds. Final registered focus:
+  seven executed, zero reused, zero findings, 122.197 seconds total. Evidence:
+  .cache/test-runs/20261125T012241Z-396d55a3948349b1b9711e5aa31e8b86/report.json.
+- Reviewed all bounded diffs/consumers and counterexamples; 13 changed source
+  records match prepared bytes. The 30 earlier full-adoption findings are all
+  already present unchanged on accepted main. Actual commit callers do not run
+  that explicitly retained census; unrelated baseline debt is not refreshed or
+  made a new universal gate. Actual required checks remain mandatory.
+- Full pending preview has zero findings, 55 instances: 41 required local,
+  five retained, nine later-stage. Shared path-helper callers and previous
+  unmerged Entity changes explain the current breadth; exact committed diff
+  and full integration still need qualification. No full pass, merge or push
+  claimed yet. Programme v21 and selection audit v10 hold the detailed packet.
+- ADR disposition remains no new ADR: repairs extend existing verification,
+  worktree and refresh owners without a new architecture or execution engine.
+  Preserve all earlier P1/P2/audit work; do not begin P4 after publication without
+  the user's milestone approval. No cloud operations or unrelated cleanup.
+
+### 2026-11-25 - P2 selection and result-reuse corrections completed locally
+
+- Continued only the user-approved P2 milestone in this recorded November 21
+  worktree after the editor crash. HEAD remains
+  33f479b12453db7f09e2c2cfbc77cecd55952145; pinned comparison base remains
+  13f16e1f10afc313ee3c55ddd854ffb1b9249876. No worktree switch, persistent
+  goal, repository commit, merge, push or cloud operation occurred.
+- Existing selector/cache/review/reporting owners now agree on candidate versus
+  explicitly retained work, real consumed inputs, exact subset/full coverage,
+  nested child context and clean checkout execution. No new source file,
+  scheduler, registry, wrapper framework or broad test suite was introduced.
+- Existing 20 focused cases passed (47.412 seconds); six commit/lockfile/prose
+  cases passed (10.277 seconds); the 14-path actual routing method passed
+  (164.988 seconds). Registered promotion and reader owners passed in 119.290
+  seconds, two executed/zero reused. Unchanged replay reused both in 10.589
+  seconds with no commands rerun. A final help-only correction re-executed
+  promotion and reused the reader, passing in 15.359 seconds.
+- Final registered evidence:
+  .cache/test-runs/20261125T010239Z-5fb87b5a035445e1bd78c93f40ec3990/report.json.
+  Earlier owner execution/replay references and exact changed owners are in
+  programme revision 20 and selection audit revision 9. Crash-interrupted and
+  initially failed fixture runs are not counted as passing evidence.
+- Both CI spellings produced identical provisional selections: 32 command
+  instances (31 identities), 17 required-now, six retained and nine later-stage;
+  zero findings. Separate accumulated/pending preview: 19 paths, 35 instances,
+  21 required, five retained, nine later-stage, zero findings. These have
+  different catalogue comparison bases and are not committed-candidate proof.
+- Independent physical delivery census passed: 521 entrypoints, six routes,
+  zero gaps. Full diagnostic adoption failed on 27 stale reviews and three
+  missing reviews; all 30 sources and records predate P2 and are unchanged from
+  HEAD. Only the six actually reviewed P2 sources were refreshed. Exact findings
+  remain visible in the selection audit for P3 pre-commit preparation.
+- P2 is locally complete at its bounded selection/implementation proof boundary,
+  not complete affected integration or publication. No broad mechanics suite,
+  full repository-contract suite, package or live proof was claimed. Helper
+  audit and P1 changes are preserved. Stop for P2 briefing/questions; P3 and
+  any Git publication require explicit user approval.
+
+### 2026-11-24 - P1 ownership repair completed locally
+
+- User approved the explained two-source-file P1 increment with "go". Added the
+  direct diagnostics-test-to-reader mapping in checks.yml and strengthened its
+  existing real-catalogue assertion. The first focused run exposed one stale
+  bootstrap expectation in that same method; corrected it to require the
+  existing focused promotion owner and reject broad mechanics. No new test
+  program or runner was created.
+- Parent source review reconciled the two diffs, selector routing and the actual
+  reader wrapper. This is registration/test-support work; no runtime diagnostic
+  meaning, producer behavior or public module boundary changed.
+- Focused actual-catalogue method passed in 30.409 seconds; all six existing
+  promotion-mechanics methods passed in 6.896 seconds. Registered diagnostics
+  reader passed, one executed / zero reused, 67.510 seconds execution and 88.070
+  seconds total. Run: .cache/test-runs/20261124T235427Z-8d22ce3bc853403186dbcee5db34a8d6/report.json.
+- Full candidate planning cleared the uncovered-input finding and retained the
+  explained 20 entries (14 pending local, five deferred local, one package).
+  The existing selection audit records every trigger. A separate pending-path
+  preview planned 55 entries / 54 identities with no findings; no broad preview
+  checks were executed. This confirms the P2 caller-policy discrepancy.
+- Source/base remain 33f479b12453db7f09e2c2cfbc77cecd55952145 /
+  13f16e1f10afc313ee3c55ddd854ffb1b9249876; source files are uncommitted deltas
+  to the earlier full-review snapshot. Programme revision 19 and selection
+  audit revision 8 record evidence and retained risks. P1 does not claim full
+  integration or merge readiness. Stop for the milestone briefing before P2.
+- Final confirmation: metadata headers passed for the four edited header-bearing
+  task files, whitespace passed and linked files resolve. The final full branch
+  plan exited 0 with zero findings, unchanged 20-entry/status set and 8.098 seconds
+  planning. Disposable evidence: /tmp/script-p1-final.FTP322.json. No checks were
+  executed or reused by that planning command; the reader pass above remains
+  the separate registered execution evidence.
+
+### 2026-11-24 - Full 690-file script review completed
+
+- Read every tracked source file under scripts/ with suffix .py, .sh, .mjs,
+  .cjs, .js, .ts, .tsx or .jsx, including embedded code, setup and assertions.
+  Traced visible callers and relevant external contracts; did not claim a full
+  review of all repository documents, configuration or product source.
+- Reconciled the six review groups against Git: 690 unique source records,
+  155,763 physical lines, no missing/extra paths, line-count mismatch or source
+  drift. Preserved the earlier helper audit and added the complete evidence
+  ledger to that existing document, not a new execution registry.
+- Revised the existing plan for bounded execution: repair the current missing
+  ownership edge, then selection and saved-proof correctness, then the merge
+  handoff. Newly found subset-proof identity, nested execution, fixture safety,
+  source-pinned recovery, package identity and conditional operational risks
+  are assigned to the affected step instead of a global cleanup gate.
+- Retained legacy staging/RAG behavior and all existing checks. No runtime
+  performance or passing behavioral test is claimed by this static review.
+- Only the existing plan, two existing audit documents and this session record
+  changed. The next implementation step remains P1, subject to user direction.
 
 ### 2026-11-21T20:00:38Z - Session started
 
@@ -852,9 +980,42 @@ Summary: Narrowed normal promotion selection so selector-catalogue and shared di
 
 ADR impact: No ADR: this is a bounded scheduling correction within the existing script-library simplification plan.
 
+
+### 2026-11-24T20:21:46Z - Sub-agent activity recorded
+
+Agent: selection_audit; promotion_audit; topology_audit
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Read-only script-library audit and independent review of revised plan
+
+
+### 2026-11-24T20:21:46Z - Context hygiene
+
+Summary: Completed requested source-backed script-library audit and revised the existing programme for milestone-based execution by Sol. Earlier implemented work remains credited, but blanket completion is withdrawn: latest six commits still lack accepted publication. This turn changes documentation only; no source implementation, test suite, merge, push or cloud execution.
+
+Durable evidence: Plan revision 17: .agentic/shared/plans/implementation/script-library-simplification.md; audit revision 6: scripts/helpers/selection-audit.md, current 2026-11-24 section with 22 findings. Baseline HEAD 33f479b12453db7f09e2c2cfbc77cecd55952145; local/cached remote main 13f16e1f10afc313ee3c55ddd854ffb1b9249876. Inventory: 690 source files; 184 registered checks. P1-P7 include exact owners, acceptance, recovery, authority and Sol goal handoff. Metadata/links/whitespace validated locally; no current behavioral pass claimed.
+
 ## Sub-Agent Activity
 
-- None recorded yet.
+
+
+### 2026-11-24T20:21:46Z - selection_audit; promotion_audit; topology_audit
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Read-only script-library audit and independent review of revised plan
+Files touched: none; parent updated existing plan and selection audit
+Checks run: Source, caller, inventory and retained-report inspection only; no behavioral tests executed
+Git actions: none
+Blockers: none
+Next step: User review of revised P1-P7 plan; P1 implementation is not started
+Summary: Selection reviewer traced routing, inherited checks and evidence invalidation; promotion reviewer traced readiness, refresh and publication ownership; topology reviewer traced helper consumers, legacy schedules and historical source resolution. Final review corrected candidate-head assumptions, pending-path coverage, integration gate code versions and migration prerequisites.
 
 ## Commits
 

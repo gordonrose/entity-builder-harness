@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 27
+#   version: 29
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-24"
+#   updated_on: "2026-11-25"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -1337,8 +1337,11 @@ class RepositoryContractTests(unittest.TestCase):
             ('platform/server/src/configuration/runtime.ts', {'platform-server-runtime', 'check-selection-repository-contracts'}, {'check-selection-mechanics', 'check-selection-regression', 'chat-export-regression', 'chat-commit-metrics-regression', *owners}),
             ('scripts/repo/check-selection/script.py', {'check-selection-promotion', 'check-selection-mechanics', 'check-selection-repository-contracts'}, {'check-selection-regression'}),
             ('scripts/repo/check-selection/checks.yml', {'check-selection-promotion'}, {'check-selection-mechanics', 'check-selection-repository-contracts', 'check-selection-regression'}),
-            ('scripts/repo/diagnostic-coverage/smoke-test.py', set(), {'diagnostic-adoption', 'diagnostic-runtime-contracts'}),
-            ('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml', {'check-selection-mechanics', 'check-selection-repository-contracts'}, set()),
+            ('scripts/repo/diagnostic-coverage/smoke-test.py', {'diagnostic-catalog-readers'},
+             {'diagnostic-adoption', 'diagnostic-runtime-contracts', 'core-runtime', 'platform-server-runtime',
+              'kanbien-platform-runtime', 'entity-smoke-composition', 'persistence-composition'}),
+            ('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml',
+             {'check-selection-promotion', 'check-selection-repository-contracts'}, {'check-selection-mechanics'}),
             ('scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh', {'chat-main-refresh-regression', 'check-selection-repository-contracts'}, {'check-selection-regression', 'check-selection-mechanics'}),
             ('bin/llm-workbench.js', {'chat-export-regression'}, {'chat-commit-metrics-regression', 'check-selection-regression', 'check-selection-mechanics'}),
             ('bin/llm-workbench-ownership.js', {'chat-export-regression'}, {'chat-commit-metrics-regression', 'check-selection-regression', 'check-selection-mechanics'}),
@@ -1362,7 +1365,19 @@ class RepositoryContractTests(unittest.TestCase):
             # payload five times. Execution/cache regressions remain unmocked.
             import hashlib
             return hashlib.sha256(json.dumps(sorted(set(references) - set(exclude))).encode()).hexdigest()
-        with patch.object(selection, 'git', side_effect=git), patch.object(selection, 'runtime_identity', return_value={'pure_plan_fixture': 'no-execution'}), patch.object(selection, 'fingerprint', side_effect=planning_fingerprint):
+        original_inspect = selection.coverage.inspect
+        inspections = {}
+        def inspect(contract, root, current_catalog, **options):
+            key = (str(contract), str(root), json.dumps(current_catalog, sort_keys=True), tuple(sorted(options.items())))
+            if key not in inspections:
+                inspections[key] = original_inspect(contract, root, current_catalog, **options)
+            return copy.deepcopy(inspections[key])
+        # The independent physical census has its own command/fixtures and is
+        # checked once in the final candidate plan. Repeating it for every pure
+        # routing example adds no consumer-selection assertion.
+        with patch.object(selection, 'delivery_inventory_required', return_value=False), \
+             patch.object(selection.coverage, 'inspect', side_effect=inspect), \
+             patch.object(selection, 'git', side_effect=git), patch.object(selection, 'runtime_identity', return_value={'pure_plan_fixture': 'no-execution'}), patch.object(selection, 'fingerprint', side_effect=planning_fingerprint):
             for path, required, forbidden in cases:
                 with self.subTest(path=path):
                     args = argparse.Namespace(root=ROOT, catalog=catalog, paths=[path], staged=False, all=False,
@@ -1371,9 +1386,18 @@ class RepositoryContractTests(unittest.TestCase):
                     report = selection.plan(args)
                     self.assertEqual(report['verdict'], 'planned', report['findings'])
                     selected = {item['check_id'] for item in report['checks']}
+                    required_now = {item['check_id'] for item in report['execution_policy']['checks']
+                                    if item['decision'] == 'required-now'}
+                    retained = {identity for identity in required
+                                if yaml.safe_load(catalog.read_text())['checks'][identity].get('cadence', 'candidate') != 'candidate'}
+                    later = {identity for identity in required
+                             if yaml.safe_load(catalog.read_text())['checks'][identity]['stage'] != 'local'}
                     self.assertTrue(required <= selected, (required - selected, selected))
-                    self.assertFalse((forbidden | {'platform-shell-payload'}) & selected,
-                                     (forbidden | {'platform-shell-payload'}) & selected)
+                    self.assertTrue(required - retained - later <= required_now,
+                                    (required - retained - later - required_now, required_now))
+                    self.assertTrue(later <= set(report['execution_policy']['later_stage_check_ids']))
+                    self.assertFalse((forbidden | {'platform-shell-payload'}) & required_now,
+                                     (forbidden | {'platform-shell-payload'}) & required_now)
 
     def test_foreign_imports_preserve_fixture_and_facade_without_launching_suites(self):
         import sys

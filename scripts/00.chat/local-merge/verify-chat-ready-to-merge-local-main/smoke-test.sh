@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.local-merge.verify-chat-ready-to-merge-local-main.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -186,6 +186,17 @@ branch="chat/$session"
 create_chat_branch_with_log "$repo" "$session"
 run_expect_state "$repo" "$branch" "eligible" "yes"
 
+# Exercise committed candidate code from root, including its own helpers.
+candidate_path="$(canonical_worktree_path "$repo" "$branch")"
+candidate_result="$(cd "$repo" && bash "$candidate_path/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh" "$branch")"
+[[ "$candidate_result" == *"State: eligible"* ]] || fail "committed candidate bootstrap failed"
+touch "$candidate_path/pending-candidate-change"
+if (cd "$repo" && bash "$candidate_path/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh" "$branch") >"$TMP_ROOT/bootstrap.out" 2>&1; then
+  fail "dirty implementation bootstrap accepted"
+fi
+grep -q implementation-identity-read-failed "$TMP_ROOT/bootstrap.out" || fail "bootstrap identity failure lost"
+rm "$candidate_path/pending-candidate-change"
+
 # Report callers retain successful inventory rows and refuse unavailable reads.
 worktree="$(canonical_worktree_path "$repo" "$branch")"
 mkdir -p "$worktree/commitLogs/$session"
@@ -223,6 +234,16 @@ for report in reporting/report-chat-workspaces local-merge/list-active-chat-bran
     [[ "$failure" == *read-failed* && "$failure" != *private-report-canary* && "$failure" != *missing-log* ]] || fail "report replaced failed observation with absence"
   done
 done
+
+missing_path="$(canonical_worktree_path "$repo" "$branch")"
+mv "$missing_path" "$missing_path.unavailable"
+inventory="$(cd "$repo" && bash scripts/00.chat/reporting/report-chat-workspaces/script.sh)"
+[[ "$inventory" == *absent* && "$inventory" == *"$branch"* ]] || fail "missing unrelated registration aborted inventory"
+if missing="$(cd "$repo" && bash scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh "$branch" 2>&1)"; then
+  fail "missing selected worktree accepted"
+fi
+[[ "$missing" == *worktree-registration-unavailable* ]] || fail "selected target lost strict availability failure"
+mv "$missing_path.unavailable" "$missing_path"
 
 repo="$(init_repo renamed-log)"
 session="2026-06-16-22-32-renamed-log"

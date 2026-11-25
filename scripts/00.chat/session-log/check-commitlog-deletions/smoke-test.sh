@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.check-commitlog-deletions.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -145,4 +145,15 @@ for operation in diff show; do
     fail "failed $operation leaked values or claimed success"
   fi
 done
+cat > "$TMP_ROOT/bin/awk" <<'EOF'
+#!/usr/bin/env bash
+echo PRIVATE_PARSER_CANARY >&2
+exit 71
+EOF
+chmod +x "$TMP_ROOT/bin/awk"
+if (cd "$REPO" && PATH="$TMP_ROOT/bin:$PATH" FAIL_GIT_OPERATION=none bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh) > "$TMP_ROOT/parser.out" 2> "$TMP_ROOT/parser.err"; then
+  fail "failed parser permitted log deletion"
+fi
+grep -q 'commit-log-deletion-parser-read-failed' "$TMP_ROOT/parser.err" || fail "parser failure lost"
+! grep -q PRIVATE_PARSER_CANARY "$TMP_ROOT/parser.err" || fail "parser failure leaked raw output"
 echo "commitlog deletion smoke test passed."

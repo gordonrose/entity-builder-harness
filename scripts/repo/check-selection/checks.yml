@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 37
+#   version: 38
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-24"
+#   updated_on: "2026-11-25"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -5549,6 +5549,9 @@ repository_inputs:
   - scripts/repo/diagnostic-coverage/script.py
   - scripts/repo/diagnostic-coverage/script.sh
   checks: [diagnostic-adoption]
+- inputs:
+  - scripts/repo/diagnostic-coverage/smoke-test.py
+  checks: [diagnostic-catalog-readers]
 - inputs:
   - scripts/repo/diagnostic-coverage/verify.sh
   - scripts/repo/diagnostic-coverage/runtime_contract.py

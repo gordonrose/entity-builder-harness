@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.coverage-compiler
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-24"
+#   updated_on: "2026-11-25"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre, agentic]
@@ -108,31 +108,43 @@ def review_document(document: object) -> list[dict]:
             raise ValueError('diagnostic-review-proof-reference-invalid')
     return document['reviews']
 
-def review_bindings(root: Path) -> dict[str, list[dict]]:
+def review_bindings(root: Path, checks: dict | None = None, *, reviews: list | None = None) -> dict[str, list[dict]]:
     bindings = {}
-    for review in review_document(json.loads((root / REVIEWS).read_text())):
-        for check in review['checks']: bindings.setdefault(check, []).append(review)
+    for review in review_document(json.loads((root / REVIEWS).read_text())) if reviews is None else reviews:
+        for identity in review['checks']:
+            projected = review
+            if checks is not None and identity in checks:
+                check = checks[identity]
+                inputs = check.get('inputs', []) + check.get('runtime', {}).get('config_inputs', []) + check.get('argv', [])[1:2]
+                def consumed(path):
+                    return any(path == ref or path.startswith(ref.rstrip('/') + '/') for ref in inputs)
+                projected = {**review, 'checks': [identity],
+                    'sources': [source for source in review['sources'] if consumed(source['path'])],
+                    'tests': [path for path in review['tests'] if consumed(path)],
+                    'definitions': [path for path in review.get('definitions', []) if consumed(path)]}
+                if not (projected['sources'] or projected['tests'] or projected['definitions']): continue
+            bindings.setdefault(identity, []).append(projected)
     return {check: sorted(entries, key=lambda entry: json.dumps(entry, sort_keys=True)) for check, entries in bindings.items()}
 
-def review_rules(root: Path, *, comparison_base: str = 'HEAD', ledger_changed: bool = False) -> list[dict[str, list[str]]]:
+def review_rules(root: Path, *, comparison_base: str = 'HEAD', ledger_changed: bool = False, checks: dict | None = None) -> list[dict[str, list[str]]]:
     """Selector consumes review-owned check identities, never arbitrary commands."""
     current = review_document(json.loads((root / REVIEWS).read_text()))
-    # A verification owner can truthfully be both executable source and proof.
-    # The shared diagnostic reader test is listed under many reviews, but an
-    # edit to its assertions does not change any reviewed runtime artifact.
-    # Keep other test inputs direct while this one remains on the explicit
-    # diagnostic-reader route.
+    selected = current if checks is None else [entry for entries in review_bindings(root, checks).values() for entry in entries]
+    # Review citations remain adoption evidence. Only inputs consumed by each
+    # declared command select or invalidate that command's execution proof.
     rules = [{"inputs": list(dict.fromkeys(
         [source["path"] for source in review["sources"]]
-        + [path for path in review["tests"] if path != "scripts/repo/diagnostic-coverage/smoke-test.py"]
-        + review.get('definitions', []))), "checks": review["checks"]} for review in current]
+        + review['tests'] + review.get('definitions', []))), "checks": review["checks"]} for review in selected]
     if ledger_changed:
         # A valid tree with no ledger is first adoption, not an unreadable base.
         git(root, 'rev-parse', '--verify', comparison_base + '^{commit}')
         present = git(root, 'ls-tree', comparison_base, '--', REVIEWS).strip()
         before = review_document(json.loads(git(root, 'show', comparison_base + ':' + REVIEWS))) if present else []
-        old = {source['path']: review for review in before for source in review['sources']}
-        new = {source['path']: review for review in current for source in review['sources']}
+        if checks is not None:
+            before = [entry for entries in review_bindings(root, checks, reviews=before).values() for entry in entries]
+            current = selected
+        old = {(tuple(review['checks']), review['owner'], tuple(source['path'] for source in review['sources'])): review for review in before}
+        new = {(tuple(review['checks']), review['owner'], tuple(source['path'] for source in review['sources'])): review for review in current}
         changed_checks = set()
         for path in set(old) | set(new):
             if old.get(path) != new.get(path):

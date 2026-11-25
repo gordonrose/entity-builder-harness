@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.testing.standard.execution
-version: 6
+version: 7
 status: active
 created_on: "2026-11-07"
-updated_on: "2026-11-22"
+updated_on: "2026-11-25"
 layer: 06.shared
 domain: testing
 disciplines: [agentic, architecture, sre]
@@ -50,11 +50,24 @@ existing checks or remove dependencies to meet a timing target.
 `cadence: candidate` is the default: the check is part of ordinary affected
 candidate selection. `cadence: hygiene` is for broad regression or unusual-
 environment checks that are not evidence required for every candidate. A
-hygiene check is selected automatically only at integration when one of its
-declared inputs changes; it is deferred at commit and may be run explicitly.
-Its declared inputs define the changes that invalidate its result. Classifying
-a check as hygiene does not waive its failure, remove it, or create a periodic
-runner. A scheduled hygiene service needs separately governed authority.
+hygiene check is retained for an explicit request; ordinary source changes do
+not execute it. `cadence: deferred` also requires an explicit request. Their
+declared inputs still invalidate saved evidence. Classifying a check does not
+waive a failure or create a periodic runner. A scheduled hygiene service needs
+separately governed authority.
+
+| Request | Candidate checks | Hygiene/deferred checks | Aggregate members |
+| --- | --- | --- | --- |
+| Staged commit | Affected checks whose boundary is commit | Retained/deferred | Expand required candidate parents only |
+| Local or remote integration | Affected checks at the selected stage | Retained/deferred | Expand required candidate parents only |
+| Explicit named check | Requested check at the selected stage | Requested check may execute | Complete requested parent's members and prerequisites |
+| Explicit aggregate members | Complete declared members at the selected stage | Requested members may execute | Existing prepared task/parent binding required |
+| Future periodic request | Its explicitly selected checks | Its explicitly selected checks | Same existing explicit route; no scheduler added here |
+
+A deferred parent cannot select children merely by membership. A child selected
+independently remains required. A candidate parent cannot treat an unmet retained
+prerequisite as passed; keep the blocking dependency or correct the declaration.
+An explicit pass proves its requested checks, not complete affected integration.
 
 Every catalogue check must declare its scheduling boundary explicitly. `commit`
 means the check is required before a commit; `integration` means it is required
@@ -84,8 +97,8 @@ shortcut for another:
 Keep their owners, effects, receipts and reports separate. A deployment route
 consumes matching local qualification evidence; it does not rerun local tests
 as an undocumented prerequisite. A runtime smoke observes the deployed identity
-and must not silently repair it. Hygiene is selected only from its declared
-inputs or an explicitly governed periodic or maintenance request. A change that
+and must not silently repair it. Hygiene executes only through explicitly
+governed periodic or maintenance requests. A change that
 needs more than one machine records each required result separately.
 
 For a new or materially changed check, name the risk it addresses, its machine,
