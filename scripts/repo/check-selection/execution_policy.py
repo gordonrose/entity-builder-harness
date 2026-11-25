@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.execution-policy
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-25"
 #   layer: 06.shared
 #   domain: testing
 #   disciplines: [agentic, security, sre]
@@ -127,15 +127,20 @@ def development_check(item: dict) -> bool:
     return bool(entries) and all(feedback_for(check).get('development') is True for check in entries.values())
 
 
-def execution_view(results: list[dict], checks: dict, *, development: bool, explicit: bool) -> dict:
+def execution_view(results: list[dict], checks: dict, *, development: bool, explicit: bool, boundary='integration', stage='local') -> dict:
     selected = {identity for item in results for identity in item['catalog_entries']}
     rows = []
     for item in results:
         feedback = feedback_for(checks[item['check_id']])
+        decision = ('not-applicable' if item['status'] == 'not-applicable' else
+                    'retained-explicit' if not explicit and item['cadence'] != 'candidate' else
+                    'later-stage' if ['local', 'package', 'deploy', 'acceptance'].index(item['stage']) > ['local', 'package', 'deploy', 'acceptance'].index(stage) or boundary == 'commit' and item['boundary'] != 'commit'
+                        or development and not development_check(item) else 'required-now')
         rows.append({
             'check_id': item['check_id'], 'owner': checks[item['check_id']].get('owner'),
             'boundary': item['boundary'], 'cadence': item['cadence'], 'stage': item['stage'], 'status': item['status'],
             'feedback': feedback, 'development_eligible': development_check(item),
+            'decision': decision,
             'selection_basis': 'explicit-request' if explicit else 'declared-impact-or-prerequisite',
             'required_by': sorted(parent['check_id'] for parent in results if item['check_id'] in parent['dependency_ids']),
             'prerequisites': item['dependency_ids'],
@@ -144,14 +149,20 @@ def execution_view(results: list[dict], checks: dict, *, development: bool, expl
             'budget_exceeded': bool(feedback and item.get('elapsed_seconds', 0) > feedback['expected_seconds']),
             **{key: item[key] for key in ('failure_detail', 'blocked_by') if key in item},
         })
-    pending = sorted(item['check_id'] for item in results if item['status'] != 'passed')
+    required = {row['check_id'] for row in rows if row['decision'] == 'required-now'}
+    pending = sorted(item['check_id'] for item in results if item['check_id'] in required and item['status'] != 'passed')
+    due = [item for item in results if item['check_id'] in required and item['status'] != 'blocked'
+           and item.get('evidence_source') != 'trusted-worktree-cache']
+    estimates_complete = all(bool(feedback_for(checks[item['check_id']])) for item in due)
     return {
         'mode': 'development' if development else 'explicit' if explicit else 'impact',
         'coverage': 'integration-pending' if development else 'requested-checks-only' if explicit else 'selected-boundary-only',
         'pending_check_ids': pending,
-        'estimated_execution_seconds': sum(feedback_for(checks[item['check_id']]).get('expected_seconds', 0)
-                                           for item in results if not development or development_check(item)),
-        'estimates_complete': all('feedback' in checks[item['check_id']] for item in results if not development or development_check(item)),
+        'retained_check_ids': sorted(row['check_id'] for row in rows if row['decision'] == 'retained-explicit'),
+        'later_stage_check_ids': sorted(row['check_id'] for row in rows if row['decision'] == 'later-stage'),
+        'estimated_execution_seconds': (sum(feedback_for(checks[item['check_id']])['expected_seconds'] for item in due)
+                                        if estimates_complete else None),
+        'estimates_complete': estimates_complete,
         'checks': rows,
         'not_selected': [{'check_id': identity, 'reason': 'not-in-selected-impact'} for identity, check in sorted(checks.items())
                          if 'feedback' in check and identity not in selected],
@@ -191,10 +202,9 @@ def evidence_summary(report: dict, *, all_inputs: bool = False) -> dict:
         return {'status': status, 'checks': rows}
 
     local = [item for item in report['checks'] if item['stage'] == 'local']
-    eligibility = {item['check_id']: item['development_eligible'] for item in policy['checks']}
-    requested = [item for item in local if (report['boundary'] == 'integration' or item['boundary'] == 'commit')
-                 and (policy['mode'] != 'development' or eligibility[item['check_id']])]
-    affected = observed(local)
+    decisions = {item['check_id']: item['decision'] for item in policy['checks']}
+    requested = [item for item in local if decisions[item['check_id']] == 'required-now']
+    affected = observed([item for item in local if decisions[item['check_id']] != 'retained-explicit'])
     complete_selection = (policy['mode'] == 'impact' and report['boundary'] == 'integration'
                           and bool(report['changed_inputs'] or all_inputs) and not report['findings'])
     affected['coverage'] = ('complete-declared-impact' if complete_selection and affected['status'] == 'passed'
@@ -234,11 +244,12 @@ def render(report: dict) -> str:
     for name, item in report.get('evidence_summary', {}).items():
         lines.append(f"Evidence {name}: {item['status']}" + (f"; {item['coverage']}" if 'coverage' in item else ''))
     if policy:
-        lines.append(f"Estimated command seconds: {policy['estimated_execution_seconds']} (advisory; complete estimates: {policy['estimates_complete']})")
+        estimate = policy['estimated_execution_seconds'] if policy['estimates_complete'] else 'unknown'
+        lines.append(f"Estimated command seconds: {estimate} (advisory; complete estimates: {policy['estimates_complete']})")
     for item in policy.get('checks', report.get('checks', [])):
         feedback = feedback_for(item)
         rationale = feedback['rationale'] if feedback else 'Feedback unclassified; existing gate retained.'
-        lines.append(f"{item['check_id']}: {item.get('status', 'declared')} | {item.get('cadence', 'candidate')} / {item.get('boundary')} / {item.get('stage')} | {rationale}")
+        lines.append(f"{item['check_id']}: {item.get('status', 'declared')} | {item.get('decision', 'inventory')} | {item.get('cadence', 'candidate')} / {item.get('boundary')} / {item.get('stage')} | {rationale}")
         if item.get('prerequisites'):
             lines.append('  prerequisites: ' + ', '.join(item['prerequisites']))
         if 'selection_basis' in item:

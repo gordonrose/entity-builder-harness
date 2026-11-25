@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle-smoke-test
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-25"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -548,6 +548,16 @@ with tempfile.TemporaryDirectory(prefix='lifecycle-diagnostic-boundaries-') as t
             _,status,out,err=load_owner(None if clock else OSError('private-root-canary'),clock,emission,broken_fallback)
         assert status==1 and out=='' and err==('' if broken_fallback else 'ERROR: lifecycle-reporting-failed\n')
     owner,status,_,_=load_owner();assert status==0
+    # A failed baseline observation is never a new artifact or absent rename.
+    for operation, present in [('ls-tree',False),('show',True),('diff',False)]:
+        def observed_git(*args, check=True):
+            if args[0] == operation:
+                raise subprocess.CalledProcessError(71, ['git'], stderr=b'private-baseline-canary')
+            return SimpleNamespace(returncode=0, stdout=b'one.md\0' if present else b'')
+        with patch.dict(owner, {'git':observed_git}), patch.object(Path,'write_bytes',side_effect=AssertionError('failed observation must not write')):
+            try:owner['head_baseline'](one,'fixture.one')
+            except subprocess.CalledProcessError:pass
+            else:raise AssertionError('failed baseline observation became absence')
     out=io.StringIO();err=io.StringIO()
     with patch.object(sys,'argv',['fixture',str(UPDATER),'--paths','one.md','--status','private-cli-canary']),contextlib.redirect_stdout(out),contextlib.redirect_stderr(err):
         try:owner['main']()

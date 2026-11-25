@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.failure-route
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-24"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -59,7 +59,7 @@ def assert_custody_input_binding(inputs):
     assert required_inputs <= set(inputs), "real policy/lifecycle dependencies must invalidate composition reuse"
 
 
-declared_inputs = catalog["checks"]["entity-smoke-composition"]["inputs"]
+declared_inputs = catalog["checks"]["entity-smoke-composition-suite"]["inputs"]
 assert_custody_input_binding(declared_inputs)
 for dependency in required_inputs:
     try: assert_custody_input_binding([value for value in declared_inputs if value != dependency])

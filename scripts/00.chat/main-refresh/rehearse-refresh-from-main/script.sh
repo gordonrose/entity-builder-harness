@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.main-refresh.rehearse-refresh-from-main
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -54,7 +54,7 @@ case "$BASE_BRANCH" in
     ;;
 esac
 
-if git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" >/dev/null 2>&1; then
+if BASE_HEAD="$(git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" 2>/dev/null)"; then
   :
 else
   status=$?
@@ -125,10 +125,11 @@ MERGE_ERR="${PREFLIGHT_ROOT}/${SAFE_BRANCH}-${STAMP}.merge.err"
 mkdir -p "$PREFLIGHT_ROOT"
 
 git branch "$PREFLIGHT_BRANCH" "$CURRENT_HEAD"
+git config --local "branch.${PREFLIGHT_BRANCH}.agenticRefreshBase" "$BASE_HEAD"
 git worktree add -q "$PREFLIGHT_WORKTREE" "$PREFLIGHT_BRANCH"
 
 set +e
-git -C "$PREFLIGHT_WORKTREE" merge --no-ff --no-edit "$BASE_BRANCH" \
+git -C "$PREFLIGHT_WORKTREE" merge --no-ff --no-edit "$BASE_HEAD" \
   > "$MERGE_OUT" 2> "$MERGE_ERR"
 MERGE_STATUS="$?"
 set -e
@@ -138,6 +139,7 @@ echo "preflight_worktree=${PREFLIGHT_WORKTREE}"
 echo "source_branch=${CURRENT_BRANCH}"
 echo "source_head=${CURRENT_HEAD}"
 echo "base_branch=${BASE_BRANCH}"
+echo "base_head=${BASE_HEAD}"
 
 if [ "$MERGE_STATUS" -ne 0 ]; then
   echo "result=conflict-or-failed"

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 18
+version: 19
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-23"
+updated_on: "2026-11-25"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -35,10 +35,12 @@ scheduler or nightly suite is introduced.
 
 Checks default to `cadence: candidate`: they are selected for an affected
 candidate. `cadence: hygiene` is retained for broad regression and
-unusual-environment checks. Hygiene checks run automatically only when their
-own declared inputs change at integration, or when deliberately requested with
-`--checks`; they do not run at every commit. This records selection only; it
-does not install a periodic scheduler.
+unusual-environment checks. Hygiene and deferred checks run when deliberately
+requested with `--checks` or the existing prepared aggregate route. Ordinary
+commits and integration retain them without execution. Their input changes still
+invalidate saved proof. Deferred parents do not select otherwise unrelated
+members; independently selected children remain required. This records selection
+only; it does not install a periodic scheduler.
 
 Every catalogue check also declares its `boundary`: `commit` for the small
 checks that must finish before a commit, or `integration` for complete affected
@@ -87,6 +89,13 @@ or total wall-time guarantees; planning and runtime identity have separate
 timings in `execution_summary`. `not_selected` explains absent declared pilot
 checks. Supported impact still depends on declared consumers; no heuristic can
 prove an undeclared dependency safe.
+
+Each selected entry also says whether it is required now, retained for an
+explicit request, or belongs to a later stage. `pending_check_ids` contains
+required work only; retained and later-stage IDs have separate lists. Estimates
+exclude retained work, later stages and reused successes. A missing estimate
+is reported as unknown. Passing today's required checks does not mark retained
+or later-stage checks as passed.
 
 For example, a successful `--checks platform-server-runtime` run proves that
 requested check, not every consequence of a server change. The additive
@@ -214,23 +223,44 @@ Deployment topology and CI therefore retain the complete delivery analysis;
 ordinary local code qualification does not repeat it. This is selection-cost
 control, not a waiver of package, target, acceptance or integration proof.
 
-Recorded chat-branch promotion uses `--ci --changed-only`. It reads the exact
-`BASE_SHA..HEAD_SHA` diff, selects only registered checks whose declared inputs
-cover those paths, and fails when an authoritative changed path has no owner.
-Changing the selector itself runs its focused promotion-selection proof. It
-does not make the selector implementation an input to every unrelated
-application proof, so an unchanged subject may reuse its matching local
-evidence. The complete selector/cache mechanics suite remains an explicit
-deferred review route.
+Recorded chat-branch promotion uses `--ci --changed-only`; remote verification
+uses `--ci`. Both now perform the same consumer analysis on the supplied
+`BASE_SHA..HEAD_SHA` diff. The older flag remains accepted without selecting a
+weaker proof route. The supplied head must match the checkout's actual commit.
+Planning with pending source or untracked task files is labelled a working-tree
+preview; executing that base/head candidate is rejected before checks run.
+Ignored/generated cache and installed-dependency directories are outside that
+source decision. The owning promotion workflow still governs final readiness.
+
+Changed check definitions select their affected proof in both routes. Real
+source/dependency relationships remain relevant, and deleted files retain
+consumer metadata read from the selected Git base. Test registration metadata
+does not imply that every branch of a wrapper consumes that test. A source's
+registration in the catalogue does not make every catalogue consumer affected.
+Unowned authoritative changes still block acceptance.
+
+Review records keep their complete adoption evidence. `review_rules` and
+`review_bindings` project each check's declared consumed inputs for selection
+and saved-result identity. An unrelated cited test therefore neither selects
+that check nor invalidates its result; a source or fixture it consumes still
+does both. Tests need their actual runner's direct mapping. There is no special
+exception for the shared diagnostics test filename.
+
+Changing the selector runs its focused promotion proof. Its implementation is
+not an input to every application result. Context-sensitive checks also bind
+their normalized changed-file list, or full execution, into saved results and
+preparation. Different subsets cannot reuse each other's proof; aggregate
+children inherit the original context. Older subset records without that
+context are rejected. Other checks retain their existing identity contract.
 Named pre-commit preparation, and the staged commit gate that consumes it, use
 the same direct-input rule for their explicit uncommitted/staged task paths.
 They record and reuse only the preparation evidence needed for those paths;
 they do not turn an ordinary commit into repository-wide analysis.
-It does not build the repository-wide consumer graph or run the independent
-delivery census; delivery topology remains covered by its dedicated CI route,
-and broad regressions remain hygiene work for an explicit or future scheduled
-route rather than a promotion gate. This selector change does not create that
-scheduler.
+Contained commit preparation does not build the full consumer graph or repeat
+the independent delivery census. Integration keeps consumer analysis and the
+existing mandatory delivery-registration route, which detects newly unregistered
+entrypoints. Broad regressions remain available through explicit requests;
+this change does not create a scheduler.
 
 The default is a plan, with pending checks and explicit later-stage obligations.
 For focused verification of an already identified registered unit, use:

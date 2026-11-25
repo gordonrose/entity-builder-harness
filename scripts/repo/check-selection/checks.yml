@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 35
+#   version: 38
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-25"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -553,7 +553,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   module-index-structure:
     boundary: commit
-    cadence: deferred
+    cadence: hygiene
     argv: [bash, scripts/repo/module-structure/script.sh]
     stage: local
     evidence_class: static
@@ -2082,6 +2082,7 @@ checks:
     - packages/core/src
   entity-smoke-composition-suite: &entity-smoke-composition-suite
     boundary: integration
+    cadence: deferred
     argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh, --unit, suite]
     stage: local
     evidence_class: local-runtime
@@ -2090,10 +2091,10 @@ checks:
     applicability: {kind: bound, program_id: kanbien-entity-smoke}
     scope_inputs: false
     feedback:
-      development: true
-      expected_seconds: 60
+      development: false
+      expected_seconds: 900
       isolation: worktree
-      rationale: Compile isolated public feature wiring and exercise controlled private HTTP and administrative observation without Docker or AWS.
+      rationale: Retain the full combined route suite for explicit qualification or maintenance; ordinary source feedback uses its bounded base and route checks.
     runtime:
       tools: [bash, python3, node, npm, typescript]
       node_packages: [typescript, '@types/node', '@types/pg', pg, '@aws-sdk/rds-signer']
@@ -2172,6 +2173,7 @@ checks:
     - package-lock.json
   entity-smoke-infrastructure-route:
     <<: *entity-smoke-composition-suite
+    cadence: candidate
     argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh, --unit, infrastructure]
     feedback:
       development: true
@@ -2182,14 +2184,80 @@ checks:
       tools: [bash, python3]
       environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  entity-smoke-composition-base:
+    <<: *entity-smoke-composition-suite
+    cadence: candidate
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh, --unit, base]
+    feedback:
+      development: true
+      expected_seconds: 120
+      isolation: worktree
+      rationale: Compile isolated feature wiring and run the shared non-route controls; route behaviour has dedicated leaves.
+  entity-smoke-task-route:
+    <<: *entity-smoke-composition-suite
+    cadence: candidate
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh, --unit, task-route]
+    feedback:
+      development: true
+      expected_seconds: 720
+      isolation: worktree
+      rationale: Exercise the task route's controlled provider protocol without compiling or running unrelated routes.
+    runtime:
+      tools: [bash, python3]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  entity-smoke-failure-route:
+    <<: *entity-smoke-composition-suite
+    cadence: candidate
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh, --unit, failure-route]
+    feedback:
+      development: true
+      expected_seconds: 60
+      isolation: worktree
+      rationale: Exercise the failure route's controlled custody protocol without compiling or running unrelated routes.
+    runtime:
+      tools: [bash, python3]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  entity-smoke-restart-route:
+    <<: *entity-smoke-composition-suite
+    cadence: candidate
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh, --unit, restart-route]
+    feedback:
+      development: true
+      expected_seconds: 480
+      isolation: worktree
+      rationale: Exercise the restart route's controlled recovery protocol without compiling or running unrelated routes.
+    runtime:
+      tools: [bash, python3]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  entity-smoke-credential-route:
+    <<: *entity-smoke-composition-suite
+    cadence: candidate
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh, --unit, credential-route]
+    feedback:
+      development: true
+      expected_seconds: 480
+      isolation: worktree
+      rationale: Exercise the credential route's controlled admission and replacement protocol without compiling or running unrelated routes.
+    runtime:
+      tools: [bash, python3]
+      environment: [PATH, LANG, LC_ALL, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
   entity-smoke-composition:
     <<: *entity-smoke-composition-suite
     argv: [bash, scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh]
     aggregate_branch: default
+    cadence: deferred
     members: [entity-smoke-infrastructure-route, entity-smoke-composition-suite]
+    # The aggregate is the explicit full route. Its members carry the source
+    # inputs; keeping only this wrapper here prevents ordinary route edits from
+    # turning a scope-level aggregate into an automatic full-suite request.
+    inputs: [scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh]
     feedback:
       development: false
-      expected_seconds: 70
+      expected_seconds: 910
       isolation: worktree
       rationale: Require both registered members for full composition verification; development feedback selects the leaves.
   persistence-composition:
@@ -5029,7 +5097,7 @@ repository_inputs:
   - packages/core/package.json
   checks: [runtime-payload-assembly]
 - inputs: [apps/entity-smoke]
-  checks: [entity-smoke-runtime, entity-smoke-composition]
+  checks: [entity-smoke-runtime, entity-smoke-composition-base]
 - inputs:
   - scripts/04.deploy/lifecycle/20-build/entity-smoke-composition
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke
@@ -5045,7 +5113,83 @@ repository_inputs:
   - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-verifier.main.ts
   - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-database-proof.main.ts
   - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json
-  checks: [entity-smoke-composition, entity-smoke-container]
+  # Route-specific sources below have their own declarations. They must not
+  # also select the shared compilation/base proof merely because they reside
+  # in this target folder.
+  exclude_inputs:
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-graph.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-runner.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/feature-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-completion.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-history.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evidence.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/ordinary-update.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execute.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-stop.sh
+  checks: [entity-smoke-composition-base, entity-smoke-container]
+- inputs:
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-binding.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-control.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-control.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-stop.sh
+  checks: [entity-smoke-failure-route, entity-smoke-task-route, entity-smoke-restart-route, entity-smoke-credential-route]
+- inputs:
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-graph.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-runner.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/feature-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-completion.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-history.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evidence.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/ordinary-update.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execute.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement.sh
+  checks: [entity-smoke-task-route, entity-smoke-restart-route, entity-smoke-credential-route]
+- inputs:
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh
+  checks: [entity-smoke-restart-route, entity-smoke-credential-route]
+- inputs: [scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-route-test.py]
+  checks: [entity-smoke-credential-route]
+- inputs: [scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh]
+  checks: [entity-smoke-composition]
 - inputs:
   - scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image
   checks: [entity-smoke-composition, entity-smoke-container]
@@ -5264,7 +5408,6 @@ repository_inputs:
   - apps
   - products
   - infra
-  - scripts
   - .agentic/03.product/standards/public-module-structure.md
   - .agentic/03.product/standards/config-runtime-settings.md
   - package.json
@@ -5306,7 +5449,14 @@ repository_inputs:
   checks: [chat-commit-metrics-regression]
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
-  - scripts/repo/check-selection
+  - scripts/repo/check-selection/checks.yml
+  - scripts/repo/check-selection/script.py
+  - scripts/repo/check-selection/local_cache.py
+  - scripts/repo/check-selection/execution_policy.py
+  - scripts/repo/check-selection/smoke-test.py
+  - scripts/repo/check-selection/mechanics_test.py
+  - scripts/repo/check-selection/repository_contracts_test.py
+  - scripts/repo/check-selection/test_support.py
   - scripts/repo/commit-gates
   - scripts/repo/diagnostic-coverage/script.py
   - scripts/01.harness/artifact-metadata/header_discovery.py
@@ -5328,7 +5478,6 @@ repository_inputs:
   - scripts/repo/diagnostic-coverage/runtime_contract.py
   checks:
   - check-selection-promotion
-  - check-selection-mechanics
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
   - .agentic
@@ -5337,7 +5486,6 @@ repository_inputs:
   - scripts/00.chat
   - scripts/01.harness
   - scripts/00.chat/main-refresh/apply-rehearsed-refresh
-  - scripts/repo/check-selection
   - package.json
   - package-lock.json
   - infra/04.deploy/03.product/entrypoints
@@ -5395,9 +5543,22 @@ repository_inputs:
   - scripts/00.chat/reporting/generate-commit-log-summary
   checks:
   - chat-main-refresh-regression
-- inputs: [.agentic/shared/workflows/verify-diagnostic-coverage.md, .agentic/shared/standards/require-safe-diagnostic-record.md, scripts/repo/diagnostic-coverage]
-  exclude_inputs: [scripts/repo/diagnostic-coverage/reviews.v1.json]
-  checks: [diagnostic-adoption, diagnostic-runtime-contracts]
+- inputs:
+  - .agentic/shared/workflows/verify-diagnostic-coverage.md
+  - .agentic/shared/standards/require-safe-diagnostic-record.md
+  - scripts/repo/diagnostic-coverage/script.py
+  - scripts/repo/diagnostic-coverage/script.sh
+  checks: [diagnostic-adoption]
+- inputs:
+  - scripts/repo/diagnostic-coverage/smoke-test.py
+  checks: [diagnostic-catalog-readers]
+- inputs:
+  - scripts/repo/diagnostic-coverage/verify.sh
+  - scripts/repo/diagnostic-coverage/runtime_contract.py
+  - scripts/repo/diagnostic-coverage/export-catalogs.mjs
+  - scripts/repo/diagnostic-coverage/compatibility.mjs
+  - scripts/repo/diagnostic-coverage/tsconfig.json
+  checks: [diagnostic-runtime-contracts]
 - inputs: [platform/config/contracts, platform/server/contracts, platform/workers/contracts, platform/persistence/contracts, apps/platform-smoke/contracts, infra/04.deploy/03.product/entrypoints/contracts]
   checks: [diagnostic-runtime-contracts]
 - inputs: [docs/03.product/rules/core/layers/packages-core.yml, docs/03.product/rules/core/concerns/validation-api-errors.yml, docs/03.product/rules/platform/layers/platform.yml, .agentic/03.product/standards/config-runtime-settings.md]
@@ -5448,16 +5609,6 @@ repository_inputs:
   checks:
   - rag-source-coverage-scope-regression
   - rag-source-coverage-validation
-- inputs:
-  - scripts/repo/check-selection
-  - scripts/repo/commit-gates
-  - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
-  - scripts/00.chat/session-log/prepare-chat-session-before-commit
-  - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main
-  - scripts/00.chat/main-refresh/apply-rehearsed-refresh
-  - scripts/01.harness/artifact-metadata
-  checks:
-  - check-selection-regression
 - inputs:
   - .agentic/routing-policy.yaml
   - scripts/00.chat/classification/classify-task

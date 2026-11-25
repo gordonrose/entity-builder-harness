@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.main-refresh.apply-rehearsed-refresh
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -178,6 +178,19 @@ if [ -n "$current_status" ]; then
 fi
 
 PREFLIGHT_HEAD="$(observe preflight-head git rev-parse "$PREFLIGHT_BRANCH")"
+BASE_HEAD="$(observe base-head git config --local --get "branch.${PREFLIGHT_BRANCH}.agenticRefreshBase")"
+if [[ ! "$BASE_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "ERROR: refresh-base-identity-invalid; applied=no" >&2
+  exit 1
+fi
+if git merge-base --is-ancestor "$BASE_HEAD" "$PREFLIGHT_HEAD" 2>/dev/null; then
+  :
+else
+  ancestry_status=$?
+  [ "$ancestry_status" -eq 1 ] || read_failed base-ancestry
+  echo "ERROR: rehearsed result does not contain its recorded base; applied=no" >&2
+  exit 1
+fi
 
 if git merge-base --is-ancestor HEAD "$PREFLIGHT_BRANCH" 2>/dev/null; then
   :
@@ -226,8 +239,7 @@ fi
 if [ -f scripts/repo/check-selection/script.sh ]; then
   # Revalidate matching preflight receipts in the promoted tree before their
   # worktree is removed. Changed inputs rerun only their affected local checks.
-  base_head="$(observe base-head git rev-parse main)"
-  BASE_SHA="$base_head" HEAD_SHA="$PROMOTED_COMMIT" \
+  BASE_SHA="$BASE_HEAD" HEAD_SHA="$PROMOTED_COMMIT" \
     bash scripts/repo/check-selection/script.sh --ci --changed-only --boundary integration \
     --execute-local --reuse-from-worktree "$PREFLIGHT_WORKTREE" --json
 fi
@@ -241,4 +253,5 @@ echo "current_branch=${CURRENT_BRANCH}"
 echo "preflight_branch=${PREFLIGHT_BRANCH}"
 echo "preflight_worktree=${PREFLIGHT_WORKTREE}"
 echo "applied_commit=${PROMOTED_COMMIT}"
+echo "base_head=${BASE_HEAD}"
 echo "cleanup_result=removed-worktree-and-deleted-branch"
