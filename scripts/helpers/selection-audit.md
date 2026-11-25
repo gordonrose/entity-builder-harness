@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.report.verification-selection-audit
-version: 10
+version: 11
 status: draft
 created_on: "2026-11-23"
 updated_on: "2026-11-25"
@@ -69,6 +69,31 @@ Next: governed task commit/session checkpoint, exact committed-candidate plan,
 then the existing root readiness gate, authorised local merge and normal push.
 No publication success is claimed by this preparation record. Full outcomes
 and any failures/retries must be recorded before the P3 milestone briefing.
+
+### P3 publication outcome and bounded follow-up
+
+Published checkpoint: qualified source aa294fd0ac95814740935e6f78108366c88625d9,
+task ccdfd5cb, main and directly observed remote main
+21365c767f4b94ba4e6e4d2ac22d048ab6ed8bf1. The merged tree exactly matched the
+qualified source. First actual readiness attempt passed all 42 required local
+instances (35 executed/seven reused), zero findings, six retained/nine later
+stages deferred. Gate wall time 1293 seconds misses the ten-minute goal.
+Largest costs were task route 345.079 seconds, credential route 242.064,
+persistence composition 114.088 and restart route 99.317. Preserve this P5 debt;
+no package/live proof or remote CI run is claimed. Registered complete evidence:
+.cache/test-runs/20261125T014918Z-83ac0867f7ea4dda88c013ff0ab43137/report.json.
+
+Completion refresh exposed an empty-diff false gap. Apply was incorrectly
+invoked before the preliminary failed result was consumed; it advanced only
+the active chat to the source-identical published tree before its post-check
+failed. Main/remote and all source were preserved. The current bounded fix
+normalizes implicit empty impact context only; explicit empty/forged group
+context remains rejected. Three existing focused cases passed (6.718 seconds),
+and the existing promotion dispatch now includes the actual-CI case. Its
+registered seven-case command passed (12.293 seconds), with no new test layer:
+.cache/test-runs/20261125T020047Z-e9ae7ad69121401ebac8d0006a1801f5/report.json.
+Normal proof/publication of this small follow-up must not repeat completed
+unchanged source regressions. P4 remains unapproved.
 
 ## P2 selection and saved-result corrections — 2026-11-25
 

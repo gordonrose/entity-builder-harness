@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 17
+#   version: 18
 #   status: active
 #   created_on: "2026-10-29"
 #   updated_on: "2026-11-25"
@@ -1651,6 +1651,7 @@ PY
 
 
     def test_ci_catalog_only_change_selects_consumers_against_pr_base(self):
+        (self.root / '.gitignore').write_text('counts\n.cache/\n')
         self.catalog['repository_inputs'].append({
             'inputs': ['scripts/repo/check-selection/checks.yml'], 'checks': ['local']})
         self.save()
@@ -1674,6 +1675,14 @@ PY
             cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': head}, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         report = json.loads(result.stdout)
+        for flags in [[], ['--changed-only']]:
+            empty = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--execute-local', '--json', *flags],
+                cwd=self.root, env={**os.environ, 'BASE_SHA': head, 'HEAD_SHA': head}, capture_output=True, text=True)
+            self.assertEqual(empty.returncode, 0, empty.stdout + empty.stderr)
+            empty_report = json.loads(empty.stdout)
+            self.assertEqual(empty_report['changed_inputs'], [])
+            self.assertEqual(empty_report['execution_summary']['executed_check_ids'], [])
+            self.assertEqual(empty_report['evidence_summary']['affected_local_integration']['coverage'], 'not-established')
         stale = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--json'],
             cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': base}, capture_output=True, text=True)
         self.assertEqual(stale.returncode, 1)

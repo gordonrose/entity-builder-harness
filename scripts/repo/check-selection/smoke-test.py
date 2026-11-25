@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection
-#   version: 10
+#   version: 11
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-25"
@@ -28,6 +28,7 @@ import repository_contracts_test
 selection = mechanics_test.selection  # Retained known foreign-fixture import surface.
 
 PROMOTION_MECHANICS_TESTS = (
+    'test_ci_catalog_only_change_selects_consumers_against_pr_base',
     'test_ci_modes_share_complete_consumer_analysis',
     'test_ci_modes_select_changed_check_contracts',
     'test_ci_modes_apply_consumed_review_ledger_transitions',

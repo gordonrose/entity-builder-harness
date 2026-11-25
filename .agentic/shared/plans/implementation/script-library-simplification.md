@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 21
+version: 22
 status: draft
 created_on: "2026-11-23"
 updated_on: "2026-11-25"
@@ -364,6 +364,34 @@ P2 requires user approval at this checkpoint.
 
 ### Approved execution packet — 2026-11-25
 
+Post-publication completion follow-up: source checkpoint aa294fd0 (task commit
+ccdfd5cb) passed the actual root readiness gate in 1293 seconds, 42 local command
+instances passed (35 executed/seven reused), zero findings; six broad checks and
+nine later-stage operations remained deferred. It was merged/pushed normally as
+21365c767f4b94ba4e6e4d2ac22d048ab6ed8bf1, verified directly on remote main.
+No source qualifications are to be repeated merely for this completion record.
+
+The governed source-identical completion refresh exposed a real empty-diff
+selector defect: an implicit empty changed-path list is rejected as an invalid
+explicit task context. The parent incorrectly invoked apply before consuming
+that preliminary failure. Apply advanced the chat to e78e50d1, whose tree equals
+published main exactly, then its post-check failed. Both branches/worktrees are
+clean; main/remote are unaffected, the preflight remains retained, and no source
+was lost or overwritten. Record this sequencing error, not a passing refresh.
+
+Bounded correction: normalize an implicit empty impact context to no context;
+keep explicitly supplied empty aggregate context invalid. Extend the existing
+real CI fixture to prove both flag spellings run no commands and do not claim
+complete affected integration for an empty diff. Only script.py/mechanics_test.py
+and their existing review records change as executable support. The existing
+promotion dispatch also includes this actual-CI method, so the regression runs
+through the normal registered owner rather than an extra test layer. Use normal
+prepared commit/proof. The existing clean preflight may fast-forward to the
+reviewed child commit: it must preserve the recorded base and source ancestry,
+have an identical tree to the tested active candidate, and pass its normal
+selector before retrying apply/cleanup. No patch copying, history rewrite or
+new recovery engine is allowed. Finish the completion publication before P4.
+
 The user approved P2 with "ok proceed" after its selection, chain-reaction and
 saved-result responsibilities were explained. Work in the recorded November 21
 worktree; preserve all P1 and audit changes. No commit/publication or cloud
@@ -696,6 +724,46 @@ Branch protection must be observed if the chosen remote route relies on it.
 **Recovery:** use the failure table below. Missing external authority or access
 can block publication, but does not justify a false "delivered" status.
 **User checkpoint:** brief this usable release before broad reorganisation.
+
+### P3 published checkpoint and completion record — 2026-11-25
+
+The implementation checkpoint is delivered: task ccdfd5cb and qualified source
+aa294fd0ac95814740935e6f78108366c88625d9 reached local and observed remote main
+at 21365c767f4b94ba4e6e4d2ac22d048ab6ed8bf1 through a normal no-ff merge/push.
+The merged tree exactly matched the qualified source tree. Root and source
+were clean, main had not moved after a fresh fetch, and no force/history rewrite,
+unrelated cleanup, task-worktree switch or cloud operation was performed.
+
+The actual readiness gate passed on its FIRST source-qualification attempt:
+42 required local command instances, 35 executed/seven reused, zero findings;
+six retained checks and nine later-stage operations stayed deferred. Gate wall
+time was 1293 seconds; selector time 1286.388 seconds, command time 1218.685,
+planning 16.884, fingerprints 15.702, runtime identity 31.867 and receipt checks
+2.773 seconds. This MISSES the ten-minute target; no fast-delivery claim follows.
+Largest commands: task route 345.079 seconds, credential route 242.064,
+persistence composition 114.088, restart route 99.317, acceptance regression
+81.986 and Entity composition base 70.860. P5 retains this concrete connected-
+fixture/qualification cost work; passing does not mean the bloat is resolved.
+Evidence: .cache/test-runs/20261125T014918Z-83ac0867f7ea4dda88c013ff0ab43137/report.json.
+
+The source-identical completion refresh then exposed the empty-diff false gap
+and the sequencing mistake recorded above. The bounded implicit-context fix
+passed three existing context/CI cases (6.718 seconds); the existing registered
+promotion owner now includes the actual-CI case and passed in 12.293 seconds.
+Evidence: .cache/test-runs/20261125T020047Z-e9ae7ad69121401ebac8d0006a1801f5/report.json.
+This completion follow-up carries that fix and these records together. When read
+from accepted main, it is published too; do not repeat P3 merely to insert a
+self-referential future commit hash. Observe actual Git containment instead.
+
+Existing helpers/audit work is retained; no new source files, registry, scheduler
+or wrapper framework were added. Unchanged accepted-baseline adoption debt and
+actual nested legacy fixtures remain explicit, not silently fixed or newly
+universal blockers. Full retained suites, package/live proof and remote CI
+execution are not claimed. The PR/manual-only workflow is not evidence of CI
+running after this direct main push.
+
+Stop for the user briefing/questions. P4 is the next implementation milestone
+and requires explicit approval; this completion does not authorise migration.
 
 ## Milestone P4 — Complete a source-backed capability disposition
 
@@ -1050,7 +1118,7 @@ cloud operations, legacy retirement, or a different folder design.
 | Audit and revised plan | Completed as documentation/source audit only. | User reviews plan and chooses execution milestone. |
 | P1 Current candidate ownership | Complete locally: direct owner connected and P1 proof recorded. | Preserved; P2 was subsequently approved. No publication claimed. |
 | P2 Consistent selection | Complete locally at its bounded selection/implementation boundary: focused and registered owners passed, warm reuse proved, both CI callers agree. Full affected integration/publication not claimed. | Brief user and stop. P3 requires explicit approval; retain the 30 pre-existing adoption findings. |
-| P3 Reliable published checkpoint | Approved and in progress: bounded owner repairs and exploratory handoff fixtures passed; metadata/review preparation and final integration/publication pending. | Prepare reviewed task inputs, run required registered checks, commit and publish through the coherent root gate. Accepted-baseline adoption debt remains explicit, not a new universal gate. |
+| P3 Reliable published checkpoint | Delivered via main/remote 21365c76: exact source qualification passed, 42 local command instances, seven reused. Empty-diff follow-up correction and completion evidence are included in this record. | Brief user and stop; P4 requires approval. The 21m33s source gate missed the cost target; retain P5 measurement work and baseline adoption debt. |
 | P4 Complete capability disposition | Full 690-file source review supplied; folder approval and final migration scope unfinished. | Reconcile only changed sources, resolve proposed decisions and approve finite migration manifest. |
 | P5 Build/package handoff | Existing machinery retained; duplication/cold reuse unmeasured. | Trace and measure one complete local qualification-to-package call chain. |
 | P6 Approved migrations | One historical diagnostics split retained. | Execute only newly approved packets after their prerequisites. |

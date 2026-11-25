@@ -85,6 +85,37 @@ Phase 1 deployment script topology classification and migration proposal
 
 ## Activity Log
 
+### 2026-11-25 - P3 published; completion follow-up
+
+- Task commit ccdfd5cb, qualified source aa294fd0ac95814740935e6f78108366c88625d9
+  and its earlier branch commits were merged/pushed normally. Local and actual
+  remote main were verified at 21365c767f4b94ba4e6e4d2ac22d048ab6ed8bf1; its
+  tree exactly matched the qualified source. No force push, history rewrite,
+  unrelated cleanup, task-worktree switch or cloud operation occurred.
+- First actual root readiness attempt passed: 42 required local instances,
+  35 executed/seven reused, zero findings; six retained and nine later-stage
+  operations stayed deferred. Wall time 1293 seconds MISSES the ten-minute
+  target. Heavy connected route fixtures remain measured P5 work, not resolved
+  by a passing check. Complete evidence:
+  .cache/test-runs/20261125T014918Z-83ac0867f7ea4dda88c013ff0ab43137/report.json.
+- Completion refresh created preflight
+  agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-aa294fd0ac95/20261125015247
+  at /tmp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-aa294fd0ac95-20261125015247.
+  Recorded base is published main 21365c76; result e78e50d1 has that exact tree.
+  The preliminary selector failed with verification-task-context-invalid for
+  its empty diff. The parent erroneously invoked apply before consuming that
+  failure. Apply advanced the chat to e78e50d1, then post-verification failed;
+  both trees remained clean and source-identical, with preflight retained.
+- Bounded correction changes implicit empty context only, preserves explicit
+  empty/forged aggregate rejection and adds the actual-CI case to the existing
+  promotion dispatch. Three focused cases passed in 6.718 seconds; registered
+  promotion owner passed in 12.293 seconds. Evidence:
+  .cache/test-runs/20261125T020047Z-e9ae7ad69121401ebac8d0006a1801f5/report.json.
+- Complete this small follow-up through normal commit/proof/publication and
+  validated clean preflight cleanup; no repeated source regression merely for
+  bookkeeping. Programme v22 and selection audit v11 record the published
+  milestone and measured remaining costs. P4 still requires user approval.
+
 ### 2026-11-25 - P3 implementation prepared; publication pending
 
 - User approved P3 with "proceed", covering its governed task commit, local
