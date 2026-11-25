@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 5
 #   status: active
 #   created_on: "2026-07-04"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-22"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines:
@@ -40,6 +40,6 @@ for required in scripts/repo/check-selection/script.sh; do
     exit 1
   fi
 done
-bash scripts/repo/check-selection/script.sh --staged --boundary commit --execute-local --require-preparation --json
+bash scripts/repo/check-selection/script.sh --staged --changed-only --boundary commit --execute-local --require-preparation --json
 
 echo "Repository commit extension gates passed."

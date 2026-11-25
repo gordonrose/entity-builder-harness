@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.support
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-22"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -124,6 +124,7 @@ class FixtureSupport(unittest.TestCase):
             'acceptance': {'argv': ['bash', 'scripts/acceptance.sh'], 'stage': 'acceptance', 'effects': ['aws-mutation'], 'evidence_class': 'live'},
             'live': {'argv': ['bash', 'scripts/live.sh'], 'stage': 'deploy', 'effects': ['aws-mutation'], 'evidence_class': 'live'}}}
         for identity, check in self.catalog['checks'].items():
+            check['boundary'] = 'commit'
             if identity in {'scope-inventory', 'runnable-program'}:
                 parameter = 'target_root' if identity == 'scope-inventory' else 'program_contract'
                 check['applicability'] = {'kind': 'generic', 'contract_schema': 'deploy/target-scope-contract/v1' if identity == 'scope-inventory' else 'deploy/runnable-program-contract/v1', 'context_parameters': [parameter]}
@@ -135,6 +136,7 @@ class FixtureSupport(unittest.TestCase):
             if check['stage'] == 'local': check['runtime'] = {'tools': ['bash', 'python3'], 'environment': ['LANG', 'PYTHONPATH']}
         self.catalog['checks']['local'].update(scope_inputs=False, inputs=['src', 'program.yml', 'image.yml'])
         self.catalog['checks']['runnable-program'].update(scope_inputs=False, inputs=['program.yml'])
+        self.catalog['repository_inputs'] = [{'inputs': ['src', 'program.yml', 'image.yml'], 'checks': ['local']}]
         self.catalog_path = self.root / 'scripts/repo/check-selection/checks.yml'
         self.save()
 
@@ -149,10 +151,12 @@ class FixtureSupport(unittest.TestCase):
         write(self.contract_path, self.contract); write(self.catalog_path, self.catalog)
 
 
-    def run_plan(self, *, paths=None, checks=None, task_paths=None, all_inputs=False, stage='local', boundary='integration', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False, reuse_from_worktree=None, development=False):
+    def run_plan(self, *, paths=None, checks=None, task_paths=None, all_inputs=False, stage='local', boundary='integration', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False, reuse_from_worktree=None, development=False, ci=False, changed_only=False):
         args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, record_preparation=record_preparation, require_preparation=require_preparation, evidence=evidence, json=True)
         args.checks = checks
         args.development = development
+        args.ci = ci
+        args.changed_only = changed_only
         args.task_paths = task_paths
         if all_inputs: args.all, args.paths = True, []
         if checks is not None: args.paths = []

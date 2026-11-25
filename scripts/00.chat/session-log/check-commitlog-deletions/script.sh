@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.check-commitlog-deletions
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -66,17 +66,14 @@ head_content() {
 has_recorded_commit() {
   local content="$1"
 
-  if printf '%s\n' "$content" | grep -Eq '^latest_commit_sha: +[^[:space:]]+'; then
-    return 0
-  fi
-
-  if printf '%s\n' "$content" | awk '
+  awk '
+    /^latest_commit_sha: +[^[:space:]]+/ { found = 1 }
     $0 == "## Commits" {
       in_section = 1
       next
     }
     in_section && /^## / {
-      exit
+      in_section = 0
     }
     in_section && /^- Commit: `[^`]+`/ {
       found = 1
@@ -87,18 +84,14 @@ has_recorded_commit() {
     END {
       exit found ? 0 : 1
     }
-  '; then
-    return 0
-  fi
-
-  return 1
+  ' <<< "$content" 2>/dev/null
 }
 
 has_retention_marker() {
   local content="$1"
 
-  printf '%s\n' "$content" | grep -Eiq \
-    '^(saved|retain|retained|preserve|preserved|keep|kept): +(yes|true)$|agentic-(save|saved|retain|retained|preserve|preserved|keep|kept)-log'
+  awk 'tolower($0) ~ /^(saved|retain|retained|preserve|preserved|keep|kept): +(yes|true)$|agentic-(save|saved|retain|retained|preserve|preserved|keep|kept)-log/ { found = 1 }
+    END { exit found ? 0 : 1 }' <<< "$content" 2>/dev/null
 }
 
 if ! DELETED_LOGS="$(staged_deleted_commit_logs)"; then
@@ -125,11 +118,23 @@ while IFS= read -r path; do
   if has_recorded_commit "$content"; then
     fail "cannot delete commit log with recorded commits ordinal=$ORDINAL"
     continue
+  else
+    parser_status=$?
+    if [ "$parser_status" -ne 1 ]; then
+      fail "commit-log-deletion-parser-read-failed ordinal=$ORDINAL"
+      continue
+    fi
   fi
 
   if has_retention_marker "$content"; then
     fail "cannot delete commit log marked for retention ordinal=$ORDINAL"
     continue
+  else
+    parser_status=$?
+    if [ "$parser_status" -ne 1 ]; then
+      fail "commit-log-deletion-parser-read-failed ordinal=$ORDINAL"
+      continue
+    fi
   fi
 done <<< "$DELETED_LOGS"
 

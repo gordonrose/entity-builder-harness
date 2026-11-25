@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.workflows.chat-promote-to-main
-  version: 1
+  version: 2
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-11-19"
+  updated_on: "2026-11-25"
   layer: 00.chat
   domain: local-merge
   disciplines:
@@ -54,6 +54,10 @@ and preservation requirements.
    ```
 
 2. Verify the target chat branch is ready to merge into local `main`:
+   Missing directories for unrelated registered worktrees are reported as
+   absent rows, not a reason to stop the inventory or prune registrations.
+   Observation failures still fail the report. The selected branch's readiness
+   gate retains strict worktree availability and identity checks.
 
    ```bash
    bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh <chat-branch>
@@ -65,6 +69,18 @@ and preservation requirements.
    clean chat tree, reusing matching
    private receipts. Its declared effects include local check/cache writes;
    package and provider operations remain with their owning controllers.
+
+   When the gate/helper repair being promoted is not yet on main, the reviewed,
+   committed candidate implementation may be invoked by absolute path from the
+   root integration checkout. It must be clean, on the selected registered chat
+   branch and share the root repository's Git metadata. It loads its own matching
+   helpers; root main remains the integration target and must still be clean.
+   Do not copy candidate files onto main or use a foreign/dirty implementation.
+   The supported invocation is the same existing gate, not an alternate bypass:
+
+   ```bash
+   bash <recorded-chat-worktree>/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh <chat-branch>
+   ```
 
 3. If verification reports `State: eligible`, confirm explicit user authority
    before merging. A merge request or end-to-end task instruction whose owning

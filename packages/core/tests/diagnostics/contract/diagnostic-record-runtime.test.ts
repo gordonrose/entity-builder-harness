@@ -17,6 +17,15 @@ import { logRecord } from "../../../src/logging/index";
 import { monitoringComponent } from "../../../src/monitoring/index";
 import { attachCoreDiagnosticRecord, inspectCoreDiagnosticAttachment } from "../../../src/shared/index";
 import { queueError } from "../../../src/queues/index";
+import * as auditDiagnosticBuilders from "../../../src/audit/diagnostics";
+import * as authnDiagnosticBuilders from "../../../src/authn/diagnostics";
+import * as eventDiagnosticBuilders from "../../../src/events/diagnostics";
+import * as fileDiagnosticBuilders from "../../../src/files/diagnostics";
+import * as i18nDiagnosticBuilders from "../../../src/i18n/diagnostics";
+import * as localizationDiagnosticBuilders from "../../../src/localization/diagnostics";
+import * as loggingDiagnosticBuilders from "../../../src/logging/diagnostics";
+import * as monitoringDiagnosticBuilders from "../../../src/monitoring/boundary-diagnostics";
+import * as tenancyDiagnosticBuilders from "../../../src/tenancy/diagnostics";
 import type { CoreError } from "../../../src/shared/index";
 
 type CompanionFactory = (input: { readonly code: never; readonly defaultMessage: string; readonly diagnosticRecord?: DiagnosticRecord }, evidence?: CoreAuditErrorEvidence) => CoreError;
@@ -249,19 +258,19 @@ equal(inspectCoreDiagnosticAttachment("private-processing-canary", selectedLiter
 equal(inspectCoreDiagnosticAttachment(new Proxy({}, { getOwnPropertyDescriptor() { throw new Error(); } }), selectedLiteral), "inspection-failed");
 
 // Substitute only the owning builder, exercising public operations and their real wrappers.
-for (const [modulePath, name, operation] of [
-  ["../../../src/events/diagnostics", "coreEventValidationDiagnosticRecord", eventType],
-  ["../../../src/audit/diagnostics", "coreAuditValidationDiagnosticRecord", auditEventType],
+for (const [moduleName, owner, name, operation] of [
+  ["events", eventDiagnosticBuilders, "coreEventValidationDiagnosticRecord", eventType],
+  ["audit", auditDiagnosticBuilders, "coreAuditValidationDiagnosticRecord", auditEventType],
 ] as const) {
-  const owner = require(modulePath) as Record<string, unknown>;
-  const original = owner[name];
+  const mutableOwner = owner as Record<string, unknown>;
+  const original = mutableOwner[name];
   try {
     for (const [replacement, reason] of [
       [() => { throw new Error("private-processing-canary"); }, "construction-threw"],
       [() => undefined, "construction-rejected"],
       [() => malformed, "definition-unselected"],
     ] as const) {
-      owner[name] = replacement;
+      mutableOwner[name] = replacement;
       const delivered: DiagnosticRecord[] = [];
       const failure = operation("Bad", { onDiagnostic(record, context) {
         deepEqual(context, { operation: "event-type", field: "type" }); delivered.push(record);
@@ -272,10 +281,10 @@ for (const [modulePath, name, operation] of [
       deepEqual(delivered, [diagnosticProcessingRecord(reason)]);
       equal(JSON.stringify(delivered).includes("private-processing-canary"), false);
     }
-  } finally { owner[name] = original; }
+  } finally { mutableOwner[name] = original; }
   const normal = operation("Bad");
   if (normal.ok) throw new Error("Expected normal validation failure.");
-  equal(normal.error.diagnosticRecord?.code, modulePath.includes("/events/") ? "core.events.validation-rejected" : "core.audit.validation-rejected");
+  equal(normal.error.diagnosticRecord?.code, moduleName === "events" ? "core.events.validation-rejected" : "core.audit.validation-rejected");
   deepEqual(normal.error.diagnosticRecord?.detail, { operation: "event-type", field: "type", reason: "invalid-format", effect: "rejected" });
 }
 
@@ -283,19 +292,18 @@ type FaultOptions = {
   diagnosticDefinitions: readonly (typeof definition)[];
   onDiagnostic: (record: DiagnosticRecord, context: unknown) => unknown;
 };
-const boundaryCases: readonly [string, string, string, (cause: unknown, options: FaultOptions) => unknown][] = [
-  ["events/diagnostics", "coreEventBoundaryDiagnosticRecord", "envelope", (cause, options) => eventEnvelope({ get id(): never { throw cause; } } as never, options)],
-  ["audit/diagnostics", "coreAuditBoundaryDiagnosticRecord", "event", (cause, options) => auditEvent({ get id(): never { throw cause; } } as never, options)],
-  ["authn/diagnostics", "coreAuthnBoundaryDiagnosticRecord", "principal", (cause, options) => principal({ get id(): never { throw cause; } } as never, options)],
-  ["tenancy/diagnostics", "coreTenancyBoundaryDiagnosticRecord", "tenant-context", (cause, options) => tenantContext({ get tenantId(): never { throw cause; } } as never, options)],
-  ["files/diagnostics", "coreFileBoundaryDiagnosticRecord", "storage-ref", (cause, options) => fileStorageRef({ get key(): never { throw cause; } }, options)],
-  ["i18n/diagnostics", "coreI18nBoundaryDiagnosticRecord", "message-template", (cause, options) => messageTemplate({ get length(): never { throw cause; } } as never, options)],
-  ["localization/diagnostics", "coreLocalizationBoundaryDiagnosticRecord", "localized-format", (cause, options) => localizedFormat({ get locale(): never { throw cause; } } as never, options)],
-  ["logging/diagnostics", "coreLoggingBoundaryDiagnosticRecord", "log-record", (cause, options) => logRecord({ get level(): never { throw cause; } } as never, options)],
-  ["monitoring/boundary-diagnostics", "coreMonitoringBoundaryDiagnosticRecord", "component", (cause, options) => monitoringComponent({ get type(): never { throw cause; }, name: "api" }, options)],
+const boundaryCases: readonly [Record<string, unknown>, string, string, (cause: unknown, options: FaultOptions) => unknown][] = [
+  [eventDiagnosticBuilders, "coreEventBoundaryDiagnosticRecord", "envelope", (cause, options) => eventEnvelope({ get id(): never { throw cause; } } as never, options)],
+  [auditDiagnosticBuilders, "coreAuditBoundaryDiagnosticRecord", "event", (cause, options) => auditEvent({ get id(): never { throw cause; } } as never, options)],
+  [authnDiagnosticBuilders, "coreAuthnBoundaryDiagnosticRecord", "principal", (cause, options) => principal({ get id(): never { throw cause; } } as never, options)],
+  [tenancyDiagnosticBuilders, "coreTenancyBoundaryDiagnosticRecord", "tenant-context", (cause, options) => tenantContext({ get tenantId(): never { throw cause; } } as never, options)],
+  [fileDiagnosticBuilders, "coreFileBoundaryDiagnosticRecord", "storage-ref", (cause, options) => fileStorageRef({ get key(): never { throw cause; } }, options)],
+  [i18nDiagnosticBuilders, "coreI18nBoundaryDiagnosticRecord", "message-template", (cause, options) => messageTemplate({ get length(): never { throw cause; } } as never, options)],
+  [localizationDiagnosticBuilders, "coreLocalizationBoundaryDiagnosticRecord", "localized-format", (cause, options) => localizedFormat({ get locale(): never { throw cause; } } as never, options)],
+  [loggingDiagnosticBuilders, "coreLoggingBoundaryDiagnosticRecord", "log-record", (cause, options) => logRecord({ get level(): never { throw cause; } } as never, options)],
+  [monitoringDiagnosticBuilders, "coreMonitoringBoundaryDiagnosticRecord", "component", (cause, options) => monitoringComponent({ get type(): never { throw cause; }, name: "api" }, options)],
 ];
-for (const [modulePath, name, expectedOperation, invoke] of boundaryCases) {
-  const owner = require("../../../src/" + modulePath) as Record<string, unknown>;
+for (const [owner, name, expectedOperation, invoke] of boundaryCases) {
   const original = owner[name];
   const source = Object.freeze({ diagnosticRecord: selectedLiteral, relatedDiagnosticRecords: Array(8).fill(selectedLiteral) });
   const delivered: DiagnosticRecord[] = [];

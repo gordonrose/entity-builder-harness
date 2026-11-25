@@ -9,7 +9,7 @@ import { coreUuidDiagnostic, coreUuidGenerationDiagnostic, correlationId, fixedC
 import { fixedFeatureFlagReader, validatePlatformCapabilityObservabilityProfile,
   validatePlatformDiagnosticCatalog, validatePlatformRouteRegistration,
   type PlatformAppRegistry, type PlatformCapabilityObservabilityProfile, type PlatformDiagnosticCatalog,
-  type PlatformHealthRegistration, type PlatformMountDeps, type PlatformRequestContext,
+  type PlatformHealthRegistration, type PlatformJobRegistration, type PlatformMountDeps, type PlatformRequestContext,
   type PlatformRouteRegistration } from "@kanbien/platform-contracts";
 import { createEntitySmokePersistenceApp, inMemoryTestEntityRepository, testEntityDiagnosticCatalog,
   type CreateTestEntityInput, type EntitySmokePersistenceAppOptions, type TestEntityError,
@@ -43,12 +43,15 @@ async function main(): Promise<void> {
       get(entityId) { repositoryCalls++; if (readFailure !== undefined) throw readFailure; return repository.get(entityId); },
       save(entity) { repositoryCalls++; return repository.save(entity); },
       listByStatus(status) { repositoryCalls++; if (readFailure !== undefined) throw readFailure; return repository.listByStatus(status); },
+      listArchivedDeleted() { repositoryCalls++; if (readFailure !== undefined) throw readFailure; return repository.listArchivedDeleted(); },
+      purgeArchivedDeleted(entityId) { repositoryCalls++; return repository.purgeArchivedDeleted(entityId); },
     },
   };
   const catalogs: PlatformDiagnosticCatalog[] = [];
   const profiles: PlatformCapabilityObservabilityProfile[] = [];
   const routes: PlatformRouteRegistration[] = [];
   const health: PlatformHealthRegistration[] = [];
+  const jobs: PlatformJobRegistration[] = [];
   const unexpectedRegistration = (): never => { throw new Error("Unexpected registration outside this smoke mount."); };
   // A recording dependency seam, not a second Platform registry implementation.
   const registry: PlatformAppRegistry = {
@@ -67,8 +70,9 @@ async function main(): Promise<void> {
       if (checked.ok) routes.push(route);
       return checked;
     },
+    registerJob(job) { jobs.push(job); return ok(undefined); },
     registerHealthCheck(check) { health.push(check); return ok(undefined); },
-    registerPermission: unexpectedRegistration, registerJob: unexpectedRegistration, registerConfigSchema: unexpectedRegistration,
+    registerPermission: unexpectedRegistration, registerConfigSchema: unexpectedRegistration,
   };
   const mountDeps: PlatformMountDeps = { clock, logger: noopLogger, metrics: noopMetrics,
     config: recordConfigSource({}), flags: fixedFeatureFlagReader({}) };
@@ -88,6 +92,8 @@ async function main(): Promise<void> {
   deepEqual(profiles[0]!.logFieldNames, ["capability", "action", "outcome", "error_class"]);
   deepEqual(profiles[0]!.errorClasses, ["test_entity_operation_failed", "test_entity_request_invalid"]);
   equal(routes.length, 1); equal(health.length, 1);
+  equal(jobs.length, 1); equal(jobs[0]!.name, "entity-smoke.test-entity.purge-expired");
+  equal(jobs[0]!.messageType, "entity-smoke.test-entity.purge-expired");
   const route = routes[0]!;
   equal(route.name, "entity-smoke.test-entity.command"); equal(route.method, "POST");
   equal(route.path, "/entity-smoke/test-entity"); deepEqual(route.auth, { kind: "public" });
@@ -175,7 +181,7 @@ async function main(): Promise<void> {
   equal(Reflect.get(unhealthy, "relatedDiagnosticRecords"), related); equal(readinessCalls, 2);
   const registrationFailure = { code: "PLATFORM_CONTRACT_DUPLICATE_REGISTRATION" as const,
     defaultMessage: "The registration already exists.", diagnosticRecord: primary.value, relatedDiagnosticRecords: related };
-  const registrationOrder = ["catalog", "profile", "health", "route"] as const;
+  const registrationOrder = ["catalog", "profile", "health", "route", "job"] as const;
   for (const [index, failedAt] of registrationOrder.entries()) {
     const attempted: string[] = [];
     const register = (name: string): ReturnType<PlatformAppRegistry["registerRoute"]> => {
@@ -185,6 +191,7 @@ async function main(): Promise<void> {
     await rejects(async () => app.mount({ ...registry,
       registerDiagnosticCatalog: () => register("catalog"), registerObservabilityProfile: () => register("profile"),
       registerHealthCheck: () => register("health"), registerRoute: () => register("route"),
+      registerJob: () => register("job"),
     }, mountDeps), error => error === registrationFailure);
     deepEqual(attempted, registrationOrder.slice(0, index + 1), "registration rejection stops later registrations");
   }

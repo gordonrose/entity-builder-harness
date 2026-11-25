@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.package-custody-capture
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -25,17 +25,23 @@ from types import SimpleNamespace
 from validate import validate,Failure,BASE_CHECKS
 
 OUTCOMES=['QUALIFICATION_OUTCOME','ACCESS_OUTCOME','PUBLICATION_OUTCOME','SCAN_OUTCOME','SBOM_OUTCOME','PROVENANCE_OUTCOME','SBOM_ATTESTATION_OUTCOME']
-INTENTIONAL_FAILURES={'custody-prerequisite-not-successful','custody-scan-kind-invalid','custody-sbom-invalid'}
+INTENTIONAL_FAILURES={'custody-prerequisite-not-successful','custody-scan-kind-invalid','custody-sbom-invalid','custody-local-qualification-invalid'}
 def main():
     parser=argparse.ArgumentParser()
     parser.error=lambda _message: parser.exit(2,json.dumps({'verdict':'failed','code':'custody-evidence-invalid'})+'\n')
     for name in ['target','environment-class','provider-region-alias','candidate','package-contract','program','scan-check','sbom','output']:parser.add_argument('--'+name,required=True)
+    parser.add_argument('--local-qualification', type=Path)
     args=parser.parse_args()
     if any(os.environ.get(key)!='success' for key in OUTCOMES):raise ValueError('custody-prerequisite-not-successful')
     if args.scan_check not in {'ecr_scan','vulnerability_scan'}:raise ValueError('custody-scan-kind-invalid')
     sbom=json.loads(Path(args.sbom).read_text())
     if not isinstance(sbom,dict) or not str(sbom.get('spdxVersion','')).startswith('SPDX-'):raise ValueError('custody-sbom-invalid')
-    receipt={'schema':'deploy/package-custody-receipt/v1','target':args.target,'environment_class':args.environment_class,'provider_region_alias':args.provider_region_alias,'candidate_id':args.candidate,'package_contract_id':args.package_contract,'program_id':args.program,'source_revision':os.environ.get('GITHUB_SHA'),'image_digest':os.environ.get('IMAGE_DIGEST'),'release_identity':'source-'+os.environ.get('GITHUB_SHA',''),'checked_at':datetime.now(timezone.utc).isoformat(),'checks':{key:'passed' for key in BASE_CHECKS|{args.scan_check}},'verdict':'qualified','receipt_reference':'github-actions-run:'+os.environ.get('GITHUB_RUN_ID','')}
+    qualification = None
+    if args.local_qualification:
+        qualification=json.loads(args.local_qualification.read_text(encoding='utf-8'))
+        if not isinstance(qualification,dict) or qualification.get('source_revision') != os.environ.get('GITHUB_SHA') or qualification.get('target') != args.target: raise ValueError('custody-local-qualification-invalid')
+    receipt={'schema':'deploy/package-custody-receipt/v2' if qualification is not None else 'deploy/package-custody-receipt/v1','target':args.target,'environment_class':args.environment_class,'provider_region_alias':args.provider_region_alias,'candidate_id':args.candidate,'package_contract_id':args.package_contract,'program_id':args.program,'source_revision':os.environ.get('GITHUB_SHA'),'image_digest':os.environ.get('IMAGE_DIGEST'),'release_identity':'source-'+os.environ.get('GITHUB_SHA',''),'checked_at':datetime.now(timezone.utc).isoformat(),'checks':{key:'passed' for key in BASE_CHECKS|{args.scan_check}},'verdict':'qualified','receipt_reference':'github-actions-run:'+os.environ.get('GITHUB_RUN_ID','')}
+    if qualification is not None: receipt['local_qualification']=qualification
     validate(receipt,SimpleNamespace(expected_target=args.target,expected_candidate=args.candidate,expected_package_contract=args.package_contract,expected_program=args.program))
     with Path(args.output).open('x') as handle:json.dump(receipt,handle,sort_keys=True);handle.write('\n')
     return 0

@@ -4,7 +4,7 @@
 //   version: 2
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-22"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -105,12 +105,17 @@ export async function performEntitySmokeAdministration(pool: PostgreSqlConnectio
     } else {
       await client.query({ text: 'SET LOCAL ROLE entity_smoke_migration' });
       const manifest = entitySmokeMigrationManifest();
-      const history = await client.query<{ checksum: string }>({ text: 'SELECT checksum FROM "entity_smoke".platform_migration_history WHERE migration_id = $1', values: [manifest.migrations[0].id] });
-      if (history.rows.length !== 1) throw entitySmokeDependencyStateError(operation, "history-count", "count-mismatch");
-      if (history.rows[0]?.checksum !== manifest.migrations[0].checksum) throw entitySmokeDependencyStateError(operation, "history-checksum", "mismatch");
+      const history = await client.query<{ migration_id: string; checksum: string }>({ text: 'SELECT migration_id, checksum FROM "entity_smoke".platform_migration_history ORDER BY migration_id ASC' });
+      if (history.rows.length !== manifest.migrations.length) throw entitySmokeDependencyStateError(operation, "history-count", "count-mismatch");
+      if (history.rows.some((row, ordinal) => row.migration_id !== manifest.migrations[ordinal]?.id)) throw entitySmokeDependencyStateError(operation, "history-id", "mismatch");
+      if (history.rows.some((row, ordinal) => row.checksum !== manifest.migrations[ordinal]?.checksum)) throw entitySmokeDependencyStateError(operation, "history-checksum", "mismatch");
       await client.query({ text: 'REVOKE ALL ON "entity_smoke".platform_migration_history FROM entity_smoke_runtime' });
       await client.query({ text: 'REVOKE ALL ON "entity_smoke".test_entity FROM entity_smoke_runtime' });
       await client.query({ text: 'GRANT SELECT, INSERT, UPDATE ON "entity_smoke".test_entity TO entity_smoke_runtime' });
+      await client.query({ text: 'REVOKE ALL ON "entity_smoke".platform_schedule FROM entity_smoke_runtime' });
+      await client.query({ text: 'GRANT SELECT, INSERT, UPDATE ON "entity_smoke".platform_schedule TO entity_smoke_runtime' });
+      await client.query({ text: 'REVOKE ALL ON "entity_smoke".platform_outbox FROM entity_smoke_runtime' });
+      await client.query({ text: 'GRANT SELECT, INSERT ON "entity_smoke".platform_outbox TO entity_smoke_runtime' });
     }
     const authentication = await client.query<{ allowed: boolean }>({
       text: `SELECT ${entitySmokePasswordAuthenticationPredicate} AS allowed`,
@@ -174,7 +179,7 @@ async function observePermissions(pool: PostgreSqlConnectionPool, database: stri
     // explicit runtime privileges as the owner, never by inheriting its rights.
     await client.query({ text: 'SET LOCAL ROLE entity_smoke_migration' });
     const observed = await client.query<{ allowed: boolean }>({
-      text: "SELECT has_schema_privilege($1, $2, 'USAGE') AND NOT has_schema_privilege($1, $2, 'CREATE') AND NOT has_database_privilege($1, $3, 'CREATE') AND has_table_privilege($1, 'entity_smoke.test_entity', 'SELECT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'INSERT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'UPDATE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'DELETE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'TRUNCATE') AND NOT has_table_privilege($1, 'entity_smoke.platform_migration_history', 'INSERT, UPDATE, DELETE') AS allowed",
+      text: "SELECT has_schema_privilege($1, $2, 'USAGE') AND NOT has_schema_privilege($1, $2, 'CREATE') AND NOT has_database_privilege($1, $3, 'CREATE') AND has_table_privilege($1, 'entity_smoke.test_entity', 'SELECT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'INSERT') AND has_table_privilege($1, 'entity_smoke.test_entity', 'UPDATE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'DELETE') AND NOT has_table_privilege($1, 'entity_smoke.test_entity', 'TRUNCATE') AND has_table_privilege($1, 'entity_smoke.platform_schedule', 'SELECT') AND has_table_privilege($1, 'entity_smoke.platform_schedule', 'INSERT') AND has_table_privilege($1, 'entity_smoke.platform_schedule', 'UPDATE') AND has_table_privilege($1, 'entity_smoke.platform_outbox', 'SELECT') AND has_table_privilege($1, 'entity_smoke.platform_outbox', 'INSERT') AND NOT has_table_privilege($1, 'entity_smoke.platform_migration_history', 'INSERT, UPDATE, DELETE') AS allowed",
       values: [entitySmokeRuntimeUsername, entitySmokeSchema, database],
     });
     const memberships = await client.query({ text: "SELECT 1 FROM pg_auth_members m JOIN pg_roles member ON member.oid = m.member JOIN pg_roles role ON role.oid = m.roleid WHERE member.rolname = ANY($1::text[]) AND role.rolname <> 'rds_iam'", values: [[entitySmokeRuntimeUsername, entitySmokeMigrationUsername]] });
@@ -207,27 +212,33 @@ async function observeMigrationState(pool: PostgreSqlConnectionPool): Promise<Ad
     if (lock.rows[0]?.acquired === false) throw rejected("migration-lock", "already-running");
     if (lock.rows[0]?.acquired !== true) throw rejected("migration-lock", "not-confirmed");
     await client.query({ text: 'SET LOCAL ROLE entity_smoke_migration' });
-    const tables = await client.query<{ history: string | null; entity: string | null; index: string | null }>({
-      text: "SELECT to_regclass($1)::text AS history, to_regclass($2)::text AS entity, to_regclass($3)::text AS index",
-      values: ["entity_smoke.platform_migration_history", "entity_smoke.test_entity", "entity_smoke.test_entity_status_created_at_idx"],
+    const tables = await client.query<{ history: string | null; entity: string | null; index: string | null; schedule: string | null; outbox: string | null; processing: string | null; lineage: string | null }>({
+      text: "SELECT to_regclass($1)::text AS history, to_regclass($2)::text AS entity, to_regclass($3)::text AS index, to_regclass($4)::text AS schedule, to_regclass($5)::text AS outbox, to_regclass($6)::text AS processing, to_regclass($7)::text AS lineage",
+      values: ["entity_smoke.platform_migration_history", "entity_smoke.test_entity", "entity_smoke.test_entity_status_created_at_idx", "entity_smoke.platform_schedule", "entity_smoke.platform_outbox", "entity_smoke.platform_processing", "entity_smoke.platform_record_change"],
     });
     const state = tables.rows[0];
-    if (tables.rows.length !== 1 || state === undefined || [state.history, state.entity, state.index].some(value => value !== null && typeof value !== "string")) throw rejected("table-state", "not-confirmed");
+    if (tables.rows.length !== 1 || state === undefined || [state.history, state.entity, state.index, state.schedule, state.outbox, state.processing, state.lineage].some(value => value !== null && typeof value !== "string")) throw rejected("table-state", "not-confirmed");
     if (state.history === null) {
-      if (state.entity !== null || state.index !== null) throw rejected("table-state", "mismatch");
+      if ([state.entity, state.index, state.schedule, state.outbox, state.processing, state.lineage].some(value => value !== null)) throw rejected("table-state", "mismatch");
       return "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED";
     }
     const history = await client.query<{ migration_id: string; checksum: string }>({ text: 'SELECT migration_id, checksum FROM "entity_smoke".platform_migration_history ORDER BY migration_id ASC' });
     if (history.rows.length === 0) {
-      if (state.entity !== null || state.index !== null) throw rejected("table-state", "mismatch");
+      if ([state.entity, state.index, state.schedule, state.outbox, state.processing, state.lineage].some(value => value !== null)) throw rejected("table-state", "mismatch");
       return "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED";
     }
-    if (history.rows.length !== 1) throw rejected("history-count", "count-mismatch");
-    const migration = entitySmokeMigrationManifest().migrations[0];
-    if (history.rows[0]?.migration_id !== migration.id) throw rejected("history-id", "mismatch");
-    if (history.rows[0]?.checksum !== migration.checksum) throw rejected("history-checksum", "mismatch");
+    const migrations = entitySmokeMigrationManifest().migrations;
+    if (history.rows.length > migrations.length) throw rejected("history-count", "count-mismatch");
+    if (history.rows.some((row, ordinal) => row.migration_id !== migrations[ordinal]?.id)) throw rejected("history-id", "mismatch");
+    if (history.rows.some((row, ordinal) => row.checksum !== migrations[ordinal]?.checksum)) throw rejected("history-checksum", "mismatch");
     if (state.entity === null || state.index === null) throw rejected("table-state", "missing");
-    return "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";
+    const scheduleExpected = history.rows.length >= 2;
+    const foundationExpected = history.rows.length >= 3;
+    if ((state.schedule !== null) !== scheduleExpected) throw rejected("table-state", scheduleExpected ? "missing" : "mismatch");
+    const foundation = [state.outbox, state.processing, state.lineage];
+    if (foundationExpected && foundation.some(value => value === null)) throw rejected("table-state", "missing");
+    if (!foundationExpected && foundation.some(value => value !== null)) throw rejected("table-state", "mismatch");
+    return history.rows.length === migrations.length ? "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED" : "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED";
   } catch (cause) {
     failed = true;
     throw cause;

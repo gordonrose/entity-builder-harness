@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 4
 #   status: active
 #   created_on: "2026-07-09"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-22"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -193,7 +193,7 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
 
 grep -q 'Verification preparation passed.' "$TMP_ROOT/before-verification.out" \
   || fail "before-verification mode did not pass"
-expected_order=$'lifecycle --paths .agentic/task.md src/feature.ts --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md src/feature.ts\nselector --paths .agentic/task.md src/feature.ts --stage local --boundary commit --record-preparation --json'
+expected_order=$'lifecycle --paths .agentic/task.md src/feature.ts --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md src/feature.ts\nselector --paths .agentic/task.md src/feature.ts --changed-only --stage local --boundary commit --record-preparation --json'
 if [[ "$(cat "$REPO/preparation-order")" != "$expected_order" ]]; then
   fail "before-verification did not complete lifecycle, structural, then selector preparation in order"
 fi

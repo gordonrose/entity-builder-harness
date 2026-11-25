@@ -1,11 +1,16 @@
-import { definePlatformApp, platformAppId, platformHealthName, platformRouteName,
+import { definePlatformApp, platformAppId, platformHealthName, platformJobName, platformRouteName,
   platformCapabilityName, platformObservabilityProfileName, type PlatformApp } from "@kanbien/platform-contracts";
 import { healthCheckName, healthCheckResult, monitoringComponent } from "@kanbien/core/monitoring";
 import { isoDateTimeFromDate } from "@kanbien/core/shared";
+import type { QueueMessageType } from "@kanbien/core/queues";
 import type { CoreError } from "@kanbien/core/shared";
 import { testEntityDiagnosticCatalog } from "../../features/test-entity/contract/diagnostics";
 import { handleTestEntityCommand } from "../../features/test-entity/transport/http";
 import type { TestEntityServiceDependencies } from "../../features/test-entity/domain/services/dependencies";
+import { purgeExpiredTestEntitiesService } from "../../features/test-entity/domain/services/purge-expired-test-entities";
+
+export const entitySmokeExpiredPurgeJobName = required(platformJobName("entity-smoke.test-entity.purge-expired"));
+export const entitySmokeExpiredPurgeMessageType = "entity-smoke.test-entity.purge-expired" as QueueMessageType;
 
 export interface EntitySmokePersistenceAppOptions {
   readonly services: TestEntityServiceDependencies;
@@ -35,6 +40,9 @@ export function createEntitySmokePersistenceApp(options: EntitySmokePersistenceA
       required(registry.registerRoute({ name: required(platformRouteName("entity-smoke.test-entity.command")), method: "POST", path: "/entity-smoke/test-entity",
         auth: { kind: "public" }, observability: { kind: "profile", profile },
         handler: { handle: (request, context) => handleTestEntityCommand(request.body, options.services, context.onDiagnostic) } }));
+      required(registry.registerJob({ name: entitySmokeExpiredPurgeJobName, messageType: entitySmokeExpiredPurgeMessageType,
+        observability: { kind: "profile", profile },
+        handler: { handle: async () => { await purgeExpiredTestEntitiesService(options.services); } } }));
     },
   });
 }

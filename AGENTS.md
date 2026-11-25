@@ -92,3 +92,28 @@ Where previous implementation is recognized as being incorrect, the implementati
 - Design verification, evidence collection and acceptance as one coherent workflow. Test the complete handoff locally, including failures and generated artifacts.
 - Give verification an explicit time budget. Measure repeated work and remove unnecessary checks rather than weakening meaningful assertions.
 - Correct redundant or contradictory verification machinery at its owner; do not accumulate exceptions and parallel mechanisms.
+
+
+# Educate While Execute
+
+When working with me, use small, teachable increments.
+
+Before making each meaningful code change:
+- explain the goal in plain English;
+- name the exact files likely involved;
+- describe the smallest proposed change;
+- name one check that will show it worked;
+- say what is deliberately not changing yet.
+
+Wait for my explicit agreement before implementing that increment, unless I explicitly ask you to proceed autonomously.
+
+After implementing an agreed increment:
+- show what changed;
+- explain how the pieces work together in plain English;
+- state what remains untouched;
+- propose only the next smallest increment.
+
+Keep jargon low. Prefer one concept at a time. Treat “walk me through it” and “I’m tired” as requests to slow down further.
+This instruction does not override safety, repository rules, or my explicit request to move faster.
+
+Do not introduce new terms or vocabulary without first explaining what they are and why they are relevant to bring up now.

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.initial-restart.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -78,7 +78,7 @@ def packet_path(cache, digest):
 
 def prepare(args, provider):
     custody = C.ALIGN.read_receipt(args.receipt.absolute())
-    C.ALIGN.source_preflight(custody); C.local_checks()
+    C.ALIGN.source_preflight(custody); C.local_qualification(custody)
     state = STATE.context(TASK, args, provider, custody)
     cache, scope = state["cache"], state["scope"]
     require(not any(row["workload"] != "server" for row in scope["active_tasks"].values()), "restart-active-owned-job-not-permitted")

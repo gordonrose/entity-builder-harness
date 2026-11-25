@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.check-artifact-path-migration
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-22"
 #   layer: 01.harness
 #   domain: migration
 #   disciplines:
@@ -121,6 +121,12 @@ is_historical_path() {
       return 0
       ;;
     .agentic/02.rag-rulebook/retirements/*)
+      return 0
+      ;;
+    .agentic/02.rag-rulebook/recognition-sources/generated/*)
+      return 0
+      ;;
+    infra/04.deploy/03.product/targets/*/20-scopes/*/30-release-evidence/proof-receipts/*.json)
       return 0
       ;;
     *)

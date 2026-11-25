@@ -5,7 +5,7 @@
 #   version: 8
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -95,7 +95,7 @@ def failed(call, code):
 # Controlled prerequisites exercise the public orchestration and real generic
 # compiler, not source/custody qualification or provider observations. Actual
 # CLI failures below run without these substitutions and cannot contact AWS.
-original = {name: getattr(M, name) for name in ("ROOT", "source_digest", "digest_file", "local_checks")}
+original = {name: getattr(M, name) for name in ("ROOT", "source_digest", "digest_file", "local_qualification")}
 old_receipt, old_preflight, old_inspect = M.ALIGN.read_receipt, M.ALIGN.source_preflight, M.ALIGN.inspect
 with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as temporary:
     root = Path(temporary)
@@ -105,7 +105,7 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     actual_digest = original["digest_file"]
     M.digest_file = lambda path: actual_digest(path) if path.is_file() else "sha256:" + "c" * 64
     source_calls = []
-    M.local_checks = lambda: source_calls.append("registered-local-proof-double")
+    M.local_qualification = lambda *_: source_calls.append("package-local-qualification-double")
     M.ALIGN.read_receipt = lambda path: {"source_revision": F.BINDING["source_revision"], "image_digest": F.BINDING["image_digest"], "receipt_reference": "github-actions-run:123"}
     M.ALIGN.source_preflight = lambda receipt: source_calls.append("committed-source-double")
     M.ALIGN.inspect = lambda provider, receipt, checked_at: ({"dependency_incarnation_sha256": F.BINDING["dependency_incarnation_sha256"]}, copy.deepcopy(F.PARAMETERS), "private-group")
@@ -184,7 +184,7 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     assert all(path.read_bytes() == raw for path, raw in {**admission_bytes, **reserved_bytes}.items())
     assert sum(operation == "execute-change-set" for _, operation, _ in provider.calls) == 1
     provider.deny_policy = True
-    with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "source_preflight", admission_unavailable), \
+    with patch.object(M, "local_qualification", admission_unavailable), patch.object(M.ALIGN, "source_preflight", admission_unavailable), \
          patch.object(M.ALIGN, "inspect", admission_unavailable), patch.object(M, "now", lambda: "2099-01-01T00:00:00Z"):
         provider.stack["StackStatus"] = "CREATE_IN_PROGRESS"
         with patch.object(M.DEPLOY.CHANGE_SETS, "retained_execution", wraps=M.DEPLOY.CHANGE_SETS.retained_execution) as selection:
@@ -382,7 +382,7 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     assert M.run(activation, provider)["verdict"] == "completed"
     # An older valid CREATE approval cannot be attached to ACTIVATE intent.
     activation.approved_plan = plan["plan_sha256"]
-    with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "inspect", admission_unavailable):
+    with patch.object(M, "local_qualification", admission_unavailable), patch.object(M.ALIGN, "inspect", admission_unavailable):
         failed(lambda: M.run(activation, provider), "infrastructure-approved-plan-mismatch")
     activation.approved_plan = activation_plan["plan_sha256"]
     original_execution = M.read_execution_reservation(store, plan["plan"]["binding"], active_parameters, True)
@@ -450,7 +450,7 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-route-") as
     M.now = old_clock
     for path in root.rglob("*.json"):
         assert CANARY not in path.read_text() and F.PARAMETERS["AdministratorSecretArn"] not in path.read_text()
-    assert source_calls.count("committed-source-double") == source_calls.count("registered-local-proof-double")
+    assert source_calls.count("committed-source-double") == source_calls.count("package-local-qualification-double")
     original_source = M.DEPLOY.SOURCE
     oversized = root / "oversized-template.yml"
     oversized.write_text(original_source.read_text() + "\n# bounded payload fixture\n" * 3000)
@@ -483,79 +483,26 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-infrastructure-cli-") as t
     assert result.returncode != 0 and json.loads(result.stdout)["condition"] == "infrastructure-arguments-invalid"
     assert not marker.exists()
 
-# A failed real local-check consumer retains its safe report reference at the
-# actual main reporter, without forwarding the child's native stderr.
-with tempfile.TemporaryDirectory(prefix="entity-smoke-local-proof-reference-") as temporary:
+# Live admission validates the package receipt only; executing local tests is
+# owned by package qualification. The binding rejects any missing or altered
+# local proof before the main route can reach a provider observer.
+with tempfile.TemporaryDirectory(prefix="entity-smoke-local-qualification-") as temporary:
     root = Path(temporary)
-    reference = ".cache/test-runs/20261108T000000Z-" + "1" * 32 + "/report.json"
-    report = root / reference; report.parent.mkdir(parents=True); report.write_text('{"fixture":true}')
-    old_root, old_run, old_parse = M.ROOT, M.subprocess.run, M.parse
-    old_read, old_source = M.ALIGN.read_receipt, M.ALIGN.source_preflight
-    M.ROOT = root
-    def local_result(arguments, **options):
-        assert arguments == ["python3", "-B", "scripts/repo/check-selection/script.py", "--checks", "entity-smoke-composition", "secret-dependency-declaration-regression", "--execute-local", "--json"]
-        assert options == {"cwd": root, "capture_output": True, "text": True, "timeout": 900}
-        return SimpleNamespace(returncode=1, stdout=json.dumps({"run_report_path": reference, "checks": [], "findings": []}), stderr=CANARY)
-    M.subprocess.run = local_result
+    checks = {identity: {"input_digest": f"{index:064x}", "evidence_key": f"{index + 3:064x}"}
+              for index, identity in enumerate(sorted(M.LOCAL_QUALIFICATION.REQUIRED_CHECKS), 1)}
+    receipt = {"schema": "deploy/package-custody-receipt/v2", "target": "kanbien-core-platform", "source_revision": "a" * 40,
+               "local_qualification": {"schema": "deploy/local-qualification/v1", "target": "kanbien-core-platform", "scope": "entity-smoke", "source_revision": "a" * 40, "checks": checks}}
+    M.local_qualification(receipt)
+    failed(lambda: M.local_qualification({}), "infrastructure-local-qualification-not-confirmed")
+    old_parse, old_read, old_source = M.parse, M.ALIGN.read_receipt, M.ALIGN.source_preflight
     M.parse = lambda: SimpleNamespace(receipt=root / "controlled.json", mode="plan", phase="create", proof_label=F.BINDING["proof_label"], validate_arguments=False)
-    M.ALIGN.read_receipt, M.ALIGN.source_preflight = lambda path: {}, lambda receipt: None
+    M.ALIGN.read_receipt, M.ALIGN.source_preflight = lambda path: {}, lambda value: None
     output = io.StringIO()
     with redirect_stdout(output): status = M.main()
     failure = json.loads(output.getvalue())
-    assert status == 1 and failure["condition"] == "infrastructure-local-proof-not-passed" and failure["evidence_reference"] == reference
-    assert CANARY not in output.getvalue() and failure["effect"] == "not-started"
-    def local_timeout(arguments, **options):
-        assert options["timeout"] == 900
-        raise subprocess.TimeoutExpired(arguments, 900, stderr=CANARY)
-    M.subprocess.run = local_timeout
-    failed(M.local_checks, "infrastructure-local-proof-unavailable")
-    # Success comes only from the existing selected runner, never an imported
-    # report or force/reuse override. The runner owns input-bound cache reuse.
-    requested = ["entity-smoke-composition", "secret-dependency-declaration-regression"]
-    catalog = M.yaml.safe_load((REAL_ROOT / "scripts/repo/check-selection/checks.yml").read_text())["checks"]
-    identities = requested + catalog[requested[0]]["members"]
-    successful = {"schema": "repo/check-selection-report/v1", "stage": "local", "verdict": "passed",
-                  "selection_mode": "explicit-checks", "requested_check_ids": requested, "findings": [],
-                  "run_report_path": reference,
-                  "checks": [{"check_id": identity, "status": "passed", "stage": "local",
-                              "catalog_entries": {identity: catalog[identity]},
-                              "dependency_ids": list(catalog[identity].get("members", []))} for identity in identities]}
-    response_value = successful
-    M.subprocess.run = lambda arguments, **options: SimpleNamespace(returncode=0, stdout=json.dumps(response_value), stderr=CANARY)
-    M.local_checks()
-    for ordinal in range(len(successful["checks"])):
-        response_value = copy.deepcopy(successful)
-        response_value["checks"].pop(ordinal)
-        failed(M.local_checks, "infrastructure-local-proof-not-passed")
-        for status in ("failed", "blocked", "running", "deferred"):
-            response_value = copy.deepcopy(successful)
-            response_value["checks"][ordinal]["status"] = status
-            failed(M.local_checks, "infrastructure-local-proof-not-passed")
-    for field, invalid in (("verdict", "planned"), ("stage", "deploy"), ("findings", [{}]),
-                           ("requested_check_ids", ["other-check"]), ("checks", [None])):
-        response_value = {**successful, field: invalid}
-        failed(M.local_checks, "infrastructure-local-proof-not-passed")
-    response_value = copy.deepcopy(successful)
-    response_value["checks"].append(response_value["checks"][0])
-    failed(M.local_checks, "infrastructure-local-proof-not-passed")
-    response_value = copy.deepcopy(successful)
-    response_value["checks"][0]["dependency_ids"] = []
-    failed(M.local_checks, "infrastructure-local-proof-not-passed")
-    output = io.StringIO()
-    with redirect_stdout(output): status = M.main()
-    failure = json.loads(output.getvalue())
-    assert status == 1 and failure["condition"] == "infrastructure-local-proof-not-passed"
-    assert failure["evidence_reference"] == reference and failure["effect"] == "not-started"
+    assert status == 1 and failure["condition"] == "infrastructure-local-qualification-not-confirmed" and failure["effect"] == "not-started"
     assert CANARY not in output.getvalue()
-    # Future catalog members work without another workload-specific name list.
-    response_value = copy.deepcopy(successful)
-    response_value["checks"][0]["dependency_ids"].append("future-member")
-    response_value["checks"][0]["catalog_entries"][requested[0]]["members"].append("future-member")
-    response_value["checks"].append({"check_id": "future-member", "status": "passed", "stage": "local",
-                                    "catalog_entries": {"future-member": {}}, "dependency_ids": []})
-    M.local_checks()
-    M.ROOT, M.subprocess.run, M.parse = old_root, old_run, old_parse
-    M.ALIGN.read_receipt, M.ALIGN.source_preflight = old_read, old_source
+    M.parse, M.ALIGN.read_receipt, M.ALIGN.source_preflight = old_parse, old_read, old_source
 
 # Preserve actual evidence-owner meaning at the real infrastructure reporter.
 primary = {"schema": "core/diagnostic-record/v1", "code": "entity-smoke-target.preflight-rejected", "definitionVersion": 1,
@@ -578,7 +525,7 @@ identity_paths = []
 dependency_paths = [REAL_ROOT / "scripts/04.deploy/shared/provider-adapters/aws" / name for name in ("cli.py", "tasks.py", "resource_reservation.py", "snapshots.py", "change_sets.py", "ecr-scan.py", "foundation-checks.py")]
 dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
 dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py")
-dependency_paths.append(Path(M.CHECK_RESULTS.__file__))
+dependency_paths.append(Path(M.LOCAL_QUALIFICATION.__file__))
 dependency_paths.extend([Path(M.ALIGN.INPUT_OWNER.__file__), Path(M.ALIGN.INPUT_OWNER.PATHS.__file__),
                          *(REAL_ROOT / reference for reference in M.ALIGN.INPUTS["references"])])
 try:
@@ -734,7 +681,7 @@ def successor_protocols():
         admission = []
         with patch.object(M, "ROOT", root), patch.object(M, "source_digest", lambda: "sha256:" + "f" * 64), \
              patch.object(M, "digest_file", lambda path: actual_digest(path) if path.is_file() else "sha256:" + "c" * 64), \
-             patch.object(M, "local_checks", lambda: None), patch.object(M.ALIGN, "source_preflight", lambda value: None), \
+             patch.object(M, "local_qualification", lambda *_: None), patch.object(M.ALIGN, "source_preflight", lambda value: None), \
              patch.object(M.ALIGN, "read_receipt", lambda path: receipt), \
              patch.object(M.ALIGN, "inspect", lambda *arguments: ({"dependency_incarnation_sha256": F.BINDING["dependency_incarnation_sha256"]}, copy.deepcopy(F.PARAMETERS), "fixture")), \
              patch.object(M.SUCCESSION, "current", lambda path: current), patch.object(M.SUCCESSION, "history_record_for_id", lambda *arguments: (history, b"controlled")), \
@@ -774,7 +721,7 @@ def successor_protocols():
             provider.mutate_change = lambda change: None
             failed(lambda: M.run(args, provider), "deployment-execution-uncertain-reconcile-only")
             assert [op for _, op, _ in provider.calls if op in {"create-change-set", "execute-change-set"}] == ["create-change-set", "execute-change-set"]
-            with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "source_preflight", admission_unavailable), \
+            with patch.object(M, "local_qualification", admission_unavailable), patch.object(M.ALIGN, "source_preflight", admission_unavailable), \
                  patch.object(M.ALIGN, "inspect", admission_unavailable), patch.object(M, "successor_admission", admission_unavailable), \
                  patch.object(M, "rollback_selection", admission_unavailable):
                 provider.stack["StackStatus"] = "UPDATE_IN_PROGRESS"
@@ -842,7 +789,7 @@ def successor_protocols():
                     args.approved_plan, args.mode = rollback_plan["plan_sha256"], "apply"
                     provider.lost_execute = False
                     assert M.run(args, provider)["verdict"] == "completed"
-                    with patch.object(M, "local_checks", admission_unavailable), patch.object(M.ALIGN, "inspect", admission_unavailable):
+                    with patch.object(M, "local_qualification", admission_unavailable), patch.object(M.ALIGN, "inspect", admission_unavailable):
                         assert M.run(args, provider)["verdict"] == "completed"
                     assert sum(op == "execute-change-set" for _, op, _ in provider.calls) == 2
             assert admission and current["release_id"] == predecessor["release_id"]

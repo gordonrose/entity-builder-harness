@@ -5,12 +5,17 @@ export { persistenceLeaseDurationRequirement, persistenceLeaseDurationReasons, v
   persistenceLeasingDiagnosticCatalog } from "./leasing/index";
 export type { PersistenceLeaseDurationReason } from "./leasing/index";
 export { persistenceConfigurationInputDiagnostic, persistenceConfigurationInputDiagnosticRecord } from "./diagnostics";
-export { persistenceCurrentDiagnosticDefinitions, persistenceCrudDiagnosticDefinitions, persistenceCrudObservedDiagnosticRecord,
+export { persistenceCurrentDiagnosticDefinitions, persistenceScheduleDiagnosticDefinitions, persistenceCrudDiagnosticDefinitions, persistenceCrudObservedDiagnosticRecord,
   persistenceLocalRejectionDiagnostic, persistenceLocalRejectionDiagnosticRecord, persistenceStoredRecordDiagnostic, persistenceStoredRecordDiagnosticRecord,
   persistenceBoundaryDiagnostic, persistenceBoundaryDiagnosticRecord, observePlatformPersistenceDiagnostic, selectPlatformPersistenceDiagnosticEvidence, capturePlatformPersistenceDiagnostic } from "./diagnostics";
 export type { PersistenceLocalRejectionDetail, PersistenceStoredRecordDetail, PersistenceBoundaryDetail, PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 export { persistenceReconciliationDiagnostic, persistenceReconciliationDiagnosticRecord } from "./diagnostics";
 export type { PersistenceReconciliationDetail } from "./diagnostics";
+export { persistenceScheduleRejectionDiagnostic, persistenceScheduleRejectionDiagnosticRecord } from "./diagnostics";
+export type { PersistenceScheduleRejectionDetail } from "./diagnostics";
+export { persistenceScheduleStoreRejectionDiagnostic, persistenceScheduleStoreRejectionDiagnosticRecord,
+  persistenceScheduleStoredRecordDiagnostic, persistenceScheduleStoredRecordDiagnosticRecord } from "./diagnostics";
+export type { PersistenceScheduleStoreRejectionDetail, PersistenceScheduleStoredRecordDetail } from "./diagnostics";
 export { persistenceCommandConditions, persistenceCommandDiagnosticDefinitions, persistenceCommandConditionDiagnostic, persistenceCommandDiagnosticRecord,
   persistenceStoredAttributeDiagnostic, persistenceStoredAttributeDiagnosticRecord,
   persistenceStateReconciliationDiagnostic, persistenceStateReconciliationDiagnosticRecord,
@@ -20,6 +25,9 @@ export { persistenceRelayBoundaryDiagnostic, persistenceRelayBoundaryDiagnosticR
 export type { PersistenceRelayBoundaryDetail } from "./diagnostics";
 export { platformPersistenceError, platformPersistenceErrorClasses } from "./errors";
 export type { PlatformPersistenceError, PlatformPersistenceErrorCode } from "./errors";
+
+export { createInMemoryPlatformScheduleStore, createPlatformSchedule } from "./scheduling";
+export type { PlatformSchedule, PlatformScheduleHandover, PlatformScheduleId, PlatformScheduleState, PlatformScheduleStore } from "./scheduling";
 
 export {
   createPlatformPersistenceTransitionObserver,

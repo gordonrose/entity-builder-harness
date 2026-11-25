@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.failure-stop.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -188,7 +188,7 @@ def validate_packet(value):
 
 def prepare(args, provider):
     receipt = C.ALIGN.read_receipt(args.receipt.absolute())
-    C.ALIGN.source_preflight(receipt); C.local_checks()
+    C.ALIGN.source_preflight(receipt); C.local_qualification(receipt)
     selected_policy = policy()
     source, declaration = artifact(), graph()
     cache = C.ROOT / ".cache/entity-smoke-live" / args.proof_label

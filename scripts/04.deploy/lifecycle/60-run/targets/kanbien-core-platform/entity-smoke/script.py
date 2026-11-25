@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.infrastructure.implementation
-#   version: 7
+#   version: 8
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -51,7 +51,7 @@ CONTRACT = ROOT / ALIGN.TARGET / "20-scopes/entity-smoke/00-declaration/infrastr
 TRANSITION = module("entity_smoke_source_transition", DIRECTORY / "source-transition.py")
 CONTROL_COMPLETION = module("entity_smoke_control_completion", DIRECTORY / "control-completion.py")
 SUCCESSION = module("entity_smoke_infrastructure_succession", ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
-CHECK_RESULTS = module("entity_smoke_check_results", ROOT / "scripts/repo/check-selection/execution_policy.py")
+LOCAL_QUALIFICATION = module("entity_smoke_local_qualification", DIRECTORY / "bindings/local-qualification/entity-smoke-proof/binding.py")
 READS = ALIGN.READS | {("cloudformation", operation) for operation in ("describe-change-set", "get-template", "list-stack-resources", "describe-stack-events", "validate-template")} | {
     ("iam", "get-role"), ("iam", "simulate-principal-policy"), ("ecs", "describe-services"), ("ecs", "describe-tasks"),
     ("ecs", "list-tasks"), ("logs", "get-log-events"),
@@ -169,25 +169,10 @@ def operator_resources_allowed(provider, role, action, resources, *, context=Non
     return True
 
 
-def local_checks():
-    # The runner reuses current input-bound receipts itself. Cold composition has
-    # taken 467s; retain a finite host-only bound that also admits its second check.
-    # This does not change provider timeouts or ECS task deadlines.
-    requested = ["entity-smoke-composition", "secret-dependency-declaration-regression"]
-    arguments = ["python3", "-B", "scripts/repo/check-selection/script.py", "--checks", *requested, "--execute-local", "--json"]
-    try:
-        result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True, timeout=900)
-        value = json.loads(result.stdout)
-    except (OSError, ValueError, TypeError, UnicodeError, subprocess.SubprocessError): raise InfrastructureFailure("infrastructure-local-proof-unavailable") from None
-    reference = value.get("run_report_path") if isinstance(value, dict) else None
-    retained = isinstance(reference, str) and re.fullmatch(r"\.cache/test-runs/[0-9]{8}T[0-9]{6}Z-[a-f0-9]{32}/report\.json", reference) is not None
-    if retained:
-        RESOURCE.CONTROL.no_symlinks(ROOT / reference)
-        retained = (ROOT / reference).is_file()
-    if result.returncode != 0:
-        raise InfrastructureFailure("infrastructure-local-proof-not-passed", reference if retained else None)
-    if not CHECK_RESULTS.passed_local_selection(value, requested):
-        raise InfrastructureFailure("infrastructure-local-proof-not-passed", reference if retained else None)
+def local_qualification(receipt):
+    """Live routes consume package-bound local proof; they never run local tests."""
+    try: LOCAL_QUALIFICATION.require_current(receipt)
+    except LOCAL_QUALIFICATION.BindingFailure: raise InfrastructureFailure("infrastructure-local-qualification-not-confirmed") from None
 
 
 def source_paths(revision=None):
@@ -196,7 +181,7 @@ def source_paths(revision=None):
             str(DIRECTORY.relative_to(ROOT)) + "/"]).splitlines())
     controller_files = [path for path in candidates
                         if path.suffix in {".py", ".sh"} and not path.name.endswith(("-test.py", "-test.sh"))]
-    paths = sorted([*controller_files, CONTRACT, DEPLOY.SOURCE, Path(CHECK_RESULTS.__file__),
+    paths = sorted([*controller_files, CONTRACT, DEPLOY.SOURCE, Path(LOCAL_QUALIFICATION.__file__),
                     CONTRACT.parent / "acceptance-record-schema.yml", CONTRACT.parent / "acceptance-route-contract.yml",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py",
                     ROOT / "scripts/04.deploy/shared/provider-adapters/aws/response.py",
@@ -767,7 +752,7 @@ def run(args, provider):
     resumed = resume_execution(args, provider, receipt)
     if resumed is not None: return resumed
     ALIGN.source_preflight(receipt)
-    local_checks()
+    local_qualification(receipt)
     artifact = source_digest()
     alignment, parameters, _ = ALIGN.inspect(provider, receipt, now())
     activate = args.phase != "create"

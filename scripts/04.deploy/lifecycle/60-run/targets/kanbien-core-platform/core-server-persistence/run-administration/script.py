@@ -166,9 +166,10 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
         if isinstance(arn, str) and arn.rsplit("/", 1)[-1]:
             ok, events, _ = MIGRATION.aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", f"persistence-administration/persistence-administration/{arn.rsplit('/', 1)[-1]}", "--start-from-head")
             contract = None
+            task_evidence = None
             try:
-                contract = module(ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py", "administration_safe_diagnostics")
-                failure, observation = contract.collect_persistence_task_failure(events, "administration") if ok and "administration_task" in known_facts else (None, "failed" if not ok else "unavailable")
+                task_evidence = module(ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py", "administration_task_evidence")
+                failure, observation = task_evidence.collect_persistence_task_failure(events, "administration") if ok and "administration_task" in known_facts else (None, "failed" if not ok else "unavailable")
                 known_facts["task_log_observation"] = observation
                 if failure is not None:
                     return unsuccessful("persistence-administration-unsuccessful-completion", facts={**known_facts, "safe_result_code": failure["code"], "task_failure": failure})

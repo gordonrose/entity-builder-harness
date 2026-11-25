@@ -85,7 +85,7 @@ def failed_task_log(arn: object) -> dict[str, object]:
     if not ok:
         return {"task_log_observation": "failed"}
     try:
-        path = ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py"
+        path = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py"
         specification = importlib.util.spec_from_file_location("verifier_task_diagnostics", path)
         module = importlib.util.module_from_spec(specification)
         assert specification and specification.loader

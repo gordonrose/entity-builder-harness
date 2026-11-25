@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.script.inventory-deploy-control.readme
-version: 1
+version: 2
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-28"
+updated_on: "2026-11-22"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -48,6 +48,28 @@ same report. Reports are output only; redirect them to the current session's
 log directory when retaining evidence. They are observations, never a second
 registry. The historical top-level directory census has been replaced rather
 than retained as a weaker success path.
+
+## Script topology inventory
+
+```bash
+bash scripts/04.deploy/inventory-deploy-control/script.sh --topology --json
+```
+
+`--topology` is a separate, read-only planning view for the `scripts/` tree. It
+derives a unit's current path, metadata owner, role, literal callers, effects,
+scope, overlapping neighbours, objective-oriented destination and provisional
+retain/move/merge/remove disposition from repository source and existing
+artifact metadata. JSON contains every classified source unit; the default
+Markdown view is a compact count and finding summary. It does not create an
+alternative registry, validate a structural migration, or infer approval to
+move a live route. `--topology` therefore cannot be combined with `--check`.
+
+The role and destination are intentionally conservative where a generic legacy
+name lacks enough objective evidence. Such output is a migration review input:
+resolve the objective and consumers first, then use the governed artifact-path
+migration workflow for an approved slice. Tests and fixtures remain proof
+assets; they do not become operational implementation merely because they sit
+beside one.
 
 Consequential `aws-mutation` effects take precedence over test/regression names
 and fixture locations. Public package commands trace literal interpreter calls,

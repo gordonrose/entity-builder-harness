@@ -27,6 +27,8 @@ export type { RdsIamAuthenticationTokenOptions } from "./rds-iam-authentication"
 export {
   createPostgreSqlMigrationRunner,
   postgreSqlMigrationChecksum,
+  postgreSqlPlatformScheduleHandoffMigration,
+  postgreSqlPlatformScheduleMigration,
   postgreSqlPersistenceFoundationMigration,
 } from "./migrations";
 export type {
@@ -53,6 +55,9 @@ export type {
 export {
   createPostgreSqlPlatformRecordChangeStore,
 } from "./lineage";
+
+export { createPostgreSqlPlatformScheduleStore } from "./scheduling";
+export type { PostgreSqlPlatformScheduleStoreOptions } from "./scheduling";
 export type {
   PostgreSqlPlatformRecordChangeStoreOptions,
 } from "./lineage";

@@ -6,9 +6,10 @@ driver calls. It is selected only by AWS target composition; applications use
 `pg` driver or this adapter's private row layout.
 
 It is a deliberately small relational reference. It supplies transaction,
-outbox, processing-lease, change-lineage, migration, safe-error, and safe
-telemetry mechanics. It does not define a product entity, database schema,
-repository query, tenant policy, generic ORM, or arbitrary SQL interface.
+outbox, processing-lease, change-lineage, one-off schedule storage, migration,
+safe-error, and safe telemetry mechanics. It does not define a product entity,
+schedule recurrence, timezone policy, a due-job runner, tenant policy, generic
+ORM, or arbitrary SQL interface.
 
 | File | Responsibility |
 | --- | --- |
@@ -21,6 +22,7 @@ repository query, tenant policy, generic ORM, or arbitrary SQL interface.
 | `src/outbox.ts` | Stores delivery obligations and provides atomic lease/fence-protected relay operations. |
 | `src/processing.ts` | Stores worker-processing claims, retry releases, completion, and stale-fence rejection. |
 | `src/lineage.ts` | Appends and queries the bounded record-change facts defined by Core. |
+| `src/scheduling.ts` | Stores and reads one validated future job instruction in PostgreSQL; it does not decide when to run it. |
 | `src/records.ts` | Keeps PostgreSQL column layout, safe conversion, parameterised statement creation, and reviewed relation identifiers private to this package. |
 | `src/telemetry.ts` | Emits only operation/outcome/duration/error-class/bounded-pool observations; it never emits SQL, values, rows, credentials, endpoints, or raw errors. |
 | `src/index.ts` | Deliberate public composition exports only. |
@@ -55,6 +57,30 @@ The statement seam admits one `INSERT`, `UPDATE`, or `DELETE` statement only.
 It rejects DDL, transaction-control commands, and multiple statements. Values
 must be bind parameters; table/column/order identifiers must come from
 reviewed source or a constrained generated manifest, never a request.
+
+## One-off schedules
+
+`createPostgreSqlPlatformScheduleStore` is the durable version of the small
+provider-neutral schedule-store contract in `@kanbien/platform-persistence`.
+The caller gives it a schedule that Core has already made: an ID, a registered
+job name, one exact due time, and the initial `waiting` state. The adapter
+inserts those values using bind parameters, then checks the row returned by
+PostgreSQL before handing it back. A later lookup makes the same checks.
+
+The target chooses the schema and immutable migration IDs.
+`postgreSqlPlatformScheduleMigration` supplies the first waiting-table shape;
+`postgreSqlPlatformScheduleHandoffMigration` is the later, separate change
+that adds the outbox link and the state/index needed for due selection. It
+does not rewrite an earlier migration checksum.
+
+`listDue` reads only waiting rows whose due time has arrived. `handoverDue`
+opens one PostgreSQL transaction, locks one schedule row, inserts the supplied
+outbox entry, and marks that schedule `delivery-created` with the outbox ID.
+If it was already handed over or is not yet due, it changes nothing. For Entity
+Smoke, target composition selects the existing `entity_smoke` schema and its
+next migration IDs. This still does not create a schedule on server startup,
+run due selection on a timer, choose the job's message type, send a queue
+message, or run the cleanup job.
 
 ## Safety boundary
 

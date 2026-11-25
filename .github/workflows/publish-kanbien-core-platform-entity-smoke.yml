@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: github.workflow.publish-kanbien-core-platform-entity-smoke
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -47,6 +47,8 @@ jobs:
         id: qualification
         run: |
           bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/script.sh --json
+          python3 -B scripts/repo/check-selection/script.py --checks entity-smoke-infrastructure-route entity-smoke-composition-suite secret-dependency-declaration-regression --execute-local --json > "$RUNNER_TEMP/entity-smoke-local-qualification-selection.json"
+          python3 -B scripts/04.deploy/lifecycle/20-build/capabilities/local-qualification/entity-smoke-proof/implementation.py capture --selector-report "$RUNNER_TEMP/entity-smoke-local-qualification-selection.json" --output "$RUNNER_TEMP/entity-smoke-local-qualification.json"
           bash scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification
           bash scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --tag kanbien-entity-smoke:qualification
           python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-entity-smoke:qualification --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/entity-smoke/image-contract.yml --input infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore --input scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs --input scripts/repo/workspace-build/declarations.mjs --input scripts/repo/workspace-build/compile.mjs --input scripts/repo/workspace-build/runtime-packages.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --input infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs --input infra/04.deploy/03.product/image/entity-smoke/Dockerfile --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs --input scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-dependencies.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/verify-image.mjs --input scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/capability-negative-test.py --input scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py --input scripts/04.deploy/shared/postgresql-version.py --input scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml entity-smoke-server,entity-smoke-migration,entity-smoke-administration,entity-smoke-verifier,entity-smoke-database-proof --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml entity-smoke-restore-reader
@@ -63,6 +65,7 @@ jobs:
           path: |
             ${{ runner.temp }}/entity-smoke-publication-reservation.json
             ${{ runner.temp }}/qualified-image.json
+            ${{ runner.temp }}/entity-smoke-local-qualification.json
           if-no-files-found: error
           overwrite: false
           retention-days: 30
@@ -111,7 +114,7 @@ jobs:
           PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
           SBOM_ATTESTATION_OUTCOME: ${{ steps.sbom-attestation.outcome }}
         run: |
-          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py --target kanbien-core-platform --environment-class private-feature-candidate --provider-region-alias aws-eu-west-1 --candidate kanbien-entity-smoke-candidate --package-contract kanbien-entity-smoke-image --program kanbien-entity-smoke --scan-check ecr_scan --sbom "$RUNNER_TEMP/entity-smoke.sbom.spdx.json" --output "$RUNNER_TEMP/package-custody-receipt.json"
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py --target kanbien-core-platform --environment-class private-feature-candidate --provider-region-alias aws-eu-west-1 --candidate kanbien-entity-smoke-candidate --package-contract kanbien-entity-smoke-image --program kanbien-entity-smoke --scan-check ecr_scan --sbom "$RUNNER_TEMP/entity-smoke.sbom.spdx.json" --local-qualification "$RUNNER_TEMP/entity-smoke-local-qualification.json" --output "$RUNNER_TEMP/package-custody-receipt.json"
           bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/package-custody-receipt.json" --expected-target kanbien-core-platform --expected-candidate kanbien-entity-smoke-candidate --expected-package-contract kanbien-entity-smoke-image --expected-program kanbien-entity-smoke --json
       - name: Upload safe package-custody evidence
         uses: actions/upload-artifact@v4
@@ -122,6 +125,7 @@ jobs:
             ${{ runner.temp }}/entity-smoke.sbom.spdx.json
             ${{ runner.temp }}/qualified-image.json
             ${{ runner.temp }}/ecr-scan.json
+            ${{ runner.temp }}/entity-smoke-local-qualification.json
           if-no-files-found: error
           overwrite: false
           retention-days: 30

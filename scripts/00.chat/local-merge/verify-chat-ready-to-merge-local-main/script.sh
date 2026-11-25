@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.local-merge.verify-chat-ready-to-merge-local-main
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -102,11 +102,24 @@ observe() {
 
 CALLER_ROOT="$(observe root git rev-parse --show-toplevel)"
 CALLER_ROOT="$(cd "$CALLER_ROOT" 2>/dev/null && pwd -P)" || read_failed root
+IMPLEMENTATION_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." 2>/dev/null && pwd -P)" || read_failed implementation-path
+
+# A reviewed candidate implementation may bootstrap a repair before main has
+# it. Load one coherent committed code tree, never candidate code/root helpers.
+if [ "$IMPLEMENTATION_ROOT" != "$CALLER_ROOT" ]; then
+  implementation_common="$(observe implementation-repository git -C "$IMPLEMENTATION_ROOT" rev-parse --path-format=absolute --git-common-dir)"
+  caller_common="$(observe implementation-repository git -C "$CALLER_ROOT" rev-parse --path-format=absolute --git-common-dir)"
+  implementation_branch="$(observe implementation-branch git -C "$IMPLEMENTATION_ROOT" branch --show-current)"
+  implementation_status="$(observe implementation-status git -C "$IMPLEMENTATION_ROOT" status --porcelain)"
+  if [ "$implementation_common" != "$caller_common" ] || [ "$implementation_branch" != "$TARGET_BRANCH" ] || [ -n "$implementation_status" ]; then
+    read_failed implementation-identity
+  fi
+fi
 
 # shellcheck source=../../worktree/paths/lib.sh
-source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
+source "$IMPLEMENTATION_ROOT/scripts/00.chat/worktree/paths/lib.sh"
 # shellcheck source=../../session-log/paths/lib.sh
-source "$CALLER_ROOT/scripts/00.chat/session-log/paths/lib.sh"
+source "$IMPLEMENTATION_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 
 PRIMARY_PATH="$(chat_worktree_primary_path)"
 PRIMARY_PATH="$(cd "$PRIMARY_PATH" 2>/dev/null && pwd -P)" || read_failed primary-path
@@ -331,6 +344,10 @@ if [ "$metadata_worktree" != "$WORKTREE_PATH" ]; then
     "Fix the session log worktree metadata before convergence."
 fi
 
+if [ "$IMPLEMENTATION_ROOT" != "$CALLER_ROOT" ] && [ "$IMPLEMENTATION_ROOT" != "$WORKTREE_PATH" ]; then
+  read_failed implementation-registration
+fi
+
 branch_worktrees="$(
   observe worktree-list git -C "$REPO_ROOT" worktree list --porcelain \
     | observe worktree-list awk -v branch="refs/heads/${TARGET_BRANCH}" '
@@ -448,7 +465,7 @@ if [ -f "$CALLER_ROOT/scripts/repo/check-selection/script.sh" ] || [ -f "$WORKTR
   # The chat already contains main. Its tree is the exact code that a local
   # merge will promote, and its private receipts can be revalidated in place.
   if ! (cd "$WORKTREE_PATH" && BASE_SHA="$base_head" HEAD_SHA="$target_head" \
-    bash scripts/repo/check-selection/script.sh --ci --boundary integration --execute-local --json); then
+    bash scripts/repo/check-selection/script.sh --ci --changed-only --boundary integration --execute-local --json); then
     block "blocked-integration-proof" "required affected integration checks failed or are missing" "Repair the reported checks in the chat worktree, then rerun promotion verification."
   fi
   verified_base="$(observe final-base-head git -C "$REPO_ROOT" rev-parse "$BASE_REF")"
@@ -472,6 +489,7 @@ info "Behind base" "$behind"
 info "Session log source" "$LOG_SOURCE"
 info "Session log path" "$LOG_PATH"
 info "Chat worktree" "$WORKTREE_PATH"
+info "Implementation worktree" "$IMPLEMENTATION_ROOT"
 info "Recorded latest task commit" "$metadata_latest_sha"
 if [ -n "$REMOTE_NAME" ]; then
   echo "Next step: after explicit push approval, prepare a clean remote-promotion worktree and push without force."

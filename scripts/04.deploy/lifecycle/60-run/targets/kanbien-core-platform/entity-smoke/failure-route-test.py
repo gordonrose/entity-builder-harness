@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.failure-route
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-24"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -59,7 +59,7 @@ def assert_custody_input_binding(inputs):
     assert required_inputs <= set(inputs), "real policy/lifecycle dependencies must invalidate composition reuse"
 
 
-declared_inputs = catalog["checks"]["entity-smoke-composition"]["inputs"]
+declared_inputs = catalog["checks"]["entity-smoke-composition-suite"]["inputs"]
 assert_custody_input_binding(declared_inputs)
 for dependency in required_inputs:
     try: assert_custody_input_binding([value for value in declared_inputs if value != dependency])
@@ -175,7 +175,7 @@ def fails(call, code):
 
 @contextmanager
 def scenario(*, partial=False, transport_factory=Transport):
-    originals = {name: getattr(M.C, name) for name in ("ROOT", "source_digest", "local_checks")}
+    originals = {name: getattr(M.C, name) for name in ("ROOT", "source_digest", "local_qualification")}
     old_read, old_source, old_artifact, old_repo = M.C.ALIGN.read_receipt, M.C.ALIGN.source_preflight, M.artifact, M.SUCCESSION.REPOSITORY_ROOT
     with tempfile.TemporaryDirectory(prefix="entity-smoke-failure-") as temporary:
         root = Path(temporary)
@@ -190,7 +190,7 @@ def scenario(*, partial=False, transport_factory=Transport):
         inventory.write_text(M.C.yaml.safe_dump(lifecycle, sort_keys=False))
         evidence = scope.parent.parent / "30-release-evidence"; evidence.mkdir()
         M.C.ROOT, M.SUCCESSION.REPOSITORY_ROOT = root, root
-        M.C.local_checks, M.C.source_digest = lambda: None, lambda: "sha256:" + "f" * 64
+        M.C.local_qualification, M.C.source_digest = lambda *_: None, lambda: "sha256:" + "f" * 64
         M.artifact = lambda common=None: "sha256:" + "f" * 64
         receipt = {"source_revision": F.BINDING["source_revision"], "image_digest": F.BINDING["image_digest"], "receipt_reference": "controlled-not-qualification"}
         M.C.ALIGN.read_receipt, M.C.ALIGN.source_preflight = lambda path: receipt, lambda receipt: None

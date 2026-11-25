@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-22"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -38,7 +38,7 @@ export async function runEntitySmokeMigration(env: NodeJS.ProcessEnv = process.e
     } else {
     const result = await createPostgreSqlMigrationRunner(settings.value.configuration, { pool }, "entity-smoke-v1").apply(manifest);
     if (!result.ok) { reportEntitySmokeFailure("migration", "unknown", result.error); process.exitCode = 1; return; }
-    completion = { verdict: "passed", code: result.value[0]?.status === "already-applied" ? "ENTITY_SMOKE_MIGRATION_ALREADY_APPLIED" : "ENTITY_SMOKE_MIGRATION_APPLIED" };
+    completion = { verdict: "passed", code: result.value.every(migration => migration.status === "already-applied") ? "ENTITY_SMOKE_MIGRATION_ALREADY_APPLIED" : "ENTITY_SMOKE_MIGRATION_APPLIED" };
     }
   } catch (cause) { reportEntitySmokeFailure("migration", operation === "preflight" ? "not-started" : "unknown",
     operation === "preflight" ? postgreSqlPersistenceOperationError("readiness", cause, { diagnosticDefinitions: entitySmokeDiagnosticCatalogs.flatMap(catalog => [...catalog.definitions]) }) : cause); process.exitCode = 1; }

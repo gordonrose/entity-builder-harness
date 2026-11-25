@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.regression
-#   version: 10
+#   version: 11
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-24"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -43,6 +43,7 @@ def load(name: str, path: Path):
 coverage = load("adoption", ROOT / "scripts/repo/diagnostic-coverage/script.py")
 reader = load("runtime_contract", ROOT / "scripts/repo/diagnostic-coverage/runtime_contract.py")
 deployment = load("deployment", ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py")
+persistence_diagnostics = load("persistence_diagnostics", ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py")
 
 class DiscoveryTests(unittest.TestCase):
     def verification_fixture(self, relative, arguments, *, fail=0, output=False):
@@ -1197,7 +1198,7 @@ process.stdout.write(JSON.stringify([
         self.assertEqual(state, "ok")
         self.assertEqual(retained["diagnostic"], diagnostic)
         restored = {"schema": "deploy/persistence-restore-verifier-result/v2", "verdict": "rejected", "code": "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID", "diagnostic": diagnostic}
-        self.assertEqual(deployment.validate_verifier_result(restored)["diagnostic"], diagnostic)
+        self.assertEqual(persistence_diagnostics.validate_verifier_result(restored)["diagnostic"], diagnostic)
         for operation, code, detail, expected in [
             ("prove-effective-privilege", "PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED", diagnostic, True),
             ("prove-effective-privilege", "PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID", diagnostic, True),
@@ -1479,9 +1480,9 @@ process.stdout.write(JSON.stringify([
         configuration = {"schema": "deploy/persistence-restore-verifier-result/v2", "verdict": "rejected", "code": "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID", "diagnostic": source}
         execution = {"classification": "tls_trust_invalid", "phase": "tls_probe", "code_status": "recognized", "elapsed_ms": 1}
         envelope = {"schema": "deploy/persistence-restore-verifier-result/v2", "verdict": "diagnostic-failed", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID", "execution": execution, "diagnostic": primary, "related_diagnostics": [security]}
-        deployment.validate_verifier_result(configuration)
-        deployment.validate_verifier_result({**configuration, "diagnostic": content})
-        self.assertEqual(deployment.validate_verifier_result(envelope), envelope)
+        persistence_diagnostics.validate_verifier_result(configuration)
+        persistence_diagnostics.validate_verifier_result({**configuration, "diagnostic": content})
+        self.assertEqual(persistence_diagnostics.validate_verifier_result(envelope), envelope)
         limit = json.loads(reader.TARGET_CATALOG.read_text())["delivery"]["maxRelatedRecords"]
         for bad in [
             {**configuration, "diagnostic": security}, {**configuration, "diagnostic": primary},
@@ -1494,7 +1495,7 @@ process.stdout.write(JSON.stringify([
             {**envelope, "execution": {**execution, "phase": "pool_connect"}},
         ]:
             with self.subTest(bad=bad):
-                with self.assertRaises(deployment.DiagnosticFailure): deployment.validate_verifier_result(bad)
+                with self.assertRaises(persistence_diagnostics.DiagnosticFailure): persistence_diagnostics.validate_verifier_result(bad)
         folder = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence"
         migration = load("tls_migration", folder / "run-migration/script.py")
         administration = load("tls_administration", folder / "run-administration/script.py")
@@ -1558,14 +1559,14 @@ process.stdout.write(JSON.stringify([
         restore = {"schema": "deploy/persistence-restore-verifier-result/v2", "verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED",
                    "execution": {"classification": "authentication_rejected", "phase": "pool_query", "code_status": "recognized", "elapsed_ms": 1},
                    "diagnostic": sources[0], "related_diagnostics": sources[1:]}
-        self.assertEqual(deployment.validate_verifier_result(restore), restore)
+        self.assertEqual(persistence_diagnostics.validate_verifier_result(restore), restore)
         boundary = {"schema": "core/diagnostic-record/v1", "code": "persistence.boundary-observed", "definitionVersion": 1,
                     "detail": {"operation": "restore_verification", "phase": "invocation", "boundary": "body", "condition": "threw", "effect": "not-assessed"}}
-        self.assertEqual(deployment.validate_verifier_result({**restore, "diagnostic": boundary}), {**restore, "diagnostic": boundary},
+        self.assertEqual(persistence_diagnostics.validate_verifier_result({**restore, "diagnostic": boundary}), {**restore, "diagnostic": boundary},
                          "Body boundary phase is not a newly invented native execution phase")
         for bad in [{**restore, "verdict": "accepted"}, {**restore, "execution": {**restore["execution"], "phase": "synthetic-secret-canary"}},
                     {**restore, "code": "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID"}, {**restore, "diagnostic": content}]:
-            with self.assertRaises(deployment.DiagnosticFailure): deployment.validate_verifier_result(bad)
+            with self.assertRaises(persistence_diagnostics.DiagnosticFailure): persistence_diagnostics.validate_verifier_result(bad)
         folder = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence"
         migration = load("b04_source_migration", folder / "run-migration/script.py")
         administration = load("b04_source_administration", folder / "run-administration/script.py")
@@ -1618,15 +1619,15 @@ process.stdout.write(JSON.stringify([
         self.assertEqual(json.loads(result.stdout), expected)
 
     def test_historical_envelope_and_new_detail_are_both_readable(self):
-        deployment.validate_verifier_result({"verdict": "rejected", "code": "SAFE_REJECTED"})
+        persistence_diagnostics.validate_verifier_result({"verdict": "rejected", "code": "SAFE_REJECTED"})
         record = {"schema": "core/diagnostic-record/v1", "code": "kanbien-core-server.configuration-invalid", "definitionVersion": 1,
                   "detail": {"issues": [{"setting": "database.host", "reason": "blank"}]}}
         value = {"schema": "deploy/persistence-restore-verifier-result/v2", "verdict": "rejected", "code": "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID", "diagnostic": record}
-        self.assertEqual(deployment.validate_verifier_result(value)["diagnostic"], record)
+        self.assertEqual(persistence_diagnostics.validate_verifier_result(value)["diagnostic"], record)
         bad = copy.deepcopy(value)
         bad["diagnostic"]["detail"]["issues"][0]["value"] = "synthetic-sensitive-canary"
-        with self.assertRaises(deployment.DiagnosticFailure): deployment.validate_verifier_result(bad)
-        with self.assertRaises(deployment.DiagnosticFailure): deployment.validate_verifier_result({**value, "verdict": "accepted"})
+        with self.assertRaises(persistence_diagnostics.DiagnosticFailure): persistence_diagnostics.validate_verifier_result(bad)
+        with self.assertRaises(persistence_diagnostics.DiagnosticFailure): persistence_diagnostics.validate_verifier_result({**value, "verdict": "accepted"})
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

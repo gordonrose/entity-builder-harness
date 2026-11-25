@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.worktree.paths.lib
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: worktree
 #   disciplines:
@@ -134,6 +134,8 @@ chat_worktree_registered_path_for_branch() {
   local repo_root="$1"
   local branch="$2"
   local path found_path="" found_count=0 registrations matches
+  local registration_only="${3:-}"
+  case "$registration_only" in ''|--registration-only) ;; *) return 2 ;; esac
 
   if ! registrations="$(git -C "$repo_root" worktree list --porcelain 2>/dev/null)"; then
     echo "ERROR: worktree-registration-read-failed" >&2
@@ -162,6 +164,12 @@ chat_worktree_registered_path_for_branch() {
     return 2
   fi
 
+  # Reports may show an absent registered directory. Action callers retain the
+  # strict filesystem check; a registration is never proof of availability.
+  if [ "$registration_only" = --registration-only ] && [ ! -d "$found_path" ]; then
+    printf '%s\n' "$found_path"
+    return 0
+  fi
   if [ ! -d "$found_path" ]; then
     echo "ERROR: worktree-registration-unavailable" >&2
     return 2
@@ -180,7 +188,7 @@ chat_worktree_path_for_existing_or_new_branch() {
   local registered_path
 
   set +e
-  registered_path="$(chat_worktree_registered_path_for_branch "$repo_root" "$branch")"
+  registered_path="$(chat_worktree_registered_path_for_branch "$repo_root" "$branch" "${3:-}")"
   status=$?
   set -e
 

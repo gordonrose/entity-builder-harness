@@ -45,5 +45,24 @@ export function relationalTestEntityRepository(executor: TestEntityRelationalExe
       }
       return entities;
     },
+    async listArchivedDeleted() {
+      const result = await executor.execute({ text: `SELECT ${columns} FROM __SCHEMA__.test_entity WHERE visibility = 'archived' AND lifecycle->>'state' = 'deleted' ORDER BY lifecycle->>'deletedAt', id`, values: [] }, "read");
+      if (!result.ok) throw result.error;
+      const entities = [];
+      for (const row of result.value.rows) {
+        const mapped = testEntityFromRow(row);
+        if (!mapped.ok) throw mapped.error;
+        entities.push(mapped.value);
+      }
+      return entities;
+    },
+    async purgeArchivedDeleted(id) {
+      const result = await executor.execute({
+        text: "DELETE FROM __SCHEMA__.test_entity WHERE id = $1 AND visibility = 'archived' AND lifecycle->>'state' = 'deleted' RETURNING id",
+        values: [id],
+      }, "write");
+      if (!result.ok) return result;
+      return { ok: true, value: result.value.rowCount === 1 };
+    },
   };
 }

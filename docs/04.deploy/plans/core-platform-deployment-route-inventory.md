@@ -4,7 +4,7 @@ id: deploy.inventory.core-platform-deployment-routes
 version: 1
 status: draft
 created_on: "2026-11-14"
-updated_on: "2026-11-18"
+updated_on: "2026-11-22"
 layer: 04.deploy
 domain: deployment.consolidation
 disciplines: [architecture, sre, security]
@@ -16,6 +16,111 @@ used_by:
   path: .agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md
 -->
 # Core platform deployment route inventory
+
+## Lifecycle ownership baseline — 2026-11-22
+
+This is the first ownership pass for the deployment script estate.  It does
+not certify an individual file as necessary or authorize removal.  The
+executable source of truth remains the read-only
+[delivery-control inventory](../../../scripts/04.deploy/inventory-deploy-control/script.py):
+on the current working tree it reported six covered delivery routes and no
+findings.  Those routes divide into three `kanbien-core-platform` routes and
+three `kanbien/staging` platform-shell routes.  Its 521 discovered entrypoints
+are not 521 independent scripts: the count includes commands, regressions,
+workflows, package commands, provider templates, runnable programs, targets and
+scopes.  This distinction is why file count alone is not a retirement signal.
+
+The following table records the intended lifecycle boundary.  “Retain” means
+that a current supported route consumes the capability; it is not a conclusion
+that its present file decomposition is permanent.
+
+| Capability family | Current evidence and consumer boundary | Lifecycle disposition |
+| --- | --- | --- |
+| Delivery census and generic lifecycle validation | `scripts/04.deploy/inventory-deploy-control/` reconciles both target families; stage validators under `scripts/04.deploy/lifecycle/00-target-alignment/`, `20-build/`, `40-package/package-custody-receipt/`, and generic `60-run/` owners are referenced by core routes. | **Retain while a core route consumes it.** Consolidate only through the existing core-platform route plan; do not label a shared owner as staging-only merely because staging also calls it. |
+| Core bootstrap runtime | The census route `kanbien-core-platform-bootstrap-runtime` binds `kanbien-core-server` to `kanbien-core-platform` declarations and its 50-deploy/60-run target paths. | **Retain.** It is an active core-platform route, outside the staging retirement set. |
+| Core server persistence | The census route `kanbien-core-platform-core-server-persistence` consumes the core target binding, its local composition/package checks, and core target deploy/run paths. | **Retain and consolidate deliberately.** It is one of the route families governed by this inventory and its implementation plan. |
+| Core entity-smoke | The census route `kanbien-core-platform-entity-smoke` consumes target alignment, local qualification, package custody and runtime proof.  The current package workflow captures local qualification before publication; runtime routes only validate that receipt before provider work. | **Retain and consolidate deliberately.** Local qualification, deployment/recovery, and deployed-runtime proof remain separate capability boundaries. |
+| Kanbien staging platform shell | The three census routes `kanbien-staging-platform-shell-server-baseline`, `kanbien-staging-operational-controls`, and `kanbien-staging-relational-delivery` all bind `infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml`, platform-shell workflows, and `scripts/04.deploy/*platform-shell*` controls. | **Legacy-isolate with `kanbien/staging`.** Preserve the capabilities and their history, but remove them from the default core-platform working surface. No file is deleted or renamed by this inventory. |
+| RAG/rulebook | The check catalogue explicitly marks `.agentic/02.rag-rulebook`, `scripts/02.rag-rulebook`, `docs/02.rag-rulebook`, and `infra/04.deploy/02.rag-rulebook` as dormant impact roots.  Its package commands are likewise explicitly dormant.  The retained GitHub workflow is a tombstone with no job execution or credentials. | **Dormant and isolated.** It is retained for explicit RAG maintenance, but must not be selected by, invoked by, or provide proof for a core-platform delivery route. |
+
+### Decisions this baseline makes possible
+
+1. A proposed script removal must first name the census route(s) that consume
+   it.  A path used only by a staging route becomes a staging-isolation
+   candidate; a path used by any core route does not.
+2. A shared owner is extracted or retained before the staging adapter is
+   removed.  Duplicating it under a core name would increase the estate rather
+   than simplify it.
+3. RAG is not part of the core-platform migration.  Its dormant roots remain
+   excluded from ordinary delivery coverage and are exercised only by their
+   own explicitly selected checks.
+4. Retiring the *staging infrastructure* needs a separate decision about the
+   preserved RAG historical manifest: it still records former staging resource
+   identities, although the retained workflow is an inert tombstone.  We must
+   either preserve it as historical material with no live consumer or move it
+   to an explicitly chosen replacement boundary before removing the old target.
+
+The next audit slice is the staging platform-shell family: trace its three
+declared routes to the exact files and decide, per file, whether it is
+staging-only, shared with a core route, or historical/RAG material.  No
+relocation starts until that map and its consumers are verified.
+
+### Staging isolation audit — 2026-11-22
+
+The delivery census was rerun against the current working tree before this
+audit.  Its exact `entrypoints[].routes` associations identify **150
+staging-only entrypoints** and **61 entrypoints reached by both staging and at
+least one core route**.  Entrypoints are commands and declarations as well as
+physical files, so the first number is not a deletion count.
+
+| Staging-only entrypoint kind | Count | Isolation treatment |
+| --- | ---: | --- |
+| Commands and regression commands | 71 | Move as a unit with their staging-only supported command, smoke/regression, and registration into the legacy namespace.  These are primarily the `scripts/04.deploy/*platform-shell*` and platform-shell provisioning, reconciliation, drift, smoke, readiness and verification families. |
+| `package.json` command aliases | 43 | Keep each alias with its owning legacy command.  An alias is not an additional implementation. |
+| Target, scope and provider-template declarations | 24 | Preserve with the `kanbien/staging` target and its recorded accepted/historical evidence policy; do not treat an isolated declaration as evidence that AWS resources were removed. |
+| Runnable programs | 8 | Preserve under the legacy target boundary unless a separately approved core replacement supersedes a program. |
+| GitHub workflows | 4 | Keep at GitHub's required workflow root, but mark and group them as legacy staging workflows; they cannot be moved beneath a subdirectory. |
+
+The three source-backed staging route identities are:
+
+- `kanbien-staging-platform-shell-server-baseline`;
+- `kanbien-staging-operational-controls`; and
+- `kanbien-staging-relational-delivery`.
+
+Their common binding is
+`infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml`.
+The census report—not a copied path list in this document—is the exact,
+current source of the 150 paths and their registrations.  This avoids another
+stale file registry and makes each later removal reviewable against the source
+revision being changed.
+
+The 61 cross-route entrypoints are **not** staging-isolation candidates by
+default.  They include delivery-control, lifecycle validators, custody and
+release policy, provider helpers, common program/image definitions, and their
+tests.  Some are broadly reached because the census checks a repository-wide
+declaration surface.  Therefore the route association proves that a staging
+removal needs a consumer review; it does not prove identical runtime behaviour
+or grant deletion of the shared owner.
+
+RAG has no active delivery-census route.  Its retained workflow is an inert
+tombstone, while the preserved readiness manifest contains historical staging
+resource identities.  That historical material must be either retained without
+a live consumer or consciously relocated before the staging target itself is
+removed.  It must not be made a dependency of the core-platform migration.
+
+#### Isolation sequence
+
+1. For each staging-only capability, record its legacy namespace and retain its
+   supported regression and history reader.
+2. Move the staging command and its tests into the legacy namespace in a
+   bounded slice, updating its package alias and workflow references.  Keep
+   GitHub workflows at their required root and mark them as legacy.
+3. Re-run the delivery census and the affected command regressions.  A missing
+   or newly unbound consumer is a failed isolation, not an invitation to add a
+   compatibility wrapper.
+4. Review the 61 shared entrypoints separately for consolidation opportunities;
+   leave a shared implementation in the active surface while core consumers
+   still use it.
 
 ## UPDATE continuation checkpoint — 2026-11-18
 

@@ -2,15 +2,15 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.module-structure.regression
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-11-01"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-22"
 #   layer: 03.product
 #   domain: architecture
 #   disciplines: [architecture, agentic]
 #   kind: script
-#   purpose: Run bounded structure fixtures and the real source-index regression.
+#   purpose: Run bounded checker fixtures without re-reading current repository source.
 #   portability: {class: source-only, targets: []}
 #   effects: [read-only, writes-files]
 #   used_by:

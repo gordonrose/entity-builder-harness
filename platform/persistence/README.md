@@ -31,6 +31,7 @@ the existing combined catalogue remains available too.
 | `observability/integration.ts` | Persistence-owned translation from a closed transition into generic observability helpers. | Provider selection, telemetry delivery, or cloud configuration. |
 | `observability/index.ts` | Deliberate transition-observability exports. | A second package or target boundary. |
 | `types.ts` | Mutable outbox/processing record shapes, attempts, leases, fences, and safe constructors. | A database representation or target configuration. |
+| `scheduling.ts` | One-off reminder creation, due-row selection, and the one-time handoff from a due reminder to an outbox entry; plus a deterministic in-memory proof store. | Recurrence, timezone rules, choosing a job's message type, a running scheduler, queue sends, or job execution. |
 | `outbox.ts` | Pending-entry storage port, claim/lease/publish transitions, and deterministic in-memory proof store. | Queue sends; a relay calls a queue adapter after it claims an entry. |
 | `processing.ts` | Worker claim, release-for-retry, and completion transitions; duplicate recognition; and stale-fence rejection. | A job handler's business effect or queue acknowledgement. |
 | `lineage.ts` | Append-oriented record-change storage port and deterministic in-memory proof store. | Full record snapshots, free-form metadata, or audit-event storage. |

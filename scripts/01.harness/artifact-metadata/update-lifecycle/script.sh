@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-25"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -379,11 +379,11 @@ def utc_commit_date(value):
 def head_baseline(path, own_id):
     """Find an existing artifact at this path or its unambiguous rename source."""
     relative = path.relative_to(ROOT).as_posix()
-    direct = git("show", f"HEAD:{relative}", check=False)
-    if direct.returncode == 0:
-        return relative, direct.stdout
+    present = git("ls-tree", "--name-only", "-z", "HEAD", "--", relative)
+    if relative in present.stdout.decode().split("\0"):
+        return relative, git("show", f"HEAD:{relative}").stdout
     changes = git(
-        "diff", "--name-status", "-z", "--find-renames", "--diff-filter=RD", "HEAD", check=False
+        "diff", "--name-status", "-z", "--find-renames", "--diff-filter=RD", "HEAD"
     )
     fields = iter(changes.stdout.decode().split("\0")[:-1])
     deleted = set()
@@ -398,9 +398,7 @@ def head_baseline(path, own_id):
             deleted.add(source)
     candidates = {}
     for source in sorted(deleted | detected_sources):
-        previous = git("show", f"HEAD:{source}", check=False)
-        if previous.returncode != 0:
-            continue
+        previous = git("show", f"HEAD:{source}")
         try:
             source_id = Header(previous.stdout).data["id"]
         except PlanError:

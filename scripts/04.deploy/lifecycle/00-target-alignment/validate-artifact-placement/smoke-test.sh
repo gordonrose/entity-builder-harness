@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-artifact-placement
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-22"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -32,10 +32,15 @@ expect_pass release-evidence infra/04.deploy/03.product/targets/example/20-scope
 expect_pass generic-workflow .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
 expect_pass aws-target-workflow .agentic/aws/60-run/workflows/targets/example/20-scopes/server/privately-verify-release.md
 expect_pass lifecycle-script scripts/04.deploy/lifecycle/50-deploy/targets/example/server/review-and-execute-target-update/script.sh
+expect_pass public-deploy-command scripts/04.deploy/commands/review-target-update/command.sh
+expect_pass lifecycle-capability scripts/04.deploy/lifecycle/20-build/capabilities/source-qualification/receipt-validation/implementation.py
+expect_pass target-capability-binding scripts/04.deploy/lifecycle/60-run/targets/example/server/bindings/source-qualification/receipt-validation/binding.py
+expect_pass provider-adapter scripts/04.deploy/shared/provider-adapters/aws/change-set-submission/request/implementation.py
 expect_fail generic-workflow .agentic/04.deploy/workflows/release-flow.md
 expect_fail scope-declaration infra/04.deploy/03.product/targets/example/scopes/server/declaration-contract.yml
 expect_fail provider-template infra/04.deploy/03.product/targets/example/30-provider-realization/aws/server.yml
 expect_fail lifecycle-script scripts/04.deploy/lifecycle/50-deploy/targets/example/review/script.sh
+expect_fail lifecycle-capability scripts/04.deploy/lifecycle/20-build/capabilities/source-qualification/implementation.py
 
 expect_pass cross-phase-standard .agentic/04.deploy/standards/operational-realization-gate.md
 expect_pass cross-phase-workflow .agentic/04.deploy/workflows/operational-realization-gate.md

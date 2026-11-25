@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.readme.entity-smoke.composition
-version: 2
+version: 3
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-19"
+updated_on: "2026-11-24"
 layer: 04.deploy
 domain: deployment.entity-smoke
 disciplines: [architecture, security, sre]
@@ -52,11 +52,29 @@ bash scripts/repo/check-selection/script.sh \
 
 This runs the existing
 [infrastructure fixture](../../60-run/targets/kanbien-core-platform/entity-smoke/infrastructure-route-test.py)
-with controlled provider responses, without compiling the application. Both
-members conservatively share the existing composition input declaration; a
-changed declared input invalidates reuse. The other member,
-`entity-smoke-composition-suite`, retains every other original suite command.
-A focused pass is not a full composition pass or live deployment proof.
+with controlled provider responses, without compiling the application. The
+other member, `entity-smoke-composition-suite`, retains the full combined
+suite. A focused pass is not a full composition pass or live deployment proof.
+
+## Route-level feedback
+
+The full suite remains the explicit combined proof and continues to run its
+four slow route fixtures together. Ordinary edits to route code instead select
+only the affected registered route checks:
+
+- `entity-smoke-task-route`
+- `entity-smoke-failure-route`
+- `entity-smoke-restart-route`
+- `entity-smoke-credential-route`
+
+The route fixtures share test support in one direction: restart imports task
+and failure support, and credential imports restart support. A change to that
+shared support therefore selects each dependent route. This is deliberate
+evidence of current coupling, not a reason to run the full suite. The separate
+`entity-smoke-composition-base` check owns compilation and the non-route
+controls. Expected durations are estimates: exceeding one is a design warning,
+not an automatic stop; only a separately declared safety timeout can stop a
+genuinely stuck process.
 
 During development, changes to the app or this composition select the check
 through [the existing catalogue](../../../../repo/check-selection/checks.yml).

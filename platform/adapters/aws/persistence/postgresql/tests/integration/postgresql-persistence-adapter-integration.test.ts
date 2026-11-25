@@ -1,4 +1,4 @@
-import { equal, ok as assertOk } from "node:assert/strict";
+import { deepEqual, equal, ok as assertOk } from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Pool } from "pg";
 import {
@@ -14,10 +14,11 @@ import {
   recordRevision,
 } from "@kanbien/core/persistence";
 import type { Queue, QueueMessage } from "@kanbien/core/queues";
-import { causationId, err, isoDateTimeFromDate, type ISODateTime, ok } from "@kanbien/core/shared";
+import { causationId, err, isoDateTimeFromDate, uuid, type ISODateTime, ok } from "@kanbien/core/shared";
+import { platformJobName } from "@kanbien/platform-contracts";
 import { tenantId } from "@kanbien/core/tenancy";
 import {
-  createPlatformOutboxRelay,
+  createPlatformOutboxRelay, createPlatformSchedule,
   platformPersistenceError,
   platformPersistenceLeaseOwner,
   platformPersistenceMutation,
@@ -32,9 +33,12 @@ import {
   createPostgreSqlMigrationRunner,
   createPostgreSqlPlatformOutboxStore,
   createPostgreSqlPlatformProcessingStore,
+  createPostgreSqlPlatformScheduleStore,
   postgreSqlPersistenceConfiguration,
   postgreSqlFailureDiagnostic,
   postgreSqlPersistenceFoundationMigration,
+  postgreSqlPlatformScheduleHandoffMigration,
+  postgreSqlPlatformScheduleMigration,
   stagePostgreSqlTransactionStatement,
 } from "../../src/index";
 import { nodePoolAdapter } from "../../src/connection";
@@ -83,7 +87,9 @@ async function main(): Promise<void> {
     const telemetry: unknown[] = [];
     const foundationMigration = postgreSqlPersistenceFoundationMigration(schema);
     const smokeMigration = kanbienPlatformSmokePostgreSqlMigration(schema);
-    const migrations = [foundationMigration, smokeMigration];
+    const scheduleMigration = postgreSqlPlatformScheduleMigration(schema, "v0003_platform_schedule");
+    const scheduleHandoffMigration = postgreSqlPlatformScheduleHandoffMigration(schema, "v0004_platform_schedule_handoff");
+    const migrations = [foundationMigration, smokeMigration, scheduleMigration, scheduleHandoffMigration];
     const migrationRunner = createPostgreSqlMigrationRunner(configuration, { pool }, "stage3-local");
     integrationPhase = "immutable-migrations";
     console.log("PostgreSQL disposable assertion phase: immutable migrations.");
@@ -98,7 +104,26 @@ async function main(): Promise<void> {
     if (!changedChecksum.ok) {
       equal(changedChecksum.error.code, "PLATFORM_PERSISTENCE_MIGRATION_CHECKSUM_MISMATCH");
     }
-    equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_migration_history"`), 2);
+    equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_migration_history"`), 4);
+
+    integrationPhase = "schedule-storage";
+    console.log("PostgreSQL disposable assertion phase: schedule storage.");
+    const schedule = required(createPlatformSchedule({
+      jobName: required(platformJobName("entity-smoke.test-entity.purge-expired")), dueAt: "2026-09-23T13:30:00+01:00",
+    }, { generate: () => uuid("e1d06aac-3d17-4292-b9f3-1fe370772a5d") }));
+    const scheduleStore = createPostgreSqlPlatformScheduleStore({ configuration, pool });
+    const createdSchedule = await scheduleStore.create(schedule);
+    equal(createdSchedule.ok, true);
+    deepEqual(await scheduleStore.get(schedule.id), schedule);
+    const scheduleOutbox = outboxEntry({ id: outboxEntryId("schedule-handoff-proof"),
+      subject: recordReference({ kind: required(recordKind("platform.schedule")), id: required(recordId(String(schedule.id))) }),
+      messageType: required(outboxMessageType("platform.schedule.due")),
+      deliveryPolicy: required(outboxDeliveryPolicy("platform-short-idempotent-work.v1")), createdAt: schedule.dueAt });
+    const handoff = await scheduleStore.handoverDue({ scheduleId: schedule.id, asOf: schedule.dueAt, outboxEntry: scheduleOutbox });
+    equal(handoff.ok, true);
+    if (!handoff.ok || handoff.value.disposition !== "outbox-created") throw new Error("Expected schedule handoff to create one outbox record.");
+    equal(handoff.value.schedule.outboxEntryId, scheduleOutbox.id);
+    equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_outbox" WHERE id = 'schedule-handoff-proof'`), 1);
 
     integrationPhase = "least-privilege-roles";
     console.log("PostgreSQL disposable assertion phase: least-privilege migration and runtime roles.");

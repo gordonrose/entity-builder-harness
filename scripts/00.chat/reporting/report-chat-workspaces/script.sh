@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.reporting.report-chat-workspaces
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-25"
 #   layer: 00.chat
 #   domain: reporting
 #   disciplines:
@@ -79,7 +79,7 @@ while IFS= read -r branch; do
 
   ahead="$(observe comparison git -C "$REPO_ROOT" rev-list --count "${BASE_BRANCH}..${branch}")"
   behind="$(observe comparison git -C "$REPO_ROOT" rev-list --count "${branch}..${BASE_BRANCH}")"
-  worktree_path="$(chat_worktree_path_for_existing_or_new_branch "$REPO_ROOT" "$branch")"
+  worktree_path="$(chat_worktree_path_for_existing_or_new_branch "$REPO_ROOT" "$branch" --registration-only)"
   status="absent"
 
   if [ -d "$worktree_path" ]; then

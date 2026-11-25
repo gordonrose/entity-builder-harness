@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.private-verifier-operation-continuation
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-23"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -69,6 +69,7 @@ class Fixture:
   self.tmp=tempfile.TemporaryDirectory(prefix='verifier-operation-cli-');self.root=Path(self.tmp.name)
   subprocess.run(['git','init','--quiet',str(self.root)],check=True)
   for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py',
+               OWNER.parent/'deployment-diagnostics/binding.py',
                Path('scripts/04.deploy/shared/deployment-operation-diagnostics.py'),Path('scripts/repo/diagnostic-coverage/runtime_contract.py'),
                Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
                Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/task_journal.py'),

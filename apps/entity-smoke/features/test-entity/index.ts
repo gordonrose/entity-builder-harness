@@ -17,4 +17,7 @@ export { restoreTestEntityService } from "./domain/services/restore-test-entity"
 export { deleteTestEntityService } from "./domain/services/delete-test-entity";
 export { restoreLogicallyDeletedTestEntityService } from "./domain/services/restore-logically-deleted-test-entity";
 export { assessTestEntityPurgeEligibilityService } from "./domain/services/assess-test-entity-purge-eligibility";
-export type { TestEntityServiceDependencies } from "./domain/services/dependencies";
+export { purgeExpiredTestEntitiesService } from "./domain/services/purge-expired-test-entities";
+export { testEntityRetentionWindowMs, testEntityExpiredPurgeDueAt } from "./domain/retention";
+export { rememberExpiredTestEntityPurge } from "./domain/services/remember-expired-purge";
+export type { TestEntityServiceDependencies, TestEntityExpiredPurgeReminder } from "./domain/services/dependencies";
