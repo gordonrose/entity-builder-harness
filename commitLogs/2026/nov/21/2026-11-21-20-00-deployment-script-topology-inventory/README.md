@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-24T19:19:53Z
-latest_commit_sha: f2c0fcbf
-chat_duration: 256755s (02:23:19:15)
+latest_commit_at_utc: 2026-11-25T01:26:18Z
+latest_commit_sha: ccdfd5cb
+chat_duration: 278740s (03:05:25:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1000,6 +1000,17 @@ Summary: Completed requested source-backed script-library audit and revised the 
 
 Durable evidence: Plan revision 17: .agentic/shared/plans/implementation/script-library-simplification.md; audit revision 6: scripts/helpers/selection-audit.md, current 2026-11-24 section with 22 findings. Baseline HEAD 33f479b12453db7f09e2c2cfbc77cecd55952145; local/cached remote main 13f16e1f10afc313ee3c55ddd854ffb1b9249876. Inventory: 690 source files; 184 registered checks. P1-P7 include exact owners, acceptance, recovery, authority and Sol goal handoff. Metadata/links/whitespace validated locally; no current behavioral pass claimed.
 
+
+### 2026-11-25T01:26:18Z - Commit recorded
+
+Commit: `ccdfd5cb`
+
+Message: fix(verification): unify selection and repair promotion handoff
+
+Summary: Complete P1/P2 selection/context fixes and audited P3 workspace/base/observer/bootstrap repairs; focused registered owners and staged commit gates passed. Exact candidate integration and publication remain pending.
+
+ADR impact: No new ADR; existing verification and chat lifecycle owners extended.
+
 ## Sub-Agent Activity
 
 
@@ -1139,6 +1150,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Narrowed normal promotion selection so selector-catalogue and shared diagnostic-reader test edits do not trigger unrelated runtime or architecture checks; retained explicit deferred routes.
   ADR impact: No ADR: this is a bounded scheduling correction within the existing script-library simplification plan.
 
+
+- Commit: `ccdfd5cb`
+  Time UTC: 2026-11-25T01:26:18Z
+  Message: fix(verification): unify selection and repair promotion handoff
+  Summary: Complete P1/P2 selection/context fixes and audited P3 workspace/base/observer/bootstrap repairs; focused registered owners and staged commit gates passed. Exact candidate integration and publication remain pending.
+  ADR impact: No new ADR; existing verification and chat lifecycle owners extended.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1152,9 +1170,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-24T19:19:53Z
-Latest commit SHA: f2c0fcbf
-Chat duration: 256755s (02:23:19:15)
+Latest commit at UTC: 2026-11-25T01:26:18Z
+Latest commit SHA: ccdfd5cb
+Chat duration: 278740s (03:05:25:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
