@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 25
+version: 27
 status: active
 created_on: "2026-11-23"
 updated_on: "2026-11-26"
@@ -17,6 +17,137 @@ used_by:
 -->
 
 # Script-library simplification programme
+
+## Follow-up: script growth-and-cost reporting — 2026-11-26
+
+The user approved making script growth and recurring verification cost visible
+in completion reports. This bounded follow-up changes only the existing shared
+completion standard and this plan in the recorded November 21 worktree. It does
+not authorise a commit, merge or push, or alter the preceding admission pilot.
+
+The existing completion standard already owns delivery-cost assessment; extend
+that owner instead of adding a report template, catalogue or script. Its
+consumers are agents following `AGENTS.md` and the existing shared and layer
+workflows. The test-execution standard still owns timing and delivery-budget
+semantics; admission still owns new-script necessity and review decisions.
+
+Named risk: a completion report can hide source growth or recurring review
+cost behind "no new automatic checks", or claim savings without measurements.
+The statement distinguishes script-source additions/removals/moves, automatic
+checks and required reviews with their triggers, and measured/unknown costs.
+It uses existing evidence, with no extra census, benchmark or enforcement hook.
+
+Planned proof: consolidated source review against the connected standards,
+then the existing path-scoped header and deterministic-process checks and
+whitespace validation. Structural-check budget: one minute. No executable
+commands or links are added; command-drift scanning and runtime/integration
+suites are deferred because neither execution nor command routing changes.
+
+Completed: the parent reviewed the connected completion, timing and admission
+guidance; independent reviewer `/root/admission_hook_fit` confirmed no required
+corrections. The final source change passed the two-file metadata-header check
+(0.18 seconds) and deterministic-process check (0.03 seconds), run concurrently
+within the one-minute budget. Whitespace validation passed. Review duration
+was not separately measured; these check timings are not total task/delivery
+timing. Previously recorded admission-pilot evidence was retained, with all
+four artifact identities confirmed unchanged; its calibration was not rerun.
+
+Growth and cost for this follow-up: zero script-source files added, removed or
+moved; two existing documentation files updated. Automatic checks and required
+agent-review triggers are unchanged. The only recurring duty added is the short
+reporting statement; its writing cost is unmeasured. No runtime verification,
+commit, merge or push was performed. Broader enforcement remains unchanged.
+
+## Follow-up: bounded script-admission review — 2026-11-26
+
+The user approved designing a changed-script review, trying known good/bad
+examples, and enabling only reliable commit requirements. This follow-up stays
+in the recorded November 21 worktree at starting HEAD
+`92ce4cbceb4c62a6d982927849ce8a5057ce0759`. No commit, merge or push is authorised
+by this implementation request.
+
+Reuse the existing admission standard, single-agent review workflow and
+before-commit checklist. The existing commit hook validates headers and
+prepared check inputs; it has no authenticated generic model-review receipt.
+Do not repurpose the diagnostic adoption ledger, trust a self-written pass
+flag, or describe preparation hashes as proof a reviewer actually reviewed.
+The bounded deliverable is a workflow-invoked review pilot with manual source
+freshness confirmation, not an automatic model invocation or a new Git gate.
+
+Affected owners and consumers:
+- `.agentic/01.harness/standards/script-admission.md`: evidence and decision
+  requirements for new or materially changed admissions.
+- `.agentic/01.harness/workflows/run-agent-review.md`: conditional review and
+  calibration procedure; existing reviewer and report shape remain authoritative.
+- `.agentic/00.chat/checklists/before-commit.md`: invoke the bounded workflow
+  before existing preparation, only when admission is affected.
+- `.agentic/01.harness/evals/script-admission.md`: one new metadata-bearing,
+  non-executable calibration document; known acceptable, unacceptable and
+  incomplete cases, not a source file or ordinary commit test suite.
+- This plan: scope, reviewed evidence, measured checks and retained limits.
+
+No runtime or diagnostic predicate changes: no executable source, catalogue,
+hook, scheduler, permission or live-operation changes are planned. General
+review scores retain their existing meaning, but no scorecard is consumed by
+the commit hook. Named rule breaches require resolution; model opinions,
+missing review and code/test failures remain distinct.
+
+Acceptance: an independent bounded reviewer evaluates cases before seeing
+their expected answers; record false positives, misses and corrections here.
+Then validate only changed metadata, links, process/command drift and whitespace.
+Review target is one minute; scoped structural verification budget is two
+minutes. Record actual overruns without automatic retries or fabricated passes.
+Existing header/preparation gates remain the only automated commit enforcement
+affected by this explanation; no universal 50-line approval gate is claimed.
+### Review and calibration evidence
+
+Implementation is complete as a workflow-level pilot. Existing automated
+commit checks are unchanged. Independent reviewer `/root/admission_hook_fit`
+found one necessary correction: metadata preparation may change reviewed
+bytes. The three handoff passages now agree: semantic review, inspect preparation
+changes, confirm final identities, then compare the staged candidate before
+the final gate. The reviewer confirmed closure with no further required changes.
+
+Independent Senior Prompt Engineer reviewer `/root/admission_calibration`
+received synthetic case inputs and the owning rules, without expected answers
+or this plan. A-H all matched their required/forbidden outcomes: A/E accepted,
+B/C/D required concrete corrections, F did not reopen admission, G/H retained
+an explicit review gap rather than a code failure. No unnecessary objections
+to the valid examples and no false passes were observed in this sample.
+Measured first review was 40 seconds (17:13:38–17:14:18 UTC), excluding report
+delivery and orchestration; this is not end-to-end commit timing.
+
+The preparation correction added case I. Only I and A/E's affected freshness
+advice were reassessed, in 11 seconds (17:16:02–17:16:13 UTC), excluding report
+delivery. Unaffected decisions were retained. I correctly preserves semantic
+findings after an inspected lifecycle-date-only change, but requires recording
+and comparing the final identity. All nine scenarios now match their expected
+observations. This is a small synthetic semantic calibration, not nine executed
+code tests, a statistically established reliability rate or a complete real
+commit demonstration. No expected outcome was rewritten to hide a miss.
+
+Reviewed final SHA-256 identities:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Admission standard v4 | `f7aa384f10c3f34247ad6ad1b9eb10c076760db23c296508d0a6de5b64b93794` |
+| Review workflow v2 | `0f1600d5380834c216653d3eaafd678f6566b9a801710901d9e663438fb9abff` |
+| Before-commit checklist v4 | `d32b14d6830d345c0fa51d809575eb4d7dce02651c64c09131a6f36fd535678b` |
+| Calibration document v1 | `3fde0331df21431d18a26cde7eeaec08f1730cc677e3be1bc30e829ad1e69f13` |
+
+Final scoped structural checks passed: five metadata headers (0.40 seconds),
+deterministic process drift (0.10 seconds), and governed command drift (39.54
+seconds), run concurrently within the two-minute structural budget. The six
+validated added relative links/anchors did not change during correction;
+whitespace validation also passed after removing a trailing blank line in the
+new document (no semantic change; recorded final identity updated).
+The reviewer confirmed the final handoff
+correction; the parent checked the complete diff and the four recorded hashes.
+Status: bounded workflow pilot and nine-case calibration complete, uncommitted.
+No product/runtime suite, broad architecture census, admission-registry
+implementation, new source file, automatic review attestation, staged commit,
+merge or push was performed. The 50-line approval requirement remains a
+review obligation, not a new mechanical gate.
 
 ## Read this first
 

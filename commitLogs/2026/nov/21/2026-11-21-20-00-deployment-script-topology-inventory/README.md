@@ -70,6 +70,10 @@ Phase 1 deployment script topology classification and migration proposal
 - Decision: Promotion uses declared direct inputs; repository-wide selector contracts are periodic hygiene.
   Rationale: Lockfile and workspace inventory remain proof invalidators, but only the module-index integrity owner is selected solely by a lockfile change; focused mechanics cover candidate routing while the repository architecture census remains available as hygiene.
 
+
+- Decision: User approved committing the admission-review pilot and growth-and-cost reporting, merging to main and promoting to origin/main.
+  Rationale: This includes the normal non-rewriting refresh needed for merge. No live deployment, script implementation, forced update or unrelated cleanup is authorised.
+
 ## Context Hygiene
 
 
@@ -107,6 +111,10 @@ Phase 1 deployment script topology classification and migration proposal
 
 - Summary: P6/P7 implementation published. Task `084d2f37` merged normally into main as `5700a3a92ca1f0af12a7fa5fd61aca5f122d09e2` and pushed; independently observed local main and remote main match. This documentation closeout records completion and corrects stale broad-diagnostic scheduling prose, without implementation changes.
   Durable evidence: Refresh base `237dbcf18fc0be11f35c6a66a9738d83d15d10b4`; source-identical candidate `af47d3e02174ca3e7214cfde912977dce2304609`. Complete integrated proof: 132 passed (19 executed, 113 reused), 28 declared stage/manual deferrals, zero findings, 706.430 seconds; report `.cache/test-runs/20261126T114050Z-a94c9caaf7f0471fa1d69c3ecfdb20b6/report.json`. Main readiness eligible in 86.678 seconds, with 132 reused and zero executed; report `.cache/test-runs/20261126T114236Z-32de8ded6d55444bbf35f321fc876720/report.json`. Independent census: 521 entrypoints, six scopes, zero gaps. All 90 historical records and two frozen snapshots unchanged. Preflight branch `agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-87d81f578585/20261126112805` and its worktree under `/var/tmp/kanbien-p6-proof.oel6Cb/agentic-main-refresh-preflight/` retained. No live deployment, workflow dispatch, schedule change or retirement; no ten-minute complete-release claim.
+
+
+- Summary: Six documentation changes passed consolidated independent source review with no required corrections. Admission calibration is retained, not repeated; this is a workflow pilot, not an automated model gate.
+  Durable evidence: Evidence: current script-library-simplification plan, nine-case calibration and recorded source identities. Publish only approved documents, generated metadata-index updates and this session record. Target ten minutes for publication verification; overruns are reported, not bypassed. Zero script-source additions, removals or moves; only admission-triggered review and bounded completion reporting duties change.
 
 ## Activity Log
 
@@ -1556,6 +1564,27 @@ Summary: Eight documentation/log files record verified main publication at 5700a
 
 ADR impact: No new architecture decision; documentation reconciles the approved implementation and existing check ownership.
 
+
+### 2026-11-26T17:34:51Z - Decision
+
+Decision: User approved committing the admission-review pilot and growth-and-cost reporting, merging to main and promoting to origin/main.
+
+Rationale: This includes the normal non-rewriting refresh needed for merge. No live deployment, script implementation, forced update or unrelated cleanup is authorised.
+
+
+### 2026-11-26T17:34:51Z - Context hygiene
+
+Summary: Six documentation changes passed consolidated independent source review with no required corrections. Admission calibration is retained, not repeated; this is a workflow pilot, not an automated model gate.
+
+Durable evidence: Evidence: current script-library-simplification plan, nine-case calibration and recorded source identities. Publish only approved documents, generated metadata-index updates and this session record. Target ten minutes for publication verification; overruns are reported, not bypassed. Zero script-source additions, removals or moves; only admission-triggered review and bounded completion reporting duties change.
+
+
+### 2026-11-26T17:34:51Z - ADR disposition
+
+ADR needed: no
+
+Reason: This documents bounded review and completion reporting within existing harness owners; no new architecture, runtime, scheduler or executable enforcement boundary.
+
 ## Sub-Agent Activity
 
 
@@ -1731,7 +1760,7 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
 
 ADR needed: no
 ADR path:
-Reason: This refines existing check-selection and chat-refresh owners without changing product, deployment, or scheduler architecture.
+Reason: This documents bounded review and completion reporting within existing harness owners; no new architecture, runtime, scheduler or executable enforcement boundary.
 
 ## Session Metrics
 
