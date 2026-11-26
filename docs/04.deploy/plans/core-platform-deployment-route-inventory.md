@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.inventory.core-platform-deployment-routes
-version: 3
+version: 4
 status: draft
 created_on: "2026-11-14"
 updated_on: "2026-11-26"
@@ -19,8 +19,10 @@ used_by:
 
 ## Current relocation status — 2026-11-26
 
-The approved 173-source relocation and its 31 Markdown companions are locally
-implemented, pending final qualification and publication. The 76 Entity sources
+The approved 173-source relocation and its 31 Markdown companions are qualified
+and published on main at `5700a3a9`; the
+[programme](../../../.agentic/shared/plans/implementation/script-library-simplification.md#final-integrated-qualification-and-publication--2026-11-26)
+records final evidence. The 76 Entity sources
 now occupy capability subfolders within their existing runtime owner. The 95
 staging sources, including the Cognito observer, now live under
 [`scripts/04.deploy/legacy/kanbien-staging/`](../../../scripts/04.deploy/legacy/kanbien-staging/);

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.scripts.readme
-version: 18
+version: 19
 status: active
 created_on: "2026-06-26"
 updated_on: "2026-11-26"
@@ -57,7 +57,7 @@ Use the current paths linked here. The
 and [current simplification plan](../../.agentic/shared/plans/implementation/script-library-simplification.md)
 own new work and migration. The [P4 source audit](../helpers/audit.md#p4-current-disposition-and-proposed-folder-manifest--2026-11-25)
 accounts for all 471 deployment source files. The approved relocation is now
-locally implemented: 76 Entity sources occupy capability subfolders within the
+published: 76 Entity sources occupy capability subfolders within the
 same runtime owner, 95 staging sources occupy `legacy/kanbien-staging/`, and two
 RAG readiness sources occupy `legacy/rag-rulebook/`. The 31 associated Markdown
 companions moved with their legacy families. No deployment source was added or

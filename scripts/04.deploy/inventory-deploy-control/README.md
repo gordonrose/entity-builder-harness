@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.script.inventory-deploy-control.readme
-version: 4
+version: 5
 status: active
 created_on: "2026-10-06"
 updated_on: "2026-11-26"
@@ -74,7 +74,9 @@ complete source audit. Do not copy those proposed dispositions into a migration.
 Use the [source-backed audit and exact P4 proposal](../../helpers/audit.md#p4-current-disposition-and-proposed-folder-manifest--2026-11-25)
 to establish responsibility, callers, retained risks and proposed destinations.
 The approved 173-source deployment relocation and its 31 Markdown companions
-are locally implemented; final qualification and publication remain pending.
+are qualified and published; the
+[programme](../../../.agentic/shared/plans/implementation/script-library-simplification.md#final-integrated-qualification-and-publication--2026-11-26)
+records the evidence.
 The source count is unchanged. This inventory discovers the canonical paths
 from the checkout and existing declarations; it does not need a second list of
 legacy owners. The catalogue remains useful for finding candidates. Any further

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: repo.check-selection.readme
-version: 19
+version: 20
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-11-25"
+updated_on: "2026-11-26"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -180,12 +180,15 @@ uses `20-scopes/scope-index.yml` for discovery and the generic scope validators
 for health, secrets and persistence applicability. It does not infer unsupported
 consumers or treat incomplete coverage as a pass.
 
-Diagnostic adoption also discovers ordinary executable code independently of
-deployment scopes. `diagnostic-adoption` runs at commit boundaries;
-`diagnostic-runtime-contracts` runs at integration. Source-matched reviews in
-`scripts/repo/diagnostic-coverage/reviews.v1.json` name registered local checks;
-their sources and tests select those checks through this same selector. These
-reviews add selection edges, never arbitrary commands or execution permission.
+Diagnostic adoption discovers ordinary executable code independently of
+deployment scopes. The broad `diagnostic-adoption` and
+`diagnostic-runtime-contracts` checks have `cadence: deferred` and
+`boundary: integration`: ordinary commits and merges retain them without
+execution. They remain available through explicit registered requests.
+Source-matched reviews in `scripts/repo/diagnostic-coverage/reviews.v1.json`
+connect checks to their actual consumed sources and fixtures. Independently
+selected candidate checks still run. Review links add selection relationships,
+not commands or execution permission.
 
 `bootstrap-payload-regression` and `persistence-payload-regression` exercise
 compiled package imports and deliberately broken payloads locally, before any
