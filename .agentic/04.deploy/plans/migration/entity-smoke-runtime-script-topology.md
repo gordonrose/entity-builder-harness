@@ -1,8 +1,8 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.migration.entity-smoke-runtime-script-topology
-version: 2
-status: draft
+version: 3
+status: active
 created_on: "2026-11-22"
 updated_on: "2026-11-26"
 layer: 04.deploy
@@ -21,17 +21,18 @@ used_by:
 
 ## Decision and scope
 
-The active `60-run` entity-smoke route currently has 76 executable files at
-one scope root.  Preserve the scope identity and its existing `bindings/`
-tree, but move those direct files to focused operational folders.  A folder
-states the objective; `implementation/`, `tests/`, and `commands/` distinguish
-supporting roles where that improves reviewability.
+The approved relocation is implemented and published on main at `5700a3a9`.
+The 76 formerly flat `60-run` Entity Smoke source files now occupy focused
+operational folders. The scope identity and existing `bindings/` tree remain
+unchanged. Folders state objectives; `implementation/`, `tests/`, and `commands/`
+distinguish supporting roles where that improves reviewability.
 
-The deployment manifest remains approved preparation, not permission to invoke
-AWS/GitHub, alter releases or activate dormant RAG. The P6 first packet below
-implements only two prelisted shared inspection relocations and placement
-reconciliation. Existing deployment paths remain canonical until their own
-reference and compatibility gates are completed in a later migration slice.
+This manifest retains the exact old-to-canonical destinations for all 173
+deployment source files and 31 Markdown companions. It is not permission to
+invoke providers, alter releases or activate dormant RAG. Final qualification
+and publication evidence is in the
+[programme](../../../shared/plans/implementation/script-library-simplification.md#final-integrated-qualification-and-publication--2026-11-26).
+Earlier dated packets below remain the implementation decision trail.
 
 The canonical scope remains:
 
@@ -56,8 +57,8 @@ scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/
 
 ## Exact path manifest
 
-Each row is relative to the canonical scope above.  The destination is the
-future authoritative location; old paths are **not** compatibility promises.
+Each row is relative to the canonical scope above. The destination is now the
+authoritative location; old paths are **not** compatibility promises.
 
 | Current relative path | Canonical relative path |
 | --- | --- |
@@ -644,5 +645,8 @@ The programme records its report and the final protected-RAG correction: exact
 original recognition bytes remain frozen; existing runtime fixtures use
 disposable source copies, and R01 directly proves its moved current references.
 No search-corpus refresh is a deployment-migration requirement. Final integrated
-qualification, coherent commits, refresh and actual main publication are tracked
-in the existing script-library-simplification programme.
+qualification subsequently passed 132 checks (113 reused), with 28 declared
+stage/manual deferrals and zero findings, in 706.430 seconds. Main readiness
+reused all 132 successes. Task `084d2f37` was normally merged and pushed as
+`5700a3a9`, verified on local and remote main. The programme records full revisions,
+reports and retained limits; no live deployment or schedule change was made.

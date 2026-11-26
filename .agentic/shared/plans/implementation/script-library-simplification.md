@@ -1,8 +1,8 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 24
-status: draft
+version: 25
+status: active
 created_on: "2026-11-23"
 updated_on: "2026-11-26"
 layer: 06.shared
@@ -56,18 +56,16 @@ proof. Revision 20 records P2's selection/context corrections and measured
 verification below. P3 and its completion correction are now published on main
 at 237dbcf18fc0be11f35c6a66a9738d83d15d10b4. Revision 23 records the approved
 P4 documentation audit and approved concrete layout. P5's bounded local handoff
-and measured registered proof are recorded. P6 now has all approved deployment
-moves locally implemented (173 source files and 31 Markdown companions), plus
-the shared inspector and selector helper transfers. Focused caller/history proof
-is passing. Retained contract corrections and exact historical-reader repairs
-are implemented; final selector ownership and complete preparation now pass.
-The corrected complete candidate passed 133 entries, with 28 stage/manual
-deferrals, in 1177.492 seconds. Final RAG fixture isolation and reference
-ownership are being reconciled with the preserved dormant snapshot before
-committing; the integrated candidate and actual publication remain outstanding.
-P7's runner/admission guidance is implemented locally, not yet published.
-Earlier dated checkpoints are historical, not current
-publication blockers.
+and measured registered proof are recorded. P6/P7 implementation is complete in
+task commit `084d2f37` and published on local and remote main through
+`5700a3a92ca1f0af12a7fa5fd61aca5f122d09e2`. All approved deployment moves
+(173 source files and 31 Markdown companions), the four repository helper/test
+moves, historical readers, verification ownership and runner/admission changes
+are included. The final integrated candidate passed 132 checks with 28 declared
+stage/manual deferrals and zero findings. Main readiness reused all 132 results
+without executing another check. The protected RAG correction is included and
+historical records remain unchanged. See the final publication record below.
+Earlier dated checkpoints are historical, not current publication blockers.
 
 The goal is understandable, manageable scripts and fast normal repository work,
 with enough evidence to protect the action being taken. This supports the
@@ -2089,6 +2087,55 @@ qualification. Preserve the 90 accepted/proof records, frozen recognition and
 dated timeout inventory unchanged through that handoff. Publication is recorded
 only after the intended commits are observed on both local and remote main.
 
+### Final integrated qualification and publication — 2026-11-26
+
+The protected-RAG correction above was completed in task commit `084d2f37`.
+The three affected registered checks passed in 91.282 seconds; final lifecycle
+preparation passed in 117.726 seconds and the staged commit gate in 71.991
+seconds. No new source file, registry, scheduler or test framework was added.
+
+Refresh used recorded base `237dbcf18fc0be11f35c6a66a9738d83d15d10b4` and
+produced `af47d3e02174ca3e7214cfde912977dce2304609` without conflicts or source
+changes. Its complete affected integration proof passed: 132 checks passed
+(19 executed, 113 reused), 28 kept their declared later/manual stage, and zero
+findings. Wall time was 706.430 seconds. Registered report:
+`.cache/test-runs/20261126T114050Z-a94c9caaf7f0471fa1d69c3ecfdb20b6/report.json`.
+
+The independent delivery census covered 521 entrypoints in six scopes with no
+gaps. Main readiness returned `eligible` in 86.678 seconds: all 132 successful
+results were reused, zero checks executed and zero findings. Registered report:
+`.cache/test-runs/20261126T114236Z-32de8ded6d55444bbf35f321fc876720/report.json`.
+These private local reports are not portable or live acceptance evidence.
+
+Normal merge and push published
+`5700a3a92ca1f0af12a7fa5fd61aca5f122d09e2`; local main and the independently
+queried remote `refs/heads/main` matched, and task commit `084d2f37` is an
+ancestor. The feature difference has 358 rename-aware changed paths: 208 moves
+and 150 other modifications. The 208 moves are 173 deployment source files,
+31 Markdown companions and four repository helper/test files. The script source
+count remains 690 (377 shell, 247 Python, 59 MJS and seven JS files).
+
+The retained preflight branch is
+`agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-87d81f578585/20261126112805`;
+its worktree remains under `/var/tmp/kanbien-p6-proof.oel6Cb/agentic-main-refresh-preflight/`.
+No branches or worktrees were deleted. Final hash comparison confirmed all
+90 accepted/proof records, the frozen recognition projection and dated timeout
+inventory remained unchanged.
+
+Publication closeout reconciles the current plan/manifest status and the two
+stale diagnostic scheduling instructions with the existing catalogue. Broad
+adoption/runtime aggregates remain explicit deferred checks, not automatic
+commit requirements. This is a documentation correction, not disabled proof.
+
+Retained limits: the large migration's verification is still costly; no
+ten-minute complete release or live environment health claim is established.
+Existing diagnostic-review debt, cold setup/runtime-scan cost and dormant
+retrieval freshness remain recorded work outside this finite scope. Package,
+deployment and runtime acceptance still require their own actual artifacts,
+authority and fresh observations. No live deployment, hosted workflow dispatch,
+new nightly automation, scheduler implementation or staging/RAG retirement was
+performed. Existing staging schedules and disabled RAG automation are unchanged.
+
 ## Milestone P7 — Codify the proven rules and close the programme
 
 1. Reconcile the existing script-admission standard, test-execution standard,
@@ -2291,6 +2338,6 @@ cloud operations, legacy retirement, or a different folder design.
 | P2 Consistent selection | Complete at its bounded implementation boundary: focused and registered owners passed, warm reuse proved, both automated callers agree; included in P3. | Retain the recorded pre-existing adoption findings; qualify newly changed inputs. |
 | P3 Reliable published checkpoint | Published including follow-up at actual remote main 237dbcf1; exact initial qualification passed 42 local instances, seven reused. Final follow-up gate reused all six due checks in 20.242 seconds without execution. | Complete. Initial 21m33s cost miss and baseline adoption debt remain visible P5 work. |
 | P4 Complete capability disposition | Approved after the complete folder/count briefing: exact 173-source relocation scope, 517 retained paths and 148 deploy file-bearing-folder counts. | Closed at the audit/design boundary; P6 implements the approved moves. |
-| P5 Build/package handoff | Bounded local handoff delivered: three registered owners pass in 212.440489 seconds; unchanged reuse passes in 11.394741 seconds with zero commands. Full affected integration and actual release timing are not established. | Include the changed handoff in final candidate qualification. Retain runtime-scan, cold setup and full-release cost debt; no live freshness weakened. |
-| P6 Approved migrations | All 173 approved deployment sources and 31 Markdown companions relocated; shared inspector and selector helper homes corrected. Delivery census, legacy/history/import proof, direct ownership and preparation pass. | Complete final candidate proof and coherent commits. |
-| P7 Standards and final acceptance | Canonical effects parsing, portable taxonomy handoff, admission/authoring guidance and source-backed folder guides implemented; representative routing reviewed with retained limits recorded. | Complete candidate evidence, normal refresh, merge and push. |
+| P5 Build/package handoff | Bounded local handoff delivered: three registered owners pass in 212.440489 seconds; unchanged reuse passes in 11.394741 seconds with zero commands. Complete affected integration now passes. | Complete within the approved local scope. Actual release timing, runtime-scan and cold-setup cost debt remain outside the proved result; no live freshness weakened. |
+| P6 Approved migrations | All 173 deployment sources and 31 Markdown companions relocated; four repository helper/test homes corrected. Current/historical callers, direct ownership and complete affected integration pass. | Complete and published in `5700a3a9`; exact rows remain in the migration manifest. |
+| P7 Standards and final acceptance | Canonical effects parsing, portable taxonomy handoff, admission/authoring guidance and folder guides implemented; representative routing and retained limits recorded. Main readiness reused all 132 passing checks. | Complete; implementation published in `5700a3a9`, with this evidence and scheduling-prose closeout recording the actual outcome. |

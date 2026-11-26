@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.workflow.verify-diagnostic-coverage
-version: 17
+version: 18
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-09"
+updated_on: "2026-11-26"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -252,12 +252,12 @@ verification sequence rather than repeatedly executing unchanged suites.
 
 ## Gates and completion
 
-After normal metadata preparation, validate the impact plan before expensive
-execution and run the structural adoption check:
+The prepared impact plan identifies required candidate checks before expensive
+execution. Broad adoption/runtime checks remain available for an explicit
+governed request; their scheduling belongs to the existing selector:
 
 ```bash
 bash scripts/repo/check-selection/script.sh --paths <changed-paths> --json
-bash scripts/repo/diagnostic-coverage/script.sh
 ```
 
 For final focused verification, follow the shared
@@ -284,10 +284,13 @@ structural validation, while semantic additions, removals and owner transfers
 select both former and current proof owners. An absent ledger in a valid base
 means initial adoption; unavailable or malformed comparison data is a gap.
 
-The structural check blocks commits; runtime contract/export verification runs
-at integration. Review-linked registered checks are selected by the existing
-selector, including for non-deployed services. CI and local-main promotion use
-that selector. Its permissions and stage rules still apply.
+The existing selector and check catalogue own execution timing. Broad adoption
+and runtime-contract checks are currently deferred from ordinary commits and
+merges. Explicit requests retain their checks and preparation requirements;
+for example, request `diagnostic-adoption` through the registered-unit interface.
+Review-linked candidate checks still follow actual changed inputs, including
+for non-deployed services. CI and local-main promotion use the same selector;
+permissions and later-stage boundaries remain unchanged.
 
 Missing ownership, missing executable contracts, stale exports, stale reviews,
 unknown check identities or failing proof block completion at the affected
