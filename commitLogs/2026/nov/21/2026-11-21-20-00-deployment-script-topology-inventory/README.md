@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-26T17:41:59Z
-latest_commit_sha: 3f43a42a9fa0e7198db666fff0a2a90eff147260
-chat_duration: 423681s (04:21:41:21)
+latest_commit_at_utc: 2026-11-26T17:58:46Z
+latest_commit_sha: 2c1649095703c7980dac48f89ec60ee57a569c4a
+chat_duration: 424688s (04:21:58:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1651,6 +1651,17 @@ Summary: Publication-status correction updates one existing plan file. It change
 
 Durable evidence: Focused header and deterministic-process checks passed. The prior main publication 83af09c6, task commit 329e2431 and 12-check merge evidence are recorded in the plan. Commit only the plan and current session log.
 
+
+### 2026-11-26T17:58:46Z - Commit recorded
+
+Commit: `2c1649095703c7980dac48f89ec60ee57a569c4a`
+
+Message: docs(harness): reconcile script governance publication record
+
+Summary: Corrected stale plan wording to distinguish original no-publication authority from the later completed publication at 83af09c6. Header, process, whitespace and staged gates passed; the only selected repository-contract check remained deferred.
+
+ADR impact: No ADR required; existing plan and publication owners retained.
+
 ## Sub-Agent Activity
 
 
@@ -1832,6 +1843,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Approved refresh from main e9b82787f636879c8a8649ad54857e70b22a9184 rehearsed cleanly, no conflicts, no stash. Combined candidate passed 12 existing local integration checks in 170.19 seconds; applying the exact result reused all 12 in 16.25 seconds with zero test re-execution. Broad repository contracts remain deferred.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `2c1649095703c7980dac48f89ec60ee57a569c4a`
+  Time UTC: 2026-11-26T17:58:46Z
+  Message: docs(harness): reconcile script governance publication record
+  Summary: Corrected stale plan wording to distinguish original no-publication authority from the later completed publication at 83af09c6. Header, process, whitespace and staged gates passed; the only selected repository-contract check remained deferred.
+  ADR impact: No ADR required; existing plan and publication owners retained.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1845,9 +1863,9 @@ Reason: This documents bounded review and completion reporting within existing h
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-26T17:41:59Z
-Latest commit SHA: 3f43a42a9fa0e7198db666fff0a2a90eff147260
-Chat duration: 423681s (04:21:41:21)
+Latest commit at UTC: 2026-11-26T17:58:46Z
+Latest commit SHA: 2c1649095703c7980dac48f89ec60ee57a569c4a
+Chat duration: 424688s (04:21:58:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
