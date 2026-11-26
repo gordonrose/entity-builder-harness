@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: '2026-10-26'
-#   updated_on: '2026-10-26'
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines:
@@ -42,10 +42,10 @@ requirements:
   - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.ts
   - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.ts
   - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.ts
-  - scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
-  - scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
-  - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh
-  - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-admission-probe/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-live-boundary/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/script.sh
   declarations:
   - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
     expectation: Each supported task binds its actual command, capability configuration

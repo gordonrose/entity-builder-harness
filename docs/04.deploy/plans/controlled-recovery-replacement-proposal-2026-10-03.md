@@ -4,7 +4,7 @@ id: deploy.plan.controlled-recovery-replacement-2026-10-03
 version: 2
 status: draft
 created_on: "2026-10-03"
-updated_on: "2026-10-25"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines: [architecture, agentic, sre]
@@ -68,9 +68,9 @@ The minimum proposed layout is:
 ```text
 .agentic/shared/workflows/deployment-recovery.md       shared coordination
 .agentic/aws/workflows/execute-approved-aws-change.md  bounded AWS authority
-scripts/04.deploy/reconcile-platform-shell-staging/    promotion/restore preflight
-scripts/04.deploy/run-platform-shell-candidate-execution-preflight/ outcome recovery
-scripts/04.deploy/smoke-test-platform-shell-image/     final-image execution
+scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/    promotion/restore preflight
+scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight/ outcome recovery
+scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/     final-image execution
 infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml service scope
 .github/workflows/deploy-platform-shell-staging.yml   existing publisher
 commitLogs/<session>/README.md                        existing ownership record
@@ -96,7 +96,7 @@ for `kanbien-staging-platform-shell-service`, reviews it, then runs
 `aws cloudformation execute-change-set` and observes CloudFormation/ECS. Preserve
 the execution role and every non-image parameter with `UsePreviousValue`.
 
-Minimally extend `scripts/04.deploy/reconcile-platform-shell-staging/script.py`,
+Minimally extend `scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.py`,
 called by `npm run platform:shell:deployment-reconciliation`, with named HTTP
 promotion/restore modes. The existing bootstrap-recovery mode is not HTTP
 authority. Validate image-only parameters and non-image properties as well as

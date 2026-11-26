@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.regression
-#   version: 11
+#   version: 12
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-24"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -105,8 +105,8 @@ class DiscoveryTests(unittest.TestCase):
         for path, identity in [
             ('scripts/repo/diagnostic-coverage/verify.sh', 'diagnostic-runtime-contracts'),
             ('scripts/repo/check-selection/smoke-test.sh', 'check-selection-regression'),
-            ('scripts/04.deploy/build-platform-shell-image/check-source.sh', 'shell-package-source'),
-            ('scripts/04.deploy/verify-platform-shell-infrastructure/script.sh', 'shell-infrastructure'),
+            ('scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh', 'shell-package-source'),
+            ('scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/script.sh', 'shell-infrastructure'),
         ]:
             for failure in [0, 7]:
                 code, calls = self.verification_fixture(path, [], fail=failure)
@@ -149,9 +149,9 @@ class DiscoveryTests(unittest.TestCase):
         for unit, command in [('entity-smoke', 'app:entity-smoke:check'), ('server', 'platform:server:check'), ('product', 'product:kanbien-platform:check'), ('cloudwatch', 'platform:adapter:aws:observability:cloudwatch:check'), ('ecs-fargate', 'platform:adapter:aws:runtime:ecs-fargate:check'), ('dynamodb-persistence', 'platform:adapter:aws:persistence:dynamodb:check'), ('sqs-queue', 'platform:adapter:aws:queue:sqs:check')]:
             self.assertEqual(self.verification_fixture(path, ['--unit', unit]), (0, ['npm --ignore-scripts run ' + command]))
             self.assertEqual(self.verification_fixture(path, ['--unit', unit], fail=7), (7, ['npm --ignore-scripts run ' + command]))
-        self.assertEqual(self.verification_fixture('scripts/04.deploy/build-platform-shell-image/check-source.sh', ['--payload-only']),
+        self.assertEqual(self.verification_fixture('scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh', ['--payload-only']),
                          (0, ['npm --ignore-scripts run platform:server:image-runtime-check']))
-        self.assertEqual(self.verification_fixture('scripts/04.deploy/build-platform-shell-image/check-source.sh', ['--payload-only'], fail=7),
+        self.assertEqual(self.verification_fixture('scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh', ['--payload-only'], fail=7),
                          (7, ['npm --ignore-scripts run platform:server:image-runtime-check']))
         code, calls = self.verification_fixture(path, ['--unit', 'base'], fail=7)
         self.assertEqual(code, 7)
@@ -161,7 +161,7 @@ class DiscoveryTests(unittest.TestCase):
         for arguments in [['--unit'], ['--unit', 'unknown'], ['--unit', 'server', 'extra'], ['--unknown', 'server']]:
             self.assertEqual(self.verification_fixture('scripts/repo/diagnostic-coverage/verify.sh', arguments), (2, []))
         for arguments in [['--payload-only', 'extra'], ['--unknown']]:
-            self.assertEqual(self.verification_fixture('scripts/04.deploy/build-platform-shell-image/check-source.sh', arguments), (2, []))
+            self.assertEqual(self.verification_fixture('scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh', arguments), (2, []))
 
     def test_each_split_package_dispatch_preserves_command_and_failure(self):
         for unit, command in [('core', 'core'), ('smoke-app', 'app:platform-smoke')] + [(name, 'platform:' + name) for name in ['contracts', 'config', 'security', 'observability', 'health', 'persistence', 'runtime', 'testing', 'workers']]:
@@ -194,7 +194,7 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(lines[1], 'bash scripts/repo/check-selection/script.sh --checks platform-shell-payload --execute-local --json')
         original = ['npm run platform:server:check', 'npm run platform:server:image-runtime-check', 'npm run product:kanbien-platform:check', 'npm run platform:shell:infrastructure:check', 'npm run platform:shell:deployment-workflow:check', 'bash scripts/04.deploy/validate-container-boundaries/script.sh']
         self.assertEqual(lines[2:], original)
-        self.assertIn('bash scripts/04.deploy/build-platform-shell-image/check-source.sh', (ROOT / 'scripts/04.deploy/build-platform-shell-image/script.sh').read_text().splitlines())
+        self.assertIn('bash scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh', (ROOT / 'scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh').read_text().splitlines())
         with tempfile.TemporaryDirectory(prefix='ci-source-order-') as directory:
             root = Path(directory)
             for relative in ['scripts/repo/check-selection/script.sh', 'scripts/04.deploy/validate-container-boundaries/script.sh']:

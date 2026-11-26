@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-26"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -52,7 +52,7 @@ The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added�
 
 ### release-evidence-test.py
 
-[Open current source](../../../../../scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py) · **Snapshot:** modified existing file; 56 added / 1 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/release-evidence-test.py) · **Snapshot:** modified existing file; 56 added / 1 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for deployment controllers and evidence readers.
 
@@ -72,7 +72,7 @@ Owning registered proof: `shell-release-evidence-regression`. Look up their exac
 
 ### release_evidence.py
 
-[Open current source](../../../../../scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py) · **Snapshot:** modified existing file; 78 added / 68 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/release_evidence.py) · **Snapshot:** modified existing file; 78 added / 68 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Bind shell readiness to producer-observed current state and immutable generic release succession without overwriting historical evidence.
 
@@ -92,7 +92,7 @@ Owning registered proof: `shell-release-evidence-regression`. Look up their exac
 
 ### script.sh
 
-[Open current source](../../../../../scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh) · **Snapshot:** modified existing file; 224 added / 44 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh) · **Snapshot:** modified existing file; 224 added / 44 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Validate platform shell deploy-readiness evidence without mutating GitHub or AWS.
 
@@ -120,7 +120,7 @@ Use the [30-minute core / 50-minute extension protocol](../facilitator-guide.md)
 
 ## Evidence and boundaries
 
-[Folder in the checkout](../../../../../scripts/04.deploy/verify-platform-shell-deploy-readiness) · [Baseline, current proof and deferrals](../sources-and-limits.md) · [Plain-language glossary](../glossary.md)
+[Folder in the checkout](../../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness) · [Baseline, current proof and deferrals](../sources-and-limits.md) · [Plain-language glossary](../glossary.md)
 
 Neighboring folder lessons: [L094 scripts/04.deploy/build-platform-shell-image](094-scripts-04-deploy-build-platform-shell-image.md) · [L110 scripts/04.deploy/smoke-test-platform-shell-image](110-scripts-04-deploy-smoke-test-platform-shell-image.md) · [L111 scripts/04.deploy/validate-container-boundaries](111-scripts-04-deploy-validate-container-boundaries.md) · [L112 scripts/04.deploy/inventory-deploy-control](112-scripts-04-deploy-inventory-deploy-control.md) · [L127 scripts/04.deploy](127-scripts-04-deploy.md) · [L152 scripts/04.deploy/reconcile-platform-shell-staging](152-scripts-04-deploy-reconcile-platform-shell-staging.md) · [L153 scripts/04.deploy/shared](153-scripts-04-deploy-shared.md) · [L168 scripts/04.deploy/verify-platform-shell-deployment-workflow](168-scripts-04-deploy-verify-platform-shell-deployment-workflow.md) · [L169 scripts/04.deploy/verify-platform-shell-infrastructure](169-scripts-04-deploy-verify-platform-shell-infrastructure.md).
 

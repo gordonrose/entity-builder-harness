@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standards.artifact-path-migrations
-version: 1
+version: 2
 status: active
 created_on: "2026-06-20"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 01.harness
 domain: migration
 disciplines:
@@ -102,6 +102,36 @@ Active references are every bucket except `session-history` and
 artifact may stay as migration evidence when the checker is told which plan file
 owns them. Historical references may stay if they are clearly audit history and
 do not look like current runnable instructions.
+
+The planner and checker share the same historical classification. In a mixed
+document, only the exact historical reference lines are excluded; the planner
+still reports their file and line under `session-history`. Supported evidence is:
+
+- Education guides' frozen inventory labels and `course-file` markers backed by
+  recorded source hashes. Link destinations and runnable examples remain active.
+- Dated RAG derivation records' source-claim evidence and recorded check results.
+  A required check is historical only when that same command has a passed result
+  and the record explicitly has no pending checks.
+- Accepted, dated RAG source-material reviews' reviewer evidence, backed by the
+  reviewed source hash. Other fields remain active.
+- A completed implementation plan's path-only `text` block introduced by exactly
+  `Historical task paths (completed work; not current instructions):`. This
+  annotation records completed work, not permission to hide current instructions.
+- The exact frozen `docs/04.deploy/plans/verification-diagnostics-timeout-inventory.tsv`
+  snapshot, SHA-256 `e765c0a2c2aa07874a15d25b19cdb041fd11995cd4ca2f79c556157cb1d5f7cf`,
+  first recorded in commit `12282929391d620e39ba8cfad7d1b3e3a8681e0b`. Its governed
+  companion `verification-diagnostics-timeout-audit.md` identifies the audited
+  source `725f17e64974496e449f1c3afe8a8faaad0790a5` and describes this inventory as
+  commands and source lines at that commit, not current instructions. Both the
+  exact path and original bytes must match; changed contents and other TSV files
+  remain active. Preserve this snapshot rather than modernizing its path values.
+
+These forms require valid artifact metadata and their documented provenance,
+or the exact frozen snapshot identity above.
+Unknown or malformed records remain active. Failed reads or unavailable parsing
+fail the observation; they must not become an empty reference inventory. Preserve
+original historical path and hash values rather than rewriting the evidence to
+make a migration pass.
 
 ## Compatibility Choices
 

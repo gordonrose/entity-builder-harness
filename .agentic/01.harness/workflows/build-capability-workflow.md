@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.workflows.build-capability-workflow
-version: 1
+version: 2
 status: active
 created_on: "2026-06-15"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -33,8 +33,9 @@ used_by:
 
 Use this when a request needs a new repeatable capability, behaviour, process, automation, skill, workflow, standard, checklist, script, agent, orchestrator, or combination of these.
 
-This workflow may create artifacts for any target layer: `chat`, `shared`,
-`harness`, `education`, `aws`, `product`, or `mixed`.
+This workflow may create artifacts for any owning layer. Use the current
+repository instructions and applicable routing policy rather than copying a
+second layer list here.
 
 ## Goal
 
@@ -43,27 +44,29 @@ Find an existing capability if one exists. If none exists, propose the smallest 
 
 Do not create files until the user explicitly grants edit permission in the current chat.
 
-## Step 1: Consume Session Context
+## Step 1: Resolve the Current Request
 
-Use the `layer`, `workflow`, and `task` already resolved by chat startup
+Use the session log for the recorded worktree, branch, authority and task
+continuity. Resolve ownership and the applicable workflow from the current
+request, repository instructions and available context router. Do not assign
+the whole chat a durable layer, mode or workflow, or switch worktrees because
+the current task crosses layers.
 
-Do not reclassify the layer unless the session metadata is missing, incomplete, or marked `unknown`.
+The target layer describes the capability being changed, not every earlier or
+later task in this session. Stop at an unresolved ownership or authority gap.
 
 Expected inputs:
 
-- `task`: from the current chat/session log or pasted startup prompt
-- `layer`: `chat`, `shared`, `harness`, `education`, `aws`, `product`, or
-  `mixed`
+- `task`: the current request and its recorded acceptance criteria
+- `layer`: the actual owning layer or layers for this change
 - `workflow`: this workflow path
-
-The selected `layer` is the target layer for the capability being built.
 
 Example:
 
 ```txt
-Task: update my harness so whenever I start a new chat, empty branches and commitLogs are cleaned up
+Task: move package-check input derivation to its existing selector owner
 Layer: shared
-Workflow: .agentic/01.harness/workflows/build-capability.md
+Workflow: .agentic/01.harness/workflows/build-capability-workflow.md
 ```
 
 ## Step 2: Check Existing Artifacts
@@ -79,8 +82,9 @@ Before proposing a new artifact, inspect only the relevant layer folders:
 - `.agentic/<target-layer>/evals/`
 - `.agentic/<target-layer>/hooks/`
 - `.agentic/<target-layer>/agents/`
-- the numbered script namespace from `docs/00.chat/script-layout.md`, when the
-  capability needs deterministic command code
+- the implemented script owners and their direct callers, using
+  `docs/00.chat/script-layout.md` for navigation when deterministic code is
+  needed; include existing `scripts/repo/` owners for repository machinery
 
 Do not scan unrelated layers unless the task clearly crosses layers.
 
@@ -115,6 +119,14 @@ For detailed placement rules, use
 
 Prefer fewer artifacts.
 
+Before adding a script or changing its role, owner, consumers or execution
+lane, use the [script-admission standard](../standards/script-admission.md).
+Record the real need, reused owner, primary role, proposed home, direct
+consumers, named risk, execution effects, invalidating inputs and expected
+cost in the existing task record. An approved future layout is not the current
+execution path. Move a bounded owner and its callers through the existing
+path-migration workflow; do not leave a compatibility copy without a real need.
+
 Do not create an agent if a skill is enough.
 Do not create a workflow if a script plus checklist is enough.
 Do not create an orchestrator unless multiple independent workflows must be coordinated.
@@ -131,10 +143,13 @@ Do not create vendor-specific adapters unless the vendor format adds necessary m
 
 ## Step 5: Proposal Format
 
-Before editing, output:
+Before editing, record the bounded proposal. If the user already authorised
+this scope, an intermediate update is sufficient; do not demand repeated
+approval for routine steps. New scope, new external effects and new source
+files above the admission standard's size limit still require prior approval.
 
 ```txt
-Target layer: <shared|harness|education|product|mixed>
+Target layer: <actual owning layer or layers>
 Capability name: <name>
 Existing artifact found: yes|no
 Recommended artifacts:
@@ -146,5 +161,19 @@ Not creating:
 Safety gates:
 - <gate>
 
-Edit permission needed: yes
+Edit permission: <already granted for this scope | needed>
 ```
+
+## Step 6: Prove the Actual Handoff
+
+Use the existing registered check and its declared runner for final focused
+proof. Follow [test execution](../../shared/testing/standards/test-execution.md)
+and [change completion](../../shared/standards/require-change-completion.md)
+for source review, affected consumers, matching-evidence reuse and later-stage
+requirements. A helper move is not a reason to replay every package or deploy
+check; preserve proof of its named risk and real consumer boundary.
+
+Report what changed, what now selects the proof, actual effects and measured
+cost, and what remains unproved. Selection never grants cloud, Git or other
+external authority. Do not create another runner, registry or test gate merely
+to enforce this prose workflow.

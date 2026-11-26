@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.plan-artifact-path-migration
-#   version: 1
+#   version: 3
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: migration
 #   disciplines:
@@ -26,6 +26,8 @@ set -euo pipefail
 #     path: .agentic/01.harness/standards/artifact-path-migrations.md
 #   effects:
 #   - read-only
+
+source "$(dirname "${BASH_SOURCE[0]}")/check-artifact-path-migration.sh"
 
 usage() {
   cat <<'EOF'
@@ -74,6 +76,10 @@ else
 fi
 
 bucket_for_path() {
+  if is_historical_path "$1"; then
+    printf '%s\n' "session-history"
+    return
+  fi
   case "$1" in
     AGENTS.md|CLAUDE.md|.agentic/routing-policy.yaml)
       printf '%s\n' "routing"
@@ -113,7 +119,8 @@ all_files() {
 
 matching_refs() {
   local needle="$1"
-  local file files matches status
+  local file files matches found status offset historical bucket
+  local -a candidates=()
 
   if files="$(all_files)"; then
     :
@@ -129,18 +136,41 @@ matching_refs() {
         continue
         ;;
     esac
-    if matches="$(grep -nF "$needle" "$file" 2>/dev/null)"; then
-      while IFS=: read -r line_no text; do
-        printf '%s\t%s\t%s\n' "$(bucket_for_path "$file")" "$file:$line_no" "$text"
-      done <<< "$matches"
+    candidates+=("$file")
+  done <<< "$files"
+
+  # Search a bounded argv batch once; spawning grep for every repository file
+  # made each planned move repeat thousands of processes. Positive files are
+  # read fully below, so an unreadable match cannot become a successful scan.
+  for ((offset=0; offset<${#candidates[@]}; offset+=256)); do
+    if found="$(grep -lF -- "$needle" "${candidates[@]:offset:256}" 2>/dev/null)"; then
+      :
     else
       status=$?
-      if [ "$status" -ne 1 ]; then
+      [ "$status" -eq 1 ] && continue
+      echo "ERROR: artifact-path-migration-reference-read-unavailable" >&2
+      return 1
+    fi
+    while IFS= read -r file; do
+      if matches="$(grep -nF -- "$needle" "$file" 2>/dev/null |
+          awk 'length($0)>512 {print substr($0,1,512) " [excerpt truncated]"; next} {print}' 2>/dev/null)"; then
+        if historical="$(historical_reference_lines "$file" "$needle" 2>/dev/null)"; then
+          :
+        else
+          echo "ERROR: artifact-path-migration-history-observation-unavailable" >&2
+          return 1
+        fi
+        while IFS=: read -r line_no text; do
+          bucket="$(bucket_for_path "$file")"
+          [[ $'\n'"$historical"$'\n' == *$'\n'"$line_no"$'\n'* ]] && bucket=session-history
+          printf '%s\t%s\t%s\n' "$bucket" "$file:$line_no" "$text"
+        done <<< "$matches"
+      else
         echo "ERROR: artifact-path-migration-reference-read-unavailable" >&2
         return 1
       fi
-    fi
-  done <<< "$files"
+    done <<< "$found"
+  done
 }
 
 print_refs_for() {
@@ -181,6 +211,7 @@ printf 'old_path=%s\n' "$OLD_PATH"
 printf 'new_path=%s\n' "$NEW_PATH"
 printf 'old_exists=%s\n' "$old_exists"
 printf 'new_exists=%s\n' "$new_exists"
+printf 'source_excerpt_limit=512 characters; reference locations and counts are complete\n'
 printf '\n'
 
 print_refs_for "Old path references" "$OLD_PATH"

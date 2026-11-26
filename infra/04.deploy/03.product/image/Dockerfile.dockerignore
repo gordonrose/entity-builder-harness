@@ -61,8 +61,10 @@ build
 
 !scripts/
 !scripts/04.deploy/
-!scripts/04.deploy/build-platform-shell-image/
-!scripts/04.deploy/build-platform-shell-image/**
+!scripts/04.deploy/legacy/
+!scripts/04.deploy/legacy/kanbien-staging/
+!scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/
+!scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/**
 !scripts/repo/
 !scripts/repo/workspace-build/
 !scripts/repo/workspace-build/declarations.mjs

@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.run-governed-script
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-11-18"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: governance
 #   disciplines:
@@ -42,14 +42,8 @@ read_failed() { echo "ERROR: governed-$1-read-failed" >&2; return 2; }
 reject_script() {
   if [ "${LIST_MODE:-no}" != yes ]; then echo "ERROR: $1" >&2; fi
 }
-has_artifact_header() {
-  local header
-  header="$(sed -n '1,80p' "$1" 2>/dev/null)" || { read_failed header; return 2; }
-  [[ "$header" == *agentic-artifact:* ]]
-}
-
-metadata_has_line() {
-  local value="$2" declared
+has_effect() {
+  local value="$1" declared
   for declared in "${script_effects[@]}"; do
     [[ "$declared" == "$value" ]] && return 0
   done
@@ -58,23 +52,15 @@ metadata_has_line() {
 
 has_never_persistent_effect() {
   local path="$1"
-
-  case "$path" in
-    scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh)
-      return 1
-      ;;
-  esac
-
-  local effect status
-  for effect in destructive push history-rewrite overwrites cloud database; do
-    if metadata_has_line "$path" "$effect"; then return 0; else status=$?; fi
-    [ "$status" -eq 1 ] || return "$status"
-  done
+  has_effect aws-mutation && return 0
+  if has_effect destructive && [ "$path" != scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh ]; then
+    return 0
+  fi
   return 1
 }
 
 classify_script() {
-  local path="$1" status effect read_only=no effects_header line
+  local path="$1" status effects_text
   local -a script_effects=()
 
   case "$path" in
@@ -103,23 +89,44 @@ classify_script() {
     return 1
   fi
 
-  if has_artifact_header "$path"; then
-    :
+  # The shared parser distinguishes the actual header from examples and gives
+  # inline/block YAML one meaning. Read again on every invocation; no cache.
+  if effects_text="$(python3 -B - "$path" 2>/dev/null <<'PY'
+import sys
+from pathlib import Path
+try:
+    sys.path.insert(0, 'scripts/01.harness/artifact-metadata')
+    from header_discovery import HeaderError, parse_header_text, script_effects
+    import yaml
+except ImportError:
+    sys.exit(2)
+try:
+    source = Path(sys.argv[1]).read_text(encoding='utf-8')
+    allowed = script_effects()
+except (OSError, UnicodeError, ValueError, KeyError, TypeError, yaml.YAMLError):
+    sys.exit(2)
+try:
+    metadata = parse_header_text(source).get('agentic-artifact', {})
+    effects = metadata.get('effects')
+    if metadata.get('kind') != 'script' or not isinstance(effects, list) or not effects or any(
+        not isinstance(effect, str) or effect not in allowed for effect in effects
+    ):
+        sys.exit(1)
+except HeaderError:
+    sys.exit(1)
+print('\n'.join(effects))
+PY
+)"; then
+    mapfile -t script_effects <<< "$effects_text"
   else
     status=$?
-    [ "$status" -eq 1 ] || return "$status"
-    reject_script "script is missing governed agentic-artifact metadata"
-    return 1
-  fi
-
-  effects_header="$(sed -n '1,140p' "$path" 2>/dev/null)" || { read_failed effects; return 2; }
-  # Parse complete lines once. Never cache across scripts or invocations, or
-  # allow whitespace matching to join a dash and an effect on separate lines.
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^[#[:space:]]*-[[:space:]]*([^[:space:]]+)[[:space:]]*$ ]]; then
-      script_effects+=("${BASH_REMATCH[1]}")
+    if [ "$status" -eq 1 ]; then
+      reject_script "script metadata or effects are missing, invalid or unknown"
+      return 1
     fi
-  done <<< "$effects_header"
+    read_failed metadata
+    return 2
+  fi
   if has_never_persistent_effect "$path"; then
     reject_script "script has effects that are never persistent-auto-approved"
     return 1
@@ -128,23 +135,9 @@ classify_script() {
     [ "$status" -eq 1 ] || return "$status"
   fi
 
-  if metadata_has_line "$path" read-only; then
-    read_only=yes
-  else
-    status=$?
-    [ "$status" -eq 1 ] || return "$status"
-  fi
-  if [ "$read_only" = yes ]; then
-    for effect in writes-files commits network; do
-      if metadata_has_line "$path" "$effect"; then
-        read_only=no
-        break
-      else
-        status=$?
-        [ "$status" -eq 1 ] || return "$status"
-      fi
-    done
-    if [ "$read_only" = yes ]; then printf '%s\n' always; return 0; fi
+  if [ "${#script_effects[@]}" -eq 1 ] && has_effect read-only; then
+    printf '%s\n' always
+    return 0
   fi
 
   printf '%s\n' "approved"

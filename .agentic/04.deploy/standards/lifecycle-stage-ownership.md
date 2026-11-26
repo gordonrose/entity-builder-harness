@@ -4,7 +4,7 @@ id: deploy.standards.lifecycle-stage-ownership
 version: 3
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-11-22"
+updated_on: "2026-11-25"
 layer: 04.deploy
 domain: deployment.lifecycle
 disciplines:
@@ -46,9 +46,11 @@ used_by:
   downstream phases but must not duplicate their checks or approval gates.
 - For a new or intentionally migrated capability, use the objective-oriented
   command, capability, adapter, binding, test and fixture homes in the placement
-  standard. A role folder alone is not an owner: its child objective must name
-  the focused responsibility. Existing mixed folders are migration inventory
-  evidence, not permission to add further generic files there.
+  standard. A role folder alone is not an owner: its capability objective or
+  enclosing cohesive target operation names the focused responsibility. Use the
+  standard's retained-system form only for audited legacy families; movement
+  never changes their schedules or authority. Existing mixed folders are
+  migration inventory evidence, not permission to add further generic files there.
 
 ## Workload and machinery boundary
 

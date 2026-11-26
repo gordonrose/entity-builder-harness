@@ -4,7 +4,7 @@ id: deploy.readme.entity-smoke.execution
 version: 5
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-19"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: deployment.entity-smoke
 disciplines: [architecture, security, sre]
@@ -42,46 +42,71 @@ controllers or images. Offline `acceptance-state.sh --operation validate-current
 checks retained history and reports `current_readiness: false`; it does not query
 today's AWS health. Local fixtures likewise are not live AWS proof.
 
+## Folder map
+
+The deployment controllers are grouped by the job they do. Within a group,
+`commands/` contains runnable entry points, `implementation/` contains their
+supporting code, and `tests/` contains controlled local checks. Recovery controls
+keep each small operation together in its own subfolder. Existing command
+arguments and approval requirements have not changed.
+
+| Folder | Responsibility |
+| --- | --- |
+| [orchestration/](orchestration/) | Plan or coordinate deployment and acceptance. |
+| [task-execution/](task-execution/) | Prepare, execute and observe individual tasks. |
+| [controls-and-readiness/](controls-and-readiness/) | Deployment/resource safeguards and readiness decisions. |
+| [failure-handling/](failure-handling/) | Diagnose and stop an owned failed workload. |
+| [recovery-and-replacement/](recovery-and-replacement/) | Restart, replacement, snapshot, restore and retained recovery state. |
+| [acceptance-evaluation/](acceptance-evaluation/) | Evaluate and retain evidence for release acceptance. |
+| [administrator-recovery/](administrator-recovery/) | Retained administrator programs and their refusal checks; this move does not reactivate them. |
+| [image-delivery-repair/](image-delivery-repair/) | Existing bounded image-delivery repair owner and its fixture. |
+| [bindings/local-qualification/entity-smoke-proof/](bindings/local-qualification/entity-smoke-proof/) | Require package-local qualification before live operations; unchanged home. |
+
+The [approved path manifest](../../../../../../../.agentic/04.deploy/plans/migration/entity-smoke-runtime-script-topology.md#exact-path-manifest)
+records every old-to-new location. Old command paths are not compatibility
+entry points. Historical release records retain their original source paths;
+the current reader obtains those bytes from their recorded Git revision.
+
 ## What each file does
 
 | Files | Responsibility |
 | --- | --- |
-| [plan.sh](plan.sh) | Runs only planning; rejects an attempt to override it into another mode. AWS reads, local checks/cache writes and credential-cache refresh are possible; AWS writes are not admitted. |
-| [script.sh](script.sh), [script.py](script.py) | Public command wrapper and actual argument checking, source/custody checks, provider boundary, gate evidence, plan matching and execution orchestration. |
-| [task-plan.sh](task-plan.sh), [task-execute.sh](task-execute.sh), [task-route.py](task-route.py) | Separate read-only planning and explicit single-task execution commands; check actual bindings, exact approval and original admission/attempt. Initial preparation, baseline, initial-recovery, credential-recovery and isolated-restoration observations use their declared stages. |
-| [task-binding.py](task-binding.py), [task-graph.py](task-graph.py) | Compare deployed task/role/private-network settings with the own source template, then derive the selected workload's complete reachable realization graph for the existing compiler. These checks are not actual database access. |
-| [task-steps.py](task-steps.py) | Build closed task requests, reobserve immutable preparation receipts in order and assemble the existing four-pair activation manifest. |
-| [task-completion.py](task-completion.py) | Link each collected step to its actual final gate through an immutable completion sidecar. An interrupted result without that gate cannot admit the next step. |
-| [feature-steps.py](feature-steps.py) | Require actual activation and original-record proof before lifecycle, collision and baseline read; admit a read-only observer only after the original reserved create task is terminal with its qualified image. |
-| [replacement.sh](replacement.sh), [replacement-route.py](replacement-route.py) | Plan or explicitly execute one original-record-bound server replacement. The original task is selected by the controller and retained across interruption; the successor cannot become a second stop target. A separate staged verifier read must establish data survival. |
-| [deployment-control.py](deployment-control.py) | Exact main-template creation, count-only activation and accepted-predecessor image update/compatible rollback, using shared change-set review and durable reservations. |
-| [resource-control.py](resource-control.py) | Shared resource reservations; original-record-bound replacement, controlled healthy stop/start and snapshot creation. Healthy stop/start is not emergency failure recovery. |
-| [failure-plan.sh](failure-plan.sh), [failure-stop.sh](failure-stop.sh), [failure-route.py](failure-route.py) | Plan and explicitly execute the initial-release stop control. Hold the real release-succession lock, reselect its policy and guard each exact reserved effect. No healthy application or SQL connection is required to stop a failed workload. |
-| [failure-binding.py](failure-binding.py), [failure-control.py](failure-control.py) | Observe own failed/partial stack lineage, exact task revisions and other service configurations; reserve each count-zero or exact task-stop request once, reconcile uncertainty and retain actual stopped-state facts. |
-| [restart.sh](restart.sh), [restart-route.py](restart-route.py) | Plan or explicitly execute one own count-one restart after initial-stop custody and a real earlier original-record read. Require a newly created qualified healthy task; do not claim data/history readback. |
-| [recovery-state.py](recovery-state.py), [recovery-steps.py](recovery-steps.py) | Check retained stop/restart journals and gate bytes against current ownership and actual task evidence. Admit a new original read, then require applied migration history through the existing task route. |
-| [credential-steps.py](credential-steps.py) | Require preserved read/history, permission observation, revocation, expected denial, restoration and a distinct replacement before fresh recovered read/permission proof. It supplies prerequisites, not launch or permission-repair authority. |
-| [recovery-history.py](recovery-history.py) | Retain the completed credential step and exact bounded evidence-file closure before long restore work. Historical task validation never means current readiness. |
-| [snapshot.sh](snapshot.sh), [snapshot-route.py](snapshot-route.py) | Plan or explicitly execute one original-record-bound source snapshot after completed credential proof and fresh target checks. No task replay, deletion or restored-database proof. |
-| [task-control.py](task-control.py) | One reserved task submission, exact request identity and reconciliation without replay. |
-| [task-evidence.py](task-evidence.py) | Closed, source-catalogue-checked task results, terminal-state/deadline checks and safe receipt validation. |
-| [task-runner.py](task-runner.py) | Bounded observation and retention of one reserved task. Historical receipt reuse does not establish current state. |
-| [preflight-control.py](preflight-control.py) | Closed observation-only launch selection and fresh, immutable prerequisite-receipt matching. It does not produce generic gate passes or grant provider authority. |
-| [unready-control.py](unready-control.py) | Separate negative-recovery admission bound to a successful permission-revocation task. The public credential stage consumes it; expected-unready evidence cannot substitute for ordinary readiness. |
-| [restore-control.py](restore-control.py) | Exact isolated restore creation/execution and owned cleanup after original-record reader completion. No source-database deletion. |
-| [acceptance-evidence.py](acceptance-evidence.py) | Historical task-archive validation and immutable evidence retention, reusing the actual task/admission/completion owners. Historical proof is not current readiness. |
-| [acceptance-steps.py](acceptance-steps.py) | Bind initial final-read admission to completed restore cleanup, or successor checks to the current deployment and preceding release-specific tasks. |
-| [acceptance-controls.py](acceptance-controls.py) | Archive of the original safe control plan, selected graph, seven-gate report and original submission identity/time/hash. It cannot call AWS or execute a plan. |
-| [collect-acceptance.sh](collect-acceptance.sh), [acceptance-route.py](acceptance-route.py) | Read the bounded acceptance input manifest, recheck actual proof and retain immutable candidate evidence. The provider allows reads only; collection does not accept a release. |
-| [acceptance-state.sh](acceptance-state.sh), [acceptance-state.py](acceptance-state.py) | Validate a candidate or the existing succession current reference and its full archived feature proof. Historical validation is not current health. |
-| [promote-acceptance.sh](promote-acceptance.sh), [acceptance-promote.py](acceptance-promote.py) | Recheck fresh same-candidate proof before ordinary release and local scope promotion. Reconcile exact retained custody after interruption without claiming new health or repeating AWS work. |
+| [plan.sh](orchestration/commands/plan.sh) | Runs only planning; rejects an attempt to override it into another mode. AWS reads, local checks/cache writes and credential-cache refresh are possible; AWS writes are not admitted. |
+| [script.sh](orchestration/commands/script.sh), [script.py](orchestration/commands/script.py) | Public command wrapper and actual argument checking, source/custody checks, provider boundary, gate evidence, plan matching and execution orchestration. |
+| [task-plan.sh](task-execution/commands/task-plan.sh), [task-execute.sh](task-execution/commands/task-execute.sh), [task-route.py](task-execution/implementation/task-route.py) | Separate read-only planning and explicit single-task execution commands; check actual bindings, exact approval and original admission/attempt. Initial preparation, baseline, initial-recovery, credential-recovery and isolated-restoration observations use their declared stages. |
+| [task-binding.py](task-execution/implementation/task-binding.py), [task-graph.py](task-execution/implementation/task-graph.py) | Compare deployed task/role/private-network settings with the own source template, then derive the selected workload's complete reachable realization graph for the existing compiler. These checks are not actual database access. |
+| [task-steps.py](task-execution/implementation/task-steps.py) | Build closed task requests, reobserve immutable preparation receipts in order and assemble the existing four-pair activation manifest. |
+| [task-completion.py](task-execution/implementation/task-completion.py) | Link each collected step to its actual final gate through an immutable completion sidecar. An interrupted result without that gate cannot admit the next step. |
+| [feature-steps.py](orchestration/implementation/feature-steps.py) | Require actual activation and original-record proof before lifecycle, collision and baseline read; admit a read-only observer only after the original reserved create task is terminal with its qualified image. |
+| [replacement.sh](recovery-and-replacement/replacement/replacement.sh), [replacement-route.py](recovery-and-replacement/replacement/replacement-route.py) | Plan or explicitly execute one original-record-bound server replacement. The original task is selected by the controller and retained across interruption; the successor cannot become a second stop target. A separate staged verifier read must establish data survival. |
+| [deployment-control.py](controls-and-readiness/implementation/deployment-control.py) | Exact main-template creation, count-only activation and accepted-predecessor image update/compatible rollback, using shared change-set review and durable reservations. |
+| [resource-control.py](controls-and-readiness/implementation/resource-control.py) | Shared resource reservations; original-record-bound replacement, controlled healthy stop/start and snapshot creation. Healthy stop/start is not emergency failure recovery. |
+| [failure-plan.sh](failure-handling/commands/failure-plan.sh), [failure-stop.sh](failure-handling/commands/failure-stop.sh), [failure-route.py](failure-handling/implementation/failure-route.py) | Plan and explicitly execute the initial-release stop control. Hold the real release-succession lock, reselect its policy and guard each exact reserved effect. No healthy application or SQL connection is required to stop a failed workload. |
+| [failure-binding.py](failure-handling/implementation/failure-binding.py), [failure-control.py](failure-handling/implementation/failure-control.py) | Observe own failed/partial stack lineage, exact task revisions and other service configurations; reserve each count-zero or exact task-stop request once, reconcile uncertainty and retain actual stopped-state facts. |
+| [restart.sh](recovery-and-replacement/restart/restart.sh), [restart-route.py](recovery-and-replacement/restart/restart-route.py) | Plan or explicitly execute one own count-one restart after initial-stop custody and a real earlier original-record read. Require a newly created qualified healthy task; do not claim data/history readback. |
+| [recovery-state.py](recovery-and-replacement/recovery-state/recovery-state.py), [recovery-steps.py](recovery-and-replacement/recovery-state/recovery-steps.py) | Check retained stop/restart journals and gate bytes against current ownership and actual task evidence. Admit a new original read, then require applied migration history through the existing task route. |
+| [credential-steps.py](controls-and-readiness/implementation/credential-steps.py) | Require preserved read/history, permission observation, revocation, expected denial, restoration and a distinct replacement before fresh recovered read/permission proof. It supplies prerequisites, not launch or permission-repair authority. |
+| [recovery-history.py](recovery-and-replacement/recovery-state/recovery-history.py) | Retain the completed credential step and exact bounded evidence-file closure before long restore work. Historical task validation never means current readiness. |
+| [snapshot.sh](recovery-and-replacement/snapshot/snapshot.sh), [snapshot-route.py](recovery-and-replacement/snapshot/snapshot-route.py) | Plan or explicitly execute one original-record-bound source snapshot after completed credential proof and fresh target checks. No task replay, deletion or restored-database proof. |
+| [task-control.py](task-execution/implementation/task-control.py) | One reserved task submission, exact request identity and reconciliation without replay. |
+| [task-evidence.py](task-execution/implementation/task-evidence.py) | Closed, source-catalogue-checked task results, terminal-state/deadline checks and safe receipt validation. |
+| [task-runner.py](task-execution/implementation/task-runner.py) | Bounded observation and retention of one reserved task. Historical receipt reuse does not establish current state. |
+| [preflight-control.py](controls-and-readiness/implementation/preflight-control.py) | Closed observation-only launch selection and fresh, immutable prerequisite-receipt matching. It does not produce generic gate passes or grant provider authority. |
+| [unready-control.py](controls-and-readiness/implementation/unready-control.py) | Separate negative-recovery admission bound to a successful permission-revocation task. The public credential stage consumes it; expected-unready evidence cannot substitute for ordinary readiness. |
+| [restore-control.py](recovery-and-replacement/restore/restore-control.py) | Exact isolated restore creation/execution and owned cleanup after original-record reader completion. No source-database deletion. |
+| [acceptance-evidence.py](acceptance-evaluation/implementation/acceptance-evidence.py) | Historical task-archive validation and immutable evidence retention, reusing the actual task/admission/completion owners. Historical proof is not current readiness. |
+| [acceptance-steps.py](acceptance-evaluation/implementation/acceptance-steps.py) | Bind initial final-read admission to completed restore cleanup, or successor checks to the current deployment and preceding release-specific tasks. |
+| [acceptance-controls.py](acceptance-evaluation/implementation/acceptance-controls.py) | Archive of the original safe control plan, selected graph, seven-gate report and original submission identity/time/hash. It cannot call AWS or execute a plan. |
+| [collect-acceptance.sh](orchestration/commands/collect-acceptance.sh), [acceptance-route.py](acceptance-evaluation/implementation/acceptance-route.py) | Read the bounded acceptance input manifest, recheck actual proof and retain immutable candidate evidence. The provider allows reads only; collection does not accept a release. |
+| [acceptance-state.sh](acceptance-evaluation/commands/acceptance-state.sh), [acceptance-state.py](acceptance-evaluation/implementation/acceptance-state.py) | Validate a candidate or the existing succession current reference and its full archived feature proof. Historical validation is not current health. |
+| [promote-acceptance.sh](orchestration/commands/promote-acceptance.sh), [acceptance-promote.py](orchestration/implementation/acceptance-promote.py) | Recheck fresh same-candidate proof before ordinary release and local scope promotion. Reconcile exact retained custody after interruption without claiming new health or repeating AWS work. |
 
 The task/resource/deployment/restore controls have corresponding `*-test.py`
 fixtures here; binding has its own fixture, while graph/step/feature wiring is
 exercised through `task-route-test.py`.
-[infrastructure-route-test.py](infrastructure-route-test.py) exercises the public
+[infrastructure-route-test.py](controls-and-readiness/tests/infrastructure-route-test.py) exercises the public
 route and actual generic gate with controlled source/custody/provider responses,
-plus real CLI rejection cases. [deployment-control-test.py](deployment-control-test.py)
+plus real CLI rejection cases. [deployment-control-test.py](controls-and-readiness/tests/deployment-control-test.py)
 also supplies reusable simulated provider fixtures without running its cases
 when imported. These Python functions are internal implementation seams, not a
 general-purpose public deployment SDK.
@@ -92,7 +117,7 @@ From the repository root, this example checks arguments only. The deliberately
 nonexistent receipt is not opened:
 
 ```bash
-bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/plan.sh \
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/plan.sh \
   --phase create \
   --receipt /tmp/not-a-real-receipt.json \
   --proof-label entity-smoke-eeeeeeeeeeeeeeeeeeeeeeee \
@@ -225,7 +250,7 @@ execution, durable reservation and uncertain-response reconciliation use the
 same owners as initial deployment. `--phase rollback` uses B's controller
 receipt and A's checked recovery selection; it does not accept B or undo data.
 
-Before an update, [acceptance-evidence.py](acceptance-evidence.py) compares the
+Before an update, [acceptance-evidence.py](acceptance-evaluation/implementation/acceptance-evidence.py) compares the
 two immutable Git revisions against the existing
 [acceptance schema's recovery-input boundary](../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-record-schema.yml).
 Unchanged recovery inputs allow the original capability proof to remain
@@ -252,7 +277,7 @@ phases, original gates and exact predecessor history. It does not rerun
 bootstrap, migration, permission changes or isolated restore on this path.
 
 The shared [delivery coordinator](../../../release-succession/ordinary-update.py)
-uses this folder's [binding](ordinary-update.py) to run the declared steps under
+uses this folder's [binding](orchestration/implementation/ordinary-update.py) to run the declared steps under
 one bounded release approval. Child owners still check each exact plan and
 reconcile its original reservation. Focused controlled fixtures cover its local
 protocol; successor image qualification, live execution and the ten-minute
@@ -308,7 +333,7 @@ are `administration/bootstrap`, `migration/apply`,
 this is an offline argument check, not an executed AWS example:
 
 ```bash
-bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh \
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-plan.sh \
   --receipt /tmp/not-a-real-receipt.json \
   --proof-label entity-smoke-eeeeeeeeeeeeeeeeeeeeeeee \
   --workload administration --operation bootstrap --phase preflight \
@@ -361,7 +386,7 @@ returns its finite condition with `effect: not-started`; a lost submission
 returns `task-submission-uncertain-reconcile-required` with
 `effect: unknown-reconcile-only`. Neither is automatic retry authority.
 
-[task-route-test.py](task-route-test.py) exercises the actual provider guard,
+[task-route-test.py](task-execution/tests/task-route-test.py) exercises the actual provider guard,
 runner, collector, generic compiler and activation consumer with controlled
 transport and source/custody/alignment prerequisites. Its four probes/four
 operations include a lost-response reconciliation with no second launch. These
@@ -382,7 +407,7 @@ This offline example checks arguments only and returns the same `valid` envelope
 shown above. It neither opens the deliberately missing receipt nor calls AWS:
 
 ```bash
-bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh \
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/commands/failure-plan.sh \
   --receipt /tmp/not-a-real-receipt.json \
   --proof-label entity-smoke-eeeeeeeeeeeeeeeeeeeeeeee \
   --validate-arguments
@@ -416,7 +441,7 @@ The receipt deliberately says `independent_data_readback: false` and
 `migration_history_readback: false`. Non-SQL database metadata and no database
 mutation are not proof that original records/history survived. Independent
 read/state proof is still required before first acceptance. The
-[failure fixture](failure-route-test.py) covers unhealthy/unpulled/queued jobs,
+[failure fixture](failure-handling/tests/failure-route-test.py) covers unhealthy/unpulled/queued jobs,
 partial creation, an owned restore reader, uncertain responses without replay,
 changed custody/baselines, altered payloads and retained-evidence rejection.
 Those controlled responses are not live AWS or data-preservation proof.
@@ -448,7 +473,7 @@ data and migration-history readback are false.
 For an offline argument check only, this invented receipt is not opened:
 
 ```bash
-bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh \
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart.sh \
   --mode plan --receipt /tmp/not-a-real-receipt.json \
   --proof-label entity-smoke-eeeeeeeeeeeeeeeeeeeeeeee \
   --expected-digest 1111111111111111111111111111111111111111111111111111111111111111 \
@@ -479,7 +504,7 @@ The stop journal/observation keeps fractional UTC time, so an immediately prior
 read cannot be falsely reordered by rounding the stop down to a whole second.
 Retained timestamps are read as recorded, never rewritten.
 
-[restart-route-test.py](restart-route-test.py) drives the actual restart and task
+[restart-route-test.py](recovery-and-replacement/restart/restart-route-test.py) drives the actual restart and task
 route/runner/collector/gate consumers with shared controlled source, custody,
 alignment, task and transport producers. It exercises preservation ordering,
 lost/pending starts, exact payloads, changed prerequisites/evidence and unsuitable
@@ -568,9 +593,9 @@ resource journal, generic gate bytes and current stopped predecessor/healthy
 successor. Its new ready probe and read must be created after replacement, with
 distinct stage keys and a separately selected probe label. A baseline probe or
 copied baseline read cannot substitute, and the original record is never created
-again. [task-route-test.py](task-route-test.py) exercises this connected sequence
+again. [task-route-test.py](task-execution/tests/task-route-test.py) exercises this connected sequence
 with controlled source/custody/alignment/transport; the
-[resource fixture](resource-control-test.py) separately rejects impossible timing
+[resource fixture](controls-and-readiness/tests/resource-control-test.py) separately rejects impossible timing
 and distinguishes known non-submission from a lost response. These are local
 protocol tests, not proof of real AWS replacement or PostgreSQL survival.
 
@@ -616,7 +641,7 @@ The proof reader follows forward log tokens through at most three pages and
 rejects incomplete pagination rather than accepting a prefix. That establishes
 the observed stream end, not a guarantee about future log ingestion.
 
-`validate_launch` in [preflight-control.py](preflight-control.py) admits only
+`validate_launch` in [preflight-control.py](controls-and-readiness/implementation/preflight-control.py) admits only
 the declared observation mode and closed proof selectors, with a deadline of
 at most ninety seconds. `require_receipt` checks the real evidence collector's
 result, matching task/image/source/configuration/permission/dependency/network
@@ -644,7 +669,7 @@ allows a concretely approved observation task after the first five normal
 gates so that real connection proof can supply the sixth. It does not mark that
 gate passed in advance. The initial task preparation route above consumes these
 controls; the infrastructure command itself still cannot launch a task.
-[preflight-control-test.py](preflight-control-test.py), the task/evidence/runner
+[preflight-control-test.py](controls-and-readiness/tests/preflight-control-test.py), the task/evidence/runner
 fixtures and the [actual-entrypoint fixture](../../../../20-build/entity-smoke-composition/preflight-test.mjs)
 exercise controlled responses only. Finished-image qualification includes these
 modes; consult the selected image's qualification evidence. The original accepted
@@ -699,7 +724,7 @@ preflight. The commands never automatically run this entire sequence.
 For an offline argument check only, this invented receipt is not opened:
 
 ```bash
-bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh \
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-plan.sh \
   --receipt /tmp/not-a-real-receipt.json \
   --proof-label entity-smoke-eeeeeeeeeeeeeeeeeeeeeeee \
   --proof-stage credential-recovery --workload verifier --operation unready \
@@ -727,8 +752,8 @@ must match its actual qualified successor and a new successful ready probe.
 Neither baseline replacement evidence nor pre-restoration readiness substitutes.
 The final permission proof does not rewrite the original activation manifest.
 
-[task-runner-test.py](task-runner-test.py) covers the internal bounded admission.
-[credential-route-test.py](credential-route-test.py) exercises the real public
+[task-runner-test.py](task-execution/tests/task-runner-test.py) covers the internal bounded admission.
+[credential-route-test.py](controls-and-readiness/tests/credential-route-test.py) exercises the real public
 task/replacement/collector/compiler/store consumers, the interruption between a
 collected result and final gate, missing/changed prerequisites, wrong negative
 result at the real reporter, and lost launch/stop responses without replay.
@@ -775,7 +800,7 @@ success cannot make a rebooting or changed database an eligible snapshot source.
 This offline argument example does not open the invented receipt or call AWS:
 
 ```bash
-bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot.sh \
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/snapshot/snapshot.sh \
   --mode plan --receipt /tmp/not-a-real-receipt.json \
   --proof-label entity-smoke-eeeeeeeeeeeeeeeeeeeeeeee \
   --expected-digest 1111111111111111111111111111111111111111111111111111111111111111 \
@@ -838,13 +863,13 @@ For example, passing only a snapshot fact projection to the collector's full
 `validate_control` returns `acceptance-control-custody-required`: knowing a
 snapshot name is not proof of the approved operation. Historical validation
 does not call AWS, query today's source or advance timestamps. The
-[acceptance-control fixture](acceptance-control-test.py) exercises all seven
+[acceptance-control fixture](acceptance-evaluation/tests/acceptance-control-test.py) exercises all seven
 control graphs with real local gate production and controlled plans, including
 the explicitly approved disposable-restore cleanup declaration. Ordinary deletion
 still fails without that declaration. These tests are not live control receipts;
 the original accepted release is established by its retained evidence linked above.
 
-For cleanup, [restore-route.py](restore-route.py) first validates the original
+For cleanup, [restore-route.py](recovery-and-replacement/restore/restore-route.py) first validates the original
 successful reader and retained plan/gate custody, observes exact clone ownership
 and requires the approved concrete plan digest. The bounded
 [provider rule](../../../../../../../.agentic/aws/standards/operational-realization-applicability.md#entity-smoke-disposable-restore-cleanup)
@@ -854,7 +879,7 @@ an uncertain response reconciles that reservation without another submission.
 `completed_cleanup` is the read-only consumer: it requires original gated cleanup
 and actual owned absence, not just missing resources.
 
-The [connected restore fixture](restore-route-test.py) now reaches that cleanup
+The [connected restore fixture](recovery-and-replacement/restore/restore-route-test.py) now reaches that cleanup
 and the distinct final probe/read through the actual controllers, runner,
 collector and compiler, using controlled source/custody/provider protocols.
 Missing original reader/cleanup, foreign ownership, changed resources and wrong
@@ -881,7 +906,7 @@ This offline example checks only arguments; it does not open the missing input
 file, contact AWS or write a candidate:
 
 ```bash
-bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/collect-acceptance.sh \
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/collect-acceptance.sh \
   --inputs /tmp/not-a-real-acceptance-manifest.yml --write-candidate --validate-arguments
 ```
 
@@ -913,7 +938,7 @@ reconcile without new provider work; that outcome is `retained`, with
 `current_readiness: false`. If release custody advances but the later local
 scope transition fails, the report preserves that known effect. Do not discard
 the current reference or replay deployment to repair a local index transition.
-The [route fixture](acceptance-route-test.py) distinguishes real offline-parser
+The [route fixture](acceptance-evaluation/tests/acceptance-route-test.py) distinguishes real offline-parser
 checks from controlled candidate/validator/promotion protocols. Neither those
 protocols nor a covered route template is live acceptance evidence.
 

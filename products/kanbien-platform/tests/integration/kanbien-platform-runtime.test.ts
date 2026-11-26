@@ -42,7 +42,7 @@ async function main(): Promise<void> {
     packageName: "@kanbien/app-entity-smoke",
     mountModule: "@kanbien/app-entity-smoke",
     routeBasePath: "/entity-smoke",
-    permissions: [], jobs: [], healthChecks: ["entity-smoke.readiness"], requiredConfig: [],
+    permissions: [], jobs: ["entity-smoke.test-entity.purge-expired"], healthChecks: ["entity-smoke.readiness"], requiredConfig: [],
   });
 
   const deps = createPlatformTestMountDeps({

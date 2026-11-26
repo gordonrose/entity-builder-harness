@@ -4,7 +4,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -1093,17 +1093,17 @@ change_impact:
         - "scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh"
         - "scripts/04.deploy/lifecycle/40-package/smoke-test-entity-smoke-image/script.sh"
         - "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/plan.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execute.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-stop.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore.sh"
-        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-reader.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/script.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/plan.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-plan.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-execute.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/commands/failure-plan.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/commands/failure-stop.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/replacement/replacement.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/snapshot/snapshot.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore.sh"
+        - "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-reader.sh"
       declarations:
         - "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml"
         - "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml"

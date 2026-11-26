@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.validate-llm-workbench-portability
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-07-03"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-26"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -85,6 +85,7 @@ require_portable_harness_scripts() {
     scripts/01.harness/check-deterministic-process-drift.sh \
     scripts/01.harness/check-governed-script-command-drift.sh \
     scripts/01.harness/artifact-metadata/header_discovery.py \
+    scripts/01.harness/artifact-metadata/taxonomy.yml \
     scripts/01.harness/artifact-metadata/check-headers/script.sh \
     scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh; do
     require_file "$repo/$required_path"

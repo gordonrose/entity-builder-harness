@@ -4,7 +4,7 @@ id: aws.standard.operational-realization-applicability
 version: 20
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-21"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -254,7 +254,7 @@ The owning controller must enforce these launch and completion boundaries:
   preflight was created after any prerequisite that changes the relevant state.
   A stale or mismatched receipt blocks it rather than being relabelled fresh.
 
-The existing [task controls](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-control.py),
+The existing [task controls](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py),
 task evidence/runner and preflight admission implement these boundaries. The
 public provider route must consume them before supplying live capability;
 helper availability alone is not enforcement or execution approval. Existing
@@ -594,7 +594,7 @@ the original successful readback. Acceptance consumes this evidence read-only;
 it cannot reserve or delete. Failed/partial restores without successful readback
 remain outside this rule and need their own governed recovery decision.
 
-The owning [restore route](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-route.py)
+The owning [restore route](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-route.py)
 and resource control implement the bounds. Local fixtures establish their
 exercised protocol behavior, not provider ownership, AWS execution or acceptance.
 

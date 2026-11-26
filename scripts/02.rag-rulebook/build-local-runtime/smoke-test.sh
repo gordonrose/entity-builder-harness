@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.build-local-runtime.smoke-test
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-26"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -29,6 +29,34 @@ set -euo pipefail
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
+
+# Build from current candidate bytes, but refresh generated sources only in a
+# disposable copy. Git archives would omit uncommitted work under verification.
+python3 -B - "$TMP_DIR/source" <<'SOURCE_COPY'
+import os, shutil, subprocess, sys
+from pathlib import Path
+root = Path.cwd().resolve(); destination = Path(sys.argv[1]); destination.mkdir()
+sys.path.insert(0, str(root / 'scripts/01.harness/artifact-metadata'))
+from header_discovery import repository_paths
+deleted = {os.fsdecode(path) for path in subprocess.check_output(
+    ['git', '-C', str(root), 'ls-files', '--deleted', '-z']).split(b'\0') if path}
+for relative in repository_paths(root):
+    source = root / relative
+    try:
+        source.lstat()
+    except FileNotFoundError:
+        if relative in deleted: continue
+        raise
+    if '.git' in Path(relative).parts or source.resolve() != source or not source.is_file():
+        raise ValueError('Runtime fixture source must be a contained regular file: ' + relative)
+    target = destination / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+SOURCE_COPY
+RAG_SOURCE_COMMIT_SHA="$(git rev-parse HEAD)"
+export RAG_SOURCE_COMMIT_SHA
+export RAG_REPO_ROOT="$TMP_DIR/source"
+cd "$RAG_REPO_ROOT"
 
 OUTPUT_DIR="$TMP_DIR/runtime"
 

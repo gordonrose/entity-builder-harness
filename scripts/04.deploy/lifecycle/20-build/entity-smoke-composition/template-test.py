@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.template
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -275,8 +275,11 @@ def check_image_environment(source, contract):
 
 
 OPERATIONAL_WRAPPERS = (
-    "task-plan.sh", "task-execute.sh", "failure-plan.sh", "failure-stop.sh",
-    "replacement.sh", "restart.sh", "snapshot.sh", "restore.sh", "restore-reader.sh",
+    "task-execution/commands/task-plan.sh", "task-execution/commands/task-execute.sh",
+    "failure-handling/commands/failure-plan.sh", "failure-handling/commands/failure-stop.sh",
+    "recovery-and-replacement/replacement/replacement.sh", "recovery-and-replacement/restart/restart.sh",
+    "recovery-and-replacement/snapshot/snapshot.sh", "recovery-and-replacement/restore/restore.sh",
+    "recovery-and-replacement/restore/restore-reader.sh",
 )
 
 

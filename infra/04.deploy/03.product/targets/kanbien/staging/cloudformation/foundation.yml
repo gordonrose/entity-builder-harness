@@ -4,7 +4,7 @@
 #   version: 6
 #   status: draft
 #   created_on: "2026-09-06"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -19,11 +19,11 @@
 #     - kanbien/staging
 #   used_by:
 #   - id: deploy.script.render-platform-shell-foundation-template
-#     path: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/render-platform-shell-foundation-template/script.sh
 #   - id: aws.plan.kanbien-staging-platform-shell-initial-deployment
 #     path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
 #   - id: deploy.script.verify-platform-shell-postgresql-reference
-#     path: scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference/script.sh
 
 schema: deploy/cloudformation-composition/v1
 description: >-

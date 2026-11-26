@@ -225,6 +225,7 @@ plan_selected_file() {
 }
 
 plan_public_harness_scripts() {
+  plan_selected_file "scripts/01.harness/artifact-metadata/taxonomy.yml"
   plan_selected_file "scripts/01.harness/run-governed-script.sh"
   plan_selected_file "scripts/01.harness/check-deterministic-process-drift.sh"
   plan_selected_file "scripts/01.harness/check-governed-script-command-drift.sh"

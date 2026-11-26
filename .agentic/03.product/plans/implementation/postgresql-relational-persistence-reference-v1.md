@@ -4,7 +4,7 @@ id: product.plan.postgresql-relational-persistence-reference-v1
 version: 11
 status: draft
 created_on: "2026-09-25"
-updated_on: "2026-10-25"
+updated_on: "2026-11-26"
 layer: 03.product
 domain: persistence
 disciplines:
@@ -297,7 +297,7 @@ no standing role in v1: the restore rehearsal creates and removes its own
 isolated recovery boundary under a separate controlled procedure, avoiding a
 permanent high-privilege recovery identity.
 
-`scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh`
+`scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference/script.sh`
 statically verifies the resource shape, no-public/no-CIDR network boundary,
 TLS/encryption/backups/deletion policy, generated-secret policy, IAM scope,
 non-secret configuration, and alarm boundary. It is included in the wider

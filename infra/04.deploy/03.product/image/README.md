@@ -4,7 +4,7 @@ id: infra.04-deploy.03-product.image.readme
 version: 5
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -43,7 +43,7 @@ queue provider adapter.
 ## Local Build
 
 ```bash
-bash scripts/04.deploy/build-platform-shell-image/script.sh
+bash scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh
 ```
 
 The build wrapper validates container-boundary hygiene before invoking Docker.
@@ -54,7 +54,7 @@ images, but do not treat that flag as production readiness.
 ## Local Smoke Test
 
 ```bash
-bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+bash scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh
 ```
 
 The smoke test builds the image, runs the container on loopback, and verifies:

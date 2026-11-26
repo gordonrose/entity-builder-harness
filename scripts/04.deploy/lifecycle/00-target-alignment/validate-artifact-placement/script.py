@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-25"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -53,6 +53,8 @@ KIND_PATTERNS = {
     "lifecycle-capability": r"^scripts/04\.deploy/lifecycle/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)/capabilities/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/implementation\.(?:py|sh|js|mjs)$",
     "target-capability-binding": r"^scripts/04\.deploy/lifecycle/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)/targets/[a-z0-9-]+/[a-z0-9-]+/bindings/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/binding\.(?:py|sh|js|mjs)$",
     "provider-adapter": r"^scripts/04\.deploy/shared/provider-adapters/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/implementation\.(?:py|sh|js|mjs)$",
+    "target-operation-script": r"^scripts/04\.deploy/lifecycle/(00-target-alignment|10-development|20-build|30-test|40-package|50-deploy|60-run)/targets/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/(?:[a-z0-9]+(?:-[a-z0-9]+)*/)?[a-z0-9]+(?:-[a-z0-9]+)*\.(?:sh|py|js|mjs)$",
+    "retained-deploy-script": r"^scripts/04\.deploy/legacy/[a-z0-9]+(?:-[a-z0-9]+)*/(?:[a-z0-9]+(?:-[a-z0-9]+)*/)+[a-z0-9]+(?:[-_][a-z0-9]+)*\.(?:sh|py|js|mjs)$",
 }
 
 

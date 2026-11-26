@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-11-01"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-25"
 #   layer: 03.product
 #   domain: architecture
 #   disciplines: [architecture, agentic]
@@ -18,5 +18,5 @@
 #     path: scripts/repo/check-selection/checks.yml
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.."
-node --test scripts/repo/workspace-build/dependencies-test.mjs
+node --test scripts/repo/module-structure/dependencies-test.mjs
 exec node scripts/repo/module-structure/smoke-test.mjs

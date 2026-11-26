@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -214,7 +214,7 @@ def iso_date(value, key):
     return value
 
 
-def explicit_path(raw):
+def explicit_path(raw, *, task_paths=False):
     path = Path(raw)
     if not path.is_absolute():
         path = ROOT / path
@@ -224,11 +224,20 @@ def explicit_path(raw):
     path = path.resolve()
     if not path.is_relative_to(ROOT) or ".git" in path.relative_to(ROOT).parts:
         raise PlanError("path-outside-repository", "path")
-    if is_excluded(path.relative_to(ROOT).as_posix()):
+    relative = path.relative_to(ROOT).as_posix()
+    if is_excluded(relative) and not task_paths:
         raise PlanError("path-excluded", "path")
     if not path.is_file():
+        if task_paths:
+            try:
+                path.lstat()
+            except FileNotFoundError:
+                # Only an exact regular HEAD file is a known task deletion.
+                entry = git("--literal-pathspecs", "-C", str(ROOT), "ls-tree", "-z", "HEAD", "--", relative).stdout
+                if re.fullmatch(rb"100(?:644|755) blob [0-9a-f]{40,64}\t" + re.escape(relative.encode()) + b"\x00", entry):
+                    return path, "deleted-head-file"
         raise PlanError("path-missing", "path")
-    return path
+    return (path, "excluded-bootstrap-scaffold" if is_excluded(relative) else None) if task_paths else path
 
 
 def changed_paths():
@@ -705,15 +714,20 @@ def main():
         emit_report(report, indent=2)
         return 1
     skip_non_artifacts = args.changed or args.skip_non_artifacts
+    task_paths = skip_non_artifacts and not any((args.status, args.replacement, args.deprecated_on, args.superseded_on, args.created_on))
     report = {"mode": "apply" if args.apply else "report", "selection": "changed-artifacts" if args.changed else "explicit-paths", "today_utc": TODAY, "plans": [], "skipped": [], "errors": [], "applied": False}
     plans = {}
     ordinals = {}
     planning_aborted = False
     for ordinal, raw_path in enumerate(raw_paths, 1):
         try:
-            path = explicit_path(raw_path)
+            observed = explicit_path(raw_path, task_paths=task_paths)
+            path, skipped_reason = observed if task_paths else (observed, None)
             if path in plans:
                 raise PlanError("path-duplicate")
+            if skipped_reason:
+                report["skipped"].append({"path": path.relative_to(ROOT).as_posix(), "reason": skipped_reason})
+                continue
             if skip_non_artifacts and not lifecycle_candidate(path):
                 report["skipped"].append({"path": path.relative_to(ROOT).as_posix(), "reason": "not-a-v2-or-v3-artifact"})
                 continue

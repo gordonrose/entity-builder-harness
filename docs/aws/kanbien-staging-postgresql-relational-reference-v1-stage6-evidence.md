@@ -4,7 +4,7 @@ id: aws.evidence.kanbien-staging-postgresql-relational-reference-v1-stage6
 version: 3
 status: draft
 created_on: "2026-09-26"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: persistence.operations
 disciplines:
@@ -18,7 +18,7 @@ portability:
   - kanbien/staging
 used_by:
 - id: deploy.script.run-platform-shell-postgresql-relational-smoke.readme
-  path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md
+  path: scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/README.md
 -->
 # Kanbien staging PostgreSQL relational Stage 6 evidence
 

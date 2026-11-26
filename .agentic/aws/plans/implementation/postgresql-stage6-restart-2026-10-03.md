@@ -4,7 +4,7 @@ id: aws.plan.postgresql-stage6-restart-2026-10-03
 version: 3
 status: draft
 created_on: "2026-10-03"
-updated_on: "2026-11-09"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: persistence.operations
 disciplines:
@@ -122,12 +122,12 @@ to the existing owners, with focused negative tests, before requesting execution
 | Candidate identity requires an unnecessary image change | Extend the existing candidate policy/controller and relational candidate-predecessor check to distinguish immutable artifact from bounded attempt identity. Keep terminal attempts consumed, and permit a fresh reviewed attempt with the same qualified digest after reconciliation. |
 | Proposed cumulative limits are not enforced | Use the existing controllers, preflights and session/evidence records to persist and check cumulative attempt/time/spend counters before submission. No counter reset by a new process, label, image or chat; local tests must prove exhaustion blocks new effects while approved cleanup remains possible. |
 
-Evidence for these gaps: the [image wrapper](../../../../scripts/04.deploy/smoke-test-platform-shell-image/script.sh)
-currently rebuilds; the [payload checker](../../../../scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs)
+Evidence for these gaps: the [image wrapper](../../../../scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh)
+currently rebuilds; the [payload checker](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/verify-runtime-payload.mjs)
 only checks a missing-CA bootstrap failure; the
 [adapter integration](../../../../platform/adapters/aws/persistence/postgresql/tests/integration/postgresql-persistence-adapter-integration.test.ts)
 uses a superuser pool without TLS; the
-[relational controller](../../../../scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py)
+[relational controller](../../../../scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/script.py)
 launches by family and owns restore cleanup after an acknowledged response; the
 [restore entrypoint](../../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.ts)
 currently checks only work-item/outbox row counts.
@@ -170,8 +170,8 @@ until amendments and reconciliation select a safe new attempt.**
 | `platform:shell:postgresql-live-boundary` | `--validate` is local; later `--json` inspection proves declared provider metadata/network/operations, not an actual authenticated database connection. |
 | Local qualification | `platform:adapter:aws:persistence:postgresql:check`, `platform:adapter:aws:persistence:postgresql:integration`, `platform:server:image-runtime-check`, controller `:check` commands and relevant product/container checks. New final-image/role cases remain prerequisites. |
 
-Use the [reconciler](../../../../scripts/04.deploy/reconcile-platform-shell-staging/script.py)
-and [candidate controller](../../../../scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py)
+Use the [reconciler](../../../../scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.py)
+and [candidate controller](../../../../scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight/script.py)
 as argument authorities. CloudFormation creation/execution remains separately
 governed by [Execute Approved AWS Change](../../workflows/execute-approved-aws-change.md).
 

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 21
+#   version: 23
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -213,10 +213,20 @@ def metadata(path: Path) -> dict[str, Any]:
 
 
 def governance_prose(root: Path, path: str) -> bool:
-    authoritative = metadata(root / path).get('kind') in {'schema', 'contract', 'deployment-contract', 'configuration', 'script', 'gate'}
+    kind = metadata(root / path).get('kind')
+    authoritative = kind in {'schema', 'contract', 'deployment-contract', 'configuration', 'script', 'gate'}
     parts = path.split('/')
     skill_instruction = len(parts) == 4 and parts[:2] == ['.agents', 'skills'] and bool(parts[2]) and parts[3] == 'SKILL.md'
-    return not authoritative and ((path.endswith('.md') and path.startswith(('.agentic/', 'docs/', 'scripts/'))) or skill_instruction)
+    if authoritative or not coverage.safe_path(path): return False
+    if (path.endswith('.md') and path.startswith(('.agentic/', 'docs/', 'scripts/', 'infra/'))) or skill_instruction: return True
+    narrative = (kind == 'rule' and path.startswith('docs/') and 'rules' in parts[1:-1]) or (
+        kind == 'implementation-plan' and path.startswith(('.agentic/', 'docs/', 'infra/')))
+    if not narrative or not path.endswith(('.yml', '.yaml')): return False
+    try:
+        body = yaml.safe_load((root / path).read_text(encoding='utf-8'))
+    except (OSError, UnicodeError, yaml.YAMLError):
+        return False
+    return isinstance(body, dict) and (not path.startswith('infra/') or body.get('status') == 'planning-only')
 
 
 def dormant_roots(root: Path, catalog: dict[str, Any]) -> tuple[list[str], list[dict[str, str]]]:
@@ -317,6 +327,35 @@ def delivery_inventory_required(args: argparse.Namespace, changed: list[str], ca
     if args.all or getattr(args, 'ci', False) or catalog_ref in changed:
         return True
     return any(any(below(path, root) for root in DELIVERY_INVENTORY_ROOTS) for path in changed)
+
+
+def renamed_inputs(root: Path, changed: list[str], *, baseline='HEAD', staged=False) -> dict[str, set[str]]:
+    """Connect observed moves to current owners, without waiving deletions."""
+    if not any(not (root / path).exists() for path in changed): return {}
+    arguments = ['diff', '--raw', '--no-abbrev', '-z', '--find-renames']
+    if staged: arguments.append('--cached')
+    records = git(root, *arguments, baseline).split('\0')
+    if records.pop() != '': raise ValueError('rename-impact-observation-invalid')
+    graph, index = {}, 0
+    while index < len(records):
+        fields = records[index].split(); index += 1
+        if len(fields) != 5 or not re.fullmatch(r':[0-7]{6}', fields[0]) or not re.fullmatch(r'[0-7]{6}', fields[1]):
+            raise ValueError('rename-impact-observation-invalid')
+        status = fields[4]
+        if not re.fullmatch(r'(?:[ADMTUXB]|[RC][0-9]{1,3})', status) or (status.startswith(('R', 'C')) and int(status[1:]) > 100):
+            raise ValueError('rename-impact-observation-invalid')
+        count = 2 if status.startswith(('R', 'C')) else 1
+        paths = records[index:index + count]; index += count
+        if len(paths) != count or any(not coverage.safe_path(path) for path in paths):
+            raise ValueError('rename-impact-observation-invalid')
+        if not status.startswith('R'): continue
+        old, new = paths
+        if (old in changed and new in changed and fields[0][1:] in {'100644', '100755'}
+                and fields[1] in {'100644', '100755'} and not (root / old).exists()
+                and not (root / old).is_symlink() and (root / new).is_file()
+                and not (root / new).is_symlink() and coverage.within(root, new) is not None):
+            graph.setdefault(old, set()).add(new)
+    return graph
 
 
 def consumer_graph(root: Path, paths: list[str], dormant: list[str] | tuple[str, ...] = (), *, include_metadata: bool = True, deleted=(), baseline='HEAD', catalog_ref='scripts/repo/check-selection/checks.yml') -> dict[str, set[str]]:
@@ -617,6 +656,11 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     paths = changed if direct_commit else repository_paths(root)
     graph = {} if direct_commit else consumer_graph(root, paths, dormant,
         deleted=changed, baseline=getattr(args, 'comparison_base', 'HEAD'), catalog_ref=catalog_ref)
+    try:
+        for source, targets in renamed_inputs(root, changed, baseline=getattr(args, 'comparison_base', 'HEAD'), staged=args.staged).items():
+            graph.setdefault(source, set()).update(targets)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        findings.append({'code': 'rename-impact-observation-invalid'})
     proof_graph = {} if direct_commit else consumer_graph(root, paths, dormant, include_metadata=False)
     # This graph is immutable for one plan. Cache traversals only within that
     # invocation; later plans must observe new metadata and dependency edges.

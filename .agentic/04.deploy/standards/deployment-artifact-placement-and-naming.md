@@ -4,7 +4,7 @@ id: deploy.standards.deployment-artifact-placement-and-naming
 version: 3
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-11-22"
+updated_on: "2026-11-25"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -186,6 +186,41 @@ the lifecycle kinds for artifacts that have one primary phase.
 
 Existing paths remain valid until a governed migration moves them. This standard
 does not authorise a blanket rename.
+
+### Cohesive target operations and retained systems
+
+An existing target operation may contain several focused implementation files,
+commands and tests. Keep that cohesive operation together rather than forcing
+each file into a new one-file capability. Its owner is still the named target
+and scope; reusable lifecycle/provider work keeps its shared owner above.
+
+```text
+scripts/04.deploy/lifecycle/<phase>/targets/<target>/<scope>/<operation>/
+  implementation/<focused-name>.<ext>
+  commands/<focused-command>.<ext>
+  tests/<focused-test>.<ext>
+```
+
+For a cohesive suboperation, one named objective can replace those role folders,
+for example recovery-and-replacement/restore/restore-route.py. A small operation
+may keep its focused files directly together. Do not add empty role folders or
+another objective level solely to satisfy a diagram. Validate executable files
+with kind `target-operation-script`; this shape does not authorise duplicating
+an execution engine for each target.
+
+Retained deployment families that are not part of current core-platform work
+use `scripts/04.deploy/legacy/<retained-system>/<capability>/...`. Preserve each
+audited family's implementation, tests and README together, and preserve
+existing meaningful filenames during the path-only move. Nested shared support
+stays within that retained system if it has no current shared consumer. Validate
+source paths with kind `retained-deploy-script`; the validator checks shape,
+not whether the family is truly legacy or whether a move is approved.
+
+The approved retained systems are kanbien-staging and rag-rulebook. Their
+movement is governed by the existing migration plan, not inferred from names.
+Retained means kept out of the active navigation, not deleted or stopped:
+staging's schedules/permissions/commands remain unchanged, and hosted RAG stays
+disabled. New core-platform scripts must use their current owner, not legacy.
 
 ## Naming Rules
 

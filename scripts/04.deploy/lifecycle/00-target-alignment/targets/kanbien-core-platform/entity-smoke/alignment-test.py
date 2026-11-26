@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.target-alignment
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-21"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -355,7 +355,7 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
         repair = commit("retain generated evidence")
         assert M.source_checkpoint(custody)["controller_revision"] == repair
         M.source_preflight(custody)
-        controller_spec = importlib.util.spec_from_file_location("retained_controller_fixture", old_root / M.CONTROLLER_DIRECTORY / "script.py")
+        controller_spec = importlib.util.spec_from_file_location("retained_controller_fixture", old_root / M.CONTROLLER_DIRECTORY / "orchestration/commands/script.py")
         controller = importlib.util.module_from_spec(controller_spec); controller_spec.loader.exec_module(controller)
         with patch.object(controller, "ROOT", M.ROOT), patch.object(controller, "ALIGN", M), \
              patch.object(controller, "source_paths", lambda revision=None: [M.ROOT / controller_path]):
@@ -368,6 +368,35 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
             try: controller.retained_controller(packet, current_digest)
             except controller.InfrastructureFailure as failure: assert failure.code == "task-step-completion-artifacts-mismatch"
             else: raise AssertionError("unknown historical controller admitted")
+        moved_controller = M.CONTROLLER_DIRECTORY + "orchestration/commands/script.py"
+        (M.ROOT / moved_controller).parent.mkdir(parents=True)
+        git("mv", controller_path, moved_controller)
+        moved = commit("approved controller-only path relocation")
+        assert M.source_checkpoint(custody) == {"package_source_revision": source, "controller_revision": moved}
+        M.source_preflight(custody)
+        with patch.object(controller, "ROOT", M.ROOT), patch.object(controller, "ALIGN", M), \
+             patch.object(controller, "source_paths", lambda revision=None: [M.ROOT / (controller_path if revision else moved_controller)]):
+            controller.historical_source_digest.cache_clear()
+            assert controller.historical_source_digest(source) == original_digest
+            assert controller.retained_controller({"binding": {"source_revision": source}, "plan": {"controller_sha256": original_digest}}, controller.source_digest()) == original_digest
+        git("revert", "--no-edit", "HEAD")
+        # Deletion alone, ambiguous destinations and replacement of an already
+        # existing nested file are not evidence of a controller relocation.
+        for destinations in ((), ("orchestration/commands/script.py", "orchestration/implementation/script.py"),
+                             ("orchestration/commands/different-name.py",)):
+            (M.ROOT / controller_path).unlink()
+            for destination in destinations: write(M.CONTROLLER_DIRECTORY + destination, "controller replacement\n")
+            commit("unpaired or ambiguous controller deletion")
+            rejected_source(lambda: M.source_checkpoint(custody))
+            git("revert", "--no-edit", "HEAD")
+        write(moved_controller, "existing nested controller\n")
+        nested_source = commit("nested controller already exists")
+        (M.ROOT / controller_path).unlink()
+        commit("deletion cannot borrow an existing destination")
+        rejected_source(lambda: M.source_checkpoint({**custody, "source_revision": nested_source}))
+        git("revert", "--no-edit", "HEAD")
+        (M.ROOT / moved_controller).unlink()
+        commit("remove fixture-only existing nested controller")
         M.source_preflight(custody)
         for path in ("scripts/04.deploy/shared/provider-adapters/aws/response.py", "scripts/04.deploy/shared/provider-adapters/aws/cli.py", "scripts/04.deploy/shared/provider-adapters/aws/tasks.py", "scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py", "scripts/04.deploy/shared/provider-adapters/aws/snapshots.py", "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py", "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py", "scripts/04.deploy/lifecycle/60-run/release-succession/script.py", "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py"):
             write(path, "checked controller response correction\n")
@@ -385,6 +414,9 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
             ".github/workflows/publish-kanbien-core-platform-entity-smoke.yml",
             M.TARGET + "/30-provider-realization/aws/cloudformation/entity-smoke.yml",
             M.SCOPE, M.CONTROLLER_DIRECTORY + "nested/not-an-admitted-controller.py",
+            M.CONTROLLER_DIRECTORY + "orchestration/commands/nested/not-admitted.py",
+            M.CONTROLLER_DIRECTORY + "bindings/local-qualification/entity-smoke-proof/binding.py",
+            M.CONTROLLER_DIRECTORY + "administrator-recovery/implementation/administrator-recovery.js",
         ):
             write(path, "changed non-controller input\n")
             commit("out-of-scope input")
@@ -420,8 +452,8 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-controller-checkpoint-") a
 
 # The registered alignment unit also exercises the bounded shared-endpoint
 # repair that must succeed before a real image-delivery alignment can pass.
-repair_spec = importlib.util.spec_from_file_location("entity_image_repair_regression", M.ROOT / M.CONTROLLER_DIRECTORY / "image-delivery-repair-test.py")
+repair_spec = importlib.util.spec_from_file_location("entity_image_repair_regression", M.ROOT / M.CONTROLLER_DIRECTORY / "image-delivery-repair/tests/image-delivery-repair-test.py")
 repair_fixture = importlib.util.module_from_spec(repair_spec)
 repair_spec.loader.exec_module(repair_fixture)
 
-print(json.dumps({"schema": "deploy/entity-smoke-alignment-fixture/v1", "verdict": "passed", "negative_cases": len(negatives) + 22, "private_image_policy_negative_cases": 22, "provider_observation": False, "checks": ["private-reference-projection", "actual-engine-boundary", "dependency-incarnation-binding", "no-provider-mutation", "real-git-controller-only-checkpoint", "image-template-runtime-and-custody-input-changes-rejected", "rename-symlink-dirty-untracked-and-nonancestor-rejected"]}))
+print(json.dumps({"schema": "deploy/entity-smoke-alignment-fixture/v1", "verdict": "passed", "negative_cases": len(negatives) + 22, "private_image_policy_negative_cases": 22, "provider_observation": False, "checks": ["private-reference-projection", "actual-engine-boundary", "dependency-incarnation-binding", "no-provider-mutation", "real-git-controller-only-checkpoint", "approved-controller-relocation-retains-historical-digest", "unpaired-ambiguous-and-existing-destination-deletion-rejected", "image-template-runtime-and-custody-input-changes-rejected", "rename-symlink-dirty-untracked-and-nonancestor-rejected"]}))

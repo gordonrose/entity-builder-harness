@@ -4,7 +4,7 @@
   version: 2
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-09"
+  updated_on: "2026-11-26"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -890,13 +890,13 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/094-scripts-04-deploy-build-platform-shell-image.md)
 
-- [ ] [scripts/04.deploy/build-platform-shell-image/check-source.sh](../../../../scripts/04.deploy/build-platform-shell-image/check-source.sh) — modified; before `34ffb556445d`, snapshot `766d24c213dc`.
-- [ ] [scripts/04.deploy/build-platform-shell-image/configuration-diagnostic-test.mjs](../../../../scripts/04.deploy/build-platform-shell-image/configuration-diagnostic-test.mjs) — added; before `absent`, snapshot `aa7bfc954bb3`.
-- [ ] [scripts/04.deploy/build-platform-shell-image/delivery-diagnostic-test.mjs](../../../../scripts/04.deploy/build-platform-shell-image/delivery-diagnostic-test.mjs) — added; before `absent`, snapshot `167696658905`.
-- [ ] [scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs](../../../../scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs) — modified; before `cd6eba6a4002`, snapshot `130a02008092`.
-- [ ] [scripts/04.deploy/build-platform-shell-image/process-diagnostic-test.mjs](../../../../scripts/04.deploy/build-platform-shell-image/process-diagnostic-test.mjs) — added; before `absent`, snapshot `19b50f8499bf`.
-- [ ] [scripts/04.deploy/build-platform-shell-image/script.sh](../../../../scripts/04.deploy/build-platform-shell-image/script.sh) — modified; before `149a9ab97468`, snapshot `f568dc67f05f`.
-- [ ] [scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs](../../../../scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs) — modified; before `01b7a2c4f3c7`, snapshot `acac4de90d66`.
+- [ ] [scripts/04.deploy/build-platform-shell-image/check-source.sh](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh) — modified; before `34ffb556445d`, snapshot `766d24c213dc`.
+- [ ] [scripts/04.deploy/build-platform-shell-image/configuration-diagnostic-test.mjs](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/configuration-diagnostic-test.mjs) — added; before `absent`, snapshot `aa7bfc954bb3`.
+- [ ] [scripts/04.deploy/build-platform-shell-image/delivery-diagnostic-test.mjs](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/delivery-diagnostic-test.mjs) — added; before `absent`, snapshot `167696658905`.
+- [ ] [scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/prepare-runtime.mjs) — modified; before `cd6eba6a4002`, snapshot `130a02008092`.
+- [ ] [scripts/04.deploy/build-platform-shell-image/process-diagnostic-test.mjs](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/process-diagnostic-test.mjs) — added; before `absent`, snapshot `19b50f8499bf`.
+- [ ] [scripts/04.deploy/build-platform-shell-image/script.sh](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh) — modified; before `149a9ab97468`, snapshot `f568dc67f05f`.
+- [ ] [scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs](../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/verify-runtime-payload.mjs) — modified; before `01b7a2c4f3c7`, snapshot `acac4de90d66`.
 
 ## L095 — scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
 
@@ -1007,7 +1007,7 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/110-scripts-04-deploy-smoke-test-platform-shell-image.md)
 
-- [ ] [scripts/04.deploy/smoke-test-platform-shell-image/script.sh](../../../../scripts/04.deploy/smoke-test-platform-shell-image/script.sh) — modified; before `837084685a44`, snapshot `366f2039666a`.
+- [ ] [scripts/04.deploy/smoke-test-platform-shell-image/script.sh](../../../../scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh) — modified; before `837084685a44`, snapshot `366f2039666a`.
 
 ## L111 — scripts/04.deploy/validate-container-boundaries
 
@@ -1287,9 +1287,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/152-scripts-04-deploy-reconcile-platform-shell-staging.md)
 
-- [ ] [scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py](../../../../scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py) — modified; before `502bfe852583`, snapshot `694cc007e3ca`.
-- [ ] [scripts/04.deploy/reconcile-platform-shell-staging/release_control.py](../../../../scripts/04.deploy/reconcile-platform-shell-staging/release_control.py) — modified; before `57d70bd61b79`, snapshot `f6dbe6cef117`.
-- [ ] [scripts/04.deploy/reconcile-platform-shell-staging/script.py](../../../../scripts/04.deploy/reconcile-platform-shell-staging/script.py) — modified; before `0d9e2ef0b8df`, snapshot `207dfbff64fd`.
+- [ ] [scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py](../../../../scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/release-control-test.py) — modified; before `502bfe852583`, snapshot `694cc007e3ca`.
+- [ ] [scripts/04.deploy/reconcile-platform-shell-staging/release_control.py](../../../../scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/release_control.py) — modified; before `57d70bd61b79`, snapshot `f6dbe6cef117`.
+- [ ] [scripts/04.deploy/reconcile-platform-shell-staging/script.py](../../../../scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.py) — modified; before `0d9e2ef0b8df`, snapshot `207dfbff64fd`.
 
 ## L153 — scripts/04.deploy/shared
 
@@ -1312,9 +1312,9 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/155-scripts-04-deploy-verify-platform-shell-deploy-readiness.md)
 
-- [ ] [scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py](../../../../scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py) — modified; before `31fe45f93ebd`, snapshot `ea439bd88ba9`.
-- [ ] [scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py](../../../../scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py) — modified; before `a452262e49cf`, snapshot `069128169b96`.
-- [ ] [scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh](../../../../scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh) — modified; before `f2f11698dc50`, snapshot `9c0fc6daa806`.
+- [ ] [scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py](../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/release-evidence-test.py) — modified; before `31fe45f93ebd`, snapshot `ea439bd88ba9`.
+- [ ] [scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py](../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/release_evidence.py) — modified; before `a452262e49cf`, snapshot `069128169b96`.
+- [ ] [scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh](../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh) — modified; before `f2f11698dc50`, snapshot `9c0fc6daa806`.
 
 ## L156 — .
 
@@ -1404,14 +1404,14 @@ The frozen inventory is **584 original paths**. Every path below has exactly one
 
 [Open folder lesson](lessons/168-scripts-04-deploy-verify-platform-shell-deployment-workflow.md)
 
-- [ ] [scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh](../../../../scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh) — modified; before `671796a7bc0e`, snapshot `c5efa01284a7`.
+- [ ] [scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh](../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/script.sh) — modified; before `671796a7bc0e`, snapshot `c5efa01284a7`.
 
 ## L169 — scripts/04.deploy/verify-platform-shell-infrastructure
 
 [Open folder lesson](lessons/169-scripts-04-deploy-verify-platform-shell-infrastructure.md)
 
-- [ ] [scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh](../../../../scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh) — added; before `absent`, snapshot `7eb05f6474dc`.
-- [ ] [scripts/04.deploy/verify-platform-shell-infrastructure/script.sh](../../../../scripts/04.deploy/verify-platform-shell-infrastructure/script.sh) — modified; before `b4c33c039aad`, snapshot `1938d4044951`.
+- [ ] [scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh](../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/policy.sh) — added; before `absent`, snapshot `7eb05f6474dc`.
+- [ ] [scripts/04.deploy/verify-platform-shell-infrastructure/script.sh](../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/script.sh) — modified; before `b4c33c039aad`, snapshot `1938d4044951`.
 
 ## L170 — scripts/repo/check-selection
 

@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-26"
-  updated_on: "2026-10-25"
+  updated_on: "2026-11-26"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -20,7 +20,7 @@
     - design-system-builder
   used_by:
   - id: deploy.script.verify-rag-rulebook-deploy-readiness
-    path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    path: scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh
   - id: deploy.rules.02-rag-rulebook.github-to-aws-deployment
     path: docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
   - id: deploy.rules.02-rag-rulebook.deployment-readiness-checks
@@ -67,7 +67,7 @@ chat.
 Before any deploy execution, run:
 
 ```bash
-bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh \
+bash scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh \
   --manifest <deploy-readiness-manifest.yml> \
   --json
 ```

@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-26"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -52,7 +52,7 @@ The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added�
 
 ### policy.sh
 
-[Open current source](../../../../../scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh) · **Snapshot:** added (absent from baseline); 2522 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/policy.sh) · **Snapshot:** added (absent from baseline); 2522 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Holds the extracted infrastructure static-policy assertions.
 
@@ -74,7 +74,7 @@ Owning registered proof: `shell-infrastructure-policy`. Look up their exact comm
 
 ### script.sh
 
-[Open current source](../../../../../scripts/04.deploy/verify-platform-shell-infrastructure/script.sh) · **Snapshot:** modified existing file; 2 added / 2504 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/script.sh) · **Snapshot:** modified existing file; 2 added / 2504 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Requests the complete registered infrastructure aggregate.
 
@@ -104,7 +104,7 @@ Use the [30-minute core / 50-minute extension protocol](../facilitator-guide.md)
 
 ## Evidence and boundaries
 
-[Folder in the checkout](../../../../../scripts/04.deploy/verify-platform-shell-infrastructure) · [Baseline, current proof and deferrals](../sources-and-limits.md) · [Plain-language glossary](../glossary.md)
+[Folder in the checkout](../../../../../scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure) · [Baseline, current proof and deferrals](../sources-and-limits.md) · [Plain-language glossary](../glossary.md)
 
 Neighboring folder lessons: [L094 scripts/04.deploy/build-platform-shell-image](094-scripts-04-deploy-build-platform-shell-image.md) · [L110 scripts/04.deploy/smoke-test-platform-shell-image](110-scripts-04-deploy-smoke-test-platform-shell-image.md) · [L111 scripts/04.deploy/validate-container-boundaries](111-scripts-04-deploy-validate-container-boundaries.md) · [L112 scripts/04.deploy/inventory-deploy-control](112-scripts-04-deploy-inventory-deploy-control.md) · [L127 scripts/04.deploy](127-scripts-04-deploy.md) · [L152 scripts/04.deploy/reconcile-platform-shell-staging](152-scripts-04-deploy-reconcile-platform-shell-staging.md) · [L153 scripts/04.deploy/shared](153-scripts-04-deploy-shared.md) · [L155 scripts/04.deploy/verify-platform-shell-deploy-readiness](155-scripts-04-deploy-verify-platform-shell-deploy-readiness.md) · [L168 scripts/04.deploy/verify-platform-shell-deployment-workflow](168-scripts-04-deploy-verify-platform-shell-deployment-workflow.md).
 

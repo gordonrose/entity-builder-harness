@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.build-entity-smoke-image
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-25"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -36,13 +36,7 @@ fi
 entity_smoke_source="$(git rev-parse HEAD)"
 [[ "$entity_smoke_source" =~ ^[a-f0-9]{40}$ ]] || { printf '%s\n' 'ENTITY_SMOKE_IMAGE_SOURCE_INVALID' >&2; exit 1; }
 candidate_image_prechecks infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes ENTITY_SMOKE_IMAGE_PROGRAM_INVALID 'The isolated program contract was not confirmed.' 'Inspect the program declaration without changing accepted programs.' python3 -B
-safe_command_diagnostic ENTITY_SMOKE_IMAGE_DIAGNOSTICS_NOT_CONFIRMED package 'The source diagnostic contract check failed.' 'Regenerate code-owned catalog exports or correct their source before packaging.' -- \
-  bash scripts/repo/diagnostic-coverage/verify.sh --unit catalog
-safe_command_diagnostic ENTITY_SMOKE_IMAGE_FEATURE_NOT_CONFIRMED package 'The feature contract and use-case checks failed.' 'Correct the feature before image qualification.' -- \
-  npm --ignore-scripts run app:entity-smoke:check
-bash scripts/repo/check-selection/script.sh --checks entity-smoke-composition --task-paths infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml --record-preparation --json
-safe_command_diagnostic ENTITY_SMOKE_IMAGE_COMPOSITION_FAILED package 'The isolated feature composition failed.' 'Correct the local wiring before image qualification.' -- \
-  bash scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh
+bash scripts/repo/check-selection/script.sh --checks diagnostic-catalog-readers entity-smoke-runtime entity-smoke-composition --task-paths infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml --record-preparation --execute-local --json
 if ! command -v docker >/dev/null 2>&1 || ! timeout 30 docker info >/dev/null 2>&1; then
   printf '%s\n' 'ENTITY_SMOKE_IMAGE_LOCAL_ENGINE_UNAVAILABLE' >&2; exit 1
 fi

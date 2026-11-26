@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -43,7 +43,7 @@ expected:
       - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
       - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
       - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
-      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_applied_stage_ids:
@@ -61,7 +61,7 @@ source_refs:
   - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
   - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
   - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
-  - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+  - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh
 update_triggers:
   - MCP deployment corpus gap changes.
   - Deploy readiness checks change.

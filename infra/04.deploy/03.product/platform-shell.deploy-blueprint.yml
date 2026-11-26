@@ -1,16 +1,16 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
 #   - architecture
 #   - sre
-#   kind: deployment-manifest
+#   kind: implementation-plan
 #   purpose: Name deployment requirements for the platform runtime shell image and selected planning runtime family.
 #   portability:
 #     class: internal
@@ -40,7 +40,7 @@ image:
   local_tag: entity-builder-harness/03.product/platform-shell:local
   container_port: 3000
   runtime_user: node
-  local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+  local_smoke_script: scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh
 server:
   process_name: platform-server
   command: node .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js

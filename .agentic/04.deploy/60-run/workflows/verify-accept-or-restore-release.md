@@ -4,7 +4,7 @@ id: deploy.workflow.verify-accept-or-restore-release
 version: 11
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-11-21"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -151,11 +151,11 @@ more reusable successor route.
    workload identity and health and database identity; unchanged historical proof
    is not recollected or invalidated solely by age. Historical proof alone does
    not establish that database permissions remain unchanged out of band.
-   The [collector](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py)
+   The [collector](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-route.py)
    derives the selection; the
    [source guard](../../../../scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py)
    enforces exact paths, bytes and Git status. The existing
-   [route fixture](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route-test.py)
+   [route fixture](../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/tests/acceptance-route-test.py)
    exercises the actual Git boundary and partial-copy reconciliation separately
    from its controlled proof prerequisites.
 5. For an approved update/restoration rehearsal, retain the original accepted

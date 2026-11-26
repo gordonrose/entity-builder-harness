@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-25T02:05:40Z
-latest_commit_sha: 4bc30ec8
-chat_duration: 281102s (03:06:05:02)
+latest_commit_at_utc: 2026-11-26T11:27:54Z
+latest_commit_sha: 084d2f37
+chat_duration: 401236s (04:15:27:16)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -28,6 +28,15 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 Phase 1 deployment script topology classification and migration proposal
 
 ## Session Log
+
+- 2026-11-26: User authorized autonomous completion of remaining P6/P7,
+  necessary local corrections and verification, coherent commits, normal merge
+  to main and push to the existing remote. Historical increment/milestone
+  approval pauses are superseded for this scope. Verified the recorded November
+  21 worktree and branch at `1ed9157cca73d43ba113d59238f12740caa94594`; preserved
+  all pending changes. The programme's autonomous-completion section records
+  scope, excluded external effects and parallel ownership. Goal execution is
+  active; publication and final acceptance remain pending.
 
 - Session started.
 - Branch created.
@@ -83,7 +92,447 @@ Phase 1 deployment script topology classification and migration proposal
 - Summary: Completed full-body static review of all 690 tracked script-source files in the recorded November 21 worktree. The existing helper audit now contains one evidence record per source file and 93 grouped finding records; these overlap and are not 93 independent bugs or required new tests. The existing programme keeps selection/evidence correctness and authorised publication first, with other repairs conditional on the affected behavior.
   Durable evidence: Plan revision 18: .agentic/shared/plans/implementation/script-library-simplification.md; full audit revision 10: scripts/helpers/audit.md; selection audit revision 7: scripts/helpers/selection-audit.md. Baseline HEAD 33f479b12453db7f09e2c2cfbc77cecd55952145; 690 files / 155,763 physical lines; inventory/content digest 58ad1d06bc15128e2cf6b99a550d2063991d0eca70007639c0cac17575b2a2c9. Complete reading advances P4 preparation, not layout approval or migration. Documentation only; no reviewed module imported/executed, source changes, tests, installation, container/cloud operations, commit, merge or push. Static evidence is not runtime acceptance or a guarantee of no further defects.
 
+
+- Summary: P6/P7 consolidated review is complete: exact deployment/helper moves, historical readers, current ownership, preparation semantics, effects parser and documentation agree. All five Entity route leaves, fifteen isolated chat/harness leaves and seven platform leaves passed. The final full candidate remains due; no publication is claimed.
+  Durable evidence: Durable plan: .agentic/shared/plans/implementation/script-library-simplification.md; exact manifest: .agentic/04.deploy/plans/migration/entity-smoke-runtime-script-topology.md. Private final evidence: .cache/p6-final-qualification.C6GUyi; representative previews: .cache/p7-representative-preview.XdmSBu. Latest audit reconciles one stale metadata-kind assertion and a governed-command example. Existing broad hygiene and live/package stages remain separate; accepted evidence and schedules are unchanged. User authorized finite autonomous task commits, non-rewriting main refresh, normal merge/push; retain preflight refs and never edit from November 6.
+
+
+- Summary: Complete-candidate review: four bounded fixture corrections, no production or scheduling changes.
+  Durable evidence: Full candidate ended in 1850.642 seconds:128 passed,4 failed,1 dependency-blocked,28 deferred. Existing report .cache/test-runs/20261126T104751Z-33034908d3104497974f826af3353439/report.json retains outcomes. Parent reviewed inventory explicit ownership versus metadata, product cleanup-job literal, two ordinary-update fixture imports and persistence acceptance mock. Targeted existing cases pass; full prepared retry and publication remain due. Only the changed persistence fixture pin was refreshed after exact old-byte comparison; partial adoption debt remains. No new ADR: completes the approved ownership and migration design.
+
+
+- Summary: Complete corrected candidate passed; final dormant-RAG safety correction is bounded and required before publication.
+  Durable evidence: 133 checks passed (28 executed, 105 reused), 28 remained later/manual-stage, zero findings; 1177.492 seconds; report .cache/test-runs/20261126T111455Z-7812a266dd484165b511b539dc04e342/report.json. All four prior failures and blocked package-source owner passed. Restore accidental recognition regeneration to exact HEAD SHA256 6089185bb1056fd87e15d6595b8c444e530360428fb8107b54134fde8abf646f; replace task-added retrieval coupling with actual R01 reference proof and isolate the two existing runtime fixtures using disposable current-source copies. Existing plan records named risks, preserved assertions, manual retrieval route and integrated qualification still due. No new program, live action, schedule change or ADR; existing migration/test-isolation owners govern this correction.
+
 ## Activity Log
+
+### 2026-11-26 - Final handoff review before checkpoint
+
+- Independent historical-reader review corrected eight moved graph entrypoint
+  bindings while retaining exact recorded fingerprints and all existing plan,
+  journal, gate-byte and permission guards. Fourteen old/current graph forms
+  and focused acceptance/source-transition fixtures pass. Rechecked all 90
+  immutable release/proof records: no byte changes.
+- All eight formerly failing legacy reference families now pass after exact
+  frozen-reference classification. The original timeout-inventory TSV snapshot
+  is retained, not rewritten into a misleading current catalogue.
+- Two explicit lifecycle preparation batches completed with zero errors:
+  239 artifact plans/185 changed metadata records and 83 plans/71 changed
+  records. Final combined preparation still follows source/review freeze.
+- Full candidate planning took 49.029 seconds and found 35 uncovered inputs:
+  27 deleted old locations from actual moves, seven directly changed dormant
+  RAG documents and the historical TSV. These are being corrected at existing
+  owners; no blanket coverage or schedule bypass is authorized.
+- Read-only review found no selected live-provider/engine mutation under the
+  observed clean environment. Three duplicated acceptance fixture calls were
+  removed from composition base; the separate acceptance check and full manual
+  suite retain them. Its build now honors the declared temporary directory.
+- Task changes remain uncommitted; final registered proof and publication are
+  still pending. Existing historical failures remain documented below.
+
+### 2026-11-26 - Autonomous P6/P7 implementation checkpoint
+
+- All 173 approved deployment sources and 31 Markdown companions are now in
+  their exact manifest destinations. Current imports, public aliases, workflows,
+  declarations and documentation follow them. Four repository helper source/test
+  files have moved to their reviewed owners. No staging schedule, RAG disabled
+  automation, accepted release record or cloud resource was changed.
+- Entity historical source digest at the starting revision remains
+  `sha256:58f6a81c76b2785c41724d9021d89b5beab1e9dffa12430bf4dc6b99a7339719`.
+  Current discovery includes nested production files and excludes tests. Existing
+  alignment fixtures prove bounded relocations and reject ambiguous/deleted
+  controller cases. Independent caller review remains in progress.
+- All 76 Entity path checks passed. Legacy has 28 passing local owner commands,
+  and delivery inventory covers 521 entrypoints across six scopes with no gaps.
+  Eight legacy path checks still identify frozen historical references; the
+  existing scanner owner is being corrected without suppressing current callers.
+- Selector helper proof passed seven existing cases. Six previously failing
+  retained repository-contract methods now pass across focused runs; the first
+  run took 486.275 seconds and the two corrected assertions passed in 53.368
+  seconds. No full retained-suite replay or passing integrated candidate claimed.
+- The governed runner now uses canonical metadata parsing and effects data.
+  Focused runner, command-drift, bootstrap and portable-contract proof passed.
+  Documentation uses the existing README skill and admission standards.
+- Initial combined Entity verification was not final proof: the base fixture
+  expected nine old flat command paths. Those expectations are corrected and its
+  inner negative cases pass. The remaining owned run was stopped before further
+  work because lifecycle metadata had not yet been prepared. Final input hashes,
+  diagnostic reviews and registered affected proof remain due.
+- Fetched origin without pruning. Local and remote main both name
+  `237dbcf18fc0be11f35c6a66a9738d83d15d10b4`; the main integration checkout is
+  clean. Task HEAD remains `1ed9157cca73d43ba113d59238f12740caa94594` and is one
+  main merge behind. Commit approved task changes first, then use the existing
+  rehearsed refresh and normal main publication route. No commit/merge/push yet.
+
+### 2026-11-25 - Approved launcher ownership correction delivered locally
+
+- Corrected only the launcher's metadata consumers/version/date, extended its
+  existing aggregate ownership test and refreshed the existing review hash.
+  Actual bodies/branches, catalogue, selector, effects and preparation source
+  remain unchanged. No new source/test unit or scheduling mechanism.
+- Two existing cases pass in 2.179s; bounded counterexamples reject old metadata,
+  false transitive selection and loss of the real commit chain. Actual launcher
+  preview is now 25 pending plus one deferred, down from 26 with only upstream-
+  contract removed. Actual preparation preview still selects that test.
+- Registered upstream-contract proof reuses unchanged trusted evidence in
+  13.553525s, zero commands. Programme records exact reports and retained debt.
+  Syntax, metadata preparation/header and whitespace checks pass; full retained
+  suite/integration and remaining migrations are not claimed. No commit/push.
+
+### 2026-11-25 - Remaining launcher ownership link reviewed
+
+- Traced the actual launcher/selector/commit-gate/preparation chain and the
+  upstream-contract fixture. The launcher is a catalogue command and is called
+  by the Python compatibility entrypoint; its header currently instead names
+  the generic selector. Preserve aggregate shape validation and real copied
+  preparation inputs, not the overly broad transitive registration relationship.
+- Proposed metadata-only caller correction plus assertions in the existing
+  aggregate contract, not a new engine/test. Actual in-memory selector preview
+  took 42.628453s, no findings/execution, removing only upstream-contract from
+  the launcher plan (proposed 25 pending plus one deferred). Disk source and
+  actual selection remain unchanged at 26; this is not final execution proof.
+- Programme and migration record contain exact scope and focused proof proposal;
+  progress table now reflects the already-completed anchor and routing work.
+  No source/configuration edit, commit, merge, push or provider operation.
+
+### 2026-11-25 - Approved summary/upstream routing delivered locally
+
+- Applied the three reviewed direct routes, reused the existing owner-map
+  assertions and refreshed only their existing reviewed test fingerprint.
+  Scheduling, real inputs, fixture/launcher bodies and permissions unchanged.
+- Three registered tests freshly pass in 14.515545s, zero findings; existing
+  contract passes in 0.636s. Nine existing-assertion counterexamples reject stale
+  routes, missing real inputs and false launcher dependencies. Source preview
+  retains all three; exact reports and self-review are in the programme.
+- Launcher-only preview selects 26 pending plus one deferred, down from 28.
+  Initial expectation of 25 was wrong: contract remains selected through the
+  declared launcher/selector/commit-gate/commit-preparation ownership chain.
+  Preserve this conservative link for separate review, not an input deletion.
+- No new script/test unit, real upstream/network action, source move or task
+  commit/merge/push. Full retained-suite and integration failures remain pending.
+
+### 2026-11-25 - Summary/upstream direct routes reviewed
+
+- Reviewed the summary, upstream-origin and upstream-contract fixture bodies,
+  actual called implementations and existing input/contract/review owners.
+  Proposed direct routes pass validation with no findings; no tests executed.
+  Fake upstream Git and definition-only portability extraction avoid actual
+  clone, install or network operations. Preserve all real copied-source inputs.
+- Proposed correction reuses the existing three-route assertion pattern; no
+  new test/script, permission or scheduling mechanism. Separate real-Git scope
+  issues in maintenance/conflict-classification fixtures are excluded.
+- Only existing programme/migration/session review records changed. Stop for
+  approval of the concrete batch; executable selection remains unchanged.
+
+### 2026-11-25 - Approved three-route correction delivered locally
+
+- User approved the reviewed process-drift/bootstrap-audit/migration-audit batch.
+  checks.yml calls the same existing tests directly with their actual metadata
+  owners and writes-files effects. Remove only their obsolete launcher inputs
+  and triggers; real dependencies, scheduling and compatibility branches stay.
+- Reconciled one existing catalogue-contract method and its existing reviewed
+  source fingerprint, preserving review status/debt. No new source/test/unit,
+  permission expansion, execution-engine change or helper/deployment move.
+- All three registered commands freshly pass in 8.189545s, zero findings;
+  child execution totals 0.865360s. Existing contract passes in 0.549s; nine
+  bounded counterexamples prove old routes, lost inputs and false dependencies
+  are rejected. Actual launcher-only preview is now 28 pending plus one deferred
+  (was 31); own checker-source preview retains all three actual owner checks.
+  Exact reports and self-review are in the existing programme.
+- The broader retained suite is intentionally not repeated; its other failures
+  and full integration remain pending. No task commit/merge/push/provider call.
+
+### 2026-11-25 - Next three direct-owner routes reviewed
+
+- Continued in the recorded November 21 worktree. Read process-drift,
+  bootstrap-audit and migration-audit fixture programs and their actual checkers.
+  Existing writes-files effects fit; the launcher is only a metadata reference,
+  not an executable dependency. Proposed direct commands pass validate_check
+  with no findings; no test command was executed and no catalogue changed.
+- Existing catalogue-contract test explicitly requires old wrapper routing;
+  include its exact three-owner expectations in the proposed correction.
+  Preserve all other assertions, real inputs, stage, timing and manual routes.
+  Command-drift/session-reader fixtures need separate Git-scope decisions and
+  are excluded. No new test/script, permission, source move or broad suite.
+- Recorded bounded scope and five-minute focused proof proposal in the existing
+  programme, with a short migration prerequisite pointer. Only these three
+  records changed. Stop for approval of that implementation increment; prior
+  pilot evidence remains valid and whole P6/integration/publication incomplete.
+
+### 2026-11-25 - Approved private-fixture Git rule and lifecycle routing
+
+- User approved addressing temporary-test Git permissions and finishing the
+  second pilot route. Clarify effect scope at the metadata standard: Git state
+  created solely inside fresh private fixtures is writes-files; existing task,
+  integration, shared Git directories and worktrees retain their Git effects
+  and approval requirements. No broader LOCAL_EFFECTS or filename exception.
+- Reuse the lifecycle smoke program's existing run helper, the header fixture's
+  Git-environment clearing pattern and current TemporaryDirectory scopes. Fence
+  helper commands to the current private scope, reject external .git pointers,
+  clear inherited Git selection/config and cap parent discovery. Resolve the
+  test source by its own path, not inherited Git environment. Keep explicit
+  fixture commit dates and every existing lifecycle assertion.
+- Extend only that existing smoke program's assertions to reject real checkout
+  cwd/external .git and verify clean child environment. No new test file, unit,
+  fixture framework, wrapper, registry or runtime runner algorithm.
+- Then classify its genuinely private fixture writes accordingly and update
+  only the lifecycle check's command/owner/effects plus unused dispatcher edges.
+  Self-review must preserve all other inputs, timing boundaries and components.
+- Budget: five minutes of focused execution for existing registered owners,
+  existing component contract, selection previews and metadata/whitespace.
+  Snapshot real HEAD/branch refs/index around tests. The source review is
+  test-only fixture containment; production diagnostics remain unchanged.
+  Existing programme/migration records carry the evidence and remaining debt.
+- Delivered: canonical scope rule plus current-fixture cwd/Git-pointer guards,
+  cleared Git environment/config and bounded discovery in the existing helper.
+  Existing smoke assertions now reject real-checkout/external-pointer targets
+  before spawn; fixture dates and all old lifecycle assertions are preserved.
+  No central runner/LOCAL_EFFECTS change, no new source/test file or test unit.
+- Lifecycle registration is now direct with its existing owner/writes-files,
+  all real inputs/runtime/scheduling retained. Only obsolete dispatcher edges
+  removed. Both pilot routes are locally delivered; no blanket route conversion.
+- Registered request passes in 22.838635s: lifecycle freshly passes directly in
+  17.019666s, unchanged header proof reuses trusted evidence. Report:
+  .cache/test-runs/20261125T174843Z-6a9c9013a5de465aaa1c6cbacedea178/report.json.
+  Three existing component/effect/stage methods pass in 1.063s.
+- Bounded actual-helper symlink probes and existing-fixture declared Git-effect
+  probes reject before spawn. Actual worktree HEAD/branch/index bytes match the
+  pre-test snapshot. Test-only source review is recorded in the programme;
+  no new runtime diagnostic/review owner was invented.
+- Dispatcher preview now has 31 candidate-local pending checks (original 33)
+  plus one deferred suite; neither metadata route appears. Own lifecycle path
+  still selects lifecycle. Both previews have zero findings/execution.
+  Exact reports, metadata/syntax/whitespace and remaining scope are in programme.
+- Stop for briefing: the two-route pilot is complete locally, not whole P6,
+  full integration or all launcher coupling. Helper paths remain unmoved and
+  other recorded findings retained. No task staging/commit/merge/push or provider
+  operation; no required process is left running.
+
+### 2026-11-25 - Approved metadata routing pilot: one safe route, one blocked
+
+- User approved the two-route pilot. Before edits, actual validate_check accepted
+  the proposed header route but rejected direct lifecycle with
+  local-check-effects-forbidden. Lifecycle's own header declares writes-files,
+  stages-files and commits, while the local runner allows only read-only and
+  writes-files. Preserve that guard and the existing lifecycle registration.
+- Both programs use temporary Git repositories. Header's existing declaration
+  describes writes-files only; lifecycle declares explicit Git actions. Their
+  inconsistent treatment needs a separately approved effects-scope decision,
+  not removing honest metadata or granting actual-worktree Git permissions.
+  The preceding caller review missed this incompatibility; do not call the
+  two-route pilot complete or infer that all other delegations can move safely.
+- Complete the independent header route: checks.yml names the exact existing
+  check-headers/smoke-test.sh command and its stable metadata owner. Its declared
+  effects match the existing writes-files header (no new permission). Remove
+  the shared dispatcher only from this check's inputs and its one explicit
+  trigger rule; preserve every other input, runtime field, stage and scheduling.
+- Existing checker, dispatcher compatibility and aggregate membership stay
+  unchanged. No new script/test, permissive fixture exception or runtime guard
+  change. Five-minute focused execution budget for the two registered owners
+  and existing focused component/ownership test; preserve matching evidence.
+- Exact intended files: checks.yml, existing programme, migration plan and this
+  session log. No moves, staging, commits, merging, pushing or provider work.
+- Partial outcome: header now directly names its existing command/owner and
+  matching writes-files declaration. Only its unused dispatcher input/trigger
+  edges were removed. Parsed catalogue comparison proves all other fields and
+  all other entries, including lifecycle, are unchanged.
+- Registered proof passes, 29.004423s: header executed directly (24.020669s),
+  lifecycle reused trusted matching evidence on its unchanged wrapper route.
+  Report: .cache/test-runs/20261125T173812Z-2f5aa5a4fd7c45cf81caf8569868a2ef/report.json.
+  Existing component/owner contract passes, 0.408s.
+- No-execution previews show shared dispatcher now selects 32 pending checks
+  rather than 33, plus one deferred suite. Header is absent; own-header-path
+  selection still includes it. Both previews have zero findings; exact reports
+  and timings are in the programme. No broad batch or fresh lifecycle run.
+- Stop before effects-policy work: lifecycle's direct route is still blocked.
+  Need an explicit governance decision for temporary-test Git versus actual
+  worktree Git; no safety guard or effect declaration was weakened. The two-route
+  pilot, full integration and P6 are not complete. No operation remains running.
+
+### 2026-11-25 - Next migration group reviewed, no source move
+
+- User requested continuation after the two cache-method corrections. Reviewed
+  the prelisted selector input-projection pair and its actual imports, Python
+  copy fixture, packaging test caller, review owners and catalogue contracts.
+- Both existing path planners completed: helper 15 literal references, test 10;
+  each includes three dormant generated RAG references retained unchanged.
+  Exact reports and proposed destinations are in the existing migration plan.
+- All seven existing tests pass in 7.506295s; direct Node alternative passes in
+  3.687334s but is not a supported catalogue command shape. No new tests added.
+- Desired ownership is a focused selector route for the same seven cases, not
+  packaging/full deferred mechanics. No new launcher, tests or runner layer.
+  The shared dispatcher has 37 command owners and 34 mapped identities.
+- Actual preview then confirmed the cost risk: changing that dispatcher selects
+  33 candidate-local pending checks and one deferred suite, zero findings,
+  31.221361s, zero executions. Retained report:
+  /tmp/script-p6-projection-dispatch-impact.cmh2t7. No broad batch was run.
+- Revise the next increment before adding a dispatcher unit: catalogue routes
+  that merely exec an existing standalone script should call its owner directly.
+  Proposed pilot is the two existing metadata regressions; preserve their IDs,
+  effects, scheduling, actual dependencies and outcomes. Do not blanket-drop
+  dispatcher inputs where an indirect consumer still uses them. No code/config
+  correction in this review. Obtain approval for the pilot before helper moves.
+- Only programme, migration plan and this log are updated. No source, wrapper,
+  check declaration, metadata review, accepted history or path was changed.
+  Source count remains 690. Stop for approval of the bounded routing prerequisite
+  increment; all earlier dirty work is preserved. No commit, merge or push.
+
+### 2026-11-25 - Two cache-test expectations: bounded correction
+
+- User approved resolving the common selection mismatch behind two existing
+  cache tests. Source review identifies scope_inputs=false and inputs=[program.yml]
+  on the fixture's runnable-program proof. Changing src/main.ts does not require
+  that unchanged definition validator; local source proof remains selected.
+- Four existing-fixture planning probes passed without findings: source-only
+  edit omits runnable-program; program.yml, scripts/program.sh and the scope
+  declaration each still select it. This matches script.py's direct-input guard
+  and the accepted narrow-selection policy. No policy or fixture expansion is
+  needed to make these cache tests include an unrelated validator.
+- Reuse mechanics_test.py; correct three exact expected lists in its two named
+  methods, retaining every revision/environment assertion, execution-count
+  assertion and rejection of changed source after preparation. Named risks:
+  unrelated revisions must preserve valid local proof; environment or source
+  drift must invalidate it. No operational diagnostic/response/interface changes.
+- Before final focused verification, self-review the complete small diff and
+  prepare existing metadata. Five-minute execution budget for the two methods,
+  headers and whitespace. Existing other findings, programme-wide integration,
+  folder moves and all git publication operations stay outside this increment.
+- Completed: three expected-list corrections and one explanatory comment in
+  mechanics_test.py. Existing two methods both pass in 5.485s, reaching their
+  unchanged environment-rerun and changed-source/preparation-rejection checks.
+  No test added, runtime selection change, expanded fixture or broad rerun.
+- Refreshed only the existing runner-test-ownership-partition support review's
+  mechanics source hash/reason after reviewing the exact diff. Programme records
+  the four positive/negative selection probes and the bounded passing result.
+  Prior failures remain historical; other catalogue/integration work is pending.
+  Changed files this increment: mechanics_test.py, reviews.v1.json, programme,
+  and this session record. Existing dirty work and November 21 ownership remain.
+
+### 2026-11-25 - Approved Core-only changed-context repair
+
+- User approved the next bounded repair. Named risk: shared package defaults
+  unnecessarily bind fourteen unchanged programs' saved proof to a changed-file
+  list that only the Core runner consumes. Core must retain that binding so a
+  subset pass cannot qualify another subset or a full run.
+- Existing owner: scripts/repo/check-selection/checks.yml package_unit anchor;
+  consumers: selector preparation/evidence keys, local cache and command
+  environment, then packages/core/tests/run-runtime-tests.mjs. Keep these
+  implementations and all commands, inputs, scheduling and effect declarations.
+- Move only the Core flag outside the shared defaults. No fourteen overrides,
+  new source/test file, new diagnostic, failure-format change or runner layer.
+  Reuse existing catalogue/context/cache/aggregate methods; five-minute focused
+  verification budget. The existing Core-only assertion fails before repair,
+  correctly naming all fourteen unintended consumers (0.473s).
+- Self-review compared parsed catalogues exactly: only those fourteen true
+  flags disappeared. Core's fields and every other declared field match.
+  Full retained-suite failures and remaining P6 moves stay separately pending;
+  no broad retry, commit, merge, push or provider operation is authorised here.
+- Implemented at the shared anchor, not as fourteen overrides. Existing
+  Core-only assertion now passes. Six existing methods ran in 17.757s: four
+  passed, two independently built fixture tests still expect runnable-program
+  in a list that no longer selects it. Exact names and proof limits are in the
+  existing programme; no test expectations or runtime source were changed.
+- Additional bounded existing-fixture proof: unchanged command inputs plus
+  different actual selection paths reuse the ordinary setting's saved result;
+  Core changes preparation/evidence identities and reruns. Earlier exploratory
+  probes used unsuitable contexts/input closures and were not accepted as proof.
+  All command results consumed; no broad retry or further migration started.
+- Saved proof with the former flag is not rewritten or imported. Affected
+  checks may need one fresh result before reuse under the corrected identity.
+  This is a local configuration repair, not a claim that full integration or
+  the retained suite passes. Only checks.yml, programme and session changed
+  in this increment; all earlier dirty work is preserved.
+
+### 2026-11-25 - P6 first bounded group and retained-suite findings
+
+- User approved proceeding after P5. This first group aligns existing placement
+  standard/lifecycle owner/validator, then moves the two prelisted import
+  inspector artifacts to scripts/repo/module-structure. No deployment family
+  moved; all 173 deployment destinations are shape-valid only, not migrated.
+- Actual imports, wrapper, catalogue/consumer invalidation, existing contract
+  assertions, README, source reviews and helper pointers follow the canonical
+  owner. Body/cases unchanged except metadata/relative import. Stable artifact
+  IDs and original creation dates preserved. Census/ledger: 690 unique sources.
+- Both exact existing migration checkers passed: canonical targets exist,
+  no active old callers and no blanket allowance. Existing placement check
+  passed 1.932746s; module fixtures passed 2.381498s. Three affected contract
+  methods passed 1.105s after correcting stale manual-scan expectations.
+- Broader retained repository-contract suite failed: first registered batch
+  total 475.761009s; corrected direct registered wrapper then ran 49 methods
+  in 461.391s (462s wall), exit 1, eleven failures across eight methods. The
+  exact first report and sanitized failure dispositions are in the programme.
+  The move is implemented with focused proof; full retained/integration proof
+  is not passed. Budget missed, no third broad retry or arbitrary cache import.
+- Confirmed unchanged baseline: shared package defaults copy Core's changed
+  context flag onto 15 checks. Other remaining failures concern CI/development
+  expectations, aggregate/member invalidation and retained staging. No new
+  candidate gate imposed. Recommend a separately approved shared-anchor repair
+  before more moves; do not silently expand this packet into policy changes.
+- Existing November 21 worktree retained; P4/P5 dirty work preserved. No new
+  source/test program, wrappers, cloud/engine operations, schedule or accepted
+  history changes. No commit, merge or push. Stop at this first-group review;
+  P6 overall remains incomplete. Plan and existing migration manifest updated.
+
+### 2026-11-25 - P5 bounded build/package handoff
+
+- User approved the detailed P4 layout/counts and proceeding with P5. All edits
+  remain in the recorded November 21 worktree; P6 moves have not started. No
+  new source files, commits, merges, pushes, engine/provider actions or schedules.
+- Entity standalone source checks now request the existing registered checks;
+  qualification capture independently checks current identities and private
+  successful receipts before accepting unchanged reuse. Existing custody/target
+  formats and actual image checks remain separate. Persistence builder captures
+  one revision for both build arguments; strict guard and recovery byte pin agree.
+- Existing fixture programs extended and actually reached through the existing
+  publication wrapper. No new test program/registry/cache engine. Nine existing
+  script sources plus workflow/catalogue/review ledger changed; exact paths and
+  named risks are recorded in scripts/helpers/audit.md P5 table.
+- Final registered three-owner run passed, zero findings: publication contract
+  2.281557s, package custody 158.745335s, persistence payload 31.083152s; total
+  212.440489s. Same request passed warm in 11.394741s, three reused and zero
+  commands executed. Both retained .cache/test-runs report paths are in the plan.
+- Full-impact preview is planned, zero findings: 42 required local instances,
+  six retained local and nine later-stage instances. It executes nothing and
+  does not establish complete affected integration; the exact IDs are in the
+  programme. Commit/merge/promotion remains unauthorised and unperformed.
+- Real image/cloud/full-release timing, cold installation and runtime-scan
+  frequency are unmeasured; existing live freshness/reservations are unchanged.
+  Five-minute focused batch budget met, prior 21m33s promotion debt retained.
+  Stop at P5 briefing; P6 requires its approval and placement-owner reconciliation.
+
+### 2026-11-25 - P4 audit and destination proposal
+
+- User approved P4 with "proceed" after the P3 publication briefing. All task
+  commands/edits remain in this recorded November 21 worktree. No source move,
+  deletion, commit, merge, push, scheduler or provider action is authorised by
+  this audit packet.
+- P3 completion is verified, not pending: normal follow-up merge/push reached
+  actual remote main 237dbcf18fc0be11f35c6a66a9738d83d15d10b4, containing
+  qualified source 1ed9157c. Both worktrees were clean. Final readiness reused
+  all six required checks, executing no commands, in 20.242 seconds; report
+  .cache/test-runs/20261125T021346Z-e38a2708eb964b77a8b1d70d6fecd17c/report.json.
+  The approved temporary refresh worktree/branch was removed by its owner.
+- Reconciled all 901 tracked script-area paths: 690 source, 185 Markdown and
+  26 data/config files. Existing ledger has 690 unique matching source rows.
+  Seventeen source files changed since the full review; no source was added or
+  removed. No untracked script-area work. Source digest and current delta are
+  recorded in scripts/helpers/audit.md P4 section.
+- Existing audit and deployment migration plan now propose 173 source moves
+  and 31 Markdown companions, retain 517 source paths and delete none. Staging
+  is retained/scheduled, RAG dormant/retained; shared core consumers stay visible.
+  Existing deployment README navigation is active-first, and inventory README
+  explains the projector's heuristic limits. The README-writing skill guided
+  that bounded navigation change, not a new procedural standard.
+- P4 layout/scope was subsequently approved after the full folder/count briefing.
+  Placement reconciliation remains required: the placement owner lacks the proposed
+  legacy namespace and does not express the cohesive Entity role folders.
+  Migration packet also names mixed tests, dynamic roots, pinned bytes,
+  reservations, historical readers and embedded RAG source lists. No claim
+that folder movement alone removes verification coupling. P5 completed its
+  bounded local handoff above; P6 has not started.
+- Proof for this documentation-only change: count/mapping/source identity,
+  metadata, links, prose, whitespace and a selector preview; final results
+  recorded in programme revision 23. No runtime suite is needed merely for prose.
 
 ### 2026-11-25 - P3 published; completion follow-up
 
@@ -1053,6 +1502,38 @@ Summary: Record the successfully published 21365c76 checkpoint and repair implic
 
 ADR impact: No new ADR; bounded correction at existing selector and refresh handoff.
 
+
+### 2026-11-26T10:14:32Z - Context hygiene
+
+Summary: P6/P7 consolidated review is complete: exact deployment/helper moves, historical readers, current ownership, preparation semantics, effects parser and documentation agree. All five Entity route leaves, fifteen isolated chat/harness leaves and seven platform leaves passed. The final full candidate remains due; no publication is claimed.
+
+Durable evidence: Durable plan: .agentic/shared/plans/implementation/script-library-simplification.md; exact manifest: .agentic/04.deploy/plans/migration/entity-smoke-runtime-script-topology.md. Private final evidence: .cache/p6-final-qualification.C6GUyi; representative previews: .cache/p7-representative-preview.XdmSBu. Latest audit reconciles one stale metadata-kind assertion and a governed-command example. Existing broad hygiene and live/package stages remain separate; accepted evidence and schedules are unchanged. User authorized finite autonomous task commits, non-rewriting main refresh, normal merge/push; retain preflight refs and never edit from November 6.
+
+
+### 2026-11-26T10:50:16Z - Context hygiene
+
+Summary: Complete-candidate review: four bounded fixture corrections, no production or scheduling changes.
+
+Durable evidence: Full candidate ended in 1850.642 seconds:128 passed,4 failed,1 dependency-blocked,28 deferred. Existing report .cache/test-runs/20261126T104751Z-33034908d3104497974f826af3353439/report.json retains outcomes. Parent reviewed inventory explicit ownership versus metadata, product cleanup-job literal, two ordinary-update fixture imports and persistence acceptance mock. Targeted existing cases pass; full prepared retry and publication remain due. Only the changed persistence fixture pin was refreshed after exact old-byte comparison; partial adoption debt remains. No new ADR: completes the approved ownership and migration design.
+
+
+### 2026-11-26T11:16:39Z - Context hygiene
+
+Summary: Complete corrected candidate passed; final dormant-RAG safety correction is bounded and required before publication.
+
+Durable evidence: 133 checks passed (28 executed, 105 reused), 28 remained later/manual-stage, zero findings; 1177.492 seconds; report .cache/test-runs/20261126T111455Z-7812a266dd484165b511b539dc04e342/report.json. All four prior failures and blocked package-source owner passed. Restore accidental recognition regeneration to exact HEAD SHA256 6089185bb1056fd87e15d6595b8c444e530360428fb8107b54134fde8abf646f; replace task-added retrieval coupling with actual R01 reference proof and isolate the two existing runtime fixtures using disposable current-source copies. Existing plan records named risks, preserved assertions, manual retrieval route and integrated qualification still due. No new program, live action, schedule change or ADR; existing migration/test-isolation owners govern this correction.
+
+
+### 2026-11-26T11:27:54Z - Commit recorded
+
+Commit: `084d2f37`
+
+Message: refactor(scripts): complete governed layout and verification ownership
+
+Summary: P6/P7: 208 approved existing-file moves including 173 deployment sources, 31 Markdown companions and four repository helper/test files; preserve historical readers, independent proof ownership and dormant legacy automation. Complete candidate: 133 passed (28 executed, 105 reused), 28 deliberately deferred, 1177.492s; subsequent protected-RAG isolation correction: 3 affected checks passed in 91.282s. Final preparation 117.726s and staged commit gate 71.991s passed; frozen recognition and 90 historical evidence records unchanged. Main integration/publication remains outstanding; no live deployment performed.
+
+ADR impact: Existing approved P6/P7 design implemented; no new architectural decision.
+
 ## Sub-Agent Activity
 
 
@@ -1206,6 +1687,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Record the successfully published 21365c76 checkpoint and repair implicit empty-diff context, preserving explicit context rejection. Existing focused and registered promotion proof passed; normal follow-up publication pending.
   ADR impact: No new ADR; bounded correction at existing selector and refresh handoff.
 
+
+- Commit: `084d2f37`
+  Time UTC: 2026-11-26T11:27:54Z
+  Message: refactor(scripts): complete governed layout and verification ownership
+  Summary: P6/P7: 208 approved existing-file moves including 173 deployment sources, 31 Markdown companions and four repository helper/test files; preserve historical readers, independent proof ownership and dormant legacy automation. Complete candidate: 133 passed (28 executed, 105 reused), 28 deliberately deferred, 1177.492s; subsequent protected-RAG isolation correction: 3 affected checks passed in 91.282s. Final preparation 117.726s and staged commit gate 71.991s passed; frozen recognition and 90 historical evidence records unchanged. Main integration/publication remains outstanding; no live deployment performed.
+  ADR impact: Existing approved P6/P7 design implemented; no new architectural decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1219,14 +1707,15 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-25T02:05:40Z
-Latest commit SHA: 4bc30ec8
-Chat duration: 281102s (03:06:05:02)
+Latest commit at UTC: 2026-11-26T11:27:54Z
+Latest commit SHA: 084d2f37
+Chat duration: 401236s (04:15:27:16)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
-- Working-tree changes are uncommitted pending user review and explicit commit
-  approval.
+- Working-tree changes are uncommitted pending final required proof. The user's
+  2026-11-26 autonomous goal explicitly authorizes coherent task commits, normal
+  main integration and push; no further routine approval pause is required.

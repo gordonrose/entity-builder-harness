@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-26"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -152,7 +152,7 @@ printf 'dirty preflight residue\n' >> "$PREFLIGHT_WORKTREE/preflight-note.txt"
 set +e
 DIRTY_PROMOTE_OUTPUT="$({
   cd "$REPO"
-  bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh "$PREFLIGHT_BRANCH"
+  bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh "$PREFLIGHT_BRANCH" --retain-preflight
 } 2> "$TMP_ROOT/dirty-promote.err")"
 DIRTY_PROMOTE_STATUS="$?"
 set -e
@@ -242,6 +242,19 @@ for stage in reference branch ancestry worktree-list current-status preflight-st
   esac
   [ "$(git -C "$REPO" rev-parse HEAD)" = "$original_head" ] || fail "fault fixture performed a real promotion"
   [ -d "$PREFLIGHT_WORKTREE" ] || fail "fault fixture performed real cleanup"
+done
+
+RETAIN_OUTPUT="$(
+  cd "$REPO"
+  bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh "$PREFLIGHT_BRANCH" --retain-preflight
+)"
+[ "$(git -C "$REPO" rev-parse HEAD)" = "$PREFLIGHT_HEAD" ] || fail "retained apply lost exact tested commit"
+[[ "$RETAIN_OUTPUT" == *cleanup_result=retained-worktree-and-branches* ]] || fail "retained apply lost disposition"
+for retained in "$PREFLIGHT_BRANCH" "$STALE_PREFLIGHT_BRANCH" "$UNIQUE_PREFLIGHT_BRANCH"; do
+  git -C "$REPO" show-ref --verify --quiet "refs/heads/$retained" || fail "retained apply deleted a branch"
+done
+for retained in "$PREFLIGHT_WORKTREE" "$STALE_PREFLIGHT_WORKTREE" "$UNIQUE_PREFLIGHT_WORKTREE"; do
+  [ -d "$retained" ] || fail "retained apply removed a worktree"
 done
 
 PROMOTE_OUTPUT="$(

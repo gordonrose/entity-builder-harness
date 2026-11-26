@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 38
+#   version: 42
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -21,6 +21,7 @@ dormant_impact_roots:
 - .agentic/02.rag-rulebook
 - scripts/02.rag-rulebook
 - docs/02.rag-rulebook
+- docs/04.deploy/rules/02.rag-rulebook
 - infra/04.deploy/02.rag-rulebook
 dormant_package_commands:
 - package.json#scripts.rag:service
@@ -31,46 +32,51 @@ isolated_check_contexts:
   kanbien-staging:
     activation_inputs:
     - infra/04.deploy/03.product/targets/kanbien/staging
+    - infra/04.deploy/03.product/image/Dockerfile
+    - infra/04.deploy/03.product/image/Dockerfile.dockerignore
     - .github/workflows/deploy-platform-shell-staging.yml
     - .github/workflows/platform-shell-staging-metric-coverage.yml
     - .github/workflows/platform-shell-staging-synthetic.yml
     - .github/workflows/reconcile-platform-shell-staging.yml
-    - scripts/04.deploy/assess-platform-shell-artifact-drift
-    - scripts/04.deploy/assess-platform-shell-foundation-drift
-    - scripts/04.deploy/assess-platform-shell-service-drift
-    - scripts/04.deploy/build-platform-shell-image
-    - scripts/04.deploy/provision-platform-shell-negative-authz-client
-    - scripts/04.deploy/provision-platform-shell-persistence-write-client
-    - scripts/04.deploy/reconcile-platform-shell-staging
-    - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
-    - scripts/04.deploy/run-platform-shell-controlled-smoke
-    - scripts/04.deploy/run-platform-shell-ingress-smoke
-    - scripts/04.deploy/run-platform-shell-metric-coverage
-    - scripts/04.deploy/run-platform-shell-negative-authz-smoke
-    - scripts/04.deploy/run-platform-shell-persistence-admission-probe
-    - scripts/04.deploy/run-platform-shell-persistence-delivery-proof
-    - scripts/04.deploy/run-platform-shell-persistence-smoke
-    - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke
-    - scripts/04.deploy/run-platform-shell-rate-limit-smoke
-    - scripts/04.deploy/run-platform-shell-worker-smoke
-    - scripts/04.deploy/smoke-test-platform-shell-image
-    - scripts/04.deploy/verify-platform-shell-deploy-readiness
-    - scripts/04.deploy/verify-platform-shell-deployment-artifact-store
-    - scripts/04.deploy/verify-platform-shell-deployment-reconciliation
-    - scripts/04.deploy/verify-platform-shell-deployment-workflow
-    - scripts/04.deploy/verify-platform-shell-drift-detection-boundary
-    - scripts/04.deploy/verify-platform-shell-infrastructure
-    - scripts/04.deploy/verify-platform-shell-metric-coverage
-    - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary
-    - scripts/04.deploy/verify-platform-shell-postgresql-reference
-    - scripts/04.deploy/verify-platform-shell-synthetic-scheduler
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-artifact-drift
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-foundation-drift
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-service-drift
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image
+    - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-negative-authz-client
+    - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-persistence-write-client
+    - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging
+    - scripts/04.deploy/legacy/kanbien-staging/render-platform-shell-foundation-template
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-controlled-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-ingress-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-metric-coverage
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-negative-authz-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-admission-probe
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-delivery-proof
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-rate-limit-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-worker-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-artifact-store
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-reconciliation
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-drift-detection-boundary
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-metric-coverage
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-observability-prerequisites
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-live-boundary
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-synthetic-scheduler
   rag-rulebook:
     activation_inputs:
     - .agentic/02.rag-rulebook
     - scripts/02.rag-rulebook
     - docs/02.rag-rulebook
+    - docs/04.deploy/rules/02.rag-rulebook
     - infra/04.deploy/02.rag-rulebook
-    - scripts/04.deploy/verify-rag-rulebook-deploy-readiness
+    - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness
 checks:
   chat-startup-regression:
     boundary: integration
@@ -131,14 +137,13 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   chat-summary-regression:
     boundary: integration
-    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-summary]
+    argv: [bash, scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh]
     stage: local
     evidence_class: local-runtime
-    effects: [read-only, writes-files]
-    owner: repo.test.check-selection.wrapper
+    effects: [writes-files]
+    owner: chat.script.reporting.generate-commit-log-summary.smoke-test
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/00.chat/reporting/generate-commit-log-summary
     runtime:
       tools: [bash, git, node]
@@ -164,6 +169,7 @@ checks:
     - scripts/01.harness/check-governed-script-command-drift.sh
     - scripts/01.harness/artifact-metadata/header_discovery.py
     - scripts/01.harness/artifact-metadata/check-headers
+    - .agentic/01.harness/artifact-metadata/taxonomy.yml
     runtime:
       tools: [bash, git, node, npm, python3]
       node_packages: []
@@ -180,8 +186,10 @@ checks:
     - scripts/repo/check-selection/smoke-test.sh
     - scripts/01.harness/run-governed-script.sh
     - scripts/01.harness/smoke-test-governed-script-runner.sh
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - .agentic/01.harness/artifact-metadata/taxonomy.yml
     runtime:
-      tools: [bash, git]
+      tools: [bash, git, python3]
       node_packages: []
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   harness-command-drift-regression:
@@ -197,20 +205,21 @@ checks:
     - scripts/01.harness/check-governed-script-command-drift.sh
     - scripts/01.harness/smoke-test-governed-script-command-drift.sh
     - scripts/01.harness/run-governed-script.sh
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - .agentic/01.harness/artifact-metadata/taxonomy.yml
     runtime:
-      tools: [bash, git]
+      tools: [bash, git, python3]
       node_packages: []
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   harness-process-drift-regression:
     boundary: integration
-    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, harness-process-drift]
+    argv: [bash, scripts/01.harness/smoke-test-deterministic-process-drift.sh]
     stage: local
     evidence_class: local-runtime
-    effects: [read-only, writes-files]
-    owner: repo.test.check-selection.wrapper
+    effects: [writes-files]
+    owner: harness.script.smoke-test-deterministic-process-drift
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/01.harness/check-deterministic-process-drift.sh
     - scripts/01.harness/smoke-test-deterministic-process-drift.sh
     runtime:
@@ -219,14 +228,13 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   chat-bootstrap-audit-regression:
     boundary: integration
-    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-bootstrap-audit]
+    argv: [bash, scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/smoke-test.sh]
     stage: local
     evidence_class: local-runtime
-    effects: [read-only, writes-files]
-    owner: repo.test.check-selection.wrapper
+    effects: [writes-files]
+    owner: chat.script.bootstrap.diagnostic-smoke-test
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set
     runtime:
       tools: [bash, git]
@@ -234,14 +242,13 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   chat-migration-audit-regression:
     boundary: integration
-    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-migration-audit]
+    argv: [bash, scripts/00.chat/migration/audit-chat-layer-migration/smoke-test.sh]
     stage: local
     evidence_class: local-runtime
-    effects: [read-only, writes-files]
-    owner: repo.test.check-selection.wrapper
+    effects: [writes-files]
+    owner: chat.script.migration.diagnostic-smoke-test
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/00.chat/migration/audit-chat-layer-migration
     runtime:
       tools: [bash, git]
@@ -249,14 +256,13 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   chat-upstream-ensure-regression:
     boundary: integration
-    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-upstream-ensure]
+    argv: [bash, scripts/00.chat/upstream/ensure-llm-workbench-repo/smoke-test.sh]
     stage: local
     evidence_class: local-runtime
-    effects: [read-only, writes-files]
-    owner: repo.test.check-selection.wrapper
+    effects: [writes-files]
+    owner: chat.script.upstream.ensure-llm-workbench-repo.smoke-test
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/00.chat/upstream/ensure-llm-workbench-repo
     runtime:
       tools: [bash, git]
@@ -264,14 +270,13 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   chat-upstream-contract-regression:
     boundary: integration
-    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-upstream-contract]
+    argv: [bash, scripts/00.chat/upstream/check-llm-workbench-contract/smoke-test.sh]
     stage: local
     evidence_class: local-runtime
-    effects: [read-only, writes-files]
-    owner: repo.test.check-selection.wrapper
+    effects: [writes-files]
+    owner: chat.script.upstream.check-llm-workbench-contract.smoke-test
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/00.chat/upstream/check-llm-workbench-contract
     - scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
     - .agentic/00.chat/workflows/chat-start.md
@@ -311,8 +316,9 @@ checks:
     - scripts/01.harness/check-governed-script-command-drift.sh
     - scripts/01.harness/artifact-metadata/header_discovery.py
     - scripts/01.harness/artifact-metadata/check-headers
+    - .agentic/01.harness/artifact-metadata/taxonomy.yml
     runtime:
-      tools: [bash, git, node]
+      tools: [bash, git, node, python3]
       node_packages: []
       environment: [PATH, LANG, LC_ALL, TMPDIR]
   chat-integration-preparation-regression:
@@ -571,9 +577,9 @@ checks:
     - infra
     - package.json
     - package-lock.json
-    # The module index is the candidate-bound lockfile integrity owner.
-    # Other checks retain the lockfile in their proof identity but are selected
-    # only by their own source or manifest inputs.
+    # The broad module index remains hygiene, including lockfile-only changes.
+    # Selection still parses workspace declarations; package preparation checks
+    # installed versions. Other proofs retain lockfile bytes in their identity.
     select_on_lockfile: true
     runtime:
       tools: [bash, node, typescript]
@@ -592,9 +598,9 @@ checks:
     - scripts/repo/module-structure/check.mjs
     - scripts/repo/module-structure/smoke-test.mjs
     - scripts/repo/module-structure/smoke-test.sh
-    - scripts/repo/workspace-build/dependencies.mjs
+    - scripts/repo/module-structure/dependencies.mjs
     - scripts/repo/workspace-build/declarations.mjs
-    - scripts/repo/workspace-build/dependencies-test.mjs
+    - scripts/repo/module-structure/dependencies-test.mjs
     - package.json
     - package-lock.json
     runtime:
@@ -614,10 +620,12 @@ checks:
     - scripts/01.harness/check-artifact-path-migration.sh
     - scripts/01.harness/plan-artifact-path-migration.sh
     - scripts/01.harness/smoke-test-artifact-path-migration.sh
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - docs/04.deploy/plans/verification-diagnostics-timeout-inventory.tsv
     runtime:
-      tools: [bash, git]
+      tools: [bash, git, python3]
       node_packages: []
-      environment: [PATH, LANG, LC_ALL, TMPDIR]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME]
   chat-export-regression:
     boundary: integration
     argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, chat-export]
@@ -831,7 +839,7 @@ checks:
     - scripts/repo/diagnostic-coverage
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence
-    - scripts/04.deploy/build-platform-shell-image/check-source.sh
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh
     - infra/04.deploy/03.product/targets/kanbien-core-platform
     - packages/core
     - platform
@@ -849,21 +857,23 @@ checks:
     aggregate_branch: unit-base
     focused_prerequisites: *startup_prerequisites
     inputs: [scripts/repo/diagnostic-coverage/verify.sh]
-  core-runtime: &package_unit
-    boundary: integration
-    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, core]
-    stage: local
-    evidence_class: local-runtime
-    effects: [writes-files]
-    owner: repo.diagnostics.verification
-    scope_inputs: false
+  core-runtime:
+    <<: &package_unit
+      boundary: integration
+      argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, core]
+      stage: local
+      evidence_class: local-runtime
+      effects: [writes-files]
+      owner: repo.diagnostics.verification
+      scope_inputs: false
+      inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, scripts/repo/module-structure/check.mjs, scripts/repo/module-structure/dependencies.mjs, scripts/repo/workspace-build, package.json, package-lock.json]
+      runtime: &package_runtime
+        tools: [bash, node, npm, typescript]
+        node_packages: [typescript, '@types/node', '@kanbien/core']
+        environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
+        config_inputs: [.npmrc, .node-version, .nvmrc]
+    # Only Core's runner consumes the changed-file list to choose test subsets.
     changed_path_context: true
-    inputs: [scripts/repo/diagnostic-coverage/verify.sh, packages/core, scripts/repo/module-structure/check.mjs, scripts/repo/workspace-build, package.json, package-lock.json]
-    runtime: &package_runtime
-      tools: [bash, node, npm, typescript]
-      node_packages: [typescript, '@types/node', '@kanbien/core']
-      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
-      config_inputs: [.npmrc, .node-version, .nvmrc]
   platform-contracts-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, contracts]
@@ -994,7 +1004,7 @@ checks:
     feedback: {development: false, expected_seconds: 90, isolation: worktree, rationale: Assemble the actual image payload at integration; failures remain blocking.}
     boundary: integration
     scope_inputs: false
-    argv: [bash, scripts/04.deploy/build-platform-shell-image/check-source.sh, --payload-only]
+    argv: [bash, scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh, --payload-only]
     stage: local
     evidence_class: local-runtime
     effects: [read-only, writes-files]
@@ -1002,7 +1012,7 @@ checks:
     inputs:
     - packages/core
     - infra/04.deploy/03.product/entrypoints
-    - scripts/04.deploy/build-platform-shell-image
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image
     - platform
     - products/kanbien-platform
     - apps/platform-smoke
@@ -1254,7 +1264,7 @@ checks:
     - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
     - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
     - scripts/04.deploy/shared/provider-adapters/aws/response.py
-    - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+    - scripts/04.deploy/legacy/kanbien-staging/shared/provider-adapters/aws/cognito-provisioning.py
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
     runtime: *alignment_fixture_runtime
   runtime-credential-lifecycle-regression:
@@ -1424,7 +1434,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference/smoke-test.sh
     stage: local
     evidence_class: static
     effects:
@@ -1434,7 +1444,7 @@ checks:
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     inputs:
-    - scripts/04.deploy/verify-platform-shell-postgresql-reference
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference
     - infra/04.deploy/03.product/targets/kanbien/staging
     runtime:
       tools:
@@ -1581,7 +1591,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+    - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/smoke-test.sh
     stage: local
     evidence_class: static
     effects:
@@ -1595,6 +1605,7 @@ checks:
       - PATH
       - LANG
       - LC_ALL
+      - TMPDIR
       - PYTHONPATH
       - PYTHONHOME
       - PYTHONHASHSEED
@@ -1603,9 +1614,21 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/verify-rag-rulebook-deploy-readiness
+    - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - .github/workflows/deploy-rag-rulebook-staging.yml
+    - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+    - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+    - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
+    - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/github-oidc-bootstrap.yml
+    - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/github-actions-to-ecs-fargate.yml
+    - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-mcp-corpus-gap.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-deploy-readiness-workflow.yml
+    - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   rag-local-retrieval-regression:
     isolated_context: rag-rulebook
+    scope_inputs: false
     boundary: integration
     applicability:
       kind: profile
@@ -1622,10 +1645,12 @@ checks:
       tools:
       - bash
       - python3
+      - git
       environment:
       - PATH
       - LANG
       - LC_ALL
+      - TMPDIR
       - PYTHONPATH
       - PYTHONHOME
       - PYTHONHASHSEED
@@ -1635,11 +1660,34 @@ checks:
       - .python-version
       - pyproject.toml
       - requirements.txt
-    inputs:
+    # Both existing fixtures copy the current Git-visible source closure.
+    # These are proof inputs, not additional ordinary selection triggers.
+    inputs: &rag_fixture_snapshot_inputs
     - .agentic
+    - .agents/skills
+    - .github
+    - apps
+    - bin
+    - commitLogs
     - docs
-    - scripts/02.rag-rulebook
-    - scripts/01.harness/artifact-metadata
+    - infra
+    - packages
+    - platform
+    - products
+    - scripts
+    - .gitignore
+    - AGENTS.md
+    - CLAUDE.md
+    - LLM_WORKBENCH.md
+    - README.md
+    - package.json
+    - package-lock.json
+    - .claude/settings.json
+    - .codex/rules/governed-scripts.rules
+    - .cursor/rules/llm-workbench.mdc
+    - .llm-workbench/lock.json
+    - .llm-workbench/manifest.json
+    - .vibe/config.toml
   rag-source-projection-validation:
     isolated_context: rag-rulebook
     boundary: integration
@@ -1975,7 +2023,7 @@ checks:
     scope_inputs: false
   entity-smoke-acceptance-controls:
     boundary: integration
-    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.sh]
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/commands/acceptance-control-test.sh]
     stage: local
     evidence_class: local-runtime
     effects: [writes-files]
@@ -2098,7 +2146,7 @@ checks:
     runtime:
       tools: [bash, python3, node, npm, typescript]
       node_packages: [typescript, '@types/node', '@types/pg', pg, '@aws-sdk/rds-signer']
-      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
       config_inputs: [.npmrc, .node-version, .nvmrc, .python-version, pyproject.toml, requirements.txt]
     inputs:
     - scripts/repo/check-selection/execution_policy.py
@@ -2192,7 +2240,7 @@ checks:
       development: true
       expected_seconds: 120
       isolation: worktree
-      rationale: Compile isolated feature wiring and run the shared non-route controls; route behaviour has dedicated leaves.
+      rationale: Compile isolated feature wiring and run the shared non-route controls; route behaviour and acceptance controls have separate existing checks and are not replayed by this base.
   entity-smoke-task-route:
     <<: *entity-smoke-composition-suite
     cadence: candidate
@@ -2463,6 +2511,8 @@ checks:
     - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
     - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
     - .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
     - scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh
     - scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh
@@ -2471,6 +2521,15 @@ checks:
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
     - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml
+    - scripts/04.deploy/lifecycle/20-build/capabilities/local-qualification/entity-smoke-proof
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/bindings/local-qualification/entity-smoke-proof
+    - scripts/repo/check-selection/test_support.py
+    - scripts/repo/check-selection/script.py
+    - scripts/repo/check-selection/local_cache.py
+    - scripts/repo/check-selection/execution_policy.py
+    - scripts/repo/check-selection/workspace_context.py
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py
   bootstrap-container:
     boundary: integration
     argv:
@@ -2530,7 +2589,7 @@ checks:
       scope: bootstrap-runtime
   entity-smoke-acceptance:
     boundary: integration
-    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/collect-acceptance.sh, --inputs, '{acceptance_inputs}', --write-candidate, --json]
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/collect-acceptance.sh, --inputs, '{acceptance_inputs}', --write-candidate, --json]
     stage: acceptance
     evidence_class: live
     effects: [network, writes-files]
@@ -2597,6 +2656,28 @@ checks:
         required: true
         schema: deploy/acceptance-inputs/v1
     acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
+  check-selection-workspace-inputs:
+    feedback: {development: true, expected_seconds: 15, isolation: disposable-fixture, rationale: Prove actual package-check inputs and safe rejection without running packaging or full selector regression.}
+    boundary: integration
+    argv: [bash, scripts/repo/check-selection/smoke-test.sh, --unit, workspace-inputs]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: repo.test.check-selection.wrapper
+    scope_inputs: false
+    inputs: &workspace_check_inputs
+    - scripts/repo/check-selection/smoke-test.sh
+    - scripts/repo/check-selection/check-inputs.mjs
+    - scripts/repo/check-selection/check-inputs-test.mjs
+    - scripts/repo/workspace-build/declarations.mjs
+    - scripts/repo/workspace-build/script.mjs
+    - scripts/repo/workspace-build/compile.mjs
+    - scripts/repo/workspace-build/project-selection.mjs
+    runtime:
+      tools: [bash, git, node, npm]
+      node_packages: [typescript]
+      environment: [PATH, LANG, LC_ALL, NODE_OPTIONS, NODE_PATH]
+      config_inputs: [.npmrc, .node-version, .nvmrc]
   check-selection-mechanics:
     feedback: {development: false, expected_seconds: 300, isolation: disposable-fixture, rationale: Full selector and cache mechanics are checkpoint proof; focused fixture cases provide editing feedback.}
     boundary: integration
@@ -2791,18 +2872,14 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/repo/check-selection/smoke-test.sh
-    - --unit
-    - harness-lifecycle
+    - scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
-    - read-only
     - writes-files
-    owner: repo.test.check-selection.wrapper
+    owner: harness.script.artifact-metadata.update-lifecycle-smoke-test
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/01.harness/artifact-metadata/update-lifecycle
     - scripts/01.harness/artifact-metadata/check-headers
     - scripts/01.harness/artifact-metadata/header_discovery.py
@@ -2827,18 +2904,14 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/repo/check-selection/smoke-test.sh
-    - --unit
-    - harness-header
+    - scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
-    - read-only
     - writes-files
-    owner: repo.test.check-selection.wrapper
+    owner: harness.script.artifact-metadata.check-headers-smoke-test
     scope_inputs: false
     inputs:
-    - scripts/repo/check-selection/smoke-test.sh
     - scripts/01.harness/artifact-metadata/check-headers
     - scripts/01.harness/artifact-metadata/header_discovery.py
     - .agentic/00.chat/workflows/chat-start.md
@@ -2985,6 +3058,7 @@ checks:
     scope_inputs: false
     aggregate_branch: default
     members:
+    - check-selection-workspace-inputs
     - check-selection-mechanics
     - check-selection-repository-contracts
     - harness-lifecycle-metadata-regression
@@ -3075,7 +3149,7 @@ checks:
     - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
     - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
     - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload
-    - scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/prepare-runtime.mjs
     - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image
     - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
     - infra/04.deploy/03.product/entrypoints
@@ -3589,7 +3663,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh
     - --mode
     - runtime-alignment
     - --deployment-manifest
@@ -3656,13 +3730,13 @@ checks:
     - shell-postgresql-relational-smoke-check
     - shell-candidate-preflight-regression
     scope_inputs: false
-    inputs: [scripts/04.deploy/verify-platform-shell-infrastructure/script.sh]
+    inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/script.sh]
     applicability:
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/script.sh
     stage: local
     evidence_class: static
     effects:
@@ -3687,7 +3761,7 @@ checks:
   shell-infrastructure-policy:
     isolated_context: kanbien-staging
     boundary: integration
-    argv: [bash, scripts/04.deploy/verify-platform-shell-infrastructure/policy.sh]
+    argv: [bash, scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/policy.sh]
     stage: local
     evidence_class: static
     effects: [read-only, writes-files]
@@ -3701,13 +3775,13 @@ checks:
   shell-artifact-store-policy:
     isolated_context: kanbien-staging
     boundary: integration
-    argv: [bash, scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh]
+    argv: [bash, scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-artifact-store/smoke-test.sh]
     stage: local
     evidence_class: static
     effects: [read-only]
     owner: deploy.script.verify-platform-shell-deployment-artifact-store.smoke-test
     scope_inputs: false
-    inputs: [scripts/04.deploy/verify-platform-shell-deployment-artifact-store, infra/04.deploy/03.product/targets/kanbien, .github, docs/04.deploy, scripts/04.deploy/shared]
+    inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-artifact-store, infra/04.deploy/03.product/targets/kanbien, .github, docs/04.deploy, scripts/04.deploy/shared]
     runtime: *shell_policy_runtime
   shell-publication:
     isolated_context: kanbien-staging
@@ -3717,12 +3791,14 @@ checks:
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/script.sh
     stage: local
     evidence_class: static
     effects:
     - read-only
     owner: deploy.script.verify-platform-shell-deployment-workflow
+    inputs:
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh
     runtime:
       tools:
       - bash
@@ -3743,13 +3819,13 @@ checks:
     aggregate_branch: default
     members: [platform-server-runtime, kanbien-platform-runtime, platform-shell-payload]
     focused_prerequisites:
-    - inputs: [packages/core, platform, products/kanbien-platform, apps/platform-smoke, infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/build-platform-shell-image]
+    - inputs: [packages/core, platform, products/kanbien-platform, apps/platform-smoke, infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts, infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts, scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image]
       checks: [platform-shell-payload]
     boundary: integration
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/build-platform-shell-image/check-source.sh
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -3765,7 +3841,7 @@ checks:
     - scripts/repo/check-selection
     - scripts/repo/diagnostic-coverage/verify.sh
     - infra/04.deploy/03.product/entrypoints
-    - scripts/04.deploy/build-platform-shell-image
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image
     - platform
     - products/kanbien-platform
     - apps/platform-smoke
@@ -3777,7 +3853,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh
     stage: package
     evidence_class: container-qualification
     effects:
@@ -3785,12 +3861,18 @@ checks:
     - writes-files
     owner: deploy.script.smoke-test-platform-shell-image
     applicability: *id001
+    inputs:
+    - scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image
+    - scripts/04.deploy/validate-container-boundaries
+    - infra/04.deploy/03.product/image/Dockerfile
+    - infra/04.deploy/03.product/image/Dockerfile.dockerignore
   shell-ingress-smoke:
     isolated_context: kanbien-staging
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-ingress-smoke/script.sh
     - --execute
     stage: acceptance
     evidence_class: live
@@ -3804,7 +3886,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-live-boundary/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -3829,7 +3911,7 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-live-boundary
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-postgresql-relational-smoke-check:
     isolated_context: kanbien-staging
@@ -3837,7 +3919,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -3862,7 +3944,7 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
     - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts
@@ -3874,7 +3956,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-admission-probe/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -3900,14 +3982,14 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/run-platform-shell-persistence-admission-probe
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-admission-probe
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-postgresql-relational-smoke:
     isolated_context: kanbien-staging
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/script.sh
     - --execute
     - --approve-relational-stage6
     stage: acceptance
@@ -3922,7 +4004,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-negative-authz-client/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -3947,19 +4029,19 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/provision-platform-shell-negative-authz-client
+    - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-negative-authz-client
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - scripts/04.deploy/shared/provider-adapters/aws/response.py
-    - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+    - scripts/04.deploy/legacy/kanbien-staging/shared/provider-adapters/aws/cognito-provisioning.py
     - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
-    - scripts/04.deploy/provision-platform-shell-persistence-write-client
+    - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-persistence-write-client
   shell-persistence-write-client-check:
     isolated_context: kanbien-staging
     boundary: integration
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-persistence-write-client/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -3984,17 +4066,17 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/provision-platform-shell-persistence-write-client
+    - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-persistence-write-client
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - scripts/04.deploy/shared/provider-adapters/aws/response.py
-    - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+    - scripts/04.deploy/legacy/kanbien-staging/shared/provider-adapters/aws/cognito-provisioning.py
   shell-controlled-smoke-check:
     isolated_context: kanbien-staging
     boundary: integration
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-controlled-smoke/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4020,7 +4102,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/run-platform-shell-controlled-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-controlled-smoke
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-negative-authz-smoke-check:
     isolated_context: kanbien-staging
@@ -4028,7 +4110,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-negative-authz-smoke/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4054,7 +4136,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/run-platform-shell-negative-authz-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-negative-authz-smoke
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-persistence-smoke-check:
     isolated_context: kanbien-staging
@@ -4062,7 +4144,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-smoke/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4088,14 +4170,14 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/run-platform-shell-persistence-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-smoke
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-negative-authz-smoke:
     isolated_context: kanbien-staging
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-negative-authz-smoke/script.sh
     - --execute
     stage: acceptance
     evidence_class: live
@@ -4108,7 +4190,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-smoke/script.sh
     - --execute
     stage: acceptance
     evidence_class: live
@@ -4122,7 +4204,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-worker-smoke/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4155,7 +4237,7 @@ checks:
       - package-lock.json
       node_packages: []
     inputs:
-    - scripts/04.deploy/run-platform-shell-worker-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-worker-smoke
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - package.json
   shell-persistence-delivery-proof-check:
@@ -4164,7 +4246,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-delivery-proof/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4190,14 +4272,14 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/run-platform-shell-persistence-delivery-proof
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-delivery-proof
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-worker-smoke:
     isolated_context: kanbien-staging
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-worker-smoke/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-worker-smoke/script.sh
     - --execute
     - --approve-live-worker-smoke
     stage: acceptance
@@ -4211,7 +4293,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-delivery-proof/script.sh
     - --verify-terminal
     stage: acceptance
     evidence_class: live
@@ -4226,7 +4308,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-metric-coverage/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4252,7 +4334,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/run-platform-shell-metric-coverage
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-metric-coverage
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-metric-coverage-policy-check:
     isolated_context: kanbien-staging
@@ -4260,7 +4342,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-metric-coverage/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4286,13 +4368,13 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/verify-platform-shell-metric-coverage
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-metric-coverage
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-policy.json
     - infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-trust.json
     - .github/workflows/platform-shell-staging-metric-coverage.yml
-    - scripts/04.deploy/run-platform-shell-metric-coverage/script.py
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-metric-coverage/script.py
     - package.json
   shell-synthetic-scheduler-check:
     isolated_context: kanbien-staging
@@ -4300,7 +4382,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-synthetic-scheduler/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4326,7 +4408,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/verify-platform-shell-synthetic-scheduler
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-synthetic-scheduler
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-synthetic-policy.json
@@ -4338,7 +4420,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-rate-limit-smoke/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4371,7 +4453,7 @@ checks:
       - package-lock.json
       node_packages: []
     inputs:
-    - scripts/04.deploy/run-platform-shell-rate-limit-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-rate-limit-smoke
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - package.json
   shell-ingress-smoke-check:
@@ -4380,7 +4462,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-ingress-smoke/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4413,7 +4495,7 @@ checks:
       - package-lock.json
       node_packages: []
     inputs:
-    - scripts/04.deploy/run-platform-shell-ingress-smoke
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-ingress-smoke
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - package.json
   shell-metric-coverage:
@@ -4421,7 +4503,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-metric-coverage/script.sh
     stage: acceptance
     evidence_class: live
     effects:
@@ -4433,7 +4515,7 @@ checks:
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-rate-limit-smoke/script.sh
     - --execute
     stage: acceptance
     evidence_class: live
@@ -4447,7 +4529,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4473,17 +4555,17 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/reconcile-platform-shell-staging
+    - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation
     - infra/04.deploy/03.product/targets/kanbien/staging/iam
     - infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
-    - scripts/04.deploy/render-platform-shell-foundation-template
+    - scripts/04.deploy/legacy/kanbien-staging/render-platform-shell-foundation-template
     - scripts/04.deploy/shared/provider-adapters/aws/response.py
     - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
-    - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight
     - scripts/04.deploy/operational-realization-gate
-    - scripts/04.deploy/verify-platform-shell-deploy-readiness
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness
     - scripts/04.deploy/lifecycle/60-run/release-succession
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
   shell-deployment-reconciliation-policy-check:
@@ -4492,7 +4574,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-reconciliation/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4518,7 +4600,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/verify-platform-shell-deployment-reconciliation
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-reconciliation
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json
     - infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json
@@ -4526,15 +4608,15 @@ checks:
     - infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml
     - .github/workflows/reconcile-platform-shell-staging.yml
     - package.json
-    - scripts/04.deploy/assess-platform-shell-foundation-drift/script.py
-    - scripts/04.deploy/reconcile-platform-shell-staging/script.py
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-foundation-drift/script.py
+    - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.py
   shell-artifact-active-drift-assessment-check:
     isolated_context: kanbien-staging
     boundary: integration
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-artifact-drift/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4560,7 +4642,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/assess-platform-shell-artifact-drift
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-artifact-drift
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-foundation-active-drift-assessment-check:
     isolated_context: kanbien-staging
@@ -4568,7 +4650,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-foundation-drift/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4594,7 +4676,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/assess-platform-shell-foundation-drift
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-foundation-drift
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml
   shell-service-active-drift-assessment-check:
@@ -4603,7 +4685,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-service-drift/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4629,7 +4711,7 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/assess-platform-shell-service-drift
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-service-drift
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
   shell-drift-detection-boundary-check:
     isolated_context: kanbien-staging
@@ -4637,7 +4719,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-drift-detection-boundary/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4663,21 +4745,21 @@ checks:
       - requirements.txt
       node_packages: []
     inputs:
-    - scripts/04.deploy/verify-platform-shell-drift-detection-boundary
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-drift-detection-boundary
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation
     - infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json
-    - scripts/04.deploy/reconcile-platform-shell-staging/script.py
-    - scripts/04.deploy/assess-platform-shell-service-drift/script.py
-    - scripts/04.deploy/assess-platform-shell-artifact-drift/script.py
+    - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.py
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-service-drift/script.py
+    - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-artifact-drift/script.py
   shell-deployment-reconciliation:
     isolated_context: kanbien-staging
     boundary: integration
     argv:
     - bash
-    - scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh
     - --mode
     - continuous
     - --json
@@ -4786,9 +4868,9 @@ checks:
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
     - scripts/04.deploy/inventory-deploy-control
     - scripts/04.deploy/validate-container-boundaries
-    - scripts/04.deploy/build-platform-shell-image/script.sh
-    - scripts/04.deploy/smoke-test-platform-shell-image/script.sh
-    - scripts/04.deploy/verify-platform-shell-deployment-workflow
+    - scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow
     - scripts/04.deploy/shared/safe-command-diagnostics.sh
     - scripts/04.deploy/shared/provider-adapters/docker
     - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
@@ -4859,7 +4941,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4881,7 +4963,7 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/verify-platform-shell-deploy-readiness
+    - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness
     - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
     - scripts/04.deploy/lifecycle/60-run/release-succession
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
@@ -4928,7 +5010,7 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
@@ -4954,7 +5036,7 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
-    - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
+    - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight
     - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     - infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
     - scripts/04.deploy/operational-realization-gate
@@ -4962,6 +5044,7 @@ checks:
     - scripts/04.deploy/inventory-deploy-control
   rag-runtime-build-regression:
     isolated_context: rag-rulebook
+    scope_inputs: false
     boundary: integration
     argv:
     - bash
@@ -4978,10 +5061,12 @@ checks:
       tools:
       - bash
       - python3
+      - git
       environment:
       - PATH
       - LANG
       - LC_ALL
+      - TMPDIR
       - PYTHONPATH
       - PYTHONHOME
       - PYTHONHASHSEED
@@ -4989,9 +5074,7 @@ checks:
       - .python-version
       - pyproject.toml
       - requirements.txt
-    inputs:
-    - scripts/02.rag-rulebook/build-local-runtime
-    - scripts/01.harness/artifact-metadata
+    inputs: *rag_fixture_snapshot_inputs
   rag-policy-compiler-regression:
     isolated_context: rag-rulebook
     boundary: integration
@@ -5056,6 +5139,8 @@ checks:
     inputs:
     - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
 repository_inputs:
+- inputs: *workspace_check_inputs
+  checks: [check-selection-workspace-inputs]
 - inputs:
   - scripts/repo/workspace-build
   checks: [runtime-payload-assembly, core-dependency-boundary, entity-smoke-composition, diagnostic-catalog-readers]
@@ -5117,76 +5202,76 @@ repository_inputs:
   # also select the shared compilation/base proof merely because they reside
   # in this target folder.
   exclude_inputs:
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-graph.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-runner.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/feature-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-completion.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-history.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evidence.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/ordinary-update.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execute.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-stop.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/tests/task-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/tests/failure-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/tests/credential-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-binding.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/tests/task-binding-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-graph.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-runner.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/feature-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/recovery-state/recovery-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/credential-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-completion.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/recovery-state/recovery-history.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair/implementation/image-delivery-repair.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/snapshot/snapshot-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/replacement/replacement-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-evidence.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/ordinary-update.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-execute.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/replacement/replacement.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/commands/failure-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/commands/failure-stop.sh
   checks: [entity-smoke-composition-base, entity-smoke-container]
 - inputs:
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-binding.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-control.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-control.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-plan.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-stop.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/tests/failure-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-binding.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-control.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-control.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/commands/failure-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/commands/failure-stop.sh
   checks: [entity-smoke-failure-route, entity-smoke-task-route, entity-smoke-restart-route, entity-smoke-credential-route]
 - inputs:
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-binding-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-graph.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-runner.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/feature-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-completion.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-history.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-steps.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evidence.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restore-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/ordinary-update.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execute.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-plan.sh
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/replacement.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/tests/task-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-binding.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/tests/task-binding-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-graph.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-runner.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/feature-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/recovery-state/recovery-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/credential-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-completion.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/recovery-state/recovery-history.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-steps.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair/implementation/image-delivery-repair.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/snapshot/snapshot-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/replacement/replacement-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-evidence.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/ordinary-update.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-execute.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-plan.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/replacement/replacement.sh
   checks: [entity-smoke-task-route, entity-smoke-restart-route, entity-smoke-credential-route]
 - inputs:
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route-test.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart.sh
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart-route-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart-route.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart.sh
   checks: [entity-smoke-restart-route, entity-smoke-credential-route]
-- inputs: [scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-route-test.py]
+- inputs: [scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/tests/credential-route-test.py]
   checks: [entity-smoke-credential-route]
 - inputs: [scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh]
   checks: [entity-smoke-composition]
@@ -5223,7 +5308,6 @@ repository_inputs:
   - scripts/00.chat/session-log/paths
   checks: [chat-log-maintenance-regression]
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/00.chat/reporting/generate-commit-log-summary
   checks: [chat-summary-regression]
 - inputs:
@@ -5238,37 +5322,37 @@ repository_inputs:
   - scripts/01.harness/check-governed-script-command-drift.sh
   - scripts/01.harness/artifact-metadata/header_discovery.py
   - scripts/01.harness/artifact-metadata/check-headers
+  - .agentic/01.harness/artifact-metadata/taxonomy.yml
   checks: [chat-upstream-portability-regression]
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
   - scripts/01.harness/run-governed-script.sh
   - scripts/01.harness/smoke-test-governed-script-runner.sh
+  - scripts/01.harness/artifact-metadata/header_discovery.py
+  - .agentic/01.harness/artifact-metadata/taxonomy.yml
   checks: [harness-governed-runner-regression]
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
   - scripts/01.harness/check-governed-script-command-drift.sh
   - scripts/01.harness/smoke-test-governed-script-command-drift.sh
   - scripts/01.harness/run-governed-script.sh
+  - scripts/01.harness/artifact-metadata/header_discovery.py
+  - .agentic/01.harness/artifact-metadata/taxonomy.yml
   checks: [harness-command-drift-regression]
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/01.harness/check-deterministic-process-drift.sh
   - scripts/01.harness/smoke-test-deterministic-process-drift.sh
   checks: [harness-process-drift-regression]
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set
   checks: [chat-bootstrap-audit-regression]
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/00.chat/migration/audit-chat-layer-migration
   checks: [chat-migration-audit-regression]
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/00.chat/upstream/ensure-llm-workbench-repo
   checks: [chat-upstream-ensure-regression]
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/00.chat/upstream/check-llm-workbench-contract
   - scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
   - .agentic/00.chat/workflows/chat-start.md
@@ -5297,6 +5381,7 @@ repository_inputs:
   - scripts/01.harness/check-governed-script-command-drift.sh
   - scripts/01.harness/artifact-metadata/header_discovery.py
   - scripts/01.harness/artifact-metadata/check-headers
+  - .agentic/01.harness/artifact-metadata/taxonomy.yml
   checks: [chat-upstream-bootstrap-regression]
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
@@ -5400,6 +5485,7 @@ repository_inputs:
   checks: [chat-log-deletion-regression]
 - inputs:
   - scripts/repo/module-structure/check.mjs
+  - scripts/repo/module-structure/dependencies.mjs
   - scripts/repo/workspace-build
   checks: [core-runtime]
 - inputs:
@@ -5417,9 +5503,9 @@ repository_inputs:
   - scripts/repo/module-structure/check.mjs
   - scripts/repo/module-structure/smoke-test.mjs
   - scripts/repo/module-structure/smoke-test.sh
-  - scripts/repo/workspace-build/dependencies.mjs
+  - scripts/repo/module-structure/dependencies.mjs
   - scripts/repo/workspace-build/declarations.mjs
-  - scripts/repo/workspace-build/dependencies-test.mjs
+  - scripts/repo/module-structure/dependencies-test.mjs
   - package.json
   - package-lock.json
   checks: [module-index-structure-regression]
@@ -5427,6 +5513,7 @@ repository_inputs:
   - scripts/01.harness/check-artifact-path-migration.sh
   - scripts/01.harness/plan-artifact-path-migration.sh
   - scripts/01.harness/smoke-test-artifact-path-migration.sh
+  - docs/04.deploy/plans/verification-diagnostics-timeout-inventory.tsv
   checks: [harness-artifact-migration-regression]
 - inputs:
   - scripts/repo/check-selection/smoke-test.sh
@@ -5501,7 +5588,6 @@ repository_inputs:
   checks:
   - check-selection-repository-contracts
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/01.harness/artifact-metadata/update-lifecycle
   - scripts/01.harness/artifact-metadata/check-headers
   - scripts/01.harness/artifact-metadata/header_discovery.py
@@ -5509,7 +5595,6 @@ repository_inputs:
   checks:
   - harness-lifecycle-metadata-regression
 - inputs:
-  - scripts/repo/check-selection/smoke-test.sh
   - scripts/01.harness/artifact-metadata/check-headers
   - scripts/01.harness/artifact-metadata/header_discovery.py
   - .agentic/00.chat/workflows/chat-start.md
@@ -5569,7 +5654,13 @@ repository_inputs:
   - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
   - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
   - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/github-oidc-bootstrap.yml
-  - scripts/04.deploy/verify-rag-rulebook-deploy-readiness
+  - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness
+  - scripts/01.harness/artifact-metadata/header_discovery.py
+  - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/github-actions-to-ecs-fargate.yml
+  - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-mcp-corpus-gap.yml
+  - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-deploy-readiness-workflow.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   checks:
   - rag-retirement-regression
 - inputs:
@@ -5714,7 +5805,7 @@ repository_inputs:
 - inputs:
   - infra/04.deploy/03.product/targets/kanbien/staging
   - .github/workflows/deploy-platform-shell-staging.yml
-  - scripts/04.deploy/verify-platform-shell-deployment-workflow
+  - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow
   checks:
   - shell-declaration
   - shell-infrastructure
@@ -5777,7 +5868,7 @@ repository_inputs:
   checks: [diagnostic-catalog-readers, core-target-declaration-regression, bootstrap-target-controls-regression, restore-connection-diagnostics, entity-smoke-composition, persistence-composition, persistence-payload-regression, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression]
 - inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/response.py
-  - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+  - scripts/04.deploy/legacy/kanbien-staging/shared/provider-adapters/aws/cognito-provisioning.py
   - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
   checks:
   - persistence-provider-regression
@@ -5793,7 +5884,7 @@ repository_inputs:
   checks:
   - container-boundaries-regression
 - inputs:
-  - scripts/04.deploy/verify-platform-shell-deploy-readiness
+  - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness
   - scripts/04.deploy/lifecycle/60-run/release-succession
   checks:
   - shell-release-evidence-regression
@@ -5804,7 +5895,7 @@ repository_inputs:
   checks: [release-succession-regression, ordinary-update-regression]
 - inputs:
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ordinary-update.py
-  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/ordinary-update.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/ordinary-update.py
   - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
   - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml
   - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml
@@ -5819,9 +5910,76 @@ repository_inputs:
   checks:
   - source-review-history-regression
 - inputs:
-  - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-candidate-execution-preflight
   checks:
   - shell-candidate-preflight-regression
+# Direct preparation has no scope census. Bind retained implementation edits
+# to their existing local owners without making their broad proof inputs into
+# repository-wide selection triggers.
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh]
+  checks: [shell-publication]
+- inputs:
+  - scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image
+  - infra/04.deploy/03.product/image/Dockerfile.dockerignore
+  checks: [shell-image-smoke]
+- inputs:
+  - infra/04.deploy/03.product/image/Dockerfile
+  - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-observability-prerequisites/script.sh
+  checks: [shell-infrastructure-policy]
+- inputs:
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-record-schema.yml
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+  checks: [entity-smoke-acceptance-controls]
+- inputs: [infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml]
+  checks: [entity-smoke-infrastructure-route]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-artifact-drift]
+  checks: [shell-artifact-active-drift-assessment-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-foundation-drift]
+  checks: [shell-foundation-active-drift-assessment-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-service-drift]
+  checks: [shell-service-active-drift-assessment-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-negative-authz-client]
+  checks: [shell-negative-authz-client-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-persistence-write-client]
+  checks: [shell-persistence-write-client-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging]
+  checks: [shell-deployment-reconciliation-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/render-platform-shell-foundation-template]
+  checks: [shell-infrastructure-policy]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-controlled-smoke]
+  checks: [shell-controlled-smoke-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-ingress-smoke]
+  checks: [shell-ingress-smoke-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-metric-coverage]
+  checks: [shell-metric-coverage-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-negative-authz-smoke]
+  checks: [shell-negative-authz-smoke-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-admission-probe]
+  checks: [shell-persistence-admission-probe-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-delivery-proof]
+  checks: [shell-persistence-delivery-proof-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-smoke]
+  checks: [shell-persistence-smoke-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke]
+  checks: [shell-postgresql-relational-smoke-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-rate-limit-smoke]
+  checks: [shell-rate-limit-smoke-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-worker-smoke]
+  checks: [shell-worker-smoke-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-artifact-store]
+  checks: [shell-artifact-store-policy]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-reconciliation]
+  checks: [shell-deployment-reconciliation-policy-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-drift-detection-boundary]
+  checks: [shell-drift-detection-boundary-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-metric-coverage]
+  checks: [shell-metric-coverage-policy-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-live-boundary]
+  checks: [shell-postgresql-live-boundary-check]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference]
+  checks: [shell-postgresql-reference-regression]
+- inputs: [scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-synthetic-scheduler]
+  checks: [shell-synthetic-scheduler-check]
 - inputs:
   - scripts/02.rag-rulebook/build-local-runtime
   - scripts/01.harness/artifact-metadata

@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -19,9 +19,9 @@
 #     targets: []
 #   used_by:
 #   - id: deploy.script.build-platform-shell-image
-#     path: scripts/04.deploy/build-platform-shell-image/script.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh
 #   - id: deploy.script.smoke-test-platform-shell-image
-#     path: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh
 
 # The build image is deliberately separate from the image that is deployed.
 # Build tooling needs a package manager; the running server does not.
@@ -49,7 +49,7 @@ COPY packages/ ./packages/
 COPY platform/ ./platform/
 COPY products/ ./products/
 COPY infra/04.deploy/03.product/entrypoints/ ./infra/04.deploy/03.product/entrypoints/
-COPY scripts/04.deploy/build-platform-shell-image/ ./scripts/04.deploy/build-platform-shell-image/
+COPY scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/ ./scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/
 COPY scripts/repo/workspace-build/declarations.mjs scripts/repo/workspace-build/compile.mjs scripts/repo/workspace-build/project-selection.mjs scripts/repo/workspace-build/script.mjs scripts/repo/workspace-build/runtime-packages.mjs ./scripts/repo/workspace-build/
 
 RUN npm ci --ignore-scripts \

@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -15,7 +15,7 @@
 #   effects: [network, writes-files]
 #   used_by:
 #   - id: deploy.library.entity-smoke.deployment-control
-#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/deployment-control.py
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/deployment-control.py
 #   - id: deploy.library.core-persistence.change-set-operations
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/change-set-operations.py
 #   - id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
