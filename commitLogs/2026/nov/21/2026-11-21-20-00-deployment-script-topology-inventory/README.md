@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-26T11:55:21Z
-latest_commit_sha: 7286d19f5dc98e64b1486bf421d24c034984a8dd
-chat_duration: 402883s (04:15:54:43)
+latest_commit_at_utc: 2026-11-26T17:37:37Z
+latest_commit_sha: 329e243161a91d92372f0331a1f77265960d41f4
+chat_duration: 423419s (04:21:36:59)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1585,6 +1585,17 @@ ADR needed: no
 
 Reason: This documents bounded review and completion reporting within existing harness owners; no new architecture, runtime, scheduler or executable enforcement boundary.
 
+
+### 2026-11-26T17:37:37Z - Commit recorded
+
+Commit: `329e243161a91d92372f0331a1f77265960d41f4`
+
+Message: docs(harness): govern script admission review and cost reporting
+
+Summary: Published candidate documents: bounded admission-review workflow, nine calibration examples, conditional commit checklist, and growth-and-cost reporting. Prepared/staged metadata and process gates passed; two existing portability integration checks remain required before merge.
+
+ADR impact: No new architecture decision; existing governance owners extended.
+
 ## Sub-Agent Activity
 
 
@@ -1752,6 +1763,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Eight documentation/log files record verified main publication at 5700a3a9, completed P6/P7 status, exact counts and retained live/cost limits. Corrected two stale broad-diagnostic scheduling instructions against the unchanged deferred catalogue; no runtime/source changes. Independent review approved links, manifest rows and claims. Corrected metadata preparation passed in 33.062 seconds; affected integration passed 16 checks (10 executed, six reused), 13 deferred, zero findings in 257.764 seconds; report .cache/test-runs/20261126T115358Z-68baf453fdd1432ab9625d3c112cb5d8/report.json. Staged commit gate passed in 48.841 seconds. Initial prose-sequence finding was corrected without a new exception or script.
   ADR impact: No new architecture decision; documentation reconciles the approved implementation and existing check ownership.
 
+
+- Commit: `329e243161a91d92372f0331a1f77265960d41f4`
+  Time UTC: 2026-11-26T17:37:37Z
+  Message: docs(harness): govern script admission review and cost reporting
+  Summary: Published candidate documents: bounded admission-review workflow, nine calibration examples, conditional commit checklist, and growth-and-cost reporting. Prepared/staged metadata and process gates passed; two existing portability integration checks remain required before merge.
+  ADR impact: No new architecture decision; existing governance owners extended.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1765,9 +1783,9 @@ Reason: This documents bounded review and completion reporting within existing h
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-26T11:55:21Z
-Latest commit SHA: 7286d19f5dc98e64b1486bf421d24c034984a8dd
-Chat duration: 402883s (04:15:54:43)
+Latest commit at UTC: 2026-11-26T17:37:37Z
+Latest commit SHA: 329e243161a91d92372f0331a1f77265960d41f4
+Chat duration: 423419s (04:21:36:59)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
