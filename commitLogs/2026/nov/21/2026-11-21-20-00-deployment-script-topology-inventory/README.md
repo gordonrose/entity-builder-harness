@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-25T02:05:40Z
-latest_commit_sha: 4bc30ec8
-chat_duration: 281102s (03:06:05:02)
+latest_commit_at_utc: 2026-11-26T11:27:54Z
+latest_commit_sha: 084d2f37
+chat_duration: 401236s (04:15:27:16)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1523,6 +1523,17 @@ Summary: Complete corrected candidate passed; final dormant-RAG safety correctio
 
 Durable evidence: 133 checks passed (28 executed, 105 reused), 28 remained later/manual-stage, zero findings; 1177.492 seconds; report .cache/test-runs/20261126T111455Z-7812a266dd484165b511b539dc04e342/report.json. All four prior failures and blocked package-source owner passed. Restore accidental recognition regeneration to exact HEAD SHA256 6089185bb1056fd87e15d6595b8c444e530360428fb8107b54134fde8abf646f; replace task-added retrieval coupling with actual R01 reference proof and isolate the two existing runtime fixtures using disposable current-source copies. Existing plan records named risks, preserved assertions, manual retrieval route and integrated qualification still due. No new program, live action, schedule change or ADR; existing migration/test-isolation owners govern this correction.
 
+
+### 2026-11-26T11:27:54Z - Commit recorded
+
+Commit: `084d2f37`
+
+Message: refactor(scripts): complete governed layout and verification ownership
+
+Summary: P6/P7: 208 approved existing-file moves including 173 deployment sources, 31 Markdown companions and four repository helper/test files; preserve historical readers, independent proof ownership and dormant legacy automation. Complete candidate: 133 passed (28 executed, 105 reused), 28 deliberately deferred, 1177.492s; subsequent protected-RAG isolation correction: 3 affected checks passed in 91.282s. Final preparation 117.726s and staged commit gate 71.991s passed; frozen recognition and 90 historical evidence records unchanged. Main integration/publication remains outstanding; no live deployment performed.
+
+ADR impact: Existing approved P6/P7 design implemented; no new architectural decision.
+
 ## Sub-Agent Activity
 
 
@@ -1676,6 +1687,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Record the successfully published 21365c76 checkpoint and repair implicit empty-diff context, preserving explicit context rejection. Existing focused and registered promotion proof passed; normal follow-up publication pending.
   ADR impact: No new ADR; bounded correction at existing selector and refresh handoff.
 
+
+- Commit: `084d2f37`
+  Time UTC: 2026-11-26T11:27:54Z
+  Message: refactor(scripts): complete governed layout and verification ownership
+  Summary: P6/P7: 208 approved existing-file moves including 173 deployment sources, 31 Markdown companions and four repository helper/test files; preserve historical readers, independent proof ownership and dormant legacy automation. Complete candidate: 133 passed (28 executed, 105 reused), 28 deliberately deferred, 1177.492s; subsequent protected-RAG isolation correction: 3 affected checks passed in 91.282s. Final preparation 117.726s and staged commit gate 71.991s passed; frozen recognition and 90 historical evidence records unchanged. Main integration/publication remains outstanding; no live deployment performed.
+  ADR impact: Existing approved P6/P7 design implemented; no new architectural decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1689,9 +1707,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-25T02:05:40Z
-Latest commit SHA: 4bc30ec8
-Chat duration: 281102s (03:06:05:02)
+Latest commit at UTC: 2026-11-26T11:27:54Z
+Latest commit SHA: 084d2f37
+Chat duration: 401236s (04:15:27:16)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
