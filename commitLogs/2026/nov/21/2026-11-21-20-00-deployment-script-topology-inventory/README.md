@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-26T11:27:54Z
-latest_commit_sha: 084d2f37
-chat_duration: 401236s (04:15:27:16)
+latest_commit_at_utc: 2026-11-26T11:55:21Z
+latest_commit_sha: 7286d19f5dc98e64b1486bf421d24c034984a8dd
+chat_duration: 402883s (04:15:54:43)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1545,6 +1545,17 @@ Summary: P6/P7 implementation published. Task `084d2f37` merged normally into ma
 
 Durable evidence: Refresh base `237dbcf18fc0be11f35c6a66a9738d83d15d10b4`; source-identical candidate `af47d3e02174ca3e7214cfde912977dce2304609`. Complete integrated proof: 132 passed (19 executed, 113 reused), 28 declared stage/manual deferrals, zero findings, 706.430 seconds; report `.cache/test-runs/20261126T114050Z-a94c9caaf7f0471fa1d69c3ecfdb20b6/report.json`. Main readiness eligible in 86.678 seconds, with 132 reused and zero executed; report `.cache/test-runs/20261126T114236Z-32de8ded6d55444bbf35f321fc876720/report.json`. Independent census: 521 entrypoints, six scopes, zero gaps. All 90 historical records and two frozen snapshots unchanged. Preflight branch `agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-87d81f578585/20261126112805` and its worktree under `/var/tmp/kanbien-p6-proof.oel6Cb/agentic-main-refresh-preflight/` retained. No live deployment, workflow dispatch, schedule change or retirement; no ten-minute complete-release claim.
 
+
+### 2026-11-26T11:55:21Z - Commit recorded
+
+Commit: `7286d19f5dc98e64b1486bf421d24c034984a8dd`
+
+Message: docs(scripts): record publication and reconcile verification guidance
+
+Summary: Eight documentation/log files record verified main publication at 5700a3a9, completed P6/P7 status, exact counts and retained live/cost limits. Corrected two stale broad-diagnostic scheduling instructions against the unchanged deferred catalogue; no runtime/source changes. Independent review approved links, manifest rows and claims. Corrected metadata preparation passed in 33.062 seconds; affected integration passed 16 checks (10 executed, six reused), 13 deferred, zero findings in 257.764 seconds; report .cache/test-runs/20261126T115358Z-68baf453fdd1432ab9625d3c112cb5d8/report.json. Staged commit gate passed in 48.841 seconds. Initial prose-sequence finding was corrected without a new exception or script.
+
+ADR impact: No new architecture decision; documentation reconciles the approved implementation and existing check ownership.
+
 ## Sub-Agent Activity
 
 
@@ -1705,6 +1716,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: P6/P7: 208 approved existing-file moves including 173 deployment sources, 31 Markdown companions and four repository helper/test files; preserve historical readers, independent proof ownership and dormant legacy automation. Complete candidate: 133 passed (28 executed, 105 reused), 28 deliberately deferred, 1177.492s; subsequent protected-RAG isolation correction: 3 affected checks passed in 91.282s. Final preparation 117.726s and staged commit gate 71.991s passed; frozen recognition and 90 historical evidence records unchanged. Main integration/publication remains outstanding; no live deployment performed.
   ADR impact: Existing approved P6/P7 design implemented; no new architectural decision.
 
+
+- Commit: `7286d19f5dc98e64b1486bf421d24c034984a8dd`
+  Time UTC: 2026-11-26T11:55:21Z
+  Message: docs(scripts): record publication and reconcile verification guidance
+  Summary: Eight documentation/log files record verified main publication at 5700a3a9, completed P6/P7 status, exact counts and retained live/cost limits. Corrected two stale broad-diagnostic scheduling instructions against the unchanged deferred catalogue; no runtime/source changes. Independent review approved links, manifest rows and claims. Corrected metadata preparation passed in 33.062 seconds; affected integration passed 16 checks (10 executed, six reused), 13 deferred, zero findings in 257.764 seconds; report .cache/test-runs/20261126T115358Z-68baf453fdd1432ab9625d3c112cb5d8/report.json. Staged commit gate passed in 48.841 seconds. Initial prose-sequence finding was corrected without a new exception or script.
+  ADR impact: No new architecture decision; documentation reconciles the approved implementation and existing check ownership.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1718,9 +1736,9 @@ Reason: This refines existing check-selection and chat-refresh owners without ch
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-26T11:27:54Z
-Latest commit SHA: 084d2f37
-Chat duration: 401236s (04:15:27:16)
+Latest commit at UTC: 2026-11-26T11:55:21Z
+Latest commit SHA: 7286d19f5dc98e64b1486bf421d24c034984a8dd
+Chat duration: 402883s (04:15:54:43)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
