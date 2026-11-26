@@ -120,6 +120,10 @@ Phase 1 deployment script topology classification and migration proposal
 - Summary: Publication candidate is now based on accepted main and remains in the original November 21 chat worktree. Source review, staged commit gate and combined-result verification passed; local merge and remote push remain pending.
   Durable evidence: Retained rehearsal: agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9/20261126173738 at /var/tmp/kanbien-admission-promotion.CTxckp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9-20261126173738. Safe temporary root /var/tmp/kanbien-admission-promotion.CTxckp avoids nearly full /tmp and is held constant for evidence reuse. No cleanup authorised or performed. Growth: one calibration Markdown document, five existing governance/plan documents and session bookkeeping changed; zero script-source files added, removed or moved; no new automatic checks. Conditional agent review and completion reporting remain workflow duties, not authenticated automatic enforcement.
 
+
+- Summary: Completed approved publication on 2026-11-26: task commit 329e243161a91d92372f0331a1f77265960d41f4 is included in main merge 83af09c63deeb43113ebf6d34ea6523cb448ef13. Normal push to origin/main succeeded; direct remote query and local main/origin/main all matched that exact merge.
+  Durable evidence: Final merge selection reused all 12 passing checks in 14.87 seconds with zero re-execution; delivery inventory reported zero gaps. Original combined-result proof took 170.19 seconds. Broad repository contracts remained deferred; no application suite or live deployment was run. This post-publication session receipt is local bookkeeping only; approved task documents are published. The rehearsal worktree remains retained, and task ownership remains November 21.
+
 ## Activity Log
 
 ### 2026-11-26 - Final handoff review before checkpoint
@@ -1617,6 +1621,13 @@ ADR impact: covered by session ADR disposition
 Summary: Publication candidate is now based on accepted main and remains in the original November 21 chat worktree. Source review, staged commit gate and combined-result verification passed; local merge and remote push remain pending.
 
 Durable evidence: Retained rehearsal: agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9/20261126173738 at /var/tmp/kanbien-admission-promotion.CTxckp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9-20261126173738. Safe temporary root /var/tmp/kanbien-admission-promotion.CTxckp avoids nearly full /tmp and is held constant for evidence reuse. No cleanup authorised or performed. Growth: one calibration Markdown document, five existing governance/plan documents and session bookkeeping changed; zero script-source files added, removed or moved; no new automatic checks. Conditional agent review and completion reporting remain workflow duties, not authenticated automatic enforcement.
+
+
+### 2026-11-26T17:44:09Z - Context hygiene
+
+Summary: Completed approved publication on 2026-11-26: task commit 329e243161a91d92372f0331a1f77265960d41f4 is included in main merge 83af09c63deeb43113ebf6d34ea6523cb448ef13. Normal push to origin/main succeeded; direct remote query and local main/origin/main all matched that exact merge.
+
+Durable evidence: Final merge selection reused all 12 passing checks in 14.87 seconds with zero re-execution; delivery inventory reported zero gaps. Original combined-result proof took 170.19 seconds. Broad repository contracts remained deferred; no application suite or live deployment was run. This post-publication session receipt is local bookkeeping only; approved task documents are published. The rehearsal worktree remains retained, and task ownership remains November 21.
 
 ## Sub-Agent Activity
 
