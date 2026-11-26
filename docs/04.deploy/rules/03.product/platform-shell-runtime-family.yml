@@ -4,7 +4,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -160,7 +160,7 @@ rules:
       - "Do not hardcode target authz maps or CORS origins in ordinary app feature code."
     required_checks:
       - "Verify deploy-readiness manifests include an auth section with provider, token_validation, permission_mapping, route_exposure, health_exposure, cors, rate_limiting, and secrets fields."
-      - "Run scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh for the target profile before treating readiness as passed."
+      - "Run scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh for the target profile before treating readiness as passed."
     agent_guidance: >
       Treat Cognito as the first target identity provider, not as an app
       contract. Apps own permissions; target profiles map real identities to

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.workspace-context
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [architecture, security]
@@ -25,7 +25,7 @@ import subprocess
 from pathlib import Path
 
 WRAPPER = 'scripts/repo/diagnostic-coverage/verify.sh'
-PROJECTOR = 'scripts/repo/workspace-build/check-inputs.mjs'
+PROJECTOR = 'scripts/repo/check-selection/check-inputs.mjs'
 OWNER = 'scripts/repo/check-selection/workspace_context.py'
 
 

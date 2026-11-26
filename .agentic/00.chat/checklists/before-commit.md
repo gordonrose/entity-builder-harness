@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.checklists.before-commit
-  version: 3
+  version: 4
   status: active
   created_on: "2026-06-15"
-  updated_on: "2026-11-20"
+  updated_on: "2026-11-26"
   layer: 00.chat
   domain: git
   disciplines:
@@ -60,6 +60,21 @@ If this flags staged process prose, propose moving the deterministic part into a
 script or gate, or keeping the prose with an allow marker and reason.
 
 ## Artifact Metadata
+
+### Conditional script-admission review
+
+<!-- deterministic-check: allow reason="bounded source/approval review remains agent-mediated; no existing commit hook authenticates a generic model review" -->
+For new script admissions or changes to their owner, responsibility, consumers,
+effects or execution timing, complete the
+[bounded admission review](../../01.harness/workflows/run-agent-review.md#script-admission-review-pilot)
+before preparation. After preparation's metadata writes, inspect what changed
+and confirm final reviewed identities without repeating unchanged findings.
+Compare those identities with the staged candidate before the final gate;
+resolve concrete required-rule findings and report missing or stale review as
+incomplete. Ordinary edits outside that trigger keep their existing checks.
+This is an agent-workflow requirement, not a model call inside Git.
+
+### Existing preparation and header checks
 
 Before final verification or image qualification, complete preparation for the
 explicit task paths:

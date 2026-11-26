@@ -4,7 +4,7 @@
   version: 43
   status: active
   created_on: "2026-09-01"
-  updated_on: "2026-10-20"
+  updated_on: "2026-11-26"
   layer: 05.education
   domain: education
   disciplines:
@@ -11381,7 +11381,7 @@ for manual chat-by-chat coordination.
 - [Kanbien one-pass relay entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts)
 - [Kanbien durable worker entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts)
 - [Kanbien task lease-owner helper](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts)
-- [Bounded persistence delivery-proof runner](../../../scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md)
+- [Bounded persistence delivery-proof runner](../../../scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-delivery-proof/README.md)
 - [Staging persistence table source](../../../infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/persistence.yml)
 - [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
 - [Current persistence session log](../../../commitLogs/2026/sep/23/2026-09-23-18-13-record-worker-telemetry-evidence/README.md)

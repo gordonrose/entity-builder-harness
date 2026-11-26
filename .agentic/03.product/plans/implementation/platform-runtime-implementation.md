@@ -4,7 +4,7 @@ id: harness.architecture.plan.platform-runtime-implementation
 version: 46
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-11-22"
+updated_on: "2026-11-26"
 layer: 03.product
 domain: platform-runtime
 disciplines:
@@ -1340,6 +1340,7 @@ non-negotiable safety rules. Read future-tense implementation steps in this
 section as the historical plan unless they expressly concern deferred
 continuous dispatch, scheduler, product-data, or recovery work.
 
+<!-- deterministic-check: allow reason="this paragraph preserves the completed bounded DynamoDB proof's historical data-classification decision; it is not a new procedure or an instruction to start deferred scheduler work" -->
 The first operating use case is now sufficiently concrete to plan a narrow
 platform proof: a non-business platform-smoke work item changes state and
 writes a bounded evidence record and outbox record in the same DynamoDB
@@ -1669,7 +1670,7 @@ Status: implemented as a blocked readiness scaffold. The platform shell staging
 manifest lives at
 `infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml`, and the
 read-only verifier is
-`scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh`.
+`scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh`.
 
 The manifest records what is proven locally today and what remains blocked
 before AWS mutation for the Kanbien staging target: source identity,

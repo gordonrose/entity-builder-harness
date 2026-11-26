@@ -4,7 +4,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -26,7 +26,7 @@ collected_schemas:
 composite_members:
   tasks: [bootstrap, migration, grant-runtime, baseline-permissions, original-record, lifecycle, collision, baseline-read, replacement-read, initial-read, migration-state, permission-state, credential-revoke, credential-unready, credential-restore, credential-read, credential-permissions, restore-read, final-read]
   controls: [server-replacement, initial-stop, initial-restart, credential-replacement, snapshot, restore-deployment, restore-cleanup]
-acceptance_owner: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-state.py
+acceptance_owner: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-state.py
 historical_validation: original-bytes-lineage-and-meaning-not-current-health
 new_promotion: current-contracts-and-fresh-same-candidate-proof
 accepted_rollback_reuse:

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 22
-status: draft
+version: 28
+status: active
 created_on: "2026-11-23"
-updated_on: "2026-11-25"
+updated_on: "2026-11-26"
 layer: 06.shared
 domain: governance
 disciplines: [agentic, architecture, sre]
@@ -18,15 +18,191 @@ used_by:
 
 # Script-library simplification programme
 
+## Follow-up: script growth-and-cost reporting — 2026-11-26
+
+The user approved making script growth and recurring verification cost visible
+in completion reports. This bounded follow-up changes only the existing shared
+completion standard and this plan in the recorded November 21 worktree. Its
+original implementation authority did not itself authorise a commit, merge or
+push, and did not alter the preceding admission pilot.
+
+The existing completion standard already owns delivery-cost assessment; extend
+that owner instead of adding a report template, catalogue or script. Its
+consumers are agents following `AGENTS.md` and the existing shared and layer
+workflows. The test-execution standard still owns timing and delivery-budget
+semantics; admission still owns new-script necessity and review decisions.
+
+Named risk: a completion report can hide source growth or recurring review
+cost behind "no new automatic checks", or claim savings without measurements.
+The statement distinguishes script-source additions/removals/moves, automatic
+checks and required reviews with their triggers, and measured/unknown costs.
+It uses existing evidence, with no extra census, benchmark or enforcement hook.
+
+Planned proof: consolidated source review against the connected standards,
+then the existing path-scoped header and deterministic-process checks and
+whitespace validation. Structural-check budget: one minute. No executable
+commands or links are added; command-drift scanning and runtime/integration
+suites are deferred because neither execution nor command routing changes.
+
+Completed: the parent reviewed the connected completion, timing and admission
+guidance; independent reviewer `/root/admission_hook_fit` confirmed no required
+corrections. The final source change passed the two-file metadata-header check
+(0.18 seconds) and deterministic-process check (0.03 seconds), run concurrently
+within the one-minute budget. Whitespace validation passed. Review duration
+was not separately measured; these check timings are not total task/delivery
+timing. Previously recorded admission-pilot evidence was retained, with all
+four artifact identities confirmed unchanged; its calibration was not rerun.
+
+Growth and cost for this follow-up: zero script-source files added, removed or
+moved; two existing documentation files updated. Automatic checks and required
+agent-review triggers are unchanged. The only recurring duty added is the short
+reporting statement; its writing cost is unmeasured. No runtime verification
+was performed. The subsequent approved documentation publication is recorded
+below; broader enforcement remains unchanged.
+
+## Follow-up: bounded script-admission review — 2026-11-26
+
+The user approved designing a changed-script review, trying known good/bad
+examples, and enabling only reliable commit requirements. This follow-up stays
+in the recorded November 21 worktree at starting HEAD
+`92ce4cbceb4c62a6d982927849ce8a5057ce0759`. Its original implementation
+request did not authorise a commit, merge or push.
+
+Reuse the existing admission standard, single-agent review workflow and
+before-commit checklist. The existing commit hook validates headers and
+prepared check inputs; it has no authenticated generic model-review receipt.
+Do not repurpose the diagnostic adoption ledger, trust a self-written pass
+flag, or describe preparation hashes as proof a reviewer actually reviewed.
+The bounded deliverable is a workflow-invoked review pilot with manual source
+freshness confirmation, not an automatic model invocation or a new Git gate.
+
+Affected owners and consumers:
+- `.agentic/01.harness/standards/script-admission.md`: evidence and decision
+  requirements for new or materially changed admissions.
+- `.agentic/01.harness/workflows/run-agent-review.md`: conditional review and
+  calibration procedure; existing reviewer and report shape remain authoritative.
+- `.agentic/00.chat/checklists/before-commit.md`: invoke the bounded workflow
+  before existing preparation, only when admission is affected.
+- `.agentic/01.harness/evals/script-admission.md`: one new metadata-bearing,
+  non-executable calibration document; known acceptable, unacceptable and
+  incomplete cases, not a source file or ordinary commit test suite.
+- This plan: scope, reviewed evidence, measured checks and retained limits.
+
+No runtime or diagnostic predicate changes: no executable source, catalogue,
+hook, scheduler, permission or live-operation changes are planned. General
+review scores retain their existing meaning, but no scorecard is consumed by
+the commit hook. Named rule breaches require resolution; model opinions,
+missing review and code/test failures remain distinct.
+
+Acceptance: an independent bounded reviewer evaluates cases before seeing
+their expected answers; record false positives, misses and corrections here.
+Then validate only changed metadata, links, process/command drift and whitespace.
+Review target is one minute; scoped structural verification budget is two
+minutes. Record actual overruns without automatic retries or fabricated passes.
+Existing header/preparation gates remain the only automated commit enforcement
+affected by this explanation; no universal 50-line approval gate is claimed.
+### Review and calibration evidence
+
+Implementation is complete as a workflow-level pilot. Existing automated
+commit checks are unchanged. Independent reviewer `/root/admission_hook_fit`
+found one necessary correction: metadata preparation may change reviewed
+bytes. The three handoff passages now agree: semantic review, inspect preparation
+changes, confirm final identities, then compare the staged candidate before
+the final gate. The reviewer confirmed closure with no further required changes.
+
+Independent Senior Prompt Engineer reviewer `/root/admission_calibration`
+received synthetic case inputs and the owning rules, without expected answers
+or this plan. A-H all matched their required/forbidden outcomes: A/E accepted,
+B/C/D required concrete corrections, F did not reopen admission, G/H retained
+an explicit review gap rather than a code failure. No unnecessary objections
+to the valid examples and no false passes were observed in this sample.
+Measured first review was 40 seconds (17:13:38–17:14:18 UTC), excluding report
+delivery and orchestration; this is not end-to-end commit timing.
+
+The preparation correction added case I. Only I and A/E's affected freshness
+advice were reassessed, in 11 seconds (17:16:02–17:16:13 UTC), excluding report
+delivery. Unaffected decisions were retained. I correctly preserves semantic
+findings after an inspected lifecycle-date-only change, but requires recording
+and comparing the final identity. All nine scenarios now match their expected
+observations. This is a small synthetic semantic calibration, not nine executed
+code tests, a statistically established reliability rate or a complete real
+commit demonstration. No expected outcome was rewritten to hide a miss.
+
+Reviewed final SHA-256 identities:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Admission standard v4 | `f7aa384f10c3f34247ad6ad1b9eb10c076760db23c296508d0a6de5b64b93794` |
+| Review workflow v2 | `0f1600d5380834c216653d3eaafd678f6566b9a801710901d9e663438fb9abff` |
+| Before-commit checklist v4 | `d32b14d6830d345c0fa51d809575eb4d7dce02651c64c09131a6f36fd535678b` |
+| Calibration document v1 | `3fde0331df21431d18a26cde7eeaec08f1730cc677e3be1bc30e829ad1e69f13` |
+
+Final scoped structural checks passed: five metadata headers (0.40 seconds),
+deterministic process drift (0.10 seconds), and governed command drift (39.54
+seconds), run concurrently within the two-minute structural budget. The six
+validated added relative links/anchors did not change during correction;
+whitespace validation also passed after removing a trailing blank line in the
+new document (no semantic change; recorded final identity updated).
+The reviewer confirmed the final handoff
+correction; the parent checked the complete diff and the four recorded hashes.
+Status: bounded workflow pilot and nine-case calibration complete. The approved
+documentation set was committed in `329e243161a91d92372f0331a1f77265960d41f4`,
+merged into `main` and pushed to `origin/main` as
+`83af09c63deeb43113ebf6d34ea6523cb448ef13`. The merge selection passed its
+twelve existing local checks; its broad repository-contract check remained
+explicitly deferred. No product/runtime suite, broad architecture census,
+admission-registry implementation, new source file or automatic review
+attestation was added. The 50-line approval requirement remains a review
+obligation, not a new mechanical gate.
+
 ## Read this first
+
+### Autonomous completion authority — 2026-11-26
+
+The user explicitly authorized completion of all remaining P6/P7 work, bounded
+necessary corrections, local verification, coherent commits, normal integration
+into main and pushing the existing remote main. This supersedes the historical
+increment/milestone stop-and-approve instructions below for this finite scope.
+Keep briefings and evidence current without waiting for routine approvals.
+Task edits stay in the session-recorded November 21 worktree; use the existing
+integration console only for governed integration operations. Preserve unrelated
+changes, accepted historical evidence, existing schedules and operational
+permissions. No live deployment, retirement, history rewrite, force push or
+unrelated feature work is authorized. Existing audited files may move at their
+current size; genuinely new source remains subject to the 50-code-line rule.
+
+Starting checkout: `1ed9157cca73d43ba113d59238f12740caa94594`, with the recorded
+P4/P5/P6 changes still uncommitted. The remaining execution packets are selector
+helper/test ownership, the exact 173-source/31-Markdown deployment manifest,
+necessary verification corrections, P7 admission/effects/docs reconciliation,
+then stable full-candidate proof and actual publication. Parallel contributors
+own disjoint source groups; the parent integrates shared catalogue/review/path
+records and reviews connected behavior before final verification. Earlier
+focused successes remain evidence at their original inputs, not a final pass.
+
+Source authorization: the user's attached goal in this conversation on
+2026-11-26. The existing completion contract remains authoritative; no approved
+manifest rows may be silently dropped, and no goal completion is claimed until
+the intended commits are verified on local and remote main.
 
 This is the single implementation plan for the chat's script-library goal.
 Revision 17 withdrew the previous claim that M1–M7 meant the programme was
 complete. Revision 18 incorporates the requested complete 690-source-file
 review. Revision 19 records the approved P1 ownership repair and passing focused
 proof. Revision 20 records P2's selection/context corrections and measured
-verification below. Earlier implemented work is retained; end-to-end acceptance
-and publication remain open.
+verification below. P3 and its completion correction are now published on main
+at 237dbcf18fc0be11f35c6a66a9738d83d15d10b4. Revision 23 records the approved
+P4 documentation audit and approved concrete layout. P5's bounded local handoff
+and measured registered proof are recorded. P6/P7 implementation is complete in
+task commit `084d2f37` and published on local and remote main through
+`5700a3a92ca1f0af12a7fa5fd61aca5f122d09e2`. All approved deployment moves
+(173 source files and 31 Markdown companions), the four repository helper/test
+moves, historical readers, verification ownership and runner/admission changes
+are included. The final integrated candidate passed 132 checks with 28 declared
+stage/manual deferrals and zero findings. Main readiness reused all 132 results
+without executing another check. The protected RAG correction is included and
+historical records remain unchanged. See the final publication record below.
+Earlier dated checkpoints are historical, not current publication blockers.
 
 The goal is understandable, manageable scripts and fast normal repository work,
 with enough evidence to protect the action being taken. This supports the
@@ -770,6 +946,95 @@ and requires explicit approval; this completion does not authorise migration.
 **Outcome:** a finite, reviewable set of retained capabilities and approved
 moves covers the current script estate.
 
+### Approved audit packet — 2026-11-25
+
+The user said "proceed" after the P3 publication briefing. This approves P4's
+source reconciliation, disposition proposal and navigation edits, not physical
+moves, legacy retirement, new scheduling, commits, merge or push. Task ownership
+remains the session-recorded November 21 worktree at source 1ed9157c. Local and
+tracking main are 237dbcf1, whose qualified source is contained and published.
+
+Reuse the 690-file ledger in `scripts/helpers/audit.md`; reconcile its fixed
+suffix set and all 17 changed sources against reviewed head 33f479b1. No new
+source file or deleted source needs classification. Document the finite mapping
+in that same audit and the existing deployment migration plan; do not create
+another executable registry or regenerate the structural helper catalogue.
+
+Affected documents: this plan; `scripts/helpers/audit.md`;
+`.agentic/04.deploy/plans/migration/entity-smoke-runtime-script-topology.md`;
+`docs/04.deploy/plans/core-platform-deployment-route-inventory.md`;
+`scripts/04.deploy/README.md`; `scripts/04.deploy/inventory-deploy-control/README.md`;
+and the current session README. No runtime predicate, diagnostic schema or
+source-review hash changes: these are source-backed documentation decisions.
+Verification budget: five minutes for bounded count/mapping, link, metadata,
+prose and whitespace checks; selection preview only, no broad execution.
+
+Known decision before migration: the current placement standard/validator has
+no legacy namespace, and the existing 76-file Entity proposal's cohesive role
+folders are not its canonical component shape. Propose the exact destinations,
+but require explicit user approval and one owner-level standards reconciliation
+before P6 changes any path. Do not invent per-file exceptions or wrappers.
+
+### P4 proposal checkpoint — 2026-11-25
+
+Prepared the [source-reconciled disposition and complete proposed leaf table](../../../../scripts/helpers/audit.md#p4-current-disposition-and-proposed-folder-manifest--2026-11-25)
+and extended the [existing deployment migration plan](../../../04.deploy/plans/migration/entity-smoke-runtime-script-topology.md#p4-whole-deployment-isolation-proposal--2026-11-25).
+The fixed inventory remains 901 tracked paths: 690 source, 185 Markdown,
+26 data/config. All 690 semantic rows match; 17 source deltas have existing
+P1–P3 review/proof, with no new/deleted source or untracked script-area file.
+
+Proposal: relocate 173 sources plus 31 Markdown companions; retain 517 source
+paths and delete none. Of 471 deployment sources, 338 remain lifecycle-owned,
+with Entity's 76 direct files regrouped by the existing exact E01 map. Shared
+helpers become 23; retained staging is 95 (31 capability directories plus the
+Cognito observer); retained RAG readiness is two. Three shared outer controls
+(13 sources) remain in place. RAG's 69-source own layer also stays in place.
+The audit's 148 file-bearing-folder rows total 471 without double counting;
+parent direct files are counted separately from child directories.
+
+Runtime behavior and verification cadence are unchanged. Active-first README
+navigation uses the README skill; inventory prose now distinguishes its
+heuristic topology output from semantic review. The catalogue generator was
+not run because its output dates are hard-coded and it cannot replace human
+decisions. Mixed fixture/test dependencies are named, not magically removed.
+
+Approved after the full folder/count briefing: the proposed `legacy/kanbien-staging/` and
+`legacy/rag-rulebook/` homes, E01's cohesive objective/role folders, and this
+finite 173-source scope. Existing placement governance must be reconciled once
+before moves; no per-file bypass or extra component explosion. Each staging
+capability is its own P6 packet, not a bulk all-files move. Existing path planner
+and checker runs remain explicitly pending that approval, as do public direct-
+path compatibility choices where real consumers require them. P4's proposal
+is complete at the audit/design boundary; the user has approved its destinations.
+
+Final bounded documentation proof passed: all 901 mappings reconcile; every
+source has one ledger row; E01 has exactly 76 members; 33 isolation pairs have
+their declared counts; all destinations are unique/unoccupied; 148 deploy
+folder rows sum to 471; source digest matches and no executable changed.
+Relative links/anchors passed. Existing header check passed six governed
+documents (the session README is outside that header scope); prose-drift and
+whitespace checks passed. Parent self-review checked role versus path claims,
+history/caller limits, real schedules and the pending placement authority.
+
+Selector preview `/tmp/script-p4-selection.NauQ1u.json` completed in 25.150
+seconds, verdict planned, zero findings, zero execution/reuse. It proposes
+24 check instances: 11 pending local instances and 13 deferred. Pending:
+acceptance-route twice for distinct scopes; chat-export-regression;
+container-boundaries-regression; delivery-inventory-regression;
+harness-artifact-migration-regression; module-index-structure-regression;
+persistence-payload-regression; persistence-provider-regression;
+scope-inventory; task-classification-fixtures. This is not integration proof.
+The seven Markdown edits still reach 113 declared consumers. Preserve this
+documentation-triggered fan-out as concrete P5 selection/input evidence; do
+not call all eleven essential or unnecessary without reviewing their actual
+consumed inputs and named risks. No check was disabled or reclassified.
+
+Runtime/container/cloud suites are intentionally unexecuted for this
+audit/navigation-only packet; no executable contract or scheduling changed.
+Any later commit/integration follows its actual selected boundary, not this
+preview as a passing result. No new test machinery, source split, scheduled
+job change, commit, merge or push is part of this packet.
+
 1. Refresh the tracked-file census and classify source versus docs/data;
    include untracked work separately. The historical 713 number and the
    generator's current 715-file denominator are not counts of runnable checks.
@@ -822,6 +1087,45 @@ never establishes bloat or removal.
 
 **Outcome:** an unchanged candidate is qualified once per required evidence
 boundary; package and deployed behavior retain their own checks.
+
+### Approved P4 close and P5 execution packet — 2026-11-25
+
+After the full folder/count briefing, the user said "ok - proceed". This
+approves the P4 concrete layout and finite 173-source scope, with the recorded
+placement-owner reconciliation before P6. P4 is closed at its audit/design
+boundary; no source has moved. Proceed with P5 only and stop for its briefing.
+No commit, merge, push, cloud operation or extra relocation is authorised.
+Preserve all seven pending P4 documentation edits in the November 21 worktree.
+
+Reuse the existing builders, selector/private cache, qualification capture,
+package-custody producer/readers and their existing fixture programs. First
+bounded correction: persistence builder captures one Git revision and uses it
+for label/build argument; update its strict workflow guard and the existing
+qualification-route fixture, whose previous positive case accepted two SHAs.
+The shared candidate-image helper still assembles argv; no new engine or file.
+Consumers include the exact-source public-image recovery allowlist: review and
+qualify its changed-owner handling before accepting any new byte binding.
+
+Entity trace confirms workflow qualification requests infrastructure + full
+composition + secret-declaration proof; builder then requests composition again
+and directly runs catalogue/app checks outside registered reuse. Capture accepts
+only local-runner, rejecting a genuine trusted-cache result. Reconcile these
+callers through existing registered checks and retain standalone prerequisites.
+Do not trust caller-supplied selector JSON: compare current declared input/tool
+identity and same-worktree private successful receipts before admitting reuse.
+Record actual cold/warm execution, not just invocation counts. Existing package
+image ID/configuration, missing/failed check and live binding tests own the
+producer-to-consumer boundaries; do not add a parallel evidence registry.
+
+Diagnostic review: preserve existing finite build-failure codes/status/redaction
+and failed-child stop ordering. No image, custody or target receipt schema
+change is intended. New malformed/missing/stale/source-mismatched qualification
+observations must refuse output and preserve the existing generic safe failure.
+Owned source/test changes require fresh existing review records, retaining
+partial debt rather than calling it adopted. Verification budget for controlled
+handoff fixtures is five minutes per stable batch; broad runtime/image/live
+work must be explicitly distinguished and not launched during editing. No new
+source files or parallel fixture execution against mutable shared state.
 
 1. Trace one real Entity Smoke route from source checks through
    `publish-kanbien-core-platform-entity-smoke.yml`,
@@ -882,6 +1186,145 @@ unmeasured live timing as not established.
 **Recovery:** retain the existing safe prerequisite until the replacement
 handoff has equivalent evidence; never remove it because an earlier log passed.
 
+### P5 consolidated self-review and final proof packet — 2026-11-25
+
+Source/caller review is closed for this bounded packet. The same registered
+checks remain required; none is disabled or reclassified. Entity source checks
+use the existing private runner/cache, and capture independently recomputes
+the current keys before accepting its private receipts. This extends an
+internal capture function and its CLI, not a product public module or a new
+runtime execution engine. Existing receipt formats and target binding remain.
+The persistence builder and exact guard now bind both arguments to one source
+read. Existing source-pinned recovery admits only the reviewed builder bytes.
+
+Review corrections: preserve the old headerless persistence guard rather than
+changing metadata migration machinery; require its exact builder footer as
+well as its prefix; connect capture and binding tests through their actual
+registered publication owner and declare their consumed helper inputs. Preserve
+safe nonzero source failure propagation through selector output, rather than
+pretending the removed ad-hoc parent error labels are still emitted. Existing
+Docker-build diagnostics remain unchanged. Six affected runtime review hashes
+are current, with original partial-adoption debt retained.
+
+Final proof requests only the existing entity-smoke-publication-contract,
+persistence-payload-regression and package-custody-regression commands, using
+explicit current task paths and recorded preparation. Preview first; budget
+five minutes per stable batch, report estimates separately from terminal pass.
+The first two cover actual builder ordering/source identity and generated local
+proof through custody/target read; the last retains wrong image/configuration
+and stale/missing package-input refusal. Warm execution must reuse the same
+unchanged proofs without launching those commands. Do not change source while
+they run. Complete affected integration remains a separate, named obligation;
+no image engine, cloud operation or promotion is authorised by this packet.
+
+### P5 bounded delivery and measured proof — 2026-11-25
+
+**Delivered locally; stop for user briefing before P6.** Existing source
+qualification now enters registered reuse, capture admits only current private
+successful proof, and the persistence builder uses one source identity. No
+source path, receipt schema, deployment freshness rule or scheduling cadence
+changed. No new file, runner, scheduler or registry was created. Nine existing
+script-source files, one hosted workflow, the existing catalogue and diagnostic
+review ledger changed; exact script paths and reasons are in the audit's P5
+edited-owner table. Seven existing P4 documentation/session files also changed:
+this programme, scripts/helpers/audit.md, the deployment migration plan, route
+inventory, deployment README, inventory README and current session README.
+
+Registered final verification, source frozen during both runs:
+
+| Existing requested owner | Actual first-run seconds | Result |
+| --- | ---: | --- |
+| entity-smoke-publication-contract | 2.281557 | Passed, including existing capture/binding programs now reached by the wrapper. |
+| package-custody-regression | 158.745335 | Passed, including actual qualification CLI image/configuration reuse and invalidation with controlled engine doubles. |
+| persistence-payload-regression | 31.083152 | Passed, including source compilation/payload checks, both actual builders, strict guard and 47 recovery cases. |
+
+First registered run total **212.440489 seconds**, command time 192.110044;
+three commands executed, no findings. Five-minute batch budget met. Remaining
+20.330445 seconds is measured planning/fingerprinting/tool/proof overhead, not
+provider wait. Report:
+.cache/test-runs/20261125T100642Z-3e9ebcbac05f45eba1dca64778050df7/report.json.
+Same unchanged request then passed in **11.394741 seconds**, all three private
+receipts reused, **zero commands executed**, no invalidation/findings. Report:
+.cache/test-runs/20261125T100726Z-a92aba1cde444059a47225b473594009/report.json.
+This is local verification cost, not a claim that a real release now takes
+11 seconds. Existing controlled fixture also proves generated qualification
+through actual custody writer and target reader; synthetic checks are not the
+real application's full test suite. No real image engine/provider was invoked.
+
+The full declared-impact preview is /tmp/script-p5-impact.pEQ9te.json:
+planned, zero findings, 24.309986 seconds, no command executions. It contains
+57 instances: **42 required local instances (41 identities), six explicitly
+retained local checks and nine later-stage package/deploy/acceptance checks**.
+Preview status does not inspect/establish all their cached passes. The explicit
+three-owner pass proves those identities, not complete affected integration.
+Before a later commit/merge/promotion, use its existing staged and full-candidate
+owners; no such action is currently authorised. The 41 local identities are:
+
+- acceptance-route
+- acceptance-route-regression
+- bootstrap-acceptance-regression
+- chat-export-regression
+- check-selection-promotion
+- cloudwatch-observability-runtime
+- container-boundaries-regression
+- core-runtime
+- core-target-declaration-regression
+- delivery-access-contract-regression
+- delivery-inventory-regression
+- dynamodb-persistence-runtime
+- ecs-fargate-runtime
+- entity-smoke-composition-base
+- entity-smoke-infrastructure-route
+- entity-smoke-publication-contract
+- entity-smoke-runtime
+- harness-artifact-migration-regression
+- kanbien-platform-runtime
+- module-index-structure-regression
+- persistence-composition
+- persistence-payload-regression
+- persistence-provider-regression
+- platform-config-runtime
+- platform-contracts-runtime
+- platform-health-runtime
+- platform-observability-runtime
+- platform-persistence-runtime
+- platform-runtime-runtime
+- platform-security-runtime
+- platform-server-runtime
+- platform-smoke-runtime
+- platform-testing-runtime
+- platform-workers-runtime
+- runtime-dependency-assembly
+- runtime-payload-assembly
+- scope-inventory
+- security-cognito-diagnostics
+- security-shared-rate-limit-diagnostics
+- sqs-queue-runtime
+- task-classification-fixtures
+
+acceptance-route has separate bootstrap-runtime and core-server-persistence
+instances. Of the explicitly requested owners, package-custody-regression is
+normally retained/deferred; it was deliberately requested here for the changed
+package handoff. No retained check was enabled in ordinary candidate selection.
+The full impact remains recorded, not silently waived or reclassified.
+
+Runtime source/history scanning was statically traced only; no authorised live
+operation, actual frequency or immutable-cache improvement is claimed. Existing
+immediately-before-action freshness and reservations remain unchanged. Cold
+installation, full application/image qualification and complete remote release
+budget remain **not established**. The prior 21m33s promotion cost and P4's
+11 documentation-triggered pending instances remain visible follow-up debt.
+This packet removes a proven handoff obstacle; it does not resolve every
+repeated verification surface or certify new parallel execution safe.
+
+Closeout: existing metadata preparation accepted 16 artifacts without changing
+any file bytes; their headers and final whitespace check passed. Existing
+headerless persistence guard, plain session log and JSON review ledger remain
+outside that metadata update. No new links were introduced by the P5 closeout;
+the P4 link proof remains applicable. All required local command terminal
+results were consumed; no P5 process is left running. No commit/merge/push or
+P6 relocation has been performed.
+
 ## Milestone P6 — Execute only the audited migration manifest
 
 **Outcome:** approved capabilities have one clear home, coherent contents and
@@ -917,6 +1360,918 @@ scope by the user; no active dangling caller, lost behavior or broken historical
 reader; source counts reconcile. No need to move sound code just for symmetry.
 **Recovery:** inspect the bounded diff and propose a scoped reversal through the
 owning workflow; never reset the entire worktree or discard unrelated changes.
+
+### P6 first group: implemented, focused proof passed; retained suite failed — 2026-11-25
+
+User approved proceeding after the P5 briefing. All work remains in the recorded
+November 21 worktree; P4/P5 dirty work is preserved. First group only: the
+existing placement standard/lifecycle owner and validator now agree on cohesive
+target-operation and retained-system paths. All 173 approved deployment source
+destinations pass the existing shape function (76 operation + 97 retained).
+Those 173 deployment sources have NOT moved. The prelisted shared-owner packet
+relocated only dependencies.mjs and dependencies-test.mjs from workspace-build
+to existing module-structure; their old/new pairs live in the existing migration
+plan, not a second registry. Source count stays 690, with 690 unique audit rows.
+
+Moved bodies/cases match HEAD exactly after only header/relative-import
+reconciliation. Metadata IDs/introduction dates remain stable. Actual imports,
+fixture wrapper, catalogue inputs/mapping, Core consumer invalidation, repository
+expectations, README and helper pointers follow the canonical paths. Three
+existing diagnostic review owners are refreshed, with adoption/debt unchanged.
+README guidance corrected the guide's old claim that the retained full-source
+scan was normal commit/build protection; no automatic policy changed.
+
+Exact changed P6 owners (prior P4/P5 changes remain intact):
+
+- .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+- .agentic/04.deploy/standards/lifecycle-stage-ownership.md
+- scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/script.py
+- scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh
+- scripts/repo/module-structure/dependencies.mjs (relocated existing inspector)
+- scripts/repo/module-structure/dependencies-test.mjs (relocated existing fixture)
+- scripts/repo/module-structure/check.mjs
+- scripts/repo/module-structure/smoke-test.sh
+- scripts/repo/module-structure/README.md
+- scripts/repo/check-selection/checks.yml
+- scripts/repo/check-selection/repository_contracts_test.py
+- scripts/repo/diagnostic-coverage/reviews.v1.json
+- scripts/helpers/catalog.md
+- scripts/helpers/audit.md
+- scripts/helpers/selection-audit.md
+- scripts/04.deploy/README.md
+- docs/04.deploy/plans/core-platform-deployment-route-inventory.md
+- this programme, existing deployment migration plan and current session README.
+
+Proof and honest limits:
+
+<!-- deterministic-check: allow reason="this table records observed outcomes of the existing migration checker, not a new prose-based verification procedure" -->
+| Observation | Result |
+| --- | --- |
+| Exact per-path planners | Inspector 18 literal old references, fixture 14; zero destination references before movement. Each included three dormant generated RAG references; those were not rewritten. Logs /tmp/script-p6-path-plans.MuSVIP. |
+| Existing migration checker, both exact pairs | Passed: new path exists, no active old reference, no active-path allowance. Logs /tmp/script-p6-path-checks.qjcjhr. Relative imports/links were additionally inspected. |
+| Existing artifact-placement-regression | Passed, 1.932746 seconds, including valid operation/retained shapes and misplaced/traversal refusals. |
+| Existing module-index-structure-regression | Passed, 2.381498 seconds, including the actual relocated inspector's eleven existing cases and checker counterexamples. Broad real-source inspection was not executed. |
+| Three affected existing repository methods | Passed in 1.105 seconds after correcting stale manual-scan expectations; exploratory supported historical runner, not a claim the full registered owner passed. |
+| First full registered batch | Gap: repository-contract owner failed after 456.367583 seconds; total 475.761009 seconds. Five-minute budget MISSED. Safe report .cache/test-runs/20261125T103006Z-374d4115eed44a5abdb25ae28ebb1d60/report.json retains no method names (unsupported-format). |
+| Exact registered contract wrapper retry | Failed: 49 methods, 11 failure records across eight methods; 461.391 seconds test time, 462 seconds command wall time. No private receipt was seeded from direct output. Both previous successful checks were preserved, not rerun. |
+
+Two full attempts total 937.761009 seconds before triage/authoring; this is a
+verification-cost miss, not a normal-release timing claim. Keep both failures.
+No third broad retry, new test program, wrapper/registry/runner, source compiler,
+image engine or provider operation is added to conceal this cost. No commit,
+merge, push, operational retirement, schedule or accepted-history change.
+
+### P6 hold point: separate existing catalogue issues before more moves
+
+These findings preserve the failed direct retry, not a reason to broaden path
+moves into execution-policy rewrites. The user subsequently approved the
+Core-only context repair recorded below; other findings still need their own
+bounded decisions.
+
+| Existing method(s) | What failed / next bounded investigation |
+| --- | --- |
+| test_core_runtime_alone_receives_declared_changed_path_context | Resolved locally by the separately approved shared-anchor correction below. Before repair, the same 15 flags existed in HEAD and the dirty catalogue. Only Core now receives changed_path_context; commands and actual consumer inputs are preserved. The unchanged assertion passes. |
+| test_candidate_preparation_selects_its_direct_persistence_proof | CI-mode plan includes deployment-operation-diagnostics-regression; test insists it is absent. Review against P2's full CI consumer-analysis rule, not restore a CI direct-input exemption to satisfy a stale test. |
+| test_development_scope_contract_change_retains_the_complete_scope_proof | Its expected pending check set differs. Inspect complete impact obligations versus development selection/retained parents; do not remove required scope proof merely to green the test. |
+| test_shared_cli_boundary_invalidates_registered_callers; test_shared_payload_assembly_selects_and_invalidates_both_consumers; test_shared_task_and_publication_owners_invalidate_actual_callers | Several subtests expect the entity-smoke-composition parent wrapper's direct fingerprint to change with child-owned inputs. Parent remains wrapper-only; review real child/dependency evidence invalidation before changing expectations. Do not duplicate all child inputs at the parent to silence tests. |
+| test_shared_ecs_response_selects_and_invalidates_both_bindings; test_workload_specific_startup_conditions; one task/publication case | Selection/startup expectations still require retained staging work in a normal core request. Compare explicit retained-context behavior and current candidate selection; do not reactivate staging or RAG to satisfy a historical assertion. |
+
+Before the separate context repair, relevant aggregate/diagnostics declarations
+and all 15 context flags matched HEAD. A baseline mismatch is not proof every
+assertion is wrong: retain each named risk until its producer/consumer decision
+is demonstrated. Only stale expectations directly touched by the move were
+corrected so far: hygiene versus deferred and invalidation versus automatic
+selection. Actual validation/invalidation counterexamples remain. Full retained
+suite success and complete affected integration are NOT established. This suite
+stays explicitly deferred, not a newly imposed ordinary commit/merge gate.
+
+The shared-context-anchor repair below is the only subsequent approved behavior
+change. Keep other catalogue findings, the rest of the P6 movement packets and
+all deployment paths pending; obtain approval before the next increment.
+
+Closeout evidence: current whole-diff preview is planned, zero findings,
+27.239716 seconds and zero command executions:
+/tmp/script-p6-final-impact.CqM7k5.json. It records 64 instances: 47 required
+local (46 unique identities), eight retained local and nine later-stage checks.
+The P5 local identity list above plus artifact-placement-regression,
+chat-upstream-bootstrap-regression, chat-upstream-portability-regression,
+core-dependency-boundary and diagnostic-catalog-readers gives the current local
+set. The eight retained identities remain deferred, including the failed
+repository-contract suite and the real-source module scan. No preview result
+is accepted proof of the complete affected candidate or a known-good release.
+
+Existing metadata preparation accepted 28 artifacts with zero errors and no
+new byte writes; their headers passed. Module README's 13 local link targets
+exist; its source-backed inventory and manual-scan wording were reviewed under
+the README guidance. Final whitespace passed. The actual consumer search finds
+REPO_CHECK_CHANGED_PATHS read by the Core runner (and its fixture), not the
+other fourteen verification programs. This supports investigating the shared
+anchor at its owner, not weakening the Core-only assertion. All required
+process terminal results were consumed; no P6 operation remains running.
+
+### P6 follow-up — Core-only changed context repaired locally
+
+The user approved this bounded repair after its explanation. Existing owner
+scripts/repo/check-selection/checks.yml now anchors the reusable package defaults
+inside Core's mapping, with changed_path_context outside that anchor. Core keeps
+the flag; fourteen inherited copies disappear. No fourteen overrides, new test
+file, check removal, scheduler, wrapper or runtime implementation change.
+
+Consumer review: only packages/core/tests/run-runtime-tests.mjs consumes
+REPO_CHECK_CHANGED_PATHS (plus its existing fixture). The selector's preparation
+keys, evidence keys, environment delivery and LocalCache remain unchanged.
+Parsed before/after comparison proved the fourteen flags were the only semantic
+catalogue changes: every command, input, effect, runtime setting, scheduling
+rule and Core field is unchanged. Core still cannot reuse an incompatible
+subset result. Old receipts under the removed flag's identity are not imported
+or rewritten; affected checks may run once under the corrected identity before
+future matching reuse. No measured end-to-end speedup is claimed.
+
+Focused evidence, using existing programs and a five-minute execution budget:
+
+- The unchanged Core-only contract failed before repair (0.473s), naming the
+  fourteen extra consumers, and passed after repair.
+- Six existing methods ran in 17.757s. Four passed: Core-only registration,
+  package command/input preservation, changed-subset/full-run cache isolation,
+  and aggregate member reuse/failure propagation.
+- Two additional methods failed: test_cache_reuses_across_unrelated_revision_but_environment_invalidates
+  and test_preparation_reuses_unchanged_proof_and_rejects_changed_inputs. Both
+  expect runnable-program in a selected list where the fixture returns only
+  local and scope-inventory. Their catalogue is built independently by unchanged
+  test_support.py; they do not consume the repaired checks.yml. No assertion or
+  runner policy was changed to hide these failures. Later assertions in those
+  methods are unproved by this run.
+- A bounded disposable run of the existing FixtureSupport with actual catalogue
+  flags held command inputs fixed and changed actual selection paths. The
+  ordinary setting kept both keys and reused its receipt; Core changed both
+  keys and executed. No new test program or durable test machinery was added.
+  Initial exploratory probes did not hold inputs fixed or used explicit-check
+  preparation paths rather than changed-file selection; those failed assertions
+  were not accepted as proof. The corrected path-selected probe passed.
+
+Self-review complete for this owner: invalidation inputs, Core's subset safety,
+failure propagation and diagnostics interfaces are preserved. No executable
+source, public interface or diagnostic definition changed, so no runtime review
+hash refresh is needed for this configuration-only correction. Exact files for
+this follow-up: checks.yml, this existing programme, and the existing session
+README. The earlier placement/migration evidence remains scoped to its inputs.
+Full retained-suite success, complete affected integration, the other catalogue
+findings and P6 overall remain pending. No broad-suite retry, staging, commit,
+merge, push, provider operation or further path movement was performed.
+
+### P6 follow-up — Two cache expectations reconciled with direct-input selection
+
+The user approved resolving the one mismatch behind the two cache-method
+failures above. The selection rule is correct: the disposable fixture's
+runnable-program check declares scope_inputs=false and inputs=[program.yml].
+Editing src/main.ts selects local source proof, not an unchanged definition
+validator. This agrees with the existing direct-input guard in script.py and
+the earlier P3 correction; widening the fixture or production inputs merely
+to satisfy an old list would reintroduce unnecessary work.
+
+Changed only three exact lists in mechanics_test.py, removing runnable-program
+from expected source-only execution/reuse results. Every original cache
+provenance, source/executed revision, environment invalidation, command-count,
+preparation match and changed-source rejection assertion remains. No test file,
+case, wrapper, runtime code, fixture catalogue, production selection rule or
+diagnostic definition was added or changed. The existing support review owner
+runner-test-ownership-partition records this reviewed diff and the exact source
+hash; unrelated review rows and debt remain unchanged.
+
+Evidence:
+
+- Four bounded planning probes using the existing FixtureSupport passed with
+  no findings. src/main.ts does not select runnable-program. program.yml,
+  scripts/program.sh and the scope declaration each still select it. These are
+  selection observations, not executions of package/provider/later-stage proof.
+- Existing test_cache_reuses_across_unrelated_revision_but_environment_invalidates
+  and test_preparation_reuses_unchanged_proof_and_rejects_changed_inputs both
+  pass, 2 tests in 5.485 seconds. The later assertions previously unreachable
+  behind the stale lists now pass, including environment rerun and rejection
+  before execution after source drift.
+- Parent self-review: the full test-source diff is one explanatory comment
+  and the three list corrections; named-risk assertions remain intact.
+  Metadata preparation and focused header/whitespace validation complete the
+  bounded packet. Five-minute execution budget retained; no broad retry.
+
+Exact files for this increment: scripts/repo/check-selection/mechanics_test.py,
+scripts/repo/diagnostic-coverage/reviews.v1.json, this programme and the existing
+November 21 session README. The earlier two-method failure is resolved locally;
+the other recorded catalogue failures and complete affected integration are
+still pending. No claim that the whole retained suite or P6 passes. Folder
+moves, commits, merging, pushing and provider operations remain untouched.
+
+### P6 next group — reviewed; metadata routing pilot delivered locally
+
+Reviewed the two prelisted selector build-input files, check-inputs.mjs and
+check-inputs-test.mjs, before any move. Exact pairs, reference reports and caller
+inventory are in the existing deployment migration plan's next-packet review.
+The helper belongs with check-selection; compiler declarations stay put.
+
+Two nonliteral dependencies matter: the Python workspace-context fixture copies
+the old folder, and the packaging wrapper owns execution of seven selector
+tests. Update the fixture explicitly; transfer those same tests to a focused
+selector route rather than merely changing their path inside packaging or
+adding them to full deferred mechanics. That ownership move is not implemented.
+No new test, source file, wrapper layer or registry is proposed. A direct Node
+catalogue entry is unsupported; do not add a duplicate shell launcher.
+
+The shared dispatcher has 37 command owners and mappings to 34 check identities.
+Actual no-execution preview of changing that file is now retained at
+/tmp/script-p6-projection-dispatch-impact.cmh2t7: planned, zero findings,
+31.221361s, 33 candidate-local pending checks plus one deferred suite, zero
+executions. Do not implement the originally considered dispatcher addition
+until this coupling is resolved; no broad batch was run.
+
+Next proposed bounded prerequisite: catalogue entries that only delegate to an
+existing standalone owner script should call that exact script directly.
+Start with the header and lifecycle metadata regression routes; literal
+branches already exec their existing owner smoke scripts. Preserve check IDs,
+effects, scheduling, actual dependencies and outcomes. Remove dispatcher
+inputs/triggers only where they cease to be actual dependencies; retain real
+indirect use. No shared dispatcher edit or new execution mechanism is required
+for this pilot. Prove the two existing owner commands and actual selection
+before widening the correction or moving the helper. The user subsequently
+approved this two-route pilot; its partial outcome and remaining blocker follow.
+
+Seven existing tests pass in 7.506295s with their normal Node test invocation;
+a direct Node alternative passes in 3.687334s but does not meet the catalogue's
+Bash-only command contract. Both exact migration planners completed; both new
+destinations are absent. Only this programme, the existing migration plan and
+session record change in this review. All code, registration and paths remain
+unchanged; programme-wide integration and other findings remain pending.
+The review itself made no code/configuration changes. The approved pilot below
+changes one route only; helper movement remains pending.
+
+#### Approved metadata routing pilot — one route delivered, one blocked
+
+The preceding audit missed an actual contract mismatch; do not describe the
+two-route pilot as complete. Before editing, validate_check accepted the direct
+header command with its own metadata, but returned local-check-effects-forbidden
+for direct lifecycle. That script declares stages-files and commits in addition
+to writes-files; LOCAL_EFFECTS permits only read-only/writes-files. Both smoke
+programs create temporary Git repositories, but their headers classify this
+differently. The current local guard has no scoped temporary-Git permission.
+Do not hide truthful effects, expand real-worktree Git authority, invent a
+filename exception or add a wrapper to bypass it. A separately approved harness
+effects-scope correction is needed before routing lifecycle directly.
+
+Completed the independent header route in checks.yml. Stable check identity,
+integration boundary, cadence, inputs other than the unused dispatcher,
+runtime/configuration and aggregate membership are preserved. Command and owner
+now identify the existing check-headers/smoke-test.sh. Effects match that
+existing script's writes-files declaration; no permission is added. Remove only
+the dispatcher from this check's declared inputs and its one exact trigger rule.
+The dispatcher, both test programs, lifecycle entry and all other catalogue
+entries remain unchanged. Parsed before/after comparison proved this exact scope.
+No new source, test, fixture exception or execution-layer change.
+
+Bounded proof, within the five-minute execution budget:
+
+- Registered request for the two existing owners passed with no findings in
+  29.004423s. Header executed its direct command and passed in 24.020669s.
+  Lifecycle reused matching trusted local evidence on its UNCHANGED wrapper
+  route; this is not proof of a direct lifecycle registration.
+  Report: .cache/test-runs/20261125T173812Z-2f5aa5a4fd7c45cf81caf8569868a2ef/report.json.
+- Existing test_runner_aggregate_retains_exact_components_and_owner_obligations
+  passed in 0.408s, including command validation and unchanged aggregate members.
+- Actual dispatcher-change preview passed in 16.537022s with no findings:
+  32 candidate-local pending checks plus the retained deferred suite. Header is
+  absent and lifecycle remains. Zero commands executed; report:
+  /tmp/script-p6-metadata-pilot-impact.S9oTmH.
+- Actual own-header-test-path preview passed with no findings in 11.824866s and
+  still selects header. Zero commands executed; report:
+  /tmp/script-p6-metadata-owner-impact.xzgFbz.
+
+Self-review: no test body or safety guard changed. Exact catalogue delta and
+source-matched command validation preserve the named positive risk; dispatcher
+non-selection removes only a no-longer-consumed dependency. Configuration-only
+change requires no new runtime source-review hash. Existing metadata preparation,
+header/whitespace checks complete the partial packet. Exact files: checks.yml,
+this programme, existing deployment migration plan and session README.
+Full integration/retained-suite success, other routing conversions, helper moves
+and P6 overall remain pending. No commit/merge/push or provider operation.
+The user subsequently approved resolving this effects decision; the completed
+bounded correction follows. This paragraph preserves the initial hold point,
+not a current request to repeat that approval.
+
+#### Private-fixture effects rule and second route — delivered locally
+
+The metadata standard now defines scope rather than widening execution rights:
+newly created private test Git state is writes-files only after actual target
+review and containment proof. Existing task/integration/shared Git state retains
+its Git effects and approvals. Isolation labels alone do not qualify. This is
+not a sandbox, new effect, registry, scheduling engine or filename exception.
+
+Strengthened only the lifecycle smoke program's existing helper. Its working
+directory must resolve within the currently owned TemporaryDirectory; external
+.git files/symlinks are rejected. Inherited GIT_* redirection/configuration is
+cleared, user/system configuration is isolated, and discovery cannot ascend
+past the fixture working directory. Explicit fixture commit dates survive.
+The source path now comes from BASH_SOURCE rather than inherited Git discovery.
+Actual clone source/destination and every mutation call were reviewed as private
+fixtures; no existing assertion or updater operational code was removed.
+Extended this same smoke program to prove checkout/external-pointer rejection
+before child execution and environment clearing; no new source/test file or unit.
+
+Reclassified those contained private writes under the new rule and completed
+the lifecycle entry in checks.yml: direct existing command and owner, matching
+writes-files, with only its obsolete dispatcher input/trigger removed. IDs,
+cadence, stage, real inputs, runtime and aggregate membership are unchanged.
+The central selector, LOCAL_EFFECTS, dispatcher and actual Git approval guards
+are unchanged. No runtime source-review ledger entry owns this verification-only
+fixture; its explicit self-review and evidence live here, not a new review row.
+
+Focused evidence (five-minute execution budget met):
+
+- Registered metadata request passes with zero findings in 22.838635s.
+  Lifecycle executes directly and passes in 17.019666s; unchanged header proof
+  is reused from the trusted cache, not rerun. Retained report:
+  .cache/test-runs/20261125T174843Z-6a9c9013a5de465aaa1c6cbacedea178/report.json.
+- Three existing component/effect/stage cases pass in 1.063s. Additional
+  disposable probes through the unchanged selector reject stages-files and
+  commits before command execution, with no generated operation marker.
+- A bounded probe compiling the actual helper proves external .git directory
+  symlinks and an escaped working-directory symlink are rejected before spawn.
+  The embedded smoke assertions separately cover real checkout, external .git
+  file and inherited Git settings. These controls are not universal OS isolation.
+- Actual real-worktree HEAD, branch and index bytes match their pre-test
+  snapshots. Test Git operations occurred only in self-created fixtures.
+- Dispatcher-change preview: planned/no findings, 16.225633s, 31 candidate-local
+  pending checks plus one deferred suite, zero execution; neither metadata route
+  is selected. This is down from the original 33, not complete fan-out removal.
+  Report: /tmp/script-p6-private-git-impact.Y80lPD.
+- Own-lifecycle-test-path preview remains positive, no findings, 9.317239s,
+  zero execution: /tmp/script-p6-private-git-own-impact.Tb3Lpx.
+  Shell syntax, bounded metadata preparation, headers and whitespace pass.
+
+Exact files this increment: canonical metadata standard, existing lifecycle
+smoke-test.sh, checks.yml, this programme, deployment migration plan and session
+README. The approved two-route pilot is locally complete. Broader route rewiring,
+the next helper move, other known catalogue findings and full affected
+integration/P6 remain pending. No worktree switch, new script, staging, task
+commit, merge, push or provider operation. Brief before the next bounded group.
+
+#### Next routing batch — reviewed, then approved and delivered locally
+
+Reviewed three existing fixture routes for the same direct-owner correction:
+
+| Check identity | Existing standalone command after `bash` | Risk its fixtures prove |
+| --- | --- | --- |
+| harness-process-drift-regression | scripts/01.harness/smoke-test-deterministic-process-drift.sh | Known process-text findings remain distinct from failed Git/awk/find/sort observations. |
+| chat-bootstrap-audit-regression | scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/smoke-test.sh | Missing bootstrap references and failed scans cannot become a successful empty audit. |
+| chat-migration-audit-regression | scripts/00.chat/migration/audit-chat-layer-migration/smoke-test.sh | Retired chat-path references and failed grep scans retain distinct failure outcomes. |
+
+Read each full fixture and its called checker. All three declare writes-files,
+create disposable file trees and use fake Git for the exercised Git observations;
+their only real Git lookup discovers the source root. None performs real Git
+mutations. The shared launcher is mentioned only by metadata used_by, not called
+by executable fixture code. Retain its literal branches for existing callers.
+The selector already starts commands at the repository root; no launcher-specific
+environment, argument conversion or status translation is consumed here.
+
+Actual validate_check accepts all three proposed direct commands with their
+existing metadata IDs/effects and no findings, without modifying the catalogue
+or executing tests. Each has exactly one matching repository_inputs rule.
+Preserve all real source/test inputs and remove only the obsolete launcher
+edge from each input list and rule. IDs, runtime, local integration boundary,
+cadence and group membership remain fixed. No check is disabled or rescheduled.
+
+The existing test_imported_diagnostic_fixtures_have_focused_registered_owners
+explicitly requires wrapper routing for these entries. Reconcile that one
+existing method with the three exact direct owners while retaining its other
+input, runtime and safety assertions and the unmigrated entries' contracts.
+The closed-dispatch mechanics case remains valid because branches stay present.
+No new test, script, wrapper or execution permission is needed.
+
+Smallest proposed implementation: checks.yml and repository_contracts_test.py,
+plus these existing programme/migration/session records. Prove the three existing
+registered owners and this affected contract, then batch no-execution previews
+for the launcher and the three owners' own source paths. Target five minutes
+of focused execution; preserve matching evidence. Do not replay the full retained
+suite or claim its other failures resolved. Existing partial diagnostic reviews
+and audit snapshot files stay unchanged because their source owners do not move
+or change. The operational audits' manual commands also remain available.
+
+Command-drift and session-reader fixtures were screened but excluded: their
+Git-effect declarations and missing isolation controls need separate source
+decisions, not a blanket reclassification. The summary fixture was also read
+but is outside this three-route batch. This review changes records only; current
+launcher selection remains 31 pending candidate-local checks plus one deferred
+suite, as last measured. Any further reduction is proposed, not established.
+Wait for the user's agreement on this meaningful code increment. Helper moves,
+deployment moves, full integration and publication remain pending.
+
+The user subsequently approved this exact three-route increment. Delivered in
+checks.yml: direct existing commands/metadata owners and matching writes-files,
+with only the three obsolete launcher input edges and their three trigger edges
+removed. The existing repository-contract method now asserts those exact owners,
+real checker inputs and absence of launcher dependencies. Unmigrated entries,
+compatibility branches, source bodies, permissions and scheduling stay intact.
+Self-review compared parsed before/after catalogues: all other fields/rules and
+all four launcher/fixture source hashes match. No new test, source file or unit.
+
+The existing runner-test-ownership-partition review's contract-test fingerprint
+is refreshed after source review; its support status, reason, other fingerprints
+and retained debt are unchanged. This test-only edit does not change operational
+diagnostic predicates or outcomes. The three existing partial checker reviews
+remain untouched. Exact files: checks.yml, repository_contracts_test.py,
+reviews.v1.json, this programme, migration plan and session record.
+
+Focused proof (five-minute execution target met):
+
+- Registered three-owner request passes with no findings in 8.189545s, all
+  three commands freshly executed; total child execution is 0.865360s.
+  Report: .cache/test-runs/20261125T182554Z-bfda91c01c5641bea866615792821a77/report.json.
+- The existing affected catalogue-contract method passes in 0.549s. Bounded
+  in-memory counterexamples independently restore each old route, remove each
+  checker dependency or reintroduce its launcher edge: all nine are rejected
+  by that method, without altering other catalogue/header reads. These probes
+  are exploratory assertion-sensitivity evidence, not new registered tests.
+- Actual launcher-path preview: planned/no findings, 16.314974s, 28 pending
+  candidate-local checks plus one deferred suite; none of these three routes.
+  This is down from 31, not complete coupling removal. Report:
+  /tmp/script-p6-three-routes-launcher.BBktIw.
+- Actual combined checker-source preview: planned/no findings, 10.842445s,
+  all three routes retained alongside their other actual affected consumers
+  (13 pending, one deferred); zero commands executed. Report:
+  /tmp/script-p6-three-routes-owners.ZrTgjb.
+
+The full retained catalogue suite was intentionally not replayed: its other
+recorded failures are outside this correction, not waived or resolved. Helper
+and deployment moves, full affected integration and publication remain pending.
+No task staging, commit, merge, push or provider operation was performed.
+
+#### Summary/upstream routing batch — reviewed, then delivered locally
+
+The next bounded candidates are three existing tests, not the upstream
+operations themselves:
+
+| Check | Standalone fixture after `bash` | Existing proof responsibility |
+| --- | --- | --- |
+| chat-summary-regression | scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh | Printed/written summary agreement, retired aggregate-output rejection and safe read/write failures. |
+| chat-upstream-ensure-regression | scripts/00.chat/upstream/ensure-llm-workbench-repo/smoke-test.sh | Missing/wrong/failed origin observations and failed clone uncertainty, using a relocated target and fake Git. |
+| chat-upstream-contract-regression | scripts/00.chat/upstream/check-llm-workbench-contract/smoke-test.sh | Required/forbidden pattern failures remain distinct from unavailable reads; extracted portability guards preserve the same distinction. |
+
+Full fixtures and called summary/ensure/contract implementations were read.
+The contract test copies thirteen declared source/configuration files into a
+temporary tree and extracts only definitions before make_repo() from the
+portability script; it does not run that script's build/install/Git body.
+The ensure test rewrites the current exact TARGET_PATH assignment to its own
+temporary directory and supplies fake Git for every exercised upstream command.
+No real upstream lookup, clone, network call, staging or commit is exercised.
+The only real Git calls in these fixtures discover their source root. All
+three declare writes-files and consume no executable shared-launcher behavior.
+
+Actual validate_check accepts the proposed direct commands, existing metadata
+owners and effects with zero findings, without edits or test execution. Each
+has one matching input rule. Remove only the launcher edge from that rule and
+the check's inputs; preserve all real dependencies, including the contract
+fixture's fifteen retained input references. Scheduling, runtimes and manual
+operational commands are unchanged. Retain literal launcher branches for callers.
+
+Reuse the direct-owner assertions already added to
+scripts/repo/check-selection/repository_contracts_test.py; extend their exact
+owner map for these three routes, not a new test/suite. Implementation files
+would be checks.yml and that test, plus its existing source-review fingerprint
+in reviews.v1.json and the three current tracking records. No runtime diagnostic
+producer or partial operational review changes. The proof proposal remains
+the three registered owners, the same affected contract method, and batched
+launcher/owner-source planning previews within a five-minute execution target.
+Keep the unrelated retained-suite failures explicit; do not replay that suite.
+
+Header screening also exposed real Git mutations without the new containment
+controls in the maintenance and conflict-classification fixtures, despite their
+writes-files labels. Those are excluded from this mechanical routing batch;
+metadata alone is not safety evidence. Other Git-changing routes were screened,
+not fully audited here. No blanket effects reclassification is authorised.
+This increment changes review records only: launcher-only selection is still
+28 pending plus one deferred as last measured. Further reduction is not yet
+proved. Obtain agreement on this exact code increment; helper/deployment moves,
+full affected integration and publication remain pending.
+
+The user subsequently approved this batch. All three checks now call those
+same standalone fixtures directly. Extended only the existing direct-owner map
+in the catalogue-contract method and refreshed its existing support-review
+fingerprint; no new test case, source file, permission or scheduling rule.
+Parsed before/after comparison proves that all other catalogue fields/rules,
+real inputs, the launcher and fixture bodies are unchanged. Operational
+diagnostics, source-review statuses and partial adoption debt are preserved.
+Exact edited files: checks.yml, repository_contracts_test.py, reviews.v1.json,
+this programme, existing migration plan and session record.
+
+Focused evidence (five-minute execution target met):
+
+- Three registered direct commands freshly pass with no findings in 14.515545s;
+  actual child execution totals 2.814446s. Report:
+  .cache/test-runs/20261125T185214Z-4560d6622de14f51a726b962c823300a/report.json.
+- Existing affected contract method passes in 0.636s. Nine bounded in-memory
+  old-route/missing-checker/false-launcher counterexamples are rejected by that
+  same method with other catalogue/header reads unmodified. These are
+  exploratory assertion-sensitivity probes, not new registered test machinery.
+- Actual combined checker-source preview retains all three routes: planned,
+  no findings, 20.508003s, 15 pending plus one deferred, zero executions.
+  Report: /tmp/script-p6-summary-upstream-owners.GYXuLi.
+- Actual launcher-only preview: planned/no findings, 30.486407s, 26 pending
+  plus one deferred, zero executions. Summary and ensure are absent; contract
+  remains indirectly selected. Report:
+  /tmp/script-p6-summary-upstream-launcher.d568c4.
+
+The initial preview assertion expected all three absent and failed; the actual
+result is a reduction from 28 to 26, not 25. Source tracing establishes the
+remaining metadata chain: shared launcher -> selector command -> commit gate
+-> prepare-chat-session-before-commit/script.sh, which is a real copied input
+of the upstream-contract fixture. That fixture does not execute this chain;
+selection follows the existing metadata consumer declarations. Retain this
+conservative obligation until that declaration's actual ownership meaning is
+reviewed separately. Do not delete a genuine copied input, weaken the selector
+or claim this packet removed all indirect coupling. Direct route/owner/input
+corrections still hold and their tests pass.
+
+No full retained-suite replay: its other known failures remain outside this
+packet. Helper/deployment moves, complete integration and publication remain
+pending. No real upstream clone/network call or task staging/commit/merge/push.
+
+#### Launcher ownership link — reviewed, then delivered locally
+
+The retained upstream-contract selection comes from the launcher's used_by
+relationship to the selector command, then commit-gates and commit preparation.
+Read those actual entrypoints, the upstream-contract fixture, catalogue inputs,
+consumer_graph/validate_check, metadata policy and existing dispatch/aggregate
+tests. Commit preparation calls the selector, not this test launcher directly.
+The upstream-contract fixture only copies/scans that preparation source; it
+does not execute its commit hook. Do not delete this genuine copied input.
+
+The launcher is registered by checks.yml, and the compatibility smoke-test.py
+entrypoint calls it with no arguments. The selector dispatches catalogue argv
+and also reads registered aggregate wrapper shapes during validation. Preserve
+that validation: catalogue registration is not an implementation dependency
+of every selector caller. Existing consumer_graph already treats relationships
+to the catalogue as registration, without transitive execution propagation.
+
+Smallest proposed correction: change only smoke-test.sh's metadata used_by to
+repo.check-selection.catalog/checks.yml and repo.test.check-selection/smoke-test.py.
+Keep its ID, kind, effects, all default/unit bodies and actual catalogue bindings.
+Update its version/date normally. Extend the existing
+test_runner_aggregate_retains_exact_components_and_owner_obligations method to
+bind these consumers and prove launcher changes do not reach commit preparation,
+while selector-command changes still do. Refresh only the existing reviewed
+test fingerprint. No selector algorithm, registry, new test unit, scheduling,
+catalogue-input deletion or execution-permission change is proposed.
+
+A read-only in-memory substitution through the real selector main completed in
+42.628453s: planned, no findings, no command execution. Relative to the retained
+actual launcher report, only chat-upstream-contract-regression disappears;
+25 candidate-local pending checks and one deferred suite remain, with no added
+check. Report: /tmp/script-p6-launcher-ownership-proposal.fP2EGZ. This is a
+what-if selection probe with unchanged disk bytes, not implemented behavior,
+fresh source fingerprints or accepted integration evidence. Current real
+selection remains 26 pending plus one deferred until implementation and proof.
+
+After approval, use existing aggregate-contract and closed-dispatch cases,
+actual launcher/preparation path previews, matching upstream-contract evidence
+reuse and targeted header validation; target five minutes of focused execution.
+No broad retained-suite replay or live Git/cloud operation. Exact likely edits:
+scripts/repo/check-selection/smoke-test.sh, repository_contracts_test.py,
+scripts/repo/diagnostic-coverage/reviews.v1.json, and existing tracking records.
+No operational diagnostic producer changes. Helper moves, other remaining
+forwarding routes, complete integration and publication remain pending.
+
+The user approved the correction. Only the launcher's header relationships,
+version/date and the existing aggregate-contract method changed; catalogue,
+selector, commit/preparation implementations, effect declarations and every
+launcher body/branch are byte-identical to the pre-increment snapshot. The
+existing support-review fingerprint matches the extended test; its status and
+debt are unchanged. No new source file, test unit, registry or selector exception.
+
+Focused proof completed within the five-minute target:
+
+- Existing aggregate-contract and closed-dispatch methods pass together in
+  2.179s. They retain all seven aggregate members, actual caller registration,
+  successful dispatch, refused arguments and child exit-status propagation.
+- Three bounded in-memory counterexamples are rejected by the extended method:
+  old header, false launcher-to-selector edge and lost real commit-gate edge.
+  These are exploratory assertion-sensitivity probes, not new test machinery.
+- Actual launcher-path preview: planned/no findings, 36.639716s, 25 pending
+  candidate-local checks plus one deferred, zero executions. Compared with the
+  previous actual report, only upstream-contract disappears; no check is added.
+  Report: /tmp/script-p6-launcher-ownership-actual.tjhY0M.
+- Actual commit-preparation-path preview retains upstream-contract: planned,
+  no findings, 22.796843s, five pending plus one deferred, zero executions.
+  Report: /tmp/script-p6-launcher-ownership-preparation.MvmRCP.
+- Registered upstream-contract request passes in 13.553525s by matching trusted
+  evidence reuse, with zero commands executed. No copied input was removed.
+  Report: .cache/test-runs/20261125T190252Z-d361283598be4bc79efcd56fb8805101/report.json.
+
+Shell syntax, targeted header/lifecycle validation and whitespace pass. Exact
+edited files: launcher header, repository_contracts_test.py, its existing
+reviews.v1.json fingerprint, programme, migration plan and session record.
+The source review changes no operational diagnostics, permissions or runtime
+predicates. Remaining launcher users, helper/deployment moves, known retained-
+suite findings, full integration and publication remain pending. No broad
+suite replay, task staging/commit/merge/push or provider operation.
+
+### Autonomous P6 continuation — 2026-11-26
+
+Selector input projection and its seven existing tests now reside under
+`scripts/repo/check-selection/`. The compiler implementations remain in
+`workspace-build/`. The package wrapper retains its five compiler groups,
+assembly and connected workload proof; selector input tests use the existing
+dispatcher and new focused catalogue identity `check-selection-workspace-inputs`.
+No new source or test program was added. The actual moved-test preview selects
+only that focused identity, with zero findings and zero executions (13.893448s).
+Registered proof passed in 23.462259s total / 6.201902s child execution:
+`.cache/test-runs/20261126T082338Z-ef6ce260bd68468f92f15cf7bbc37f78/report.json`.
+Eight existing Python consumer/ownership cases passed across an initial batch
+and targeted retry: six initially passed, two failed to write disposable files
+because `/tmp` was full. Retrying only those two with a fresh ignored-worktree
+temporary directory passed in 21.299s; no assertion was weakened. Active audit
+pointers and existing review ownership were reconciled; final combined proof
+and remaining source-review updates are still pending.
+
+Entity Smoke history prerequisite is implemented before moving its sources.
+Current discovery includes nested production files but excludes tests/fixtures;
+historical discovery reads the layout from the immutable requested Git revision
+and retains the old flat inventory when present. The original source checkpoint
+`1ed9157cca73d43ba113d59238f12740caa94594` still produces exactly
+`sha256:58f6a81c76b2785c41724d9021d89b5beab1e9dffa12430bf4dc6b99a7339719`.
+The existing infrastructure-route fixture passed via its declared wrapper with
+the new nested-file and old/new-layout assertions. Provider responses remain
+controlled; no live qualification or provider invocation occurred. Actual
+post-move current/historical discovery and full selected proof remain due.
+
+Exact Entity path planners are being retained compressed under
+`.cache/migration-reports/entity-path-planning.xsyTSLSN/`; legacy planners use
+`.cache/p6-legacy-path-plans/`. This storage change preserves observations and
+avoids deleting other sessions' material from the full `/tmp` filesystem.
+
+### Autonomous migration and proof checkpoint — 2026-11-26
+
+Later handoff review on the same date: all eight previously failing legacy
+reference families now pass after distinguishing exact frozen evidence from
+current instructions. Current links, commands, malformed provenance and failed
+observations remain failures. The dated timeout-inventory TSV is also a frozen
+audit snapshot: only this task's path substitutions were reversed, restoring
+its exact original bytes; it is not a current command catalogue.
+
+Entity's historical graph readers now recognize only the finite eight moved
+entrypoint paths when the complete recorded graph fingerprint or retained gate
+binding matches. All other source, plan, journal, gate-byte and permission checks
+remain. Fourteen old/current graph forms and the existing acceptance/source
+transition fixtures pass. All 90 accepted/proof records remain byte-for-byte
+unchanged. No old path is reinstated as an executable controller.
+
+Final preview exposed deleted-path ownership gaps for real moves: fixing that
+belongs to the existing selector's Git rename observation, not to aliases or
+deferred old checks. Destination coverage must still be earned; arbitrary
+deletions and uncovered destinations remain failures. Candidate selection and
+registered execution are not yet accepted. The preview's 131 local entries
+include directly affected retained staging/RAG proof because this task moves
+their code; this is not ordinary Core work triggering dormant systems.
+
+The composition base wrapper no longer repeats the three acceptance fixtures
+owned by its separate selected acceptance check. The full manual suite retains
+that existing wrapper once. Temporary build output now honors the declared
+temporary directory; no cloud or engine permission changes are involved.
+Earlier partial evidence below remains recorded at its original inputs.
+
+All E01/S01–S32/R01 files are now at their approved destinations. No alias,
+wrapper copy or new implementation registry was added. Stable identifiers,
+command arguments, effects, executable modes and accepted proof records remain.
+Current declarations, wrappers, metadata links, catalogue entries, fixtures and
+READMEs point to canonical paths. The deployment census is covered: 521 entry
+points, six scopes, zero findings (6.609 seconds). This is local routing evidence,
+not cloud acceptance.
+
+Evidence and limits at this checkpoint:
+
+- All 76 exact Entity planners and 33 legacy family planners completed. Original
+  partial reports were compressed and retained after temporary storage filled;
+  only incomplete observations were retried. Later, two Entity planner calls
+  overlapped a scanner edit and failed syntax parsing; only those two were
+  retried successfully after the scanner was frozen.
+- All 76 Entity path checks pass. Legacy raw path checks currently pass for 25
+  of 33 families; the remaining eight report 49 frozen/historical references,
+  not current executable callers. Their narrower historical classification is
+  being reconciled with the existing standard; no blanket bypass was used.
+- Existing legacy controlled proof passes 28/28 owner commands. All 97 moved
+  legacy sources parse; original body transformations and executable modes were
+  checked. Historical declaration proof fields and schedules were not changed.
+- Shared consumers pass their existing recovery (5), qualification (4), runtime
+  preparation (6), diagnostic-dispatch (4) and local-public recovery (48) cases.
+  CloudFormation helper executable bytes/syntax were unchanged; its metadata-only
+  new source hash was reviewed before updating the existing recovery pin. A
+  controlled counterexample rejects changed helper code before engine access.
+- Entity source enumeration now includes nested production controllers and
+  excludes test-only folders. The real historical Git digest remains exactly
+  `sha256:58f6a81c76b2785c41724d9021d89b5beab1e9dffa12430bf4dc6b99a7339719`
+  at `1ed9157cca73d43ba113d59238f12740caa94594`, before and after relocation.
+  The existing real-Git alignment fixture passes with admitted relocation and
+  rejection of unrelated source, unpaired/ambiguous deletion, borrowed existing
+  destinations, bindings, runtime JavaScript, symlinks and dirty/nonancestor state.
+- The existing infrastructure fixture passes at its moved path. An exploratory
+  registered leaf run failed the base fixture's old nine-command path list; the
+  direct diagnostic isolated that assertion after successful compilation/app
+  checks. Updating only those nine independent expected paths made the inner
+  template fixture pass. The combined run was deliberately cancelled before
+  later checks, because final lifecycle metadata preparation was still pending
+  and would invalidate its receipts. It is **not** counted as qualification.
+- The retained six-method repository-contract run finished in 486.275 seconds:
+  four passed, two fixture-expectation corrections remain. This measured cost is
+  retained debt, not a claim that ordinary commit verification takes that long.
+
+The existing migration scanners now batch literal searches instead of starting
+one process per repository file. Existing fixtures preserve reference locations,
+counts, active/history decisions and read/enumeration failure behavior. Measured
+same-query planner time fell from 22.933 to 0.759 seconds; checker time from
+8.545 to 0.281 seconds. Only displayed source excerpts are bounded to 512
+characters; matches and locations are not dropped.
+
+P7's existing runner now uses the canonical metadata parser/taxonomy and rejects
+unknown, malformed and prohibited effects before executing a child. Controlled
+runner (16.778s), command drift (2.873s), portable bootstrap (72.235s) and public
+contract (0.406s) proof pass. The exported taxonomy is generated from the same
+canonical data, not separately maintained. Admission/authoring guidance includes
+the actual selector-helper transfer as its example; existing metadata and new
+source size approval rules remain. Full registered qualification is still due.
+
+Remote observation: fetched origin without pruning; local main and origin/main
+are both `237dbcf18fc0be11f35c6a66a9738d83d15d10b4`, the root integration checkout
+is clean, and task HEAD is its one-commit ancestor. Use the governed non-rewriting
+refresh after task commits; no merge or push has occurred in this continuation.
+
+### Final prepared handoff and representative review — 2026-11-26
+
+The complete 562-path migration prepared successfully in 115 seconds: 334
+artifact headers pass; 19 non-artifacts, one canonical bootstrap template and
+208 observed HEAD deletion/move sources are explicitly accounted for. The
+updater now handles task-path lists without pretending deleted sources still
+exist, while retaining containment, symlink and strict lifecycle-transition
+guards. Direct preparation and full integration previews have zero ownership
+findings. The full preview selects 133 local instances plus explicitly deferred
+or later-stage proof, not 133 checks for an ordinary change. No new check
+identity was added by the final ownership corrections.
+
+Narrative infrastructure Markdown and explicitly typed planning-only YAML use
+the existing prose classification. Executable, authoritative, malformed or
+unknown inputs still require actual owners. The platform-shell blueprint body
+already says planning-only; its metadata now agrees. Existing counterexamples
+prove that this is not a blanket YAML exemption.
+
+Independent representative previews in
+`.cache/p7-representative-preview.XdmSBu/` report no findings: documentation and
+session prose need no source tests; the diagnostic-reader test selects its one
+reader check; an Entity feature selects six actual consumers; a moved task
+controller selects eight connected consumers, not its full aggregate. No
+ordinary Entity, manifest or helper preview activates retained staging/RAG.
+The moved helper's test has its focused owner; changing the shared projector
+itself still affects real selector and packaging consumers.
+
+Lockfile-only selection still parses workspace declarations and invalidates
+matching dependency proof. Full installation equivalence is checked by package
+preparation and hosted `npm ci`, not claimed at local commit. The broad module
+scan intentionally remains hygiene; this predates the task. Its stale catalogue
+comment is corrected without changing selection. This retained distinction is
+not a new exemption or a claim that declaration parsing proves installation.
+
+All five Entity route leaves pass (task-route 494 seconds, credential 366,
+restart 175, failure 30, infrastructure 20), as do 15 isolated chat/harness
+leaves and seven sequential platform leaves (257 seconds). Existing private
+receipts will be reused only when their effective inputs still match.
+The final review found one stale helper-test metadata-label assertion and one
+old governed-command example; these are corrected at their existing owners.
+No new source/test program, wrapper or scheduler is introduced. Final complete
+candidate execution, task commits and publication remain due.
+
+### Complete-candidate observations and bounded corrections — 2026-11-26
+
+The first stable complete-candidate run finished in 1850.642 seconds: 128
+entries passed (including 29 reused results), four failed, one combined check
+was blocked by its failed prerequisite, and 28 remained deliberately deferred
+or owned by a later stage. Report:
+`.cache/test-runs/20261126T104751Z-33034908d3104497974f826af3353439/report.json`.
+This is failed qualification, not acceptance. Its successful receipts remain
+available for matching-input reuse. The broad migration cost misses the normal
+checkpoint target; it is not a measured ordinary-feature or live-delivery cost.
+
+Independent diagnosis and parent source review identify one correction batch:
+
+- `delivery-smoke-test.py` under `inventory-deploy-control/` still expects
+  catalogue metadata alone to select checks and unowned changed scripts to
+  pass. Reconcile its existing cases with explicit selection ownership and
+  exact `changed-input-uncovered` failures; preserve census findings and prove
+  planning executes no child. Do not restore broad metadata selection.
+- `products/kanbien-platform/tests/integration/kanbien-platform-runtime.test.ts`
+  still expects no Entity cleanup job, although accepted commit `be940246`
+  declared it. Update the independent literal expectation, retaining the full
+  descriptor assertion. This proves metadata, not scheduling or live cleanup.
+- `release-succession/ordinary-update-test.py` dynamically imports two moved
+  Entity fixtures from old locations. Point those imports to their approved
+  capability/test folders; retain approval and recovery assertions.
+- The persistence target's `controller-regression.py` mocks the old Entity
+  acceptance command. Match the new canonical command so its existing
+  once-only mandatory-gate assertions receive controlled validated evidence.
+
+No production behavior, catalogue selection policy, schedules, new test program
+or deployment authority changes in this batch. Existing registered owners
+(`delivery-inventory-regression`, `kanbien-platform-runtime`,
+`ordinary-update-regression`, `persistence-provider-regression`) must pass in
+the next complete prepared candidate. The blocked `shell-package-source`
+aggregate must then complete; its failed product prerequisite is not waived.
+The persistence fixture is source-pinned in the existing diagnostic review.
+Its old pin matches the staged pre-correction bytes exactly; independent review
+and the existing once-only gate case (1.022 seconds) cover the single mock-path
+change before refreshing that pin. Production hashes, partial status and live
+debt remain unchanged. Both corrected ordinary-update cases pass in 4.157 seconds.
+
+### Complete-candidate pass and protected RAG boundary — 2026-11-26
+
+The corrected complete candidate passed: 133 entries passed (28 executed,
+105 reused), 28 retained their declared later/manual stage, and zero findings.
+Wall time was 1177.492 seconds. Report:
+`.cache/test-runs/20261126T111455Z-7812a266dd484165b511b539dc04e342/report.json`.
+All four previously failing owners and the blocked package-source aggregate
+passed. This broad migration still exceeds the ordinary delivery cost target;
+it does not establish fast ordinary-change or live-release timing.
+
+Final review found a task-introduced scope error: the new retrieval evaluator
+registration led to regeneration of the dormant recognition projection, despite
+this migration's explicit freeze. Restore that projection to its exact starting
+bytes (`6089185bb1056fd87e15d6595b8c444e530360428fb8107b54134fde8abf646f`).
+Do not erase the earlier reports or claim they qualify this corrected candidate.
+
+The named migration risk is a broken current readiness-command reference, not
+freshness of the whole dormant search index. Extend the existing R01 readiness
+fixture to inspect the actual five changed YAML reference owners, their stable
+artifact identities and repository-contained destinations. Bind those consumed
+inputs to that existing check. Remove only this task's accidental new evaluator
+registration and its incidental evaluator-header edit; the existing manual
+evaluation command and fixtures remain available. Their retained full retrieval
+and freshness obligations are not represented as a current-checkout pass.
+
+The existing local runtime and query fixtures also call a builder that refreshes
+recognition at its source root: a temporary output directory alone is not
+isolation. Preserve their assertions and required execution, but copy current
+Git-visible source bytes and executable modes into their existing disposable
+test directories, using the builder's existing source-root/provenance inputs.
+Only those disposable copies may be regenerated. No production builder change,
+new test program, new registry, disabled required check or live operation is
+introduced. Reconcile their actual consumed inputs before trusting reused proof.
+
+After this bounded batch, prepare and enforce the staged commit gate, then use
+the existing refreshed-candidate and main-readiness routes for final integrated
+qualification. Preserve the 90 accepted/proof records, frozen recognition and
+dated timeout inventory unchanged through that handoff. Publication is recorded
+only after the intended commits are observed on both local and remote main.
+
+### Final integrated qualification and publication — 2026-11-26
+
+The protected-RAG correction above was completed in task commit `084d2f37`.
+The three affected registered checks passed in 91.282 seconds; final lifecycle
+preparation passed in 117.726 seconds and the staged commit gate in 71.991
+seconds. No new source file, registry, scheduler or test framework was added.
+
+Refresh used recorded base `237dbcf18fc0be11f35c6a66a9738d83d15d10b4` and
+produced `af47d3e02174ca3e7214cfde912977dce2304609` without conflicts or source
+changes. Its complete affected integration proof passed: 132 checks passed
+(19 executed, 113 reused), 28 kept their declared later/manual stage, and zero
+findings. Wall time was 706.430 seconds. Registered report:
+`.cache/test-runs/20261126T114050Z-a94c9caaf7f0471fa1d69c3ecfdb20b6/report.json`.
+
+The independent delivery census covered 521 entrypoints in six scopes with no
+gaps. Main readiness returned `eligible` in 86.678 seconds: all 132 successful
+results were reused, zero checks executed and zero findings. Registered report:
+`.cache/test-runs/20261126T114236Z-32de8ded6d55444bbf35f321fc876720/report.json`.
+These private local reports are not portable or live acceptance evidence.
+
+Normal merge and push published
+`5700a3a92ca1f0af12a7fa5fd61aca5f122d09e2`; local main and the independently
+queried remote `refs/heads/main` matched, and task commit `084d2f37` is an
+ancestor. The feature difference has 358 rename-aware changed paths: 208 moves
+and 150 other modifications. The 208 moves are 173 deployment source files,
+31 Markdown companions and four repository helper/test files. The script source
+count remains 690 (377 shell, 247 Python, 59 MJS and seven JS files).
+
+The retained preflight branch is
+`agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-87d81f578585/20261126112805`;
+its worktree remains under `/var/tmp/kanbien-p6-proof.oel6Cb/agentic-main-refresh-preflight/`.
+No branches or worktrees were deleted. Final hash comparison confirmed all
+90 accepted/proof records, the frozen recognition projection and dated timeout
+inventory remained unchanged.
+
+Publication closeout reconciles the current plan/manifest status and the two
+stale diagnostic scheduling instructions with the existing catalogue. Broad
+adoption/runtime aggregates remain explicit deferred checks, not automatic
+commit requirements. This is a documentation correction, not disabled proof.
+
+Retained limits: the large migration's verification is still costly; no
+ten-minute complete release or live environment health claim is established.
+Existing diagnostic-review debt, cold setup/runtime-scan cost and dormant
+retrieval freshness remain recorded work outside this finite scope. Package,
+deployment and runtime acceptance still require their own actual artifacts,
+authority and fresh observations. No live deployment, hosted workflow dispatch,
+new nightly automation, scheduler implementation or staging/RAG retirement was
+performed. Existing staging schedules and disabled RAG automation are unchanged.
 
 ## Milestone P7 — Codify the proven rules and close the programme
 
@@ -1115,11 +2470,11 @@ cloud operations, legacy retirement, or a different folder design.
 
 | Milestone | Status at this revision | Next concrete action |
 | --- | --- | --- |
-| Audit and revised plan | Completed as documentation/source audit only. | User reviews plan and chooses execution milestone. |
-| P1 Current candidate ownership | Complete locally: direct owner connected and P1 proof recorded. | Preserved; P2 was subsequently approved. No publication claimed. |
-| P2 Consistent selection | Complete locally at its bounded selection/implementation boundary: focused and registered owners passed, warm reuse proved, both CI callers agree. Full affected integration/publication not claimed. | Brief user and stop. P3 requires explicit approval; retain the 30 pre-existing adoption findings. |
-| P3 Reliable published checkpoint | Delivered via main/remote 21365c76: exact source qualification passed, 42 local command instances, seven reused. Empty-diff follow-up correction and completion evidence are included in this record. | Brief user and stop; P4 requires approval. The 21m33s source gate missed the cost target; retain P5 measurement work and baseline adoption debt. |
-| P4 Complete capability disposition | Full 690-file source review supplied; folder approval and final migration scope unfinished. | Reconcile only changed sources, resolve proposed decisions and approve finite migration manifest. |
-| P5 Build/package handoff | Existing machinery retained; duplication/cold reuse unmeasured. | Trace and measure one complete local qualification-to-package call chain. |
-| P6 Approved migrations | One historical diagnostics split retained. | Execute only newly approved packets after their prerequisites. |
-| P7 Standards and final acceptance | Historical admission rule retained; reconciliation incomplete. | Close proven rules, acceptance matrix and final authorised publication. |
+| Audit and revised plan | Complete: source-backed review and approved bounded destinations recorded. | Preserve the audit; do not repeat all 690 reviews. |
+| P1 Current candidate ownership | Complete: direct owner connected and P1 proof recorded; included in the published P3 checkpoint. | Preserve existing ownership evidence. |
+| P2 Consistent selection | Complete at its bounded implementation boundary: focused and registered owners passed, warm reuse proved, both automated callers agree; included in P3. | Retain the recorded pre-existing adoption findings; qualify newly changed inputs. |
+| P3 Reliable published checkpoint | Published including follow-up at actual remote main 237dbcf1; exact initial qualification passed 42 local instances, seven reused. Final follow-up gate reused all six due checks in 20.242 seconds without execution. | Complete. Initial 21m33s cost miss and baseline adoption debt remain visible P5 work. |
+| P4 Complete capability disposition | Approved after the complete folder/count briefing: exact 173-source relocation scope, 517 retained paths and 148 deploy file-bearing-folder counts. | Closed at the audit/design boundary; P6 implements the approved moves. |
+| P5 Build/package handoff | Bounded local handoff delivered: three registered owners pass in 212.440489 seconds; unchanged reuse passes in 11.394741 seconds with zero commands. Complete affected integration now passes. | Complete within the approved local scope. Actual release timing, runtime-scan and cold-setup cost debt remain outside the proved result; no live freshness weakened. |
+| P6 Approved migrations | All 173 deployment sources and 31 Markdown companions relocated; four repository helper/test homes corrected. Current/historical callers, direct ownership and complete affected integration pass. | Complete and published in `5700a3a9`; exact rows remain in the migration manifest. |
+| P7 Standards and final acceptance | Canonical effects parsing, portable taxonomy handoff, admission/authoring guidance and folder guides implemented; representative routing and retained limits recorded. Main readiness reused all 132 passing checks. | Complete; implementation published in `5700a3a9`, with this evidence and scheduling-prose closeout recording the actual outcome. |

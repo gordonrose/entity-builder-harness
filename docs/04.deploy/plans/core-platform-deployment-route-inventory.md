@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.inventory.core-platform-deployment-routes
-version: 1
+version: 4
 status: draft
 created_on: "2026-11-14"
-updated_on: "2026-11-22"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: deployment.consolidation
 disciplines: [architecture, sre, security]
@@ -16,6 +16,62 @@ used_by:
   path: .agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md
 -->
 # Core platform deployment route inventory
+
+## Current relocation status — 2026-11-26
+
+The approved 173-source relocation and its 31 Markdown companions are qualified
+and published on main at `5700a3a9`; the
+[programme](../../../.agentic/shared/plans/implementation/script-library-simplification.md#final-integrated-qualification-and-publication--2026-11-26)
+records final evidence. The 76 Entity sources
+now occupy capability subfolders within their existing runtime owner. The 95
+staging sources, including the Cognito observer, now live under
+[`scripts/04.deploy/legacy/kanbien-staging/`](../../../scripts/04.deploy/legacy/kanbien-staging/);
+the two retained RAG readiness sources live under
+[`scripts/04.deploy/legacy/rag-rulebook/`](../../../scripts/04.deploy/legacy/rag-rulebook/).
+The deployment estate still contains 471 source files. No source was retired,
+no staging schedule changed, and the hosted RAG job remains disabled.
+
+Current consumers use the canonical paths; accepted receipts, source identities
+and dated audit observations remain historical evidence. The dated baselines
+below describe their recorded checkout, not today's directory placement. Shared
+core/staging helpers remain shared, and local relocation is not fresh live proof.
+
+## P4 current script disposition — 2026-11-25
+
+The [source-backed script audit](../../../scripts/helpers/audit.md#p4-current-disposition-and-proposed-folder-manifest--2026-11-25)
+now reconciles every one of the 690 script sources against the earlier complete
+review. Current source is 1ed9157c, published through main 237dbcf1. The 17
+changed sources are chat/harness/verification repairs; no deployment source was
+added, deleted or changed since the full review at 33f479b1.
+
+There are 471 deployment source files: lifecycle 338 (alignment 35, build 32,
+package 67, deploy 37, run 167), shared helpers 24, shared outer controls 13,
+outer staging 94 and retained RAG readiness 2. This is a file count, including
+tests/wrappers, not a count of checks or mandatory work per deployment.
+The most recent actual P3 delivery census still reports 521 entrypoints, six
+scopes and no gaps; it does not establish live behavior.
+
+The [existing migration plan](../../../.agentic/04.deploy/plans/migration/entity-smoke-runtime-script-topology.md#p4-whole-deployment-isolation-proposal--2026-11-25)
+now proposes exact staging/RAG directory pairs alongside its existing 76 Entity
+file pairs. Proposed moves total 173 sources and 31 Markdown companions;
+517 sources stay in place. No deletion, script split or schedule change occurs.
+The audit supplies every proposed deploy folder and its direct-file count,
+including the full deploy-phase breakdown.
+
+`legacy/kanbien-staging/` (95 sources including the Cognito observer) and
+`legacy/rag-rulebook/` (2 readiness sources) are proposed deployment homes, not
+existing directories. The 69-source RAG layer already has its own home and stays
+there. Shared inventory, realization and container controls stay in place;
+shared helpers used by core routes must not be swept into staging.
+
+The user approved P4's layout/scope after the full folder briefing. Its migration
+plan's placement-standard reconciliation is delivered by P6's first group; the
+deployment moves still require their non-obvious consumers to be handled:
+mixed provider/package tests, dynamic imports and fixture roots, source-pinned
+recovery, original reservation hashes, historical Entity readers and embedded
+RAG source catalogues. Folder movement alone does not remove those dependencies.
+The three staging workflows remain scheduled every four hours; the hosted RAG
+job remains disabled. Earlier dated baselines below are retained audit history.
 
 ## Lifecycle ownership baseline — 2026-11-22
 
@@ -311,7 +367,7 @@ to changing that accepted-historical route.
 
 Baseline [task evidence](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py)
 exposes `task_overrides_match(task, container_name, expected_environment)`.
-The feature [task controller](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-control.py)
+The feature [task controller](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py)
 repeats that shape/environment check inside `exact_task`, alongside additional
 reservation identity checks. Those surrounding identity checks must remain.
 The baseline's server-observation helper accepts a different service-task
@@ -320,7 +376,7 @@ separate contract.
 
 ### Accepted history depends on incident code
 
-The feature [source transition module](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/source-transition.py)
+The feature [source transition module](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/source-transition/source-transition.py)
 contains pinned recovery exceptions for particular attempts. Its imports reach
 normal task and acceptance paths. Removing those constants just because the
 incident ended would change the interpretation of existing proof.

@@ -4,7 +4,7 @@ id: deploy.plan.migration.aws-provider-neutral-transition
 version: 1
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: migration
 disciplines:
@@ -48,7 +48,7 @@ Do not move, rewrite, or semantically alter these surfaces during bootstrap:
 - `.agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md`
 - `.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md`
 - `docs/aws/kanbien-staging-postgresql-relational-reference-v1-*`
-- `scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/`
+- `scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/`
 - `infra/04.deploy/03.product/targets/kanbien/staging/`
 
 No PostgreSQL Stage 6 live operation may be run as part of this transition.

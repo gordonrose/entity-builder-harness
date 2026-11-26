@@ -4,7 +4,7 @@ id: rag-rulebook.plan.repo
 version: 1
 status: active
 created_on: "2026-06-25"
-updated_on: "2026-10-25"
+updated_on: "2026-11-26"
 layer: 02.rag-rulebook
 domain: rulebook
 disciplines:
@@ -511,6 +511,7 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
    - Detect when structured rule YAML files are added, modified, moved, or
      removed under indexed roots such as `docs/02.rag-rulebook/rules/` and
      `docs/04.deploy/rules/`.
+   <!-- deterministic-check: allow reason="the existing check-source-material-coverage capability owns discovery and chunk reachability; this retained plan states its purpose, not an additional manual gate" -->
    - Verify that indexed rule roots discover the changed YAML files and that
      generated chunk candidates/chunks include the expected derived rule
      material or intentionally exclude it with a recorded reason.
@@ -1038,8 +1039,8 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
    - Status: present in
      `.github/workflows/rag-rulebook-msp-checks.yml`,
      `.agentic/aws/workflows/deploy-rag-rulebook-service.md`,
-     `scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh`,
-     `scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh`,
+     `scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh`,
+     `scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/smoke-test.sh`,
      `docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml`,
      `docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml`,
      and `corpus-gaps/04.deploy/mcp-server-deployment.yml`.

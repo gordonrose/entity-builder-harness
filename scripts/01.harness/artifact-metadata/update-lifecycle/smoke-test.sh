@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle-smoke-test
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -22,13 +22,11 @@ set -euo pipefail
 #       - design-system-builder
 #   effects:
 #     - writes-files
-#     - stages-files
-#     - commits
 #   used_by:
 #     - id: harness.script.artifact-metadata.update-lifecycle
 #       path: scripts/01.harness/artifact-metadata/update-lifecycle/script.sh
 
-repo_root="$(git rev-parse --show-toplevel)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd -P)"
 python3 - "$repo_root/scripts/01.harness/artifact-metadata/update-lifecycle/script.sh" <<'PY'
 import datetime as dt
 import contextlib
@@ -69,7 +67,18 @@ Body remains byte-for-byte.
 
 
 def run(cmd, cwd, **kwargs):
-    return subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+    cwd = Path(cwd).resolve()
+    if not Path(temporary).is_dir() or not cwd.is_relative_to(Path(temporary).resolve()):
+        raise ValueError("fixture-cwd-outside-temporary-scope")
+    git_dir = cwd / ".git"
+    if git_dir.is_symlink() or git_dir.exists() and not git_dir.is_dir():
+        raise ValueError("fixture-external-git-directory")
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env.update({key: value for key, value in kwargs.pop("env", {}).items()
+                if not key.startswith("GIT_") or key in {"GIT_AUTHOR_DATE", "GIT_COMMITTER_DATE"}})
+    env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+               GIT_CEILING_DIRECTORIES=str(cwd), GIT_DISCOVERY_ACROSS_FILESYSTEM="0")
+    return subprocess.run(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
 
 
 def git(repo, *args, **kwargs):
@@ -107,6 +116,33 @@ def artifact(repo, name=".agentic/original.md", identity="test.artifact.original
 with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary:
     repo = Path(temporary) / "repository"
     repo.mkdir()
+    # The fixture must refuse real-checkout and external-Git targets before spawn.
+    with patch.object(subprocess, "run") as child:
+        try:
+            run(["git", "status"], UPDATER.parents[4])
+        except ValueError as error:
+            assert str(error) == "fixture-cwd-outside-temporary-scope"
+        else:
+            raise AssertionError("fixture admitted an existing checkout")
+        (repo / ".git").write_text("gitdir: /outside-fixture-canary\n")
+        try:
+            run(["git", "status"], repo)
+        except ValueError as error:
+            assert str(error) == "fixture-external-git-directory"
+        else:
+            raise AssertionError("fixture admitted an external Git directory")
+        (repo / ".git").unlink()
+        assert child.call_count == 0
+        with patch.dict(os.environ, {"GIT_DIR": "/outside-fixture-canary",
+                                    "GIT_WORK_TREE": "/outside-fixture-canary",
+                                    "GIT_INDEX_FILE": "/outside-fixture-canary",
+                                    "GIT_CONFIG_COUNT": "1"}):
+            run(["git", "status"], repo, env={"GIT_AUTHOR_DATE": "2025-01-03T00:00:00Z"})
+        observed = child.call_args.kwargs["env"]
+        assert not {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_CONFIG_COUNT"} & observed.keys()
+        assert observed["GIT_CONFIG_NOSYSTEM"] == "1" and observed["GIT_CONFIG_GLOBAL"] == os.devnull
+        assert observed["GIT_CEILING_DIRECTORIES"] == str(repo.resolve())
+        assert observed["GIT_AUTHOR_DATE"] == "2025-01-03T00:00:00Z"
     git(repo, "init", "-q")
     git(repo, "config", "user.name", "Lifecycle smoke test")
     git(repo, "config", "user.email", "lifecycle-test@example.invalid")
@@ -175,13 +211,41 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary
         "schema: agentic-artifact/v2",
         'schema: agentic-artifact/v3\ncreated_on: "2025-01-03"\nupdated_on: "2025-01-03"'
     ))
-    git(repo, "add", ".agentic/rename-edit.md")
+    deleted = artifact(repo, ".agentic/deleted-task.md", "test.artifact.deleted-task")
+    deleted_bytes = deleted.read_bytes()
+    git(repo, "add", ".agentic/rename-edit.md", ".agentic/deleted-task.md")
     git(repo, "commit", "-qm", "Add rename-edit fixture")
     git(repo, "mv", ".agentic/rename-edit.md", ".agentic/renamed-edit.md")
     renamed = repo / ".agentic/renamed-edit.md"
     renamed.write_text(renamed.read_text() + "Edited while moving.\n")
     git(repo, "add", ".agentic/renamed-edit.md")
-    report = update(repo, [".agentic/renamed-edit.md"], "--apply")
+    deleted.unlink()
+    scaffold_name = "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template"
+    scaffold = repo / scaffold_name
+    scaffold.parent.mkdir(parents=True)
+    scaffold.write_bytes(b"# raw @PLACEHOLDER@ scaffold\n")
+    index = git(repo, "write-tree")
+    report = update(repo, [".agentic/rename-edit.md", ".agentic/renamed-edit.md", ".agentic/deleted-task.md", scaffold_name], "--skip-non-artifacts", "--apply")
+    assert report["skipped"] == [
+        {"path": ".agentic/rename-edit.md", "reason": "deleted-head-file"},
+        {"path": ".agentic/deleted-task.md", "reason": "deleted-head-file"},
+        {"path": scaffold_name, "reason": "excluded-bootstrap-scaffold"},
+    ], report
+    assert not deleted.exists() and not rename_source.exists()
+    assert scaffold.read_bytes() == b"# raw @PLACEHOLDER@ scaffold\n"
+    assert git(repo, "write-tree") == index, "task preparation must not stage deletions or moves"
+    for name, code in [(".agentic/rename-edit.md", "path-missing"), (scaffold_name, "path-excluded")]:
+        for flags in [(), ("--skip-non-artifacts", "--status", "deprecated")]:
+            rejected = update(repo, [name], *flags, succeeds=False)
+            assert rejected["errors"][0]["code"] == "lifecycle-" + code
+    link = repo / ".agentic/task-link.md"; link.symlink_to(replacement)
+    parent_link = repo / "task-parent"; parent_link.symlink_to(repo / ".agentic", target_is_directory=True)
+    for name, code in [(".agentic/missing-typo.md", "path-missing"), (".agentic", "path-missing"),
+                       ("../outside-task.md", "path-outside-repository"), (".agentic/task-link.md", "path-symlink"),
+                       ("task-parent/missing.md", "path-symlink")]:
+        rejected = update(repo, [name], "--skip-non-artifacts", "--apply", succeeds=False)
+        assert not rejected["applied"] and rejected["errors"][0]["code"] == "lifecycle-" + code
+    link.unlink(); parent_link.unlink(); scaffold.unlink(); deleted.write_bytes(deleted_bytes)
     assert report["plans"][0]["head_baseline_path"] == ".agentic/rename-edit.md"
     assert report["plans"][0]["after"]["updated_on"] == TODAY
     assert report["plans"][0]["after"]["created_on"] == "2025-01-03"
@@ -584,6 +648,8 @@ with tempfile.TemporaryDirectory(prefix='lifecycle-diagnostic-boundaries-') as t
         assert all(path.read_bytes()==raw for path,raw in original.items())
     status,report,command=invoke('--changed',replacements={'changed_paths':lambda:(_ for _ in ()).throw(ValueError('private-selection-canary'))})
     assert status==1 and report['errors'][0]['stage']=='selection' and command.call_count==0
+    status,report,command=invoke('--paths','missing.md','--skip-non-artifacts','--apply',replacements={'git':lambda *args:(_ for _ in ()).throw(subprocess.CalledProcessError(71,['git'],stderr=b'private-deletion-canary'))})
+    assert status==1 and not report['applied'] and report['errors'][0]['code']=='lifecycle-planning-failed' and command.call_count==0
     for error in [OSError('private-checker-canary'),UnicodeDecodeError('utf8',b'\xff',0,1,'private-checker-canary'),subprocess.TimeoutExpired(['private-checker-canary'],1)]:
         status,report,command=invoke('--paths','one.md','--apply',child_error=error)
         assert status==1 and report['errors'][0]['code']=='lifecycle-proposed-check-failed' and command.call_count==1

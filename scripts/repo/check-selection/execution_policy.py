@@ -4,7 +4,7 @@
 #   version: 7
 #   status: active
 #   created_on: "2026-11-07"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: testing
 #   disciplines: [agentic, security, sre]
@@ -16,7 +16,7 @@
 #   - id: repo.compiler.check-selection
 #     path: scripts/repo/check-selection/script.py
 #   - id: deploy.command.entity-smoke.infrastructure.implementation
-#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/script.py
 """Consume and retain runner observations; selector/cache own execution and proof."""
 from __future__ import annotations
 

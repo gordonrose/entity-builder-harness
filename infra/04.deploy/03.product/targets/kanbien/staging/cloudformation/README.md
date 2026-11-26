@@ -4,7 +4,7 @@ id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
 version: 2
 status: draft
 created_on: "2026-09-06"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -52,7 +52,7 @@ priority must be reviewed in an AWS change set before it is applied.
 Render the deployable template locally with:
 
 ```bash
-bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh --output /tmp/platform-shell-foundation.yml
+bash scripts/04.deploy/legacy/kanbien-staging/render-platform-shell-foundation-template/script.sh --output /tmp/platform-shell-foundation.yml
 ```
 
 The renderer is run by the static policy gate and GitHub workflow before AWS

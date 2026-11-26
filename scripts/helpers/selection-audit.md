@@ -4,7 +4,7 @@ id: repo.report.verification-selection-audit
 version: 11
 status: draft
 created_on: "2026-11-23"
-updated_on: "2026-11-25"
+updated_on: "2026-11-26"
 layer: 06.shared
 domain: scripts.catalogue
 disciplines: [architecture, agentic, sre]
@@ -24,6 +24,13 @@ remains the execution authority.
 
 The P2 section supersedes earlier current-selection counts. The full source
 audit and historical milestone observations remain for traceability.
+
+P6 first-group update: F18's import inspector and existing fixture now reside
+in repo/module-structure; the two paths and their caller proof are recorded in
+the current programme/migration plan. No scheduling policy changed. The broad
+retained repository-contract suite is still failing separately; its 11 failure
+records across eight methods are recorded in the programme, not hidden by the
+successful relocation-specific proof. Earlier F18 recommendations are history.
 
 ## P3 publication preparation — 2026-11-25
 
@@ -228,13 +235,13 @@ to mass-refresh hashes or bypass a structural gate. Exact findings follow:
 - `diagnostic-review-stale`: `infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts`.
 - `diagnostic-review-stale`: `infra/04.deploy/03.product/entrypoints/entity-smoke/runtime.ts`.
 - `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/verify-workflow.py`.
-- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/snapshot-route.py`.
-- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/credential-steps.py`.
-- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/restart-route.py`.
-- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-route.py`.
+- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/snapshot/snapshot-route.py`.
+- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/credential-steps.py`.
+- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart-route.py`.
+- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-route.py`.
 - `diagnostic-review-stale`: `infra/04.deploy/03.product/entrypoints/entity-smoke/administration.ts`.
 - `diagnostic-review-stale`: `infra/04.deploy/03.product/entrypoints/entity-smoke/migrations.ts`.
-- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py`.
+- `diagnostic-review-stale`: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/script.py`.
 - `diagnostic-review-stale`: `scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh`.
 - `diagnostic-review-stale`: `scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh`.
 - `diagnostic-review-stale`: `scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh`.

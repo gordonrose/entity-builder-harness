@@ -4,7 +4,7 @@
 #   version: 55
 #   status: draft
 #   created_on: "2026-07-10"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -17,7 +17,7 @@
 #     targets: []
 #   used_by:
 #   - id: deploy.script.verify-platform-shell-deploy-readiness
-#     path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh
 #   - id: infra.04-deploy.03-product.aws-runtime-family-decision
 #     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
 schema: deploy/platform-shell-readiness-manifest/v1
@@ -371,7 +371,7 @@ inspection:
     planned_cloudformation:
       foundation_stack: kanbien-staging-platform-shell-foundation
       foundation_composition: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
-      foundation_renderer: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+      foundation_renderer: scripts/04.deploy/legacy/kanbien-staging/render-platform-shell-foundation-template/script.sh
       foundation_template: rendered-transient-output-from-foundation-composition
       service_stack: kanbien-staging-platform-shell-service
       service_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
@@ -496,7 +496,7 @@ artifacts:
     scan_on_push_expected: true
     dockerfile: infra/04.deploy/03.product/image/Dockerfile
     build_context: .
-    local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+    local_smoke_script: scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh
     local_smoke_passed: true
     local_smoke_verified_on: "2026-09-07"
     compiled_runtime_payload_check: passed-local-2026-09-06

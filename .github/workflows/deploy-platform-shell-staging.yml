@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-07-14"
-#   updated_on: "2026-10-28"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -104,7 +104,7 @@ jobs:
       - name: Run platform shell checks
         id: source-checks
         run: |
-          bash scripts/repo/check-selection/script.sh --checks shell-package-source shell-infrastructure shell-publication --task-paths scripts/04.deploy/build-platform-shell-image/check-source.sh scripts/04.deploy/verify-platform-shell-infrastructure/script.sh .github/workflows/deploy-platform-shell-staging.yml --record-preparation --json
+          bash scripts/repo/check-selection/script.sh --checks shell-package-source shell-infrastructure shell-publication --task-paths scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-infrastructure/script.sh .github/workflows/deploy-platform-shell-staging.yml --record-preparation --json
           bash scripts/repo/check-selection/script.sh --checks platform-shell-payload --execute-local --json
           npm run platform:server:check
           npm run platform:server:image-runtime-check
@@ -115,7 +115,7 @@ jobs:
 
       - name: Verify blocked deploy-readiness manifest
         run: |
-          bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
+          bash scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh \
             --manifest "$READINESS_MANIFEST" \
             --allow-blocked \
             --caller-intent planning \
@@ -214,7 +214,7 @@ jobs:
       - name: Build platform shell image
         if: ${{ !inputs.publish_image || steps.existing-image.outputs.exists != 'true' }}
         run: |
-          bash scripts/04.deploy/build-platform-shell-image/script.sh \
+          bash scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh \
             --tag "${{ steps.image-tag.outputs.uri }}" \
             --base-image "${{ steps.base-image.outputs.build_image }}" \
             --runtime-image "${{ steps.base-image.outputs.runtime_image }}" \
@@ -226,7 +226,7 @@ jobs:
           EXISTING_IMAGE: ${{ steps.existing-image.outputs.exists }}
           EXISTING_DIGEST: ${{ steps.existing-image.outputs.digest }}
           CANDIDATE_IMAGE: ${{ steps.image-tag.outputs.uri }}
-        run: bash scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh
+        run: bash scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/qualify-image.sh
 
       - name: Push platform shell image
         if: ${{ inputs.publish_image && steps.existing-image.outputs.exists != 'true' }}
@@ -329,7 +329,7 @@ jobs:
           PUBLISHED_DIGEST: ${{ steps.image.outputs.digest }}
           SBOM_PATH: ${{ runner.temp }}/platform-shell.sbom.spdx.json
         run: |
-          python3 scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py --output "$RUNNER_TEMP/platform-shell-custody.json"
+          python3 scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/emit-custody.py --output "$RUNNER_TEMP/platform-shell-custody.json"
           bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/platform-shell-custody.json" --expected-target kanbien-staging --expected-candidate platform-shell --expected-package-contract kanbien-staging-platform-shell --expected-program platform-shell --json
 
       - name: Retain immutable package custody evidence

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.target-alignment.implementation
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-21"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -30,6 +30,19 @@ ROOT = Path(__file__).resolve().parents[7]
 TARGET = "infra/04.deploy/03.product/targets/kanbien-core-platform"
 SCOPE = TARGET + "/20-scopes/entity-smoke/00-declaration/declaration-contract.yml"
 CONTROLLER_DIRECTORY = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/"
+# Admitted controller homes from the approved Entity operation/role migration.
+# Runtime JavaScript and local-qualification bindings are not controller repairs.
+CONTROLLER_GROUPS = frozenset({
+    "acceptance-evaluation/implementation", "acceptance-evaluation/tests", "acceptance-evaluation/commands",
+    "controls-and-readiness/implementation", "controls-and-readiness/tests",
+    "failure-handling/implementation", "failure-handling/tests", "failure-handling/commands",
+    "image-delivery-repair/implementation", "image-delivery-repair/tests",
+    "orchestration/implementation", "orchestration/commands",
+    "recovery-and-replacement/recovery-state", "recovery-and-replacement/replacement",
+    "recovery-and-replacement/restart", "recovery-and-replacement/restore",
+    "recovery-and-replacement/snapshot", "recovery-and-replacement/source-transition",
+    "task-execution/implementation", "task-execution/tests", "task-execution/commands",
+})
 CONTROLLER_REPAIR_FILES = frozenset({
     "AGENTS.md",
     ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
@@ -220,7 +233,9 @@ def source_checkpoint(receipt, *, controller_revision=None):
         paths = changed.split("\0")[:-1]
         def controller(path):
             relative = path.removeprefix(CONTROLLER_DIRECTORY)
-            return path.startswith(CONTROLLER_DIRECTORY) and "/" not in relative and relative.endswith((".py", ".sh"))
+            return path.startswith(CONTROLLER_DIRECTORY) and relative.endswith((".py", ".sh")) and (
+                "/" not in relative or relative.rsplit("/", 1)[0] in CONTROLLER_GROUPS
+                and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*\.(?:py|sh)", relative.rsplit("/", 1)[1]) is not None)
         evidence_prefix = str(Path(SCOPE).parent.parent / "30-release-evidence") + "/"
         def evidence_addition(path):
             pattern = re.escape(evidence_prefix) + r"(?:proof-receipts/entity-smoke-[a-f0-9]{64}\.json|release-candidates/release-[a-f0-9]{24}\.yml)"
@@ -231,7 +246,18 @@ def source_checkpoint(receipt, *, controller_revision=None):
         checked = [path for path in paths if not path.startswith("commitLogs/")]
         if checked:
             rows = command(["git", "ls-tree", "-z", current, "--", *checked]).split("\0")[:-1]
-            require(len(rows) == len(checked) and all(row.startswith(("100644 blob ", "100755 blob ")) for row in rows), "alignment-source-checkpoint-mismatch")
+            require(all(row.startswith(("100644 blob ", "100755 blob ")) for row in rows), "alignment-source-checkpoint-mismatch")
+            present = {row.split("\t", 1)[1] for row in rows}
+            missing = set(checked) - present
+            if missing:
+                original = command(["git", "ls-tree", "-z", source, "--", *checked]).split("\0")[:-1]
+                before = {row.split("\t", 1)[1]: row for row in original}
+                for old in missing:
+                    require(controller(old) and "/" not in old.removeprefix(CONTROLLER_DIRECTORY)
+                            and before.get(old, "").startswith(("100644 blob ", "100755 blob ")), "alignment-source-checkpoint-mismatch")
+                    destinations = [path for path in present if controller(path) and path not in before
+                                    and "/" in path.removeprefix(CONTROLLER_DIRECTORY) and Path(path).name == Path(old).name]
+                    require(len(destinations) == 1, "alignment-source-checkpoint-mismatch")
     return {"package_source_revision": source, "controller_revision": current}
 
 

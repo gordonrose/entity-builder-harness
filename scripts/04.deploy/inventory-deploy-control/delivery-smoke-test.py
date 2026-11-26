@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.delivery-inventory
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -195,26 +195,35 @@ class DeliveryInventoryCLI(unittest.TestCase):
                 self.assertIn(expected, {item['code'] for item in report['findings']})
                 self.assertFalse((self.root / 'census-must-not-execute').exists())
 
-    def test_catalog_member_edit_selects_independent_census_via_real_consumer_metadata(self):
+    def test_catalog_member_edit_requires_explicit_census_selection_owner(self):
         compiler = self.root / 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py'
         compiler.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / compiler.relative_to(self.root), compiler)
-        self.fixture.check_script('inventory-proof', ['read-only', 'writes-files'], 'printf fixture\n')
+        self.fixture.check_script('inventory-proof', ['read-only', 'writes-files'], 'touch census-must-not-execute\n')
+        catalog_ref = 'scripts/repo/check-selection/checks.yml'
+        inventory_ref = 'scripts/04.deploy/inventory-deploy-control'
         self.fixture.catalog['checks']['delivery-inventory-regression'] = copy.deepcopy(self.fixture.catalog['checks']['local'])
-        self.fixture.catalog['checks']['delivery-inventory-regression'].update(argv=['bash', 'scripts/inventory-proof.sh'], inputs=['scripts/04.deploy/inventory-deploy-control'])
-        self.fixture.catalog['repository_inputs'] = [{'inputs': ['scripts/04.deploy/inventory-deploy-control'], 'checks': ['delivery-inventory-regression']}]
-        self.fixture.save()
-        catalog = (ROOT / 'scripts/repo/check-selection/checks.yml').read_text()
+        self.fixture.catalog['checks']['delivery-inventory-regression'].update(argv=['bash', 'scripts/inventory-proof.sh'], inputs=[inventory_ref, catalog_ref])
+        catalog = (ROOT / catalog_ref).read_text()
         header = catalog[:catalog.index('schema: repo/check-catalog/v1')]
-        original = self.fixture.catalog_path.read_text()
-        for present in (True, False):
-            with self.subTest(consumer_edge=present):
-                prefix = header if present else header.replace('#   - id: deploy.compiler.delivery-inventory\n#     path: scripts/04.deploy/inventory-deploy-control/delivery_inventory.py\n', '')
-                self.fixture.catalog_path.write_text(prefix + original)
-                with patch.object(fixture.selection, 'changed_catalog_checks', return_value=set()):
-                    report = self.fixture.run_plan(paths=['scripts/repo/check-selection/checks.yml'])
-                selected = {item['check_id'] for item in report['checks']}
-                self.assertEqual('delivery-inventory-regression' in selected, present, report['findings'])
+        for explicit_owner in (True, False):
+            refs = [inventory_ref, catalog_ref] if explicit_owner else [inventory_ref]
+            self.fixture.catalog['repository_inputs'] = [{'inputs': refs, 'checks': ['delivery-inventory-regression']}]
+            self.fixture.save()
+            original = self.fixture.catalog_path.read_text()
+            for consumer_edge in (True, False):
+                with self.subTest(explicit_owner=explicit_owner, consumer_edge=consumer_edge):
+                    prefix = header if consumer_edge else header.replace('#   - id: deploy.compiler.delivery-inventory\n#     path: scripts/04.deploy/inventory-deploy-control/delivery_inventory.py\n', '')
+                    self.fixture.catalog_path.write_text(prefix + original)
+                    with patch.object(fixture.selection, 'changed_catalog_checks', return_value=set()):
+                        report = self.fixture.run_plan(paths=[catalog_ref])
+                    selected = {item['check_id'] for item in report['checks']}
+                    self.assertEqual('delivery-inventory-regression' in selected, explicit_owner, report['findings'])
+                    expected = [] if explicit_owner else [{'code': 'changed-input-uncovered', 'path': catalog_ref, 'state': 'present'}]
+                    self.assertEqual(report['findings'], expected)
+                    self.assertFalse((self.root / 'census-must-not-execute').exists())
+                    self.assertFalse((self.root / 'operations').exists())
+                    self.assertFalse((self.root / 'counts').exists())
 
     def test_catalogued_dormant_root_does_not_block_active_delivery_inventory(self):
         dormant = self.root / 'dormant-rag'
@@ -310,10 +319,13 @@ class DeliveryInventoryCLI(unittest.TestCase):
                 code, report = self.invoke()
                 self.assertEqual(code, 1)
                 self.assertIn(('delivery-entrypoint-unregistered', path), {(f['code'], f.get('path')) for f in report['findings']})
-                # Focused selection consumes declared routes only. The independent
-                # census, above, remains the mandatory global discovery gate.
+                # The independent census discovers undeclared operations; focused
+                # selection separately rejects changed source with no proof owner.
                 code, report = self.invoke_selector(path)
-                self.assertEqual(code, 0, report['findings'])
+                self.assertEqual(code, 1, report['findings'])
+                self.assertIn({'code': 'changed-input-uncovered', 'path': path, 'state': 'present'}, report['findings'])
+                self.assertFalse((self.root / 'operations').exists())
+                self.assertFalse((self.root / 'counts').exists())
                 (self.root / path).unlink()
 
     def test_supported_javascript_effect_headers_override_fixture_names(self):
@@ -327,7 +339,10 @@ class DeliveryInventoryCLI(unittest.TestCase):
                     self.assertEqual(code, 1)
                     self.assertIn(('delivery-entrypoint-unregistered', path), {(f['code'], f.get('path')) for f in report['findings']})
                     code, report = self.invoke_selector(path)
-                    self.assertEqual(code, 0, report['findings'])
+                    self.assertEqual(code, 1, report['findings'])
+                    self.assertIn({'code': 'changed-input-uncovered', 'path': path, 'state': 'present'}, report['findings'])
+                    self.assertFalse((self.root / 'operations').exists())
+                    self.assertFalse((self.root / 'counts').exists())
                     target.unlink()
 
     def test_bash_wrapper_and_npm_alias_require_each_consequential_implementation(self):

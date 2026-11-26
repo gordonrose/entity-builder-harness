@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.check-llm-workbench-contract
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-07-03"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-26"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -171,6 +171,8 @@ if [ "$PUBLIC_MODE" = "yes" ]; then
 
   for required_path in \
     "scripts/01.harness/run-governed-script.sh" \
+    "scripts/01.harness/artifact-metadata/header_discovery.py" \
+    "scripts/01.harness/artifact-metadata/taxonomy.yml" \
     "scripts/01.harness/check-deterministic-process-drift.sh" \
     "scripts/01.harness/check-governed-script-command-drift.sh" \
     "scripts/01.harness/artifact-metadata/check-headers/script.sh" \

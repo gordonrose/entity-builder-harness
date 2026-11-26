@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.script.artifact-metadata.update-lifecycle.readme
-version: 3
+version: 4
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-26"
+updated_on: "2026-11-26"
 layer: 01.harness
 domain: metadata
 disciplines: [agentic]
@@ -56,6 +56,13 @@ alone, and never stages anything. It is safe to repeat: once the lifecycle
 headers match the current task state, the second invocation makes no write.
 Use explicit `--paths ... --skip-non-artifacts --apply` when the task scope is
 already known and includes both ordinary source and metadata-bearing artifacts.
+This task mode reports the three canonical raw bootstrap scaffolds as skipped.
+It also skips a missing path only when that exact path was a regular file in
+`HEAD` (the current commit), such as a deleted file or a move's original path.
+Missing untracked paths, unsafe paths and symbolic links still fail. Explicit
+lifecycle transitions retain strict file requirements, even with the skip flag.
+The chat preparation command still passes every original task path to check
+selection: skipping a metadata edit does not waive verification of a deletion.
 `--changed` is intentionally not a lifecycle-transition shortcut: deprecation,
 supersession, and historical-date decisions remain explicit-path operations.
 

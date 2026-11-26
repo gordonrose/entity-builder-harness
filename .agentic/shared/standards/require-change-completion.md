@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 14
+version: 15
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-20"
+updated_on: "2026-11-26"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -120,6 +120,25 @@ impact and proportional verification. Scale this assessment to the change;
 a small correction does not require a new plan or a repository-wide audit.
 The implementing agent owns it. Escalate material scope/risk tradeoffs, not
 routine implementation choices already authorised by the task.
+
+For changes to script source or recurring check/review requirements, include a
+short growth-and-cost statement in the final response and existing task record:
+
+- **Files:** script-source files added, removed and moved, counted separately.
+  Include helpers and tests regardless of executable permission; a move is not
+  an addition plus a removal. Keep documentation and data-only changes distinct.
+- **Recurring work:** checks and required agent reviews added, removed or
+  rescheduled, and what triggers them. State when these are unchanged. No new
+  automatic check does not mean zero cost if a required review was introduced.
+- **Observed cost:** relevant verification/review timings already collected,
+  what evidence was reused, and what remains unmeasured. Distinguish measured
+  time from estimates; do not claim a speedup without a comparable baseline or
+  infer end-to-end delivery timing from a focused check.
+
+Use the scoped diff and existing admission, task and execution evidence.
+Summarise rather than duplicate detailed records; do not add a repository
+census, benchmark run, registry or commit gate just to fill in this statement.
+This is a reporting duty, not another required review or test.
 
 ## Implementation and consumers
 

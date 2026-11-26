@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standards.governed-script-permissions
-version: 1
+version: 2
 status: active
 created_on: "2026-06-19"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -61,6 +61,14 @@ hide unrelated behavior.
 Vendor files must not duplicate this standard. They should point their tool's
 permission system at the governed runner and leave policy meaning here.
 
+The runner uses the shared artifact-header parser and the canonical
+`script_effects` taxonomy. Inline and block lists have identical meaning;
+unrelated lists do not grant or remove permission. A missing, malformed, empty
+or unknown effects declaration is rejected before execution. Failed metadata
+observation is reported separately from a policy rejection. This classification
+assumes reviewed declarations accurately describe the script and its children;
+it is not a sandbox or a substitute for inspecting those effects.
+
 ## Approval Classes
 
 ### Always Runnable Checks
@@ -72,6 +80,10 @@ Examples include deterministic read-only checks, classifiers, and reporting
 helpers that do not stage, commit, push, delete, rewrite, clean, overwrite,
 start network listeners, or otherwise mutate repository, branch, runtime,
 cloud, or data state.
+
+Only the sole declared effect `read-only` qualifies. Mixing it with staging,
+commits, branches, worktrees, file writes or network effects requires the
+approval-sensitive route.
 
 ### Approval-Sensitive Governed Actions
 
@@ -105,6 +117,9 @@ bash scripts/01.harness/run-governed-script.sh --approved-action <script> [args.
 `--approved-action` does not grant approval by itself. It only records that the
 current workflow and current chat already contain explicit approval for that
 action class.
+It cannot turn an unknown or prohibited effect into permission. In particular,
+`aws-mutation` is rejected even with that flag; explicit cloud authority belongs
+to its owning workflow and must use that workflow's execution boundary.
 
 Direct script calls are allowed inside implementation scripts, smoke tests,
 fixture setup, and historical or explanatory prose when they are not active
@@ -134,6 +149,11 @@ governed runner:
 
 If a future workflow needs one of these actions, govern it directly with a
 specific workflow, script, gate, and approval boundary.
+
+The existing `apply-rehearsed-refresh` command retains its narrow approved
+cleanup exception for the rehearsed temporary worktree and branch. It still
+requires `--approved-action`; the exception does not permit `aws-mutation` or
+unknown effects and does not authorize arbitrary destructive scripts.
 
 ## Vendor Permission Surfaces
 

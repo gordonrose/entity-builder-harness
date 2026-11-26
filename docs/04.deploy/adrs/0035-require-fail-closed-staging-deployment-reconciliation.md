@@ -4,7 +4,7 @@ id: deploy.architecture.adr.0035-require-fail-closed-staging-deployment-reconcil
 version: 2
 status: active
 created_on: "2026-09-26"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -19,7 +19,7 @@ portability:
   - kanbien/staging
 used_by:
 - id: deploy.script.reconcile-platform-shell-staging
-  path: scripts/04.deploy/reconcile-platform-shell-staging/script.py
+  path: scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.py
 - id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
   path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
 -->

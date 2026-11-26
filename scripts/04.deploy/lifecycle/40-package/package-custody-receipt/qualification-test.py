@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.package-qualification-binding
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -63,7 +63,7 @@ if stage=='image-observation':print('sha256:'+'a'*64)
             env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'DOCKER_CONFIG':str(root/'docker-config'),'REAL_PYTHON':sys.executable,'FIXTURE_ROOT':str(ROOT),'FIXTURE_CALLS':str(calls),'FIXTURE_COUNTS':str(counts)}
             for stage,status,code in [('',0,None),('server-1',41,'CONTAINER_START_FAILED'),('http-1',59,'HTTP_OBSERVATION_FAILED'),('server-2',41,'CONTAINER_START_FAILED'),('receiver',41,'METRIC_RECEIVER_START_FAILED'),('http-2',59,'HTTP_OBSERVATION_FAILED'),('relational',67,'RELATIONAL_PACKAGE_FAILED')]:
                 calls.write_text('');counts.unlink(missing_ok=True)
-                result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/smoke-test-platform-shell-image/script.sh'),'--image','sha256:'+'a'*64],cwd=ROOT,env={**env,'FAIL_STAGE':stage},capture_output=True,text=True,timeout=15)
+                result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh'),'--image','sha256:'+'a'*64],cwd=ROOT,env={**env,'FAIL_STAGE':stage},capture_output=True,text=True,timeout=15)
                 self.assertEqual(result.returncode,status,(stage,result.stdout,result.stderr));self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
                 if code:self.assertIn('DIAGNOSTIC_CODE=SHELL_QUALIFICATION_'+code,result.stderr);self.assertIn('LIFECYCLE_STAGE=package',result.stderr)
                 seen=calls.read_text().splitlines()
@@ -161,7 +161,7 @@ if [ "$1" = build ]; then printf "credential-canary-value\\n" >&2; exit "$BUILD_
             for owner,prefix,rejected in [
                 ('lifecycle/40-package/build-core-server-image','CORE_IMAGE',[('scripts/04.deploy/validate-container-boundaries/script.sh',23,'CONTAINER_BOUNDARY_FAILED'),('scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',23,'PROGRAM_CONTRACT_FAILED'),('scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh',23,'DEPENDENCY_BOUNDARY_FAILED'),('scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/build.sh',23,'COMPILATION_FAILED'),('scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs',43,'RUNTIME_PREPARATION_FAILED')]),
                 ('lifecycle/40-package/build-core-server-persistence-image','PERSISTENCE_IMAGE',[('scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',23,'PROGRAM_CONTRACT_FAILED')]),
-                ('build-platform-shell-image','SHELL_IMAGE',[('scripts/04.deploy/validate-container-boundaries/script.sh',23,'CONTAINER_BOUNDARY_FAILED')]),
+                ('legacy/kanbien-staging/build-platform-shell-image','SHELL_IMAGE',[('scripts/04.deploy/validate-container-boundaries/script.sh',23,'CONTAINER_BOUNDARY_FAILED')]),
             ]:
                 for failed,status,code in [*rejected,('',47,'BUILD_FAILED'),('',0,None)]:
                     calls.write_text('')
@@ -176,9 +176,9 @@ if [ "$1" = build ]; then printf "credential-canary-value\\n" >&2; exit "$BUILD_
             cleanup=root/'scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py'
             cleanup.write_text('')  # python3 substitute records but does not execute it.
             calls.write_text('')
-            result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/smoke-test-platform-shell-image/script.sh')],cwd=root,env={**env,'FAIL_COMMAND':'scripts/04.deploy/build-platform-shell-image/script.sh','BUILD_EXIT':'0'},capture_output=True,text=True)
+            result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh')],cwd=root,env={**env,'FAIL_COMMAND':'scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh','BUILD_EXIT':'0'},capture_output=True,text=True)
             self.assertEqual(result.returncode,23,result.stdout+result.stderr);self.assertIn('DIAGNOSTIC_CODE=SHELL_QUALIFICATION_BUILD_FAILED',result.stderr);self.assertNotIn('credential-canary-value',result.stdout+result.stderr)
-            self.assertEqual(calls.read_text().splitlines().count('scripts/04.deploy/build-platform-shell-image/script.sh'),1)
+            self.assertEqual(calls.read_text().splitlines().count('scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh'),1)
 
     def test_capture_native_faults_and_arguments_are_bounded(self):
         capture=ROOT/'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py'
@@ -364,16 +364,16 @@ sys.exit(0)
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);binary=root/'bin';binary.mkdir()
             git=binary/'git';git.write_text('#!/bin/sh\nprintf "%s\\n" "$FIXTURE_ROOT"\n');git.chmod(0o755)
-            paths=['.github/workflows/deploy-platform-shell-staging.yml','infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml','infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml','scripts/04.deploy/build-platform-shell-image/script.sh','scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh','scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py']
+            paths=['.github/workflows/deploy-platform-shell-staging.yml','infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml','infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml','scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh','scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/qualify-image.sh','scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py']
             for relative in paths:
                 destination=root/relative;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,destination)
             workflow_path=root/paths[0];original=workflow_path.read_text();workflow=yaml.safe_load(original)
             def run(value,expected):
                 workflow_path.write_text(value)
-                result=subprocess.run(['bash',str(ROOT/'scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh')],cwd=root,env={**os.environ,'PATH':str(binary)+os.pathsep+os.environ['PATH'],'FIXTURE_ROOT':str(root)},capture_output=True,text=True)
+                result=subprocess.run(['bash',str(ROOT/'scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/script.sh')],cwd=root,env={**os.environ,'PATH':str(binary)+os.pathsep+os.environ['PATH'],'FIXTURE_ROOT':str(root)},capture_output=True,text=True)
                 self.assertEqual(result.returncode,expected,result.stdout+result.stderr)
             run(original,0)
-            qualifier=root/'scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh';qualifier_original=qualifier.read_text()
+            qualifier=root/'scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/qualify-image.sh';qualifier_original=qualifier.read_text()
             smoke=next(line for line in qualifier_original.splitlines() if line.startswith('bash scripts/'))
             for mutated in [qualifier_original.replace(smoke,smoke+' || true'),qualifier_original.replace(smoke,'if false; then '+smoke+'; fi'),qualifier_original.replace(smoke,''),qualifier_original.replace(smoke+'\n','')+'\n'+smoke,qualifier_original.replace('set -euo pipefail','set +e')]:
                 qualifier.write_text(mutated);run(original,1)
@@ -395,7 +395,7 @@ sys.exit(0)
                 elif mutation=='attestation-conditional':next(item for item in steps if item.get('name')=='Attest image provenance')['if']='false'
                 else:next(item for item in steps if item.get('name')=='Verify published target-platform image')['run']+='\nset +e'
                 run(yaml.safe_dump(broken,sort_keys=False),1)
-            emitter=ROOT/'scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py'
+            emitter=ROOT/'scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/emit-custody.py'
             sbom=root/'sbom.json';sbom.write_text('{"spdxVersion":"SPDX-2.3"}')
             receipt=root/'custody.json';keys=['SOURCE_CHECKS_OUTCOME','QUALIFICATION_OUTCOME','CREDENTIALS_OUTCOME','REGISTRY_LOGIN_OUTCOME','PUBLISHED_IMAGE_OUTCOME','SCAN_OUTCOME','SBOM_OUTCOME','PROVENANCE_OUTCOME','SBOM_ATTESTATION_OUTCOME']
             environment={**os.environ,**{key:'success' for key in keys},'GITHUB_SHA':'a'*40,'GITHUB_RUN_ID':'456','PUBLISHED_DIGEST':'sha256:'+'b'*64,'SBOM_PATH':str(sbom)}
@@ -422,9 +422,9 @@ sys.exit(0)
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);binary=root/'bin';binary.mkdir();docker=binary/'docker'
             docker.write_text('#!/bin/sh\nif [ "$1" = image ]; then printf "sha256:'+'a'*64+'\\n"; fi\n');docker.chmod(0o755)
-            smoke=root/'scripts/04.deploy/smoke-test-platform-shell-image/script.sh';smoke.parent.mkdir(parents=True);smoke.write_text('#!/bin/sh\ntouch "$SMOKE_MARKER"\nexit "$SMOKE_RESULT"\n')
+            smoke=root/'scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/script.sh';smoke.parent.mkdir(parents=True);smoke.write_text('#!/bin/sh\ntouch "$SMOKE_MARKER"\nexit "$SMOKE_RESULT"\n')
             capture=root/'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py';capture.parent.mkdir(parents=True);shutil.copy2(HELPER,capture)
-            for relative in ['infra/04.deploy/03.product/image/Dockerfile','infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml','scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py','infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml']:
+            for relative in ['infra/04.deploy/03.product/image/Dockerfile','infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml','scripts/04.deploy/legacy/kanbien-staging/smoke-test-platform-shell-image/relational-package-test.py','infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml']:
                 destination=root/relative;destination.parent.mkdir(parents=True,exist_ok=True);destination.write_text('synthetic input')
             adapter='scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py'
             (root/adapter).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/adapter,root/adapter)
@@ -433,7 +433,7 @@ sys.exit(0)
                 for status in [23,0]:
                     output=root/(existing+'-'+str(status));output.mkdir();marker=output/'smoke-called';github=output/'github-output'
                     environment={**os.environ,'PATH':str(binary)+os.pathsep+os.environ['PATH'],'EXISTING_IMAGE':existing,'EXISTING_DIGEST':'sha256:'+'b'*64,'ECR_URI':'fixture.example/repository','CANDIDATE_IMAGE':'fixture:tag','RUNNER_TEMP':str(output),'GITHUB_OUTPUT':str(github),'SMOKE_MARKER':str(marker),'SMOKE_RESULT':str(status)}
-                    result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh')],cwd=root,env=environment,capture_output=True,text=True)
+                    result=subprocess.run(['/bin/bash',str(ROOT/'scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-workflow/qualify-image.sh')],cwd=root,env=environment,capture_output=True,text=True)
                     self.assertEqual(result.returncode,status,result.stdout+result.stderr);self.assertTrue(marker.exists())
                     if status:self.assertFalse((output/'qualified-image.json').exists());self.assertFalse(github.exists())
                     else:self.assertEqual(json.loads((output/'qualified-image.json').read_text())['image_id'],'sha256:'+'a'*64);self.assertIn('image_id=sha256:',github.read_text())

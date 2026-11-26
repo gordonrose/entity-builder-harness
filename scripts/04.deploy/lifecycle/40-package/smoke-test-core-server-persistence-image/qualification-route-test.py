@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-publication-qualification
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -143,8 +143,8 @@ if [[ "docker:$1" == "$QUAL_FAIL" ]]; then printf 'build-provider-canary\\n' >&2
             assert docker_args.read_bytes().decode().split('\0')[:-1] == [
                 'build', '--file', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile',
                 '--tag', 'kanbien-core-server-persistence:qualification', '--label', 'org.opencontainers.image.revision=' + '1'.zfill(40),
-                '--label', 'org.opencontainers.image.source=entity-builder-harness', '--build-arg', 'SOURCE_COMMIT_SHA=' + '2'.zfill(40), str(fixture)]
-            assert head_count.read_text().strip() == '2' and 'timeout:30' not in executed
+                '--label', 'org.opencontainers.image.source=entity-builder-harness', '--build-arg', 'SOURCE_COMMIT_SHA=' + '1'.zfill(40), str(fixture)]
+            assert head_count.read_text().strip() == '1' and 'timeout:30' not in executed
         else:
             assert result.returncode != 0 and not boundary.exists(), rejected
             assert executed.count(rejected) == 1, executed
@@ -164,6 +164,8 @@ if [[ "docker:$1" == "$QUAL_FAIL" ]]; then printf 'build-provider-canary\\n' >&2
             'wrong-contract': original.replace('candidate_image_prechecks infra/', 'candidate_image_prechecks other/'),
             'late-gate': original.replace(first_gate + '\n', '').replace(module.DOCKER_BOUNDARY, module.DOCKER_BOUNDARY + '\n' + first_gate),
             'missing-docker-boundary': original.replace(module.DOCKER_BOUNDARY, ''),
+            'second-source-read': original.replace('"$persistence_source" "$ROOT"', '"$(git rev-parse HEAD)" "$ROOT"'),
+            'unbound-source': original.replace('"$persistence_source" "$persistence_source"', 'fixture-revision fixture-source'),
         }.items():
             builder.write_text(altered)
             assert not module.qualification_route_valid(text), change
@@ -203,9 +205,7 @@ if [[ "docker:$1" == "$QUAL_FAIL" ]]; then printf 'build-provider-canary\\n' >&2
     ]
     preparation_args = fixture / 'preparation-args'
     environment['QUAL_PREPARATION_ARGS'] = str(preparation_args)
-    feature_checks = shared + ['scripts/repo/diagnostic-coverage/verify.sh', 'npm:--ignore-scripts run app:entity-smoke:check',
-                               'scripts/repo/check-selection/script.sh',
-                               'scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh']
+    feature_checks = shared + ['scripts/repo/check-selection/script.sh']
     for rejected in ('', *feature_checks, 'docker:info', 'docker:build'):
         calls.write_text(''); head_count.unlink(missing_ok=True); docker_args.unlink(missing_ok=True)
         result = subprocess.run(['/bin/bash', str(feature), '--tag', 'kanbien-entity-smoke:fixture'], cwd=fixture,
@@ -215,9 +215,9 @@ if [[ "docker:$1" == "$QUAL_FAIL" ]]; then printf 'build-provider-canary\\n' >&2
             assert result.returncode == 0, result.stderr
             assert executed == feature_checks + ['timeout:30', 'docker:info', 'docker:build'], executed
             assert preparation_args.read_bytes().decode().split('\0')[:-1] == [
-                '--checks', 'entity-smoke-composition', '--task-paths',
+                '--checks', 'diagnostic-catalog-readers', 'entity-smoke-runtime', 'entity-smoke-composition', '--task-paths',
                 'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml',
-                '--record-preparation', '--json']
+                '--record-preparation', '--execute-local', '--json']
             assert head_count.read_text().strip() == '1'
             assert result.stdout.strip() == 'ENTITY_SMOKE_LOCAL_IMAGE_BUILT_NOT_QUALIFIED'
             assert docker_args.read_bytes().decode().split('\0')[:-1] == [

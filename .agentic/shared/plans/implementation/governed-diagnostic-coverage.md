@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.governed-diagnostic-coverage
-version: 23
+version: 24
 status: active
 created_on: "2026-10-27"
-updated_on: "2026-11-09"
+updated_on: "2026-11-26"
 layer: 06.shared
 domain: diagnostics
 disciplines: [architecture, security, sre, agentic]
@@ -2239,7 +2239,7 @@ from that census:
   filename exclusion does not justify ignoring a real operational consumer.
 - Dormant RAG/rulebook roots stay dormant under AGENTS; no automatic reactivation,
   corpus rebuild or feature development. The active
-  `scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh` remains in
+  `scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh` remains in
   tooling review only; its existence does not authorize running dormant work.
 - `scripts/03.product` does not exist; do not plan against an invented directory.
 
@@ -5286,7 +5286,7 @@ remain authoritative; arbitrary reports and direct npm runs cannot seed reuse.
 | --- | --- | --- |
 | `scripts/repo/check-selection/script.py` and `checks.yml` | Add explicit registered check selection, mutually exclusive with impact/CI modes. Keep validation, effects, stage boundaries, input/runtime identity and final drift sweep. | Selector fixtures for exact selection, unknown and malformed requests, aliases, failures, invalidation, stage isolation and reuse across explicit and impact selection. |
 | `scripts/repo/diagnostic-coverage/verify.sh` | Retain catalog compile/freshness, reader regressions and all 13 package checks. Separate server and product from the remaining 11 packages; closed unit arguments execute existing commands only. Default command requests all three units through the selector. Existing adapter arguments remain unchanged. | Wrapper command fixtures prove complete membership, argument rejection and failure propagation; real local unit checks. |
-| `scripts/04.deploy/build-platform-shell-image/check-source.sh` | Default command still requires complete server, product and freshly matched compiled-payload proof. A closed payload branch runs the existing image-runtime check. Build and Docker owners remain unchanged. | Wrapper command fixtures, compiled payload proof and shared-unit reuse. |
+| `scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh` | Default command still requires complete server, product and freshly matched compiled-payload proof. A closed payload branch runs the existing image-runtime check. Build and Docker owners remain unchanged. | Wrapper command fixtures, compiled payload proof and shared-unit reuse. |
 | Existing source reviews and check documentation | Refresh only reviewed changed sources; document focused registered checks and distinguish them from full impact selection. Aggregate receipts bind the consumed catalog and selector so changed child definitions cannot leave an aggregate receipt valid. | Adoption, metadata/process checks and final selector plan. |
 
 The four units are diagnostic base runtime (catalog/readers plus 11 complete
@@ -5580,7 +5580,7 @@ different later source-preflight identity. No timing savings are asserted
 before parent-owned measured verification. No provider, container, git or
 publication operation is part of this correction task.
 
-Task paths for parent review:
+Historical task paths (completed work; not current instructions):
 
 ```text
 .agentic/shared/plans/implementation/governed-diagnostic-coverage.md

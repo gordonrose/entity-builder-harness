@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.bootstrap-llm-workbench-repo.smoke-test
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-26"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -74,6 +74,16 @@ run_apply "$EMPTY_REPO" "$TMP_ROOT/empty-apply.out"
 test -f "$EMPTY_REPO/AGENTS.md" || fail "apply did not create AGENTS.md"
 test -f "$EMPTY_REPO/package.json" || fail "apply did not create package.json"
 test -f "$EMPTY_REPO/scripts/01.harness/artifact-metadata/header_discovery.py" || fail "apply did not include shared header discovery"
+test -f "$EMPTY_REPO/scripts/01.harness/artifact-metadata/taxonomy.yml" || fail "apply did not include canonical effects data"
+(cd "$EMPTY_REPO" && bash scripts/01.harness/run-governed-script.sh scripts/00.chat/worktree/check-write-location/script.sh --help) > "$TMP_ROOT/portable-runner.out"
+grep -q '^Usage:$' "$TMP_ROOT/portable-runner.out" || fail "portable runner could not classify a read-only check"
+python3 -B - "$SOURCE_ROOT/.agentic/01.harness/artifact-metadata/taxonomy.yml" "$EMPTY_REPO/scripts/01.harness/artifact-metadata/taxonomy.yml" <<'PY'
+from pathlib import Path
+import hashlib, sys, yaml
+source, exported = (Path(path).read_bytes() for path in sys.argv[1:])
+assert yaml.safe_load(source) == yaml.safe_load(exported), 'portable taxonomy differs from canonical data'
+print('portable taxonomy source sha256:', hashlib.sha256(source).hexdigest())
+PY
 test -f "$EMPTY_REPO/scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh" || fail "apply did not create planner script"
 test ! -e "$EMPTY_REPO/.agentic/01.harness" || fail "apply created source-maintenance .agentic/01.harness"
 test ! -e "$EMPTY_REPO/docs/00.chat/public-chat-workbench-adrs.md" || fail "apply created public ADR manifest"

@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.prepare-chat-session-before-commit.smoke-test
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-07-09"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-26"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -188,12 +188,12 @@ git -C "$REPO" switch --quiet -c "chat/$SESSION_ID"
 
 bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
   bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh \
-  --before-verification --paths .agentic/task.md src/feature.ts \
+  --before-verification --paths .agentic/task.md src/feature.ts src/deleted.ts docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template \
   >"$TMP_ROOT/before-verification.out"
 
 grep -q 'Verification preparation passed.' "$TMP_ROOT/before-verification.out" \
   || fail "before-verification mode did not pass"
-expected_order=$'lifecycle --paths .agentic/task.md src/feature.ts --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md src/feature.ts\nselector --paths .agentic/task.md src/feature.ts --changed-only --stage local --boundary commit --record-preparation --json'
+expected_order=$'lifecycle --paths .agentic/task.md src/feature.ts src/deleted.ts docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md src/feature.ts src/deleted.ts docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template\nselector --paths .agentic/task.md src/feature.ts src/deleted.ts docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template --changed-only --stage local --boundary commit --record-preparation --json'
 if [[ "$(cat "$REPO/preparation-order")" != "$expected_order" ]]; then
   fail "before-verification did not complete lifecycle, structural, then selector preparation in order"
 fi

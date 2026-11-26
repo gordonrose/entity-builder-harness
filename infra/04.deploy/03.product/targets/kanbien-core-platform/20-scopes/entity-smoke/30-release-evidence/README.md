@@ -4,7 +4,7 @@ id: infra.04-deploy.entity-smoke.release-evidence.readme
 version: 1
 status: draft
 created_on: "2026-11-08"
-updated_on: "2026-11-10"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: deployment.release-evidence
 disciplines: [architecture, security, sre]
@@ -53,7 +53,7 @@ ignored or treated as permission to change executable source.
 
 Collection must write its proof and candidate before promotion can read them.
 During acceptance only, the
-[collector](../../../../../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-route.py)
+[collector](../../../../../../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-route.py)
 therefore derives the exact two file names, byte lengths and hashes from its
 original validated collection observation in the private working cache. The
 [source guard](../../../../../../../../scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py)

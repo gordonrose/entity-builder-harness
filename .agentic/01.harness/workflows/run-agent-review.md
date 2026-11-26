@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.workflows.run-agent-review
-version: 1
+version: 2
 status: active
 created_on: "2026-07-02"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 01.harness
 domain: governance.agents
 disciplines:
@@ -137,6 +137,54 @@ when the correct agent is unclear.
    or agent may consume the result.
 7. Treat `block` and `delegate` decisions as unfinished review states until the
    blocker or delegation is resolved.
+
+## Script-admission review pilot
+
+<!-- deterministic-check: allow reason="necessity, reuse and approval provenance require bounded source-backed review; existing scripts enforce header and preparation facts, not authenticity of a model review" -->
+For an admission identified by the
+[script-admission standard](../standards/script-admission.md#bounded-review-before-commit),
+perform one bounded review before commit preparation. Use this workflow's
+existing reviewer selection and human report; do not create another reviewer,
+registry or scorecard-consuming hook. Select Senior Prompt Engineer for
+admission/instruction governance, delegating a concrete domain question only
+when it is necessary to decide the affected admission.
+
+1. Gather the admission record, actual changed source, relevant existing owner
+   and direct callers, changed selection declaration, applicable approval and
+   already available focused proof. Scope discovery to the affected capability.
+   Ordinary edits that do not reopen admission do not request this review.
+2. Use the existing header check and selector preview where relevant; reuse
+   matching preparation/verification output. The preview explains selection
+   without running the selected suite. Do not install dependencies, scan the
+   whole repository or execute package/deployment work just for this review.
+3. Review against the standard's five concerns and record evidence-backed
+   findings in the existing task/session record using the human report shape.
+   Record checked file identities, relevant rules, missing evidence and elapsed
+   time. Aim for one minute; an overrun is a cost observation, not permission
+   to manufacture a decision or restart the commit. Broader work needs an
+   explained scope decision.
+4. Resolve concrete required-rule breaches at their owner. Keep recommendations
+   separate. Missing or interrupted review is incomplete, not a test failure.
+   Reuse completed findings and proof when inputs still match; there is no
+   automatic retry loop. After existing metadata preparation, inspect its
+   changes and confirm final reviewed identities, revisiting only changed
+   portions and affected relationships. The committing agent then compares
+   those identities with the actual staged candidate before the final gate.
+
+The [calibration cases](../evals/script-admission.md) exercise this review.
+When its criteria or procedure change, give a reviewer the case inputs and
+current rules without the expected answers, then compare the returned findings
+with those answers. Record misses, unnecessary objections, elapsed time and
+corrections in the existing task record. A flawed case expectation is changed
+only with a rule-backed explanation, never just to make the reviewer pass.
+These cases run for review-policy changes or explicit calibration, not for
+each ordinary script admission or commit.
+
+This pilot installs an agent-workflow obligation only. Existing header and
+prepared-input checks remain automated; the Git hook does not invoke a model,
+authenticate this report or automatically verify its freshness. Calibration
+success does not establish universal reviewer reliability. Automatic enforcement
+of additional review requirements needs a separately proven bounded extension.
 
 ## Outputs
 

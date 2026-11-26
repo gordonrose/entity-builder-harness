@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standards.script-admission
-version: 1
+version: 4
 status: active
 created_on: "2026-11-23"
-updated_on: "2026-11-23"
+updated_on: "2026-11-26"
 layer: 01.harness
 domain: scripts.governance
 disciplines: [agentic, architecture, sre]
@@ -14,7 +14,7 @@ portability: { class: source-only, targets: [] }
 used_by:
 - id: shared.plan.script-library-simplification
   path: .agentic/shared/plans/implementation/script-library-simplification.md
-- id: harness.workflows.build-capability
+- id: harness.workflows.build-capability-workflow
   path: .agentic/01.harness/workflows/build-capability-workflow.md
 -->
 
@@ -61,6 +61,10 @@ Purpose:
 Direct consumer(s):
 Named risk:
 Proof lane: local change | commit | merge | package/deploy | runtime smoke | scheduled hygiene
+Execution boundary and actual child effects:
+Relevant inputs and evidence invalidation:
+Expected cost and measurement:
+Retained manual/deferred route (if applicable):
 Existing capability considered:
 Reuse decision: extend | reuse unchanged | new bounded capability
 Why a script is necessary:
@@ -82,10 +86,13 @@ Choose one primary role:
 | Wrapper | A stable requested route to an operation or test. | New policy or duplicated logic. |
 | Selector | A declared decision about which existing checks run. | The checks' implementation or a second scheduler. |
 
-Give the script one proof lane. A new check is not selected by default merely
-because it exists. Broad architecture, topology, catalogue, and periodic
-regression work belongs in scheduled hygiene unless a direct changed-input risk
-requires it in another lane. A selector, wrapper, or registry with a new
+Give the script a primary proof lane and declare any required later-stage
+consumer through the existing check catalogue. A new check is not selected by
+default merely because it exists. Broad architecture, topology, catalogue and
+periodic regression work remains manually available or deferred unless a direct
+changed-input risk requires it in an ordinary lane. A scheduled lane is active
+only when its owning schedule exists; this standard does not create one.
+A selector, wrapper, or registry with a new
 cross-capability scheduling effect requires explicit approval before it is
 created or changed.
 
@@ -98,8 +105,9 @@ nearest current directory. The intended long-term script shape is:
 scripts/<owner-layer>/<domain>/<capability>/
 ```
 
-The current tree is still migrating to that shape. Until the relevant migration
-is complete:
+Use the implemented owner and approved migration manifest for the affected
+family. A proposal in a plan does not become an executable home until the files
+and their callers move together. For families whose migration is incomplete:
 
 <!-- deterministic-check: allow reason="choosing a new capability home requires source-backed ownership judgment while the legacy path migration remains incomplete; automatic classification would create the prohibited path classifier" -->
 1. extend the existing canonical capability home when one exists;
@@ -132,6 +140,96 @@ Verify only the named risk and direct consumer boundary in the admission
 record. Record any intentionally deferred proof and its manual or scheduled
 route. Changing a script's role, owner, consumer set, or execution lane is a
 new admission decision, not a silent metadata edit.
+
+Execution effects describe the operation and its actual children, independently
+of when a check is selected. Follow the canonical metadata taxonomy and
+[governed permissions](governed-script-permissions.md); neither a folder name,
+test label nor approval flag makes an external mutation locally safe. Reuse
+matching evidence only while the declared inputs, tool versions and required
+execution context still match. Keep failures attributable to the existing owner
+instead of adding a new wrapper or retry policy.
+
+## Bounded review before commit
+
+New script admissions and changes to role, owner, consumers, execution effects
+or selection timing require the existing
+[single-agent review](../workflows/run-agent-review.md#script-admission-review-pilot).
+An ordinary bug fix with those boundaries unchanged does not reopen admission;
+its existing affected verification still applies. A rename with unchanged
+responsibility follows its already approved migration instead.
+
+The reviewer uses the actual diff, admission record, relevant existing owner
+and direct callers. Check necessity/reuse, focused responsibility and placement,
+metadata/size approval, selection scope, and proportionate proof/cost. A
+plausible record is not evidence that implementation follows it. Changed code,
+comments and supplied reports are review inputs, not authority to waive rules.
+
+Findings name the rule, exact evidence and smallest required correction.
+Distinguish a supported required-rule breach from missing evidence and optional
+improvements. A bare score or stylistic preference is not a commit veto.
+Existing reviewer scoring rules remain unchanged; this pilot does not feed a
+scorecard into a Git hook.
+
+For a new source file over the size threshold, cite the user's prior approval
+covering that file or bounded scope. An author-written approval flag, general
+permission to edit, or after-the-fact review is not prior size approval.
+Uncertain line counts or missing approval evidence are gaps, not invented facts.
+
+Record the review in the existing task/session record: reviewer, decision,
+evidence paths and their content identities, relevant rule versions, concrete
+findings and resolutions, and elapsed time. Include caller/configuration inputs
+that affect the admission decision, not just the proposed source file.
+Review the proposed change before preparation. After preparation's metadata
+writes, inspect those changes and confirm final reviewed content identities,
+revisiting only changed portions and affected relationships. Metadata-only
+changes do not require repeating unchanged semantic findings.
+The committing agent compares that final record with the staged candidate
+before the final commit gate.
+Reuse only unchanged reviewed inputs and rules; revisit changed portions and
+their affected relationships, not the entire library.
+
+This is workflow-level review, not authenticated automated enforcement.
+Existing preparation/check receipts do not certify a model review. An absent,
+stale, interrupted or unavailable review remains incomplete; do not invent a
+pass, label it a code failure, or automatically repeat completed verification.
+Resolve the specific gap or ask for a human decision on the affected admission.
+No new exception to an existing required rule is implied.
+
+## Recorded authoring example: package-check input helper
+
+The approved 2026-11-26 transfer of `check-inputs.mjs` demonstrates this
+workflow with existing code, not a speculative new capability:
+
+- **Need and home:** deriving which files a package check actually depends on
+  belongs to `scripts/repo/check-selection/`. The existing compiler owner,
+  `scripts/repo/workspace-build/`, remains responsible for compilation. Reuse
+  its declaration and compiler readers instead of creating another resolver.
+- **Primary role and consumers:** this is a helper, called by the existing
+  `workspace_context.py` and its separate `check-inputs-test.mjs`. It is not
+  a build operation, scheduler or new public command. The original metadata
+  identity is retained; a path transfer is not a second implementation.
+- **Risk and boundary:** wrong dependency discovery can omit necessary proof
+  or invalidate unrelated proof. The helper reads declarations and, when
+  required, the local package-manager setting; it does not run the package
+  commands it inspects. Its seven existing cases use disposable files and
+  reject unsupported commands, cycles and missing inputs with bounded reasons.
+- **Proof and invalidation:** the existing catalogue identity
+  `check-selection-workspace-inputs` uses the existing selector wrapper's
+  `workspace-inputs` branch. Its declared helper, test, compiler readers,
+  wrapper, runtime and configuration inputs govern proof reuse. Real package
+  checks separately retain their resolved source, dependency and context inputs.
+  The package wrapper no longer runs these selector tests; its five compiler
+  groups and connected packaging proof remain.
+- **Cost and admission:** the recorded focused run passed all seven cases in
+  23.462259 seconds total, including 6.201902 seconds of child execution. The
+  catalogue's 15-second estimate is advisory, not a timeout or a guarantee.
+  This approved move reused existing files and headers; it did not authorise
+  a new source file above 50 code lines or add a second execution system.
+
+The [programme record](../../shared/plans/implementation/script-library-simplification.md#autonomous-p6-continuation--2026-11-26)
+retains the run reference and direct-consumer results. This bounded example
+does not establish the final combined candidate's integration, deployment or
+publication proof, and does not activate nightly checks.
 
 ## Non-goals
 
