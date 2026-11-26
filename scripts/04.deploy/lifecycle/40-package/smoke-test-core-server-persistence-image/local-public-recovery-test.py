@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.local-public-persistence-recovery
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -154,6 +154,7 @@ for name,mutate in (
  ('changed-nested-integration-check',lambda root:(root/INTEGRATION_CHECK).write_text((root/INTEGRATION_CHECK).read_text()+'\n# unreviewed owner edit\n')),
  ('changed-nested-diagnostic-check',lambda root:(root/DIAGNOSTIC_CHECK).write_text((root/DIAGNOSTIC_CHECK).read_text()+'\n# unreviewed owner edit\n')),
  ('changed-safe-command-helper',lambda root:(root/SAFE_COMMAND).write_text((root/SAFE_COMMAND).read_text()+'\n# unreviewed helper edit\n')),
+ ('changed-cloudformation-template',lambda root:(root/'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py').write_text('raise RuntimeError("unreviewed helper")\n')),
  ('changed-build-operations',lambda root:(root/BUILD_OPERATIONS).write_text((root/BUILD_OPERATIONS).read_text()+'\n# unreviewed build edit\n')),
  ('private-node',replace(DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
  ('private-frontend',replace(DOCKERFILE,'docker/dockerfile:1.7','private.invalid/frontend:1.7')),

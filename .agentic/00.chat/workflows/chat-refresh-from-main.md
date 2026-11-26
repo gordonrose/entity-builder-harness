@@ -4,7 +4,7 @@
   version: 3
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-11-25"
+  updated_on: "2026-11-26"
   layer: 00.chat
   domain: main-refresh
   disciplines:
@@ -192,12 +192,27 @@ refresh should be rehearsed before mutating the active chat worktree.
    bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch>
    ```
 
+   If cleanup is prohibited or not approved, use this owned command instead:
+
+   ```bash
+   bash scripts/01.harness/run-governed-script.sh --approved-action \
+     scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch> --retain-preflight
+   ```
+
+   This is authorized only by the explicit refresh approval. It retains all
+   ancestry, cleanliness, exact-result and affected-proof checks, but does not
+   remove any worktree or branch. The runner's approval flag does not grant
+   cleanup authority; this explicit retained route still requires refresh
+   approval. Record the retained references in the session log; later cleanup
+   requires its own authority.
+
 5. Applying the rehearsed refresh fast-forwards the active chat branch, verifies it points at the
    tested preflight commit, removes the clean temporary preflight worktree,
    deletes the matching `agentic/preflight/*/<timestamp>` branch, and cleans up
    stale sibling preflight branches/worktrees for the same chat branch when they
    are already ancestors of the promoted chat branch and have clean or absent
-   worktrees.
+   worktrees. With `--retain-preflight`, it instead reports retention and skips
+   all those cleanup operations.
 <!-- deterministic-check: allow reason="apply-rehearsed-refresh enforces dirty preflight worktree refusal before applying or cleanup" -->
 6. Stop before applying if unresolved conflicts remain, required checks failed
    or were skipped, the preflight worktree is dirty, the preflight branch no

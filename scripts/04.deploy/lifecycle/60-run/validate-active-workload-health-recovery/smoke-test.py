@@ -5,7 +5,7 @@
 #   version: 6
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -75,7 +75,7 @@ def health_only_scopes(target_root: Path) -> None:
 def copied_live_reference_rejected(target_root: Path) -> None:
     expect_failure(target_root, "scope-lifecycle-accepted-release-invalid")
     record = target_root / "entity-smoke/30-release-evidence/current-accepted-release.yml"
-    command = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-state.sh"
+    command = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/commands/acceptance-state.sh"
     result = subprocess.run(["bash", str(command), "--operation", "validate-current", "--record", str(record), "--json"],
                             check=False, capture_output=True, text=True)
     report = json.loads(result.stdout)

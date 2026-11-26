@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-25"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -41,6 +41,19 @@ expect_fail scope-declaration infra/04.deploy/03.product/targets/example/scopes/
 expect_fail provider-template infra/04.deploy/03.product/targets/example/30-provider-realization/aws/server.yml
 expect_fail lifecycle-script scripts/04.deploy/lifecycle/50-deploy/targets/example/review/script.sh
 expect_fail lifecycle-capability scripts/04.deploy/lifecycle/20-build/capabilities/source-qualification/implementation.py
+
+expect_pass target-operation-script scripts/04.deploy/lifecycle/60-run/targets/example/server/task-execution/implementation/task-runner.py
+expect_pass target-operation-script scripts/04.deploy/lifecycle/60-run/targets/example/server/task-execution/tests/task-runner-test.py
+expect_pass target-operation-script scripts/04.deploy/lifecycle/60-run/targets/example/server/recovery-and-replacement/restore/restore-route.py
+expect_pass retained-deploy-script scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-service-drift/drift_test.py
+expect_pass retained-deploy-script scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh
+expect_pass retained-deploy-script scripts/04.deploy/legacy/kanbien-staging/shared/provider-adapters/aws/cognito-provisioning.py
+expect_fail target-operation-script scripts/04.deploy/lifecycle/60-run/targets/example/server/task-runner.py
+expect_fail target-operation-script scripts/04.deploy/lifecycle/60-run/targets/example/server/task-execution/implementation/utils/task-runner.py
+expect_fail retained-deploy-script scripts/04.deploy/legacy/verify/script.sh
+expect_fail retained-deploy-script scripts/04.deploy/legacy/example/../current/script.sh
+expect_fail retained-deploy-script scripts/04.deploy/lifecycle/60-run/targets/example/server/task-execution/commands/script.sh
+expect_fail lifecycle-capability scripts/04.deploy/legacy/example/build/source-qualification/implementation.py
 
 expect_pass cross-phase-standard .agentic/04.deploy/standards/operational-realization-gate.md
 expect_pass cross-phase-workflow .agentic/04.deploy/workflows/operational-realization-gate.md

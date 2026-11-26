@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: '2026-10-26'
-#   updated_on: '2026-10-26'
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines:
@@ -41,11 +41,11 @@ requirements:
     only their bounded positive or negative authorization proof.
   owner: deployment-platform
   required_by:
-  - scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh
-  - scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
-  - scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
-  - scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh
-  - scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-negative-authz-client/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-persistence-write-client/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-controlled-smoke/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-negative-authz-smoke/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-smoke/script.sh
   declarations:
   - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     expectation: Dedicated least-privilege machine identities and secret references
@@ -79,8 +79,8 @@ requirements:
     reconcile effects and prove task and queue settlement.
   owner: deployment-platform
   required_by:
-  - scripts/04.deploy/run-platform-shell-worker-smoke/script.sh
-  - scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-worker-smoke/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-persistence-delivery-proof/script.sh
   declarations:
   - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     expectation: Bounded queue and persistence proof commands require declared identities,
@@ -105,10 +105,10 @@ requirements:
     plus bounded current signal and routing observations.
   owner: deployment-platform
   required_by:
-  - scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
-  - scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh
-  - scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh
-  - scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-metric-coverage/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-rate-limit-smoke/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-ingress-smoke/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-observability-prerequisites/script.sh
   declarations:
   - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     expectation: Declared ingress, rate limits and enabled telemetry have package
@@ -137,10 +137,10 @@ requirements:
     absent, pending, denied and uncertain outcomes before permitted changes.
   owner: deployment-platform
   required_by:
-  - scripts/04.deploy/reconcile-platform-shell-staging/script.sh
-  - scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh
-  - scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
-  - scripts/04.deploy/assess-platform-shell-service-drift/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-artifact-drift/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-foundation-drift/script.sh
+  - scripts/04.deploy/legacy/kanbien-staging/assess-platform-shell-service-drift/script.sh
   declarations:
   - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     expectation: Read-only target reconciliation and bounded drift inspection distinguish

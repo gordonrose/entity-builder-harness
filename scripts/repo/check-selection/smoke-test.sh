@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.wrapper
-#   version: 4
+#   version: 6
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -15,8 +15,10 @@ set -euo pipefail
 #   portability: { class: source-only, targets: [] }
 #   effects: [read-only, writes-files]
 #   used_by:
-#   - id: repo.command.check-selection
-#     path: scripts/repo/check-selection/script.sh
+#   - id: repo.check-selection.catalog
+#     path: scripts/repo/check-selection/checks.yml
+#   - id: repo.test.check-selection
+#     path: scripts/repo/check-selection/smoke-test.py
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 if [ "$#" -eq 0 ]; then
@@ -31,6 +33,7 @@ fi
 # Literal dispatch preserves the old fixture-only execution boundary, not general
 # permission to forward a command or mutate this repository.
 case "$2" in
+  workspace-inputs) exec node --test scripts/repo/check-selection/check-inputs-test.mjs ;;
   chat-startup) exec bash scripts/00.chat/startup/start-chat-session/smoke-test.sh ;;
   chat-log-writers) exec bash scripts/00.chat/session-log/update-chat-log/smoke-test.sh ;;
   chat-log-maintenance) exec bash scripts/00.chat/session-log/checkpoint-chat-session-log/smoke-test.sh ;;

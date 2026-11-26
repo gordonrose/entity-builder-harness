@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-26"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -32,20 +32,23 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  script.sh <preflight-branch>
+  script.sh <preflight-branch> [--retain-preflight]
 
 Fast-forwards the current chat branch to a tested preflight refresh branch,
 then removes the temporary preflight worktree and deletes the preflight branch.
-The current worktree and preflight worktree must both be clean.
+The current worktree and preflight worktree must both be clean. With
+--retain-preflight all verification still runs, but no worktree or branch is
+removed; use it when cleanup is not authorized.
 EOF
 }
 
-if [ $# -ne 1 ]; then
+if [ $# -lt 1 ] || [ $# -gt 2 ] || { [ $# -eq 2 ] && [ "$2" != --retain-preflight ]; }; then
   usage >&2
   exit 2
 fi
 
 PREFLIGHT_BRANCH="$1"
+RETAIN_PREFLIGHT="${2:-}"
 
 read_failed() { echo "ERROR: refresh-$1-read-failed; applied=$APPLIED" >&2; exit 2; }
 APPLIED=no
@@ -244,9 +247,14 @@ if [ -f scripts/repo/check-selection/script.sh ]; then
     --execute-local --reuse-from-worktree "$PREFLIGHT_WORKTREE" --json
 fi
 
-perform_refresh remove-preflight-worktree git worktree remove "$PREFLIGHT_WORKTREE"
-perform_refresh delete-preflight-branch git branch -d "$PREFLIGHT_BRANCH" >/dev/null
-cleanup_stale_preflight_siblings "$PREFLIGHT_BRANCH"
+if [ "$RETAIN_PREFLIGHT" = --retain-preflight ]; then
+  CLEANUP_RESULT=retained-worktree-and-branches
+else
+  perform_refresh remove-preflight-worktree git worktree remove "$PREFLIGHT_WORKTREE"
+  perform_refresh delete-preflight-branch git branch -d "$PREFLIGHT_BRANCH" >/dev/null
+  cleanup_stale_preflight_siblings "$PREFLIGHT_BRANCH"
+  CLEANUP_RESULT=removed-worktree-and-deleted-branch
+fi
 
 echo "Applied rehearsed refresh:"
 echo "current_branch=${CURRENT_BRANCH}"
@@ -254,4 +262,4 @@ echo "preflight_branch=${PREFLIGHT_BRANCH}"
 echo "preflight_worktree=${PREFLIGHT_WORKTREE}"
 echo "applied_commit=${PROMOTED_COMMIT}"
 echo "base_head=${BASE_HEAD}"
-echo "cleanup_result=removed-worktree-and-deleted-branch"
+echo "cleanup_result=${CLEANUP_RESULT}"

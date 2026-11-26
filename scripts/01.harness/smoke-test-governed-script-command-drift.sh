@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.smoke-test-governed-script-command-drift
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: validation
 #   disciplines:
@@ -45,6 +45,10 @@ mkdir -p \
 
 cp "$SOURCE_ROOT/scripts/01.harness/run-governed-script.sh" \
   "$REPO/scripts/01.harness/run-governed-script.sh"
+for dependency in scripts/01.harness/artifact-metadata/header_discovery.py .agentic/01.harness/artifact-metadata/taxonomy.yml; do
+  mkdir -p "$REPO/${dependency%/*}"
+  cp "$SOURCE_ROOT/$dependency" "$REPO/$dependency"
+done
 cp "$SOURCE_ROOT/scripts/01.harness/check-governed-script-command-drift.sh" \
   "$REPO/scripts/01.harness/check-governed-script-command-drift.sh"
 

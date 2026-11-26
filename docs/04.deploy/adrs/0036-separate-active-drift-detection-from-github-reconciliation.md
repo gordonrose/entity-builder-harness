@@ -4,7 +4,7 @@ id: deploy.architecture.adr.0036-separate-active-drift-detection-from-github-rec
 version: 1
 status: active
 created_on: "2026-09-26"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -19,7 +19,7 @@ portability:
   - kanbien/staging
 used_by:
 - id: deploy.script.verify-platform-shell-drift-detection-boundary
-  path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py
+  path: scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-drift-detection-boundary/script.py
 -->
 # ADR 0036: Separate Active Drift Detection from GitHub Reconciliation
 

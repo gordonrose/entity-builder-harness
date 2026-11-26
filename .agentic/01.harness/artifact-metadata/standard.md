@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standard.artifact-metadata
-version: 4
+version: 5
 status: active
 created_on: "2026-06-24"
-updated_on: "2026-10-26"
+updated_on: "2026-11-25"
 layer: 01.harness
 domain: metadata
 disciplines:
@@ -341,6 +341,25 @@ such as `packages.design-system`, `apps.persistence`, or `infra.ci-cd`.
 
 `effects` is required when `kind: script`. Use one or more controlled script
 effects from `taxonomy.yml`.
+
+For reviewed fixture-only tests, `writes-files` includes Git state created
+inside newly created, private temporary test repositories. It does not grant
+staging, commits, branching or worktree operations on an existing repository.
+The test must keep every mutation inside its owned temporary scope, reject
+external Git-directory pointers, clear inherited Git redirection/configuration,
+and prevent repository discovery from escaping that scope. Local clones must
+also have private fixture sources and destinations; remote clones still have
+network effects. Preserve explicit fixture dates where the assertion needs them.
+
+Prove rejection of an existing checkout before child execution and the absence
+of inherited Git redirection at the actual fixture helper. Name the source and
+proof in the existing task record. An isolation label, path name or header alone
+is not containment or permission; reviewed fixture controls are not an operating
+system sandbox. Existing/shared Git directories and task or integration
+worktrees retain their real Git effects and explicit approval requirements.
+Do not widen the local runner's allowed effects or hide real Git operations
+behind a wrapper to admit a test. Apply this classification only after reviewing
+the program's actual targets and controls, not as a blanket header rewrite.
 
 `purpose` is required. Use one concise sentence that explains why the artifact
 exists.

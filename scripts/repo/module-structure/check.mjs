@@ -4,7 +4,7 @@
 //   version: 5
 //   status: active
 //   created_on: "2026-11-01"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-25"
 //   layer: 03.product
 //   domain: architecture
 //   disciplines: [architecture, agentic]
@@ -20,7 +20,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
-import { inspectWorkspaceDependencies } from "../workspace-build/dependencies.mjs";
+import { inspectWorkspaceDependencies } from "./dependencies.mjs";
 import { WorkspaceDeclarationError } from "../workspace-build/declarations.mjs";
 
 export const sourceRoots = Object.freeze(["packages", "platform", "apps", "products"]);

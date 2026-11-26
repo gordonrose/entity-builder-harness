@@ -4,7 +4,7 @@ id: deploy.inventory.verification-diagnostics-timeouts
 version: 1
 status: draft
 created_on: "2026-11-21"
-updated_on: "2026-11-21"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: deployment.consolidation
 disciplines: [architecture, sre]
@@ -112,7 +112,7 @@ detail. Blocked and uncertain entries are different outcomes.
 ### V1 Regression execution inside live preparation
 
 **Confirmed, still present.** Entity-smoke's
-[`local_checks`](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py)
+[`local_checks`](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/script.py)
 runs composition and secret-dependency checks with a 900-second wrapper.
 Infrastructure, restart, credential, snapshot and failure routes call it.
 The task route was corrected in `8a39ed56`; sibling callers remain.
@@ -155,7 +155,7 @@ retain deliberate tests whose behavior genuinely depends on command lookup.
 
 **Confirmed duplication.**
 [Composition](../../../scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/smoke-test.sh)
-and [acceptance controls](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-control-test.sh)
+and [acceptance controls](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/commands/acceptance-control-test.sh)
 both run the same restore-control, acceptance-control and acceptance-route
 Python tests. Different outer receipt identities do not deduplicate them.
 

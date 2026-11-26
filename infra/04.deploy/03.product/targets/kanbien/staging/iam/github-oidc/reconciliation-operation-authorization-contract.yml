@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-09-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.access
 #   disciplines:
@@ -18,7 +18,7 @@
 #     - kanbien/staging
 #   used_by:
 #   - id: deploy.script.verify-platform-shell-deployment-reconciliation
-#     path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deployment-reconciliation/script.sh
 schema: deploy/reconciliation-operation-authorization-contract/v1
 target: kanbien/staging
 identity: github-platform-shell-staging-reconciliation

@@ -1,0 +1,173 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v3
+id: deploy.script.reconcile-platform-shell-staging.readme
+version: 2
+status: active
+created_on: "2026-09-26"
+updated_on: "2026-11-26"
+layer: 04.deploy
+domain: runtime.operations
+disciplines:
+- security
+- sre
+kind: capability-readme
+purpose: Explain the fail-closed Kanbien staging deployment reconciliation command.
+portability:
+  class: internal
+  targets:
+  - kanbien/staging
+used_by:
+- id: deploy.script.reconcile-platform-shell-staging
+  path: scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.py
+-->
+# Platform-Shell Staging Deployment Reconciliation
+
+This command is the mandatory boundary between a reviewed infrastructure plan
+and an AWS mutation. Observation modes make no provisioning change; the guarded
+release modes below execute only an exactly reviewed change set. It validates the source
+policy, then checks only the declared account, Foundation and artifact-stack
+state, fresh passive CloudFormation drift evidence, private artifact-bucket
+controls, and the tag-scoped monthly budget. Its output contains only check identifiers and a
+verdict; it never prints provider responses, endpoints, resource contents,
+secrets, or change-set details.
+
+If AWS cannot be verified, the result names the owning safe control (for
+example, `artifact-bucket-public-access-control-verification-unavailable`)
+rather than a generic provider error. Each artifact-bucket read is an
+independent check, so a failure identifies the exact control without revealing
+a provider response. The command remains fail-closed: a passed neighbouring
+control never masks an unavailable one.
+
+GitHub does not start CloudFormation drift scans. AWS can require dependent
+provider reads for every resource type in a stack, and assigning those reads to
+the GitHub role would create a broad, hidden permission boundary. Instead this
+command requires a recent `IN_SYNC` stack summary and reports whether the
+evidence is missing, stale, or not in sync. A separate target-scoped detector
+is planned behind the reviewed resource-read contract in
+`infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/`.
+
+The check runs its AWS calls serially and each call has three bounded attempts
+with short backoff. This avoids creating an avoidable burst of CloudFormation,
+S3, and Budgets requests while still failing closed if the declared control
+cannot be verified.
+
+Use it in two modes:
+
+- `continuous` is the read-only scheduled guard. A failed check makes the
+  GitHub workflow fail visibly rather than silently accepting drift.
+- `pre-foundation-change-set` is run immediately before a reviewed Foundation
+  change set is executed. It rechecks every direct mutation prerequisite,
+  including fresh passive evidence for both stacks and all artifact-bucket and
+  budget controls. It then requires exactly the 22 approved additions and one
+  non-replacement SNS topic-policy update. Any extra, missing, or replacement
+  change blocks execution.
+
+```bash
+npm run platform:shell:deployment-reconciliation -- --validate
+npm run platform:shell:deployment-reconciliation -- --mode pre-foundation-change-set --foundation-change-set reviewed-name
+```
+
+The command is a deployment control, not a substitute for review: it detects
+drift and prevents scope creep, while a current approved change set still
+defines the authorised mutation.
+
+- `pre-relational-stage6-service-change-set` is run immediately before the
+  isolated relational reference proof's Service-stack change set. It permits
+  exactly five new non-public PostgreSQL task definitions, the three normal
+  immutable-image task-definition revisions, and the two in-place service
+  references. It rejects every other resource, replacement, or stack. This
+  separates image publication from deployment while still making the
+  deployment scope mechanically reviewable.
+
+  It also requires two short-lived target-admin assessment records: the
+  classified Foundation record (which accepts only the known RDS parameter
+  normalisation) and an `IN_SYNC` record for the fixed Service stack. The
+  artifact bucket itself is verified through its current encryption, ownership,
+  public-access, lifecycle, and policy controls; a stale passive artifact
+  stack timestamp cannot suppress those direct checks or authorize a change.
+
+Before a Foundation change set can execute, the declared administrator profile
+also compares the live GitHub inline policy with the reviewed JSON source. This
+is deliberately a separate mode: GitHub proves its own usable operations in
+the scheduled workflow; an administrator proves that AWS has not retained or
+gained a different policy.
+
+```bash
+npm run platform:shell:deployment-reconciliation:role-policy-alignment
+npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-service-change-set --service-change-set reviewed-name
+```
+
+- `pre-candidate-execution-preflight-onboarding-change-set` permits exactly
+  one new dormant candidate task definition. When a historical service-stack
+  rollback has completed, it requires a fresh candidate-baseline record that
+  proves the stack is `IN_SYNC` and the fixed source service is at steady
+  state. It does not authorize a routing, IAM, database, queue, or service
+  change.
+
+```bash
+npm run platform:shell:service-active-drift-assessment -- \
+  --candidate-onboarding \
+  --execute-approved-active-service-drift-assessment \
+  --evidence-file /tmp/candidate-baseline.json --json
+
+npm run platform:shell:deployment-reconciliation -- \
+  --mode pre-candidate-execution-preflight-onboarding-change-set \
+  --service-change-set reviewed-name \
+  --service-drift-evidence /tmp/candidate-baseline.json --json
+```
+
+- `pre-relational-stage6-bootstrap-recovery-service-change-set` is used only
+  after the first Stage 6 Service composition already exists and a corrected
+  immutable image must be rolled out before the one fixed bootstrap recovery.
+  It permits no additions or removals. It permits only replacement revisions of
+  the three normal and five already-declared relational task definitions, plus
+  the two in-place ECS service references. The same fresh Foundation
+  classification and in-sync Service assessment are required. Any IAM,
+  queue, database, listener, routing, or other resource change fails closed.
+  It also requires the durable successful fixed bootstrap-effect reconciliation
+  receipt before it will accept the promotion change set. This prevents service
+  promotion from bypassing the pre-promotion read-only reconciliation of
+  partially completed bootstrap roles, grants, and schema effects.
+
+```bash
+npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-bootstrap-recovery-service-change-set --service-change-set reviewed-name --known-foundation-drift-evidence /tmp/fresh-foundation-evidence.json --service-drift-evidence /tmp/fresh-service-evidence.json
+```
+
+The executable release modes consume `--deployment-manifest <path>` and the
+manifest's package-custody receipt. `runtime-alignment` reads the reviewed source
+and provider observations: exact source/deployed templates; drift assessed after
+stack updates and within 15 minutes; all declared runtime task configurations;
+workload role trust, inline policies and attached policy identities; service
+health; and running immutable image digests. It writes the manifest's fresh
+`acceptance.current_observation` and an immutable candidate under
+`acceptance.evidence_root`. Generic release succession performs promotion as a
+separate compare-and-swap step. Historical custody remains usable after the
+original CI download expires because the accepted proof set retains its bytes.
+
+`service-update` and `service-rollback` are the guarded mutation entrypoints.
+Both require `--service-change-set`, `--expected-predecessor`,
+`--realization-facts` and `--realization-change-summary`. First creation uses
+`--expected-predecessor none`; it requires a CREATE change set and absent or
+review-only stack, qualification, declared default configuration, and observed
+Foundation/permission/artifact-store/budget prerequisites. A successor requires
+`--current-deployment-manifest` with the accepted current release and fresh
+observation. The bounded update route preserves source templates and all
+non-image parameters. It does not qualify a simultaneous configuration change.
+Rollback additionally requires `--rollback-compatibility-id`; its retained proof
+must bind the exact current nested configuration and permission sources.
+
+`service-operation-status` requires the manifest and exact change-set identity;
+it observes pending, failed, absent/uncertain and completed outcomes without
+executing a change set. Lost execute responses remain uncertain. Provider calls
+in release control are single attempts with a 30-second maximum, and execution
+uses a stable request token derived from the reviewed change-set identity.
+Run the existing active drift assessment after a successful stack update before
+producing fresh runtime alignment. All local CLI regressions use disposable
+provider fixtures and explicitly simulated release evidence.
+
+Runtime observations also record `permission_state_sha256`: a digest of actual
+role trust, inline policies, permission boundary and attached managed policy
+default-version/document identities. Raw permission documents remain in memory.
+A new managed policy version at the same ARN invalidates current readiness; the
+immutable historical receipt remains retained. Mutation re-observes this identity
+immediately before execution, and rollback compares retained and current proof.

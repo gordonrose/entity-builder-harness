@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.script.inventory-deploy-control.readme
-version: 2
+version: 4
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-11-22"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -64,12 +64,22 @@ Markdown view is a compact count and finding summary. It does not create an
 alternative registry, validate a structural migration, or infer approval to
 move a live route. `--topology` therefore cannot be combined with `--check`.
 
-The role and destination are intentionally conservative where a generic legacy
-name lacks enough objective evidence. Such output is a migration review input:
-resolve the objective and consumers first, then use the governed artifact-path
-migration workflow for an approved slice. Tests and fixtures remain proof
-assets; they do not become operational implementation merely because they sit
-beside one.
+Roles and destinations are filename/path heuristics, not audited conclusions.
+For example, the projector can label `source-transition.py` for removal even
+though runtime code still reads its historical custody functions. Its caller
+list combines literal source strings with metadata references; neither alone
+proves a live executable call. Its suffix set also omits `.jsx`, unlike the
+complete source audit. Do not copy those proposed dispositions into a migration.
+
+Use the [source-backed audit and exact P4 proposal](../../helpers/audit.md#p4-current-disposition-and-proposed-folder-manifest--2026-11-25)
+to establish responsibility, callers, retained risks and proposed destinations.
+The approved 173-source deployment relocation and its 31 Markdown companions
+are locally implemented; final qualification and publication remain pending.
+The source count is unchanged. This inventory discovers the canonical paths
+from the checkout and existing declarations; it does not need a second list of
+legacy owners. The catalogue remains useful for finding candidates. Any further
+moves still need destination approval and the existing migration workflow. Tests and fixtures
+remain proof assets, not operations merely because they sit beside one.
 
 Consequential `aws-mutation` effects take precedence over test/regression names
 and fixture locations. Public package commands trace literal interpreter calls,

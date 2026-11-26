@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.build-core-server-persistence-image
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -23,10 +23,11 @@ source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 source "$ROOT/scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh"
 TAG="entity-builder-harness/04.deploy/kanbien-core-server-persistence:local"
 if [[ $# -eq 2 && "$1" == "--tag" && -n "$2" ]]; then TAG="$2"; elif [[ $# -ne 0 ]]; then printf '%s\n' 'Usage: script.sh [--tag <tag>]' >&2; exit 2; fi
+persistence_source="$(git rev-parse HEAD)"
 candidate_image_prechecks infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes PERSISTENCE_IMAGE_PROGRAM_CONTRACT_FAILED 'Runnable program validation failed.' 'Inspect the runnable program contract fixture.' python3
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
 if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then printf '%s\n' 'ERROR: Docker is required to qualify the persistence candidate image.' >&2; exit 1; fi
-candidate_image_build PERSISTENCE_IMAGE_BUILD_FAILED 'Local image build failed.' 'Inspect the retained build operation without replaying publication.' infra/04.deploy/03.product/image/core-server-persistence/Dockerfile "$TAG" "$(git rev-parse HEAD)" "$(git rev-parse HEAD)" "$ROOT"
+candidate_image_build PERSISTENCE_IMAGE_BUILD_FAILED 'Local image build failed.' 'Inspect the retained build operation without replaying publication.' infra/04.deploy/03.product/image/core-server-persistence/Dockerfile "$TAG" "$persistence_source" "$persistence_source" "$ROOT"
 printf 'Built local core-server persistence image: %s\n' "$TAG"

@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -19,7 +19,7 @@
 #   - id: deploy.library.kanbien-core-platform.persistence-ecs-task-evidence
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
 #   - id: deploy.library.entity-smoke.task-control
-#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-control.py
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py
 #   - id: deploy.command.kanbien-core-platform.prepare-core-server-persistence-candidate
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py
 """AWS response semantics only; no credentials, requests, retries or persistence."""

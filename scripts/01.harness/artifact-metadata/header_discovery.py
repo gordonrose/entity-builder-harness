@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.library.artifact-metadata.header-discovery
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -20,6 +20,8 @@
 #   used_by:
 #     - id: harness.script.artifact-metadata.check-headers
 #     - id: harness.script.artifact-metadata.generate-index
+#     - id: harness.script.run-governed-script
+#       path: scripts/01.harness/run-governed-script.sh
 #   effects:
 #     - read-only
 
@@ -247,6 +249,22 @@ def parse_header_text(text: str) -> dict[str, Any]:
     if not isinstance(parsed, dict) or set(parsed) != {span.marker} or not isinstance(parsed[span.marker], dict):
         raise HeaderError("invalid metadata header shape", condition="shape-invalid", field="header")
     return parsed
+
+
+def script_effects() -> frozenset[str]:
+    """Read canonical effects, or its generated companion in portable exports."""
+    canonical = Path(__file__).resolve().parents[3] / '.agentic' / '01.harness' / 'artifact-metadata' / 'taxonomy.yml'
+    source = canonical if canonical.is_file() else Path(__file__).with_name('taxonomy.yml')
+    text = source.read_text(encoding='utf-8')
+    metadata = parse_header_text(text).get('agentic-artifact', {})
+    if metadata.get('id') != 'harness.taxonomy.artifact-metadata' or metadata.get('version') != 2:
+        raise ValueError('unsupported script effects taxonomy')
+    taxonomy = yaml.safe_load(text)
+    values = taxonomy.get('script_effects') if isinstance(taxonomy, dict) else None
+    if not isinstance(values, list) or not values or any(not isinstance(value, str) for value in values):
+        raise ValueError('invalid script effects taxonomy')
+    return frozenset(values)
+
 
 def recover_legacy_baseline(text: str) -> dict[str, Any]:
     """Recover only unambiguous v2 identity from malformed historical YAML.

@@ -4,7 +4,7 @@ id: deploy.rules.02-rag-rulebook.readme
 version: 1
 status: active
 created_on: "2026-06-26"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -57,6 +57,6 @@ Planning may explain gaps. Deployment execution must block until the relevant
 readiness rules have executable or auditable proof.
 
 The current executable proof surface is
-`scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh`, which
+`scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh`, which
 validates a target deploy-readiness manifest before any GitHub-to-AWS
 deployment execution can proceed.

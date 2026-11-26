@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -15,7 +15,7 @@
 #   effects: [network, writes-files]
 #   used_by:
 #   - id: deploy.library.entity-smoke.resource-control
-#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/resource-control.py
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/resource-control.py
 """No retries, deletion authority, missing-object adoption or completion store."""
 
 

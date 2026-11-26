@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-11-14"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -15,7 +15,7 @@
 #   effects: [network]
 #   used_by:
 #   - id: deploy.command.entity-smoke.infrastructure.implementation
-#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/script.py
 #   - id: deploy.command.entity-smoke.target-alignment.implementation
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py
 """Private invocation mechanics; callers own arguments, admission and retry policy."""

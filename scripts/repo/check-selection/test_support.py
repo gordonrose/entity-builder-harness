@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.support
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -164,6 +164,7 @@ class FixtureSupport(unittest.TestCase):
         args.reuse_from_worktree = reuse_from_worktree
         files = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file() and '.git' not in path.relative_to(self.root).parts]
         def git(_root, *arguments):
+            if arguments[0] == 'diff' and '--raw' in arguments: return ''
             if arguments[0] == 'diff': return 'src/old.ts\0src/main.ts\0' if '--cached' in arguments else ''
             if arguments[0] == 'ls-files': return ''
             return getattr(self, 'revision', 'a' * 40)

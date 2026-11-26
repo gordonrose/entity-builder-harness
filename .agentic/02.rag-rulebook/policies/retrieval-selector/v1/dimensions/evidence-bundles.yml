@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-06-28"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -407,7 +407,7 @@ evidence_bundles:
     always_source_paths:
       - .github/workflows/deploy-rag-rulebook-staging.yml
       - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
-      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh
       - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
       - infra/04.deploy/02.rag-rulebook/github-actions/README.md
     family_source_paths:
@@ -598,7 +598,7 @@ evidence_bundles:
       - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
       - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
       - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
-      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      - scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh
     family_source_paths:
       evidence.deploy.mcp-corpus-gap-record: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
   - question_category_id: question.rag.selector-diagnostics

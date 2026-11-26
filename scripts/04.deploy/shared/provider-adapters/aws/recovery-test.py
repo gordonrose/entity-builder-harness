@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.aws.provisioning-recovery
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -15,9 +15,9 @@
 #   effects: [read-only, writes-files]
 #   used_by:
 #   - id: deploy.script.provision-platform-shell-negative-authz-client.smoke-test
-#     path: scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-negative-authz-client/smoke-test.sh
 #   - id: deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test
-#     path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+#     path: scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
 #   - id: deploy.test.kanbien-core-platform.provision-target-budget
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh
 import importlib.util,json,os,shutil,subprocess,sys,tempfile,unittest
@@ -67,7 +67,7 @@ def copy(root,relative):
  path=Path(relative);target=root/path;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/path,target);return target
 
 def fixture_root(root):
- for path in ['scripts/04.deploy/shared/provider-adapters/aws/response.py','scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py']:copy(root,path)
+ for path in ['scripts/04.deploy/shared/provider-adapters/aws/response.py','scripts/04.deploy/legacy/kanbien-staging/shared/provider-adapters/aws/cognito-provisioning.py']:copy(root,path)
  inventory=root/'scripts/04.deploy/inventory-deploy-control/script.py';inventory.parent.mkdir(parents=True);inventory.write_text('print("covered synthetic fixture")\n')
 
 class RecoveryCli(unittest.TestCase):
@@ -124,7 +124,7 @@ class RecoveryCli(unittest.TestCase):
    profile=copy(root,'infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml')
    aws=root/'aws';aws.write_text(AUTH_FAKE);aws.chmod(0o755)
    for mode in ['negative-authz','persistence-write']:
-    relative=f'scripts/04.deploy/provision-platform-shell-{mode}-client/script.py';controller=copy(root,relative);module=load(ROOT/relative);policy=module.resolve_policy(module.load_yaml(profile));scopes=[policy['scope_name']] if mode=='negative-authz' else ['smoke.read','smoke.write']
+    relative=f'scripts/04.deploy/legacy/kanbien-staging/provision-platform-shell-{mode}-client/script.py';controller=copy(root,relative);module=load(ROOT/relative);policy=module.resolve_policy(module.load_yaml(profile));scopes=[policy['scope_name']] if mode=='negative-authz' else ['smoke.read','smoke.write']
     for scenario,verdict in [('absent','absent'),('present','present-unqualified'),('partial','partial'),('deleting','partial'),('denied','uncertain'),('malformed','uncertain'),('partial-page','uncertain'),('duplicate','uncertain')]:
      with self.subTest(mode=mode,scenario=scenario):
       calls=root/f'{mode}-{scenario}.log';env={**os.environ,'FIXTURE_POLICY':json.dumps(policy),'FIXTURE_SCOPES':json.dumps(scopes),'FIXTURE_MODE':mode,'FIXTURE_SCENARIO':scenario,'FIXTURE_CALLS':str(calls),'PYTHONDONTWRITEBYTECODE':'1'}
@@ -151,7 +151,7 @@ except m.RelationalSmokeError as error:print(str(error));sys.exit(1)
   with tempfile.TemporaryDirectory(prefix='relational-provider-filters-') as directory:
    root=Path(directory);subprocess.run(['git','init','-q',str(root)],check=True,capture_output=True);aws=root/'aws';aws.write_text(fake);aws.chmod(0o755)
    for scenario,status,expected in [('valid','RUNNING',0),('valid','STOPPED',0),('paginated','STOPPED',1),('wrong-identity','STOPPED',1),('partial','STOPPED',1)]:
-    result=subprocess.run([sys.executable,'-B','-c',driver,str(ROOT/'scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py'),status],cwd=root,env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'FIXTURE_SCENARIO':scenario},text=True,capture_output=True,timeout=10)
+    result=subprocess.run([sys.executable,'-B','-c',driver,str(ROOT/'scripts/04.deploy/legacy/kanbien-staging/run-platform-shell-postgresql-relational-smoke/script.py'),status],cwd=root,env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH'],'FIXTURE_SCENARIO':scenario},text=True,capture_output=True,timeout=10)
     self.assertEqual(result.returncode,expected,(scenario,result.stdout,result.stderr))
     if expected:self.assertIn('observation is incomplete',result.stdout)
  def test_budget_lost_response_resumes_exact_operation(self):

@@ -4,7 +4,7 @@ id: infra.04-deploy.03-product.targets.kanbien.staging.drift-detection.readme
 version: 1
 status: active
 created_on: "2026-09-26"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -18,7 +18,7 @@ portability:
   - kanbien/staging
 used_by:
 - id: deploy.script.verify-platform-shell-drift-detection-boundary
-  path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py
+  path: scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-drift-detection-boundary/script.py
 -->
 # Kanbien Staging CloudFormation Drift Detection
 

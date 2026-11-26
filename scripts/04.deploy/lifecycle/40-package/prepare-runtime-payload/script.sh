@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.prepare-runtime-payload.wrapper
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-14"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -22,7 +22,6 @@ node --test "$ROOT/scripts/repo/workspace-build/declarations-test.mjs" \
   "$ROOT/scripts/repo/workspace-build/compile-test.mjs" \
   "$ROOT/scripts/repo/workspace-build/script-test.mjs" \
   "$ROOT/scripts/repo/workspace-build/project-selection-test.mjs" \
-  "$ROOT/scripts/repo/workspace-build/runtime-packages-test.mjs" \
-  "$ROOT/scripts/repo/workspace-build/check-inputs-test.mjs"
+  "$ROOT/scripts/repo/workspace-build/runtime-packages-test.mjs"
 node --test "$ROOT/scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble-test.mjs"
 exec python3 -B "$ROOT/scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/connected-workload-test.py"

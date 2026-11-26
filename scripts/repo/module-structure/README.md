@@ -4,7 +4,7 @@ id: repo.module-structure.readme
 version: 6
 status: active
 created_on: "2026-11-01"
-updated_on: "2026-11-22"
+updated_on: "2026-11-25"
 layer: 03.product
 domain: architecture
 disciplines: [architecture, agentic]
@@ -30,6 +30,11 @@ owns the rule and its treatment of refactoring; this guide explains the tools.
 - [check.mjs](check.mjs) finds source indexes, reads their TypeScript syntax and
   returns fixed finding codes with repository-relative locations. It never
   executes the product code it inspects or prints its source text.
+- [dependencies.mjs](dependencies.mjs) implements the shared workspace-import
+  inspection described below; it reads build declarations rather than compiling.
+- [dependencies-test.mjs](dependencies-test.mjs) exercises that inspector with
+  isolated, differently named example workspaces. No new test program was added
+  for the relocation; this is the existing fixture file in its new home.
 - [legacy.v1.json](legacy.v1.json) records the exact existing non-export code in
   23 mixed indexes. This is a temporary allowance, not permission to add logic.
   There is no refresh command; changing an allowance needs the approval and
@@ -109,8 +114,9 @@ actual source tree and prohibited/permitted future callers are fixture-tested.
 
 ## Running it
 
-The registered real-source check is the normal protection for a relevant code
-change:
+The real-source scan is retained for explicitly requested architecture review,
+not an ordinary commit or build prerequisite. With task context already prepared
+(see the [selection guide](../check-selection/README.md)), request it through:
 
 ```bash
 bash scripts/repo/check-selection/script.sh --checks module-index-structure --execute-local --json
@@ -195,13 +201,17 @@ dependency. A test-only assertion package belongs in `devDependencies`; runtime
 source cannot import a test helper to borrow that test-only permission.
 
 `check.mjs` calls
-[`inspectWorkspaceDependencies()`](../workspace-build/dependencies.mjs), which
+[`inspectWorkspaceDependencies()`](dependencies.mjs), which
 discovers workspaces through the root manifest and uses
 [`declarations.mjs`](../workspace-build/declarations.mjs) for their exports and
 selected dependency closures. TypeScript resolves literal import destinations.
 The inspector compares each workspace edge with the importing owner's manifest,
 then returns counts and fixed finding codes to the command's safe JSON report.
 It never executes the inspected programs or prints rejected import strings.
+
+The inspector and its tests live here because they inspect architecture; they
+do not compile or package software. Workspace declarations remain with the
+build owner and are imported as shared information, not copied into this folder.
 
 For the invented receipt example, a missing dependency produces this report
 excerpt (not a complete command response):
@@ -212,7 +222,7 @@ excerpt (not a complete command response):
 
 Adding the justified declaration resolves that finding; it does not by itself
 prove runtime behavior. Do not add dependencies merely to suppress a violation.
-The [focused fixtures](../workspace-build/dependencies-test.mjs) exercise both
+The [focused fixtures](dependencies-test.mjs) exercise both
 the package import and relative-path versions, changed/new/removed packages,
 runtime-to-test bypasses and an independently named workspace.
 

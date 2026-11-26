@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-06-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -98,7 +98,7 @@ rules:
       considered.
     must:
       - "Use .agentic/aws/workflows/deploy-rag-rulebook-service.md as the governing workflow for RAG/rulebook GitHub-to-AWS deployment."
-      - "Validate a deploy-readiness manifest with scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh before deploy execution."
+      - "Validate a deploy-readiness manifest with scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh before deploy execution."
       - "Name the target GitHub workflow path, workflow name, trigger, source policy, ref, environment, OIDC role, OIDC audience, OIDC subject/repository/ref/environment conditions, artifact provenance requirements, AWS target, MCP exposure model, cost controls, and rollback path in the manifest."
       - "Treat a blocked readiness report as planning evidence, not deploy approval."
     must_not:
@@ -106,7 +106,7 @@ rules:
       - "Do not run a GitHub-to-AWS deploy without a manifest that passes the deploy-readiness verifier."
       - "Do not let a workflow path or environment name stand in for proof that the environment protections, OIDC trust, artifact provenance, and AWS target are configured."
     required_checks:
-      - "Run scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh against the candidate manifest."
+      - "Run scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh against the candidate manifest."
       - "Verify the readiness report status is ready before deploy execution."
       - "Verify blocked readiness reports are surfaced as blocking deployment gaps."
     agent_guidance: >
@@ -200,7 +200,7 @@ source_refs:
       - "GitHub Release Path"
       - "Deployment Phases"
       - "Stop Conditions"
-  - doc: "scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh"
+  - doc: "scripts/04.deploy/legacy/rag-rulebook/verify-rag-rulebook-deploy-readiness/script.sh"
     sections:
       - "deploy-readiness manifest validation"
   - doc: "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments"

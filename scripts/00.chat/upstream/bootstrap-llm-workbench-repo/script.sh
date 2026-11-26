@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.bootstrap-llm-workbench-repo
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-11-05"
+#   updated_on: "2026-11-26"
 #   layer: 00.chat
 #   domain: upstream
 #   disciplines:
@@ -220,6 +220,13 @@ plan_selected_file() {
 }
 
 plan_public_harness_scripts() {
+  local taxonomy=".agentic/01.harness/artifact-metadata/taxonomy.yml"
+  local portable_taxonomy="scripts/01.harness/artifact-metadata/taxonomy.yml"
+  if [ -f "$SOURCE_REPO/$taxonomy" ]; then
+    plan_file "$SOURCE_REPO/$taxonomy" "$portable_taxonomy"
+  else
+    plan_selected_file "$portable_taxonomy"
+  fi
   plan_selected_file "scripts/01.harness/run-governed-script.sh"
   plan_selected_file "scripts/01.harness/check-deterministic-process-drift.sh"
   plan_selected_file "scripts/01.harness/check-governed-script-command-drift.sh"

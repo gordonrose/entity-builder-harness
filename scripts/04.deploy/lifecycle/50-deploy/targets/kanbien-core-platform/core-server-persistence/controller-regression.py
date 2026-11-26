@@ -5,7 +5,7 @@
 #   version: 15
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -1200,7 +1200,7 @@ class ControllerRegression(unittest.TestCase):
                     with patch.object(sys,'argv',['active','--target-root',str(target),'--json']),contextlib.redirect_stdout(io.StringIO()):
                         code=active.main()
                     return subprocess.CompletedProcess(command,code,stdout='',stderr='')
-                if '/validate-accepted-release/script.sh' in script or script.endswith('/entity-smoke/acceptance-state.sh'):
+                if '/validate-accepted-release/script.sh' in script or script.endswith('/entity-smoke/acceptance-evaluation/commands/acceptance-state.sh'):
                     return subprocess.CompletedProcess(command,0,stdout=json.dumps({'verdict':'validated'}),stderr='')
                 relevant='--scope-contract' in command and '/core-server-persistence/' in command[command.index('--scope-contract')+1]
                 for key in counts:

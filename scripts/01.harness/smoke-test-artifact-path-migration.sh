@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.smoke-test-artifact-path-migration
-#   version: 2
+#   version: 4
 #   status: active
 #   created_on: "2026-06-20"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: migration
 #   disciplines:
@@ -160,7 +160,150 @@ EOF
     --plan .agentic/harness-renamed/plans/migration/example.md \
     .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/historical.out"
   grep -q '^active_old_refs=none$' "$TMP_ROOT/historical.out" || fail "checker did not retain only historical evidence"
+
+  # Cross a search batch, preserve literal punctuation/whitespace paths and
+  # every matching line, and bound giant generated-line excerpts.
+  for ((index=0; index<260; index++)); do
+    printf 'unrelated\n' > "docs/neutral-$index.txt"
+  done
+  printf 'docs/a[1].md\ndocs/a[1].md and docs/a[1].md\ndocs/a11.md\n' > 'docs/zz file:12:literal.md'
+  printf '%6000s docs/a[1].md\n' '' > 'docs/zz long.md'
+  bash "$SOURCE_ROOT/scripts/01.harness/plan-artifact-path-migration.sh" 'docs/a[1].md' docs/renamed.md > "$TMP_ROOT/batch.out"
+  grep -Fxq 'references=3' "$TMP_ROOT/batch.out" || fail "batch scanner changed literal matching-line counts"
+  grep -Fxq 'docs/zz file:12:literal.md:2' "$TMP_ROOT/batch.out" || fail "batch scanner lost literal filename or line location"
+  grep -q '\[excerpt truncated\]' "$TMP_ROOT/batch.out" || fail "planner did not mark a shortened source excerpt"
+  [ "$(wc -c < "$TMP_ROOT/batch.out")" -lt 3000 ] || fail "planner retained an unbounded generated line"
+  if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" 'docs/a[1].md' docs/renamed.md > "$TMP_ROOT/batch-check.out" 2> "$TMP_ROOT/batch-check.err"; then
+    fail "checker lost active references across a batch"
+  fi
+  grep -Fxq 'docs/zz file:12:literal.md:2' "$TMP_ROOT/batch-check.err" || fail "checker lost exact batch match location"
+  grep -Fxq 'docs/zz long.md:1' "$TMP_ROOT/batch-check.err" || fail "checker omitted a giant matching line"
 )
+
+# Historical fields must not exempt current instructions in the same documents.
+MIGRATION_SOURCE_ROOT="$SOURCE_ROOT" MIGRATION_FIXTURE_ROOT="$REPO" python3 -B - <<'PY'
+import os
+from pathlib import Path
+import subprocess
+
+root = Path(os.environ['MIGRATION_FIXTURE_ROOT'])
+scripts = Path(os.environ['MIGRATION_SOURCE_ROOT']) / 'scripts/01.harness'
+old, new = 'example/old/', 'example/new/'
+def header(kind, layer, markdown=True):
+    fields = f'schema: agentic-artifact/v3\ncreated_on: "2026-01-01"\nkind: {kind}\nlayer: {layer}\n'
+    return '<!-- agentic-artifact:\n' + fields + '-->\n' if markdown else '# agentic-artifact:\n' + ''.join('#   ' + line + '\n' for line in fields.splitlines())
+course = header('guide', '05.education') + 'The frozen inventory is recorded in this frozen course inventory.\n<!-- course-file: example/old/a.sh -->\n<!-- course-source-sha256: before=absent after=' + 'a' * 64 + ' -->\n- [ ] [example/old/a.sh](example/new/a.sh) — modified; before `aaaaaaaaaaaa`, snapshot `bbbbbbbbbbbb`.\n'
+derivation = header('derivation-report', '02.rag-rulebook', False) + '''schema: rag-rulebook/source-to-rule-derivation-report/v1
+semantic_review:
+  source_claims:
+    - evidence_path: example/old/a.sh
+validation:
+  required_checks: ['bash example/old/a.sh']
+  checks_run:
+    - command: bash example/old/a.sh
+      result: passed
+  checks_pending: []
+'''
+review = header('review-record', '02.rag-rulebook', False) + 'schema: rag-rulebook/okf-source-material-review/v1\nstatus: accepted\nsource_material:\n  sha256: ' + 'a' * 64 + '\niterations:\n  - reviewer_assessments:\n      - evidence: [example/old/a.sh]\n'
+plan = header('plan', '06.shared') + 'Historical task paths (completed work; not current instructions):\n\n```text\nexample/old/a.sh\n```\n'
+documents = {
+    'docs/education/history.md': course,
+    '.agentic/02.rag-rulebook/derivation-reports/example/2026-01-01-record.yml': derivation,
+    '.agentic/02.rag-rulebook/source-material-reviews/example/2026-01-01-record.yml': review,
+    '.agentic/shared/plans/implementation/history.md': plan,
+}
+for name, content in documents.items():
+    path = root / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+def run(script, env=None, needle=old):
+    return subprocess.run(['bash', str(scripts / script), needle, new], cwd=root, text=True, capture_output=True, env=env)
+accepted = run('check-artifact-path-migration.sh')
+assert accepted.returncode == 0 and 'active_old_refs=none' in accepted.stdout, accepted.stderr
+inventory = run('plan-artifact-path-migration.sh')
+assert inventory.returncode == 0 and 'references=7' in inventory.stdout and '[session-history]' in inventory.stdout, inventory.stdout + inventory.stderr
+old_inventory = inventory.stdout.split('New path references', 1)[0]
+assert '[workflow]' not in old_inventory and '[other]' not in old_inventory, old_inventory
+for name, content in documents.items():
+    for line, value in enumerate(content.splitlines(), 1):
+        if old in value:
+            assert f'{name}:{line}\n' in inventory.stdout, (name, line)
+education, derivation_path, review_path, plan_path = documents
+rejections = [
+    (education, course + 'Run bash example/old/a.sh\n'),
+    (education, course + '[Current script](example/old/a.sh)\n'),
+    (education, course.replace('(example/new/a.sh)', '(example/old/a.sh)')),
+    (education, course.replace('course-source-sha256:', 'unverified-source:')),
+    (education, course.replace('05.education', '01.harness')),
+    (education, course.replace('kind: guide', 'kind: guide\nkind: guide')),
+    (education, course.replace('<!-- course-file:', '```bash\n<!-- course-file:').replace(' -->\n- [ ]', ' -->\n```\n- [ ]')),
+    (education, course.replace('<!-- course-file:', '~~~~\n```bash\n<!-- course-file:')),
+    (derivation_path, derivation.replace('result: passed', 'result: failed')),
+    (derivation_path, derivation.replace('checks_pending: []', 'checks_pending: [awaiting-proof]')),
+    (derivation_path, derivation + 'current_command: bash example/old/a.sh\n'),
+    (derivation_path, derivation.replace('evidence_path: example/old/a.sh', '{evidence_path: example/old/a.sh, current_command: example/old/a.sh}')),
+    (derivation_path, derivation.replace('source-to-rule-derivation-report/v1', 'unknown/v1')),
+    (derivation_path, derivation.replace('result: passed', 'result: passed\n      result: passed')),
+    (derivation_path, derivation + 'unknown: [unterminated\n'),
+    (derivation_path, derivation.replace('evidence_path: example/old/a.sh', 'evidence_path: &old example/old/a.sh') + 'current_command: *old\n'),
+    (review_path, review.replace('status: accepted', 'status: pending')),
+    (review_path, review.replace('a' * 64, 'unverified')),
+    (plan_path, plan.replace('Historical task paths (completed work; not current instructions):', 'Task paths for parent review:')),
+    (plan_path, plan.replace('example/old/a.sh', 'bash example/old/a.sh')),
+    (plan_path, plan + 'Run bash example/old/a.sh\n'),
+]
+for name, content in rejections:
+    (root / name).write_text(content)
+    rejected = run('check-artifact-path-migration.sh')
+    assert rejected.returncode == 1 and 'active old-path references remain' in rejected.stderr, (name, rejected.stdout, rejected.stderr)
+    (root / name).write_text(documents[name])
+snapshot_name = 'docs/04.deploy/plans/verification-diagnostics-timeout-inventory.tsv'
+snapshot = root / snapshot_name
+snapshot.parent.mkdir(parents=True, exist_ok=True)
+snapshot_needle = 'scripts/04.deploy/'
+counterfeit = ('category\tpath_or_id\tdetails\ncurrent\t' + snapshot_needle + 'active.sh\trun now\n').encode()
+snapshot.write_bytes(counterfeit)
+rejected = run('check-artifact-path-migration.sh', needle=snapshot_needle)
+assert rejected.returncode == 1 and snapshot_name + ':2' in rejected.stderr, rejected.stderr
+# Source-only audit data is not shipped in portable harness exports.
+original_snapshot = scripts.parents[1] / snapshot_name
+if original_snapshot.is_file():
+    original = original_snapshot.read_bytes()
+    snapshot.write_bytes(original)
+    accepted = run('check-artifact-path-migration.sh', needle=snapshot_needle)
+    assert accepted.returncode == 0 and 'active_old_refs=none' in accepted.stdout, accepted.stderr
+    inventory = run('plan-artifact-path-migration.sh', needle=snapshot_needle)
+    snapshot_inventory = inventory.stdout.split('New path references', 1)[0]
+    assert inventory.returncode == 0 and '[session-history]' in snapshot_inventory and '[other]' not in snapshot_inventory, inventory.stdout + inventory.stderr
+    for number, line in enumerate(original.decode().splitlines(), 1):
+        if snapshot_needle in line:
+            assert f'{snapshot_name}:{number}\n' in inventory.stdout, number
+    for altered in (original + counterfeit, original.replace(b'registered-check', b'current-command', 1)):
+        snapshot.write_bytes(altered)
+        rejected = run('check-artifact-path-migration.sh', needle=snapshot_needle)
+        assert rejected.returncode == 1 and snapshot_name + ':' in rejected.stderr, rejected.stderr
+    snapshot.unlink()
+    lookalike = snapshot.with_name('current-inventory.tsv')
+    lookalike.write_bytes(original)
+    rejected = run('check-artifact-path-migration.sh', needle=snapshot_needle)
+    assert rejected.returncode == 1 and 'current-inventory.tsv:' in rejected.stderr, rejected.stderr
+    lookalike.unlink()
+    print('OK: exact frozen audit snapshot retained with all planner line locations; changed, appended and lookalike snapshots rejected.')
+else:
+    snapshot.unlink()
+    print('OK: counterfeit audit snapshot rejected; original source-only snapshot is not present in this export.')
+bin_dir = root.parent / 'history-bin'
+bin_dir.mkdir()
+port = bin_dir / 'python3'
+port.write_text('#!/bin/sh\necho PRIVATE_HISTORY_NATIVE_CANARY >&2\nexit 77\n')
+port.chmod(0o755)
+for script in ('check-artifact-path-migration.sh', 'plan-artifact-path-migration.sh'):
+    unavailable = run(script, dict(os.environ, PATH=str(bin_dir) + ':' + os.environ['PATH']))
+    assert unavailable.returncode == 1 and unavailable.stderr == 'ERROR: artifact-path-migration-history-observation-unavailable\n', unavailable.stderr
+    assert 'PRIVATE_HISTORY_NATIVE_CANARY' not in unavailable.stdout
+    assert 'active_old_refs=none' not in unavailable.stdout and 'references=0' not in unavailable.stdout
+print('OK: seven exact historical references retained; twenty-one active/malformed variants rejected; parser failures observed safely.')
+PY
 
 # Exercise the actual commands with only disposable Git/grep/sort ports replaced.
 # Successful planner source inventory above is intentional data, not a failure stream.
@@ -196,7 +339,8 @@ cat > "$FAKE_BIN/grep" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$MIGRATION_GREP_CALLS"
 if [ "$MIGRATION_MODE" = read-native ] ||
-   { [ "$MIGRATION_MODE" = new-read-native ] && [ "$2" = .agentic/harness-renamed ]; }; then
+   { [ "$MIGRATION_MODE" = matched-read-native ] && [ "$1" = -nF ]; } ||
+   { [ "$MIGRATION_MODE" = new-read-native ] && [ "$3" = .agentic/harness-renamed ]; }; then
   printf '%s\n' '1:PRIVATE_MIGRATION_NATIVE_CANARY'
   echo 'PRIVATE_MIGRATION_NATIVE_CANARY' >&2
   exit 2
@@ -250,12 +394,6 @@ assert_failure() {
 }
 
 EXPECTED_ENUMERATION=$'rev-parse --show-toplevel\nls-files\nls-files --others --exclude-standard'
-read -r EXPECTED_FIRST_FILE < <(
-  {
-    "$MIGRATION_REAL_GIT" -C "$REPO" ls-files
-    "$MIGRATION_REAL_GIT" -C "$REPO" ls-files --others --exclude-standard
-  } | "$MIGRATION_REAL_SORT" -u
-)
 for script in check-artifact-path-migration.sh plan-artifact-path-migration.sh; do
   assert_failure "$script" root-native 71 artifact-path-migration-repository-observation-unavailable .agentic/01.harness .agentic/harness-renamed
   [ "$(< "$TMP_ROOT/git.calls")" = 'rev-parse --show-toplevel' ] || fail "repository failure changed Git calls"
@@ -271,7 +409,13 @@ for script in check-artifact-path-migration.sh plan-artifact-path-migration.sh; 
 
   assert_failure "$script" read-native 1 artifact-path-migration-reference-read-unavailable .agentic/01.harness .agentic/harness-renamed
   [ "$(< "$TMP_ROOT/git.calls")" = "$EXPECTED_ENUMERATION" ] || fail "read failure changed Git call order/count"
-  [ "$(< "$TMP_ROOT/grep.calls")" = "-nF .agentic/01.harness $EXPECTED_FIRST_FILE" ] || fail "read failure did not stop at first attempted file"
+  [ "$(wc -l < "$TMP_ROOT/grep.calls")" -eq 1 ] || fail "read failure did not stop at first attempted batch"
+  grep -q '^-lF -- .agentic/01.harness ' "$TMP_ROOT/grep.calls" || fail "batch scan changed literal query"
+
+  assert_failure "$script" matched-read-native 1 artifact-path-migration-reference-read-unavailable .agentic/01.harness .agentic/harness-renamed
+  [ "$(< "$TMP_ROOT/git.calls")" = "$EXPECTED_ENUMERATION" ] || fail "matched-file failure changed enumeration calls"
+  [ "$(wc -l < "$TMP_ROOT/grep.calls")" -eq 2 ] || fail "matched-file failure did not stop after first full read"
+  grep -q '^-nF -- .agentic/01.harness ' "$TMP_ROOT/grep.calls" || fail "positive candidate skipped its full read"
 
   migration_command "$script" normal .agentic/no-existing-reference .agentic/no-new-reference || fail "legitimate grep no-match became failure"
   [ ! -s "$TMP_ROOT/command.err" ] || fail "no-match emitted failure diagnostics"

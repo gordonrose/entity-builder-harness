@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.adapter.aws.cloudformation-template
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [security, sre]
@@ -17,7 +17,7 @@
 #   - id: deploy.command.kanbien-core-platform.execute-runtime-change-set
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py
 #   - id: deploy.adapter.platform-shell-release-control
-#     path: scripts/04.deploy/reconcile-platform-shell-staging/release_control.py
+#     path: scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/release_control.py
 """AWS syntax normalization only; deployment qualification remains target-owned."""
 import json
 import yaml

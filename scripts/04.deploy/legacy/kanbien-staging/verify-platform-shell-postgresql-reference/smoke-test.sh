@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.script.verify-platform-shell-postgresql-reference.smoke-test
+#   version: 1
+#   status: active
+#   created_on: "2026-09-26"
+#   updated_on: "2026-11-26"
+#   layer: 04.deploy
+#   domain: persistence.operations
+#   disciplines:
+#   - security
+#   - sre
+#   - architecture
+#   kind: script
+#   purpose: Locally smoke test the static Kanbien staging PostgreSQL relational-reference policy check.
+#   portability:
+#     class: internal
+#     targets:
+#     - kanbien/staging
+#   effects:
+#   - read-only
+#   used_by:
+#   - id: deploy.script.verify-platform-shell-postgresql-reference
+#     path: scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference/script.sh
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+bash scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-postgresql-reference/script.sh

@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-10-31"
-  updated_on: "2026-11-04"
+  updated_on: "2026-11-26"
   layer: 05.education
   domain: education.diagnostics
   disciplines: [architecture, security, sre, agentic]
@@ -52,7 +52,7 @@ The comparison is against `d94da2b9401d3abcf86618b5d497e9b93903490a`. “Added�
 
 ### check-source.sh
 
-[Open current source](../../../../../scripts/04.deploy/build-platform-shell-image/check-source.sh) · **Snapshot:** modified existing file; 10 added / 5 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/check-source.sh) · **Snapshot:** modified existing file; 10 added / 5 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Run the existing product, server and assembled runtime-payload checks before packaging.
 
@@ -70,7 +70,7 @@ Owning registered proof: `diagnostic-catalog-readers`, `shell-package-source`, `
 
 ### configuration-diagnostic-test.mjs
 
-[Open current source](../../../../../scripts/04.deploy/build-platform-shell-image/configuration-diagnostic-test.mjs) · **Snapshot:** added (absent from baseline); 411 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/configuration-diagnostic-test.mjs) · **Snapshot:** added (absent from baseline); 411 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for assembled image and payload safety.
 
@@ -92,7 +92,7 @@ Owning registered proof: `platform-persistence-runtime`, `diagnostic-catalog-rea
 
 ### delivery-diagnostic-test.mjs
 
-[Open current source](../../../../../scripts/04.deploy/build-platform-shell-image/delivery-diagnostic-test.mjs) · **Snapshot:** added (absent from baseline); 651 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/delivery-diagnostic-test.mjs) · **Snapshot:** added (absent from baseline); 651 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for assembled image and payload safety.
 
@@ -114,7 +114,7 @@ Owning registered proof: `platform-shell-payload`, `diagnostic-catalog-readers`,
 
 ### prepare-runtime.mjs
 
-[Open current source](../../../../../scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs) · **Snapshot:** modified existing file; 17 added / 2 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/prepare-runtime.mjs) · **Snapshot:** modified existing file; 17 added / 2 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Prepare CommonJS package shims for the platform shell image runtime payload.
 
@@ -138,7 +138,7 @@ Owning registered proof: `bootstrap-payload-regression`, `persistence-payload-re
 
 ### process-diagnostic-test.mjs
 
-[Open current source](../../../../../scripts/04.deploy/build-platform-shell-image/process-diagnostic-test.mjs) · **Snapshot:** added (absent from baseline); 279 added / 0 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/process-diagnostic-test.mjs) · **Snapshot:** added (absent from baseline); 279 added / 0 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Runtime/fixture proof for assembled image and payload safety.
 
@@ -160,7 +160,7 @@ Owning registered proof: `persistence-composition`, `platform-shell-payload`, `d
 
 ### script.sh
 
-[Open current source](../../../../../scripts/04.deploy/build-platform-shell-image/script.sh) · **Snapshot:** modified existing file; 5 added / 4 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/script.sh) · **Snapshot:** modified existing file; 5 added / 4 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Build the platform shell container image from the governed infra image boundary.
 
@@ -178,7 +178,7 @@ Owning registered proof: `package-custody-regression`. Look up their exact comma
 
 ### verify-runtime-payload.mjs
 
-[Open current source](../../../../../scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs) · **Snapshot:** modified existing file; 142 added / 4 removed lines. These are textual counts, not a count of new features.
+[Open current source](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/verify-runtime-payload.mjs) · **Snapshot:** modified existing file; 142 added / 4 removed lines. These are textual counts, not a count of new features.
 
 **What it does:** Prove the compiled platform shell payload starts with its generated package shims rather than workspace TypeScript sources.
 
@@ -212,7 +212,7 @@ Use the [30-minute core / 50-minute extension protocol](../facilitator-guide.md)
 
 ## Evidence and boundaries
 
-[Folder in the checkout](../../../../../scripts/04.deploy/build-platform-shell-image) · [Baseline, current proof and deferrals](../sources-and-limits.md) · [Plain-language glossary](../glossary.md)
+[Folder in the checkout](../../../../../scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image) · [Baseline, current proof and deferrals](../sources-and-limits.md) · [Plain-language glossary](../glossary.md)
 
 Neighboring folder lessons: [L110 scripts/04.deploy/smoke-test-platform-shell-image](110-scripts-04-deploy-smoke-test-platform-shell-image.md) · [L111 scripts/04.deploy/validate-container-boundaries](111-scripts-04-deploy-validate-container-boundaries.md) · [L112 scripts/04.deploy/inventory-deploy-control](112-scripts-04-deploy-inventory-deploy-control.md) · [L127 scripts/04.deploy](127-scripts-04-deploy.md) · [L152 scripts/04.deploy/reconcile-platform-shell-staging](152-scripts-04-deploy-reconcile-platform-shell-staging.md) · [L153 scripts/04.deploy/shared](153-scripts-04-deploy-shared.md) · [L155 scripts/04.deploy/verify-platform-shell-deploy-readiness](155-scripts-04-deploy-verify-platform-shell-deploy-readiness.md) · [L168 scripts/04.deploy/verify-platform-shell-deployment-workflow](168-scripts-04-deploy-verify-platform-shell-deployment-workflow.md) · [L169 scripts/04.deploy/verify-platform-shell-infrastructure](169-scripts-04-deploy-verify-platform-shell-infrastructure.md).
 

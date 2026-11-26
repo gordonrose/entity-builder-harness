@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.smoke-test-governed-script-runner
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-19"
-#   updated_on: "2026-11-18"
+#   updated_on: "2026-11-26"
 #   layer: 01.harness
 #   domain: validation
 #   disciplines:
@@ -52,11 +52,16 @@ mkdir -p \
 
 cp "$SOURCE_ROOT/scripts/01.harness/run-governed-script.sh" \
   "$REPO/scripts/01.harness/run-governed-script.sh"
+for dependency in scripts/01.harness/artifact-metadata/header_discovery.py .agentic/01.harness/artifact-metadata/taxonomy.yml; do
+  mkdir -p "$REPO/${dependency%/*}"
+  cp "$SOURCE_ROOT/$dependency" "$REPO/$dependency"
+done
 
 make_fixture() {
   local path="$1"
   local label="$2"
   local effects="${3:-read-only}"
+  local style="${4:-block}"
   local effect
 
   mkdir -p "$REPO/${path%/*}"
@@ -75,10 +80,14 @@ make_fixture() {
     printf '#   - agentic\n'
     printf '#   kind: script\n'
     printf '#   purpose: Fixture script for governed runner smoke tests.\n'
-    printf '#   effects:\n'
-    for effect in $effects; do
-      printf '#   - %s\n' "$effect"
-    done
+    if [ "$style" = inline ]; then
+      printf '#   effects: [%s]\n' "${effects// /, }"
+    else
+      printf '#   effects:\n'
+      for effect in $effects; do printf '#   - %s\n' "$effect"; done
+    fi
+    printf '#   portability: {class: source-only, targets: [aws-mutation]}\n'
+    printf '#   unrelated:\n#   - destructive\n'
     printf '\n'
     printf 'echo "%s:$*"\n' "$label"
   } > "$REPO/$path"
@@ -100,13 +109,16 @@ make_fixture "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "danger
 make_fixture "scripts/01.harness/check-deterministic-process-drift.sh" "allowed-harness"
 make_fixture "scripts/02.rag-rulebook/run-local-service/smoke-test.sh" "canonical-rag-smoke" "writes-files network"
 make_fixture "scripts/local/not-governed.sh" "local-script"
-for effect in destructive push history-rewrite overwrites cloud database; do
-  make_fixture "scripts/01.harness/blocked-$effect.sh" "blocked-$effect" "read-only $effect"
+for style in block inline; do
+  for effect in destructive aws-mutation push history-rewrite overwrites cloud database network-extra; do
+    make_fixture "scripts/01.harness/blocked-$style-$effect.sh" "blocked-$style-$effect" "read-only $effect" "$style"
+  done
+  for effect in writes-files stages-files commits branches worktrees network; do
+    make_fixture "scripts/01.harness/approved-$style-$effect.sh" "approved-$style-$effect" "read-only $effect" "$style"
+  done
+  make_fixture "scripts/01.harness/read-only-$style.sh" "read-only-$style" read-only "$style"
 done
-for effect in writes-files commits network; do
-  make_fixture "scripts/01.harness/approved-$effect.sh" "approved-$effect" "read-only $effect"
-done
-make_fixture "scripts/01.harness/not-an-effect.sh" "not-an-effect" "read-only network-extra"
+make_fixture "scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh" "refresh" "branches destructive worktrees writes-files"
 
 git -C "$REPO" init --quiet
 git -C "$REPO" add scripts
@@ -200,22 +212,45 @@ if bash scripts/01.harness/run-governed-script.sh /bin/echo >"$TMP_ROOT/absolute
 fi
 
 LIST="$(bash scripts/01.harness/run-governed-script.sh --list)"
-for effect in destructive push history-rewrite overwrites cloud database; do
-  [[ "$LIST" != *"scripts/01.harness/blocked-$effect.sh"* ]] || fail "listed forbidden $effect"
-  if bash scripts/01.harness/run-governed-script.sh --approved-action "scripts/01.harness/blocked-$effect.sh" >"$TMP_ROOT/blocked.out" 2>&1; then
-    fail "explicit approval bypassed forbidden $effect"
-  fi
+for style in block inline; do
+  for effect in destructive aws-mutation push history-rewrite overwrites cloud database network-extra; do
+    path="scripts/01.harness/blocked-$style-$effect.sh"
+    [[ "$LIST" != *"$path"* ]] || fail "listed forbidden $style/$effect"
+    if bash scripts/01.harness/run-governed-script.sh --approved-action "$path" >"$TMP_ROOT/blocked.out" 2>&1; then
+      fail "explicit approval bypassed forbidden $style/$effect"
+    fi
+    [[ "$(<"$TMP_ROOT/blocked.out")" != *"blocked-$style-$effect:"* ]] || fail "rejected child executed"
+  done
+  for effect in writes-files stages-files commits branches worktrees network; do
+    path="scripts/01.harness/approved-$style-$effect.sh"
+    [[ "$LIST" == *"approved $path"* ]] || fail "lost mixed read-only/$style/$effect classification"
+    if bash scripts/01.harness/run-governed-script.sh "$path" >"$TMP_ROOT/approved.out" 2>&1; then
+      fail "mixed $style/$effect ran without approval"
+    fi
+    OUT="$(bash scripts/01.harness/run-governed-script.sh --approved-action "$path")"
+    [ "$OUT" = "approved-$style-$effect:" ] || fail "approved $style/$effect did not execute"
+  done
+  OUT="$(bash scripts/01.harness/run-governed-script.sh "scripts/01.harness/read-only-$style.sh")"
+  [ "$OUT" = "read-only-$style:" ] || fail "unrelated lists altered $style read-only approval"
 done
-for effect in writes-files commits network; do
-  [[ "$LIST" == *"approved scripts/01.harness/approved-$effect.sh"* ]] || fail "lost mixed read-only/$effect classification"
-done
-[[ "$LIST" == *"always scripts/01.harness/not-an-effect.sh"* ]] || fail "matched an effect prefix instead of a complete line"
+[[ "$LIST" == *"approved scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh"* ]] || fail "lost governed refresh exception"
+OUT="$(bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh)"
+[ "$OUT" = refresh: ] || fail "approved refresh did not execute"
 
 # A later invocation must read changed effects, not reuse a previous decision.
-make_fixture "scripts/01.harness/not-an-effect.sh" "not-an-effect" "read-only cloud"
-if bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/not-an-effect.sh >"$TMP_ROOT/changed.out" 2>&1; then
+make_fixture "scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh" "refresh" "destructive aws-mutation" inline
+if bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh >"$TMP_ROOT/changed.out" 2>&1; then
   fail "reused stale permission metadata"
 fi
+for declaration in 'effects: []' 'effects: read-only' 'effects: [read-only, {invalid: shape}]' 'effects: [read-only' 'effects: [read-only]\n#   effects: [writes-files]' 'unrelated: [read-only]'; do
+  printf '# agentic-artifact:\n#   kind: script\n#   %b\n\necho invalid-child-executed\n' "$declaration" > scripts/01.harness/invalid.sh
+  if output="$(bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/invalid.sh 2>&1)"; then
+    fail "invalid effects were accepted"
+  else
+    [ "$?" -eq 1 ] || fail "invalid effects lost policy rejection"
+  fi
+  [[ "$output" == *"metadata or effects are missing, invalid or unknown"* && "$output" != *invalid-child-executed* ]] || fail "invalid metadata executed or lost reason"
+done
 case "$LIST" in
   *"always scripts/00.chat/worktree/check-write-location/script.sh"*)
     ;;
@@ -270,36 +305,32 @@ case "$LIST" in
     ;;
 esac
 
-export REAL_GIT="$(command -v git)" REAL_SED="$(command -v sed)"
+export REAL_GIT="$(command -v git)" REAL_PYTHON="$(command -v python3)"
 mkdir "$TMP_ROOT/fault-bin"
-for command in git sed; do
+for command in git python3; do
   printf '#!/usr/bin/env bash\ncommand=%q\n' "$command" > "$TMP_ROOT/fault-bin/$command"
   cat >> "$TMP_ROOT/fault-bin/$command" <<'EOF'
 fault=no
-if [ "$command" = sed ] && [ -n "${READ_COUNTER:-}" ]; then
-  printf '%s\n' "${2:-}" >> "$READ_COUNTER"
+if [ "$command" = python3 ] && [ -n "${READ_COUNTER:-}" ]; then
+  printf '%s\n' "${3:-}" >> "$READ_COUNTER"
 fi
 case "$FAULT:$command:${1:-}" in
-  root:git:rev-parse|inventory:git:ls-files)
+  root:git:rev-parse|inventory:git:ls-files|metadata:python3:-B)
     fault=yes ;;
 esac
-case "$FAULT:$command:${2:-}" in
-  header:sed:1,80p|effects:sed:1,140p) fault=yes ;;
-esac
 if [ "$fault" = yes ]; then
-  if [ "$command" = sed ]; then "$REAL_SED" "$@"; fi
   echo private-governance-canary@example.invalid >&2
   exit 77
 fi
 case "$command" in
   git) exec "$REAL_GIT" "$@" ;;
-  sed) exec "$REAL_SED" "$@" ;;
+  python3) exec "$REAL_PYTHON" "$@" ;;
 esac
 EOF
   chmod +x "$TMP_ROOT/fault-bin/$command"
 done
 for mode in run list; do
-  for stage in root inventory header effects; do
+  for stage in root inventory metadata; do
     [ "$mode:$stage" != run:inventory ] || continue
     args=(scripts/00.chat/worktree/check-write-location/script.sh)
     [ "$mode" != list ] || args=(--list)
@@ -315,6 +346,24 @@ done
 
 PATH="$TMP_ROOT/fault-bin:$PATH" FAULT=none READ_COUNTER="$TMP_ROOT/reads" \
   bash scripts/01.harness/run-governed-script.sh scripts/00.chat/worktree/check-write-location/script.sh > "$TMP_ROOT/count.out"
-[[ "$(<"$TMP_ROOT/reads")" == $'1,80p\n1,140p' ]] || fail "permission classification reread the same effects"
+[[ "$(<"$TMP_ROOT/reads")" == scripts/00.chat/worktree/check-write-location/script.sh ]] || fail "permission classification parsed metadata more than once"
+
+taxonomy=.agentic/01.harness/artifact-metadata/taxonomy.yml
+portable_taxonomy=scripts/01.harness/artifact-metadata/taxonomy.yml
+mv "$taxonomy" "$portable_taxonomy"
+OUT="$(bash scripts/01.harness/run-governed-script.sh scripts/00.chat/worktree/check-write-location/script.sh)"
+[ "$OUT" = canonical-check: ] || fail "portable taxonomy could not classify the same script"
+mv "$portable_taxonomy" "$TMP_ROOT/taxonomy.yml"
+for availability in missing unsupported; do
+  if [ "$availability" = unsupported ]; then
+    sed 's/#   version: 2/#   version: 999/' "$TMP_ROOT/taxonomy.yml" > "$portable_taxonomy"
+  fi
+  if output="$(bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/worktree/check-write-location/script.sh 2>&1)"; then
+    fail "$availability taxonomy permitted execution"
+  else
+    [ "$?" -eq 2 ] || fail "$availability taxonomy lost observation-failure status"
+  fi
+  [[ "$output" == *governed-metadata-read-failed* && "$output" != *canonical-check:* ]] || fail "$availability taxonomy executed child or lost reason"
+done
 
 echo "governed script runner smoke test passed"

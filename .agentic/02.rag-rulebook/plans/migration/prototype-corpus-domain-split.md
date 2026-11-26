@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: rag-rulebook.migration-plan.prototype-corpus-domain-split
-version: 1
+version: 2
 status: active
 created_on: "2026-08-31"
-updated_on: "2026-11-04"
+updated_on: "2026-11-26"
 layer: 02.rag-rulebook
 domain: corpus
 disciplines:
@@ -496,7 +496,7 @@ bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
 bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
 bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
 bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current
-bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh
 bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh
 bash scripts/01.harness/check-governed-script-command-drift.sh

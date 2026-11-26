@@ -4,7 +4,7 @@ id: aws.runbooks.platform-shell-staging-rollback
 version: 1
 status: active
 created_on: "2026-07-13"
-updated_on: "2026-10-26"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: infra.operations
 disciplines:
@@ -23,7 +23,7 @@ used_by:
 # Platform Shell Staging Rollback
 
 The supported service-change boundary is
-`scripts/04.deploy/reconcile-platform-shell-staging/script.sh`. The guarded
+`scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh`. The guarded
 `service-update` and `service-rollback` modes replace the former raw ECS
 `update-service` instructions. The GitHub publication workflow remains an image
 publisher; it does not deploy the service. Mutation still requires the current
@@ -40,7 +40,7 @@ run and image digest must agree with the captured custody receipt.
    Refresh the current service observation through the existing owner:
 
    ```bash
-   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+   bash scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh \
      --mode runtime-alignment --deployment-manifest <current-manifest> --json
    ```
 
@@ -52,7 +52,7 @@ run and image digest must agree with the captured custody receipt.
 2. Produce an additive rollback compatibility decision for the retained image:
 
    ```bash
-   bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
+   bash scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh \
      --manifest <retained-manifest> \
      --record-rollback-compatibility <retained-release-id> --json
    ```
@@ -69,7 +69,7 @@ run and image digest must agree with the captured custody receipt.
    After explicit approval, execute through the guarded owner:
 
    ```bash
-   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+   bash scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh \
      --mode service-rollback \
      --deployment-manifest <retained-manifest> \
      --current-deployment-manifest <current-manifest> \
@@ -90,7 +90,7 @@ run and image digest must agree with the captured custody receipt.
    change set before any retry:
 
    ```bash
-   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+   bash scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh \
      --mode service-operation-status --deployment-manifest <retained-manifest> \
      --service-change-set <reviewed-change-set-id> --json
    ```
@@ -103,13 +103,13 @@ run and image digest must agree with the captured custody receipt.
    compare-and-swap boundary:
 
    ```bash
-   bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh \
+   bash scripts/04.deploy/legacy/kanbien-staging/reconcile-platform-shell-staging/script.sh \
      --mode runtime-alignment --deployment-manifest <retained-manifest> --json
    bash scripts/04.deploy/lifecycle/60-run/release-succession/script.sh \
      --operation promote --evidence-root <evidence-root> \
      --candidate-record <emitted-candidate-path> \
      --expected-predecessor <current-release-id> --json
-   bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
+   bash scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-deploy-readiness/script.sh \
      --manifest <retained-manifest> --json
    ```
 

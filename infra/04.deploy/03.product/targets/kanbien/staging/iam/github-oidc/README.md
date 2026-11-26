@@ -4,7 +4,7 @@ id: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.readme
 version: 4
 status: active
 created_on: "2026-09-22"
-updated_on: "2026-10-20"
+updated_on: "2026-11-26"
 layer: 04.deploy
 domain: infra.access
 disciplines:
@@ -20,7 +20,7 @@ used_by:
 - id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
   path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
 - id: deploy.script.verify-platform-shell-synthetic-scheduler
-  path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+  path: scripts/04.deploy/legacy/kanbien-staging/verify-platform-shell-synthetic-scheduler/script.sh
 -->
 # Kanbien Staging Platform-Shell GitHub OIDC IAM Source
 

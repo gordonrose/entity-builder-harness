@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.runtime-preparation-diagnostics
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-31"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -30,7 +30,7 @@ BASE = "scripts/04.deploy/lifecycle/40-package/"
 PREPARERS = {
     "core-server": BASE + "build-core-server-image/prepare-runtime.mjs",
     "core-server-persistence": BASE + "build-core-server-persistence-image/prepare-runtime.mjs",
-    "platform-shell": "scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs",
+    "platform-shell": "scripts/04.deploy/legacy/kanbien-staging/build-platform-shell-image/prepare-runtime.mjs",
 }
 CANARY = "PRIVATE_PREPARATION_PATH_CANARY"
 spec = importlib.util.spec_from_file_location("payload_checker", ROOT / BASE / "build-core-server-image/verify-payload.py")

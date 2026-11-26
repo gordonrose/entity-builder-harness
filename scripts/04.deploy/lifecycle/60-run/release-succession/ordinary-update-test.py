@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-19"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [architecture, security, sre]
@@ -89,7 +89,7 @@ class Harness:
     def runner(self, argv, success, *, root):
         def arg(flag): return argv[argv.index(flag) + 1]
         script = argv[1]
-        if "transition-qualified-release" in script or (script.endswith("entity-smoke/script.sh")):
+        if "transition-qualified-release" in script or (script.endswith("entity-smoke/orchestration/commands/script.sh")):
             if self.scope == "entity-smoke":
                 assert arg("--mode") in {"plan", "apply"}, "ordinary update must review before execution"
             name = "rollback" if arg("--phase" if self.scope == "entity-smoke" else "--operation") == "rollback" else "deploy"
@@ -147,7 +147,7 @@ class DeliveryTests(unittest.TestCase):
     def test_successor_approval_requires_explicit_provider_rollback(self):
         with tempfile.TemporaryDirectory() as directory:
             h = Harness("entity-smoke", directory); c = h.consumer()
-            fixture = D.module(ROOT / c.directory / "deployment-control-test.py")
+            fixture = D.module(ROOT / c.directory / "controls-and-readiness/tests/deployment-control-test.py")
             binding, delivery = fixture.BINDING, fixture.delivery_fixture()
             c.release_context = lambda: (binding, delivery, Path(directory))
             c.context.package = delivery["candidate"]
@@ -192,7 +192,7 @@ class DeliveryTests(unittest.TestCase):
             for _, execute in steps: execute()
             self.assertEqual(len(calls), len(names))
             self.assertEqual(calls[-1], ("final-read", "operation"))
-            aggregate = D.module(ROOT / c.directory / "acceptance-aggregate-test.py")
+            aggregate = D.module(ROOT / c.directory / "acceptance-evaluation/tests/acceptance-aggregate-test.py")
             fixture = aggregate.successor_fixture(c.K)
             delivery, binding = fixture["delivery"], fixture["binding"]
             c.context.values["proof_label"] = binding["proof_label"]

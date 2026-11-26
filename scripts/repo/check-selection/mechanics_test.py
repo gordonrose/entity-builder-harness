@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.mechanics
-#   version: 18
+#   version: 20
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -358,6 +358,9 @@ class SelectionTests(FixtureSupport):
     def workspace_context_fixture(self):
         folder = self.root / 'scripts/repo/workspace-build'
         shutil.copytree(ROOT / 'scripts/repo/workspace-build', folder)
+        projector = self.root / selection.workspace_context.PROJECTOR
+        projector.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / selection.workspace_context.PROJECTOR, projector)
         wrapper = self.root / selection.workspace_context.WRAPPER
         wrapper.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / selection.workspace_context.WRAPPER, wrapper)
@@ -2076,6 +2079,51 @@ used_by:
         self.assertIn('changed-input-uncovered', self.codes(unowned),
                       'A repository-wide retained census is not a script verification owner.')
 
+        old, new = 'old-owner.py', 'new-owner.py'
+        source = '# agentic-artifact:\n#   id: fixture.moved\n#   used_by: [{path: src/main.ts}]\n' + 'value = 1\n' * 30
+        (self.root / old).write_text(source)
+        self.catalog['repository_inputs'] = [{'inputs': [new], 'checks': ['local']}]
+        self.save()
+        def git(*arguments):
+            return subprocess.check_output(['git', '-C', str(self.root), *arguments], text=True).strip()
+        git('add', '.')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Before move')
+        baseline = git('rev-parse', 'HEAD')
+        (self.root / old).rename(self.root / new)
+        (self.root / new).write_text(source.replace('value = 1', 'value = 2', 1))
+        git('add', '-A')
+        pair = {old: {new}}
+        self.assertEqual(selection.renamed_inputs(self.root, [old, new], baseline=baseline), pair)
+        self.assertEqual(selection.renamed_inputs(self.root, [old, new], baseline=baseline, staged=True), pair)
+        self.assertEqual(selection.renamed_inputs(self.root, [old], baseline=baseline), {})
+        historical = selection.consumer_graph(self.root, [new], deleted=[old], baseline=baseline)
+        self.assertIn('src/main.ts', historical[old], 'A rename must not discard former consumer effects.')
+        args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=[old, new], staged=False,
+            all=False, stage='local', boundary='integration', execute_local=False, checks=None,
+            record_preparation=False, require_preparation=False, evidence=None, comparison_base=baseline)
+        with patch.object(selection, 'discover', return_value=([], [])), patch.object(selection, 'delivery_inventory_required', return_value=False):
+            covered = selection.plan(args)
+            self.assertFalse(covered['findings'], covered['findings'])
+            self.assertEqual(covered['changed_inputs'], [{'path': new, 'state': 'present'}, {'path': old, 'state': 'deleted'}])
+            self.assertIn('local', covered['execution_summary']['selected_check_ids'])
+            args.staged = True
+            self.assertFalse(selection.plan(args)['findings'])
+            args.staged = False
+            git('add', '-A')
+            git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'After move')
+            self.assertEqual(selection.renamed_inputs(self.root, [old, new], baseline=baseline), pair)
+            self.catalog['repository_inputs'] = []; self.save()
+            self.assertIn('changed-input-uncovered', self.codes(selection.plan(args)), 'The destination still needs its ordinary owner.')
+            args.paths = [old]
+            self.assertIn('changed-input-uncovered', self.codes(selection.plan(args)), 'A deletion without its destination is not waived.')
+            args.paths = [old, new]
+            with patch.object(selection, 'renamed_inputs', side_effect=subprocess.CalledProcessError(1, 'git')):
+                self.assertIn('rename-impact-observation-invalid', self.codes(selection.plan(args)))
+        with patch.object(selection, 'git', return_value='malformed\0'):
+            with self.assertRaises(ValueError): selection.renamed_inputs(self.root, [old, new])
+        (self.root / new).unlink(); (self.root / new).symlink_to('src/main.ts')
+        self.assertEqual(selection.renamed_inputs(self.root, [old, new], baseline=baseline, staged=True), {})
+
 
     def test_session_stream_logs_are_evidence_without_exempting_source_or_scripts(self):
         paths = ['commitLogs/session/check.stderr', 'commitLogs/session/check.stdout']
@@ -2321,6 +2369,22 @@ used_by:
         report = self.run_plan(paths=['.agentic/standards/prose.md'])
         self.assertEqual(report['verdict'], 'planned', report)
         self.assertFalse(report['checks'])
+        guide = self.root / 'infra/04.deploy/image/README.md'; guide.parent.mkdir(parents=True)
+        guide.write_text('# Image guidance\n')
+        report = self.run_plan(paths=['infra/04.deploy/image/README.md'])
+        self.assertEqual(report['verdict'], 'planned', report['findings'])
+        self.assertFalse(report['checks'])
+        self.assertIn('changed-path-invalid', self.codes(self.run_plan(paths=['infra/../outside.md'])))
+        for ref, kind, body in (
+                ('docs/04.deploy/rules/narrative.yml', 'rule', 'rules: []\n'),
+                ('.agentic/plans/narrative.yaml', 'implementation-plan', 'purpose: review only\n'),
+                ('infra/04.deploy/narrative.yml', 'implementation-plan', 'status: planning-only\n')):
+            with self.subTest(path=ref):
+                file = self.root / ref; file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text(f'# agentic-artifact:\n#   id: fixture.narrative\n#   kind: {kind}\n' + body)
+                report = self.run_plan(paths=[ref])
+                self.assertEqual(report['verdict'], 'planned', report['findings'])
+                self.assertFalse(report['checks'])
 
 
     def test_cache_reuses_across_unrelated_revision_but_environment_invalidates(self):
@@ -2331,7 +2395,8 @@ used_by:
         self.assertEqual(local['evidence_source'], 'trusted-worktree-cache')
         self.assertEqual(local['executed_revision'], 'a' * 40)
         self.assertEqual(local['source_revision'], 'b' * 40)
-        self.assertEqual(result['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+        # Source-only work does not select the unchanged program.yml validator.
+        self.assertEqual(result['execution_summary']['reused_check_ids'], ['local', 'scope-inventory'])
         with patch.dict(os.environ, {'LANG': 'C.fixture'}): self.run_plan(execute=True)
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
 
@@ -2340,10 +2405,10 @@ used_by:
         prepared = self.run_plan(record_preparation=True)
         self.assertEqual(prepared['preparation_status'], 'recorded')
         verified = self.run_plan(execute=True)
-        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'scope-inventory'])
         commit = self.run_plan(execute=True, staged=True, require_preparation=True)
         self.assertEqual(commit['preparation_status'], 'matched')
-        self.assertEqual(commit['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+        self.assertEqual(commit['execution_summary']['reused_check_ids'], ['local', 'scope-inventory'])
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
         (self.root / 'src/main.ts').write_text('changed implementation\n')
         stale = self.run_plan(execute=True, staged=True, require_preparation=True)
@@ -2788,6 +2853,24 @@ used_by:
         path = self.root / '.agentic/schemas/contract.md'; path.parent.mkdir(parents=True)
         path.write_text('<!-- agentic-artifact:\nid: fixture.contract\nkind: schema\n-->\n# Contract\n')
         self.assertIn('changed-input-uncovered', self.codes(self.run_plan(paths=['.agentic/schemas/contract.md'])))
+        path = self.root / 'infra/04.deploy/contract.md'; path.parent.mkdir(parents=True, exist_ok=True)
+        for kind in ('schema', 'contract', 'deployment-contract', 'configuration', 'script', 'gate'):
+            with self.subTest(kind=kind):
+                path.write_text(f'<!-- agentic-artifact:\nid: fixture.authoritative\nkind: {kind}\n-->\n# Contract\n')
+                self.assertIn('changed-input-uncovered', self.codes(self.run_plan(paths=['infra/04.deploy/contract.md'])))
+        executable = path.with_name('command.sh'); executable.write_text('#!/bin/sh\nexit 0\n')
+        self.assertIn('changed-input-uncovered', self.codes(self.run_plan(paths=['infra/04.deploy/command.sh'])))
+        for kind, body in (('contract', 'status: active\n'), ('configuration', 'status: active\n'),
+                           ('unknown', 'status: planning-only\n'), ('implementation-plan', 'status: active\n'),
+                           ('implementation-plan', 'status: [broken\n'), ('implementation-plan', '- planning-only\n'),
+                           ('rule', 'rules: []\n')):
+            with self.subTest(kind=kind, body=body):
+                file = path.with_suffix('.yml')
+                file.write_text(f'# agentic-artifact:\n#   id: fixture.authoritative\n#   kind: {kind}\n' + body)
+                self.assertIn('changed-input-uncovered', self.codes(self.run_plan(paths=['infra/04.deploy/contract.yml'])))
+        file = self.root / 'docs/04.deploy/rules/broken.yml'; file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text('# agentic-artifact:\n#   kind: rule\nrules: [broken\n')
+        self.assertIn('changed-input-uncovered', self.codes(self.run_plan(paths=['docs/04.deploy/rules/broken.yml'])))
 
 
     def test_catalogued_acceptance_route_cannot_be_removed_from_scope(self):

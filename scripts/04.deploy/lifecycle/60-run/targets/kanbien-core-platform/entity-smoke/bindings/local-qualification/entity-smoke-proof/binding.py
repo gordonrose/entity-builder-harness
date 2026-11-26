@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-21"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-26"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -15,7 +15,7 @@
 #   effects: [read-only]
 #   used_by:
 #   - id: deploy.command.entity-smoke.infrastructure.implementation
-#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/script.py
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/script.py
 """Target binding for the qualification-to-deployment handoff."""
 
 from __future__ import annotations
