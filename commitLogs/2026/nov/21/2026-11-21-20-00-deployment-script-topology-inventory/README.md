@@ -74,6 +74,10 @@ Phase 1 deployment script topology classification and migration proposal
 - Decision: User approved committing the admission-review pilot and growth-and-cost reporting, merging to main and promoting to origin/main.
   Rationale: This includes the normal non-rewriting refresh needed for merge. No live deployment, script implementation, forced update or unrelated cleanup is authorised.
 
+
+- Decision: User approved reconciling stale publication wording, then committing, merging to main and promoting to origin/main.
+  Rationale: The correction is limited to the current script-library plan; it preserves original authority history and records the already-confirmed 83af09c6 publication.
+
 ## Context Hygiene
 
 
@@ -123,6 +127,10 @@ Phase 1 deployment script topology classification and migration proposal
 
 - Summary: Completed approved publication on 2026-11-26: task commit 329e243161a91d92372f0331a1f77265960d41f4 is included in main merge 83af09c63deeb43113ebf6d34ea6523cb448ef13. Normal push to origin/main succeeded; direct remote query and local main/origin/main all matched that exact merge.
   Durable evidence: Final merge selection reused all 12 passing checks in 14.87 seconds with zero re-execution; delivery inventory reported zero gaps. Original combined-result proof took 170.19 seconds. Broad repository contracts remained deferred; no application suite or live deployment was run. This post-publication session receipt is local bookkeeping only; approved task documents are published. The rehearsal worktree remains retained, and task ownership remains November 21.
+
+
+- Summary: Publication-status correction updates one existing plan file. It changes no scripts, automatic check selection, review trigger or runtime behavior.
+  Durable evidence: Focused header and deterministic-process checks passed. The prior main publication 83af09c6, task commit 329e2431 and 12-check merge evidence are recorded in the plan. Commit only the plan and current session log.
 
 ## Activity Log
 
@@ -1628,6 +1636,20 @@ Durable evidence: Retained rehearsal: agentic/preflight/chat-2026-11-21-20-00-ph
 Summary: Completed approved publication on 2026-11-26: task commit 329e243161a91d92372f0331a1f77265960d41f4 is included in main merge 83af09c63deeb43113ebf6d34ea6523cb448ef13. Normal push to origin/main succeeded; direct remote query and local main/origin/main all matched that exact merge.
 
 Durable evidence: Final merge selection reused all 12 passing checks in 14.87 seconds with zero re-execution; delivery inventory reported zero gaps. Original combined-result proof took 170.19 seconds. Broad repository contracts remained deferred; no application suite or live deployment was run. This post-publication session receipt is local bookkeeping only; approved task documents are published. The rehearsal worktree remains retained, and task ownership remains November 21.
+
+
+### 2026-11-26T17:55:49Z - Decision
+
+Decision: User approved reconciling stale publication wording, then committing, merging to main and promoting to origin/main.
+
+Rationale: The correction is limited to the current script-library plan; it preserves original authority history and records the already-confirmed 83af09c6 publication.
+
+
+### 2026-11-26T17:55:50Z - Context hygiene
+
+Summary: Publication-status correction updates one existing plan file. It changes no scripts, automatic check selection, review trigger or runtime behavior.
+
+Durable evidence: Focused header and deterministic-process checks passed. The prior main publication 83af09c6, task commit 329e2431 and 12-check merge evidence are recorded in the plan. Commit only the plan and current session log.
 
 ## Sub-Agent Activity
 
