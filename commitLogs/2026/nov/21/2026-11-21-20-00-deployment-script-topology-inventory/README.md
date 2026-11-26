@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-26T17:41:59Z
-latest_commit_sha: 3f43a42a9fa0e7198db666fff0a2a90eff147260
-chat_duration: 423681s (04:21:41:21)
+latest_commit_at_utc: 2026-11-26T17:58:46Z
+latest_commit_sha: 2c1649095703c7980dac48f89ec60ee57a569c4a
+chat_duration: 424688s (04:21:58:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -74,6 +74,10 @@ Phase 1 deployment script topology classification and migration proposal
 - Decision: User approved committing the admission-review pilot and growth-and-cost reporting, merging to main and promoting to origin/main.
   Rationale: This includes the normal non-rewriting refresh needed for merge. No live deployment, script implementation, forced update or unrelated cleanup is authorised.
 
+
+- Decision: User approved reconciling stale publication wording, then committing, merging to main and promoting to origin/main.
+  Rationale: The correction is limited to the current script-library plan; it preserves original authority history and records the already-confirmed 83af09c6 publication.
+
 ## Context Hygiene
 
 
@@ -119,6 +123,14 @@ Phase 1 deployment script topology classification and migration proposal
 
 - Summary: Publication candidate is now based on accepted main and remains in the original November 21 chat worktree. Source review, staged commit gate and combined-result verification passed; local merge and remote push remain pending.
   Durable evidence: Retained rehearsal: agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9/20261126173738 at /var/tmp/kanbien-admission-promotion.CTxckp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9-20261126173738. Safe temporary root /var/tmp/kanbien-admission-promotion.CTxckp avoids nearly full /tmp and is held constant for evidence reuse. No cleanup authorised or performed. Growth: one calibration Markdown document, five existing governance/plan documents and session bookkeeping changed; zero script-source files added, removed or moved; no new automatic checks. Conditional agent review and completion reporting remain workflow duties, not authenticated automatic enforcement.
+
+
+- Summary: Completed approved publication on 2026-11-26: task commit 329e243161a91d92372f0331a1f77265960d41f4 is included in main merge 83af09c63deeb43113ebf6d34ea6523cb448ef13. Normal push to origin/main succeeded; direct remote query and local main/origin/main all matched that exact merge.
+  Durable evidence: Final merge selection reused all 12 passing checks in 14.87 seconds with zero re-execution; delivery inventory reported zero gaps. Original combined-result proof took 170.19 seconds. Broad repository contracts remained deferred; no application suite or live deployment was run. This post-publication session receipt is local bookkeeping only; approved task documents are published. The rehearsal worktree remains retained, and task ownership remains November 21.
+
+
+- Summary: Publication-status correction updates one existing plan file. It changes no scripts, automatic check selection, review trigger or runtime behavior.
+  Durable evidence: Focused header and deterministic-process checks passed. The prior main publication 83af09c6, task commit 329e2431 and 12-check merge evidence are recorded in the plan. Commit only the plan and current session log.
 
 ## Activity Log
 
@@ -1618,6 +1630,38 @@ Summary: Publication candidate is now based on accepted main and remains in the 
 
 Durable evidence: Retained rehearsal: agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9/20261126173738 at /var/tmp/kanbien-admission-promotion.CTxckp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9-20261126173738. Safe temporary root /var/tmp/kanbien-admission-promotion.CTxckp avoids nearly full /tmp and is held constant for evidence reuse. No cleanup authorised or performed. Growth: one calibration Markdown document, five existing governance/plan documents and session bookkeeping changed; zero script-source files added, removed or moved; no new automatic checks. Conditional agent review and completion reporting remain workflow duties, not authenticated automatic enforcement.
 
+
+### 2026-11-26T17:44:09Z - Context hygiene
+
+Summary: Completed approved publication on 2026-11-26: task commit 329e243161a91d92372f0331a1f77265960d41f4 is included in main merge 83af09c63deeb43113ebf6d34ea6523cb448ef13. Normal push to origin/main succeeded; direct remote query and local main/origin/main all matched that exact merge.
+
+Durable evidence: Final merge selection reused all 12 passing checks in 14.87 seconds with zero re-execution; delivery inventory reported zero gaps. Original combined-result proof took 170.19 seconds. Broad repository contracts remained deferred; no application suite or live deployment was run. This post-publication session receipt is local bookkeeping only; approved task documents are published. The rehearsal worktree remains retained, and task ownership remains November 21.
+
+
+### 2026-11-26T17:55:49Z - Decision
+
+Decision: User approved reconciling stale publication wording, then committing, merging to main and promoting to origin/main.
+
+Rationale: The correction is limited to the current script-library plan; it preserves original authority history and records the already-confirmed 83af09c6 publication.
+
+
+### 2026-11-26T17:55:50Z - Context hygiene
+
+Summary: Publication-status correction updates one existing plan file. It changes no scripts, automatic check selection, review trigger or runtime behavior.
+
+Durable evidence: Focused header and deterministic-process checks passed. The prior main publication 83af09c6, task commit 329e2431 and 12-check merge evidence are recorded in the plan. Commit only the plan and current session log.
+
+
+### 2026-11-26T17:58:46Z - Commit recorded
+
+Commit: `2c1649095703c7980dac48f89ec60ee57a569c4a`
+
+Message: docs(harness): reconcile script governance publication record
+
+Summary: Corrected stale plan wording to distinguish original no-publication authority from the later completed publication at 83af09c6. Header, process, whitespace and staged gates passed; the only selected repository-contract check remained deferred.
+
+ADR impact: No ADR required; existing plan and publication owners retained.
+
 ## Sub-Agent Activity
 
 
@@ -1799,6 +1843,13 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Approved refresh from main e9b82787f636879c8a8649ad54857e70b22a9184 rehearsed cleanly, no conflicts, no stash. Combined candidate passed 12 existing local integration checks in 170.19 seconds; applying the exact result reused all 12 in 16.25 seconds with zero test re-execution. Broad repository contracts remain deferred.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `2c1649095703c7980dac48f89ec60ee57a569c4a`
+  Time UTC: 2026-11-26T17:58:46Z
+  Message: docs(harness): reconcile script governance publication record
+  Summary: Corrected stale plan wording to distinguish original no-publication authority from the later completed publication at 83af09c6. Header, process, whitespace and staged gates passed; the only selected repository-contract check remained deferred.
+  ADR impact: No ADR required; existing plan and publication owners retained.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1812,9 +1863,9 @@ Reason: This documents bounded review and completion reporting within existing h
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-26T17:41:59Z
-Latest commit SHA: 3f43a42a9fa0e7198db666fff0a2a90eff147260
-Chat duration: 423681s (04:21:41:21)
+Latest commit at UTC: 2026-11-26T17:58:46Z
+Latest commit SHA: 2c1649095703c7980dac48f89ec60ee57a569c4a
+Chat duration: 424688s (04:21:58:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

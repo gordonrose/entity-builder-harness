@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.plan.script-library-simplification
-version: 27
+version: 28
 status: active
 created_on: "2026-11-23"
 updated_on: "2026-11-26"
@@ -22,8 +22,9 @@ used_by:
 
 The user approved making script growth and recurring verification cost visible
 in completion reports. This bounded follow-up changes only the existing shared
-completion standard and this plan in the recorded November 21 worktree. It does
-not authorise a commit, merge or push, or alter the preceding admission pilot.
+completion standard and this plan in the recorded November 21 worktree. Its
+original implementation authority did not itself authorise a commit, merge or
+push, and did not alter the preceding admission pilot.
 
 The existing completion standard already owns delivery-cost assessment; extend
 that owner instead of adding a report template, catalogue or script. Its
@@ -55,16 +56,17 @@ four artifact identities confirmed unchanged; its calibration was not rerun.
 Growth and cost for this follow-up: zero script-source files added, removed or
 moved; two existing documentation files updated. Automatic checks and required
 agent-review triggers are unchanged. The only recurring duty added is the short
-reporting statement; its writing cost is unmeasured. No runtime verification,
-commit, merge or push was performed. Broader enforcement remains unchanged.
+reporting statement; its writing cost is unmeasured. No runtime verification
+was performed. The subsequent approved documentation publication is recorded
+below; broader enforcement remains unchanged.
 
 ## Follow-up: bounded script-admission review — 2026-11-26
 
 The user approved designing a changed-script review, trying known good/bad
 examples, and enabling only reliable commit requirements. This follow-up stays
 in the recorded November 21 worktree at starting HEAD
-`92ce4cbceb4c62a6d982927849ce8a5057ce0759`. No commit, merge or push is authorised
-by this implementation request.
+`92ce4cbceb4c62a6d982927849ce8a5057ce0759`. Its original implementation
+request did not authorise a commit, merge or push.
 
 Reuse the existing admission standard, single-agent review workflow and
 before-commit checklist. The existing commit hook validates headers and
@@ -143,11 +145,15 @@ whitespace validation also passed after removing a trailing blank line in the
 new document (no semantic change; recorded final identity updated).
 The reviewer confirmed the final handoff
 correction; the parent checked the complete diff and the four recorded hashes.
-Status: bounded workflow pilot and nine-case calibration complete, uncommitted.
-No product/runtime suite, broad architecture census, admission-registry
-implementation, new source file, automatic review attestation, staged commit,
-merge or push was performed. The 50-line approval requirement remains a
-review obligation, not a new mechanical gate.
+Status: bounded workflow pilot and nine-case calibration complete. The approved
+documentation set was committed in `329e243161a91d92372f0331a1f77265960d41f4`,
+merged into `main` and pushed to `origin/main` as
+`83af09c63deeb43113ebf6d34ea6523cb448ef13`. The merge selection passed its
+twelve existing local checks; its broad repository-contract check remained
+explicitly deferred. No product/runtime suite, broad architecture census,
+admission-registry implementation, new source file or automatic review
+attestation was added. The 50-line approval requirement remains a review
+obligation, not a new mechanical gate.
 
 ## Read this first
 
