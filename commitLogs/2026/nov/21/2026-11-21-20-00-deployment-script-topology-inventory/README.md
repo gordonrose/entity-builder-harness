@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-26T11:55:21Z
-latest_commit_sha: 7286d19f5dc98e64b1486bf421d24c034984a8dd
-chat_duration: 402883s (04:15:54:43)
+latest_commit_at_utc: 2026-11-26T17:41:59Z
+latest_commit_sha: 3f43a42a9fa0e7198db666fff0a2a90eff147260
+chat_duration: 423681s (04:21:41:21)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -70,6 +70,10 @@ Phase 1 deployment script topology classification and migration proposal
 - Decision: Promotion uses declared direct inputs; repository-wide selector contracts are periodic hygiene.
   Rationale: Lockfile and workspace inventory remain proof invalidators, but only the module-index integrity owner is selected solely by a lockfile change; focused mechanics cover candidate routing while the repository architecture census remains available as hygiene.
 
+
+- Decision: User approved committing the admission-review pilot and growth-and-cost reporting, merging to main and promoting to origin/main.
+  Rationale: This includes the normal non-rewriting refresh needed for merge. No live deployment, script implementation, forced update or unrelated cleanup is authorised.
+
 ## Context Hygiene
 
 
@@ -107,6 +111,14 @@ Phase 1 deployment script topology classification and migration proposal
 
 - Summary: P6/P7 implementation published. Task `084d2f37` merged normally into main as `5700a3a92ca1f0af12a7fa5fd61aca5f122d09e2` and pushed; independently observed local main and remote main match. This documentation closeout records completion and corrects stale broad-diagnostic scheduling prose, without implementation changes.
   Durable evidence: Refresh base `237dbcf18fc0be11f35c6a66a9738d83d15d10b4`; source-identical candidate `af47d3e02174ca3e7214cfde912977dce2304609`. Complete integrated proof: 132 passed (19 executed, 113 reused), 28 declared stage/manual deferrals, zero findings, 706.430 seconds; report `.cache/test-runs/20261126T114050Z-a94c9caaf7f0471fa1d69c3ecfdb20b6/report.json`. Main readiness eligible in 86.678 seconds, with 132 reused and zero executed; report `.cache/test-runs/20261126T114236Z-32de8ded6d55444bbf35f321fc876720/report.json`. Independent census: 521 entrypoints, six scopes, zero gaps. All 90 historical records and two frozen snapshots unchanged. Preflight branch `agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-87d81f578585/20261126112805` and its worktree under `/var/tmp/kanbien-p6-proof.oel6Cb/agentic-main-refresh-preflight/` retained. No live deployment, workflow dispatch, schedule change or retirement; no ten-minute complete-release claim.
+
+
+- Summary: Six documentation changes passed consolidated independent source review with no required corrections. Admission calibration is retained, not repeated; this is a workflow pilot, not an automated model gate.
+  Durable evidence: Evidence: current script-library-simplification plan, nine-case calibration and recorded source identities. Publish only approved documents, generated metadata-index updates and this session record. Target ten minutes for publication verification; overruns are reported, not bypassed. Zero script-source additions, removals or moves; only admission-triggered review and bounded completion reporting duties change.
+
+
+- Summary: Publication candidate is now based on accepted main and remains in the original November 21 chat worktree. Source review, staged commit gate and combined-result verification passed; local merge and remote push remain pending.
+  Durable evidence: Retained rehearsal: agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9/20261126173738 at /var/tmp/kanbien-admission-promotion.CTxckp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9-20261126173738. Safe temporary root /var/tmp/kanbien-admission-promotion.CTxckp avoids nearly full /tmp and is held constant for evidence reuse. No cleanup authorised or performed. Growth: one calibration Markdown document, five existing governance/plan documents and session bookkeeping changed; zero script-source files added, removed or moved; no new automatic checks. Conditional agent review and completion reporting remain workflow duties, not authenticated automatic enforcement.
 
 ## Activity Log
 
@@ -1556,6 +1568,56 @@ Summary: Eight documentation/log files record verified main publication at 5700a
 
 ADR impact: No new architecture decision; documentation reconciles the approved implementation and existing check ownership.
 
+
+### 2026-11-26T17:34:51Z - Decision
+
+Decision: User approved committing the admission-review pilot and growth-and-cost reporting, merging to main and promoting to origin/main.
+
+Rationale: This includes the normal non-rewriting refresh needed for merge. No live deployment, script implementation, forced update or unrelated cleanup is authorised.
+
+
+### 2026-11-26T17:34:51Z - Context hygiene
+
+Summary: Six documentation changes passed consolidated independent source review with no required corrections. Admission calibration is retained, not repeated; this is a workflow pilot, not an automated model gate.
+
+Durable evidence: Evidence: current script-library-simplification plan, nine-case calibration and recorded source identities. Publish only approved documents, generated metadata-index updates and this session record. Target ten minutes for publication verification; overruns are reported, not bypassed. Zero script-source additions, removals or moves; only admission-triggered review and bounded completion reporting duties change.
+
+
+### 2026-11-26T17:34:51Z - ADR disposition
+
+ADR needed: no
+
+Reason: This documents bounded review and completion reporting within existing harness owners; no new architecture, runtime, scheduler or executable enforcement boundary.
+
+
+### 2026-11-26T17:37:37Z - Commit recorded
+
+Commit: `329e243161a91d92372f0331a1f77265960d41f4`
+
+Message: docs(harness): govern script admission review and cost reporting
+
+Summary: Published candidate documents: bounded admission-review workflow, nine calibration examples, conditional commit checklist, and growth-and-cost reporting. Prepared/staged metadata and process gates passed; two existing portability integration checks remain required before merge.
+
+ADR impact: No new architecture decision; existing governance owners extended.
+
+
+### 2026-11-26T17:41:59Z - Commit recorded
+
+Commit: `3f43a42a9fa0e7198db666fff0a2a90eff147260`
+
+Message: Merge accepted main into the script-governance candidate
+
+Summary: Approved refresh from main e9b82787f636879c8a8649ad54857e70b22a9184 rehearsed cleanly, no conflicts, no stash. Combined candidate passed 12 existing local integration checks in 170.19 seconds; applying the exact result reused all 12 in 16.25 seconds with zero test re-execution. Broad repository contracts remain deferred.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-11-26T17:41:59Z - Context hygiene
+
+Summary: Publication candidate is now based on accepted main and remains in the original November 21 chat worktree. Source review, staged commit gate and combined-result verification passed; local merge and remote push remain pending.
+
+Durable evidence: Retained rehearsal: agentic/preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9/20261126173738 at /var/tmp/kanbien-admission-promotion.CTxckp/agentic-main-refresh-preflight/chat-2026-11-21-20-00-phase-1-deployment-script-9ca6eb73b6a9-20261126173738. Safe temporary root /var/tmp/kanbien-admission-promotion.CTxckp avoids nearly full /tmp and is held constant for evidence reuse. No cleanup authorised or performed. Growth: one calibration Markdown document, five existing governance/plan documents and session bookkeeping changed; zero script-source files added, removed or moved; no new automatic checks. Conditional agent review and completion reporting remain workflow duties, not authenticated automatic enforcement.
+
 ## Sub-Agent Activity
 
 
@@ -1723,6 +1785,20 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
   Summary: Eight documentation/log files record verified main publication at 5700a3a9, completed P6/P7 status, exact counts and retained live/cost limits. Corrected two stale broad-diagnostic scheduling instructions against the unchanged deferred catalogue; no runtime/source changes. Independent review approved links, manifest rows and claims. Corrected metadata preparation passed in 33.062 seconds; affected integration passed 16 checks (10 executed, six reused), 13 deferred, zero findings in 257.764 seconds; report .cache/test-runs/20261126T115358Z-68baf453fdd1432ab9625d3c112cb5d8/report.json. Staged commit gate passed in 48.841 seconds. Initial prose-sequence finding was corrected without a new exception or script.
   ADR impact: No new architecture decision; documentation reconciles the approved implementation and existing check ownership.
 
+
+- Commit: `329e243161a91d92372f0331a1f77265960d41f4`
+  Time UTC: 2026-11-26T17:37:37Z
+  Message: docs(harness): govern script admission review and cost reporting
+  Summary: Published candidate documents: bounded admission-review workflow, nine calibration examples, conditional commit checklist, and growth-and-cost reporting. Prepared/staged metadata and process gates passed; two existing portability integration checks remain required before merge.
+  ADR impact: No new architecture decision; existing governance owners extended.
+
+
+- Commit: `3f43a42a9fa0e7198db666fff0a2a90eff147260`
+  Time UTC: 2026-11-26T17:41:59Z
+  Message: Merge accepted main into the script-governance candidate
+  Summary: Approved refresh from main e9b82787f636879c8a8649ad54857e70b22a9184 rehearsed cleanly, no conflicts, no stash. Combined candidate passed 12 existing local integration checks in 170.19 seconds; applying the exact result reused all 12 in 16.25 seconds with zero test re-execution. Broad repository contracts remain deferred.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1731,14 +1807,14 @@ Summary: Selection reviewer traced routing, inherited checks and evidence invali
 
 ADR needed: no
 ADR path:
-Reason: This refines existing check-selection and chat-refresh owners without changing product, deployment, or scheduler architecture.
+Reason: This documents bounded review and completion reporting within existing harness owners; no new architecture, runtime, scheduler or executable enforcement boundary.
 
 ## Session Metrics
 
 Raised at UTC: 2026-11-21T20:00:38Z
-Latest commit at UTC: 2026-11-26T11:55:21Z
-Latest commit SHA: 7286d19f5dc98e64b1486bf421d24c034984a8dd
-Chat duration: 402883s (04:15:54:43)
+Latest commit at UTC: 2026-11-26T17:41:59Z
+Latest commit SHA: 3f43a42a9fa0e7198db666fff0a2a90eff147260
+Chat duration: 423681s (04:21:41:21)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
