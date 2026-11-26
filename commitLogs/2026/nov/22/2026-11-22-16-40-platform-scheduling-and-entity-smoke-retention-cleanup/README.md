@@ -8,19 +8,19 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-11-22T16:40:32Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-11-26T17:51:42Z
+latest_commit_sha: a4b68279
+chat_duration: 349870s (04:01:11:10)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -126,13 +126,30 @@ ADR needed: no
 
 Reason: Checkpoint and non-rewriting main refresh preserve existing architecture; the scheduler pass composes existing persistence and outbox contracts.
 
+
+### 2026-11-26T17:51:42Z - Commit recorded
+
+Commit: `a4b68279`
+
+Message: feat(scheduling): checkpoint due schedule delivery pass
+
+Summary: Preserved the reusable one-pass schedule-to-outbox service, exports, repeated-pass test, product job expectation correction and source review before the approved refresh from main.
+
+ADR impact: No new ADR required.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `a4b68279`
+  Time UTC: 2026-11-26T17:51:42Z
+  Message: feat(scheduling): checkpoint due schedule delivery pass
+  Summary: Preserved the reusable one-pass schedule-to-outbox service, exports, repeated-pass test, product job expectation correction and source review before the approved refresh from main.
+  ADR impact: No new ADR required.
 
 ## Main Refresh Conflicts
 
@@ -147,12 +164,12 @@ Reason: Checkpoint and non-rewriting main refresh preserve existing architecture
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-11-26T17:51:42Z
+Latest commit SHA: a4b68279
+Chat duration: 349870s (04:01:11:10)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
