@@ -25,6 +25,7 @@ import {
   createInMemoryPlatformProcessingStore,
   createInMemoryPlatformRecordChangeStore,
   createPlatformOutboxRelay,
+  createPlatformScheduleDelivery,
   createPlatformSchedule,
   platformPersistenceFence,
   platformPersistenceLeaseOwner,
@@ -159,6 +160,47 @@ async function main(): Promise<void> {
   equal(noneDue.ok, true);
   if (!noneDue.ok) throw new Error("Expected no due schedule after handoff.");
   deepEqual(noneDue.value, []);
+
+  const dueSchedule = createPlatformSchedule({
+    jobName,
+    dueAt: at(0),
+  }, { generate: () => acceptedResult(uuid("a1d06aac-3d17-4292-b9f3-1fe370772a5d")) });
+  equal(dueSchedule.ok, true);
+  if (!dueSchedule.ok) throw new Error("Expected a due schedule.");
+  equal((await schedules.create(dueSchedule.value)).ok, true);
+
+  let scheduleOutboxEntriesCreated = 0;
+  const scheduleDeliveryRunner = createPlatformScheduleDelivery({
+    clock: { now: () => baseTime },
+    scheduleStore: schedules,
+    createOutboxEntry: (due) => {
+      scheduleOutboxEntriesCreated++;
+      return outboxEntry({
+        id: outboxEntryId(`schedule-handoff-${due.id}`),
+        subject: record,
+        messageType: accepted(outboxMessageType("entity-smoke.test-entity.purge-expired")),
+        deliveryPolicy: accepted(outboxDeliveryPolicy("platform-short-idempotent-work.v1")),
+        createdAt: due.dueAt,
+      });
+    },
+  });
+  const firstScheduleDelivery = await scheduleDeliveryRunner.runOnce();
+  equal(firstScheduleDelivery.ok, true);
+  if (!firstScheduleDelivery.ok) throw new Error("Expected due schedules to be handed over.");
+  deepEqual(firstScheduleDelivery.value, { inspected: 1, deliveryCreated: 1, deliveryAlreadyCreated: 0, notDue: 0 });
+  equal(scheduleOutboxEntriesCreated, 1);
+  deepEqual(await schedules.get(dueSchedule.value.id), {
+    ...dueSchedule.value,
+    state: "delivery-created",
+    outboxEntryId: "schedule-handoff-a1d06aac-3d17-4292-b9f3-1fe370772a5d",
+  });
+
+  const repeatedScheduleDelivery = await scheduleDeliveryRunner.runOnce();
+  equal(repeatedScheduleDelivery.ok, true);
+  if (!repeatedScheduleDelivery.ok) throw new Error("Expected a repeat schedule scan to be harmless.");
+  deepEqual(repeatedScheduleDelivery.value, { inspected: 0, deliveryCreated: 0, deliveryAlreadyCreated: 0, notDue: 0 });
+  equal(scheduleOutboxEntriesCreated, 1);
+
   const relayA = accepted(platformPersistenceLeaseOwner("relay-a"));
   const relayB = accepted(platformPersistenceLeaseOwner("relay-b"));
   const workerA = accepted(platformPersistenceLeaseOwner("worker-a"));

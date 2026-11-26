@@ -29,6 +29,14 @@ export type { PlatformPersistenceError, PlatformPersistenceErrorCode } from "./e
 export { createInMemoryPlatformScheduleStore, createPlatformSchedule } from "./scheduling";
 export type { PlatformSchedule, PlatformScheduleHandover, PlatformScheduleId, PlatformScheduleState, PlatformScheduleStore } from "./scheduling";
 
+export { createPlatformScheduleDelivery } from "./schedule-delivery";
+export type {
+  PlatformScheduleDelivery,
+  PlatformScheduleDeliveryOptions,
+  PlatformScheduleDeliveryRunResult,
+  PlatformScheduleOutboxEntryFactory,
+} from "./schedule-delivery";
+
 export {
   createPlatformPersistenceTransitionObserver,
   platformPersistenceTransitionProfile,

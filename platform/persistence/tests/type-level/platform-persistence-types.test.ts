@@ -18,6 +18,7 @@ import {
   createInMemoryPlatformOutboxStore,
   createInMemoryPlatformScheduleStore,
   createInMemoryPlatformProcessingStore,
+  createPlatformScheduleDelivery,
   createPlatformSchedule,
   platformOutboxQueueMessage,
   platformPersistenceFence,
@@ -67,6 +68,11 @@ const scheduleResult = createPlatformSchedule({ jobName: jobName.value, dueAt: "
 if (!scheduleResult.ok) throw new Error("Expected valid schedule.");
 const schedule: PlatformSchedule = scheduleResult.value;
 const schedules: PlatformScheduleStore = createInMemoryPlatformScheduleStore();
+const scheduleDelivery = createPlatformScheduleDelivery({
+  clock: { now: () => new Date("2026-09-23T12:00:00.000Z") },
+  scheduleStore: schedules,
+  createOutboxEntry: () => entry,
+});
 
 const recordKindResult = recordKind("platform-smoke.work-item");
 const recordIdResult = recordId("work-1");
@@ -106,6 +112,7 @@ void outbox;
 void processing;
 void schedule;
 void schedules;
+void scheduleDelivery;
 void change;
 void mutation;
 void relayPayload;
