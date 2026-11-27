@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.realization-service-graph
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -78,6 +78,92 @@ def observations(contract):
 
 def without_edge(contract, source, destination):
     contract["edges"] = [edge for edge in contract["edges"] if (edge["from"], edge["to"]) != (source, destination)]
+
+
+def temporary_session_cleanup_cases(root, schema, existing_variants):
+    requirements = {"explicit_temporary_discard_policy_required", "exact_session_binding_required",
+                    "durable_positive_ownership_required", "creation_admission_closed_required",
+                    "inflight_operations_reconciled_required", "explicit_execution_approval_required",
+                    "protected_resources_excluded", "owned_teardown_changes_only"}
+    definition = schema["bounded_temporary_session_cleanup"]
+    assert set(definition["required_true_fields"]) == requirements
+    assert definition["selection"] == "change_shape.temporary_session_cleanup"
+    phases = {"prepare-discard": {"update"}, "delete": {"delete"}}
+    operations = {"create", "update", "delete", "replace", "broaden-permission"}
+    assert set(definition["phases"]) == set(phases)
+    for phase, allowed in phases.items():
+        forbidden = operations - allowed
+        assert set(definition["phases"][phase]["allowed_operation_classes"]) == allowed
+        assert set(definition["phases"][phase]["forbidden_operation_classes"]) == forbidden
+        contract = copy.deepcopy(CONTRACT)
+        contract["change_shape"] = {
+            "reviewed_change_summary_required": True,
+            "allowed_operation_classes": sorted(allowed),
+            "forbidden_operation_classes": sorted(forbidden),
+            "temporary_session_cleanup": {"phase": phase, **{key: True for key in requirements}}}
+        run(root, contract)
+        for invalid in (None, False, True, [], CANARY, {}):
+            changed = copy.deepcopy(contract); changed["change_shape"]["temporary_session_cleanup"] = invalid
+            run(root, changed, "change-shape-invalid")
+        for field in requirements | {"phase"}:
+            changed = copy.deepcopy(contract); changed["change_shape"]["temporary_session_cleanup"].pop(field)
+            run(root, changed, "change-shape-invalid")
+            for invalid in (None, False, 1, CANARY, [], {}):
+                changed = copy.deepcopy(contract); changed["change_shape"]["temporary_session_cleanup"][field] = invalid
+                run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(contract); changed["change_shape"]["temporary_session_cleanup"]["extra"] = True
+        run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(LEGACY); changed["change_shape"] = copy.deepcopy(contract["change_shape"])
+        run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(contract)
+        changed["change_shape"]["temporary_session_cleanup"]["phase"] = "delete" if phase == "prepare-discard" else "prepare-discard"
+        run(root, changed, "change-shape-invalid")
+        for field in ("allowed_operation_classes", "forbidden_operation_classes"):
+            changed = copy.deepcopy(contract); changed["change_shape"][field].pop()
+            run(root, changed, "change-shape-allowed-missing" if field == "allowed_operation_classes" else "change-shape-invalid")
+        for operation in forbidden:
+            changed = copy.deepcopy(contract)
+            changed["change_shape"]["allowed_operation_classes"].append(operation)
+            changed["change_shape"]["forbidden_operation_classes"].remove(operation)
+            run(root, changed, "change-shape-invalid")
+        for variant in existing_variants:
+            changed = copy.deepcopy(variant)
+            changed["change_shape"]["temporary_session_cleanup"] = copy.deepcopy(contract["change_shape"]["temporary_session_cleanup"])
+            run(root, changed, "change-shape-invalid")
+            changed = copy.deepcopy(contract)
+            selected = next(key for key in ("disposable_restore_cleanup", "immutable_definition_refresh") if key in variant["change_shape"])
+            changed["change_shape"][selected] = copy.deepcopy(variant["change_shape"][selected])
+            run(root, changed, "change-shape-invalid")
+        # Plain update remains an ordinary shape, never implicit session cleanup.
+        changed = copy.deepcopy(contract); changed["change_shape"].pop("temporary_session_cleanup")
+        run(root, changed, "change-shape-invalid" if phase == "delete" else None)
+        facts, summary = observations(contract)
+        summary["operation_counts"] = {operation: int(operation in allowed) for operation in operations}
+        run(root, contract, facts=facts, summary=summary)
+        for operation in forbidden:
+            changed_summary = copy.deepcopy(summary); changed_summary["operation_counts"][operation] = 1
+            run(root, contract, "normalized-change-summary-forbidden-operation", facts, changed_summary)
+        changed_summary = copy.deepcopy(summary); changed_summary["operation_counts"][next(iter(allowed))] = True
+        run(root, contract, "normalized-change-summary-counts-invalid", facts, changed_summary)
+        missing = copy.deepcopy(facts); missing["gate_evidence"].pop(0)
+        run(root, contract, "normalized-facts-evidence-sequence-invalid", missing, summary)
+        old = (datetime.now(timezone.utc) - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        stale = copy.deepcopy(facts); stale["gate_evidence"][3]["timestamp"] = old
+        run(root, contract, "normalized-facts-current-evidence-stale", stale, summary)
+        stale_summary = copy.deepcopy(summary); stale_summary["timestamp"] = old
+        run(root, contract, "normalized-change-summary-stale", facts, stale_summary)
+        changed_facts = copy.deepcopy(facts); changed_facts["gate_evidence"][0]["input_sha256"] = "sha256:" + "0" * 64
+        run(root, contract, "gate-evidence-input-mismatch", changed_facts, summary)
+        changed_summary = copy.deepcopy(summary); changed_summary["input_sha256"] = "sha256:" + "0" * 64
+        run(root, contract, "normalized-change-summary-input-mismatch", facts, changed_summary)
+        changed_facts = copy.deepcopy(facts); changed_facts["component_evidence"][0]["input_sha256"] = "sha256:" + "0" * 64
+        run(root, contract, "component-evidence-input-mismatch", changed_facts, summary)
+        for state in ("failed", "stopped", "succeeded"):
+            changed = copy.deepcopy(contract)
+            changed["lifecycle"]["transitions"].append({"from": state, "to": "running"})
+            run(root, changed, "unsafe-lifecycle-transition")
+        changed = copy.deepcopy(contract); changed["lifecycle"]["retry"]["mode"] = "automatic"
+        run(root, changed, "unsafe-retry-policy")
 
 
 def main():
@@ -194,6 +280,7 @@ def main():
             run(root, cleanup, "normalized-change-summary-forbidden-operation", cleanup_facts, changed_summary)
         missing_gate = copy.deepcopy(cleanup_facts); missing_gate["gate_evidence"].pop(0)
         run(root, cleanup, "normalized-facts-evidence-sequence-invalid", missing_gate, cleanup_summary)
+        temporary_session_cleanup_cases(root, schema, (cleanup, refresh, successor))
         old = copy.deepcopy(CONTRACT); old["schema"] = OWNER.CONTRACT_SCHEMA
         run(root, old, "connection-destination-type-invalid")
         old = copy.deepcopy(LEGACY); old["execution_units"][0]["state_stores"] = []

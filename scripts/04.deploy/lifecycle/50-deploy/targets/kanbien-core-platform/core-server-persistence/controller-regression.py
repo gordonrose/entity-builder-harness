@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 15
+#   version: 16
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -259,15 +259,19 @@ class ControllerRegression(unittest.TestCase):
             self.assertFalse(any(parts[1]=='execute-change-set' for parts in provider.calls))
 
     def test_baseline_change_set_actual_callers_reserve_and_never_replay(self):
+        prepare = load(DEPLOY/'prepare-candidate/script.py')
         receipt = {'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
         name = 'kanbien-core-platform-persistence-create-'+'a'*12
         stack_id = 'arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-core-platform-core-server-persistence/fixture-id'
         for command, phase in [('create-change-set','create'),('deploy-candidate','execute')]:
             for lost in (False, True):
                 module = load(DEPLOY/command/'script.py')
-                expected = {'ImageDigest':receipt['image_digest'],'SupportImageDigest':receipt['image_digest'],
-                            'RestoreVerifierImageDigest':receipt['image_digest'],'SourceRevision':receipt['source_revision'],
-                            'PrivateSubnetIds':'PRIVATE_PARAMETER_CANARY'}
+                infrastructure = {'PrivateSubnetIds':'PRIVATE_PARAMETER_CANARY','ResourceNamePrefix':'unrelated-prefix',
+                                  'ServerDesiredCount':'0','ObservabilityCollectorDesiredCount':'0','IncludeLegacyPasswordSecrets':'false'}
+                expected = prepare.candidate_parameters({},infrastructure,receipt)
+                self.assertEqual(expected['ResourceNamePrefix'],prepare.INPUTS['target'])
+                self.assertEqual({key: expected[key] for key in prepare.INPUTS['creation_parameters']},
+                                 {'ServerDesiredCount':'1','ObservabilityCollectorDesiredCount':'1','IncludeLegacyPasswordSecrets':'true'})
                 state = {'submitted':False,'identity':None,'foreign':False}
                 calls = []
                 def aws(*parts):
@@ -283,6 +287,9 @@ class ControllerRegression(unittest.TestCase):
                         self.assertNotIn('PRIVATE_PARAMETER_CANARY',records[0].read_text())
                         state.update(submitted=True,identity=retained['operation_id'])
                         if phase == 'create':
+                            parameter_path = parts[parts.index('--parameters')+1].removeprefix('file://')
+                            submitted = json.loads(Path(parameter_path).read_text())
+                            self.assertEqual(submitted,[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()])
                             self.assertEqual(parts[parts.index('--description')+1],state['identity'])
                             self.assertIn('CAPABILITY_NAMED_IAM',parts)
                             self.assertNotIn('--on-stack-failure',parts)
@@ -301,8 +308,8 @@ class ControllerRegression(unittest.TestCase):
                         return True,{'StackEvents':[{'PhysicalResourceId':stack_id,'ClientRequestToken':'foreign' if state['foreign'] else state['identity']}]},'ok'
                     raise AssertionError(parts)
                 provider = SimpleNamespace(validate_receipt=lambda _path:receipt,declaration_covered=lambda:True,
-                    foundation_outputs=lambda:({},'ok'),infrastructure_parameters=lambda _:({},'ok'),
-                    candidate_image=lambda _:(True,'ok'),live_budget=lambda:(True,'ok'),candidate_parameters=lambda *args:expected,
+                    foundation_outputs=lambda:({},'ok'),infrastructure_parameters=lambda _:(infrastructure,'ok'),
+                    candidate_image=lambda _:(True,'ok'),live_budget=lambda:(True,'ok'),candidate_parameters=prepare.candidate_parameters,
                     change_name_matches=lambda actual,wanted:actual == wanted,aws=aws)
                 argv = ['fixture','--receipt','fixture'] + (['--approved-change-set',name] if phase == 'execute' else [])
                 with temporary_change_sets(module) as store, contextlib.ExitStack() as fixtures:
@@ -322,6 +329,7 @@ class ControllerRegression(unittest.TestCase):
                     self.assertIn(result(module.main)[1]['verdict'],('blocked','uncertain'))
                     state['foreign'] = False
                     expected['PrivateSubnetIds'] = 'changed-private-input'
+                    infrastructure['PrivateSubnetIds'] = expected['PrivateSubnetIds']
                     changed = result(module.main)[1]
                     self.assertEqual(changed['findings'],[{'code':'persistence-change-set-reservation-mismatch'}])
                     self.assertEqual(sum(parts[1] in ('create-change-set','execute-change-set') for parts in calls),1)
@@ -1498,7 +1506,11 @@ class ControllerRegression(unittest.TestCase):
     def test_correction_parameters_remain_complete_and_unique(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
         digest='sha256:'+'a'*64
-        parameters=prepare.candidate_parameters({'RepositoryUri':'synthetic-image'},{'PrivateSubnetIds':'subnet-safe'},{'image_digest':digest,'source_revision':'a'*40})
+        parameters=prepare.candidate_parameters({'RepositoryUri':'synthetic-image'},{'PrivateSubnetIds':'subnet-safe','ResourceNamePrefix':'unrelated-prefix',
+            'ServerDesiredCount':'0','ObservabilityCollectorDesiredCount':'0','IncludeLegacyPasswordSecrets':'false'},{'image_digest':digest,'source_revision':'a'*40})
+        self.assertEqual(parameters['ResourceNamePrefix'],prepare.INPUTS['target'])
+        self.assertEqual({key: parameters[key] for key in prepare.INPUTS['creation_parameters']},
+                         {'ServerDesiredCount':'1','ObservabilityCollectorDesiredCount':'1','IncludeLegacyPasswordSecrets':'true'})
         self.assertEqual(parameters['ImageDigest'],digest)
         self.assertEqual(parameters['SupportImageDigest'],digest)
         self.assertEqual(parameters['RestoreVerifierImageDigest'],digest)
@@ -1546,13 +1558,19 @@ class ControllerRegression(unittest.TestCase):
 
     def test_wrong_live_parameters_cannot_execute(self):
         module=load(DEPLOY/'deploy-candidate/script.py')
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
         digest,revision='sha256:'+'a'*64,'a'*40
         receipt={'image_digest':digest,'source_revision':revision}
         name='kanbien-core-platform-persistence-create-'+digest[7:19]
-        expected={'ImageDigest':digest,'SupportImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':revision,'PrivateSubnetIds':'subnet-safe','EndpointSecurityGroupId':'sg-safe'}
-        for key in ('PrivateSubnetIds','EndpointSecurityGroupId'):
-            wrong={**expected,key:'unrelated'}
-            change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ChangeSetType':'CREATE','Parameters':[{'ParameterKey':k,'ParameterValue':v} for k,v in wrong.items()],'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]}
+        infrastructure={'PrivateSubnetIds':'subnet-safe','EndpointSecurityGroupId':'sg-safe','ResourceNamePrefix':'unrelated-prefix'}
+        expected=prepare.candidate_parameters({},infrastructure,receipt)
+        observations=[]
+        for key in ('PrivateSubnetIds','EndpointSecurityGroupId','ResourceNamePrefix'):
+            observations.append([{'ParameterKey':k,'ParameterValue':v} for k,v in {**expected,key:'unrelated'}.items()])
+        observations.append([{'ParameterKey':k,'ParameterValue':v} for k,v in expected.items() if k!='ResourceNamePrefix'])
+        observations.append([{'ParameterKey':k,'ParameterValue':v} for k,v in expected.items()]+[{'ParameterKey':'ResourceNamePrefix','ParameterValue':expected['ResourceNamePrefix']}])
+        for observed in observations:
+            change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ChangeSetType':'CREATE','Parameters':observed,'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]}
             def response(parts):
                 if parts[1]=='describe-change-set':return True,change,'ok'
                 if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':'REVIEW_IN_PROGRESS'}]},'ok'
@@ -1561,9 +1579,9 @@ class ControllerRegression(unittest.TestCase):
             provider.declaration_covered=lambda:True
             provider.validate_receipt=lambda path:receipt
             provider.foundation_outputs=lambda:({},'ok')
-            provider.infrastructure_parameters=lambda outputs:({},'ok')
+            provider.infrastructure_parameters=lambda outputs:(infrastructure,'ok')
             provider.candidate_image=lambda receipt:(True,'ok')
-            provider.candidate_parameters=lambda *args:expected
+            provider.candidate_parameters=prepare.candidate_parameters
             with temporary_change_sets(module),patch.object(module,'controls',return_value=provider),patch.object(sys,'argv',['test','--receipt','synthetic.json','--approved-change-set',name]):
                 report=result(module.main)[1]
                 self.assertEqual(report['findings'][0]['code'],'persistence-change-set-live-parameters-mismatch')

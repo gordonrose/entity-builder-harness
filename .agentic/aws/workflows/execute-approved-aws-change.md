@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: aws.workflows.execute-approved-aws-change
-  version: 6
+  version: 7
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-11-20"
+  updated_on: "2026-11-27"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -147,6 +147,25 @@ cleanup authority before execution; do not ask again when it is already covered.
 Rule adoption, a compiler pass or clone-creation-only approval is not deletion
 authority. Preserve the original readback/ownership gates and
 single-submission journal; uncertain deletion is reconciled, not retried.
+
+## Temporary-session teardown
+
+Select the provider-owned
+[temporary-session rule](../standards/operational-realization-applicability.md#temporary-session-cleanup)
+only when the actual connected controller and concrete task authority cover its
+effects. Review and bind the exact `prepare-discard` or `delete` phase plan to
+the approved session/account/region, qualified source, durable original ownership
+and protected-resource exclusions before execution. A failed functional test is
+not deletion authority and does not excuse missing cleanup gates; independently
+proved session ownership allows cleanup without claiming functional success.
+
+Keep creation, independent expiry and cleanup observations separate. Expiry must
+invoke the same qualified cleanup route with original authority, and creation
+must remain closed while admitted operations and late resources are reconciled.
+Retain original reservations after uncertainty; do not resubmit a deletion or
+replace failed observations with assumed absence. Report the original test result,
+cleanup outcome and remaining owned resources separately. This workflow addition
+does not itself provision or qualify the controller, worker or ownership store.
 
 ## Bounded PostgreSQL Repair and Resume
 

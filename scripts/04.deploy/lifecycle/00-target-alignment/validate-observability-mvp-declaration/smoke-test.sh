@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-core-server-persistence-observability-mvp
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -98,5 +98,64 @@ fail observability-readiness-code-policy-invalid "$malformed_codes"
 unreadable_template="$(fixture unreadable-template)"
 printf '\377' > "$unreadable_template/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 fail observability-provider-realization-unreadable "$unreadable_template"
+
+# Exercise the real validator against altered source without replacing its
+# existing raw security checks or introducing a second template interpreter.
+python3 - "$ROOT" "$SOURCE" "$TEMPORARY_DIRECTORY" <<'PY'
+import contextlib, importlib.machinery, importlib.util, io, json, runpy, shutil, sys
+from pathlib import Path
+from unittest.mock import patch
+root, source, temporary = map(Path, sys.argv[1:])
+path = root / 'scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.py'
+spec = importlib.util.spec_from_file_location('observability_fixture', path)
+owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
+destination = temporary / 'identity' / 'targets' / source.name
+shutil.copytree(source, destination)
+shutil.copytree(root / 'infra/04.deploy/03.product/image', destination.parent.parent / 'image')
+template_path = destination / '30-provider-realization/aws/cloudformation/core-server-persistence.yml'
+original = template_path.read_text()
+changes = [
+    ('    Default: kanbien-core-platform', '    Default: different-target'),
+    ('    Default: kanbien-core-platform', '    Default: private-canary\n    Default: kanbien-core-platform'),
+    ('    MaxLength: 21', '    MaxLength: 1'),
+    ('http://observability-collector.${ResourceNamePrefix}.internal:4318/v1/metrics', 'http://private-canary.invalid'),
+    ('Name: PLATFORM_OBSERVABILITY_TARGET, Value: !Ref ResourceNamePrefix', 'Name: PLATFORM_OBSERVABILITY_TARGET, Value: private-canary'),
+    ('Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT, Value: !Ref ResourceNamePrefix', 'Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT, Value: private-canary'),
+    ('Name: target, Value: !Ref ResourceNamePrefix', 'Name: target, Value: private-canary'),
+]
+for old, new in changes:
+    assert old in original, old
+    template_path.write_text(original.replace(old, new, 1))
+    try:
+        owner.check(destination)
+    except owner.Failure as error:
+        assert error.code == 'observability-provider-realization-invalid', error.code
+    else:
+        raise AssertionError('unsafe identity accepted')
+template_path.write_text(original)
+owner.check(destination)
+execute = importlib.machinery.SourceFileLoader.exec_module
+for kind in (FileNotFoundError, SyntaxError, ImportError, RuntimeError):
+    def injected(loader, module):
+        if loader.name == 'observability_cloudformation':
+            raise kind('private-canary')
+        return execute(loader, module)
+    output, errors = io.StringIO(), io.StringIO()
+    with patch.object(importlib.machinery.SourceFileLoader, 'exec_module', injected), \
+            patch.object(sys, 'argv', [str(path), '--target-root', str(destination), '--json']), \
+            contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+        try:
+            runpy.run_path(str(path), run_name='__main__')
+        except SystemExit as exit:
+            assert exit.code == 1, exit.code
+        else:
+            raise AssertionError('missing CLI exit')
+    report = json.loads(output.getvalue())
+    assert report == {'schema': 'deploy/observability-mvp-declaration-report/v1',
+                      'target': 'kanbien-core-platform', 'scope': 'core-server-persistence',
+                      'verdict': 'invalid', 'findings': [{'code': 'observability-provider-realization-unreadable'}]}
+    assert errors.getvalue() == '' and 'private-canary' not in output.getvalue()
+print('Identity projection and safe import failures passed.')
+PY
 echo "Core-server persistence observability MVP declaration tests passed."
 

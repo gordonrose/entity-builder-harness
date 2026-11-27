@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.deployment-control
-#   version: 4
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -42,7 +42,7 @@ CF = module("entity_smoke_deployment_cf", ROOT / "scripts/04.deploy/shared/provi
 CHANGE_SETS = module("aws_change_set_execution", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/change_sets.py")
 SOURCE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml"
 STACK = "kanbien-core-platform-entity-smoke"
-PARAMETERS = {"VpcId", "VpcCidr", "PrivateSubnetIds", "ClusterArn", "NamespaceId", "EndpointSecurityGroupId", "S3ArtifactPrefixListId", "LogGroupName", "DatabaseEndpoint", "DatabaseName", "DatabaseResourceId", "DatabaseSecurityGroupId", "AdministratorSecretArn", "ImageRepositoryUri", "ImageRepositoryArn", "ImageDigest", "SourceRevision", "ServerDesiredCount"}
+PARAMETERS = {"ResourceNamePrefix", "VpcId", "VpcCidr", "PrivateSubnetIds", "ClusterArn", "NamespaceId", "EndpointSecurityGroupId", "S3ArtifactPrefixListId", "LogGroupName", "DatabaseEndpoint", "DatabaseName", "DatabaseResourceId", "DatabaseSecurityGroupId", "AdministratorSecretArn", "ImageRepositoryUri", "ImageRepositoryArn", "ImageDigest", "SourceRevision", "ServerDesiredCount"}
 RESOURCE_TYPES = {name + "SecurityGroup": "AWS::EC2::SecurityGroup" for name in ("Server", "Migration", "Administration", "Verifier", "DatabaseProof")}
 RESOURCE_TYPES.update({"EndpointIngressFrom" + name: "AWS::EC2::SecurityGroupIngress" for name in ("Server", "Migration", "Administration", "Verifier", "DatabaseProof")})
 RESOURCE_TYPES.update({"DatabaseIngressFrom" + name: "AWS::EC2::SecurityGroupIngress" for name in ("Server", "Migration", "Administration", "DatabaseProof")})
@@ -64,6 +64,8 @@ def source():
         template = CF.template(body)
         resources = template.get("Resources")
         require(isinstance(resources, dict) and all(isinstance(value, dict) for value in resources.values()) and {key: value.get("Type") for key, value in resources.items()} == RESOURCE_TYPES and set(template.get("Parameters", {})) == PARAMETERS, "deployment-source-shape-invalid")
+        prefix = template["Parameters"]["ResourceNamePrefix"]
+        require(isinstance(prefix, dict) and prefix.get("Type") == "String" and prefix.get("Default") == RESOURCE.CLUSTER, "deployment-source-shape-invalid")
         return body, template
     except (OSError, ValueError, TypeError):
         raise RESOURCE.ResourceFailure("deployment-source-unavailable") from None
@@ -88,7 +90,7 @@ def parameters_for(binding, parameters, activate):
     RESOURCE.validate_binding(binding, record_required=False)
     require(type(activate) is bool and isinstance(parameters, dict) and set(parameters) == PARAMETERS and all(isinstance(value, str) and value and not any(char in value for char in "\n\r\0") for value in parameters.values()), "deployment-parameters-invalid")
     _, template = source()
-    fixed = {"ImageDigest": binding["image_digest"], "SourceRevision": binding["source_revision"], "ServerDesiredCount": "1" if activate else "0",
+    fixed = {"ResourceNamePrefix": RESOURCE.CLUSTER, "ImageDigest": binding["image_digest"], "SourceRevision": binding["source_revision"], "ServerDesiredCount": "1" if activate else "0",
              "ClusterArn": "arn:aws:ecs:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":cluster/" + RESOURCE.CLUSTER,
              "ImageRepositoryUri": RESOURCE.ACCOUNT + ".dkr.ecr." + RESOURCE.REGION + ".amazonaws.com/kanbien-core-platform/entity-smoke",
              "ImageRepositoryArn": "arn:aws:ecr:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + ":repository/kanbien-core-platform/entity-smoke",

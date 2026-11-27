@@ -4,15 +4,15 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.aws.runtime-alignment
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Exercise AWS runtime alignment reporting or the focused shared foundation checks without provider access.
+#   purpose: Exercise runtime alignment, foundation or session handoff fixtures without live provider access.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   used_by:
 #   - id: deploy.adapter.aws.runtime-alignment
@@ -20,6 +20,9 @@ set -euo pipefail
 #   effects: [read-only, writes-files]
 
 ROOT="$(git rev-parse --show-toplevel)"
+if [[ "$#" -eq 1 && "$1" == "--environment-sessions-only" ]]; then
+  exec python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py"
+fi
 if [[ "$#" -eq 1 && "$1" == "--postgresql-version-only" ]]; then
   exec python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py" PostgreSqlVersionTests
 fi

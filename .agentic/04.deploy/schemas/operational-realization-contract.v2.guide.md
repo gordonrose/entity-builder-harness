@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.guide.operational-realization-contract.v2
-version: 3
+version: 4
 status: active
 created_on: "2026-11-08"
-updated_on: "2026-11-15"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [architecture, security, sre]
@@ -79,6 +79,32 @@ This is not general teardown permission. The provider controller still needs the
 original successful readback, positively owned disposable resources and explicit
 concrete execution approval, protecting source and shared resources. All gates,
 current normalized change counts and input-bound evidence remain required.
+
+For temporary test-session cleanup, use the separate
+`temporary_session_cleanup` declaration from the schema. Its exact `phase`
+and eight true policy fields describe a different operation, not an opt-out
+from restore readback. `prepare-discard` allows only `update`, forbidding
+`create`, `delete`, `replace` and `broaden-permission`; `delete` allows only
+`delete`, forbidding `create`, `update`, `replace` and `broaden-permission`.
+Missing or extra fields, null/non-boolean flags, unsupported phases and mixed
+bounded opt-ins fail. A normal update shape remains valid without this opt-in,
+but confers no temporary-session teardown authority.
+
+The [owning standard](../standards/operational-realization-gate.md#bounded-temporary-session-cleanup)
+requires exact session custody, durable ownership, closed creation admission,
+reconciled in-flight operations and protected-resource exclusion in the provider
+controller. A failed functional test may require cleanup; it must remain failed.
+Cleanup is a separately labelled operation, never a transition out of that
+terminal attempt or proof of functional success. A changed cleanup declaration
+invalidates its existing input-bound gate evidence; it does not alter the
+normalized evidence format or waive qualification/freshness.
+
+Declare independent expiry execution and its real invocation, identity and
+durable-store relationships using the existing graph fields. Every direct store
+access needs its owned connection; a caller does not inherit the cleanup worker's
+permissions. An async invocation binds its real durable idempotency store and
+acknowledges only durable completion. Declaring that graph does not provision an
+expiry worker or establish independence from disposable resources.
 
 For the verifier, permissions and network reachability must be proven against
 its own provider identity and private server route. The compiler cannot derive

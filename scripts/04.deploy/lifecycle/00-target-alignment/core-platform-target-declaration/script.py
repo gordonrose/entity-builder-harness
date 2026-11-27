@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 11
+#   version: 13
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import tempfile
 import json
 import re
@@ -37,6 +38,20 @@ from typing import Any
 
 import yaml
 
+
+ROOT = Path(__file__).resolve().parents[5]
+PROFILE_READERS_READY = False
+try:
+    _lifecycle_spec = importlib.util.spec_from_file_location("target_environment_lifecycle", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy/implementation.py")
+    LIFECYCLE = importlib.util.module_from_spec(_lifecycle_spec)
+    _lifecycle_spec.loader.exec_module(LIFECYCLE)
+    _template_spec = importlib.util.spec_from_file_location("target_profile_document", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
+    PROFILE_DOCUMENT = importlib.util.module_from_spec(_template_spec)
+    _template_spec.loader.exec_module(PROFILE_DOCUMENT)
+    PROFILE_READERS_READY = True
+except Exception:
+    # Only dependency loading is bounded here; native details never become a report.
+    pass
 
 TARGET = "kanbien-core-platform"
 REQUIRED_E0_FACTS = {
@@ -112,6 +127,18 @@ def mapping(path: Path, code: str) -> dict[str, Any]:
     return value
 
 
+def profile_mapping(path: Path) -> dict[str, Any]:
+    """Use the existing strict mapping reader for policy-bearing profiles only."""
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        raise DeclarationFailure("target-profile-unreadable") from None
+    try:
+        return PROFILE_DOCUMENT.template(raw)
+    except ValueError:
+        raise DeclarationFailure("target-profile-document-invalid") from None
+
+
 def non_empty(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -153,6 +180,10 @@ def required_mapping(document: dict[str, Any], key: str, code: str) -> dict[str,
 def check_profile(profile: dict[str, Any]) -> None:
     if profile.get("schema") != "deploy/target-profile/v1" or profile.get("id") != TARGET:
         raise DeclarationFailure("target-profile-invalid")
+    try:
+        LIFECYCLE.require_persistent(LIFECYCLE.read(profile))
+    except LIFECYCLE.PolicyFailure as failure:
+        raise DeclarationFailure(failure.code) from None
     if profile.get("status") != "healthy-runtime-accepted":
         raise DeclarationFailure("target-status-invalid")
     if profile.get("baseline") != "accepted-immutable-release" or profile.get("repository_declaration") != "repository-declaration-complete":
@@ -648,8 +679,10 @@ def main() -> int:
     try:
         args = parse_args()
         if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
+        if not PROFILE_READERS_READY:
+            raise DeclarationFailure("declaration-observation-unavailable")
         root = Path(args.target_root) if args.target_root else Path(__file__).resolve().parents[5] / "infra/04.deploy/03.product/targets" / TARGET
-        profile = mapping(root / "00-target" / "target-profile.yml", "target-profile-unreadable")
+        profile = profile_mapping(root / "00-target" / "target-profile.yml")
         check_profile(profile)
         check_foundation(root)
         if args.rehearsal_root is not None and (not args.rehearsal_root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.resolve().is_relative_to(args.rehearsal_root.resolve())):

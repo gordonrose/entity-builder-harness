@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.local-public-persistence-recovery
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -127,7 +127,8 @@ def run_case(name,*,package="persistence",environment=None,arguments=None,mutate
   assert all(not Path(path).exists() for path in configs),(name,configs)
   assert not list(fixture.glob('persistence-public-docker-*')),name
   assert original_files=={p.name:(p.read_bytes(),stat.S_IMODE(p.stat().st_mode)) for p in original.iterdir()},name
-  if name.startswith(('remote','invalid-argument','owner-')):assert not any(item.get('args',[])[:1]==['info'] for item in records),(name,records)
+  if name.startswith(('remote','invalid-argument')):assert not any(item.get('args',[])[:1]==['info'] for item in records),(name,records)
+  if name.startswith('owner-'):assert not any(item['kind']=='docker' for item in records),(name,records)
   COUNT+=1
 
 def replace(path,old,new):

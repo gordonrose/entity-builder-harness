@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.target-alignment.implementation
-#   version: 4
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -373,7 +373,7 @@ def inspect(provider, receipt, now):
     try: FOUNDATION_CHECKS.budget(budget.get("Budget") if isinstance(budget, dict) else None, INPUTS["budget"])
     except FOUNDATION_CHECKS.FoundationFailure as failure: raise AlignmentFailure(failure.code) from None
     parameters = {key: dependency[key] for key in ("DatabaseEndpoint", "DatabaseName", "DatabaseResourceId", "DatabaseSecurityGroupId", "AdministratorSecretArn")}
-    parameters.update(**network,
+    parameters.update(**network, ResourceNamePrefix="kanbien-core-platform",
                       EndpointSecurityGroupId=endpoint_group, S3ArtifactPrefixListId=prefix_id,
                       ImageRepositoryUri=REPOSITORY_URI, ImageRepositoryArn="arn:aws:ecr:" + REGION + ":" + ACCOUNT + ":repository/" + REPOSITORY,
                       ImageDigest=receipt["image_digest"], SourceRevision=receipt["source_revision"], ServerDesiredCount="0")

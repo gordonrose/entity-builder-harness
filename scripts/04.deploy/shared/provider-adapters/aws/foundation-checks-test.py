@@ -2,15 +2,15 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.aws.foundation-checks
-#   version: 1
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Exercise shared foundation and private-network checks with controlled provider observations.
+#   purpose: Exercise foundation observations, bounded source projection and the owned private-network template without AWS.
 #   portability: {class: reusable, targets: [entity-builder]}
 #   effects: [read-only]
 #   used_by:
@@ -20,6 +20,7 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import re
 import unittest
 from unittest.mock import Mock
 
@@ -277,6 +278,257 @@ class FoundationTests(unittest.TestCase):
                 M.private_network(provider, OUTPUTS, "test.internal", "eu-west-1")
             self.assertIs(caught.exception, failure)
             self.assertEqual(provider.call_count, index + 1)
+
+
+class CloudFormationStringProjectionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        spec = importlib.util.spec_from_file_location("string_projection", Path(__file__).with_name("cloudformation-template.py"))
+        cls.cf = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.cf)
+
+    def source(self):
+        return {"Parameters": {"Prefix": {"Type": "String", "Default": "production", "MinLength": 1,
+                    "MaxLength": 21, "AllowedPattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"},
+                "Secret": {"Type": "String", "NoEcho": True}},
+                "Resources": {"Example": {"Type": "AWS::Example::Resource", "Properties": {
+                    "Name": {"Ref": "Prefix"}, "Url": {"Fn::Sub": "http://service.${Prefix}.internal"},
+                    "Arn": {"Fn::Sub": "arn:${AWS::Partition}:example:${AWS::Region}:${Resource.Arn}:${Prefix}"},
+                    "Escaped": {"Fn::Sub": "${Prefix}-${!Prefix}"}, "Secret": {"Ref": "Secret"},
+                    "Other": {"Fn::Sub": ["${Local}", {"Local": {"Ref": "Resource"}}]},
+                    "EscapedMap": {"Fn::Sub": ["${!Prefix}", {}]},
+                    "Dynamic": {"Fn::Sub": "{{resolve:ssm:unselected-reference}}"},
+                    "Join": {"Fn::Join": ["-", [{"Ref": "Prefix"}, {"Ref": "Resource"}]]},
+                    "Unchanged": {"Fn::Sub": "literal-${AWS::Region}-${!Prefix}"}}}}}
+
+    def test_selected_defaults_and_overrides_preserve_symbolic_source_and_copy(self):
+        original = self.source(); before = copy.deepcopy(original)
+        for override, expected in ((None, "production"), ({"Prefix": "temporary-one"}, "temporary-one")):
+            result = self.cf.project_string_parameters(original, ["Prefix"], override)
+            props = result["Resources"]["Example"]["Properties"]
+            self.assertEqual(props["Name"], expected)
+            self.assertEqual(props["Url"], "http://service." + expected + ".internal")
+            self.assertEqual(props["Arn"], {"Fn::Sub": "arn:${AWS::Partition}:example:${AWS::Region}:${Resource.Arn}:" + expected})
+            self.assertEqual(props["Escaped"], {"Fn::Sub": expected + "-${!Prefix}"})
+            self.assertEqual(props["Join"], {"Fn::Join": ["-", [expected, {"Ref": "Resource"}]]})
+            for key in ("Secret", "Other", "EscapedMap", "Dynamic", "Unchanged"):
+                self.assertEqual(props[key], before["Resources"]["Example"]["Properties"][key])
+            props["Other"]["Fn::Sub"][1]["Local"]["Ref"] = "changed"
+            result["Parameters"]["Prefix"]["Default"] = "changed"
+            self.assertTrue(self.cf.templates_equal(original, before))
+        self.assertEqual(self.cf.project_string_parameters(json.dumps(original), ("Prefix",)),
+                         self.cf.project_string_parameters(original, ["Prefix"]))
+
+    def test_valid_explicit_string_and_constraint_boundaries(self):
+        source = self.source(); declaration = source["Parameters"]["Prefix"]
+        for value in ("a", "a" * 21):
+            self.assertEqual(self.cf.project_string_parameters(source, ["Prefix"], {"Prefix": value})
+                             ["Resources"]["Example"]["Properties"]["Name"], value)
+        declaration.update(AllowedValues=["production", "staging"], NoEcho=False,
+                           Description="Public identity", ConstraintDescription="An admitted identity")
+        self.assertEqual(self.cf.project_string_parameters(source, ["Prefix"], {"Prefix": "staging"})
+                         ["Resources"]["Example"]["Properties"]["Name"], "staging")
+        del declaration["Default"]
+        self.cf.project_string_parameters(source, ["Prefix"], {"Prefix": "staging"})
+        source["Parameters"]["Suffix"] = {"Type": "String", "Default": "private"}
+        source["Outputs"] = {"Name": {"Value": {"Fn::Sub": "${Prefix}-${Suffix}"}}}
+        result = self.cf.project_string_parameters(source, ["Prefix", "Suffix"], {"Prefix": "staging"})
+        self.assertEqual(result["Outputs"]["Name"]["Value"], "staging-private")
+
+    def test_selection_and_declarations_fail_with_value_free_reasons(self):
+        source = self.source()
+        for names, overrides in (([], None), ("Prefix", None), (["Prefix", "Prefix"], None),
+                                 (["Missing"], None), ([1], None), ([[]], None),
+                                 (["Prefix"], []), (["Prefix"], {"Unknown": "private-canary"})):
+            with self.subTest(names=names), self.assertRaisesRegex(ValueError, "^cloudformation-parameter-selection-invalid$"):
+                self.cf.project_string_parameters(source, names, overrides)
+        changes = [{"Type": "Number"}, {"NoEcho": True}, {"NoEcho": "false"}, {"Unexpected": 1},
+                   {"Description": 1}, {"ConstraintDescription": []}, {"AllowedPattern": "[private-canary"},
+                   {"AllowedPattern": "a{9999999999999999999999}"},
+                   {"AllowedPattern": "(" * 1000 + "a" + ")" * 1000},
+                   {"AllowedPattern": None}, {"MinLength": True}, {"MinLength": -1}, {"MaxLength": "21"},
+                   {"MaxLength": None}, {"MinLength": 22}, {"AllowedValues": []}, {"AllowedValues": [1]},
+                   {"AllowedValues": None}, {"AllowedValues": ["different"]}, {"Default": None},
+                   {"Default": ""}, {"Default": "a" * 22}, {"Default": "two--hyphens"},
+                   {"Default": "{{resolve:secretsmanager:private-canary}}"}, {"Default": "${private-canary}"}]
+        for change in changes:
+            changed = copy.deepcopy(source); changed["Parameters"]["Prefix"].update(change)
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "^cloudformation-string-parameter-invalid$"):
+                self.cf.project_string_parameters(changed, ["Prefix"], {"Prefix": "production"})
+        for declaration in (None, [], {"Type": "String"}):
+            changed = copy.deepcopy(source); changed["Parameters"]["Prefix"] = declaration
+            with self.assertRaisesRegex(ValueError, "^cloudformation-string-parameter-invalid$"):
+                self.cf.project_string_parameters(changed, ["Prefix"])
+        for value in (None, 1, "", "a" * 22, "UPPER", "two--hyphens"):
+            with self.assertRaisesRegex(ValueError, "^cloudformation-string-parameter-invalid$"):
+                self.cf.project_string_parameters(source, ["Prefix"], {"Prefix": value})
+
+    def test_unsupported_substitutions_dynamic_values_and_injection_are_rejected(self):
+        expressions = [
+            {"Ref": "Prefix", "Other": True}, {"Fn::Sub": "${Prefix}", "Other": True},
+            {"Fn::Sub": ["${Prefix}", {"Prefix": "local-shadow"}]},
+            {"Fn::Sub": ["${Local}", {"Local": {"Ref": "Prefix"}}]},
+            {"Fn::Sub": {"Unexpected": "${Prefix}"}},
+            {"Fn::Sub": "{{resolve:secretsmanager:${Prefix}}}"},
+        ]
+        for expression in expressions:
+            source = self.source(); source["Outputs"] = {"Value": expression}
+            with self.subTest(expression=expression), self.assertRaisesRegex(ValueError, "^cloudformation-parameter-substitution-unsupported$"):
+                self.cf.project_string_parameters(source, ["Prefix"])
+        for value, expression in (("$", "${Prefix}{AWS::Region}"), ("{", "$${Prefix}AWS::Region}"),
+                                  ("resolve:private-canary", "{{${Prefix}}}")):
+            source = {"Parameters": {"Prefix": {"Type": "String", "Default": value}},
+                      "Outputs": {"Value": {"Fn::Sub": expression}}}
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-substitution-unsupported$"):
+                self.cf.project_string_parameters(source, ["Prefix"])
+        for value in ("${private-canary}", "{{resolve:ssm:private-canary}}"):
+            source = {"Parameters": {"Prefix": {"Type": "String", "Default": "safe"}}}
+            with self.assertRaisesRegex(ValueError, "^cloudformation-string-parameter-invalid$"):
+                self.cf.project_string_parameters(source, ["Prefix"], {"Prefix": value})
+
+
+    def test_integer_parameters_and_selected_equality_guards_are_bounded(self):
+        source = {'Parameters': {'Count': {'Type': 'Number', 'Default': 1, 'AllowedValues': [0, 1]},
+                                 'Enabled': {'Type': 'String', 'Default': 'true', 'AllowedValues': ['true', 'false']}},
+                  'Conditions': {'Selected': {'Fn::Equals': [{'Ref': 'Enabled'}, 'true']}, 'Other': {'Fn::Equals': [{'Ref': 'Provider'}, 'value']}},
+                  'Resources': {'Optional': {'Type': 'AWS::Example::Resource', 'Condition': 'Selected'},
+                                'Kept': {'Type': 'AWS::Example::Resource', 'Properties': {'Count': {'Ref': 'Count'}, 'Label': {'Fn::Sub': 'count-${Count}'}}}},
+                  'Outputs': {'OptionalArn': {'Condition': 'Selected', 'Value': {'Fn::GetAtt': ['Optional', 'Arn']}}}}
+        original = copy.deepcopy(source)
+        production = self.cf.project_parameters(source, ['Count', 'Enabled'], condition_names=['Selected'])
+        temporary = self.cf.project_parameters(source, ['Count', 'Enabled'], {'Count': 0, 'Enabled': 'false'}, condition_names=['Selected'])
+        self.assertNotIn('Condition', production['Resources']['Optional'])
+        self.assertIn('OptionalArn', production['Outputs'])
+        self.assertNotIn('Optional', temporary['Resources'])
+        self.assertNotIn('OptionalArn', temporary['Outputs'])
+        self.assertEqual(temporary['Resources']['Kept']['Properties'], {'Count': 0, 'Label': 'count-0'})
+        self.assertIs(type(temporary['Resources']['Kept']['Properties']['Count']), int)
+        self.assertEqual(temporary['Conditions'], {'Other': source['Conditions']['Other']})
+        self.assertEqual(source, original)
+        with self.assertRaisesRegex(ValueError, '^cloudformation-string-parameter-invalid$'):
+            self.cf.project_string_parameters(source, ['Count'])
+        for value in (True, 0.0, '0', None, -1, 2):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, '^cloudformation-number-parameter-invalid$'):
+                self.cf.project_parameters(source, ['Count'], {'Count': value})
+        for change in ({'Default': True}, {'AllowedValues': [False, True]}, {'AllowedValues': []}, {'MinValue': '0'},
+                       {'MaxValue': False}, {'MinValue': 2}, {'MaxValue': 0}, {'NoEcho': True}, {'Unknown': 1}):
+            changed = copy.deepcopy(source); changed['Parameters']['Count'].update(change)
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, '^cloudformation-number-parameter-invalid$'):
+                self.cf.project_parameters(changed, ['Count'])
+
+    def test_selected_guards_reject_unresolved_forms_and_surviving_references(self):
+        base = {'Parameters': {'Enabled': {'Type': 'String', 'Default': 'false'}},
+                'Conditions': {'Selected': {'Fn::Equals': [{'Ref': 'Enabled'}, 'true']}},
+                'Resources': {'Removed': {'Type': 'AWS::Example::Resource', 'Condition': 'Selected'},
+                              'Kept': {'Type': 'AWS::Example::Resource'}}}
+        def project(source, guards=('Selected',)):
+            return self.cf.project_parameters(source, ['Enabled'], condition_names=guards)
+        for guards in ('Selected', ['Missing'], ['Selected', 'Selected'], [[]]):
+            with self.assertRaisesRegex(ValueError, '^cloudformation-condition-selection-invalid$'): project(base, guards)
+        for expression in ({'Fn::If': ['Other', True, False]}, {'Fn::Equals': [{'Ref': 'Provider'}, 'true']},
+                           {'Fn::Equals': [True, 1]}, {'Fn::Equals': ['${Provider}', 'true']}, {'Fn::Equals': ['true', 'true'], 'Extra': 1}):
+            source = copy.deepcopy(base); source['Conditions']['Selected'] = expression
+            with self.assertRaisesRegex(ValueError, '^cloudformation-condition-unsupported$'): project(source)
+        for value in ({'Ref': 'Removed'}, {'Fn::GetAtt': ['Removed', 'Arn']}, {'Fn::GetAtt': 'Removed.Arn'},
+                      {'Fn::Sub': '${Removed}'}, {'Fn::Sub': 'arn:${Removed.Arn}'}, {'DependsOn': 'Removed'}, {'DependsOn': ['Removed']}):
+            source = copy.deepcopy(base); source['Resources']['Kept']['Properties'] = value
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, '^cloudformation-removed-resource-reference$'): project(source)
+        for value in ({'Fn::If': ['Selected', 'yes', 'no']}, {'Fn::If': [{'Unexpected': 'Selected'}, 'yes', 'no']},
+                      {'Fn::If': {'Malformed': 'Selected'}}, {'Condition': 'Selected'}, {'Condition': {'Malformed': 'Selected'}}):
+            source = copy.deepcopy(base); source['Outputs'] = {'StillPresent': {'Value': value}}
+            with self.assertRaisesRegex(ValueError, '^cloudformation-condition-unsupported$'): project(source)
+        source = copy.deepcopy(base); source['Resources']['Kept']['Condition'] = None
+        with self.assertRaisesRegex(ValueError, '^cloudformation-condition-unsupported$'): project(source)
+
+
+class PrivateNetworkTemplateTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        spec = importlib.util.spec_from_file_location("foundation_template", Path(__file__).with_name("cloudformation-template.py"))
+        cls.cf = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.cf)
+        cls.path = Path(__file__).resolve().parents[5] / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/private-network.yml"
+
+    def assert_private_graph(self, template):
+        """Exact owned references reject shared adoption and added public paths."""
+        ref = lambda name: {"Ref": name}
+        tags = lambda suffix: [{"Key": "Name", "Value": {"Fn::Sub": "${ResourceNamePrefix}-" + suffix}}]
+        expected = {"Vpc": {"Type": "AWS::EC2::VPC", "Properties": {
+            "CidrBlock": ref("VpcCidr"), "EnableDnsSupport": True,
+            "EnableDnsHostnames": True, "InstanceTenancy": "default", "Tags": tags("private")}}}
+        for ordinal in ("One", "Two"):
+            expected["PrivateSubnet" + ordinal] = {"Type": "AWS::EC2::Subnet", "Properties": {
+                "VpcId": ref("Vpc"), "CidrBlock": ref("PrivateSubnet" + ordinal + "Cidr"),
+                "AvailabilityZone": ref("AvailabilityZone" + ordinal), "MapPublicIpOnLaunch": False,
+                "Tags": tags("private-" + ordinal.lower())}}
+            expected["PrivateRouteTable" + ordinal] = {"Type": "AWS::EC2::RouteTable", "Properties": {
+                "VpcId": ref("Vpc"), "Tags": tags("private-" + ordinal.lower())}}
+            expected["PrivateSubnet" + ordinal + "RouteAssociation"] = {"Type": "AWS::EC2::SubnetRouteTableAssociation", "Properties": {
+                "SubnetId": ref("PrivateSubnet" + ordinal), "RouteTableId": ref("PrivateRouteTable" + ordinal)}}
+        expected["S3GatewayEndpoint"] = {"Type": "AWS::EC2::VPCEndpoint", "Properties": {
+            "VpcId": ref("Vpc"), "VpcEndpointType": "Gateway", "ServiceName": {"Fn::Sub": "com.amazonaws.${AWS::Region}.s3"},
+            "RouteTableIds": [ref("PrivateRouteTableOne"), ref("PrivateRouteTableTwo")],
+            "PolicyDocument": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": "*",
+                "Action": "s3:GetObject", "Resource": {"Fn::Sub": "arn:${AWS::Partition}:s3:::prod-${AWS::Region}-starport-layer-bucket/*"}}]},
+            "Tags": tags("image-layers")}}
+        self.assertTrue(self.cf.templates_equal({"Resources": expected}, {"Resources": template["Resources"]}))
+        self.assertEqual(template["Outputs"], {
+            "VpcId": {"Value": ref("Vpc")}, "VpcCidr": {"Value": {"Fn::GetAtt": ["Vpc", "CidrBlock"]}},
+            "PrivateSubnetIds": {"Value": {"Fn::Join": [",", [ref("PrivateSubnetOne"), ref("PrivateSubnetTwo")]]}},
+            "PrivateRouteTableIds": {"Value": {"Fn::Join": [",", [ref("PrivateRouteTableOne"), ref("PrivateRouteTableTwo")]]}},
+            "S3GatewayEndpointId": {"Value": ref("S3GatewayEndpoint")}})
+
+    def test_owned_private_template_graph(self):
+        self.assert_private_graph(self.cf.template(self.path.read_text()))
+
+    def test_explicit_bounded_inputs_and_two_zone_rules(self):
+        template = self.cf.template(self.path.read_text())
+        self.assertEqual(set(template), {"AWSTemplateFormatVersion", "Description", "Metadata", "Parameters", "Rules", "Resources", "Outputs"})
+        self.assertEqual(template["Metadata"], {"CreationControls": {}})
+        parameters = template["Parameters"]
+        self.assertEqual(set(parameters), {"ResourceNamePrefix", "VpcCidr", "PrivateSubnetOneCidr", "PrivateSubnetTwoCidr", "AvailabilityZoneOne", "AvailabilityZoneTwo"})
+        self.assertTrue(all("Default" not in parameter for parameter in parameters.values()))
+        prefix = parameters["ResourceNamePrefix"]
+        self.assertEqual((prefix["MinLength"], prefix["MaxLength"], prefix["Type"]), (1, 40, "String"))
+        for value in ("production", "temporary-a1", "a"):
+            self.assertIsNotNone(re.fullmatch(prefix["AllowedPattern"], value))
+        for value in ("", "-prefix", "prefix-", "Uppercase", "with.dot", "with/slash", "with space"):
+            self.assertIsNone(re.fullmatch(prefix["AllowedPattern"], value))
+        # Only lexical bounds are claimed here; source preflight must separately
+        # prove canonical addresses, subnet containment, non-overlap and AZ availability.
+        for name in ("VpcCidr", "PrivateSubnetOneCidr", "PrivateSubnetTwoCidr"):
+            self.assertEqual(parameters[name]["Type"], "String")
+            for value in ("10.72.0.0/16", "172.16.1.0/24", "192.168.2.0/28"):
+                self.assertIsNotNone(re.fullmatch(parameters[name]["AllowedPattern"], value))
+            for value in ("", "0.0.0.0/0", "8.8.8.0/24", "172.32.0.0/16", "10.0.0.0/15", "10.0.0.0/29", "::/64"):
+                self.assertIsNone(re.fullmatch(parameters[name]["AllowedPattern"], value))
+        for name in ("AvailabilityZoneOne", "AvailabilityZoneTwo"):
+            self.assertEqual(parameters[name], {"Type": "AWS::EC2::AvailabilityZone::Name"})
+        self.assertEqual(set(template["Rules"]), {"DistinctAvailabilityZones", "DistinctSubnetCidrs"})
+        for rule, names in (("DistinctAvailabilityZones", ["AvailabilityZoneOne", "AvailabilityZoneTwo"]),
+                            ("DistinctSubnetCidrs", ["PrivateSubnetOneCidr", "PrivateSubnetTwoCidr"])):
+            assertions = template["Rules"][rule]["Assertions"]
+            self.assertEqual(len(assertions), 1)
+            self.assertEqual(assertions[0]["Assert"], {"Fn::Not": [{"Fn::Equals": [{"Ref": name} for name in names]}]})
+
+    def test_assertions_reject_public_shared_or_overbroad_counterexamples(self):
+        original = self.cf.template(self.path.read_text())
+        counterexamples = [
+            lambda d: d["Resources"]["PrivateSubnetOne"]["Properties"].update(MapPublicIpOnLaunch=True),
+            lambda d: d["Resources"]["PrivateSubnetOne"]["Properties"].update(VpcId="vpc-existing"),
+            lambda d: d["Resources"]["Vpc"]["Properties"].update(EnableDnsSupport=False),
+            lambda d: d["Resources"].update(PublicGateway={"Type": "AWS::EC2::InternetGateway"}),
+            lambda d: d["Resources"].update(NatGateway={"Type": "AWS::EC2::NatGateway"}),
+            lambda d: d["Resources"]["PrivateSubnetTwoRouteAssociation"]["Properties"].update(RouteTableId={"Ref": "PrivateRouteTableOne"}),
+            lambda d: d["Resources"]["S3GatewayEndpoint"]["Properties"].update(RouteTableIds=[{"Ref": "PrivateRouteTableOne"}]),
+            lambda d: d["Resources"]["S3GatewayEndpoint"]["Properties"]["PolicyDocument"]["Statement"][0].update(Resource="*"),
+            lambda d: d["Resources"]["S3GatewayEndpoint"]["Properties"]["PolicyDocument"]["Statement"][0].update(Action="s3:*"),
+            lambda d: d["Outputs"]["VpcId"].update(Value="vpc-existing"),
+        ]
+        for index, change in enumerate(counterexamples):
+            changed = copy.deepcopy(original); change(changed)
+            with self.subTest(index=index), self.assertRaises(AssertionError):
+                self.assert_private_graph(changed)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.entity-smoke.scope-contract
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -1045,6 +1045,8 @@ change_impact:
   schema: "deploy/change-impact/v1"
   inputs:
     - "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py"
+    - "scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy/implementation.py"
+    - "scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/session-binding/implementation.py"
     - "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage"
     - "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py"
     - "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py"

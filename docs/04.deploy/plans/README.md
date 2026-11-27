@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plans.readme
-version: 4
+version: 5
 status: active
 created_on: "2026-09-26"
-updated_on: "2026-10-25"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -39,6 +39,7 @@ workflow remains `.agentic/aws/workflows/execute-approved-aws-change.md`.
 
 | Plan | Purpose |
 | --- | --- |
+| [Disposable test environments](disposable-test-environments.md) | Preserve production behaviour while using shared deployment machinery for temporary tests. Five milestones cover environment settings, separate temporary resources, automated testing/cleanup, safe rehearsal and existing-resource retirement. Inventory/design documented; implementation and AWS changes remain proposed. |
 | [`kanbien-staging-aws-change-reliability-programme.md`](kanbien-staging-aws-change-reliability-programme.md) | Prevent source/live IAM and CloudFormation drift-detection dependency failures before a staging change reaches AWS. |
 | [`kanbien-staging-platform-foundation-convergence-v1.md`](kanbien-staging-platform-foundation-convergence-v1.md) | Orchestrate data governance, PostgreSQL, scheduler/time, storage, and observability foundations through source, reconciliation, change-set, proof, recovery, and closeout gates. |
 | [`operational-realization-v2-programme.md`](operational-realization-v2-programme.md) | Define the complete runtime graph and target-adapter proof required before a candidate can reach a live service. |

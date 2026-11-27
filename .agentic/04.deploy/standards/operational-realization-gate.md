@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: deploy.standard.operational-realization-gate
-  version: 6
+  version: 7
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-11-19"
+  updated_on: "2026-11-27"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -82,8 +82,11 @@ and matching plans, not another prompt when its effects remain within scope.
 
 All source, package, live-state, change-shape, ownership and recovery gates still
 apply. Declared disposable proof-resource cleanup may be included in the
-delivery boundary; it requires positive ownership and original successful proof
-before deletion. A different target/account, broader permissions, shared-resource
+delivery boundary; it requires positive ownership and its applicable cleanup
+contract's prerequisites. Disposable-restore cleanup retains original successful
+readback; separately governed temporary-session cleanup may remove positively
+owned resources after failed or partial tests under the boundary below.
+A different target/account, broader permissions, shared-resource
 changes outside the declared delivery, source-data deletion, history rewriting,
 discarding unrelated work or new ungoverned recovery is not implied authority.
 Stop only that affected operation and resolve the actual missing authority or
@@ -158,6 +161,43 @@ All eight gates, input-bound evidence and actual normalized change counts still
 apply. The compiler cannot establish those provider facts from booleans. The
 currently approved provider case is solely the entity-smoke isolated restore
 under its [applicability rule](../../aws/standards/operational-realization-applicability.md#entity-smoke-disposable-restore-cleanup).
+
+## Bounded temporary-session cleanup
+
+V2 may separately declare `change_shape.temporary_session_cleanup` using the
+closed field set in the [schema](../schemas/operational-realization-contract.v2.schema.yml).
+Its `prepare-discard` phase is update-only; `delete` is delete-only. Every other
+operation class is forbidden, and either declaration is mutually exclusive with
+restore cleanup and immutable-definition refresh. V1 and ordinary change shapes
+retain their previous meaning. The compiler validates declarations, not authority.
+
+The provider controller must bind the exact temporary/discard policy, immutable
+session and qualified source/artifact, durable original ownership, concrete
+execution approval and protected-resource exclusion. Creation admission must be
+closed and admitted in-flight operations reconciled before teardown. Unknown
+effects remain pending, never absence or permission to replay. Preparation only
+admits reviewed owned-resource quiescence, retention and protection changes;
+it cannot introduce unrelated updates, replacement or permission broadening.
+Actual normalized counts, all eight gates and existing freshness/bindings apply.
+
+Functional success is not a prerequisite for removing independently proved-owned
+temporary resources. Retain the original failed/stopped/succeeded workload
+outcome; cleanup starts a separately labelled operation and cannot advance
+functional acceptance. Terminal attempts stay terminal. A cleanup reservation
+survives uncertainty and worker restart; a fresh recovery operation retains its
+reviewed predecessor/new-label relationship instead of replaying the old effect.
+
+Creation uses its ordinary creation contract and additionally requires positively
+armed independent expiry before billable session work. Expiry invokes the same
+qualified cleanup operation with the original session authority, not broader
+deletion permissions. Declare actual worker/invocation/store relationships and
+prove the control identity and durable records do not depend on the disposable
+environment. A failed or absent watchdog blocks creation, not production health.
+
+The [AWS applicability owner](../../aws/standards/operational-realization-applicability.md#temporary-session-cleanup)
+defines concrete custody and operation checks. This contract addition does not
+implement that controller, its durable store or independent worker; execution
+remains blocked until they satisfy their own source, package and provider gates.
 
 ## Proof Levels
 

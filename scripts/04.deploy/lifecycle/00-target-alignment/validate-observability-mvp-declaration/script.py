@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-core-server-persistence-observability-mvp
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -143,13 +144,41 @@ def check(root: Path) -> None:
         template = (root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml").read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         raise Failure("observability-provider-realization-unreadable") from None
+    # Project only the public identity parameter, keeping all provider and
+    # secret references symbolic. This public validator still owns one target.
+    try:
+        spec = importlib.util.spec_from_file_location("observability_cloudformation", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
+        cf = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cf)
+    except Exception:
+        raise Failure("observability-provider-realization-unreadable") from None
+    try:
+        projected = cf.project_string_parameters(template, ["ResourceNamePrefix"])
+        if projected["Parameters"]["ResourceNamePrefix"]["Default"] != TARGET:
+            raise ValueError("fixed-target-required")
+        resources = projected["Resources"]
+        container = resources["CoreServerPersistenceTaskDefinition"]["Properties"]["ContainerDefinitions"][0]
+        branch = container["Environment"]["Fn::If"]
+        if branch[0] != "ObservabilityEnabled" or not isinstance(branch[1], list):
+            raise ValueError("observability-environment-invalid")
+        environment = {item["Name"]: item["Value"] for item in branch[1]}
+        if (len(environment) != len(branch[1])
+                or environment.get("PLATFORM_OBSERVABILITY_METRICS_ENDPOINT") != collector["endpoint"]
+                or environment.get("PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT") != TARGET
+                or environment.get("PLATFORM_OBSERVABILITY_TARGET") != TARGET):
+            raise ValueError("observability-identity-invalid")
+        dimensions = resources["CoreServerPostgreSqlReadinessAlarm"]["Properties"]["Dimensions"]
+        if [item for item in dimensions if item.get("Name") == "target"] != [{"Name": "target", "Value": TARGET}]:
+            raise ValueError("observability-identity-invalid")
+    except (ValueError, KeyError, TypeError, IndexError, AttributeError, RecursionError):
+        raise Failure("observability-provider-realization-invalid") from None
     # Observability is an independently activated target concern.  Its
     # implementation must remain complete and conditionally composed, but a
     # database-permission transition must not claim notification delivery or
     # couple its recovery to collector activation.
     required_template_text = [
         "EnableObservability: { Type: String, Default: 'false', AllowedValues: ['false', 'true'] }", "ObservabilityEnabled: !Equals [!Ref EnableObservability, 'true']",
-        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "Condition: ObservabilityEnabled", "Name: AOT_CONFIG_CONTENT", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "dimensions: [[target, scope, workload, dependency]]", "metric_name_selectors: ['^kanbien\\.core_server\\.postgresql_readiness$']", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ObservabilityCollectorSecurityGroup:", "ObservabilityCollectorIngressFromServer:", "ServerObservabilityCollectorEgress:", "ObservabilityCollectorExecutionRole:", "ObservabilityCollectorTaskRole:", "ObservabilityCollectorTaskDefinition:", "ObservabilityCollectorService:", "TaskRoleArn: !GetAtt ObservabilityCollectorTaskRole.Arn", "ServiceRegistries: [{ RegistryArn: !GetAtt ObservabilityCollectorServiceDiscovery.Arn }]", "http://observability-collector.kanbien-core-platform.internal:4318/v1/metrics", "PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY, Value: private-collector-service", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
+        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "Condition: ObservabilityEnabled", "Name: AOT_CONFIG_CONTENT", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "dimensions: [[target, scope, workload, dependency]]", "metric_name_selectors: ['^kanbien\\.core_server\\.postgresql_readiness$']", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ObservabilityCollectorSecurityGroup:", "ObservabilityCollectorIngressFromServer:", "ServerObservabilityCollectorEgress:", "ObservabilityCollectorExecutionRole:", "ObservabilityCollectorTaskRole:", "ObservabilityCollectorTaskDefinition:", "ObservabilityCollectorService:", "TaskRoleArn: !GetAtt ObservabilityCollectorTaskRole.Arn", "ServiceRegistries: [{ RegistryArn: !GetAtt ObservabilityCollectorServiceDiscovery.Arn }]", "PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY, Value: private-collector-service", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
     ]
     server_role = template.split("ServerTaskRole:", 1)[1].split("ObservabilityCollectorExecutionRole:", 1)[0] if "ServerTaskRole:" in template and "ObservabilityCollectorExecutionRole:" in template else ""
     collector_role = template.split("ObservabilityCollectorTaskRole:", 1)[1].split("MigrationExecutionRole:", 1)[0] if "ObservabilityCollectorTaskRole:" in template and "MigrationExecutionRole:" in template else ""

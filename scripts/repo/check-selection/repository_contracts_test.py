@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 31
+#   version: 35
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -142,6 +142,214 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue({'entity-smoke-task-route', 'entity-smoke-restart-route',
                          'entity-smoke-credential-route'} <= selected)
         self.assertFalse({'entity-smoke-composition', 'entity-smoke-composition-suite'} & selected)
+
+    def test_persistence_composition_partition_preserves_complete_fixture_dispatch(self):
+        import ast
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        parent = checks['persistence-composition']
+        wrapper = parent['argv'][1]
+        members = ['preparation-inputs-regression', 'postgresql-version-policy', 'persistence-composition-runtime']
+        dispatched_classes = {
+            'preparation-inputs-regression': ['PreparationInputTests'],
+            'postgresql-version-policy': ['PostgreSqlVersionTests'],
+            'persistence-composition-runtime': ['DeclaredTemplateTests', 'RuntimeConfigurationTests'],
+        }
+        self.assertEqual(parent['members'], members)
+        self.assertEqual(parent['inputs'], checks['persistence-composition-runtime']['inputs'])
+        for identity in ['persistence-composition', *members]:
+            self.assertEqual(selection.validate_check(ROOT, identity, checks[identity]), [])
+        preparation = checks[members[0]]
+        self.assertEqual(preparation['argv'], ['bash', wrapper, '--unit', 'preparation-inputs'])
+        self.assertEqual(checks[members[2]]['argv'], ['bash', wrapper, '--unit', 'runtime'])
+        self.assertTrue(preparation['feedback']['development'])
+        self.assertNotIn('node', preparation['runtime']['tools'])
+        fixture = 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py'
+        classes = {node.name for node in ast.parse((ROOT / fixture).read_text()).body if isinstance(node, ast.ClassDef)}
+        self.assertEqual(classes, {'PostgreSqlVersionTests', 'PreparationInputTests', 'DeclaredTemplateTests', 'RuntimeConfigurationTests'})
+        with tempfile.TemporaryDirectory() as temporary:
+            scratch = Path(temporary)
+            log = scratch / 'dispatch'
+            # Observe the real wrapper's literal dispatch without compiling or
+            # executing its children. Each child's original status must survive.
+            for tool in ('bash', 'python3', 'node'):
+                executable = scratch / tool
+                executable.write_text('#!/bin/sh\nprintf "%s\\n" "$0" "$@" END >> "$DISPATCH_LOG"\n'
+                                      'if [ "${0##*/}" = "$DISPATCH_FAIL_TOOL" ]; then exit 37; fi\n')
+                executable.chmod(0o755)
+            env = {**os.environ, 'PATH': str(scratch) + os.pathsep + os.environ['PATH'],
+                   'DISPATCH_LOG': str(log), 'DISPATCH_FAIL_TOOL': ''}
+            def dispatch(command, fail=''):
+                log.write_text('')
+                result = subprocess.run(['/bin/bash', *command], cwd=ROOT,
+                                        env={**env, 'DISPATCH_FAIL_TOOL': fail}, capture_output=True, text=True)
+                calls = [block.splitlines() for block in log.read_text().split('END\n') if block]
+                return result, [[Path(call[0]).name, *call[1:]] for call in calls]
+            for fail in ('', 'bash'):
+                result, calls = dispatch([wrapper], fail)
+                self.assertEqual(result.returncode, 37 if fail else 0, result.stderr)
+                self.assertEqual(calls, [['bash', 'scripts/repo/check-selection/script.sh', '--aggregate-members',
+                                         'persistence-composition', '--execute-local', '--json']])
+            seen = []
+            for identity in members:
+                command = checks[identity]['argv'][1:]
+                for fail in ('', 'python3'):
+                    result, calls = dispatch(command, fail)
+                    self.assertEqual(result.returncode, 37 if fail else 0, result.stderr)
+                    python = [call for call in calls if call[0] == 'python3']
+                    self.assertEqual(len(python), 1)
+                    self.assertEqual(python[0][1], '-B')
+                    self.assertEqual(Path(python[0][2]).name, Path(fixture).name)
+                    self.assertEqual(python[0][3:], dispatched_classes[identity])
+                    if not fail: seen.extend(python[0][3:])
+                    if identity != 'persistence-composition-runtime':
+                        self.assertEqual(len(calls), 1, 'Focused declarations must not compile the runtime.')
+            self.assertCountEqual(seen, classes, 'Every original Python fixture class must run exactly once.')
+            for arguments in [('--unit', 'private-canary'), ('--unit',), ('--unit', 'runtime', 'private-canary')]:
+                result, calls = dispatch([wrapper, *arguments])
+                self.assertEqual(result.returncode, 2)
+                self.assertEqual(calls, [])
+                self.assertNotIn('private-canary', result.stdout + result.stderr)
+
+    def test_preparation_inputs_registration_binds_real_sources_and_mutations(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        check = catalog['checks']['preparation-inputs-regression']
+        self.assertEqual([rule['inputs'] for rule in catalog['repository_inputs']
+                          if rule['checks'] == ['preparation-inputs-regression']], [check['inputs']])
+        source = 'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py'
+        spec = importlib.util.spec_from_file_location('registered_preparation_inputs', ROOT / source)
+        owner = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(owner)
+        references = {source,
+            'scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py',
+            'scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py',
+            'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py',
+            'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py'}
+        session_helper = 'scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/session-binding/implementation.py'
+        for scope in ('entity-smoke', 'core-server-persistence'):
+            references.update(owner.load(ROOT, 'kanbien-core-platform', scope)['references'])
+            intent = {'schema': 'deploy/environment-session-intent/v1', 'target': 'kanbien-core-platform',
+                      'scope': scope, 'session_id': 'a' * 32, 'starts_at': 1000, 'expires_at': 8200,
+                      'environment_lifecycle': {'mode': 'temporary', 'data_retention': 'discard',
+                                                'max_duration_seconds': 7200}}
+            plan = owner.load_session_plan(ROOT, 'kanbien-core-platform', scope, intent, 1000, 7200)
+            self.assertIn(session_helper, plan['references'])
+            references.update(plan['references'])
+            contract = ROOT / ('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/'
+                               + scope + '/00-declaration/declaration-contract.yml')
+            self.assertIn(session_helper, yaml.safe_load(contract.read_text())['change_impact']['inputs'])
+        for reference in references:
+            with self.subTest(reference=reference), tempfile.TemporaryDirectory() as temporary:
+                self.assertTrue(any(selection.below(reference, declared) for declared in check['inputs']))
+                root = Path(temporary)
+                path = root / reference
+                path.parent.mkdir(parents=True)
+                path.write_text('first')
+                before = selection.fingerprint(root, set(check['inputs']))
+                path.write_text('changed')
+                self.assertNotEqual(selection.fingerprint(root, set(check['inputs'])), before)
+
+    def test_foundation_fixture_selects_and_binds_private_network_sources(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        identity = 'aws-foundation-checks'
+        check = catalog['checks'][identity]
+        self.assertEqual(selection.validate_check(ROOT, identity, check), [])
+        self.assertEqual(check['argv'][-1], '--foundation-only')
+        for reference in (
+            'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py',
+            'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/private-network.yml',
+        ):
+            self.assertIn(reference, check['inputs'])
+            self.assertTrue(any(identity in rule['checks'] and reference in rule['inputs']
+                                for rule in catalog['repository_inputs']))
+        parser = 'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py'
+        foundation = 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml'
+        policy = 'scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy'
+        consumers = [(parser, name) for name in ('observability-mvp-declaration-regression',
+                     'persistence-composition-runtime', 'entity-smoke-composition-base')]
+        consumers += [(foundation, 'entity-smoke-composition-base'), (policy, 'entity-smoke-composition-base')]
+        for reference, name in consumers:
+            with self.subTest(reference=reference, check=name), tempfile.TemporaryDirectory() as temporary:
+                inputs = catalog['checks'][name]['inputs']
+                self.assertTrue(any(selection.below(reference, item) for item in inputs))
+                self.assertTrue(any(name in rule['checks'] and reference in rule['inputs'] for rule in catalog['repository_inputs']))
+                path = Path(temporary) / reference
+                path.parent.mkdir(parents=True)
+                path.write_text('first')
+                before = selection.fingerprint(Path(temporary), set(inputs))
+                path.write_text('changed')
+                self.assertNotEqual(selection.fingerprint(Path(temporary), set(inputs)), before)
+
+    def test_environment_session_registration_dispatches_and_binds_actual_inputs(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        identity = 'aws-environment-sessions'
+        check = catalog['checks'][identity]
+        wrapper = 'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh'
+        fixture_path = 'scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py'
+        self.assertEqual(check['argv'], ['bash', wrapper, '--environment-sessions-only'])
+        self.assertEqual(selection.validate_check(ROOT, identity, check), [])
+        self.assertEqual((check['boundary'], check['stage'], check['evidence_class']), ('integration', 'local', 'local-runtime'))
+        self.assertEqual(check['effects'], ['read-only', 'writes-files'])
+        self.assertTrue(check['feedback']['development'])
+        self.assertEqual(check['feedback']['isolation'], 'disposable-fixture')
+        self.assertEqual(check['runtime']['tools'], ['bash', 'git', 'python3'])
+        self.assertTrue({'TMPDIR', 'PYTHONOPTIMIZE'} <= set(check['runtime']['environment']))
+        rules = [rule for rule in catalog['repository_inputs'] if rule['checks'] == [identity]]
+        self.assertEqual(len(rules), 1)
+        self.assertIs(rules[0]['inputs'], check['inputs'], 'Impact selection must use the same YAML input anchor.')
+        spec = importlib.util.spec_from_file_location('registered_environment_sessions', ROOT / fixture_path)
+        fixture = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fixture)
+        fixture.SessionHandoffTests.setUpClass()  # Checked source plan only; no fixture/provider execution.
+        preparation = fixture.load('registered_session_preparation', ROOT / 'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py')
+        owner = fixture.OWNER
+        modules = (fixture, owner, owner.RECORDS, owner.RESERVATIONS, owner.CHANGE_SETS,
+                   owner.RECORDS.CLI, owner.RECORDS.CLI._RESPONSE, preparation.PATHS, preparation.CHECKS)
+        plans = (fixture.SessionHandoffTests.plan, fixture.SessionHandoffTests.entity_plan)
+        self.assertEqual({plan['source_configuration']['scope'] for plan in plans},
+                         {'core-server-persistence', 'entity-smoke'})
+        network = 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/private-network.yml'
+        for plan in plans:
+            self.assertIn(network, dict(plan['binding'].source_inputs), 'Owned prerequisites must enter the real captured source closure.')
+        references = {wrapper, *(reference for plan in plans for reference in plan['references']),
+                      *(Path(module.__file__).relative_to(ROOT).as_posix() for module in modules)}
+        self.assertEqual(set(check['inputs']), references, 'Use the real narrow closure, not unrelated preparation suites.')
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for reference in sorted(references):
+                with self.subTest(reference=reference):
+                    path = root / reference
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text('first')
+                    before = selection.fingerprint(root, set(check['inputs']))
+                    path.write_text('changed')
+                    self.assertNotEqual(selection.fingerprint(root, set(check['inputs'])), before)
+            log, executable = root / 'dispatch', root / 'python3'
+            executable.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$SESSION_DISPATCH_LOG"\nexit "$SESSION_DISPATCH_STATUS"\n')
+            executable.chmod(0o755)
+            environment = {**os.environ, 'PATH': str(root) + os.pathsep + os.environ['PATH'],
+                           'SESSION_DISPATCH_LOG': str(log), 'SESSION_DISPATCH_STATUS': '0'}
+            for status in (0, 37):
+                result = subprocess.run(['/bin/bash', str(ROOT / wrapper), '--environment-sessions-only'],
+                    cwd=ROOT, env={**environment, 'SESSION_DISPATCH_STATUS': str(status)}, capture_output=True, text=True)
+                self.assertEqual(result.returncode, status, result.stderr)
+                self.assertEqual(log.read_text().splitlines(), ['-B', str(ROOT / fixture_path)])
+            log.write_text('not-dispatched')
+            result = subprocess.run(['/bin/bash', str(ROOT / wrapper), '--environment-sessions-only', 'private-canary'],
+                cwd=ROOT, env=environment, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(log.read_text(), 'not-dispatched')
+            self.assertNotIn('private-canary', result.stdout + result.stderr)
+        args = argparse.Namespace(root=ROOT, catalog=ROOT / 'scripts/repo/check-selection/checks.yml', paths=[fixture_path],
+            staged=False, all=False, stage='local', boundary='integration', ci=False, changed_only=False,
+            execute_local=False, evidence=None, json=True, development=True, checks=None, aggregate_members=None,
+            record_preparation=False, require_preparation=False, task_paths=None, explain=False)
+        with patch.object(selection, 'fingerprint', return_value='a' * 64), \
+             patch.object(selection, 'runtime_identity', return_value={'selection_fixture': 'no-execution'}), \
+             patch.object(selection, 'repository_paths', return_value=[fixture_path]), \
+             patch.object(selection, 'discover', return_value=([], [])):
+            report = selection.plan(args)
+        self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+        self.assertIn(identity, {row['check_id'] for row in report['checks'] if row['status'] == 'pending'})
 
     def test_described_aggregate_branches_preserve_exact_execution_gate(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())

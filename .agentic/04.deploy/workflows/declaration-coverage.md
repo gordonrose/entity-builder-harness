@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.declaration-coverage
-version: 3
+version: 4
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-25"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -50,6 +50,10 @@ dependency, or release safety property.
    excluded dependency rather than implying that it is covered.
 2. Identify requirements from the changed code, package/runtime definition,
    configuration shape, infrastructure definitions, and release controls.
+   For environment lifetime and data treatment, use the owning
+   [environment lifecycle policy](../00-target-alignment/standards/require-environment-lifecycle-policy.md).
+   A valid temporary declaration is not evidence of supported session execution
+   or permission to remove resources.
 3. For each requirement, create or update a declaration-contract entry with
    the complete chain required by the Declaration Coverage Standard.
    When a workload needs injected secret material, also follow

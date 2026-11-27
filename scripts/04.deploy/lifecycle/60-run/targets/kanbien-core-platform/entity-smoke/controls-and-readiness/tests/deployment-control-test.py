@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.deployment-control
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -35,7 +35,7 @@ BINDING = {"source_revision": "a" * 40, "image_digest": "sha256:" + "b" * 64,
            "configuration_contract_sha256": "sha256:" + "c" * 64, "permission_contract_sha256": "sha256:" + "d" * 64,
            "dependency_incarnation_sha256": M.fingerprint({"resource_id": "db-ABCDEFGHIJKLMNOP", "database": "kanbienpersistence", "schema": "entity_smoke"}),
            "proof_label": "entity-smoke-" + "e" * 24}
-PARAMETERS = {"VpcId": "vpc-" + "1" * 17, "VpcCidr": "10.71.0.0/16", "PrivateSubnetIds": "subnet-" + "2" * 17,
+PARAMETERS = {"ResourceNamePrefix": "kanbien-core-platform", "VpcId": "vpc-" + "1" * 17, "VpcCidr": "10.71.0.0/16", "PrivateSubnetIds": "subnet-" + "2" * 17,
               "ClusterArn": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-core-platform", "NamespaceId": "ns-abc123",
               "EndpointSecurityGroupId": "sg-" + "3" * 17, "S3ArtifactPrefixListId": "pl-abc123", "LogGroupName": "/aws/ecs/kanbien-core-platform",
               "DatabaseEndpoint": CANARY, "DatabaseName": "kanbienpersistence", "DatabaseResourceId": "db-ABCDEFGHIJKLMNOP",
@@ -222,6 +222,10 @@ def successor_cases(root):
 if __name__ == "__main__":
     rows = [{"ParameterKey": key, "ParameterValue": value} for key, value in PARAMETERS.items()]
     M.exact_parameters(rows, PARAMETERS)
+    for selected in (None, "", "another-instance", 1, True):
+        observed = [row for row in rows if row["ParameterKey"] != "ResourceNamePrefix"]
+        if selected is not None: observed.append({"ParameterKey": "ResourceNamePrefix", "ParameterValue": selected})
+        fails(lambda: M.exact_parameters(observed, PARAMETERS), "deployment-provider-parameters-mismatch")
     for invalid in (None, {}, rows + [rows[0]], rows + [{"ParameterKey": "ImageDigest", "ParameterValue": CANARY}],
                     rows + [None], rows[:-1], [{"ParameterKey": key, "ParameterValue": None} for key in PARAMETERS]):
         fails(lambda: M.exact_parameters(invalid, PARAMETERS), "deployment-provider-parameters-mismatch")
@@ -236,6 +240,30 @@ if __name__ == "__main__":
             review = M.prepare(provider, owner, BINDING, PARAMETERS)
             facts = review["facts"]
             return M.execute(provider, owner, BINDING, PARAMETERS, facts["change_set_arn"], facts["stack_arn"])
+        for index, selected in enumerate((None, "", "another-instance", 1, True)):
+            supplied = {key: value for key, value in PARAMETERS.items() if key != "ResourceNamePrefix"}
+            if selected is not None: supplied["ResourceNamePrefix"] = selected
+            fresh = Provider()
+            fails(lambda: M.prepare(fresh, store("invalid-prefix-" + str(index)), BINDING, supplied), "deployment-parameters-invalid")
+            assert fresh.calls == []
+        original = M.source()[1]
+        for index, declaration in enumerate((None, {}, {"Type": "Number", "Default": "kanbien-core-platform"}, {"Type": "String", "Default": "another-instance"})):
+            changed = copy.deepcopy(original)
+            if declaration is None: del changed["Parameters"]["ResourceNamePrefix"]
+            else: changed["Parameters"]["ResourceNamePrefix"] = declaration
+            fresh = Provider()
+            with patch.object(M.CF, "template", return_value=changed):
+                fails(lambda: M.prepare(fresh, store("invalid-prefix-source-" + str(index)), BINDING, PARAMETERS), "deployment-source-shape-invalid")
+            assert fresh.calls == []
+        for index, selected in enumerate((None, "another-instance")):
+            observed = Provider()
+            def change_prefix(change, selected=selected):
+                change["Parameters"] = [row for row in change["Parameters"] if row["ParameterKey"] != "ResourceNamePrefix"]
+                if selected is not None: change["Parameters"].append({"ParameterKey": "ResourceNamePrefix", "ParameterValue": selected})
+            observed.mutate_change = change_prefix
+            fails(lambda: M.prepare(observed, store("observed-prefix-" + str(index)), BINDING, PARAMETERS), "deployment-provider-parameters-mismatch")
+            assert sum(op == "create-change-set" for _, op, _ in observed.calls) == 1
+            assert not any(op == "execute-change-set" for _, op, _ in observed.calls)
         provider, owner = Provider(lost_prepare=True), store("lost-prepare")
         fails(lambda: M.prepare(provider, owner, BINDING, PARAMETERS), "deployment-change-submission-uncertain-reconcile-only")
         review = M.prepare(provider, owner, BINDING, PARAMETERS)

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.provider.aws.response-classification
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -40,6 +40,7 @@ MISSING = {
     ("budgets", "describe-budget"): {"NotFoundException"},
     ("logs", "filter-log-events"): {"ResourceNotFoundException"},
     ("logs", "get-log-events"): {"ResourceNotFoundException"},
+    ("s3api", "get-object"): {"NoSuchKey"},
 }
 
 
@@ -54,6 +55,8 @@ def classify_error(service: str, operation: str, stderr: str) -> str:
         return "aws-access-denied"
     if code in MISSING.get((service, operation), set()):
         return "aws-resource-missing"
+    if (service, operation) == ("s3api", "put-object") and code in {"PreconditionFailed", "ConditionalRequestConflict"}:
+        return "aws-condition-conflict"
     # CloudFormation uniquely uses ValidationError for a named absent stack.
     # Anchor the entire message; arbitrary validation failures remain failures.
     if service == "cloudformation" and operation == "describe-stacks" and code == "ValidationError" and match:

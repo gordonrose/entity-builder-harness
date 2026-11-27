@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 20
+version: 21
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-26"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -597,6 +597,68 @@ remain outside this rule and need their own governed recovery decision.
 The owning [restore route](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-route.py)
 and resource control implement the bounds. Local fixtures establish their
 exercised protocol behavior, not provider ownership, AWS execution or acceptance.
+
+## Temporary-session cleanup
+
+This reusable route is distinct from isolated-restore cleanup above. It governs
+explicitly temporary/discard environments whose creation and teardown are inside
+recorded execution authority; it cannot adopt existing production, legacy or
+shared resources. The [v2 temporary-session declaration](../../04.deploy/standards/operational-realization-gate.md#bounded-temporary-session-cleanup)
+admits a truthful phase shape only. No AWS adapter, independent worker or durable
+ownership store is implemented or qualified by that declaration. Do not execute
+this route until its actual connected controller passes the applicable gates.
+
+Before a mutation, that controller must establish all of the following:
+
+- Exact account, region, immutable session/instance binding, expiry and explicit
+  temporary/discard policy match the recorded authority. The reviewed phase plan
+  binds qualified controller/source/artifact identities, original creation
+  reservations and current resource incarnations. A matching name or tag alone
+  is insufficient ownership; never adopt an existing resource for deletion.
+- Durable original intent, provider tokens, exact stack identifiers, templates,
+  parameters and physical-resource observations establish each resource's owner,
+  including after partial creation. Unknown or missing ownership fails closed.
+  Independently identified production/shared resources remain excluded from both
+  plan selection and effective execution permissions.
+- Creation admission is durably closed, and every admitted provider operation is
+  reconciled before dependent teardown. Account for late-created resources;
+  absence during an uncertain submission is not terminal absence. No post-expiry
+  creation, activation or mutation replay is allowed through another caller.
+- `prepare-discard` reviews only exact owned quiescence, retention and deletion-
+  protection changes. It may not change images, application behavior, permissions
+  or unrelated settings. `delete` permits only the exact reviewed removals, with
+  the current physical identities and no resource-retention/force-delete escape
+  or caller-supplied role override. Count all effects truthfully; a planned final
+  snapshot is creation, not a delete-only effect.
+- The execution identity's effective permissions enforce the protected boundary,
+  including any CloudFormation service role. An invoker's narrow stack permission
+  does not prove the delegated role cannot affect protected resources. Exact plan
+  approval, all prior gates and fresh observations remain mandatory.
+
+A failed test, interruption or expiry may trigger cleanup without successful
+functional readback, provided ownership is independently established. Preserve
+that original result. Cleanup is its own labelled operation, not functional
+acceptance, a failed-to-running transition or permission to skip cleanup's own
+artifact/semantic/provider evidence. Existing isolated restores cannot switch
+to this route merely to avoid their successful-readback requirement.
+
+Retain each exclusive operation reservation before submission. A lost response,
+partial removal or restarted worker selects observation of that original token,
+never automatic resubmission. A new recovery attempt must use the existing
+reviewed predecessor/new-label rules; it cannot discard the original intent.
+Completion requires exact physical absence/inactive observations and a complete
+owned-leftover manifest, including backups, snapshots, secrets, logs and network
+resources. Failed observations are unknown, not absence. Retain safe evidence
+outside the disposable application, without credentials or application payloads.
+
+Creation retains its ordinary create/update contract and must positively observe
+the independently armed expiry execution before billable session creation. Bind
+that execution to the same approved cleanup source and session authority. Its
+host, permissions and durable records must remain available after losing the
+runner or disposable network. Normal completion and expiry use the same cleanup
+controller/store; duplicate invocation does not grant duplicate effects. Failure
+to reconcile or finish records remaining resources and a bounded failure alert,
+not successful cleanup. These requirements add no scheduled job by themselves.
 
 ## Bounded PostgreSQL Stage 6 Applicability
 

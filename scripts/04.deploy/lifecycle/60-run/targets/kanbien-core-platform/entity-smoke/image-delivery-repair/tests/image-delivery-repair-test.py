@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.image-delivery-repair
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-10"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -32,7 +32,11 @@ spec = importlib.util.spec_from_file_location("image_repair_fixture", (Path(__fi
 M = importlib.util.module_from_spec(spec); spec.loader.exec_module(M)
 C = M.C
 SOURCE = "8f76ed3480e85d60fb60f547f996628c8554504d"
-BEFORE = C.DEPLOY.CF.template((C.ROOT / C.ALIGN.FOUNDATION).read_text())
+CURRENT = C.DEPLOY.CF.template((C.ROOT / C.ALIGN.FOUNDATION).read_text())
+assert CURRENT["Parameters"]["ResourceNamePrefix"]["Default"] == "kanbien-core-platform"
+CURRENT = C.DEPLOY.CF.project_string_parameters(CURRENT, ["ResourceNamePrefix"])
+del CURRENT["Parameters"]["ResourceNamePrefix"]
+BEFORE = copy.deepcopy(CURRENT)
 # Reconstruct the exact pinned pre-repair fixture without requiring Git
 # history in hosted shallow checkouts. This hash was independently obtained
 # from SOURCE's original template, not from the reconstruction under test.
@@ -45,7 +49,7 @@ for endpoint in ("EcrApiEndpoint", "EcrDkrEndpoint"):
     matches[0]["Resource"] = {"Ref": "ExistingRepositoryArn"}
 assert C.DEPLOY.fingerprint(BEFORE) == "sha256:aef24b28801c4ada9c405ec908d7c7151d12bb5f854d3734883f8da02b0b8997"
 AFTER = C.ALIGN.repaired_foundation(BEFORE)
-assert C.DEPLOY.CF.templates_equal(AFTER, (C.ROOT / C.ALIGN.FOUNDATION).read_text())
+assert C.DEPLOY.CF.templates_equal(AFTER, CURRENT)
 
 
 def fails(callback, code):

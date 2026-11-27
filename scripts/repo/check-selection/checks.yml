@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 42
+#   version: 46
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -1034,6 +1034,12 @@ checks:
     owner: deploy.test.validate-core-server-persistence-observability-mvp
     inputs:
     - scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/observability.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
+    - infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
     runtime:
       tools:
       - bash
@@ -1145,8 +1151,55 @@ checks:
     inputs:
     - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py
     - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/private-network.yml
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
     runtime: *alignment_fixture_runtime
+  aws-environment-sessions:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh, --environment-sessions-only]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.aws.runtime-alignment
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 30
+      isolation: disposable-fixture
+      rationale: Prove checked session admission and shared change-set handoffs using isolated fake AWS, without live access or unrelated preparation fixtures.
+    inputs: &environment_session_inputs
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
+    - scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/environment_sessions.py
+    - scripts/04.deploy/shared/provider-adapters/aws/session_records.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy/implementation.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/session-binding/implementation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py
+    - scripts/04.deploy/shared/postgresql-version.py
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml
+    - infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/workload-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/private-network.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+    runtime:
+      tools: [bash, git, python3]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
   aws-runtime-alignment-regression:
     boundary: integration
     argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh]
@@ -2186,6 +2239,8 @@ checks:
     - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml
@@ -2308,11 +2363,51 @@ checks:
       expected_seconds: 910
       isolation: worktree
       rationale: Require both registered members for full composition verification; development feedback selects the leaves.
-  persistence-composition:
+  preparation-inputs-regression:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh, --unit, preparation-inputs]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.core-server-persistence-composition
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 120
+      isolation: disposable-fixture
+      rationale: Prove checked preparation and lifecycle inputs reach their real callers and reject unsafe alternatives before provider work without compilation or AWS.
+    inputs: &preparation_inputs
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/session-binding/implementation.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+    - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/postgresql-version.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml
+    - infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
+    runtime:
+      tools: [bash, git, python3]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  persistence-composition-runtime: &persistence_composition_runtime
     boundary: integration
     argv:
     - bash
     - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
+    - --unit
+    - runtime
     stage: local
     evidence_class: local-runtime
     effects:
@@ -2324,6 +2419,7 @@ checks:
     runtime:
       tools:
       - bash
+      - git
       - python3
       - node
       - npm
@@ -2333,9 +2429,11 @@ checks:
       - PATH
       - LANG
       - LC_ALL
+      - TMPDIR
       - PYTHONPATH
       - PYTHONHOME
       - PYTHONHASHSEED
+      - PYTHONOPTIMIZE
       - NODE_OPTIONS
       - NODE_PATH
       - TS_NODE_PROJECT
@@ -2358,6 +2456,7 @@ checks:
       - '@types/node'
       - typescript
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
     - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
     - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
@@ -2392,6 +2491,13 @@ checks:
     - scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image
     - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
     scope_inputs: false
+  persistence-composition:
+    <<: *persistence_composition_runtime
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh]
+    aggregate_branch: default
+    members: [preparation-inputs-regression, postgresql-version-policy, persistence-composition-runtime]
+    # Preserve the public command and its complete affected-input obligations;
+    # registered leaves execute each original fixture class once and reuse proof.
   persistence-provider-regression:
     boundary: integration
     inputs:
@@ -5824,6 +5930,10 @@ repository_inputs:
 - inputs:
   - scripts/04.deploy/shared/postgresql-version.py
   checks: [postgresql-version-policy, entity-smoke-composition, persistence-provider-regression, package-custody-regression, persistence-payload-regression]
+- inputs: *preparation_inputs
+  checks: [preparation-inputs-regression]
+- inputs: *environment_session_inputs
+  checks: [aws-environment-sessions]
 - inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
   checks: [entity-smoke-composition, persistence-provider-regression]
@@ -5831,6 +5941,17 @@ repository_inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py
   - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks-test.py
   checks: [aws-foundation-checks, aws-runtime-alignment-regression, entity-smoke-composition, persistence-provider-regression]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/private-network.yml
+  checks: [aws-foundation-checks]
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+  checks: [observability-mvp-declaration-regression, persistence-composition-runtime, entity-smoke-composition-base]
+- inputs:
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+  - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy
+  checks: [entity-smoke-composition-base]
 - inputs:
   - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody
   checks:

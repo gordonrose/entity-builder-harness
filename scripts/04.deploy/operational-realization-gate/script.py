@@ -4,10 +4,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.operational-realization-gate
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -436,7 +436,26 @@ def validate_change_shape(contract: dict[str, Any]) -> None:
         raise ContractFailure("change-summary-not-required")
     allowed = set(listed_ids(shape.get("allowed_operation_classes"), "change-shape-allowed-missing"))
     forbidden = set(listed_ids(shape.get("forbidden_operation_classes"), "change-shape-forbidden-missing"))
-    if "immutable_definition_refresh" in shape:
+    opt_ins = {"immutable_definition_refresh", "disposable_restore_cleanup", "temporary_session_cleanup"}
+    if len(opt_ins & set(shape)) > 1:
+        raise ContractFailure("change-shape-invalid")
+    if "temporary_session_cleanup" in shape:
+        # The provider controller, not these declarations, establishes session
+        # custody, ownership, sealed admission and each exact teardown change.
+        cleanup = shape["temporary_session_cleanup"]
+        requirements = {"explicit_temporary_discard_policy_required", "exact_session_binding_required",
+                        "durable_positive_ownership_required", "creation_admission_closed_required",
+                        "inflight_operations_reconciled_required", "explicit_execution_approval_required",
+                        "protected_resources_excluded", "owned_teardown_changes_only"}
+        phases = {"prepare-discard": {"update"}, "delete": {"delete"}}
+        operations = {"create", "update", "delete", "replace", "broaden-permission"}
+        if (contract["schema"] != SERVICE_CONTRACT_SCHEMA or not isinstance(cleanup, dict)
+                or set(cleanup) != requirements | {"phase"}
+                or any(cleanup[key] is not True for key in requirements)
+                or not isinstance(cleanup["phase"], str) or cleanup["phase"] not in phases
+                or allowed != phases[cleanup["phase"]] or forbidden != operations - allowed):
+            raise ContractFailure("change-shape-invalid")
+    elif "immutable_definition_refresh" in shape:
         refresh = shape["immutable_definition_refresh"]
         common = {"owned_task_definitions_only", "unchanged_permissions_and_storage",
                   "qualified_image_required", "original_preparation_retained"}
@@ -445,7 +464,7 @@ def validate_change_shape(contract: dict[str, Any]) -> None:
         # Retained stopped-workload declarations retain their exact meaning.
         # Ordinary releases declare predecessor/recovery custody instead; the
         # provider controller must establish it, not merely set these flags.
-        if (contract["schema"] != SERVICE_CONTRACT_SCHEMA or "disposable_restore_cleanup" in shape
+        if (contract["schema"] != SERVICE_CONTRACT_SCHEMA
                 or not isinstance(refresh, dict) or set(refresh) not in variants or any(value is not True for value in refresh.values())
                 or allowed != {"update", "replace"} or forbidden != {"create", "delete", "broaden-permission"}):
             raise ContractFailure("change-shape-invalid")

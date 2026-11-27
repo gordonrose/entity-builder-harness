@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.template
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -77,6 +77,12 @@ def check_realization(value, graph, restore=None):
 
 def check(value):
     """Focused static invariants only, not a provider execution preflight."""
+    try:
+        if value["Parameters"]["ResourceNamePrefix"].get("Default") != "kanbien-core-platform":
+            return ["resource-name-prefix-invalid"]
+        value = CF.project_string_parameters(value, ["ResourceNamePrefix"])
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return ["resource-name-prefix-invalid"]
     findings = set()
     resources = value.get("Resources", {})
     expected = {
@@ -98,6 +104,8 @@ def check(value):
         return sorted(findings)
     props = {name: resource["Properties"] for name, resource in resources.items()}
     service = props["FeatureService"]
+    if service.get("ServiceName") != "kanbien-core-platform-entity-smoke":
+        findings.add("service-name-binding-mismatch")
     if value["Parameters"]["ServerDesiredCount"].get("Default") != 0 or service.get("DesiredCount") != {"Ref": "ServerDesiredCount"}:
         findings.add("initial-workload-not-stopped")
     if service.get("DeploymentConfiguration", {}).get("DeploymentCircuitBreaker") != {"Enable": True, "Rollback": False}:
@@ -108,6 +116,9 @@ def check(value):
         findings.add("server-task-binding-mismatch")
     for name in ("Server", "Migration", "Administration", "Verifier", "DatabaseProof"):
         task = props[name + "TaskDefinition"]
+        suffix = "database-proof" if name == "DatabaseProof" else name.lower()
+        if task.get("Family") != "kanbien-core-platform-entity-smoke-" + suffix:
+            findings.add("task-family-binding-mismatch")
         containers = task["ContainerDefinitions"]
         if len(containers) != 1:
             findings.add("container-set-mismatch")
@@ -137,6 +148,8 @@ def check(value):
         if name == "Verifier":
             if set(env) != {"NODE_ENV", "PLATFORM_SOURCE_COMMIT_SHA", "ENTITY_SMOKE_VERIFICATION_URL", "ENTITY_SMOKE_EXPECTED_SOURCE"}:
                 findings.add("verifier-database-configuration")
+            if env.get("ENTITY_SMOKE_VERIFICATION_URL") != "http://entity-smoke.kanbien-core-platform.internal:3000/":
+                findings.add("verifier-url-binding-mismatch")
         elif env.get("PERSISTENCE_POSTGRES_SCHEMA") != "entity_smoke" or env.get("PERSISTENCE_POSTGRES_HOST") != {"Ref": "DatabaseEndpoint"}:
             findings.add("database-scope-binding-mismatch")
         dns = [{"IpProtocol": protocol, "FromPort": 53, "ToPort": 53, "CidrIp": {"Ref": "VpcCidr"}} for protocol in ("udp", "tcp")]
@@ -345,6 +358,12 @@ def main():
         assert code in check_restore(changed), code
         assert "sensitive-canary" not in json.dumps(check_restore(changed))
     cases = [
+        (lambda v: v["Parameters"].pop("ResourceNamePrefix"), "resource-name-prefix-invalid"),
+        (lambda v: v["Parameters"]["ResourceNamePrefix"].update(Default="another-instance"), "resource-name-prefix-invalid"),
+        (lambda v: v["Parameters"]["ResourceNamePrefix"].update(Type="Number"), "resource-name-prefix-invalid"),
+        (lambda v: v["Resources"]["FeatureService"]["Properties"].update(ServiceName="another-instance-entity-smoke"), "service-name-binding-mismatch"),
+        (lambda v: v["Resources"]["ServerTaskDefinition"]["Properties"].update(Family="another-instance-entity-smoke-server"), "task-family-binding-mismatch"),
+        (lambda v: next(item for item in v["Resources"]["VerifierTaskDefinition"]["Properties"]["ContainerDefinitions"][0]["Environment"] if item["Name"] == "ENTITY_SMOKE_VERIFICATION_URL").update(Value="http://entity-smoke.another-instance.internal:3000/"), "verifier-url-binding-mismatch"),
         (lambda v: v["Resources"]["FeatureService"]["Properties"]["DeploymentConfiguration"]["DeploymentCircuitBreaker"].update(Rollback=True), "automatic-release-restoration-not-prohibited"),
         (lambda v: v["Resources"]["VerifierTaskDefinition"]["Properties"].update(TaskRoleArn={"Fn::GetAtt": ["ServerTaskRole", "Arn"]}), "task-role-boundary-mismatch"),
         (lambda v: v["Resources"]["VerifierTaskDefinition"]["Properties"]["ContainerDefinitions"][0]["Environment"].append({"Name": "PERSISTENCE_POSTGRES_HOST", "Value": "sensitive-canary"}), "verifier-database-configuration"),

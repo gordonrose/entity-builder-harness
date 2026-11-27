@@ -4,7 +4,7 @@ id: deploy.adrs.readme
 version: 1
 status: active
 created_on: "2026-08-31"
-updated_on: "2026-10-25"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -42,3 +42,4 @@ The old prototype ADR pointers have been retired. Use this owner-aligned ADR
 root directly for deploy-owned decision history.
 
 - [ADR 0042: Separate change and deployment proof ownership](0042-separate-change-and-deployment-proof-ownership.md) records the shared, deployment and provider authority boundary with compatible legacy paths.
+- [ADR 0044: Use temporary instances of production deployments](0044-use-temporary-instances-of-production-deployments.md) keeps production defaults intact while selecting isolated test lifetimes, shared cleanup and independent expiry.

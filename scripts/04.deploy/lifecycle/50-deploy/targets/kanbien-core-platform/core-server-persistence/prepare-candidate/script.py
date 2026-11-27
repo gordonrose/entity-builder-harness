@@ -311,7 +311,7 @@ def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> 
     # release.  Keep these bindings together so either CREATE or UPDATE cannot
     # accidentally retain an obsolete support-program image while moving the
     # server or restoration verifier to the candidate digest.
-    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/{REPOSITORY}", "ImageRepositoryUri": INPUTS["repository_uri"], "ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
+    return {**infrastructure, **INPUTS["creation_parameters"], "ResourceNamePrefix": INPUTS["target"], "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/{REPOSITORY}", "ImageRepositoryUri": INPUTS["repository_uri"], "ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
 
 
 def update_parameters_match(actual: object, desired: object, current: object) -> bool:

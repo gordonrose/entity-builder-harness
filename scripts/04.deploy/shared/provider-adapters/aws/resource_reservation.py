@@ -2,25 +2,28 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.resource-reservation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
 #   kind: script
 #   purpose: Retain immutable resource-operation intent before a single submission while workload bindings own request validation and file identity.
 #   portability: {class: reusable, targets: [entity-builder]}
-#   effects: [writes-files]
+#   effects: [network, writes-files]
 #   used_by:
 #   - id: deploy.library.entity-smoke.resource-control
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/resource-control.py
+#   - id: deploy.library.aws.session-records
+#     path: scripts/04.deploy/shared/provider-adapters/aws/session_records.py
 """Extracted resource reservation mechanics, not approval or completion evidence.
 
 Bindings supply a closed request/path validator, timestamp reader and historical
-schema/operation prefix. Existing files are never replaced, including after an
-uncertain write or provider outcome. No credentials or provider calls live here.
+schema/operation prefix. Existing local files are never replaced, including after
+an uncertain write or provider outcome. Optional storage owns remote retention;
+credentials and provider transport remain at that adapter, not this protocol.
 """
 from datetime import datetime, timezone
 import hashlib
@@ -62,16 +65,20 @@ def write_exclusive(path, value):
 
 
 class ImmutableReservationStore:
-    """Subclass only the workload binding, never the write/read/reuse protocol."""
+    """Bind requests; optional storage owns retention, not reserve/reuse policy."""
     schema = None
     operation_prefix = None
     failure = ReservationFailure
 
-    def __init__(self, root):
-        self.root = Path(root)
+    def __init__(self, root, *, storage=None):
+        self.root = Path(root) if storage is None else root
+        self._storage = storage
         if not isinstance(self.schema, str) or not self.schema or not isinstance(self.operation_prefix, str) or re.fullmatch(r"[a-z][a-z0-9-]*-", self.operation_prefix) is None:
             raise self.failure("reservation-binding-invalid")
-        no_symlinks(self.root)
+        if storage is None:
+            no_symlinks(self.root)
+        elif not callable(getattr(storage, "read", None)) or not callable(getattr(storage, "create", None)):
+            raise self.failure("reservation-storage-invalid")
 
     def path_for(self, phase, request):
         """Validate the closed request, then return its one canonical file path."""
@@ -82,6 +89,11 @@ class ImmutableReservationStore:
 
     def read(self, phase, request):
         path = self.path_for(phase, request)
+        if self._storage is not None:
+            try: previous = self._storage.read(path)
+            except ReservationFailure as failure: raise self.failure(failure.code) from None
+            if previous is None: return None
+            return self.validate_record(phase, request, previous, validate_time=self.validate_time)
         no_symlinks(path)
         try:
             descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
@@ -106,8 +118,9 @@ class ImmutableReservationStore:
                  "operation_id": self.operation_prefix + uuid.uuid4().hex, "request": request,
                  "request_sha256": hashlib.sha256(canonical(request)).hexdigest(),
                  "reserved_at": datetime.now(timezone.utc).isoformat()}
-        try: fresh = write_exclusive(path, value)
+        try: fresh = write_exclusive(path, value) if self._storage is None else self._storage.create(path, value)
         except ReservationFailure as failure: raise self.failure(failure.code) from None
+        if type(fresh) is not bool: raise self.failure("retention-not-confirmed")
         if fresh: return value, True
         previous = self.read(phase, request)
         if previous is None: raise self.failure("reservation-unavailable")

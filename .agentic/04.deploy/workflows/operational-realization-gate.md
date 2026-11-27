@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: deploy.workflow.operational-realization-gate
-  version: 5
+  version: 6
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-11-09"
+  updated_on: "2026-11-27"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -64,6 +64,14 @@ provider exceptions or grant mutation authority.
    delete-only, retain source/shared protection and bind the original successful
    readback and positive ownership in the provider's concrete reviewed plan.
    An opt-in or passing compiler is not that evidence or execution approval.
+   For temporary-session teardown, instead select the separate
+   [bounded temporary-session contract](../standards/operational-realization-gate.md#bounded-temporary-session-cleanup)
+   and its exact update-only preparation or delete-only removal phase. Retain
+   the failed or partial functional result and label cleanup separately. Resolve
+   the provider's original session custody, closed creation admission, in-flight
+   reconciliation and protected-resource checks before collecting its gate facts.
+   Declare actual independent-expiry and durable-record dependencies; a graph
+   or contract pass alone cannot establish that those controls exist.
 2. Use `npm run deployment:realization:validate -- --contract <path>
    --validate-contract` to
    reject missing graph edges, unsafe lifecycle/retry paths, insufficient proof

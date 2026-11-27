@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.operational-realization-contract.v2
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -41,6 +41,31 @@ bounded_cleanup:
   allowed_operation_classes: [delete]
   forbidden_operation_classes: [create, update, replace, broaden-permission]
   authority: declaration-only-provider-owned-proof-and-explicit-execution-approval-required
+bounded_temporary_session_cleanup:
+  selection: change_shape.temporary_session_cleanup
+  default: ordinary-update-shape-unchanged-delete-remains-forbidden
+  mutually_exclusive_with: [change_shape.disposable_restore_cleanup, change_shape.immutable_definition_refresh]
+  required_fields: [phase]
+  required_true_fields:
+    - explicit_temporary_discard_policy_required
+    - exact_session_binding_required
+    - durable_positive_ownership_required
+    - creation_admission_closed_required
+    - inflight_operations_reconciled_required
+    - explicit_execution_approval_required
+    - protected_resources_excluded
+    - owned_teardown_changes_only
+  additional_fields: forbidden
+  phases:
+    prepare-discard:
+      allowed_operation_classes: [update]
+      forbidden_operation_classes: [create, delete, replace, broaden-permission]
+    delete:
+      allowed_operation_classes: [delete]
+      forbidden_operation_classes: [create, update, replace, broaden-permission]
+  authority: declaration-only-exact-provider-session-proof-and-execution-approval-required
+  functional_success: not-a-cleanup-prerequisite-or-result
+  lifecycle: separately-labelled-cleanup-no-transition-from-terminal-workload-attempt
 bounded_definition_refresh:
   selection: change_shape.immutable_definition_refresh
   default: replacement-remains-forbidden
@@ -62,6 +87,14 @@ unchanged_requirements:
   lifecycle: reviewed-new-label-recovery-only
   evidence: complete-current-input-bound-component-and-gate-observations
 field_guide:
+  - path: change_shape.temporary_session_cleanup
+    what: Explicit bounded cleanup of an independently owned temporary session, including partial creation or failed tests.
+    does: Separates update-only preparation for discard from delete-only removal without admitting ordinary deletion or relaxing restore-readback requirements.
+    validation: v2 only; exact phase and eight required_true_fields above; additional fields, null, false and non-boolean flags reject. Cannot combine with another bounded change-shape opt-in. All eight gates, current evidence, exact counts and provider-owned session/authority checks remain required. A declaration is neither resource ownership nor execution approval.
+  - path: change_shape.temporary_session_cleanup.phase
+    what: The one reviewed teardown operation being planned.
+    does: Prevents quiescence/protection/retention updates from being mislabeled as deletion or bundled with unrelated operations.
+    validation: Exactly prepare-discard or delete, with the exact allowed/forbidden classes in phases above. The provider controller separately restricts preparation to owned teardown changes and binds deletion to current physical incarnations.
   - path: change_shape.disposable_restore_cleanup
     what: Explicit opt-in for cleanup of a proven disposable restore, never ordinary deletion.
     does: Admits a delete-only change shape without granting permission or manufacturing ownership/readback proof.

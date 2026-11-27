@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-10"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [architecture, security, sre]
@@ -17,7 +17,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Proposed private foundation for kanbien-core-platform; no public ingress.
 
+Metadata:
+  CreationControls:
+    EnableDeliveryRole:
+      kind: optional-resources
+      temporary: 'false'
+      condition: CreateDeliveryRole
+      resources: [DeliveryRole]
+      outputs: []
+
 Parameters:
+  EnableDeliveryRole: { Type: String, Default: 'true', AllowedValues: ['true', 'false'] }
+  ResourceNamePrefix:
+    Type: String
+    Default: kanbien-core-platform
+    MinLength: 1
+    MaxLength: 21
+    AllowedPattern: '^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$'
   VpcId: { Type: 'AWS::EC2::VPC::Id' }
   VpcCidr:
     Type: String
@@ -46,39 +62,40 @@ Parameters:
     Default: 'false'
 
 Conditions:
+  CreateDeliveryRole: !Equals [!Ref EnableDeliveryRole, 'true']
   CreateTargetBudget: !Equals [!Ref EnableTargetBudget, 'true']
 
 Resources:
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: kanbien-core-platform
+      ClusterName: !Ref ResourceNamePrefix
       ClusterSettings: [{ Name: containerInsights, Value: enabled }]
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/ecs/kanbien-core-platform
+      LogGroupName: !Sub '/aws/ecs/${ResourceNamePrefix}'
       RetentionInDays: 14
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Private core server ingress from verifier only.
       VpcId: !Ref VpcId
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   VerifierSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Private one-pass release verifier.
       VpcId: !Ref VpcId
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: HTTPS from core tasks to required AWS endpoints.
       VpcId: !Ref VpcId
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   ServiceDnsUdpEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref ServiceSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
@@ -137,7 +154,7 @@ Resources:
             Resource:
               - !Ref ExistingRepositoryArn
               - !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke'
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   EcrDkrEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -156,7 +173,7 @@ Resources:
             Resource:
               - !Ref ExistingRepositoryArn
               - !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke'
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   LogsEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -173,22 +190,22 @@ Resources:
             Principal: '*'
             Action: [logs:CreateLogStream, logs:PutLogEvents]
             Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroup}:log-stream:*'
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   Namespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
-    Properties: { Name: kanbien-core-platform.internal, Vpc: !Ref VpcId, Tags: [{ Key: Target, Value: kanbien-core-platform }] }
+    Properties: { Name: !Sub '${ResourceNamePrefix}.internal', Vpc: !Ref VpcId, Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }] }
   BootstrapServiceDiscovery:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Name: bootstrap-runtime
       DnsConfig: { NamespaceId: !Ref Namespace, DnsRecords: [{ Type: A, TTL: 10 }] }
       HealthCheckCustomConfig: { FailureThreshold: 1 }
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   TaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: kanbien-core-platform-task-execution
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      RoleName: !Sub '${ResourceNamePrefix}-task-execution'
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
         - PolicyName: pull-image-and-write-logs
@@ -199,10 +216,11 @@ Resources:
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ExistingRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroup}:log-stream:*' }
   DeliveryRole:
+    Condition: CreateDeliveryRole
     Type: AWS::IAM::Role
     Properties:
-      RoleName: github-kanbien-core-platform-delivery
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      RoleName: !Sub 'github-${ResourceNamePrefix}-delivery'
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -224,11 +242,11 @@ Resources:
     Condition: CreateTargetBudget
     Properties:
       Budget:
-        BudgetName: kanbien-core-platform-monthly
+        BudgetName: !Sub '${ResourceNamePrefix}-monthly'
         BudgetType: COST
         TimeUnit: MONTHLY
         BudgetLimit: { Amount: 100, Unit: USD }
-        CostFilters: { TagKeyValue: ['user:Target$kanbien-core-platform'] }
+        CostFilters: { TagKeyValue: [!Sub 'user:Target$${ResourceNamePrefix}'] }
       NotificationsWithSubscribers:
         - Notification: { NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80, ThresholdType: PERCENTAGE }
           Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref CostAlertEmail }]

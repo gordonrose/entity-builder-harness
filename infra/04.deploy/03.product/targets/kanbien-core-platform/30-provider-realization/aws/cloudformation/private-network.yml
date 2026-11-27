@@ -1,0 +1,122 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.private-network
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-26"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.network
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Define a separately owned private network for persistent or temporary environments without adopting shared networking.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.plan.disposable-test-environments
+#     path: docs/04.deploy/plans/disposable-test-environments.md
+#   - id: deploy.test.aws.foundation-checks
+#     path: scripts/04.deploy/shared/provider-adapters/aws/foundation-checks-test.py
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Separately owned two-zone private network with image-layer access and no public internet route.
+Metadata:
+  CreationControls: {}
+
+# The owning deployment preflight must validate canonical CIDRs, containment,
+# non-overlap and regional AZ availability before creating a change set. These
+# lexical bounds and distinct-value rules do not establish those properties.
+# No input accepts an existing VPC, subnet, route table or security group.
+# Environment lifetime and deletion authority belong to the deployment binding,
+# not this reusable network definition. Existing shared networks are untouched.
+Parameters:
+  ResourceNamePrefix:
+    Type: String
+    MinLength: 1
+    MaxLength: 40
+    AllowedPattern: '^[a-z]([a-z0-9-]*[a-z0-9])?$'
+  VpcCidr:
+    Type: String
+    AllowedPattern: '^(10\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}|192\.168\.[0-9]{1,3})\.[0-9]{1,3}/(1[6-9]|2[0-8])$'
+  PrivateSubnetOneCidr:
+    Type: String
+    AllowedPattern: '^(10\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}|192\.168\.[0-9]{1,3})\.[0-9]{1,3}/(1[6-9]|2[0-8])$'
+  PrivateSubnetTwoCidr:
+    Type: String
+    AllowedPattern: '^(10\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}|192\.168\.[0-9]{1,3})\.[0-9]{1,3}/(1[6-9]|2[0-8])$'
+  AvailabilityZoneOne: { Type: 'AWS::EC2::AvailabilityZone::Name' }
+  AvailabilityZoneTwo: { Type: 'AWS::EC2::AvailabilityZone::Name' }
+
+Rules:
+  DistinctAvailabilityZones:
+    Assertions:
+      - Assert: !Not [!Equals [!Ref AvailabilityZoneOne, !Ref AvailabilityZoneTwo]]
+        AssertDescription: Select two different availability zones.
+  DistinctSubnetCidrs:
+    Assertions:
+      - Assert: !Not [!Equals [!Ref PrivateSubnetOneCidr, !Ref PrivateSubnetTwoCidr]]
+        AssertDescription: Select two different subnet CIDR blocks.
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags: [{ Key: Name, Value: !Sub '${ResourceNamePrefix}-private' }]
+  PrivateSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref PrivateSubnetOneCidr
+      AvailabilityZone: !Ref AvailabilityZoneOne
+      MapPublicIpOnLaunch: false
+      Tags: [{ Key: Name, Value: !Sub '${ResourceNamePrefix}-private-one' }]
+  PrivateSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref PrivateSubnetTwoCidr
+      AvailabilityZone: !Ref AvailabilityZoneTwo
+      MapPublicIpOnLaunch: false
+      Tags: [{ Key: Name, Value: !Sub '${ResourceNamePrefix}-private-two' }]
+  PrivateRouteTableOne:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: !Sub '${ResourceNamePrefix}-private-one' }]
+  PrivateRouteTableTwo:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: !Sub '${ResourceNamePrefix}-private-two' }]
+  PrivateSubnetOneRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PrivateSubnetOne, RouteTableId: !Ref PrivateRouteTableOne }
+  PrivateSubnetTwoRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: { SubnetId: !Ref PrivateSubnetTwo, RouteTableId: !Ref PrivateRouteTableTwo }
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref Vpc
+      VpcEndpointType: Gateway
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      RouteTableIds: [!Ref PrivateRouteTableOne, !Ref PrivateRouteTableTwo]
+      # The selected target needs S3 only for private ECR image-layer retrieval.
+      # Other object-store capabilities require a declared policy extension.
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::prod-${AWS::Region}-starport-layer-bucket/*'
+      Tags: [{ Key: Name, Value: !Sub '${ResourceNamePrefix}-image-layers' }]
+
+Outputs:
+  VpcId: { Value: !Ref Vpc }
+  VpcCidr: { Value: !GetAtt Vpc.CidrBlock }
+  PrivateSubnetIds: { Value: !Join [',', [!Ref PrivateSubnetOne, !Ref PrivateSubnetTwo]] }
+  PrivateRouteTableIds: { Value: !Join [',', [!Ref PrivateRouteTableOne, !Ref PrivateRouteTableTwo]] }
+  S3GatewayEndpointId: { Value: !Ref S3GatewayEndpoint }

@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-composition
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-28"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines:
@@ -27,6 +27,18 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+if [ "$#" -eq 0 ]; then
+  exec bash scripts/repo/check-selection/script.sh --aggregate-members persistence-composition --execute-local --json
+fi
+if [ "$#" -ne 2 ] || [ "$1" != "--unit" ]; then
+  echo "Usage: smoke-test.sh [--unit runtime|preparation-inputs]" >&2
+  exit 2
+fi
+case "$2" in
+  preparation-inputs) exec python3 -B scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py PreparationInputTests ;;
+  runtime) ;;
+  *) echo "Usage: smoke-test.sh [--unit runtime|preparation-inputs]" >&2; exit 2 ;;
+esac
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 COMPILED_DIRECTORY="$TEMPORARY_DIRECTORY/compiled"
@@ -46,4 +58,4 @@ for fixture in runtime-test restore-diagnostic-test configuration-test observabi
 done
 test "$BASELINE_FINGERPRINT" = "$(node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/fixture-runtime.mjs --fingerprint "$COMPILED_DIRECTORY")"
 
-python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py" DeclaredTemplateTests RuntimeConfigurationTests

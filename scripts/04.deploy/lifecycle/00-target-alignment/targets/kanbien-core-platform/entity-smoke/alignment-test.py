@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.target-alignment
-#   version: 4
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -127,6 +127,7 @@ assert (parameters["EndpointSecurityGroupId"], parameters["S3ArtifactPrefixListI
 assert safe["verdict"] == "aligned" and safe["provider_mutation"] is False and safe["acceptance_evidence"] is False
 assert safe["parameters_sha256"] == M.fingerprint(parameters)
 assert parameters["ServerDesiredCount"] == "0" and parameters["AdministratorSecretArn"] == SECRET
+assert parameters["ResourceNamePrefix"] == "kanbien-core-platform"
 assert all(marker not in json.dumps(safe) for marker in (CANARY, "private-provider-canary.internal", SECRET))
 original_incarnation = safe["dependency_incarnation_sha256"]
 for version in ("18.4", "18.12", "18.4-rds.20261116"):
